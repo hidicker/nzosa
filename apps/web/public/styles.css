@@ -1,0 +1,1923 @@
+.split-marker { font-size: 0.68rem; background: none; border: none; padding: 0; cursor: pointer;
+  color: #b45309; text-decoration: underline; }
+#check-body tr.split-detail > td { background: rgba(180,83,9,0.06); padding: 0.4rem 0.6rem 0.4rem 2rem; }
+#check-body tr.split-detail table { width: auto; font-size: 0.75rem; }
+#check-body tr.split-detail td { border: none; padding: 0.12rem 0.7rem 0.12rem 0; white-space: nowrap; }
+
+/* The three codings are the point of this table, so they get the room and the
+   headers are aligned the same way as their values. Natural column sizing, not
+   fixed widths: a fixed layout starved the coding columns to one word a line. */
+.check-scroll { overflow-x: visible; }
+.check-table { width: 100%; }
+.check-table th, .check-table td { vertical-align: top; }
+#check-body .check-table .col-date,
+#check-body .check-table .col-amount { white-space: nowrap; }
+#check-body .check-table .col-date   { text-align: left; }
+#check-body .check-table .col-amount { text-align: right; font-variant-numeric: tabular-nums; }
+#check-body .check-table .col-payee  { text-align: left; width: 10rem; max-width: 10rem;
+  white-space: normal; overflow-wrap: anywhere; }
+#check-body .check-table .col-proposed,
+#check-body .check-table .col-coded,
+#check-body .check-table .col-imported,
+#check-body .check-table .col-gst { text-align: left; padding-left: 0.55rem;
+  white-space: normal; overflow-wrap: anywhere; }
+#check-body .check-table .col-proposed { border-left: 2px solid rgba(106,75,156,0.4); }
+#check-body .check-table .col-coded    { border-left: 2px solid rgba(31,111,74,0.4); }
+#check-body .check-table .col-imported,
+#check-body .check-table .col-gst      { border-left: 2px solid rgba(180,83,9,0.4); }
+#check-body .check-table .col-use { text-align: right; white-space: normal; }
+.check-table td.col-coded:empty::after { content: "not coded"; color: rgba(128,128,128,0.65);
+  font-style: italic; }
+.check-table tbody tr:nth-child(even) { background: rgba(128,128,128,0.04); }
+
+#check-body .check-table .col-proposed { color: #6a4b9c; }
+#check-body .check-table .col-coded { color: #1f6f4a; font-weight: 600; }
+#check-body .check-table .col-imported { color: #b45309; }
+.check-table th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.check-actions { white-space: nowrap; }
+.use-button { font-size: 0.68rem; padding: 0.1rem 0.4rem; margin-left: 0.2rem; cursor: pointer;
+  border: 1px solid rgba(128,128,128,0.45); border-radius: 3px; background: transparent; color: inherit; }
+.use-button:hover { border-color: currentColor; }
+
+.how-to { margin: 0 0 1rem; font-size: 0.82rem; }
+.how-to summary { cursor: pointer; color: #1f6f4a; font-weight: 600; }
+.how-to ol { margin: 0.5rem 0; padding-left: 1.3rem; }
+.how-to li { margin: 0.2rem 0; }
+.how-to code { background: rgba(128,128,128,0.15); padding: 0 0.2rem; border-radius: 3px; }
+
+.rules-message { font-size: 0.82rem; padding: 0.5rem 0.7rem; border-radius: 4px;
+  background: rgba(31,111,74,0.10); border-left: 3px solid #1f6f4a; margin: 0.4rem 0; }
+.rules-choice { padding: 0.7rem; border: 1px solid rgba(128,128,128,0.4); border-radius: 6px;
+  background: rgba(128,128,128,0.06); margin: 0.6rem 0; }
+.rules-choice p { margin: 0 0 0.5rem; font-size: 0.85rem; }
+.rules-choice button { margin-right: 0.4rem; font-size: 0.82rem; }
+.rules-archive { font-size: 0.8rem; margin: 0.2rem 0; color: var(--muted,#667); }
+.rules-archive button { font-size: 0.75rem; margin-left: 0.4rem; }
+
+.code-flow { font-size: 0.72rem; color: var(--muted, #667); margin-top: 0.15rem; }
+.code-flow.internal { color: #6a4b9c; }
+.code-details { font-size: 0.68rem; background: none; border: none; padding: 0.1rem 0; cursor: pointer;
+  color: var(--muted, #667); text-decoration: underline; }
+.code-raw { margin-top: 0.4rem; font-size: 0.7rem; border-collapse: collapse; }
+.code-raw th { text-align: left; font-weight: 500; color: var(--muted, #667); padding: 0.1rem 0.6rem 0.1rem 0;
+  vertical-align: top; white-space: nowrap; }
+.code-raw td { padding: 0.1rem 0; word-break: break-all; }
+
+.check-summary { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
+.check-stat { display: flex; flex-direction: column; }
+.check-value { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.check-label { font-size: 0.75rem; color: var(--muted, #667); }
+#check-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 1rem; }
+#check-body th, #check-body td { padding: 0.3rem 0.5rem; text-align: right;
+  border-bottom: 1px solid rgba(128,128,128,0.18); }
+#check-body h3 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.3rem; max-width: 34rem; }
+.chip { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(128,128,128,0.45); background: transparent; color: inherit; }
+.chip:hover { border-color: currentColor; }
+.chip.on { background: #1f6f4a; border-color: #1f6f4a; color: #fff; font-weight: 600; }
+
+.gst-select { min-width: 5rem; }
+
+.split-editor { grid-column: 1 / -1; margin: 0.6rem 0 0.2rem; padding: 0.7rem;
+  border: 1px solid rgba(128,128,128,0.35); border-radius: 6px; background: rgba(128,128,128,0.05); }
+.split-rows { display: flex; flex-direction: column; gap: 0.35rem; }
+.split-row { display: grid; grid-template-columns: 7rem minmax(9rem, 1fr) 5.5rem minmax(9rem, 1.4fr) 2rem;
+  gap: 0.4rem; align-items: center; }
+.split-row input, .split-row select { font-size: 0.8rem; width: 100%; }
+.split-amount { text-align: right; font-variant-numeric: tabular-nums; }
+.split-drop { border: none; background: none; cursor: pointer; font-size: 1rem; color: #c62828; }
+.split-drop:disabled { opacity: 0.3; cursor: default; }
+.split-footer { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-top: 0.6rem; }
+.split-footer button { font-size: 0.8rem; }
+.split-balance { font-size: 0.78rem; margin-left: auto; }
+.split-balance.ok { color: #2e7d32; }
+.split-balance.off { color: #c62828; font-weight: 600; }
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---------- the shell: a sidebar, and everything else ---------- */
+
+/*
+ * Navigation down the side rather than across the top. Ten sections do not fit
+ * a tab strip, which is why six of them were hidden behind an "Other" menu; a
+ * column fits all ten, and can say which are daily work and which are setup.
+ */
+.shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.sidebar {
+  width: 232px;
+  flex: 0 0 232px;
+  display: flex;
+  flex-direction: column;
+  background: var(--navy);
+  color: var(--on-navy);
+  padding: 18px 12px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 18px;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  color: #fff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  flex: 1;
+}
+
+.sidebar-heading {
+  margin: 18px 8px 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-navy-dim);
+}
+
+.sidebar-nav button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--on-navy);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.sidebar-nav button svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.sidebar-nav button:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+.sidebar-nav button.active {
+  background: #fff;
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.sidebar-nav button.active svg {
+  opacity: 1;
+}
+
+.sidebar-foot {
+  padding: 12px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  margin-top: 12px;
+}
+
+.sidebar .ledger-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  color: var(--on-navy-dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar .ledger-picker select {
+  width: 100%;
+  max-width: none;
+  font-size: 13px;
+  background-color: var(--navy-2);
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238ba3bf' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.sidebar .theme-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--on-navy-dim);
+}
+
+.sidebar .theme-toggle:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+/*
+ * Narrowed to icons rather than hidden. A menu that disappears has to be
+ * remembered; one that stays as a column of icons can still be pointed at, and
+ * each keeps its name as a tooltip.
+ */
+.shell.narrow .sidebar {
+  width: 62px;
+  flex: 0 0 62px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.shell.narrow .wordmark,
+.shell.narrow .sidebar-heading,
+.shell.narrow .sidebar-foot,
+.shell.narrow .sidebar-nav button span {
+  display: none;
+}
+
+/* The theme button stays: narrowing the menu should not hide the way back to
+   a light or dark screen. It sits under the collapse button instead. */
+.shell.narrow .sidebar-head {
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  padding: 0 0 14px;
+}
+
+.shell.narrow .sidebar-nav button {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--on-navy-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.sidebar-toggle:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+.shell-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The page name, and the one filter that qualifies every figure under it. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 28px 14px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * Each page's own heading is now said by the topbar, so the one inside the
+ * page would say it twice.
+ */
+.page > .page-head > h2 {
+  display: none;
+}
+
+/* ---------- cards ---------- */
+
+/*
+ * The working areas sit on the page as cards rather than running edge to edge.
+ * With a tinted page behind them, a card is what makes a section look like a
+ * thing you are working on rather than a stretch of a longer document.
+ */
+.page-head,
+.toolbar,
+.dropzone,
+.balance-check,
+.summary,
+#reports-body,
+#invoices-body,
+#entities-body,
+#rules-body,
+#check-body,
+#variance-body,
+#history-body,
+#setup-body,
+.table-scroll {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.page-head {
+  align-items: center;
+}
+
+/* The reconcile list is its own card, and each line a row within it. */
+#reconcile-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px 18px;
+}
+
+.page-hint {
+  margin-top: 0;
+}
+
+@media (max-width: 820px) {
+  /* Narrow: the sidebar becomes a strip of icons rather than disappearing, so
+     nothing has to be hunted for behind a menu. */
+  .shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: auto;
+    flex: none;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 12px;
+  }
+  .sidebar-head {
+    padding: 0 10px 0 4px;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    flex: 1;
+  }
+  .sidebar-nav button span {
+    display: none;
+  }
+  .sidebar-nav button {
+    padding: 8px;
+  }
+  .sidebar-heading,
+  .sidebar-foot {
+    display: none;
+  }
+  main,
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ---------- combobox ---------- */
+
+.combo {
+  position: relative;
+  min-width: 15rem;
+  flex: 1 1 15rem;
+  max-width: 22rem;
+}
+
+.combo-input {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.combo-input:hover {
+  border-color: var(--muted);
+}
+
+.combo-input::placeholder {
+  color: var(--muted);
+}
+
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.combo-list[hidden] {
+  display: none;
+}
+
+.combo-option {
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 13.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combo-option:hover,
+.combo-option.on {
+  background: var(--surface-2);
+}
+
+.combo-option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+.combo-empty {
+  padding: 6px 9px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+
+
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.page-head h2 { margin: 0; font-size: 1.15rem; }
+.page-actions { display: flex; gap: 0.6rem; align-items: flex-start; flex-wrap: wrap; }
+.page-hint { color: var(--muted, #667); font-size: 0.85rem; margin: 0.4rem 0 1rem; }
+.toggle { font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
+
+.code-row { display: grid; grid-template-columns: minmax(12rem, 2fr) 7rem minmax(20rem, 3fr); gap: 0.75rem;
+  align-items: start; padding: 0.6rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); }
+.code-row.done { opacity: 0.55; }
+.code-bank { min-width: 0; }
+.code-date { font-size: 0.75rem; color: var(--muted, #667); }
+.code-who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-what { font-size: 0.8rem; color: var(--muted, #667); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; padding-top: 0.9rem; }
+.code-amount.out { color: #c62828; }
+.code-amount.in { color: #2e7d32; }
+.code-form { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+.code-form select { max-width: 15rem; font-size: 0.85rem; }
+.code-form input[type="text"] { flex: 1 1 12rem; font-size: 0.85rem; }
+/* The contact is a name, so it needs less room than a sentence of description
+   and should not be the field that collapses when the row gets tight. */
+.code-contact { flex: 0 1 10rem !important; }
+.code-description { flex: 2 1 14rem !important; }
+.code-form button { min-width: 4rem; }
+.code-reason { grid-column: 3; font-size: 0.75rem; color: var(--muted, #667); }
+
+#rules-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+#rules-body th, #rules-body td { padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); text-align: right; }
+
+/*.variance { margin: 2rem 0; }
+.variance-accounts { display: flex; flex-direction: column; font-size: 0.75rem; gap: 0.15rem; }
+.variance-accounts select { font-size: 0.75rem; min-width: 15rem; }
+.variance-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.variance-head h2 { margin: 0; font-size: 1.1rem; }
+.variance-actions { display: flex; gap: 0.5rem; }
+.variance-hint { color: var(--muted, #667); font-size: 0.85rem; margin: 0.4rem 0 1rem; }
+.variance table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.variance th, .variance td { padding: 0.35rem 0.6rem; text-align: right; border-bottom: 1px solid rgba(128,128,128,0.2); }
+.variance th:first-child, .variance td:first-child { text-align: left; }
+.variance tbody tr { cursor: pointer; }
+.variance tbody tr:hover { background: rgba(128,128,128,0.08); }
+.variance tr.settled td.left { color: #2e7d32; }
+.variance tr.open td.left { color: #c62828; font-weight: 600; }
+.variance-detail { margin-top: 1.25rem; padding-top: 1rem; border-top: 2px solid rgba(128,128,128,0.3); }
+.variance-detail h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+.variance-detail h4 { margin: 1rem 0 0.35rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted, #667); }
+.variance-detail table { font-size: 0.85rem; }
+.variance-problems { color: #c62828; font-size: 0.85rem; }
+.variance-note { font-size: 0.85rem; margin: 0.2rem 0; }
+
+ * Light and dark are both defined on tokens so the page follows the reader's
+ * system setting. Colours carry meaning here -- money in versus out, and three
+ * dedupe statuses -- so each is paired with a text label rather than relying on
+ * hue alone.
+ */
+:root {
+  /* A deep bank navy rather than a bright one: this sits beside statements and
+     signed accounts, and wants to look like the bank rather than like software.
+     The page is a cool off-white so white cards lift off it. */
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --border: #dbe1ea;
+  --text: #16202e;
+  --muted: #5d6b7f;
+  --accent: #0b3d69;
+  --accent-soft: #e6eef7;
+  --accent-text: #ffffff;
+  --navy: #0a2540;
+  --navy-2: #123457;
+  --on-navy: #dbe6f2;
+  --on-navy-dim: #8ba3bf;
+  --in: #0f6b52;
+  --out: #b3402c;
+  --review: #8a5a12;
+  --review-bg: #fdf4e3;
+  --duplicate-bg: #eceff4;
+  --danger: #b3402c;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* Chart series: the validated categorical pair, not the in/out green and
+     red. Those two measure 5.8 apart under protanopia, which is fine on a
+     figure that also carries a minus sign and is not fine when the colour is
+     the only thing saying which bar is which. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d151f;
+    --surface: #16202e;
+    --surface-2: #1d2937;
+    --border: #2b3a4d;
+    --text: #e7edf5;
+    --muted: #93a4bb;
+    --accent: #5aa9e6;
+    --accent-soft: #16293d;
+    --accent-text: #08192b;
+    --navy: #0a1826;
+    --navy-2: #142639;
+    --on-navy: #dbe6f2;
+    --on-navy-dim: #7f97b3;
+    --in: #4fbf9b;
+    --out: #f08a76;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --review: #e0aa5a;
+    --review-bg: #2e2617;
+    --duplicate-bg: #1a2431;
+    --danger: #f08a76;
+  }
+}
+
+:root[data-theme="dark"] {
+    --bg: #0d151f;
+    --surface: #16202e;
+    --surface-2: #1d2937;
+    --border: #2b3a4d;
+    --text: #e7edf5;
+    --muted: #93a4bb;
+    --accent: #5aa9e6;
+    --accent-soft: #16293d;
+    --accent-text: #08192b;
+    --navy: #0a1826;
+    --navy-2: #142639;
+    --on-navy: #dbe6f2;
+    --on-navy-dim: #7f97b3;
+    --in: #4fbf9b;
+    --out: #f08a76;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --review: #e0aa5a;
+    --review-bg: #2e2617;
+    --duplicate-bg: #1a2431;
+    --danger: #f08a76;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  padding: 0 28px 56px;
+  max-width: 1280px;
+}
+
+
+/* Brand and entity picker stack at the left edge: which entity you are looking
+   at qualifies everything on every page, so it belongs with the title rather
+   than lost among the tabs. */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+
+
+.ledger-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ledger-picker select {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--text);
+  padding: 6px 30px 6px 11px;
+  max-width: 20rem;
+}
+
+/* A single round button that says what it will do next rather than what the
+   theme currently is -- the sun on a dark page means "go light". */
+.theme-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+}
+
+
+/* ---------- dropzone ---------- */
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 32px 24px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.dragging {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.dropzone-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dropzone-sub {
+  margin: 4px 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.options label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.options label.checkbox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.options label.checkbox small {
+  grid-column: 2;
+}
+
+.options small {
+  font-weight: 400;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+textarea {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+input[type="text"]:hover,
+input[type="search"]:hover,
+input[type="number"]:hover,
+select:hover {
+  border-color: var(--muted);
+}
+
+/*
+ * Selects were the one control left entirely unstyled, so every browser drew
+ * its own native widget -- which is what made the app look a decade older than
+ * it is. `appearance: none` drops the OS chrome; the caret is then a background
+ * SVG, and the right padding is what stops the text running under it.
+ *
+ * The caret is inlined per colour scheme because a data: URI cannot read a CSS
+ * variable.
+ */
+select {
+  font: inherit;
+  padding: 7px 30px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b6558' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px 6px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+/* An option list is drawn by the OS, so it does not inherit the page colours.
+   Setting them explicitly stops white-on-white text in dark mode. */
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa0aa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The entity picker qualifies every figure on every page, so it is the one
+   control that reads as a control rather than as text. */
+.entity-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.entity-filter select {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--text);
+  padding: 6px 30px 6px 11px;
+  max-width: 22rem;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- buttons ---------- */
+
+button {
+  font: inherit;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--surface-2);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button.primary:hover {
+  filter: brightness(1.08);
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* ---------- messages ---------- */
+
+.busy,
+.warning {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.warning {
+  background: var(--review-bg);
+  color: var(--review);
+  border: 1px solid currentColor;
+}
+
+.reports {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.report {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.report.error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.report p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.report.error p {
+  color: inherit;
+}
+
+.report details {
+  margin-top: 8px;
+}
+
+.report summary {
+  cursor: pointer;
+  color: var(--review);
+}
+
+.report ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.report code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ---------- stats ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 24px 0 16px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat.wide .stat-value {
+  font-size: 15px;
+  font-family: var(--mono);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.ledger-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ---------- table ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr.status-duplicate {
+  background: var(--duplicate-bg);
+  color: var(--muted);
+}
+
+tr.status-review {
+  background: var(--review-bg);
+}
+
+.date,
+.source {
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.amount.in {
+  color: var(--in);
+}
+
+.amount.out {
+  color: var(--out);
+}
+
+.amount .ccy {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.amount .foreign {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.party {
+  font-weight: 550;
+  min-width: 14ch;
+}
+
+.detail,
+.account {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.source {
+  color: var(--muted);
+  max-width: 22ch;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 12px;
+}
+
+/* ---------- status chips ---------- */
+
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid currentColor;
+}
+
+.chip.unique {
+  color: var(--in);
+}
+
+.chip.review {
+  color: var(--review);
+}
+
+.chip.duplicate {
+  color: var(--muted);
+}
+
+.reason {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.actions button {
+  padding: 4px 9px;
+  font-size: 12px;
+}
+
+/* ---------- help ---------- */
+
+.help {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.help h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 24px 0 10px;
+}
+
+.help h2:first-child {
+  margin-top: 0;
+}
+
+.help ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.help li {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.help li span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.help p {
+  max-width: 78ch;
+  color: var(--muted);
+}
+
+footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+
+  .ledger-actions {
+    margin-left: 0;
+  }
+
+  .options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.code-warn {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid #b26a00;
+  background: #fff6e5;
+  color: #7a4b00;
+  font-size: 0.85rem;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Rules editor ---------------------------------------------------------- */
+.rules-summary { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+  margin: 0.6rem 0; font-size: 0.85rem; color: var(--muted, #667); }
+.rules-summary button { margin-left: 0.2rem; }
+.rules-dirty { color: #b26a00; font-weight: 600; }
+.rules-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.rules-table th, .rules-table td { padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(128,128,128,0.18); text-align: right;
+  vertical-align: top; }
+.rules-table td.rules-left, .rules-table th { text-align: left;
+  white-space: normal; overflow-wrap: anywhere; }
+.rules-table .rules-actions { text-align: right; white-space: nowrap; }
+.rules-table .rules-actions button { font-size: 0.75rem; padding: 0.15rem 0.45rem;
+  margin-left: 0.2rem; }
+
+.rule-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem; padding: 0.7rem; margin: 0.4rem 0;
+  border: 1px solid rgba(128,128,128,0.35); border-radius: 6px;
+  background: rgba(128,128,128,0.05); text-align: left; }
+.rule-field { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.75rem; }
+.rule-field span { color: var(--muted, #667); }
+.rule-field input { font-size: 0.85rem; width: 100%; }
+.rule-impact { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; color: var(--muted, #667); }
+.rule-problems { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; color: #c62828; }
+.rule-editor-actions { grid-column: 1 / -1; display: flex; gap: 0.4rem; }
+
+/* Entities -------------------------------------------------------------- */
+.entity-list { display: flex; flex-direction: column; gap: 0.35rem; margin: 0.6rem 0; }
+/* One entity is two lines: what it is on the first, how it appears on an
+   invoice on the second. It used to be one non-wrapping line, and adding the
+   billing fields to it stretched every control to the height of the tallest
+   and left the row sprawling. */
+.entity-chip { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  font-size: 0.85rem; padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(128,128,128,0.3); border-radius: 5px; }
+.entity-chip > span { flex: 1; }
+.entity-chip > button { font-size: 0.75rem; padding: 0.15rem 0.5rem; }
+.entity-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 0.4rem 0 1rem; }
+.entity-table th, .entity-table td { padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(128,128,128,0.18); text-align: center; }
+.entity-table th:first-child, .entity-table td.entity-left { text-align: left; }
+.entity-table select { font-size: 0.8rem; max-width: 14rem; }
+
+/* The check page compares three codings side by side, so it is the one page
+   where the 1200px reading measure costs more than it gives: every column it
+   saves comes off the codings being compared. Let it use the window. */
+main:has(#page-check:not([hidden])) { max-width: none; }
+
+/* Breaking anywhere is right for an account name that must fit a narrow
+   column; it is wrong for a heading or a two-word placeholder, which then
+   read as "YOU COD ED". */
+#check-body .check-table th { overflow-wrap: normal; word-break: keep-all; }
+#check-body .check-table td.col-coded:empty::after { white-space: nowrap; }
+
+/* Accounts editor -------------------------------------------------------- */
+.account-add { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 0.8rem; }
+.account-add input { font-size: 0.85rem; }
+.account-add input:first-child { max-width: 8rem; }
+.account-add input:nth-child(2) { min-width: 18rem; flex: 1; }
+.accounts-table select { font-size: 0.8rem; }
+/* An account with no GST treatment is the one thing on this page that will
+   quietly produce a wrong return, so it does not look like an empty field. */
+.accounts-table select.gst-unset { border-color: #b26a00; color: #7a4b00; background: #fff6e5; }
+
+/* Reports ---------------------------------------------------------------- */
+.report-table { width: 100%; max-width: 46rem; border-collapse: collapse;
+  font-size: 0.85rem; margin: 0.5rem 0 1.4rem; }
+.report-table td { padding: 0.28rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.15); }
+.report-name { text-align: left; }
+.report-count { text-align: right; width: 3rem; color: var(--muted, #667); font-size: 0.75rem; }
+.report-amount { text-align: right; font-variant-numeric: tabular-nums; width: 8rem; }
+.report-table tr.report-section td { font-weight: 600; padding-top: 0.8rem; border-bottom: none; }
+.report-table tr.report-total td { border-top: 1px solid rgba(128,128,128,0.5);
+  border-bottom: none; font-weight: 600; }
+.report-table tr.report-net td { border-top: 2px solid rgba(128,128,128,0.6);
+  border-bottom: 2px double rgba(128,128,128,0.6); font-weight: 700; padding-top: 0.4rem; }
+.accounts-table select.type-unset { border-color: #b26a00; color: #7a4b00; background: #fff6e5; }
+
+.entity-owners-wrap input.entity-owners { flex: 0 0 auto; font-size: 0.8rem; width: 100%; }
+.entity-chip > select { font-size: 0.8rem; }
+.entity-chip > span { flex: 0 1 20rem; }
+.owner-table th { text-align: right; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.03em; padding: 0.3rem 0.5rem; color: var(--muted, #667); }
+.owner-table th:first-child, .owner-table th:nth-child(2) { text-align: left; }
+
+.extra-add { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.4rem 0 1.5rem; }
+.extra-add input, .extra-add select { font-size: 0.85rem; }
+.extra-add input { max-width: 12rem; }
+.depreciation-table td.report-name { max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
+.report-table td button.danger { font-size: 0.7rem; padding: 0.1rem 0.4rem; }
+
+#invoices-body .owner-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+#invoices-body h3 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+
+/* An invoice line sits under the bank line it settles, not beside it: it is a
+   statement about the whole row, and it is only there when there is one. */
+.code-invoice { grid-column: 1 / -1; display: flex; gap: 0.4rem; align-items: center;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #1f6f4a; background: rgba(31,111,74,0.06);
+  border-radius: 0 3px 3px 0; }
+.code-invoice select { font-size: 0.8rem; max-width: 30rem; }
+/* A statement of fact that happens to be clickable: it reads as text, and
+   says on hover that the answer can be changed. */
+.code-invoice .invoice-matched {
+  font-weight: 600;
+  color: #1f6f4a;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.code-invoice .invoice-matched:hover {
+  text-decoration: underline;
+}
+
+/* Found rather than decided, so it is worth a second look. */
+.code-invoice .invoice-auto {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* A transfer is not a coding decision, so it reads differently from the invoice
+   row above it: violet rather than the green used for money earned or spent. */
+.code-transfer { grid-column: 1 / -1; display: flex; gap: 0.4rem; align-items: center;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #6a4b9c; background: rgba(106,75,156,0.06);
+  border-radius: 0 3px 3px 0; }
+.code-transfer select { font-size: 0.8rem; max-width: 30rem; }
+.code-transfer .transfer-matched { font-weight: 600; color: #6a4b9c; }
+
+/* A split says what the line is, so it reads first and in its own colour:
+   amber, neither the invoice green nor the transfer violet. */
+.code-split { grid-column: 1 / -1; display: flex; gap: 0.5rem; align-items: baseline;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #b8860b; background: rgba(184, 134, 11, 0.06); }
+.code-split .split-matched { font-weight: 600; color: #8a6508; }
+.code-split .split-parts { color: var(--muted); }
+
+/* The balance sheet. Section headings and totals carry the structure, because
+   a reader follows the shape of the statement before any figure on it. */
+.balance-sheet .bs-section td { font-weight: 600; padding-top: 0.7rem; border-bottom: 1px solid var(--border); }
+.balance-sheet .bs-total td { font-weight: 600; }
+.opening-heading { margin-top: 2rem; }
+.opening-table { max-width: 46rem; }
+
+/* A payout is worth interrupting for: coding it as it arrives is wrong in
+   three places at once, and it looks like an ordinary receipt. */
+/* A journal is read for its narration first: the figures keep, the reason does not. */
+.journal-card { margin: 0.9rem 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--border); }
+.journal-card.journal-broken { border-left-color: #a33; }
+.journal-narration { font-weight: 600; margin: 0 0 0.4rem; }
+
+.payout-banner { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+  margin: 0.6rem 0; padding: 0.6rem 0.8rem; font-size: 0.85rem;
+  border-left: 3px solid #b8860b; background: rgba(184, 134, 11, 0.08); }
+.balance-sheet .bs-total td:first-child { padding-left: 1rem; }
+.balance-sheet .bs-grand td { font-weight: 700; border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border); }
+.balance-sheet tbody tr:not(.bs-section):not(.bs-total):not(.bs-grand) td:first-child { padding-left: 1rem; }
+
+/* Gathering several invoices against one payment. The chips are removable and
+   the tally says whether the set adds up, which is the only way to see that a
+   choice is right before committing to it. */
+.invoice-gathered { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+.invoice-chip { font-size: 0.75rem; padding: 0.1rem 0.4rem; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--card); cursor: pointer; font-family: inherit; }
+.invoice-chip:hover { border-color: #a33; color: #a33; }
+.invoice-tally { font-size: 0.75rem; color: var(--muted); }
+.invoice-tally-exact { color: #1f6f4a; font-weight: 600; }
+.invoice-tally-over { color: #a33; font-weight: 600; }
+
+/* Found rather than agreed to, so it is worth a second look. */
+.code-transfer .transfer-auto { font-weight: 400; color: var(--muted); }
+
+/* ---------- invoice matching ---------- */
+
+/*
+ * A matching decision needs the evidence on screen, so these cells stack a
+ * heading over its detail rather than showing an invoice number alone. The
+ * detail lines are quieter than the heading so a column still scans vertically.
+ */
+.match-table { width: 100%; }
+.match-table td { vertical-align: top; }
+
+/* Figures should take only what they need, so the descriptive columns get the
+   rest. Left to itself the browser gave every amount column the same width as
+   its heading and squeezed "Why" to a character a line. */
+.match-table td.report-amount,
+.match-table th { white-space: nowrap; }
+.match-table td.report-amount { width: 1%; }
+
+.match-why { white-space: normal; min-width: 12rem; font-size: 0.78rem; }
+
+/* The two stacked cells carry the evidence, so they get a floor. Without it the
+   browser gave them less room than the figures and broke the contact name and
+   the payee across four lines each. */
+.match-table td.match-cell { min-width: 11rem; }
+
+/* ---------- writing an invoice ---------- */
+
+.invoice-editor {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem 1.1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.invoice-editor h3 { margin: 0 0 0.8rem; font-size: 1rem; }
+.invoice-editor h4 { margin: 1rem 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
+
+.invoice-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.7rem 1rem;
+}
+
+.invoice-fields label { display: flex; flex-direction: column; gap: 0.25rem; }
+.invoice-fields label > span { font-size: 0.75rem; color: var(--muted); }
+.invoice-fields small { font-size: 0.7rem; color: var(--muted); }
+
+.invoice-lines { display: flex; flex-direction: column; gap: 0.4rem; }
+
+/* Description, account, tax, amount, remove. The account is a combobox, which
+   brings its own width, so it is given a column rather than left to flex. */
+.invoice-line {
+  display: grid;
+  grid-template-columns: minmax(10rem, 2fr) minmax(11rem, 1.4fr) 9rem 7rem 2rem;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.invoice-line .combo { min-width: 0; max-width: none; }
+.invoice-line input, .invoice-line select { width: 100%; font-size: 0.85rem; }
+.invoice-amount { text-align: right; font-variant-numeric: tabular-nums; }
+
+.line-drop {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--danger);
+  padding: 0;
+}
+
+.invoice-totals {
+  margin: 0.7rem 0 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.invoice-actions { display: flex; gap: 0.4rem; margin-top: 0.9rem; flex-wrap: wrap; }
+
+/* ---------- clearing everything ---------- */
+
+/* The typing box is the safeguard, so it is given room rather than tucked
+   beside the button as an afterthought. */
+.clear-form { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start;
+  margin: 0.6rem 0 1rem; padding: 0.8rem 0.9rem; border: 1px solid var(--danger);
+  border-radius: 8px; background: rgba(163,58,42,0.05); max-width: 34rem; }
+.clear-form label { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; }
+.clear-form label > span { font-size: 0.78rem; color: var(--muted); }
+.clear-form input { width: 100%; }
+.clear-form button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Said before the typing box rather than after it: it changes whether you want
+   to clear at all. */
+.clear-reload { font-size: 0.82rem; margin: 0.4rem 0 0.2rem; padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--review); background: var(--review-bg); color: var(--review);
+  border-radius: 0 4px 4px 0; max-width: 46rem; }
+
+/* ---------- bank balance check ---------- */
+
+.balance-check { margin: 1.2rem 0; padding: 0.9rem 1rem; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface); }
+.balance-head { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.balance-head h3 { margin: 0; font-size: 0.95rem; }
+.balance-check .page-hint { margin: 0.4rem 0 0.8rem; }
+.balance-ok { font-weight: 600; color: #1f6f4a; margin: 0 0 0.6rem; }
+.balance-off { font-weight: 600; color: #b45309; margin: 0 0 0.6rem; }
+
+/* The differing days, listed under the account they belong to. */
+.balance-detail { padding: 0.3rem 0 0.6rem 1.4rem; font-size: 0.75rem;
+  font-variant-numeric: tabular-nums; color: var(--muted); }
+.balance-detail div { line-height: 1.5; white-space: pre; }
+#balances-body td.report-name:first-child { min-width: 16rem; white-space: normal; }
+
+
+
+
+
+.match-cell strong {
+  display: block;
+  font-weight: 600;
+}
+
+.match-sub {
+  font-size: 0.72rem;
+  color: var(--muted, #667);
+  line-height: 1.4;
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+}
+
+.match-lines div {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 30rem;
+}
+
+/* A difference is the reason a row is a proposal rather than a match. */
+.match-off { color: #b45309; font-weight: 600; }
+.match-ok { color: #1f6f4a; }
+
+
+.journal-balanced { color: #1f6f4a; font-weight: 600; font-size: 0.85rem; margin: 0.4rem 0; }
+.journal-out { color: #c62828; font-weight: 700; font-size: 0.85rem; margin: 0.4rem 0; }
+
+/* What the app read for itself, said once where every page can see it. */
+.startup-status { max-width: 1200px; margin: 0 auto; padding: 0 20px 0.4rem;
+  font-size: 0.75rem; color: var(--muted, #667); }
+
+/* History ---------------------------------------------------------------- */
+.who-label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;
+  color: var(--muted, #667); }
+.who-label input { font-size: 0.85rem; max-width: 10rem; }
+#history-body .owner-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+.event-reverted { opacity: 0.5; }
+.event-reverted td.report-name { text-decoration: line-through; }
+.event-undone { font-size: 0.7rem; color: var(--muted, #667); text-transform: uppercase;
+  letter-spacing: 0.04em; }
+
+/* Setup ------------------------------------------------------------------ */
+.setup-progress { font-size: 0.9rem; font-weight: 600; margin: 0.5rem 0; }
+.setup-steps { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.6rem; }
+.setup-step { display: flex; gap: 0.7rem; align-items: flex-start;
+  padding: 0.55rem 0.7rem; border: 1px solid rgba(128,128,128,0.28); border-radius: 5px; }
+.setup-step.done { border-color: rgba(31,111,74,0.4); background: rgba(31,111,74,0.05); }
+.setup-step > div { flex: 1; }
+.setup-mark { width: 1rem; color: #1f6f4a; font-weight: 700; }
+.setup-detail { font-size: 0.8rem; color: var(--muted, #667); margin-top: 0.1rem; }
+.setup-unlocks { font-size: 0.78rem; color: #6a4b9c; margin-top: 0.15rem; }
+.setup-step button { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
+.setup-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+
+/* A control that reads as a quiet offer rather than an action to take. */
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--accent);
+}
+
+/* What the bank's own balance says about a questionable duplicate. */
+.verdict {
+  margin: 4px 0 6px;
+  font-size: 12px;
+}
+
+.verdict-double-counted { color: #b4462b; }
+.verdict-both-real { color: #1f6f4a; }
+.verdict-cannot-tell { color: var(--muted); }
+
+/* An export the bank cut short. Worth noticing at import, not at year end. */
+.report.cut-off {
+  border-left: 3px solid #c98a2b;
+  padding-left: 10px;
+}
+
+/* The bank feed: a form, then what it found. */
+.feed-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.feed-form input[type="text"],
+.feed-form input[type="password"] {
+  min-width: 320px;
+}
+
+.feed-steps {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.feed-steps li { margin-bottom: 6px; }
+
+.feed-said {
+  margin: 6px 0;
+  color: var(--muted);
+}
+
+.feed-connected {
+  margin: 10px 0;
+  font-weight: 600;
+  color: #1f6f4a;
+}
+
+.feed-accounts { margin-top: 18px; }
+
+/* Choosing columns for a table nothing could name. */
+.column-picker {
+  border-left: 3px solid #c98a2b;
+  padding: 2px 0 2px 12px;
+  margin: 14px 0;
+}
+
+.feed-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+/* Figures resting on transactions nobody has settled yet. */
+.unresolved-note {
+  margin: 8px 0 14px;
+  padding: 8px 12px;
+  border-left: 3px solid #c98a2b;
+  background: var(--accent-soft);
+  font-size: 13px;
+}
+
+/* GST registration sits with the entity, not on the report. */
+.entity-gst { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+
+/* A cell whose answer is not set here, or does not apply at all. */
+.cell-not-applicable { color: #8a8a8a; }
+.cell-said-elsewhere { color: #444; }
+
+/* A figure resting on an assumption, said before it is read. */
+.variance-note.warn { border-left: 3px solid #b26a00; padding-left: 0.6rem; color: #7a4b00; }
+
+/* The extract preview: many narrow columns, scrolled rather than squeezed. */
+.extract-table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; font-size: 0.9em; }
+.extract-table th, .extract-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #eee; text-align: left; }
+
+
+/* --- Charts -------------------------------------------------------------
+   Drawn by hand, so the marks are specified here rather than by a library:
+   thin bars, hairline grid, and text that never wears the data's colour. */
+/* Scrolled rather than shrunk. An SVG told to fill its container keeps
+   shrinking its own text with it, so on a narrow window the axis becomes a row
+   of grey smudges -- legible-looking at a glance and unreadable in fact. Below
+   the width the labels need, the chart scrolls sideways instead. */
+.chart-figure { margin: 0 0 1.6rem; position: relative; overflow-x: auto; }
+.chart { display: block; width: 100%; min-width: 620px; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-axis { stroke: var(--muted); stroke-width: 1; opacity: 0.6; }
+.chart-tick { fill: var(--muted); font-size: 11px; }
+.chart-name { fill: var(--text); font-size: 12px; }
+.chart-value { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-series-1 { fill: var(--chart-1); }
+.chart-series-2 { fill: var(--chart-2); }
+
+.chart-legend { display: flex; gap: 1.1rem; margin: 0 0 0.5rem 76px; font-size: 0.8rem;
+  color: var(--muted); }
+.chart-legend-item { display: inline-flex; align-items: center; gap: 0.35rem; }
+.chart-swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.chart-swatch.chart-series-1 { background: var(--chart-1); }
+.chart-swatch.chart-series-2 { background: var(--chart-2); }
+
+.chart-tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem;
+  font-size: 0.78rem; line-height: 1.45; color: var(--text); white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.14); }
+
+.chart-tiles { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 0 0 1.4rem; }
+.chart-tile { flex: 1 1 10rem; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.7rem 0.9rem; display: flex; flex-direction: column;
+  gap: 0.15rem; }
+.chart-tile-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); }
+.chart-tile-value { font-size: 1.35rem; font-variant-numeric: tabular-nums; color: var(--text); }
+.chart-tile-note { font-size: 0.74rem; color: var(--muted); }
+
+.chart-heading { font-size: 0.95rem; margin: 1.4rem 0 0.2rem; }
+
+/* Which ledger account a chart's bank row is, and what it serves. */
+.bank-link { max-width: 17rem; }
+.bank-serves { display: block; font-size: 0.78rem; margin-top: 0.15rem; }
+.row-remove { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
+  background: transparent; border: 1px solid var(--border); border-radius: 3px; }
+.row-remove:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+.row-remove:disabled { opacity: 0.35; cursor: not-allowed; }
+/* Edit sits beside Remove and shares its shape, but not its colour: one of
+   them undoes a typo and the other throws an account away. */
+.row-edit { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
+  background: transparent; border: 1px solid var(--border); border-radius: 3px;
+  margin-right: 0.3rem; }
+.row-edit:hover { color: var(--accent); border-color: var(--accent); }
+/* What the owners box understood, under the owners box. Quiet when it agrees
+   with you, and not quiet when the shares do not add up. */
+.entity-owners-wrap { display: flex; flex-direction: column; gap: 0.15rem;
+  flex: 1 1 16rem; min-width: 0; }
+.entity-owners-said { flex: 0 0 auto; font-size: 0.75rem; color: var(--muted);
+  min-height: 1em; }
+.entity-owners-said.owners-wrong { color: var(--danger); }
+/* The add-an-entity form, under the entities rather than over them. */
+.entity-add-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.75rem 0 1.5rem; font-size: 0.85rem; }
+.entity-add-row select, .entity-add-row input[type="text"] { font-size: 0.85rem; }
+.entity-add-gst { display: flex; align-items: center; gap: 0.3rem; }
+/* An entity still carrying the placeholder name. Not an error -- a set of
+   books that works perfectly well -- but the one thing nothing can infer. */
+.entity-chip.needs-name { border-left: 3px solid var(--accent); padding-left: 0.6rem; }
+.entity-rename-hint { font-size: 0.78rem; color: var(--accent); display: block;
+  margin-top: 0.15rem; }
+/* The Books page. "open now" is a fact about the row, not a warning. */
+.books-open { font-size: 0.72rem; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 3px; padding: 0 0.3rem; }
+.books-table td:last-child { white-space: nowrap; }
+.books-table td:last-child button { margin-left: 0.4rem; }
+/* The confirmation, under the row it belongs to. */
+.books-confirm { background: var(--accent-soft); padding: 0.75rem 0.9rem; }
+.books-confirm p { margin: 0 0 0.6rem; font-size: 0.85rem; }
+.books-new { margin-bottom: 1.5rem; }
+/* Which books are open, in the corner of the menu. A label, not a control:
+   it goes to the Books page rather than changing anything itself. */
+.ledger-open { display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0.1rem; width: 100%; text-align: left; background: transparent;
+  border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem;
+  cursor: pointer; color: inherit; }
+.ledger-open:hover { border-color: var(--accent); }
+.ledger-open-label { font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); }
+.ledger-open-name { font-size: 0.85rem; font-weight: 600; }
+.shell.narrow .ledger-open-label { display: none; }
+/* The supplier details that go at the top of an invoice. */
+.entity-billing-details { flex: 1 0 100%; margin-top: 0.15rem; padding-top: 0.4rem;
+  border-top: 1px dashed rgba(128,128,128,0.3); }
+.entity-billing-details > summary { font-size: 0.72rem; color: var(--muted);
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em; }
+.entity-billing-details[open] > summary { margin-bottom: 0.4rem; }
+.entity-billing { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.entity-billing-field { display: flex; flex-direction: column; gap: 0.15rem;
+  flex: 1 1 8rem; min-width: 0; align-self: flex-start; }
+.entity-billing-field.wide { flex: 2 1 14rem; }
+.entity-billing-field input, .entity-billing-field textarea { font-size: 0.8rem;
+  width: 100%; }
+.entity-billing-field span { flex: 0 0 auto; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); }
+.entity-billing-field textarea { resize: vertical; font: inherit; }
+.invoice-send { margin-left: 0.35rem; }
+
+/* A rule the app wrote from a coding decision, said once on the page. */
+.rule-made { background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.55rem 0.8rem; margin: 0 0 0.9rem; font-size: 0.88rem; border-radius: 0 3px 3px 0; }
+
+/* The confirm tick. Sized so it keeps the footprint the word "OK" had -- the
+   row's buttons sit in a line and a narrower one would shuffle the rest. */
+.code-tick { min-width: 2.6rem; font-size: 1.05em; line-height: 1.1; }
+
+/* A row with a transfer chosen has no coding to do, and says so by going flat
+   rather than by disappearing -- the controls stay in place so the row keeps
+   its shape in a long list. */
+/* Flat, except for whatever is still worth pressing. Dimming the row as a
+   whole took the tick down with it, so the one live control on a transfer row
+   looked as spent as the dead ones beside it. */
+.coding-off > * { opacity: 0.42; }
+.coding-off > .tick-live { opacity: 1; }
+.coding-off input:disabled, .coding-off select:disabled, .coding-off button:disabled {
+  cursor: not-allowed; background: var(--surface-2); }
+.combo.is-transfer { opacity: 0.42; pointer-events: none; }
+
+/* A pairing whose legs fell on different days: made, and worth a glance. */
+.transfer-matched.transfer-stretched { color: var(--review); }
+
+/* The general ledger: the first line of an entry carries the rule, so three
+   lines read as one entry rather than three unrelated rows. */
+.extract-table tr.entry-start td { border-top: 1px solid var(--border); }
+
+/* A button that has been pressed and is still working. The stripes move
+   towards the button's end, so "in progress" reads without a number that
+   would have to be invented. */
+button.working {
+  cursor: progress;
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.22) 25%, transparent 25%,
+    transparent 50%, rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.22) 75%, transparent 75%);
+  background-size: 1.1rem 1.1rem;
+  animation: working-stripes 0.8s linear infinite;
+}
+@keyframes working-stripes { to { background-position: 1.1rem 0; } }
+@media (prefers-reduced-motion: reduce) {
+  button.working { animation: none; }
+}
+
+/* The same dropzone as the Import page, shorter: the Check page has a table
+   under it and does not need a landing pad the height of the window. */
+.dropzone-slim { padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.dropzone-slim .dropzone-title { font-size: 1rem; margin: 0 0 0.3rem; }
+.dropzone-slim .dropzone-sub { margin: 0 0 0.75rem; }
+/* Nothing coded yet, so nothing to compare -- said plainly instead of as a
+   row of zeros. */
+.check-nothing { border: 1px solid var(--accent); border-radius: 6px;
+  padding: 0.9rem 1.1rem; margin-bottom: 1rem; background: var(--accent-soft); }
+.check-nothing p { margin: 0 0 0.6rem; }
+
+/* Bank rows that nothing has linked to a ledger account yet. Not an error --
+   a chart arrives this way -- but the reports cannot place a payment until
+   somebody says, and the control for it is a column far below. */
+.needs-linking { border-left: 3px solid var(--accent); padding: 0.5rem 0.75rem;
+  background: var(--accent-soft); border-radius: 0 4px 4px 0;
+  font-size: 0.85rem; margin: 0.75rem 0; }
+/* The demo, offered on Setup while there is nothing loaded. */
+.setup-demo { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 1.25rem; }
+.setup-demo button { margin-top: 0.5rem; }
+
+/* What the Setup drop area did with each file, said as it goes. */
+#setup-loaded { margin-top: 0.75rem; font-size: 0.82rem; text-align: left;
+  display: flex; flex-direction: column; gap: 0.2rem; }
+#setup-loaded div { color: var(--muted); }
+
+/* The rule proposals, folded away once there is a comparison to read. */
+.check-rules-fold { margin-top: 1.5rem; border-top: 1px solid var(--border);
+  padding-top: 1rem; }
+.check-rules-fold > summary { cursor: pointer; font-weight: 600; font-size: 0.9rem;
+  padding: 0.3rem 0; }
+.check-rules-fold > summary:hover { color: var(--accent); }
+
+
+/* Setup: who these books belong to, and what to go and fetch. */
+.setup-name { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.6rem 0 0.9rem; }
+.setup-name label { font-weight: 600; }
+.setup-name input { flex: 1 1 18rem; font-size: 0.95rem; padding: 0.3rem 0.45rem; }
+.setup-name .setup-name-said { flex: 1 0 100%; font-size: 0.78rem; color: var(--muted); }
+.setup-files { margin: 0.4rem 0 0.9rem; padding: 0.7rem 0.9rem;
+  border: 1px solid rgba(128,128,128,0.25); border-radius: 6px; }
+.setup-files > h3 { margin: 0 0 0.15rem; font-size: 0.95rem; }
+.setup-files > p { margin: 0 0 0.6rem; font-size: 0.8rem; color: var(--muted); }
+.setup-file { display: grid; grid-template-columns: minmax(9rem, 14rem) 1fr;
+  gap: 0.2rem 0.8rem; padding: 0.3rem 0; align-items: baseline;
+  border-top: 1px dashed rgba(128,128,128,0.2); }
+.setup-file:first-of-type { border-top: 0; }
+.setup-file.have { opacity: 0.55; }
+.setup-file-what { font-weight: 600; font-size: 0.85rem; }
+.setup-file-where { font-size: 0.8rem; }
+.setup-file-why { grid-column: 2; font-size: 0.75rem; color: var(--muted); }
+@media (max-width: 640px) { .setup-file { grid-template-columns: 1fr; }
+  .setup-file-why { grid-column: 1; } }

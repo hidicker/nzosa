@@ -1,0 +1,67 @@
+node_modules/
+dist/
+*.tsbuildinfo
+.DS_Store
+.env
+.env.local
+
+# ---------------------------------------------------------------------------
+# Real financial data. This repository is intended to be published, so the
+# rules below are deny-by-default: anything that could carry personal or
+# financial information is excluded unless it is explicitly a synthetic sample.
+# ---------------------------------------------------------------------------
+
+# Documents from banks, accountants and tax authorities.
+*.pdf
+*.xlsx
+*.xls
+*.xlsm
+*.ofx
+*.qif
+
+# Working folders for real data.
+/data/
+/statements/
+/private/
+/samples/private/
+End of Year Accounts*/
+RequestedFiles/
+# Folders exports get dropped into while testing. Named loosely on purpose:
+# the next one will be called something else, and a real chart of accounts
+# sitting in an unignored folder is how data reaches a repository.
+New*/
+new-files/
+exports/
+
+# Ledgers hold every transaction. Never commit one.
+ledger.json
+*.ledger.json
+
+# Bank exports anywhere except the synthetic samples directory.
+*.csv
+!/samples/*.csv
+# Files the app loads for itself on startup. Real data, so never committed;
+# the folder is the one place to put them.
+apps/web/public/data/
+
+# The demo data set. Entirely invented -- an imaginary coffee roastery and a
+# rental -- so it is committed on purpose, against the deny-by-default rules
+# above. It is what makes the app demonstrable without anybody's real bank data.
+!/apps/web/public/demo/
+!/apps/web/public/demo/*.csv
+!/apps/web/public/demo/*.json
+tools/.demo-transactions.json
+
+# Written by the launcher, which has no window to print to.
+nzosa-log.txt
+
+# Bank feed credentials. Covered by /ledgers/ below, and named here as well:
+# a token that reaches somebody's bank data should not depend on one rule in
+# one place, and a copy taken anywhere else is still a credential.
+.akahu.json
+*.akahu.json
+
+# Ledger folders: the books themselves. The folder is the truth now, so this
+# is the real data and must never be committed. The demo ships as a template
+# under apps/web/public/demo instead.
+/ledgers/

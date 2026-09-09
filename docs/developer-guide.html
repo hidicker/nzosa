@@ -1,0 +1,335 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZOSA: a guide for developers</title>
+<style>
+:root { --ink: #14171a; --quiet: #5b6570; --line: #e3e6ea; --page: #fff;
+  --soft: #f6f8fa; --link: #1a5fb4; }
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e6e9ec; --quiet: #9aa4af; --line: #2c3238; --page: #14171a;
+    --soft: #1c2126; --link: #7fb3ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.wrap { display: grid; grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 3rem; max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.5rem 6rem; }
+nav { position: sticky; top: 2.5rem; align-self: start; font-size: 0.87rem;
+  max-height: calc(100vh - 5rem); overflow-y: auto; }
+nav strong { display: block; margin-bottom: 0.6rem; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--quiet); }
+nav a { display: block; padding: 0.2rem 0; color: var(--quiet);
+  text-decoration: none; border-left: 2px solid transparent; padding-left: 0.7rem; }
+nav a:hover { color: var(--link); border-left-color: var(--link); }
+main { min-width: 0; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; }
+h2 { font-size: 1.35rem; margin: 2.75rem 0 0.75rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--line); }
+h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
+h4 { font-size: 0.95rem; margin: 1.25rem 0 0.4rem; color: var(--quiet); }
+p, li { margin: 0 0 0.85rem; }
+li { margin-bottom: 0.4rem; }
+ul, ol { padding-left: 1.35rem; margin: 0 0 1rem; }
+a { color: var(--link); }
+code { background: var(--soft); border: 1px solid var(--line); border-radius: 3px;
+  padding: 0.05em 0.35em; font-size: 0.88em;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+pre { background: var(--soft); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.9rem 1.1rem; overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; font-size: 0.85em; }
+.scroll { overflow-x: auto; margin: 0 0 1.25rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th { text-align: left; font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--quiet); border-bottom: 1px solid var(--quiet);
+  padding: 0 0.8rem 0.4rem 0; }
+td { padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+strong { font-weight: 650; }
+.foot { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+  font-size: 0.85rem; color: var(--quiet); }
+@media (max-width: 60rem) {
+  .wrap { grid-template-columns: 1fr; gap: 1.5rem; }
+  nav { position: static; max-height: none; border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem; }
+}
+@media print {
+  .wrap { display: block; max-width: none; padding: 0; }
+  nav { display: none; }
+  h2 { break-before: auto; }
+  pre, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <strong>Contents</strong>
+      <a href="#1-shape">1. Shape</a>
+      <a href="#2-money-and-dates">2. Money and dates</a>
+      <a href="#3-data-model">3. Data model</a>
+      <a href="#4-invariants">4. Invariants</a>
+      <a href="#5-account-names-coding-names-ts-and-chart-codes-ts-read-these">5. Account names: `coding-names.ts` and `chart-codes.ts` — read these</a>
+      <a href="#6-posting-posting-ts">6. Posting: `posting.ts`</a>
+      <a href="#7-the-event-log-events-ts">7. The event log: `events.ts`</a>
+      <a href="#8-gst-engine">8. GST engine</a>
+      <a href="#9-matching-engines">9. Matching engines</a>
+      <a href="#10-reporting">10. Reporting</a>
+      <a href="#11-files-it-reads">11. Files it reads</a>
+      <a href="#12-bank-statement-formats">12. Bank statement formats</a>
+      <a href="#13-deduplication">13. Deduplication</a>
+      <a href="#14-corrections-beat-rules">14. Corrections beat rules</a>
+      <a href="#15-proving-the-import-is-complete">15. Proving the import is complete</a>
+      <a href="#16-adding-an-importer">16. Adding an importer</a>
+      <a href="#17-traps">17. Traps</a>
+      <a href="#18-privacy">18. Privacy</a>
+      <a href="#19-running-it-and-deploying-it">19. Running it, and deploying it</a>
+    </nav>
+    <main>
+<h1 id="nzosa-a-guide-for-developers">NZOSA: a guide for developers</h1>
+<p>Architecture, data model, the invariants that must not be broken, and the mistakes this codebase has already made so you do not repeat them.</p>
+<hr>
+<h2 id="1-shape">1. Shape</h2>
+<pre><code>packages/core    pure functions, zero dependencies, no I/O
+packages/cli     the same core behind a command line
+apps/web         browser app, esbuild bundle, no framework
+tools/           the privacy audit, run before anything is pushed</code></pre>
+<p><strong>Core has no I/O and no ambient DOM or Node types.</strong> Everything is a pure function over strings and plain objects. That is what lets identical code run in a browser tab with the file never leaving the machine, in a Node CLI, or behind a server. Storage is the caller's problem, deliberately.</p>
+<p><strong>Zero dependencies in core.</strong> Including the <code>.xlsx</code> reader, which parses the ZIP central directory by hand and inflates with <code>DecompressionStream</code> (<code>deflate-raw</code>) — native in Node 18+ and every current browser.</p>
+<p>The web app must remain deployable to a free static host: no backend, no build step at runtime, no network calls from the page.</p>
+<h3 id="build-and-test">Build and test</h3>
+<pre><code>npm install
+./node_modules/.bin/tsc --build          # typechecks every package
+node --test packages/core/test/*.test.js # 339 tests
+node --test packages/cli/test/*.test.js  # 18 more, over the command line
+npm test                                 # both, through the workspaces
+cd apps/web &amp;&amp; node build.js             # bundle to apps/web/dist
+cd apps/web &amp;&amp; node build.js --serve     # dev server on :3210</code></pre>
+<h3 id="what-persists-and-what-does-not">What persists, and what does not</h3>
+<p>Anything a person loaded or decided is kept with the ledger; only what can be derived again, and the transient state of the page, lives in memory.</p>
+<p>Kept with the ledger, each for the same reason -- anything else means re-loading a file or re-picking a setting after every reload: the filed GST returns (<code>filedReturns</code>, which the CLI writes and the page reads), the accounts the GST comparison is scoped to, and the coded history loaded on the Coding reconciliation page.</p>
+<p>Restoring a value is not always enough. The GST comparison is <em>derived</em> from the filed returns, so <code>recomputeVariance</code> runs at startup as well; restoring the returns without recomputing leaves the page holding figures and showing nothing.</p>
+<p>Still memory-only, deliberately: the current page, the search boxes, the reconcile account chips, the split being edited. Those are where you are, not what you decided.</p>
+<h3 id="the-ledger-folder-is-the-truth">The ledger folder is the truth</h3>
+<p><code>apps/web/ledger-folder.js</code> and <code>apps/web/server.js</code> are the reason the files on disk are the books rather than a copy of them. The page holds a working copy and writes every change back before it counts as saved: no export step, nothing to remember, and a folder that can be copied or backed up.</p>
+<p><strong>One file per part.</strong> <code>transactions.json</code> is written by an import and then only read; <code>decisions.json</code> holds everything a person chose and changes on every click. Keeping them apart is what makes writing on every change affordable -- confirming a coding writes about seventy kilobytes rather than rewriting two megabytes of transactions beside it. <code>store.ts</code> skips a part whose object is the one it last sent, so "which parts changed" is recognised by reference rather than declared by the caller.</p>
+<p><strong>Every write is a rename.</strong> <code>writePart</code> writes <code>.name.json.writing</code> and renames it into place. A rename within a directory is atomic, so a crash leaves either the old file or the new one, never half of either. That guarantee is what makes it safe to call a file the truth.</p>
+<p><strong>Versions and the lock.</strong> Each part carries a counter, sent back with every write, and a stale version is refused with a 409 rather than silently overwritten. Nothing produces a conflict today -- the server holds <code>.open-by</code> while it runs and the command line refuses -- but this is the seam a shared ledger would need, and it is far cheaper carried unused than retrofitted once two people share a ledger.</p>
+<p><strong>The command line reads that folder.</strong> <code>loadLedger</code> in <code>packages/cli</code> takes a directory as well as a file: each part read from its own <code>{ version, data }</code> file, <code>decisions</code> spread out flat the way the app holds it in memory. It also reads the <code>rules.json</code> sitting beside the books, so a return produced from the terminal is built from the same rules the app coded with — and the chart, so it is built with the same tax codes. Anything less and the two halves answer the same question differently, which is worse than one of them refusing.</p>
+<p>Writing is refused, with a message saying so. The app writes each part separately with its own version counter, and one file dropped into the middle of that folder would be ignored by the app and would look, to the next person, like the books. <code>ledger.json</code> inside a ledger folder is metadata — the name and the date it was made — and reading it as the books is the mistake that made every real folder look like an unknown version.</p>
+<p><strong>Clearing archives.</strong> <code>POST /api/ledger/archive</code> moves every file into <code>archive/&lt;timestamp&gt;/</code>. The ledger is gone and there is nothing left to reload from, which is the point: a clear that empties the browser but leaves the files on disk refills itself from <code>data/</code> on the next refresh, and is indistinguishable from a clear that did not work.</p>
+<p><strong>Two modes.</strong> <code>loadFromFolder</code> asks <code>/api/status</code> once. A folder answers and becomes the source; nothing answers on a static host, and the app falls back to keeping everything in the browser. <code>data/</code> now only seeds that browser-only case, and never loads over a folder.</p>
+<p>The build deliberately excludes <code>public/data</code> from <code>dist</code>, because that folder held real books and copying it into the output would publish them with the app.</p>
+<h3 id="bank-balances-bank-balances-ts">Bank balances: <code>bank-balances.ts</code></h3>
+<p><code>parseDailyBalances</code> reads a BNZ daily balance export — several accounts one after another, a heading line then a row per business day. <code>checkDailyBalances</code> compares each day's closing balance against the cumulative sum of our transactions up to that date.</p>
+<p>The comparison is of the <em>offset</em> (bank closing less our running total), not the balance. Three consequences, all deliberate:</p>
+<ul><li>No opening balance is needed, and a wrong one cannot poison the result.</li><li>One missing transaction produces one break, not a break on every later day.</li><li>The file lists business days only, so a Saturday movement lands in Monday's balance; comparing cumulative totals absorbs that, comparing daily movement would not.</li></ul>
+<p>Cards are matched to our account ids by their last four digits, and only when that is unambiguous — guessing between two cards would be worse than saying nothing.</p>
+<h3 id="tax-read-from-tags-and-the-settlement-case">Tax read from tags, and the settlement case</h3>
+<p><code>taxSummary</code> builds the boxes from the tax tag on each line, not from the balance of account 820. A coded bank line posts its own GST line and the boxes read it there.</p>
+<p>Settling an invoice posts no GST line: the sale and its tax were booked when the invoice was raised, and the receipt only clears the receivable. On the invoice basis that is right. On the payments basis the invoice journal is excluded, so nothing supplied the tax at all -- every settled invoice reported its gross in Box 5 and nothing in Box 8. <code>postsTaxFor</code> indexes which tax types each journal actually posts, and where a tag has no tax line the tax is taken from the gross instead. An ordinary coded sale is unaffected, because its journal does post one.</p>
+<p>The <code>taxBase</code> on a settlement line is the signed gross, the same convention a supply line uses -- for payables as well as receivables. Flipping the sign for payables makes a settled bill subtract from Box 11 rather than add to it, and a book whose invoices are all sales will never show it.</p>
+<h3 id="the-demo-data">The demo data</h3>
+<p><code>apps/web/public/demo/</code> is generated by the three scripts in <code>tools/</code>, and is the one place the deny-by-default rules in <code>.gitignore</code> are deliberately reversed — every name in it is invented, and it is what makes the app demonstrable without anyone's bank data.</p>
+<p>Stage one writes bank exports and runs them through the real importer, so ids are genuine <code>hash(dedupeKey(...))</code> values; stage two attaches everything a CSV cannot carry — splits, confirmed codings, invoice matches, a transfer — keyed by those ids. It asserts each decision matches exactly one bank line, so a change to the invented transactions fails loudly rather than silently pinning a split to nothing.</p>
+<p><code>loadStartupFiles(folder, replace)</code> serves both the automatic <code>data/</code> load and the demo: the demo passes <code>replace</code> so it overwrites rather than filling gaps, and calls <code>wipe()</code> first, because a demo laid over a part-coded book would leave the old book's decisions attached to transactions that are gone.</p>
+<p><code>clearStore()</code> clears the object store rather than deleting known keys: a key added by a later version and forgotten there would survive a clear and reappear attached to a book that no longer exists.</p>
+<h3 id="the-launchers">The launchers</h3>
+<p><code>NZOSA.cmd</code> and <code>NZOSA.command</code> at the repo root exist so a non-technical user never types a command. They install on first run, always build, start the server <strong>detached with no window</strong>, wait for it to answer, and exit — so the console window closes and the app stays up.</p>
+<p><code>Stop NZOSA.cmd</code> / <code>Stop NZOSA.command</code> stop it, finding the process by the port it listens on rather than by a saved process id: a stale id after a crash points at nothing, or at whatever has since been given that number.</p>
+<p>Detaching costs the two things a visible window gave for free, so both are replaced. Errors go to <code>nzosa-log.txt</code> beside the app, because a hidden process has nowhere to print; and the launcher waits for the port before exiting, so a failure keeps its window open with the log in it rather than vanishing. The launcher also checks whether the app is already running <em>before</em> installing or building — without that, a second double-click started a second server that could not even write its log, because the first still held the file open.</p>
+<p>Two things about them are load-bearing:</p>
+<ul><li><strong><code>NZOSA.cmd</code> must be CRLF</strong>, and must not be renamed to anything starting with the word <code>Start</code>. <code>cmd /c "Start NZOSA.cmd"</code> parses <code>Start</code> as the START builtin and detaches the process, and LF-only line endings break <code>goto</code> and parenthesised blocks. <code>NZOSA.command</code> must stay LF: <code>/bin/sh</code> chokes on CR.</li><li><strong>A busy port never falls back to the next one.</strong> Browser storage is per origin, so a different port is a different database; moving silently would show someone an empty app and their work would look lost. <code>build.js</code> instead fetches the port, and if <code>&lt;title&gt;NZOSA&lt;/title&gt;</code> comes back it opens that copy and exits 0; otherwise it prints a plain-English message and exits 1.</li></ul>
+<p><code>tsconfig</code> runs with <code>exactOptionalPropertyTypes</code>, so <code>{ x: undefined }</code> is not assignable to <code>{ x?: string }</code>. Spread conditionally: <code>...(v !== undefined ? { x: v } : {})</code>.</p>
+<h2 id="2-money-and-dates">2. Money and dates</h2>
+<ul><li><strong>Money is integer minor units</strong> (<code>Cents</code>). Never floats. <code>parseAmount</code> handles the formats banks emit; <code>formatAmount</code> is the only way out.</li><li><strong>Dates are ISO strings</strong> (<code>YYYY-MM-DD</code>), compared lexically. Bank formats are ambiguous, so importers take a <code>dayFirst</code> option.</li><li>NZ financial years end 31 March. FY2026 is 1 Apr 2025 to 31 Mar 2026.</li></ul>
+<h2 id="3-data-model">3. Data model</h2>
+<p><code>StoredLedger</code> is the in-memory shape, identical between the CLI's <code>ledger.json</code> and the browser, so it round-trips.</p>
+<p><strong>It is not stored as one record.</strong> Chart, entities, assets, journals, invoices, allocations, invoice matches and tax extras each get their own IndexedDB key; everything else stays on a core record. Before that split, changing one account's type rewrote 2.3 MB to change 20 KB. <code>save()</code> writes everything, <code>savePart()</code> writes only what changed, and <code>load()</code> reassembles. Records written before the split still load, so nothing needed migrating.</p>
+<div class="scroll"><table><thead><tr><th>Field</th><th>What it is</th></tr></thead><tbody><tr><td><code>transactions</code></td><td>Imported bank rows, deduplicated</td></tr><tr><td><code>overrides</code></td><td>Human decisions, keyed by transaction id</td></tr><tr><td><code>splits</code></td><td>One bank line divided into parts</td></tr><tr><td><code>varianceNotes</code></td><td>Why a computed return differs from a filed one</td></tr><tr><td><code>chart</code></td><td>Chart of accounts, with entity and GST columns</td></tr><tr><td><code>entities</code></td><td>Entities, account assignments, bank assignments</td></tr><tr><td><code>assets</code></td><td>Fixed asset register</td></tr><tr><td><code>journals</code></td><td>General ledger, for the accrual basis</td></tr><tr><td><code>invoices</code>, <code>allocations</code>, <code>invoiceMatches</code></td><td>Invoice matching</td></tr><tr><td><code>taxExtras</code></td><td>Income entered by hand</td></tr><tr><td><code>filedReturns</code></td><td>Filed GST returns, for comparison</td></tr></tbody></table></div>
+<p>Two things live outside the ledger, under their own keys: the <strong>event log</strong> (<code>events</code>) and the <strong>user's name</strong> (<code>user</code>). Neither is part of an export — history belongs to the machine the work was done on.</p>
+<h3 id="transaction-identity">Transaction identity</h3>
+<p><code>id</code> is a hash of the transaction's own contents, not its position in a file. This is what makes an override durable: re-import the same statement, or a later overlapping one, and the decision lands on the same row.</p>
+<p>Anything keyed by transaction id inherits that property. Anything keyed by row number does not, and will silently drift.</p>
+<h2 id="4-invariants">4. Invariants</h2>
+<p>Break these and figures become wrong without anything failing.</p>
+<ol><li><strong>Splits must sum to the parent exactly.</strong> Enforced in the editor (save is disabled) and on load. A split that does not balance changes a GST return with no bank line changing.</li></ol>
+<ol><li><strong>Rules suggest; overrides decide.</strong> <code>confirmed</code> distinguishes a decision from a guess. Nothing may set <code>confirmed: true</code> on a user's behalf.</li></ol>
+<ol><li><strong>Overrides beat rules, always.</strong> <code>categorise</code> checks overrides first and returns immediately.</li></ol>
+<ol><li><strong>The GST comparison baseline is Box 8 − Box 12</strong>, never Box 15. Boxes 9 and 13 carry adjustments a bank-derived ledger cannot contain.</li></ol>
+<ol><li><strong>Cash and accrual must not be mixed in one figure.</strong> They answer different questions and are sourced differently.</li></ol>
+<ol><li><strong>One account, one name.</strong> See below.</li></ol>
+<ol><li><strong>Every journal sums to zero</strong>, and so does the ledger. <code>trialBalance</code> returns an <code>imbalance</code>; a non-zero answer is a posting bug, not a surprising figure.</li></ol>
+<ol><li><strong>The GST return reads tax tags, never an account balance.</strong> A line posted to the GST account with no tax type must reach no box. There is a test asserting the account balance and the return <em>differ</em>.</li></ol>
+<ol><li><strong>A sale is counted on one basis, never both.</strong> Each journal declares the basis its tax falls due on; <code>taxSummary</code> filters. Posting an invoice and its payment without this doubles the return.</li></ol>
+<ol><li><strong><code>before</code> is captured before the change.</strong> An event recorder that reads current state has already lost the thing it needs. This was written wrong once, in <code>matchToInvoice</code>.</li></ol>
+<h2 id="5-account-names-coding-names-ts-and-chart-codes-ts-read-these">5. Account names: <code>coding-names.ts</code> and <code>chart-codes.ts</code> — read these</h2>
+<p>An account is stored once in the chart and referred to everywhere else by a <em>label</em> built from its code and its name — <code>Advertising - 400</code>. That label is what is written into every override, every rule, every split part, the GST treatment and the entity assignment. Getting from a label back to a chart row is therefore the lookup this codebase does most, and the one it has got wrong most.</p>
+<p><strong>Take no first match. Rank.</strong> Accepting a raw label from another system leaves aliases behind: a bare <code>200</code> beside the canonical <code>NB Sales - 200</code>, both live, both carrying transactions. Code that reaches for "the code containing 200" and takes the first match gets whichever sorts first — the alias — and the account quietly becomes two accounts, splitting its own total.</p>
+<p>This bug was written four times before and after <code>coding-names.ts</code> existed: in the chart matcher, in the Xero matcher, in invoice matching, and in depreciation, which filed roasting equipment against <em>Office</em> Equipment because both names contain "equipment". <code>canonicalCodeFor</code> ranks candidates instead, preferring a real account name over a bare number, and has tests for the near-miss (<code>20</code> must not match <code>200</code>).</p>
+<p><strong>One label format.</strong> <code>accountLabel(code, name, housePrefixed)</code> builds them, name first. There were two: adding an account by hand in the app wrote <code>400 - Advertising</code> while every other path wrote <code>Advertising - 400</code>. Both name account 400, nothing matched them to each other, so the app <em>manufactured</em> the alias problem the paragraph above exists to survive. Name first because the trailing code is what <code>bareAccountName</code> strips to compare two spellings; a code at the front is not stripped and does not match.</p>
+<p><strong>One chart lookup.</strong> <code>chartTreatments(chart, rules, overrides)</code> returns every label the chart has an opinion about, and the app and the CLI both call it. Deliberately one function rather than one each: two implementations agree on the ordinary codes and part company on the awkward ones — <code>820 GST</code> is written number first, which a matcher built around three fixed shapes misses — and two answers to "what is this account's tax code" is two GST returns from one set of books.</p>
+<p>An account answers to <strong>every</strong> label whose account number matches it, not only its canonical one. Keying only the canonical name left aliases with no opinion from the chart, and no opinion means the fall-through assumption: standard-rated. An account marked <code>No GST</code> claiming GST whenever it was reached by its other name.</p>
+<p><strong>Renaming: <code>rename-account.ts</code>.</strong> Changing a code or a name changes the label, so an edit that touches only the chart row orphans every reference to it — with no error, just a return that quietly moved. <code>renameAccount</code> rewrites the chart, the overrides, the split parts, the rules, the code treatments and the entity key together, returns fresh objects, and never edits what it was given, so the caller saves it as one change. <code>renameProblem</code> refuses a rename before anything is written: no name, no code, a code that is not letters/numbers/hyphens, or a code another account already holds.</p>
+<p><strong>Codes are required</strong>, on adding and on editing, because the code is the only stable identity an account has: <code>accountEntityKey</code> is the code where there is one and <code>name:&lt;name&gt;</code> where there is not, so a codeless account loses its entity assignment the moment it is renamed. Bank accounts are the exception and carry none — their identity is the bank account number, and any code would be invented.</p>
+<p><strong>The starter chart: <code>starter-chart.ts</code>.</strong> A new ledger seeds the standard NZ small-company chart. It is held as CSV and parsed by <code>parseChartOfAccounts</code>, so it is not the one chart in the system that takes a private path into the app. <code>starterChart()</code> parses on every call: the caller owns and edits what it gets, and one shared array would let one set of books rename an account in another.</p>
+<h2 id="6-posting-posting-ts">6. Posting: <code>posting.ts</code></h2>
+<p>Coded bank lines, invoices, bills and depreciation all post as balanced <code>PostedLine[]</code>, debit positive and credit negative — one convention, so a journal balances by summing rather than by comparing two columns.</p>
+<div class="scroll"><table><thead><tr><th>Function</th><th>Produces</th></tr></thead><tbody><tr><td><code>postTransaction</code></td><td>Bank line → supply, tax, bank. Splits post every part against one bank line</td></tr><tr><td><code>postInvoice</code></td><td>Dr receivable / Cr income / Cr GST — the entry no statement can make</td></tr><tr><td><code>postDepreciation</code></td><td>Dr depreciation / Cr accumulated — no money moves at all</td></tr><tr><td><code>trialBalance</code></td><td>Per-account balances, plus the imbalance proof</td></tr><tr><td><code>taxSummary</code></td><td>The return, read from tags, filtered by basis</td></tr></tbody></table></div>
+<p>Postings are <strong>derived, never stored</strong>. Recomputed from the transaction and its coding, so a corrected rule corrects the journal.</p>
+<p><code>postTransaction(…, { settles })</code> is the correctness lynchpin: a receipt matched to an invoice clears the receivable instead of booking the sale again. Without it, posting invoices overstated income by a third on real data.</p>
+<p>Two cases worth knowing:</p>
+<ul><li><strong>Imports</strong>: the line <em>is</em> the tax, so there is no supply line beside it.</li><li><strong>Half-deductible</strong>: a return claims a share of the <em>gross</em> and takes 3/23 of that, not a share of the tax. The two differ by a cent often enough to matter.</li></ul>
+<h2 id="7-the-event-log-events-ts">7. The event log: <code>events.ts</code></h2>
+<p>State stays the source of truth; the log sits beside it. Each event carries <code>before</code> and <code>after</code>, which is what makes reversal possible — reversal is applying <code>before</code> back over the target.</p>
+<ul><li>Events carry <strong>the thing that changed, not the collection it lives in</strong>. A chart event holding the whole chart cost 41 KB and, worse, undoing one account reverted every other account edited since.</li><li><code>canReverse</code> refuses when a later event touched the same target.</li><li><code>who</code> is <strong>attribution, not authentication</strong>, and the UI says so. Do not let that wording soften.</li><li>Capped at 5,000, oldest falling off.</li></ul>
+<h2 id="8-gst-engine">8. GST engine</h2>
+<p><code>gstResolver</code> composes, in precedence order:</p>
+<ol><li>Override on the transaction</li><li>Code treatment (<code>codeTreatments</code>, keyed by account name)</li><li>GST rules (keyword and account patterns)</li><li>Direction of the amount</li></ol>
+<p><code>GstTreatment</code> is <code>standard | zero-rated | exempt | out-of-scope</code>; <code>GstSide</code> is <code>sales | purchases | imports | none</code>.</p>
+<p><code>imports</code> is the case people get wrong: the line <strong>is</strong> the tax, so it is claimed whole in Box 13 rather than having 3/23 taken out of it.</p>
+<p><code>deductiblePercent</code> on a treatment halves entertainment per line, not by adjusting a total afterwards.</p>
+<h3 id="payments-basis-and-receivables">Payments basis and receivables</h3>
+<p>Xero carries no tax rate on Accounts Receivable, because on an accrual basis the GST arose when the invoice was raised. <strong>These returns are filed on a payments basis</strong>, so a receipt settling an invoice is a taxable supply when it lands.</p>
+<p>Coding such receipts <code>out-of-scope</code> to "match Xero" silently drops that GST — it cost one period $1,005.69 before it was caught. Anything coded to a receivables control account needs <code>standard</code>, with the side following the direction of the money.</p>
+<h2 id="9-matching-engines">9. Matching engines</h2>
+<p>Three, all following the same principle: <strong>rank evidence, never take the first match.</strong></p>
+<div class="scroll"><table><thead><tr><th>Engine</th><th>File</th><th>Matches</th></tr></thead><tbody><tr><td>Coding check</td><td><code>coding-check.ts</code></td><td>Our coding against another system's</td></tr><tr><td>Invoice matching</td><td><code>invoice-matching.ts</code></td><td>Receipts to the invoices they settle</td></tr><tr><td>Account names</td><td><code>coding-names.ts</code></td><td>One system's account label to ours</td></tr></tbody></table></div>
+<p><code>matchInvoices</code> lives in core so the CLI and the browser reach the same answer from the same evidence. Accrual reporting depends on it: an unmatched invoice means its payment posts as a second sale.</p>
+<p><code>compareCodings</code> deliberately excludes Accounts Payable and Receivable as "structural": letting a payment match a control-account line pairs it with the wrong side of a posting. Uncoded transactions need a placeholder code to be matched at all, or they are set aside and never paired.</p>
+<p><code>inferAccountMapping</code> pairs bank accounts between systems from the payments themselves, because the two name nothing alike — a card called <code>Kea Coffee Tradin</code> here is <code>BNZ Visa - Business Card</code> there. An account with <strong>no</strong> inferred pairing is excluded rather than left unconstrained once a mapping exists, otherwise a transfer marries an unrelated loan of the same amount.</p>
+<h3 id="invoices-written-by-hand">Invoices written by hand</h3>
+<p><code>renderInvoiceEditor</code> in <code>main.ts</code> writes to <code>ledger.invoices</code> (its own store part) under the <code>invoice</code> event kind, which carries one invoice so undoing an edit does not revert every other invoice touched since -- the same rule as <code>chart</code>.</p>
+<p>Two things it is careful about: the account is stored as the bare chart code (<code>200</code>), the way an imported invoice holds it, rather than the picker's label; and <code>outstanding</code> is derived as <code>total - paid</code> rather than typed, because <code>matchInvoices</code> reads it.</p>
+<p>Every invoice reaches exactly one bucket, and a test pins that. One with <code>paid === 0</code> belongs in <code>unmatched</code> -- it is awaiting payment, or was just written by hand. Skipping those drops them from every bucket, which makes them invisible rather than outstanding.</p>
+<h3 id="transfers">Transfers</h3>
+<p><code>postTransfer</code> in <code>posting.ts</code> emits one journal for a pair of bank lines: debit the receiving bank, credit the sending one, <code>taxType: "NONE"</code>, source <code>transfer</code>, dated the <strong>later</strong> of the two legs. Its <code>transactionId</code> sorts the two ids, so the same pair yields the same journal whichever leg you start from.</p>
+<p><code>ledger.transfers</code> is <code>Record&lt;txId, partnerTxId&gt;</code>, written for <strong>both</strong> legs so either finds its partner in one lookup and neither can point at a leg that does not point back. It is its own store part, and its own event kind whose reversal deletes both keys — half a transfer is a balance that means nothing.</p>
+<p>The trap is double counting. <code>journalsFor</code> builds the transfer journals from the outgoing legs only (<code>leg.amount &gt;= 0</code> is skipped, since both halves are recorded) and collects both ids in <code>postedAsTransfer</code>, which the bank <code>flatMap</code> then skips. Linking one pair moves the FY2027 totals from 438 journals / 987 lines to 437 / 985: one journal of two lines replacing two of two.</p>
+<p>Candidates come from <code>transferCandidates</code> in <code>reconcile.ts</code> — never applied automatically, for the same reason no rule confirms a coding.</p>
+<h2 id="10-reporting">10. Reporting</h2>
+<p><code>profitAndLoss</code> (cash) and <code>accrualProfitAndLoss</code> (ledger) return the same <code>ProfitAndLoss</code> shape, so the UI renders either.</p>
+<ul><li>Cash removes GST <strong>line by line</strong> from each transaction's own treatment, never by dividing a total.</li><li>Accrual reads journal amounts, which are already GST-exclusive; it flips the ledger's sign once, since a ledger credits income.</li><li><strong><code>unclassified</code> is listed, never dropped.</strong> Anything whose account has no type — transfers, drawings, loan principal — appears under its own heading. A profit figure that quietly excludes things cannot be checked.</li></ul>
+<p>An account's <strong>type</strong> (Revenue, Direct Costs, Overhead…) decides income vs expense vs neither. Accounts that exist only as a coding rule have no type until one is set, and get promoted into the chart when it is.</p>
+<h2 id="11-files-it-reads">11. Files it reads</h2>
+<p><strong>Everything goes through one reader.</strong> <code>readExport</code> in <code>packages/cli</code> and <code>asCsvText</code> in the app both sniff the file and hand every parser the same CSV text. There were four private copies of "read a file that might not be UTF-8", and the three that did not also handle a workbook were the three that could not read what Xero actually gives you.</p>
+<p>Two things that reader settles:</p>
+<ul><li><strong>A spreadsheet is a zip, and every zip starts <code>PK</code>.</strong> Sniffed rather than taken from the extension: a workbook saved as <code>.csv</code> is still a workbook. A <code>.xlsx</code> read as text finds no header row, and the parser then reports "required columns missing" — of a file whose columns are perfectly fine.</li><li><strong>Bank and Xero exports are Windows-1252, not UTF-8.</strong> Decode UTF-8 first and fall back when the result contains <code>U+FFFD</code>. This is not cosmetic: the payee is one of the fields a transaction's id is hashed from, so a mangled one gives the same row a different id in the CLI from the app, and importing one file in both duplicates every accented row rather than recognising it.</li></ul>
+<p><strong>Dates in a workbook are numbers.</strong> A cell holding <code>45397</code> is 15 April 2024, and the only thing that says so is the number format on it. <code>xlsx.ts</code> reads <code>xl/styles.xml</code> and treats a cell as a date when its format is one of the built-in date formats (14–17, 22) or a custom one whose pattern has a year, month or day outside the parts it prints literally. Serials below 61 are left as numbers: those are the days around Excel's imaginary 29 February 1900, they cannot come off a bank export, and a date silently one day out is worse than a number obviously wrong.</p>
+<div class="scroll"><table><thead><tr><th>File</th><th>Parser</th></tr></thead><tbody><tr><td>Bank CSV (BNZ ×3, ANZ loan, Wise)</td><td><code>importers/</code></td></tr><tr><td>Account Transactions CSV or <code>.xlsx</code></td><td><code>xero.ts</code>, and <code>coding-check.ts</code> for the coding comparison</td></tr><tr><td>Journal Report CSV or <code>.xlsx</code></td><td><code>journals.ts</code></td></tr><tr><td>Chart of accounts CSV</td><td><code>chart.ts</code></td></tr><tr><td>Fixed assets CSV</td><td><code>assets.ts</code></td></tr><tr><td>Invoices, allocations CSV or <code>.xlsx</code></td><td><code>invoices.ts</code></td></tr><tr><td>Filed GST returns <code>.xlsx</code></td><td><code>filed-returns.ts</code></td></tr><tr><td>Daily balances CSV</td><td><code>bank-balances.ts</code></td></tr></tbody></table></div>
+<p><strong>Account Transactions comes in two layouts.</strong> Run for one account it is sectioned, each section introduced by a row holding only the account name. Run across the ledger — which is how you would export it to check a whole year — it is flat, and every row names its own account in a column. Reading only the sectioned one meant such a file produced no rows at all and an empty reconciliation that looked like agreement.</p>
+<p>The account <em>name</em> decides what is a bank account, because the <code>Account Type</code> column holds the broad class — Asset, Expense, Liability — and never a bank flag. The class still rules things out: "Bank Fees" is named like a bank account and is an Expense.</p>
+<h3 id="the-startup-folder">The startup folder</h3>
+<p><code>apps/web/public/data/</code> holds what the app loads for itself: <code>ledger.json</code>, <code>rules.json</code>, <code>chart-of-accounts.csv</code>, <code>invoices.csv</code>, <code>allocations.csv</code>, <code>assets.csv</code>, <code>journals.csv</code>. Each loads <strong>only when the browser holds nothing of that kind</strong>, so files seed an empty browser and never overwrite work. A missing file is a setup step not done, not an error.</p>
+<p>Nothing writes back. A page cannot write to disk; <code>Export ledger</code>, <code>Save chart</code> and <code>Download JSON</code> produce files you copy in yourself. The folder is a seed, not a sync, and it goes stale the moment anything changes.</p>
+<p>The chart file is the app's own record: the usual chart-of-accounts columns, with <code>Entity</code>, <code>GST Treatment</code>, <code>Entity Owners</code>, <code>Entity Kind</code> and <code>Ledger Account</code> appended. Appended, not woven in, so the file still imports into Xero and unknown columns are ignored rather than fatal. Bank accounts are written as their own rows, so which entities each serves survives a cleared browser.</p>
+<h2 id="12-bank-statement-formats">12. Bank statement formats</h2>
+<p>| Importer               | Source                                                             | | ---------------------- | ------------------------------------------------------------------ | | <code>bnz-transaction-list</code> | BNZ "Transaction list" — every account at once, in blocks           | | <code>bnz-account</code>          | BNZ transaction account export (the "Payment"/"Spending" download)  | | <code>bnz-card</code>             | BNZ credit card export (Advantage Visa Platinum / Classic)          | | <code>anz-loan</code>             | ANZ home-loan statement export                                      | | <code>wise</code>                 | Wise multi-currency balance statement                               |</p>
+<p>The BNZ transaction list is the one to prefer: it covers every account in a single file, each block naming its own account, and its thirteen columns are the richest BNZ produces.</p>
+<p>The format is detected from the column names, so you do not have to say which file is which. Files with an export preamble above the header row are handled — the ANZ loan export puts twelve lines of account metadata first.</p>
+<p>Adding a bank is one file: see section 16.</p>
+<h2 id="13-deduplication">13. Deduplication</h2>
+<p><strong>Nothing is ever deleted automatically.</strong> Every row is classified, and anything uncertain is surfaced for you to decide.</p>
+<p>| Status      | Meaning                                                                                              | | ----------- | ---------------------------------------------------------------------------------------------------- | | <code>unique</code>    | Not seen before. Added to the ledger.                                                                  | | <code>duplicate</code> | Identical on every field the bank gave us, including the account. Left out — re-importing is safe.     | | <code>review</code>    | Looks like a duplicate but is not certain. <strong>Kept</strong>, and flagged, with a reason.                       |</p>
+<p>A row is flagged <code>review</code> rather than dropped when:</p>
+<ul><li>It matches on date, amount and payee but the bank's <strong>serial or reference differs</strong> — usually the same transaction exported twice, but not always.</li><li>It matches on amount and payee <strong>a day or two apart</strong> on a feed that carries no serial at all (cards, loans), where a genuine repeat and a re-dated re-export are indistinguishable.</li></ul>
+<p><strong>Repeats inside one export are kept.</strong> A school taking three $20 membership payments on one day produces three byte-identical rows, and a card feed has no serial to tell them apart. They are numbered 1, 2, 3, which makes two things true at once: all three survive, and re-importing that file matches them one-for-one instead of adding three more. A bank export should not list one transaction twice, so a repeat inside a single file is treated as real.</p>
+<p>For the case numbering cannot see — the same transaction legitimately arriving in two separate exports — add its key to <code>legitimateDuplicates</code> in <code>ledger.json</code>, or click <strong>Keep both</strong> in the browser. That decision persists.</p>
+<h2 id="14-corrections-beat-rules">14. Corrections beat rules</h2>
+<p>Coding and GST rules are a suggestion engine. They will be wrong, and when they are the correction has to stick:</p>
+<pre><code>node packages/cli/dist/cli.js override a1b2c3 --gst out-of-scope --note "overseas supplier, no NZ GST"</code></pre>
+<pre><code>node packages/cli/dist/cli.js override a1b2c3 --code "Rimu Lane Expense" --note "paid on the wrong card"</code></pre>
+<p>Overrides are checked before any rule and always win. They are keyed by the derived transaction id, so a correction survives re-importing the same statement, or a later overlapping one. <code>--note</code> is <strong>required</strong> — an anonymous correction is indistinguishable from a mistake six months later, and this is exactly the kind of decision that gets questioned at year end. <code>--list</code> shows every correction recorded; <code>--clear</code> removes one.</p>
+<p>Correcting a coding does not silently change a GST treatment you did not touch, and vice versa.</p>
+<p>Getting this wrong in either direction is expensive — a false duplicate silently deletes a real expense from a tax return, and a missed one double-counts income — which is why the default is to keep and ask.</p>
+<h2 id="15-proving-the-import-is-complete">15. Proving the import is complete</h2>
+<p>Deduplication that is nearly right is worse than useless, so there is a way to check it against something outside the bank feeds:</p>
+<pre><code>node packages/cli/dist/cli.js balances --year 2026</code></pre>
+<p><code>--year 2026</code> means the financial year ending 31 March 2026 — the NZ/AU convention, configurable with <code>--fy-end MM-DD</code> for a 5 April or 31 December year end. It prints per-account totals, and reconciles them against any known balances in the ledger:</p>
+<pre><code>"balances": {
+  "02-1100-0022001-001": {
+    "opening": { "date": "2025-03-31", "amount": "356.00" },
+    "closing": { "date": "2026-03-31", "amount": "13591.00" },
+    "note": "FY2026 financials, balance sheet"
+  }
+}</code></pre>
+<p><strong>Opening + the sum of every transaction must equal closing.</strong> If it does, then across that period nothing was missed, double-counted or mis-signed — a complete audit of the import stage against an independent source, needing no categories at all. If it does not, the variance is exactly what is wrong. The command exits non-zero on a mismatch, so it works in CI.</p>
+<p>Where the two sides date a transaction differently, record it rather than letting it look like a discrepancy:</p>
+<pre><code>"cutOff": [
+  {
+    "date": "2025-04-01",
+    "amount": "172.08",
+    "note": "transfer the bank posts 1 Apr; the ledger dates it 31 Mar, so it is already in the opening balance"
+  }
+]</code></pre>
+<p>A transfer between your own accounts can leave one on 31 March and arrive at the other on 1 April. The bank reports each leg on the day it touched that account; an accounting ledger may treat the transfer as complete at balance date and put both legs in the earlier year. Neither is wrong, but the two disagree by the amount in transit, and without somewhere to record that, a correct set of books looks like an error. A <code>note</code> is required, so an adjustment can never be a silent fudge.</p>
+<p>Opening and closing come from a bank statement, or from a set of prepared financials. Note that financial statements are usually rounded to whole dollars; a variance under a dollar is reported as <code>ok</code> but still shown, because a genuine one-cent error and a rounding artefact look identical.</p>
+<h2 id="16-adding-an-importer">16. Adding an importer</h2>
+<p>One file in <code>packages/core/src/importers/</code>, exporting an object with <code>detect</code> and <code>parse</code>. <code>detect</code> scores the file by column names — required columns must all be present, distinctive ones raise confidence and break ties between banks that share a common core. <code>parse</code> maps rows to <code>Transaction</code>.</p>
+<p>Two rules that matter:</p>
+<ul><li><strong>Never drop a row silently.</strong> A row you cannot read goes into <code>problems</code> with its line number and a reason. A skipped row and a missing transaction must not look the same to the user.</li><li><strong>Report the physical line number</strong>, which is why parsed rows carry their own <code>line</code> rather than relying on an array index — blank rows are dropped and quoted fields can span lines.</li></ul>
+<p>Add it to the array in <code>importers/index.ts</code>, add a synthetic sample to <code>samples/</code>, and add tests.</p>
+<pre><code>npm test</code></pre>
+<hr>
+<h2 id="17-traps">17. Traps</h2>
+<p><strong>Two implementations of one behaviour will drift, and the drift is silent.</strong> This is the trap that produced most of the bugs found in a single week of testing: the chart lookup, four readers for "a file that might not be UTF-8", two <code>loadRules</code>, two label formats, four copies of the <code>RuleFile</code> interface. None of them announced itself. They showed up as the app and the command line answering the same question differently, which on a tax return is the worst possible kind of disagreement. If a behaviour is needed in both halves, it goes in <code>packages/core</code> and both call it.</p>
+<p><strong>Dead code that validates is worse than no validation.</strong> There were two <code>loadRules</code>: one that checked the file held rules and said so when it did not — "failing loudly rather than silently coding nothing", its own comment said — and a bare <code>JSON.parse</code> that was the one actually called. So <code>--rules</code> pointed at any file that was not a rule set produced no error: nothing matched, everything fell back to standard-rated, and a full GST101A printed with the same confidence as a correct one. Check what is <em>called</em>, not what exists.</p>
+<p><strong>An empty list is not a filter.</strong> <code>--accounts</code> defaults to <code>[]</code>. <code>reconcile</code> read that as "none of them" rather than "all of them", so without the flag our side of the comparison was empty and it reported the entire Xero export as a difference — a report that reads as catastrophic disagreement and is in fact no comparison at all. Every other command here treats an empty list as everything.</p>
+<p><strong>Read state before anything writes it back.</strong> <code>record</code> appends to <code>state.events</code> and saves the lot, so anything recording before the event log is loaded saves a log of one and loses what was there. The entity setup at boot was one changed ledger away from doing exactly that.</p>
+<p><strong>A test fixture short of a required field reports faults that are its own.</strong> Three "bugs" in the folder-ledger work were a fixture missing <code>source</code>, <code>extras</code>, <code>otherPartyAccount</code> and <code>occurrence</code>. Build fixtures from the full required set, or a real one.</p>
+<p><strong>Heredocs mangle escapes.</strong> <code>\b</code> in a shell heredoc becomes a literal backspace (0x08) and <code>\0</code> becomes a NUL. Both produce source that compiles, passes typecheck, and silently misbehaves — a regex that matches nothing, an xlsx reader returning zero rows. Two files reached git as <em>binary</em> because of NUL separators. Python is not a way out: <code>"\b"</code> in a non-raw Python string is also a backspace. Build the character with <code>chr(92)</code> when it matters, and scan for control characters after any scripted edit:</p>
+<pre><code>python -c "import io,os
+for r,d,f in os.walk('.'):
+    d[:]=[x for x in d if x not in ('node_modules','.git','dist')]
+    for n in f:
+        if n.endswith(('.ts','.js','.json','.css','.html')):
+            p=os.path.join(r,n); b=io.open(p,'rb').read()
+            if any(c&lt;9 or (10&lt;c&lt;13) or (13&lt;c&lt;32) for c in b): print(p)"</code></pre>
+<p><strong><code>--ours</code> during a rebase means the upstream</strong>, not your commit. It dropped a 347-line README for a 2-line placeholder.</p>
+<p><strong>Assert every scripted anchor.</strong> An unchecked <code>.replace()</code> that matches nothing reports success and changes nothing.</p>
+<p><strong>Prove a test fails without the fix.</strong> Two of this week's fixes were checked by taking the fix back out and watching the test go red. A test written after the fact, against the fixed code, passes whether or not the code is right.</p>
+<p><strong><code>render()</code> only redraws the import page.</strong> Page renderers must be called by name; <code>showPage(state.page)</code> redraws whichever page is actually showing. A fix that redraws a hidden page looks exactly like a feature that does nothing.</p>
+<p><strong>A block moved to another page must not keep calling its old page's renderer.</strong> The rule proposals live on the Coding reconciliation page; if <code>acceptProposals</code> ended with <code>renderSetup()</code> it would redraw a page nobody is looking at, leaving the proposals on screen as though the click had missed -- and then showing them accepted the moment you navigate away and back. That is the worst shape this bug takes: it looks like nothing happened, and then like it happened twice. Anything a movable block calls has to be page-agnostic: <code>showPage(state.page)</code>, never a renderer by name.</p>
+<p><strong>IndexedDB is per-browser.</strong> The dev preview and a user's Chrome hold separate copies. A ledger seeded once is never re-seeded, so a stale browser will happily show figures from before every correction.</p>
+<p><strong>Event handlers must read live state</strong>, not the state captured when the row was drawn. Two changes before a redraw otherwise start from the same snapshot and the second silently undoes the first.</p>
+<p><strong>Never take the first match.</strong> Rank. See §5, where this is written out in full along with the four times it was got wrong.</p>
+<p><strong>Do not re-run a scripted edit.</strong> These scripts are not idempotent; running one twice inserts everything twice, and it typechecks.</p>
+<p><strong>No raw control characters in source.</strong> Where one is needed -- as a key separator, say -- write the escape (<code>\u0000</code>, <code>\u0001</code>) rather than the byte. They are identical at runtime and only one of them is visible in a diff, in a review, or to the scanner above. <code>posting.ts</code> carried a real 0x01 for months: deliberate, working, and indistinguishable from the mangling accident.</p>
+<h2 id="18-privacy">18. Privacy</h2>
+<p><code>.gitignore</code> is deny-by-default: ledgers, bank exports, accountant documents and working spreadsheets are all excluded, and <code>data/</code> holds anything real. <code>samples/*.csv</code> are synthetic — <code>SAMPLE &amp; CO</code>, <code>12 Sample Street</code>, invented account numbers — and are allowed by an explicit exception.</p>
+<p>That covers whole folders, which is the part that matters and not the part that fails. What fails is one string at a time: a payee copied into a test to make it realistic, a real IRD number in a fixture, an account description naming the client's actual trade carried into a starter chart. Three separate leaks into tracked files have happened by exactly that route -- and a fourth was this paragraph, which first quoted the offending description in full.</p>
+<pre><code>node tools/privacy-audit.mjs ledgers/my-books</code></pre>
+<p>It takes every name, reference and account number out of a real ledger and looks for them in the files git tracks <strong>or would track on the next <code>git add -A</code></strong> — <code>--cached --others --exclude-standard</code>. <code>git ls-files</code> alone is blind to precisely the file that leaks, because a brand new one is not tracked yet, so it is not scanned, so the audit passes, so it gets committed, and only then can the audit see it: one commit too late. That is not hypothetical.</p>
+<p>Two things about running it:</p>
+<ul><li><strong>It exits non-zero on a finding.</strong> Do not pipe it through <code>head</code> or <code>tail</code> without checking the status — masking that exit code is how one of the leaks got through a run of this very tool.</li><li><strong>A shared vocabulary is not a leak.</strong> "Inland Revenue", "Bank Fee", "provisional tax", a well-known merchant — those go in <code>GENERIC</code> in the script. A report full of harmless matches is a report nobody reads to the end, which is the only way this tool fails.</li></ul>
+<p>Chart account names are deliberately not scanned: a chart is shared vocabulary, and scanning it reports forty standard names and buries the one line that matters. What identifies somebody is who they paid.</p>
+<hr>
+<h2 id="19-running-it-and-deploying-it">19. Running it, and deploying it</h2>
+<h3 id="loading-files-automatically">Loading files automatically</h3>
+<p>The app reads <code>apps/web/public/data/</code> on startup, when the browser holds nothing of that kind yet: <code>ledger.json</code>, <code>rules.json</code>, <code>chart-of-accounts.csv</code>, <code>invoices.csv</code>, <code>allocations.csv</code>, <code>assets.csv</code>, <code>journals.csv</code>. Every one is optional; a missing file is a setup step not done, not an error.</p>
+<p>It is a <strong>seed, not a sync</strong>. A page cannot write to disk, so changes never flow back — use <em>Export ledger</em> and copy the file in yourself. The folder is gitignored, so real data never reaches the repository.</p>
+<h3 id="deploying-your-own-copy">Deploying your own copy</h3>
+<pre><code>npm run build --workspace @nzosa/web</code></pre>
+<p>Upload <code>apps/web/dist/</code> to any static host — GitHub Pages, Netlify, Cloudflare Pages, or plain shared hosting. There is no backend to run.</p>
+<h3 id="running-a-second-copy-side-by-side">Running a second copy side by side</h3>
+<pre><code>npm run dev --workspace @nzosa/web -- --port 3211</code></pre>
+<p>Browser storage is per origin, so another port is a completely separate database. That is how to try something out, or run the <a href="docs/testing-plan.md">testing plan</a>, without touching real work.</p>
+<h3 id="command-line">Command line</h3>
+<pre><code>node packages/cli/dist/cli.js import samples/*.csv</code></pre>
+<pre><code>node packages/cli/dist/cli.js detect statements/july.csv</code></pre>
+<p><code>import</code> writes <code>ledger.json</code> in the current directory. <code>--dry-run</code> reports what would happen without writing. The browser app reads and writes the same file format, so you can move between the two.</p>
+<h3 id="what-a-static-deployment-does-not-have">What a static deployment does not have</h3>
+<p>A static host serves the files and nothing else, so <code>/api/status</code> answers 404, <code>loadFromFolder</code> returns null, and <code>backend</code> stays <code>"browser"</code>. Every consequence follows from that one fact:</p>
+<ul><li><strong>Each visitor's books live in their own browser</strong>, in IndexedDB under that origin. There is no shared ledger, and nothing is uploaded — the host never sees a figure.</li><li><strong>They are not durable.</strong> Clearing site data deletes them; a private window keeps nothing; the browser may evict them under storage pressure unless <code>requestPersistence()</code> has been granted.</li><li><strong>The folder-only features are absent</strong>: switching ledgers, archives, restoring an archive, and the per-part file writes. <code>writesToFolder()</code> is false and the app adjusts what it offers accordingly.</li></ul>
+<p>That makes a static deployment right for a demo or for somebody to try, and wrong for books anybody depends on. Real books want the launcher, which runs the small server that owns the folder.</p>
+      <p class="foot">
+        NZOSA &mdash; New Zealand open-source accounting. Free software under an
+        MIT licence, provided as is and without warranty of any kind.
+        Built from <code>developer-guide.md</code>.
+      </p>
+    </main>
+  </div>
+</body>
+</html>

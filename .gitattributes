@@ -1,0 +1,12 @@
+# Normalise line endings in the repository, whatever the checkout platform.
+* text=auto eol=lf
+
+# Bank exports are read byte for byte by the importers and their fixtures are
+# compared exactly, so they must not be rewritten on checkout.
+*.csv -text
+
+# The Windows launcher must reach a checkout with CRLF: cmd mis-parses `goto`
+# and parenthesised blocks in an LF-only batch file. Its shell counterpart must
+# stay LF, because /bin/sh chokes on the CR.
+*.cmd text eol=crlf
+*.command text eol=lf

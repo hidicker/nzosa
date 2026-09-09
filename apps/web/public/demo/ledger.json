@@ -1,0 +1,3477 @@
+{
+  "version": 1,
+  "legitimateDuplicates": [],
+  "transactions": [
+    {
+      "id": "814cd938bdf84e22",
+      "occurrence": 1,
+      "date": "2025-04-03",
+      "amount": 126500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "000",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1001",
+      "otherParty": "Harbour Cafe",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 3
+      }
+    },
+    {
+      "id": "5b365cd882ac3291",
+      "occurrence": 1,
+      "date": "2025-04-08",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "001",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 4
+      }
+    },
+    {
+      "id": "b7050ca9a856f4dc",
+      "occurrence": 1,
+      "date": "2025-04-11",
+      "amount": -18400,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "002",
+      "particulars": "Packaging",
+      "code": "",
+      "reference": "",
+      "otherParty": "Pack It Ltd",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-3322",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 5
+      }
+    },
+    {
+      "id": "ee4be5bdef860883",
+      "occurrence": 1,
+      "date": "2025-04-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "003",
+      "particulars": "Rent April",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 6
+      }
+    },
+    {
+      "id": "8fb03a32bdd9030d",
+      "occurrence": 1,
+      "date": "2025-04-22",
+      "amount": 253000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "004",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1002",
+      "otherParty": "Kea Cafe Group",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 7
+      }
+    },
+    {
+      "id": "e619ef3c7656e448",
+      "occurrence": 1,
+      "date": "2025-04-29",
+      "amount": -21850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "005",
+      "particulars": "Power",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trustpower",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7766",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 8
+      }
+    },
+    {
+      "id": "e21e55efc5495429",
+      "occurrence": 1,
+      "date": "2025-05-06",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "006",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 9
+      }
+    },
+    {
+      "id": "73e453763e405905",
+      "occurrence": 1,
+      "date": "2025-05-09",
+      "amount": 97750,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "007",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1003",
+      "otherParty": "The Roastery Bar",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1177",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 10
+      }
+    },
+    {
+      "id": "c645c56b0868ea6e",
+      "occurrence": 1,
+      "date": "2025-05-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "008",
+      "particulars": "Rent May",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 11
+      }
+    },
+    {
+      "id": "c0d4eddb4ef3faef",
+      "occurrence": 1,
+      "date": "2025-05-20",
+      "amount": -34500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "009",
+      "particulars": "Courier",
+      "code": "",
+      "reference": "",
+      "otherParty": "NZ Post",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-6655",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 12
+      }
+    },
+    {
+      "id": "74a8a6603f6e42b0",
+      "occurrence": 1,
+      "date": "2025-05-28",
+      "amount": -21850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "010",
+      "particulars": "Power",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trustpower",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7766",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 13
+      }
+    },
+    {
+      "id": "32789f6247c3db67",
+      "occurrence": 1,
+      "date": "2025-06-04",
+      "amount": 184000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "011",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1004",
+      "otherParty": "Harbour Cafe",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 14
+      }
+    },
+    {
+      "id": "a3e9d7262c2121f6",
+      "occurrence": 1,
+      "date": "2025-06-10",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "012",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 15
+      }
+    },
+    {
+      "id": "91ff8c7c3b957cf1",
+      "occurrence": 1,
+      "date": "2025-06-16",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "013",
+      "particulars": "Rent June",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 16
+      }
+    },
+    {
+      "id": "c66825e8d1dc9e02",
+      "occurrence": 1,
+      "date": "2025-06-24",
+      "amount": -28750,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "014",
+      "particulars": "Accounting",
+      "code": "",
+      "reference": "",
+      "otherParty": "Fern Advisory",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5533",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 17
+      }
+    },
+    {
+      "id": "4f33ad8bf9d819a6",
+      "occurrence": 1,
+      "date": "2025-07-02",
+      "amount": 310500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "015",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1005",
+      "otherParty": "Kea Cafe Group",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 18
+      }
+    },
+    {
+      "id": "6c9fb1cedbd8d30e",
+      "occurrence": 1,
+      "date": "2025-07-08",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "016",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 19
+      }
+    },
+    {
+      "id": "16c41356e925c3a3",
+      "occurrence": 1,
+      "date": "2025-07-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "017",
+      "particulars": "Rent July",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 20
+      }
+    },
+    {
+      "id": "b22dde6a7c7aa4c1",
+      "occurrence": 1,
+      "date": "2025-07-21",
+      "amount": -149500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "018",
+      "particulars": "Roaster service",
+      "code": "",
+      "reference": "",
+      "otherParty": "Southern Machinery",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-2244",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 21
+      }
+    },
+    {
+      "id": "786205a1e4a09d7a",
+      "occurrence": 1,
+      "date": "2025-07-30",
+      "amount": -21850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "019",
+      "particulars": "Power",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trustpower",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7766",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 22
+      }
+    },
+    {
+      "id": "cc5ae1112136e560",
+      "occurrence": 1,
+      "date": "2025-08-05",
+      "amount": 126500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "020",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1006",
+      "otherParty": "The Roastery Bar",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1177",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 23
+      }
+    },
+    {
+      "id": "ac36298de9521a84",
+      "occurrence": 1,
+      "date": "2025-08-12",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "021",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 24
+      }
+    },
+    {
+      "id": "95989f4073b02b0b",
+      "occurrence": 1,
+      "date": "2025-08-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "022",
+      "particulars": "Rent August",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 25
+      }
+    },
+    {
+      "id": "6e52ea6a13d8484a",
+      "occurrence": 1,
+      "date": "2025-08-26",
+      "amount": -40250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "023",
+      "particulars": "Insurance",
+      "code": "",
+      "reference": "",
+      "otherParty": "Tasman Insurance",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-4488",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 26
+      }
+    },
+    {
+      "id": "957f85211f95bbf1",
+      "occurrence": 1,
+      "date": "2025-09-03",
+      "amount": 218500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "024",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1007",
+      "otherParty": "Harbour Cafe",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 27
+      }
+    },
+    {
+      "id": "351721f343fd10bd",
+      "occurrence": 1,
+      "date": "2025-09-09",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "025",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 28
+      }
+    },
+    {
+      "id": "11d2c8d706cf5634",
+      "occurrence": 1,
+      "date": "2025-09-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "026",
+      "particulars": "Rent September",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 29
+      }
+    },
+    {
+      "id": "82a5ade33dd57147",
+      "occurrence": 1,
+      "date": "2025-09-23",
+      "amount": -69000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "027",
+      "particulars": "Market stall fees",
+      "code": "",
+      "reference": "",
+      "otherParty": "Nelson Markets",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-3399",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 30
+      }
+    },
+    {
+      "id": "35dc0a96dc5c51a8",
+      "occurrence": 1,
+      "date": "2025-10-01",
+      "amount": 149500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "028",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1008",
+      "otherParty": "Kea Cafe Group",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 31
+      }
+    },
+    {
+      "id": "8c19954644f642a5",
+      "occurrence": 1,
+      "date": "2025-10-07",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "029",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 32
+      }
+    },
+    {
+      "id": "964469bbcbe91d0c",
+      "occurrence": 1,
+      "date": "2025-10-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "030",
+      "particulars": "Rent October",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 33
+      }
+    },
+    {
+      "id": "1c928b77f8eac96b",
+      "occurrence": 1,
+      "date": "2025-10-21",
+      "amount": -105800,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "031",
+      "particulars": "Hardware",
+      "code": "",
+      "reference": "",
+      "otherParty": "Timberline Hardware",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7711",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 34
+      }
+    },
+    {
+      "id": "e9641a005d915a02",
+      "occurrence": 1,
+      "date": "2025-10-28",
+      "amount": -128435,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "032",
+      "particulars": "Card payment",
+      "code": "",
+      "reference": "",
+      "otherParty": "BNZCREDITCDS",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "kea-card-4021",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 35
+      }
+    },
+    {
+      "id": "3ffecda17459ac96",
+      "occurrence": 1,
+      "date": "2025-11-04",
+      "amount": 276000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "033",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1009",
+      "otherParty": "Harbour Cafe",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 36
+      }
+    },
+    {
+      "id": "2365e0486c075b59",
+      "occurrence": 1,
+      "date": "2025-11-11",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "034",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 37
+      }
+    },
+    {
+      "id": "a88419eb85273e40",
+      "occurrence": 1,
+      "date": "2025-11-17",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "035",
+      "particulars": "Rent November",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 38
+      }
+    },
+    {
+      "id": "fc9757b278e89fa4",
+      "occurrence": 1,
+      "date": "2025-11-25",
+      "amount": -21850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "036",
+      "particulars": "Power",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trustpower",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7766",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 39
+      }
+    },
+    {
+      "id": "2baedcdfa2005eff",
+      "occurrence": 1,
+      "date": "2025-12-02",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "037",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1010",
+      "otherParty": "Kea Cafe Group",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 40
+      }
+    },
+    {
+      "id": "e655e3945924c95f",
+      "occurrence": 1,
+      "date": "2025-12-09",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "038",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 41
+      }
+    },
+    {
+      "id": "f0707b15ce17fad0",
+      "occurrence": 1,
+      "date": "2025-12-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "039",
+      "particulars": "Rent December",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 42
+      }
+    },
+    {
+      "id": "9096aad138874154",
+      "occurrence": 1,
+      "date": "2026-01-13",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "040",
+      "particulars": "Rent January",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 43
+      }
+    },
+    {
+      "id": "4ce6700c468afe72",
+      "occurrence": 1,
+      "date": "2026-01-20",
+      "amount": 161000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "041",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1011",
+      "otherParty": "The Roastery Bar",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1177",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 44
+      }
+    },
+    {
+      "id": "3cb04688bfc5c841",
+      "occurrence": 1,
+      "date": "2026-01-27",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "042",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 45
+      }
+    },
+    {
+      "id": "b369e306cce8c335",
+      "occurrence": 1,
+      "date": "2026-02-04",
+      "amount": -28750,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "043",
+      "particulars": "Accounting",
+      "code": "",
+      "reference": "",
+      "otherParty": "Fern Advisory",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5533",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 46
+      }
+    },
+    {
+      "id": "5c3ab18e99dcdc5d",
+      "occurrence": 1,
+      "date": "2026-02-11",
+      "amount": 207000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "044",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1012",
+      "otherParty": "Harbour Cafe",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 47
+      }
+    },
+    {
+      "id": "326590e4934cc959",
+      "occurrence": 1,
+      "date": "2026-02-16",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "045",
+      "particulars": "Rent February",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 48
+      }
+    },
+    {
+      "id": "840707e99e5e337f",
+      "occurrence": 1,
+      "date": "2026-02-24",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "046",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 49
+      }
+    },
+    {
+      "id": "c63de240fac964fc",
+      "occurrence": 1,
+      "date": "2026-03-03",
+      "amount": -21850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "047",
+      "particulars": "Power",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trustpower",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7766",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 50
+      }
+    },
+    {
+      "id": "97acc0877ddf1ab1",
+      "occurrence": 1,
+      "date": "2026-03-10",
+      "amount": 184000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "048",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1013",
+      "otherParty": "Kea Cafe Group",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4455",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 51
+      }
+    },
+    {
+      "id": "f4012a445d1c67df",
+      "occurrence": 1,
+      "date": "2026-03-16",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "049",
+      "particulars": "Rent March",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 52
+      }
+    },
+    {
+      "id": "5c167ea5f07ae64b",
+      "occurrence": 1,
+      "date": "2026-03-24",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "050",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 53
+      }
+    },
+    {
+      "id": "bdfcfa53267a7bfc",
+      "occurrence": 1,
+      "date": "2025-04-04",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "000",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 3
+      }
+    },
+    {
+      "id": "58a614d09e7e5430",
+      "occurrence": 1,
+      "date": "2025-04-18",
+      "amount": -124000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "001",
+      "particulars": "Rates",
+      "code": "",
+      "reference": "",
+      "otherParty": "Nelson City Council",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5511",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 4
+      }
+    },
+    {
+      "id": "45651e24c89194fd",
+      "occurrence": 1,
+      "date": "2025-05-02",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "002",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 5
+      }
+    },
+    {
+      "id": "ebaffbafdf5e5875",
+      "occurrence": 1,
+      "date": "2025-05-30",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "003",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 6
+      }
+    },
+    {
+      "id": "112f2810a4b8d2bd",
+      "occurrence": 1,
+      "date": "2025-06-27",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "004",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 7
+      }
+    },
+    {
+      "id": "3b37a6a38592acd5",
+      "occurrence": 1,
+      "date": "2025-07-14",
+      "amount": -148000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "005",
+      "particulars": "House insurance",
+      "code": "",
+      "reference": "",
+      "otherParty": "Tasman Insurance",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-4488",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 8
+      }
+    },
+    {
+      "id": "f9c6c79665ba0be4",
+      "occurrence": 1,
+      "date": "2025-07-25",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "006",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 9
+      }
+    },
+    {
+      "id": "b09659da291b056f",
+      "occurrence": 1,
+      "date": "2025-08-22",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "007",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 10
+      }
+    },
+    {
+      "id": "2e42caf18e548e93",
+      "occurrence": 1,
+      "date": "2025-09-19",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "008",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 11
+      }
+    },
+    {
+      "id": "392056e960e4418a",
+      "occurrence": 1,
+      "date": "2025-10-17",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "009",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 12
+      }
+    },
+    {
+      "id": "bd1d469103696582",
+      "occurrence": 1,
+      "date": "2025-10-24",
+      "amount": -124000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "010",
+      "particulars": "Rates",
+      "code": "",
+      "reference": "",
+      "otherParty": "Nelson City Council",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5511",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 13
+      }
+    },
+    {
+      "id": "01e80ef761babfad",
+      "occurrence": 1,
+      "date": "2025-11-14",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "011",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 14
+      }
+    },
+    {
+      "id": "e46851baa5125571",
+      "occurrence": 1,
+      "date": "2025-11-28",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "012",
+      "particulars": "Plumbing repair",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kahu Plumbing",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-6644",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 15
+      }
+    },
+    {
+      "id": "d7b525b0e29b6886",
+      "occurrence": 1,
+      "date": "2025-12-12",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "013",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 16
+      }
+    },
+    {
+      "id": "2aa12adc7b446760",
+      "occurrence": 1,
+      "date": "2026-01-16",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "014",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 17
+      }
+    },
+    {
+      "id": "0594aacee7b52fe1",
+      "occurrence": 1,
+      "date": "2026-02-13",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "015",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 18
+      }
+    },
+    {
+      "id": "f868c8be23760b9b",
+      "occurrence": 1,
+      "date": "2026-03-13",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "016",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 19
+      }
+    },
+    {
+      "id": "3f655df9b516edd0",
+      "occurrence": 1,
+      "date": "2026-03-20",
+      "amount": -51750,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "017",
+      "particulars": "Gutter clean",
+      "code": "",
+      "reference": "",
+      "otherParty": "Topline Roofing",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-2277",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 20
+      }
+    },
+    {
+      "id": "d6ec29355c67f9d9",
+      "occurrence": 1,
+      "date": "2025-04-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 2
+      }
+    },
+    {
+      "id": "3dcbc4a1b5f3d8fb",
+      "occurrence": 1,
+      "date": "2025-04-16",
+      "amount": -8740,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Cafe supplies",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 3
+      }
+    },
+    {
+      "id": "25ec648d62308fc4",
+      "occurrence": 1,
+      "date": "2025-05-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 4
+      }
+    },
+    {
+      "id": "85b6dc9e8d4aa795",
+      "occurrence": 1,
+      "date": "2025-05-21",
+      "amount": -14260,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Richmond",
+      "code": "",
+      "reference": "",
+      "otherParty": "Fuel",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 5
+      }
+    },
+    {
+      "id": "1b40f84b61ce0243",
+      "occurrence": 1,
+      "date": "2025-06-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 6
+      }
+    },
+    {
+      "id": "724a853a55bf209a",
+      "occurrence": 1,
+      "date": "2025-06-18",
+      "amount": -6325,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Cafe supplies",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 7
+      }
+    },
+    {
+      "id": "40f6a5b7ae8e3f1e",
+      "occurrence": 1,
+      "date": "2025-07-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 8
+      }
+    },
+    {
+      "id": "c5ca9c194358ae83",
+      "occurrence": 1,
+      "date": "2025-07-23",
+      "amount": -21045,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Auckland",
+      "code": "",
+      "reference": "",
+      "otherParty": "Airline ticket",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 9
+      }
+    },
+    {
+      "id": "f54ada41ea21de2d",
+      "occurrence": 1,
+      "date": "2025-08-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 10
+      }
+    },
+    {
+      "id": "292cc33353fc849c",
+      "occurrence": 1,
+      "date": "2025-08-14",
+      "amount": -5520,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Stationery",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 11
+      }
+    },
+    {
+      "id": "73e2beaf4616c228",
+      "occurrence": 1,
+      "date": "2025-09-09",
+      "amount": -2990,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Wellington",
+      "code": "",
+      "reference": "",
+      "otherParty": "Xero Subscription",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 12
+      }
+    },
+    {
+      "id": "045769d5a712d544",
+      "occurrence": 1,
+      "date": "2025-09-26",
+      "amount": -17825,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Richmond",
+      "code": "",
+      "reference": "",
+      "otherParty": "Fuel",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 13
+      }
+    },
+    {
+      "id": "3659e56947a0e88f",
+      "occurrence": 1,
+      "date": "2025-10-15",
+      "amount": -39560,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Christchurch",
+      "code": "",
+      "reference": "",
+      "otherParty": "Trade show stand",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 14
+      }
+    },
+    {
+      "id": "5b0e6def40e069fd",
+      "occurrence": 1,
+      "date": "2025-10-28",
+      "amount": 128435,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "",
+      "code": "",
+      "reference": "",
+      "otherParty": "PAYMENT - THANK YOU",
+      "origin": "",
+      "type": "PMT",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 15
+      }
+    },
+    {
+      "id": "c20dd82678542662",
+      "occurrence": 1,
+      "date": "2025-11-19",
+      "amount": -9200,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Cafe supplies",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 16
+      }
+    },
+    {
+      "id": "3b6978d5be9ecbc3",
+      "occurrence": 1,
+      "date": "2025-12-04",
+      "amount": -13225,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Phone and internet",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 17
+      }
+    },
+    {
+      "id": "d242c9d086a43633",
+      "occurrence": 1,
+      "date": "2026-01-22",
+      "amount": -4600,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Cafe supplies",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 18
+      }
+    },
+    {
+      "id": "5ed25a4339dea1c4",
+      "occurrence": 1,
+      "date": "2026-02-19",
+      "amount": -16790,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Richmond",
+      "code": "",
+      "reference": "",
+      "otherParty": "Fuel",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 19
+      }
+    },
+    {
+      "id": "b0b426e48bc88b3f",
+      "occurrence": 1,
+      "date": "2026-03-05",
+      "amount": -13225,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Phone and internet",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 20
+      }
+    }
+  ],
+  "overrides": {
+    "5b365cd882ac3291": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-04-08"
+    },
+    "ee4be5bdef860883": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-04-15"
+    },
+    "e619ef3c7656e448": {
+      "confirmed": true,
+      "code": "Light, power, heating - 445",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Power at the roastery",
+      "at": "2025-04-29"
+    },
+    "e21e55efc5495429": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-05-06"
+    },
+    "c645c56b0868ea6e": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-05-15"
+    },
+    "74a8a6603f6e42b0": {
+      "confirmed": true,
+      "code": "Light, power, heating - 445",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Power at the roastery",
+      "at": "2025-05-28"
+    },
+    "a3e9d7262c2121f6": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-06-10"
+    },
+    "91ff8c7c3b957cf1": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-06-16"
+    },
+    "6c9fb1cedbd8d30e": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-07-08"
+    },
+    "16c41356e925c3a3": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-07-15"
+    },
+    "786205a1e4a09d7a": {
+      "confirmed": true,
+      "code": "Light, power, heating - 445",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Power at the roastery",
+      "at": "2025-07-30"
+    },
+    "ac36298de9521a84": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-08-12"
+    },
+    "95989f4073b02b0b": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-08-15"
+    },
+    "351721f343fd10bd": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-09-09"
+    },
+    "11d2c8d706cf5634": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-09-15"
+    },
+    "8c19954644f642a5": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-10-07"
+    },
+    "964469bbcbe91d0c": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-10-15"
+    },
+    "2365e0486c075b59": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-11-11"
+    },
+    "a88419eb85273e40": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-11-17"
+    },
+    "fc9757b278e89fa4": {
+      "confirmed": true,
+      "code": "Light, power, heating - 445",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Power at the roastery",
+      "at": "2025-11-25"
+    },
+    "e655e3945924c95f": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2025-12-09"
+    },
+    "f0707b15ce17fad0": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2025-12-15"
+    },
+    "9096aad138874154": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2026-01-13"
+    },
+    "3cb04688bfc5c841": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2026-01-27"
+    },
+    "326590e4934cc959": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2026-02-16"
+    },
+    "840707e99e5e337f": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2026-02-24"
+    },
+    "c63de240fac964fc": {
+      "confirmed": true,
+      "code": "Light, power, heating - 445",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Power at the roastery",
+      "at": "2026-03-03"
+    },
+    "f4012a445d1c67df": {
+      "confirmed": true,
+      "code": "Rent paid - 461",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Monthly rent on the roastery unit",
+      "at": "2026-03-16"
+    },
+    "5c167ea5f07ae64b": {
+      "confirmed": true,
+      "code": "Cost of goods sold - 300",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Green beans for roasting",
+      "at": "2026-03-24"
+    },
+    "bdfcfa53267a7bfc": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-04-04"
+    },
+    "58a614d09e7e5430": {
+      "confirmed": true,
+      "code": "Rates - 604",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Council rates on the rental",
+      "at": "2025-04-18"
+    },
+    "45651e24c89194fd": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-05-02"
+    },
+    "ebaffbafdf5e5875": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-05-30"
+    },
+    "112f2810a4b8d2bd": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-06-27"
+    },
+    "f9c6c79665ba0be4": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-07-25"
+    },
+    "b09659da291b056f": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-08-22"
+    },
+    "2e42caf18e548e93": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-09-19"
+    },
+    "392056e960e4418a": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-10-17"
+    },
+    "bd1d469103696582": {
+      "confirmed": true,
+      "code": "Rates - 604",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Council rates on the rental",
+      "at": "2025-10-24"
+    },
+    "01e80ef761babfad": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-11-14"
+    },
+    "d7b525b0e29b6886": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2025-12-12"
+    },
+    "2aa12adc7b446760": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2026-01-16"
+    },
+    "0594aacee7b52fe1": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2026-02-13"
+    },
+    "f868c8be23760b9b": {
+      "confirmed": true,
+      "code": "Rent received - 210",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Residential rent, exempt from GST",
+      "at": "2026-03-13"
+    },
+    "d6ec29355c67f9d9": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-04-09"
+    },
+    "25ec648d62308fc4": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-05-09"
+    },
+    "1b40f84b61ce0243": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-06-09"
+    },
+    "40f6a5b7ae8e3f1e": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-07-09"
+    },
+    "f54ada41ea21de2d": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-08-09"
+    },
+    "73e2beaf4616c228": {
+      "confirmed": true,
+      "code": "Subscriptions - 469",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Accounting software",
+      "at": "2025-09-09"
+    },
+    "814cd938bdf84e22": {
+      "confirmed": true,
+      "code": "Sales - 200",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Settles INV-1001. Coded from the invoice.",
+      "at": "2025-04-03"
+    },
+    "8fb03a32bdd9030d": {
+      "confirmed": true,
+      "code": "Sales - 200",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Settles INV-1002. Coded from the invoice.",
+      "at": "2025-04-22"
+    },
+    "73e453763e405905": {
+      "confirmed": true,
+      "code": "Sales - 200",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Settles INV-1003. Coded from the invoice.",
+      "at": "2025-05-09"
+    }
+  },
+  "splits": {
+    "1c928b77f8eac96b": [
+      {
+        "amount": -51750,
+        "code": "Property repairs - 600",
+        "treatment": "exempt",
+        "side": "none",
+        "note": "Fence palings and gate hardware for 17 Rimu Lane"
+      },
+      {
+        "amount": -54050,
+        "code": "Repairs and maintenance - 458",
+        "treatment": "standard",
+        "side": "purchases",
+        "note": "Shelving and fittings for the roastery"
+      }
+    ],
+    "3b6978d5be9ecbc3": [
+      {
+        "amount": -9258,
+        "code": "Telephone and internet - 477",
+        "treatment": "standard",
+        "side": "purchases",
+        "note": "Business share, 70%"
+      },
+      {
+        "amount": -3967,
+        "code": "Drawings - 630",
+        "treatment": "out-of-scope",
+        "side": "none",
+        "note": "Personal share, 30% -- not a business expense"
+      }
+    ]
+  },
+  "invoiceMatches": {
+    "814cd938bdf84e22": "INV-1001",
+    "8fb03a32bdd9030d": "INV-1002",
+    "73e453763e405905": "INV-1003"
+  },
+  "transfers": {
+    "e9641a005d915a02": "5b0e6def40e069fd",
+    "5b0e6def40e069fd": "e9641a005d915a02"
+  },
+  "entities": {
+    "entities": [
+      {
+        "id": "kea-coffee-roasters-limited",
+        "name": "Kea Coffee Roasters Limited",
+        "note": "The trading company",
+        "kind": "business",
+        "owners": []
+      },
+      {
+        "id": "17-rimu-lane",
+        "name": "17 Rimu Lane",
+        "note": "Residential rental, jointly owned",
+        "kind": "residential",
+        "owners": [
+          {
+            "name": "Ana Whitcombe",
+            "share": 50
+          },
+          {
+            "name": "Tom Whitcombe",
+            "share": 50
+          }
+        ]
+      }
+    ],
+    "accounts": {
+      "200": "kea-coffee-roasters-limited",
+      "210": "17-rimu-lane",
+      "300": "kea-coffee-roasters-limited",
+      "310": "kea-coffee-roasters-limited",
+      "425": "kea-coffee-roasters-limited",
+      "429": "kea-coffee-roasters-limited",
+      "433": "kea-coffee-roasters-limited",
+      "437": "kea-coffee-roasters-limited",
+      "445": "kea-coffee-roasters-limited",
+      "449": "kea-coffee-roasters-limited",
+      "453": "kea-coffee-roasters-limited",
+      "458": "kea-coffee-roasters-limited",
+      "461": "kea-coffee-roasters-limited",
+      "469": "kea-coffee-roasters-limited",
+      "473": "kea-coffee-roasters-limited",
+      "477": "kea-coffee-roasters-limited",
+      "481": "kea-coffee-roasters-limited",
+      "500": "kea-coffee-roasters-limited",
+      "600": "17-rimu-lane",
+      "604": "17-rimu-lane",
+      "608": "17-rimu-lane",
+      "630": "kea-coffee-roasters-limited",
+      "710": "kea-coffee-roasters-limited",
+      "711": "kea-coffee-roasters-limited",
+      "820": "kea-coffee-roasters-limited"
+    },
+    "banks": {
+      "02-1234-0056789-000": [
+        "kea-coffee-roasters-limited"
+      ],
+      "kea-card-4021": [
+        "kea-coffee-roasters-limited"
+      ],
+      "02-1234-0056789-001": [
+        "17-rimu-lane"
+      ]
+    }
+  },
+  "chart": [
+    {
+      "code": "200",
+      "name": "Sales",
+      "type": "Revenue",
+      "taxCode": "15% GST on Income",
+      "description": "Coffee sold wholesale",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "210",
+      "name": "Rent received",
+      "type": "Revenue",
+      "taxCode": "GST Exempt",
+      "description": "Residential rent",
+      "entity": "17 Rimu Lane",
+      "gstTreatment": "exempt",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "residential"
+    },
+    {
+      "code": "300",
+      "name": "Cost of goods sold",
+      "type": "Direct Costs",
+      "taxCode": "15% GST on Expenses",
+      "description": "Green beans",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "310",
+      "name": "Packaging",
+      "type": "Direct Costs",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "425",
+      "name": "Freight and courier",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "429",
+      "name": "General expenses",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "433",
+      "name": "Insurance",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "437",
+      "name": "Accounting fees",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "445",
+      "name": "Light, power, heating",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "449",
+      "name": "Motor vehicle expenses",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "Fuel and running costs",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "453",
+      "name": "Office expenses",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "458",
+      "name": "Repairs and maintenance",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "461",
+      "name": "Rent paid",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "The roastery unit",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "469",
+      "name": "Subscriptions",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "473",
+      "name": "Advertising",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "Markets and trade shows",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "477",
+      "name": "Telephone and internet",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "481",
+      "name": "Travel",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "600",
+      "name": "Property repairs",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "Rental repairs",
+      "entity": "17 Rimu Lane",
+      "gstTreatment": "exempt",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "residential"
+    },
+    {
+      "code": "604",
+      "name": "Rates",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "17 Rimu Lane",
+      "gstTreatment": "exempt",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "residential"
+    },
+    {
+      "code": "608",
+      "name": "Property insurance",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "17 Rimu Lane",
+      "gstTreatment": "exempt",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "residential"
+    },
+    {
+      "code": "630",
+      "name": "Drawings",
+      "type": "Current Liability",
+      "taxCode": "No GST",
+      "description": "Money taken out",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "out-of-scope",
+      "entityKind": "business"
+    },
+    {
+      "code": "710",
+      "name": "Plant and equipment",
+      "type": "Fixed Asset",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "standard",
+      "entityKind": "business"
+    },
+    {
+      "code": "711",
+      "name": "Less accumulated depreciation on Plant and equipment",
+      "type": "Fixed Asset",
+      "taxCode": "No GST",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "out-of-scope",
+      "entityKind": "business"
+    },
+    {
+      "code": "820",
+      "name": "GST",
+      "type": "Current Liability",
+      "taxCode": "No GST",
+      "description": "The GST control account",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "out-of-scope",
+      "entityKind": "business"
+    },
+    {
+      "code": "500",
+      "name": "Depreciation",
+      "type": "Depreciation",
+      "taxCode": "No GST",
+      "description": "",
+      "entity": "Kea Coffee Roasters Limited",
+      "gstTreatment": "out-of-scope",
+      "entityKind": "business"
+    }
+  ],
+  "assets": [
+    {
+      "number": "FA-0001",
+      "name": "Probat 12kg shop roaster",
+      "type": "Plant and equipment",
+      "status": "Registered",
+      "purchased": "2024-04-12",
+      "depreciationFrom": "2024-04-12",
+      "cost": 1850000,
+      "rate": 13,
+      "method": "Straight Line",
+      "averaging": "Full Month",
+      "disposed": null
+    },
+    {
+      "number": "FA-0002",
+      "name": "Delivery van, 2019 Hiace",
+      "type": "Plant and equipment",
+      "status": "Registered",
+      "purchased": "2024-08-03",
+      "depreciationFrom": "2024-08-03",
+      "cost": 2400000,
+      "rate": 20,
+      "method": "Straight Line",
+      "averaging": "Full Month",
+      "disposed": null
+    },
+    {
+      "number": "FA-0003",
+      "name": "Packaging sealer",
+      "type": "Plant and equipment",
+      "status": "Registered",
+      "purchased": "2025-09-19",
+      "depreciationFrom": "2025-09-19",
+      "cost": 320000,
+      "rate": 20,
+      "method": "Straight Line",
+      "averaging": "Full Month",
+      "disposed": null
+    },
+    {
+      "number": "FA-0004",
+      "name": "Laptop",
+      "type": "Plant and equipment",
+      "status": "Registered",
+      "purchased": "2026-02-05",
+      "depreciationFrom": "2026-02-05",
+      "cost": 240000,
+      "rate": 40,
+      "method": "Straight Line",
+      "averaging": "Full Month",
+      "disposed": null
+    }
+  ],
+  "invoices": [
+    {
+      "number": "INV-1001",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2025-03-28",
+      "due": "2025-04-27",
+      "total": 126500,
+      "tax": 16500,
+      "paid": 126500,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, March",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 110000,
+          "tax": 16500,
+          "gross": 126500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1002",
+      "kind": "sales",
+      "contact": "Kea Cafe Group",
+      "reference": "",
+      "issued": "2025-04-15",
+      "due": "2025-05-15",
+      "total": 253000,
+      "tax": 33000,
+      "paid": 253000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, April",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 220000,
+          "tax": 33000,
+          "gross": 253000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1003",
+      "kind": "sales",
+      "contact": "The Roastery Bar",
+      "reference": "",
+      "issued": "2025-05-01",
+      "due": "2025-05-31",
+      "total": 97750,
+      "tax": 12750,
+      "paid": 97750,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 85000,
+          "tax": 12750,
+          "gross": 97750,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1004",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2025-05-28",
+      "due": "2025-06-27",
+      "total": 184000,
+      "tax": 24000,
+      "paid": 184000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, May",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 160000,
+          "tax": 24000,
+          "gross": 184000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1005",
+      "kind": "sales",
+      "contact": "Kea Cafe Group",
+      "reference": "",
+      "issued": "2025-06-24",
+      "due": "2025-07-24",
+      "total": 310500,
+      "tax": 40500,
+      "paid": 310500,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, June",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 270000,
+          "tax": 40500,
+          "gross": 310500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1006",
+      "kind": "sales",
+      "contact": "The Roastery Bar",
+      "reference": "",
+      "issued": "2025-07-29",
+      "due": "2025-08-28",
+      "total": 126500,
+      "tax": 16500,
+      "paid": 126500,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 110000,
+          "tax": 16500,
+          "gross": 126500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1007",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2025-08-27",
+      "due": "2025-09-26",
+      "total": 218500,
+      "tax": 28500,
+      "paid": 218500,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, August",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 190000,
+          "tax": 28500,
+          "gross": 218500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1008",
+      "kind": "sales",
+      "contact": "Kea Cafe Group",
+      "reference": "",
+      "issued": "2025-09-24",
+      "due": "2025-10-24",
+      "total": 149500,
+      "tax": 19500,
+      "paid": 149500,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 130000,
+          "tax": 19500,
+          "gross": 149500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1009",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2025-10-28",
+      "due": "2025-11-27",
+      "total": 276000,
+      "tax": 36000,
+      "paid": 276000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, October",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 240000,
+          "tax": 36000,
+          "gross": 276000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1010",
+      "kind": "sales",
+      "contact": "Kea Cafe Group",
+      "reference": "",
+      "issued": "2025-11-25",
+      "due": "2025-12-25",
+      "total": 345000,
+      "tax": 45000,
+      "paid": 345000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Christmas order",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 300000,
+          "tax": 45000,
+          "gross": 345000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1011",
+      "kind": "sales",
+      "contact": "The Roastery Bar",
+      "reference": "",
+      "issued": "2026-01-13",
+      "due": "2026-02-12",
+      "total": 161000,
+      "tax": 21000,
+      "paid": 161000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 140000,
+          "tax": 21000,
+          "gross": 161000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1012",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2026-02-04",
+      "due": "2026-03-06",
+      "total": 207000,
+      "tax": 27000,
+      "paid": 207000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, January",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 180000,
+          "tax": 27000,
+          "gross": 207000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1013",
+      "kind": "sales",
+      "contact": "Kea Cafe Group",
+      "reference": "",
+      "issued": "2026-03-03",
+      "due": "2026-04-02",
+      "total": 184000,
+      "tax": 24000,
+      "paid": 184000,
+      "outstanding": 0,
+      "currency": "NZD",
+      "status": "Paid",
+      "lines": [
+        {
+          "description": "Wholesale coffee, February",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 160000,
+          "tax": 24000,
+          "gross": 184000,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1014",
+      "kind": "sales",
+      "contact": "Harbour Cafe",
+      "reference": "",
+      "issued": "2026-03-24",
+      "due": "2026-04-23",
+      "total": 149500,
+      "tax": 19500,
+      "paid": 0,
+      "outstanding": 149500,
+      "currency": "NZD",
+      "status": "Awaiting Payment",
+      "lines": [
+        {
+          "description": "Wholesale coffee, March",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 130000,
+          "tax": 19500,
+          "gross": 149500,
+          "quantity": 1
+        }
+      ]
+    },
+    {
+      "number": "INV-1015",
+      "kind": "sales",
+      "contact": "The Roastery Bar",
+      "reference": "",
+      "issued": "2026-03-30",
+      "due": "2026-04-29",
+      "total": 86250,
+      "tax": 11250,
+      "paid": 0,
+      "outstanding": 86250,
+      "currency": "NZD",
+      "status": "Awaiting Payment",
+      "lines": [
+        {
+          "description": "Wholesale coffee",
+          "accountCode": "200",
+          "taxType": "15% GST on Income",
+          "net": 75000,
+          "tax": 11250,
+          "gross": 86250,
+          "quantity": 1
+        }
+      ]
+    }
+  ]
+}

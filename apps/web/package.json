@@ -1,0 +1,19 @@
+{
+  "name": "@nzosa/web",
+  "version": "0.1.0",
+  "private": true,
+  "description": "Static browser front end. Parses bank files in the page; nothing is uploaded.",
+  "license": "MIT",
+  "type": "module",
+  "scripts": {
+    "build": "node build.js",
+    "dev": "node build.js --serve",
+    "typecheck": "tsc --build"
+  },
+  "dependencies": {
+    "@nzosa/core": "0.1.0"
+  },
+  "devDependencies": {
+    "esbuild": "^0.28.2"
+  }
+}

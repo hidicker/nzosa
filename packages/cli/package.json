@@ -1,0 +1,23 @@
+{
+  "name": "@nzosa/cli",
+  "version": "0.1.0",
+  "description": "Command-line front end for NZOSA. Imports bank flat files into a local JSON ledger.",
+  "license": "MIT",
+  "type": "module",
+  "bin": {
+    "nzosa": "./dist/cli.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "test": "npm run build && node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "@nzosa/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

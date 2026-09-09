@@ -1,0 +1,190 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZOSA: a guide for owners</title>
+<style>
+:root { --ink: #14171a; --quiet: #5b6570; --line: #e3e6ea; --page: #fff;
+  --soft: #f6f8fa; --link: #1a5fb4; }
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e6e9ec; --quiet: #9aa4af; --line: #2c3238; --page: #14171a;
+    --soft: #1c2126; --link: #7fb3ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.wrap { display: grid; grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 3rem; max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.5rem 6rem; }
+nav { position: sticky; top: 2.5rem; align-self: start; font-size: 0.87rem;
+  max-height: calc(100vh - 5rem); overflow-y: auto; }
+nav strong { display: block; margin-bottom: 0.6rem; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--quiet); }
+nav a { display: block; padding: 0.2rem 0; color: var(--quiet);
+  text-decoration: none; border-left: 2px solid transparent; padding-left: 0.7rem; }
+nav a:hover { color: var(--link); border-left-color: var(--link); }
+main { min-width: 0; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; }
+h2 { font-size: 1.35rem; margin: 2.75rem 0 0.75rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--line); }
+h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
+h4 { font-size: 0.95rem; margin: 1.25rem 0 0.4rem; color: var(--quiet); }
+p, li { margin: 0 0 0.85rem; }
+li { margin-bottom: 0.4rem; }
+ul, ol { padding-left: 1.35rem; margin: 0 0 1rem; }
+a { color: var(--link); }
+code { background: var(--soft); border: 1px solid var(--line); border-radius: 3px;
+  padding: 0.05em 0.35em; font-size: 0.88em;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+pre { background: var(--soft); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.9rem 1.1rem; overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; font-size: 0.85em; }
+.scroll { overflow-x: auto; margin: 0 0 1.25rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th { text-align: left; font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--quiet); border-bottom: 1px solid var(--quiet);
+  padding: 0 0.8rem 0.4rem 0; }
+td { padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+strong { font-weight: 650; }
+.foot { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+  font-size: 0.85rem; color: var(--quiet); }
+@media (max-width: 60rem) {
+  .wrap { grid-template-columns: 1fr; gap: 1.5rem; }
+  nav { position: static; max-height: none; border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem; }
+}
+@media print {
+  .wrap { display: block; max-width: none; padding: 0; }
+  nav { display: none; }
+  h2 { break-before: auto; }
+  pre, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <strong>Contents</strong>
+      <a href="#what-it-does">What it does</a>
+      <a href="#what-it-will-not-do">What it will not do</a>
+      <a href="#where-your-data-lives">Where your data lives</a>
+      <a href="#running-it-on-your-own-computer">Running it on your own computer</a>
+      <a href="#setting-up">Setting up</a>
+      <a href="#the-everyday-job">The everyday job</a>
+      <a href="#gst">GST</a>
+      <a href="#year-end">Year end</a>
+      <a href="#when-something-looks-wrong">When something looks wrong</a>
+      <a href="#trying-it-first">Trying it first</a>
+      <a href="#licence-and-liability">Licence and liability</a>
+    </nav>
+    <main>
+<h1 id="nzosa-a-guide-for-owners">NZOSA: a guide for owners</h1>
+<p>For the person whose business this is. No accounting background assumed.</p>
+<p>If you are the accountant, read the <a href="accountant-guide.md">guide for accountants</a> instead. If you are changing the code, read the <a href="developer-guide.md">guide for developers</a>.</p>
+<hr>
+<h2 id="what-it-does">What it does</h2>
+<p>You give it your bank statements. It works out what each line was, keeps a proper set of books, and produces your GST returns and the figures your accountant needs at year end.</p>
+<p>The important part is the second sentence. Plenty of software will import a bank statement. What makes this a set of books rather than a list is that every line lands in a double-entry ledger that has to balance, so a mistake shows up as a number that does not add up rather than as a report that quietly reads wrong.</p>
+<h2 id="what-it-will-not-do">What it will not do</h2>
+<ul><li><strong>It will not file anything for you.</strong> It produces the figures; you or your accountant put them in the return.</li><li><strong>It is not a substitute for an accountant.</strong> It does the mechanical work — coding, matching, GST, depreciation. Year-end judgement calls are still judgement calls.</li><li><strong>It will not guess in secret.</strong> Every figure traces back to a bank line and a decision somebody made. Where it is unsure it asks rather than picking.</li></ul>
+<hr>
+<h2 id="where-your-data-lives">Where your data lives</h2>
+<p>Worth understanding before you put a year of your business into it, because it depends on how you opened it.</p>
+<p><strong>If you started it with the launcher</strong> (<code>NZOSA.cmd</code> on Windows, <code>NZOSA.command</code> on a Mac), your books are <strong>files in a folder on your computer</strong>. One file per part — transactions, decisions, invoices, chart. You can back them up, copy them to another machine, and read them without this software. This is the mode to use for real books.</p>
+<p><strong>If you opened it as a web page</strong> with no launcher running, there is no folder, and your books are kept <strong>inside that browser</strong> on that device. That is fine for trying it out. It is a poor place for anything you care about:</p>
+<ul><li>Clearing your browsing data deletes it.</li><li>It does not follow you to another browser, another computer, or your phone.</li><li>A private or incognito window starts empty and keeps nothing.</li><li>The browser is allowed to discard it if the device runs short of space.</li></ul>
+<p>Either way, <strong>nothing is uploaded</strong>. Your files are read on your own machine and the app does not send them anywhere. That is also why nobody can recover your books for you if you lose them — there is no copy but yours.</p>
+<p>The app tells you which mode you are in: with a folder behind it, the ledger's name shows at the bottom of the sidebar and the demo offers to "Open the demo books"; without one, it offers to "Load demo data".</p>
+<p><strong>Back it up.</strong> In folder mode, copy the folder. Wherever you are, <code>Bank import → Export ledger</code> writes the whole thing to a single file you can keep somewhere else.</p>
+<hr>
+<h2 id="running-it-on-your-own-computer">Running it on your own computer</h2>
+<p>The demo online is for looking at. For books of your own you run NZOSA on your own machine, which takes about ten minutes once.</p>
+<p>You are not "installing an app" in the usual sense: you are putting a folder on your computer and double-clicking a file in it. Nothing goes into Program Files, nothing runs at startup, and nothing phones home.</p>
+<h3 id="1-install-node-js">1. Install Node.js</h3>
+<p>Go to <a href="https://nodejs.org">nodejs.org</a> and download the <strong>LTS</strong> version — the one on the left, marked "Recommended For Most Users". Run the installer and accept every default.</p>
+<p>Node.js is the engine NZOSA runs on. You will never open it or see it again.</p>
+<h3 id="2-get-the-nzosa-folder">2. Get the NZOSA folder</h3>
+<p>You will be given either a ZIP file or a link. Download it and <strong>unzip it somewhere you will find again</strong> — Documents is a good choice, and somewhere inside a folder that is backed up is better.</p>
+<p>Do not run it from inside the ZIP. Windows will let you open files in a ZIP without unpacking it, and NZOSA will fail in confusing ways if you do.</p>
+<h3 id="3-start-it">3. Start it</h3>
+<p>Open the folder and double-click:</p>
+<ul><li><strong>Windows</strong> — <code>NZOSA.cmd</code></li><li><strong>Mac</strong> — <code>NZOSA.command</code></li></ul>
+<p>The first time, it spends a minute or two fetching what it needs and building itself. A black window shows what it is doing; that is normal, and it closes on its own. Your browser then opens at NZOSA.</p>
+<p>To stop it, double-click <strong><code>Stop NZOSA</code></strong> in the same folder. Closing the browser tab does not stop it.</p>
+<h3 id="if-something-gets-in-the-way">If something gets in the way</h3>
+<p><strong>Windows says it protected your PC.</strong> Click <em>More info</em>, then <em>Run anyway</em>. This is SmartScreen not recognising a file that few people have downloaded; it is not a virus warning.</p>
+<p><strong>Mac says it is from an unidentified developer.</strong> Right-click <code>NZOSA.command</code>, choose <strong>Open</strong>, then <strong>Open</strong> again in the box that appears. You only do this once.</p>
+<p><strong>Mac says it cannot be opened, or opens it in a text editor.</strong> The file lost its permission to run, which happens with some ways of downloading. Open Terminal, type <code>chmod +x </code> (with the space), drag <code>NZOSA.command</code> into the window, and press Enter. Then double-click it as normal.</p>
+<p><strong>Nothing happens, or the window flashes and vanishes.</strong> Node.js is probably not installed, or was installed after you first tried. Restart the computer and try again.</p>
+<p><strong>It says NZOSA is already running.</strong> It is — the launcher reopens your browser at it rather than starting a second copy.</p>
+<h3 id="where-your-books-end-up">Where your books end up</h3>
+<p>In a folder called <code>ledgers</code> inside the NZOSA folder, as ordinary files. Back that up the way you back up anything else you would hate to lose. There is no copy anywhere else, and nobody can recover it for you.</p>
+<h3 id="updating">Updating</h3>
+<p>You will be given a new folder. Copy your <code>ledgers</code> folder out of the old one and into the new one before you start it. Your books are those files; everything else is just the software.</p>
+<hr>
+<h2 id="setting-up">Setting up</h2>
+<p>Open <strong>Setup</strong>. It lists what is needed, in the order it is needed, and ticks each item off as it arrives. You do not have to do it in one sitting.</p>
+<h3 id="1-say-whose-books-these-are">1. Say whose books these are</h3>
+<p>At the top of Setup. Your company, trust, or your own name. It is the one thing no file can tell it: a chart of accounts arrives with sixty accounts and not one of them says whose they are.</p>
+<p>If one set of books holds several things — a company and two rental properties, say — add the others on <strong>Entities &amp; accounts</strong>. Most people need only the one.</p>
+<h3 id="2-fetch-your-files-all-at-once">2. Fetch your files, all at once</h3>
+<p>Setup lists exactly what to export and where each one lives. If you use an accounting system already, they all come from the same place and the whole set takes a few minutes — so fetch them in one visit rather than one at a time.</p>
+<p>Then drop the lot on the same page, in any order. Each file is recognised by its own columns, so you do not have to say which is which.</p>
+<p>At a minimum you need your <strong>bank statements</strong>. Everything else improves what the software can tell you, and Setup says what each one adds. The ones that earn their place quickly:</p>
+<div class="scroll"><table><thead><tr><th>File</th><th>What it gives you</th></tr></thead><tbody><tr><td>Chart of accounts</td><td>Consistent account names, and the GST treatment each account uses</td></tr><tr><td>Your existing coded history</td><td>Your own past coding becomes the rules. This is the big one — see below</td></tr><tr><td>Trial balance at last year end</td><td>Opening balances, without which a balance sheet is wrong rather than merely short</td></tr><tr><td>Invoices</td><td>Income counted when you invoiced it, and receipts matched to what they settled</td></tr><tr><td>Fixed asset register</td><td>Depreciation, which no bank statement can produce</td></tr></tbody></table></div>
+<h3 id="3-say-which-bank-accounts-are-yours">3. Say which bank accounts are yours</h3>
+<p>On <strong>Entities &amp; accounts</strong>. Your chart lists an account called something like "Business Cheque Account"; your ledger has one identified by its number. Tell it which is which.</p>
+<p>This matters more than it sounds. Money moving between two of your own accounts is a transfer, not income — but the software can only know that if it knows both ends belong to you. Get this wrong and paying your own credit card looks like a sale.</p>
+<h3 id="4-opening-balances">4. Opening balances</h3>
+<p>On its own page. Load the trial balance from your previous year end. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.</p>
+<h3 id="5-let-it-learn-your-coding">5. Let it learn your coding</h3>
+<p>On <strong>Coding reconciliation</strong>, load the coded history you exported. The software compares its guesses against what you actually did last year and writes rules from the agreement.</p>
+<p>You never type keyword rules. Your own past decisions are the rules.</p>
+<hr>
+<h2 id="the-everyday-job">The everyday job</h2>
+<p><strong>Reconcile</strong> is where you spend your time. It shows bank lines that still need a decision, with a suggestion against each one.</p>
+<p>Three things to know:</p>
+<p><strong>Suggestions are suggestions.</strong> Accept, change, or split. Nothing is filed on your behalf.</p>
+<p><strong>Corrections stick.</strong> Correcting a line teaches it, and the correction survives re-importing the same statement later. If you find yourself making the same correction twice, something is wrong — say so.</p>
+<p><strong>It flags what it is unsure about rather than guessing.</strong> A line it cannot place stays visible until you deal with it. An empty Reconcile page means the books are done, not that it gave up.</p>
+<h3 id="the-three-that-catch-people-out">The three that catch people out</h3>
+<p><strong>Transfers.</strong> Moving money between your own accounts is not income and not an expense. The software looks for the matching leg and offers it as a transfer for you to confirm. Check the pairing before confirming — two unrelated payments of the same round amount a day apart look identical to a computer, and confirming a false transfer hides two real transactions at once.</p>
+<p><strong>Customer payments.</strong> If you raise invoices, a receipt should settle the invoice, not count as a fresh sale. Coding it as a sale counts the same income twice and leaves the invoice looking unpaid for ever. Where one payment covers several invoices, split it — there is a button for exactly that.</p>
+<p><strong>Entertainment.</strong> Most business entertainment is only half deductible in New Zealand. The <strong>Split 50/50</strong> button does the halving and the GST correctly. Use it rather than coding the whole amount.</p>
+<hr>
+<h2 id="gst">GST</h2>
+<p><strong>GST reconciliation</strong> builds your return from the ledger for whatever period you are on.</p>
+<p>If you load the returns you have already filed, it compares each one against what the books now say and shows the difference. Differences are normal and not automatically errors — but each one should have an explanation, and there is somewhere to record it.</p>
+<p>Check the return before you file it. It is your return.</p>
+<hr>
+<h2 id="year-end">Year end</h2>
+<p>What your accountant will want, and what this produces:</p>
+<ul><li><strong>Profit and loss</strong> and <strong>balance sheet</strong>, on <strong>Reports</strong></li><li><strong>IR10</strong> figures</li><li>The <strong>fixed asset</strong> schedule with depreciation</li><li><strong>Shareholder current account</strong> movements</li></ul>
+<p>Two things the software cannot know, and will not pretend to:</p>
+<ol><li><strong>Judgement journals.</strong> Provisions, reclassifications, and year-end adjustments your accountant makes in their working papers. Once made, they can be entered as manual journals — every one needs a reason typed against it, because a journal nobody can explain is one nobody can defend.</li><li><strong>Anything that never touched a bank account.</strong> Non-cash adjustments, and anything that happened before the books start.</li></ol>
+<p>Expect your accountant to make adjustments. That is what they are for. The point of this software is that they start from a complete, balanced, explainable ledger rather than from a shoebox.</p>
+<hr>
+<h2 id="when-something-looks-wrong">When something looks wrong</h2>
+<p><strong>A number you cannot account for.</strong> Every figure decomposes. Click through from the report to the account to the transactions behind it.</p>
+<p><strong>Check nothing is missing.</strong> <strong>Bank import → Check against the bank's own balances</strong> compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.</p>
+<p><strong>Undo it.</strong> <strong>History</strong> records every change, most recent first, with a way to put it back.</p>
+<p><strong>A balance sheet that does not balance</strong> almost always means opening balances, not coding.</p>
+<hr>
+<h2 id="trying-it-first">Trying it first</h2>
+<p>There is a complete invented set of books — a coffee roastery and a rental, part way through a year, with codings, splits, invoices and a transfer already in it. Worth ten minutes before you load a real year.</p>
+<p>Online, it loads by itself: anything you see there is invented, and you can change it freely. On your own machine it opens in books of its own, from <strong>Setup → Demo data</strong>, so nothing of yours is touched.</p>
+<hr>
+<h2 id="licence-and-liability">Licence and liability</h2>
+<p>NZOSA is open-source software under the MIT Licence. It is provided as is, with no warranty. Nobody who wrote or distributes it is liable if a figure is wrong.</p>
+<p>You remain responsible for what you file. Check the figures.</p>
+      <p class="foot">
+        NZOSA &mdash; New Zealand open-source accounting. Free software under an
+        MIT licence, provided as is and without warranty of any kind.
+        Built from <code>user-guide.md</code>.
+      </p>
+    </main>
+  </div>
+</body>
+</html>

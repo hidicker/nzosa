@@ -1,0 +1,193 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZOSA: A Guide for Accountants and Tax Practitioners</title>
+<style>
+:root { --ink: #14171a; --quiet: #5b6570; --line: #e3e6ea; --page: #fff;
+  --soft: #f6f8fa; --link: #1a5fb4; }
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e6e9ec; --quiet: #9aa4af; --line: #2c3238; --page: #14171a;
+    --soft: #1c2126; --link: #7fb3ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.wrap { display: grid; grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 3rem; max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.5rem 6rem; }
+nav { position: sticky; top: 2.5rem; align-self: start; font-size: 0.87rem;
+  max-height: calc(100vh - 5rem); overflow-y: auto; }
+nav strong { display: block; margin-bottom: 0.6rem; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--quiet); }
+nav a { display: block; padding: 0.2rem 0; color: var(--quiet);
+  text-decoration: none; border-left: 2px solid transparent; padding-left: 0.7rem; }
+nav a:hover { color: var(--link); border-left-color: var(--link); }
+main { min-width: 0; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; }
+h2 { font-size: 1.35rem; margin: 2.75rem 0 0.75rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--line); }
+h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
+h4 { font-size: 0.95rem; margin: 1.25rem 0 0.4rem; color: var(--quiet); }
+p, li { margin: 0 0 0.85rem; }
+li { margin-bottom: 0.4rem; }
+ul, ol { padding-left: 1.35rem; margin: 0 0 1rem; }
+a { color: var(--link); }
+code { background: var(--soft); border: 1px solid var(--line); border-radius: 3px;
+  padding: 0.05em 0.35em; font-size: 0.88em;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+pre { background: var(--soft); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.9rem 1.1rem; overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; font-size: 0.85em; }
+.scroll { overflow-x: auto; margin: 0 0 1.25rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th { text-align: left; font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--quiet); border-bottom: 1px solid var(--quiet);
+  padding: 0 0.8rem 0.4rem 0; }
+td { padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+strong { font-weight: 650; }
+.foot { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+  font-size: 0.85rem; color: var(--quiet); }
+@media (max-width: 60rem) {
+  .wrap { grid-template-columns: 1fr; gap: 1.5rem; }
+  nav { position: static; max-height: none; border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem; }
+}
+@media print {
+  .wrap { display: block; max-width: none; padding: 0; }
+  nav { display: none; }
+  h2 { break-before: auto; }
+  pre, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <strong>Contents</strong>
+      <a href="#1-what-it-is-and-the-rules-of-engagement">1. What It Is — And the Rules of Engagement</a>
+      <a href="#2-how-the-double-entry-journal-works">2. How the Double-Entry Journal Works</a>
+      <a href="#3-the-three-accounting-bases">3. The Three Accounting Bases</a>
+      <a href="#4-chart-of-accounts-and-new-zealand-tax-rules">4. Chart of Accounts and New Zealand Tax Rules</a>
+      <a href="#5-bank-feeds-and-verification-of-completeness">5. Bank Feeds and Verification of Completeness</a>
+      <a href="#6-the-decisioning-engine-rules-suggest-humans-decide">6. The Decisioning Engine: Rules Suggest, Humans Decide</a>
+      <a href="#7-meeting-inland-revenue-ird-requirements">7. Meeting Inland Revenue (IRD) Requirements</a>
+      <a href="#8-producing-annual-financial-statements-ses-2-standard">8. Producing Annual Financial Statements (SES-2 Standard)</a>
+      <a href="#9-validating-it-against-a-signed-set-of-accounts">9. Validating It Against a Signed Set of Accounts</a>
+      <a href="#10-summary-checklist-for-practitioners">10. Summary Checklist for Practitioners</a>
+    </nav>
+    <main>
+<h1 id="nzosa-a-guide-for-accountants-and-tax-practitioners">NZOSA: A Guide for Accountants and Tax Practitioners</h1>
+<p>What this software does with client financial data, how its double-entry journal engine works, what it will and will not do, and how its figures can be verified for New Zealand Inland Revenue (IRD / Te Tari Taake) compliance.</p>
+<p>Read this before relying on anything it produces.</p>
+<hr>
+<h2 id="1-what-it-is-and-the-rules-of-engagement">1. What It Is — And the Rules of Engagement</h2>
+<p>NZOSA takes raw bank exports and live bank feeds, reconciles invoices and fixed assets, and produces a fully balanced double-entry transaction ledger, statutory GST returns, and annual financial summaries. It runs locally on your machine or inside a browser — financial data is processed in-memory and on your local disk, never uploaded to third-party cloud servers.</p>
+<h3 id="can-it-be-used-to-prepare-accounts">Can It Be Used to Prepare Accounts?</h3>
+<p><strong>Yes, with the safeguards below.</strong> NZOSA is built to be checked rather than trusted: every reported figure decomposes into the bank lines, invoices and human decisions behind it, and the trial balance proof in section 2 either balances to zero or names the journal that does not. Section 9 sets out how to validate it against a signed set of accounts before you rely on it.</p>
+<p><strong>However, it must be used with caution and professional diligence.</strong></p>
+<ol><li><strong>No Developer Guarantees or Warranties:</strong> NZOSA is open-source software distributed under the MIT Licence. It is provided strictly <em>"as is"</em>, without warranty of any kind, express or implied. Neither the developers who wrote it nor anyone distributing it assume any liability or legal responsibility if a figure, tax classification, or return is incorrect. The compiling accountant, tax agent, or taxpayer remains entirely responsible for every figure filed with Inland Revenue.</li><li><strong>Not a Blind "Black Box":</strong> The software is deliberately designed around <strong>complete auditability and traceability</strong>. It does not make opaque adjustments or hide unreviewed guesses. Every ledger figure decomposes into visible bank lines, source invoices, and explicit human decisions.</li><li><strong>Accountant in the Loop:</strong> NZOSA automates the mechanical heavy lifting of bank transaction coding, GST classification, invoice settlement matching, and asset depreciation calculations. What it does not replace are the professional judgements of a qualified accountant: year-end closing journals, opening equity reconciliations, tax provisions, shareholder loan benchmark interest adjustments, and compilation disclosures under Service Engagement Standard 2 (SES-2).</li></ol>
+<hr>
+<h2 id="2-how-the-double-entry-journal-works">2. How the Double-Entry Journal Works</h2>
+<p>At the very heart of NZOSA is a deterministic, balanced <strong>double-entry journal posting engine</strong>. Understanding how this engine functions is essential for any accountant reviewing its output.</p>
+<h3 id="the-journal-entry-model">The Journal Entry Model</h3>
+<p>Unlike simple single-entry cashbooks that merely categorise bank inflows and outflows, every approved transaction in NZOSA generates balanced double-entry journal lines:</p>
+<p>$$\sum \text{Debits} = \sum \text{Credits}$$</p>
+<p>Each journal line carries an Account Code, Account Name, Monetary Amount (tracked in integer cents to eliminate floating-point rounding discrepancies), and explicit GST Classification metadata.</p>
+<h4 id="example-a-standard-expense-with-gst">Example A: Standard Expense with GST</h4>
+<p>When a $115.00 payment for advertising clears the bank account:</p>
+<pre><code>Dr  400 Advertising Expenses       $100.00   [15% GST on Expenses — Input Tax]
+Dr  820 GST Control Account         $15.00   [15% GST on Expenses — Claimable in Box 11 &amp; 12]
+Cr  Bank Account (BNZ Current)     $115.00   [Out of Scope — Gross Bank Settlement]</code></pre>
+<h4 id="example-b-invoiced-sale-vs-bank-settlement-avoiding-double-counted-revenue">Example B: Invoiced Sale vs Bank Settlement (Avoiding Double-Counted Revenue)</h4>
+<p>In an accrual-aware accounting workflow, customer sales are invoiced before payment:</p>
+<ol><li><strong>When the Sales Invoice is Issued:</strong> ``<code>text Dr  610 Accounts Receivable        $1,150.00  [Debtor Asset Created] Cr  200 Sales Revenue              $1,000.00  [Output Tax Supply] Cr  820 GST Control Account          $150.00  [Output Tax — Box 5 &amp; 8] </code>``</li><li><strong>When the Bank Receipt Clears:</strong> When the customer pays $1,150.00 into the bank account, NZOSA matches the payment to the outstanding invoice. The receipt does <strong>not</strong> credit Sales again (which would inflate revenue by 100%): ``<code>text Dr  Bank Account (BNZ Current)     $1,150.00  [Cash Asset Inflow] Cr  610 Accounts Receivable        $1,150.00  [Debtor Asset Settled] </code>``</li></ol>
+<h4 id="example-c-inter-bank-account-transfers">Example C: Inter-Bank Account Transfers</h4>
+<p>When funds move between the trading current account and the business credit card, single-entry systems often double-count income and expenditure or leave unreconciled balances in clearing accounts.</p>
+<p>NZOSA pairs corresponding outflow and inflow legs across accounts owned by the same entity:</p>
+<pre><code>Dr  BNZ Visa Card                  $1,260.65  [Liability Reduction / Card Inflow]
+Cr  BNZ 01 Current Account         $1,260.65  [Cash Outflow]</code></pre>
+<p>Both legs are posted as <strong>one single journal</strong>, with no intermediate clearing account, and both sides marked strictly <em>Out of Scope</em> for GST.</p>
+<h4 id="example-d-split-transactions-e-g-stripe-payouts-customs-border-gst">Example D: Split Transactions (e.g. Stripe Payouts &amp; Customs Border GST)</h4>
+<p>Real commercial transactions rarely fit single ledger categories. NZOSA enforces that all split parts must sum to the bank statement line to the exact cent:</p>
+<ul><li><strong>Stripe Card Payout:</strong> A net bank deposit of $972.43 represents gross sales of $1,000.00 less Stripe processing fees of $27.57: ``<code>text Dr  Bank Account                   $972.43  [Net Cash Deposited] Dr  506 Stripe Fees                  $27.57  [No GST / Exempt Expense] Cr  610 Accounts Receivable / 200  $1,000.00  [Gross Sales Settled, incl GST] </code>``</li><li><strong>Customs Border GST:</strong> A courier payment of $1,039.02 may represent $102.42 of freight (subject to 15% GST) and $936.60 of customs border GST paid on behalf of the importer. In NZOSA, the $936.60 is tagged as <code>imports</code> (100% GST claimed directly in Box 13), while $102.42 is standard freight.</li></ul>
+<h3 id="derived-vs-stored-postings">Derived vs Stored Postings</h3>
+<p>In NZOSA, <strong>journal lines are derived, not frozen in opaque database tables</strong>.</p>
+<p>When you modify a rule, correct an account mapping, or assign an invoice settlement, the journals for those transactions are recomputed from the underlying source data and the updated human decision. This ensures that the ledger never suffers from "drift" or orphan records where a rule was updated but historical journal lines were left stranded.</p>
+<h3 id="the-trial-balance-proof">The Trial Balance Proof</h3>
+<p>NZOSA can run a full mathematical proof over every journal in the book. However many journals and lines a set of books holds, the aggregate is the same:</p>
+<p>$$\text{Total Debits} - \text{Total Credits} = \$0.00$$</p>
+<p>If any journal fails to balance to zero, NZOSA flags the offending journal ID and blocks generation of financial reports until the discrepancy is resolved.</p>
+<hr>
+<h2 id="3-the-three-accounting-bases">3. The Three Accounting Bases</h2>
+<p>One of the most common pitfalls in small business software is conflating cash movements with accrual financial statements. NZOSA clearly separates three accounting bases:</p>
+<p>| Feature | Cash Basis | Accrual (Own Postings) | Accrual (Imported General Ledger) | | :--- | :--- | :--- | :--- | | <strong>Primary Source</strong> | Bank statements | Bank + Invoices + Assets | External General Ledger export (e.g. Xero) | | <strong>Revenue Recognition</strong> | When money hits the bank | When sales invoice is issued | When entered in GL | | <strong>Expenses Recognized</strong> | When money leaves the bank | When bill is issued / paid | When entered in GL | | <strong>Depreciation</strong> | Never | From Fixed Asset Register | From GL journals | | <strong>GST Returns</strong> | <strong>Used for Payments Basis (GST101A)</strong> | Reconciles to Debtors/Creditors | Audit comparison | | <strong>Financial Statements</strong> | Cash flow only | Management / Draft accounts | Statutory SES-2 Annual Accounts |</p>
+<h3 id="why-cash-and-accrual-differ-and-why-that-is-correct">Why Cash and Accrual Differ (And Why That Is Correct)</h3>
+<p>A cash P&amp;L will almost never equal an accrual P&amp;L. Taking round figures for illustration:</p>
+<ul><li><strong>Invoiced sales (accrual):</strong> $85,000</li><li><strong>Cash banked in the year:</strong> $79,700</li><li><strong>Difference:</strong> $5,300</li></ul>
+<p>This difference is not an error — it is the net movement in trade debtors across the balance date. Sales invoiced in March and paid in April belong to the year they were invoiced in, and to next year's bank statement. Expect the two figures to differ, and expect the difference to equal the movement in Accounts Receivable; if it does not, something is miscoded. NZOSA’s dual-engine allows you to prepare GST returns on the cash/payments basis mandated by Inland Revenue while simultaneously tracking trade debtors and accrued revenue.</p>
+<hr>
+<h2 id="4-chart-of-accounts-and-new-zealand-tax-rules">4. Chart of Accounts and New Zealand Tax Rules</h2>
+<p>NZOSA is pre-configured with the standard New Zealand small company chart of accounts:</p>
+<ul><li><strong>200–299: Revenue</strong> (200 Sales, 260 Interest Income, 270 Other Revenue)</li><li><strong>300–399: Cost of Sales</strong> (310 Cost of Goods Sold, 320 Freight Inwards, 330 Packaging)</li><li><strong>400–499: Operating Overheads</strong> (400 Advertising, 412 Consulting &amp; Accounting, 420 Entertainment, 433 Insurance, 449 Motor Vehicle, 469 Rent, 485 Subscriptions)</li><li><strong>700–799: Fixed Assets</strong> (710 Computer Equipment, 720 Office Equipment, 730 Plant &amp; Equipment, 740 Motor Vehicles, and accumulated depreciation contra-accounts)</li><li><strong>800–899: Current Liabilities &amp; Equity</strong> (800 Accounts Payable, 820 GST Control, 840 PAYE Payable, 860 Retained Earnings, 880 Share Capital)</li><li><strong>900–999: Non-Current Liabilities &amp; Director Loans</strong> (910 Loan from Director, 980 Owner Drawings)</li></ul>
+<h3 id="gst-classification-engine-te-tari-taake-rules">GST Classification Engine (Te Tari Taake Rules)</h3>
+<p>The GST engine operates according to the Goods and Services Tax Act 1985:</p>
+<ol><li><strong>Standard Rated (15%):</strong> Tax fraction of $3/23$ applied to tax-inclusive amounts. Claimed in Box 11 &amp; 12 (Purchases) or returned in Box 5 &amp; 8 (Sales).</li><li><strong>Zero-Rated (0%):</strong> Exports, financial services where applicable. Reported in Box 5 and deducted in Box 6.</li><li><strong>Exempt / Out of Scope:</strong> Bank fees, interest, drawings, director loans, inter-account transfers, and Inland Revenue tax settlements. Does not appear on the GST101A form.</li><li><strong>Customs / Border GST Imports:</strong> 100% of the line is tax (no $3/23$ fraction). Claimed in Box 13 as a credit adjustment.</li><li><strong>50% Non-Deductible Entertainment:</strong> Under Subpart DD of the Income Tax Act 2007, business entertainment (meals, corporate events) is only 50% deductible for income tax, and the associated GST input tax on the non-deductible half must be adjusted. NZOSA supports assigning a <code>deductiblePercent: 50</code> tag to entertainment expenses to maintain statutory compliance.</li></ol>
+<hr>
+<h2 id="5-bank-feeds-and-verification-of-completeness">5. Bank Feeds and Verification of Completeness</h2>
+<p>A major source of accounting error is missing transactions or duplicate imports. NZOSA addresses this at two levels:</p>
+<ol><li><strong>Akahu Open Banking Integration:</strong> Direct, read-only OAuth connection to New Zealand registered banks (ANZ, ASB, BNZ, Westpac, Kiwibank). Pulls transactions directly with end-to-end data integrity.</li><li><strong>Daily Balance Verification (<code>Bank import → Check against the bank's own balances</code>):</strong> Compares the running balance of imported transactions against the bank’s official daily closing balances. If a transaction is missed or duplicated, NZOSA flags the exact calendar day and exact dollar variance immediately.</li></ol>
+<hr>
+<h2 id="6-the-decisioning-engine-rules-suggest-humans-decide">6. The Decisioning Engine: Rules Suggest, Humans Decide</h2>
+<p>Automated accounting AI often fails when it guesses silently. NZOSA adheres to a strict design principle:</p>
+<ul><li><strong>Rules Propose:</strong> Machine learning or regex keyword rules suggest a probable account code and GST treatment.</li><li><strong>Humans Decide:</strong> No coding becomes part of the permanent ledger until a human confirms it or overrides it.</li><li><strong>Immutable Bank Feed:</strong> Raw statement data lives in <code>transactions.json</code> and is never altered. User decisions live in <code>decisions.json</code>.</li><li><strong>Audit Change Log:</strong> Every change is timestamped and recorded in <code>events.json</code>, allowing full historical playback and rollback.</li></ul>
+<hr>
+<h2 id="7-meeting-inland-revenue-ird-requirements">7. Meeting Inland Revenue (IRD) Requirements</h2>
+<p>From the perspective of an accountant, tax agent, or IRD auditor, software must satisfy specific statutory criteria under the Tax Administration Act 1994 (TAA):</p>
+<h3 id="record-keeping-taa-section-22">Record-Keeping (TAA Section 22)</h3>
+<p>Under section 22, taxpayers must keep sufficient records in English or Te Reo Māori to enable the Commissioner to ascertain readily their taxable income, allowable deductions, and GST liabilities, and retain them for at least 7 years.</p>
+<ul><li>NZOSA stores all data in standard, non-proprietary JSON files on local disk. </li><li>Books can be copied, archived, or version-controlled using Git, ensuring that financial records remain permanently readable without vendor lock-in or subscription requirements.</li></ul>
+<h3 id="gst-returns-gst101a">GST Returns (GST101A)</h3>
+<p>Returns are generated on the payments basis for one-monthly, two-monthly, or six-monthly filing periods. Box 5 through Box 15 reconcile directly to tagged journal lines.</p>
+<h3 id="ir10-financial-statements-summary">IR10 Financial Statements Summary</h3>
+<p>Every company income tax return (IR4) filed in New Zealand requires an IR10 summary or full financial statements. NZOSA accounts map directly to the IR10 box categories:</p>
+<ul><li>Box 2: Sales / Operating Revenue</li><li>Box 4: Purchases / Direct Costs</li><li>Box 10: Other Income (e.g. Depreciation Recovered)</li><li>Box 13: Depreciation</li><li>Box 14: Insurance</li><li>Box 16: Professional &amp; Consulting</li><li>Box 18: Rent</li><li>Box 23: Contractor Payments</li><li>Box 24: Other Expenses</li></ul>
+<h3 id="shareholder-current-accounts-section-hb-1-fbt-deemed-dividend-rules">Shareholder Current Accounts (Section HB 1 &amp; FBT/Deemed Dividend Rules)</h3>
+<p>In owner-operated New Zealand companies, transactions between the company and its shareholders are heavily scrutinised by the IRD:</p>
+<ul><li>If a shareholder current account becomes overdrawn (the shareholder owes the company money), the company has provided a low-interest or interest-free loan. The IRD prescribes an official <strong>benchmark interest rate</strong> (currently ~8.41%). If interest is not charged at or above this benchmark, the shortfall is treated as a taxable dividend or subject to Fringe Benefit Tax (FBT).</li><li>NZOSA explicitly isolates <strong>Drawings</strong> (<code>980</code>) and <strong>Funds Introduced</strong> (<code>910</code>), allowing practitioners to accurately produce the Shareholder Current Account schedule required for Page 2 &amp; Page 3 of the IR4 tax return (Boxes 40A–40E).</li></ul>
+<hr>
+<h2 id="8-producing-annual-financial-statements-ses-2-standard">8. Producing Annual Financial Statements (SES-2 Standard)</h2>
+<p>To prepare financial statements that can be signed by directors and submitted to banks and Inland Revenue, accounts must comply with the <em>Special Purpose Financial Reporting Framework for For-Profit Entities</em> (SPFR for FPEs), compiled under <em>Service Engagement Standard No. 2 (SES-2)</em>.</p>
+<p>A full statutory financial report consists of eight essential parts:</p>
+<ol><li><strong>Compilation Report:</strong> The practitioner’s report detailing scope, responsibilities, disclaimers, and lack of audit assurance under SES-2.</li><li><strong>Approval of Financial Report:</strong> Formal resolution signed and dated by the Board of Directors under the Companies Act 1993.</li><li><strong>Statement of Profit or Loss:</strong> Categorised into Trading Income, Cost of Sales, Gross Profit, Other Income, Operating Expenses, Non-Assessable Income, Non-Deductible Expenses, and Net Profit Before and After Tax.</li><li><strong>Balance Sheet (Statement of Financial Position):</strong> Current Assets (Bank, Debtors, GST), Non-Current Assets (PPE), Current Liabilities (Creditors, GST, Shareholder Loans), Net Assets, and Equity.</li><li><strong>Statement of Changes in Equity:</strong> Opening balance, Net Profit for the year, Dividends/Drawings, Closing Equity.</li><li><strong>Depreciation Schedule:</strong> Line-by-line register of all fixed assets showing asset description, purchase date, cost, opening book value, additions, disposals (sale proceeds and gain/loss), depreciation rate, method (SL or DV), current year depreciation, and closing book value.</li><li><strong>Shareholder Current Accounts Schedule:</strong> Detailed reconciliation for each shareholder: Opening balance, Funds Introduced, Share of Profit / Salaries, Drawings, and Closing balance.</li><li><strong>Notes to the Financial Statements:</strong> Accounting policies adopted (measurement base, revenue recognition, accounts receivable valuation, depreciation rates, GST presentation).</li></ol>
+<h3 id="what-nzosa-provides-vs-what-the-accountant-supplies">What NZOSA Provides vs What the Accountant Supplies</h3>
+<p>| Statement / Schedule | NZOSA Native Capability | What the Accountant / Practitioner Supplies | | :--- | :--- | :--- | | <strong>Profit or Loss</strong> | Complete from bank + invoices + assets | Year-end non-cash adjustments (accruals, provisions) | | <strong>Depreciation Schedule</strong> | Computed from Fixed Asset CSV | Review of depreciation rates &amp; tax vs book methods | | <strong>Asset Disposals</strong> | Book value derecognition | Splitting proceeds into Capital Gain vs Depn Recovery | | <strong>Balance Sheet</strong> | Bank balances, Debtors, Creditors | Opening balances, Tax provisions, Retained earnings | | <strong>Equity Statement</strong> | Current year net profit | Opening equity from prior year's signed accounts | | <strong>Shareholder Accounts</strong> | Drawings &amp; Funds Introduced movements | Opening balances, salary allocations, benchmark interest | | <strong>SES-2 Compilation Report</strong> | Standard markdown/HTML export template | Professional sign-off, firm letterhead, client disclosures |</p>
+<hr>
+<h2 id="9-validating-it-against-a-signed-set-of-accounts">9. Validating It Against a Signed Set of Accounts</h2>
+<p>Do not take this guide's word for any of the above. The way to satisfy yourself is to run a year you already have signed accounts for, and see whether the figures come back. This is the recommended first use of the software on any client, and it takes an afternoon.</p>
+<h3 id="what-to-load">What to load</h3>
+<ul><li>Every bank account for the year, from the bank's own export, plus the bank's daily balance export if it offers one.</li><li>The chart of accounts.</li><li>The coded history for the year, so the rules learn from work already done.</li><li>Sales invoices and bills.</li><li>The fixed asset register.</li><li>The trial balance at the previous year end, for opening balances.</li><li>The general ledger or journal report, for the year-end journals.</li><li>The GST returns as filed.</li></ul>
+<h3 id="what-to-compare-and-in-what-order">What to compare, and in what order</h3>
+<p>Work down this list. Each step depends on the one above it, so a difference found late is usually caused by something skipped early.</p>
+<ol><li><strong>Bank completeness first.</strong> Every account's closing balance must agree with the bank's own figure. Until this holds, nothing below it means anything: a report built from an incomplete set of transactions can still balance perfectly and still be wrong.</li><li><strong>Trial balance proof.</strong> Debits less credits across every journal must be zero.</li><li><strong>Balance sheet.</strong> Compare against the signed statement of financial position, line by line. Differences here usually mean opening balances, not coding.</li><li><strong>Profit or loss, line by line.</strong> Expect most lines to agree exactly and a handful not to. The exceptions are the interesting part.</li><li><strong>Depreciation</strong>, against the signed depreciation schedule.</li><li><strong>Each GST period</strong>, against the return as filed.</li></ol>
+<h3 id="reading-the-differences">Reading the differences</h3>
+<p>A line that does not agree is not necessarily a fault in the software, and this is where professional judgement is actually required. In practice differences fall into a few recognisable kinds:</p>
+<ul><li><strong>A year-end journal that exists only in the accountant's working papers.</strong> Reclassifications, provisions, and adjustments made outside the accounting system will not appear in bank data. These are entered as manual journals with a narration saying why.</li><li><strong>Entries dated before the ledger opens.</strong> A prior-year accrual reversed on the first day of the year is real, and no bank export contains it.</li><li><strong>A receipt coded to revenue that should have settled an invoice.</strong> This overstates income and leaves the debtor outstanding. It is the single most common coding error this software finds, and it is worth checking for specifically.</li><li><strong>Rounding on a split.</strong> Half of an odd amount is not a whole number of cents. The convention here is that the odd cent goes to the first part.</li><li><strong>A genuine error in the signed accounts.</strong> This does happen. Do not assume the signed figure is right merely because it was signed; establish which of the two is correct before adjusting anything.</li></ul>
+<h3 id="the-standard-to-hold-it-to">The standard to hold it to</h3>
+<p>A validation has passed when every difference is <em>explained</em>, not when every difference is zero. An unexplained agreement is worth less than an explained difference: the first may be luck, the second is understanding. Record the explanations — they are the working papers for the year, and they are what makes the following year quick.</p>
+<hr>
+<h2 id="10-summary-checklist-for-practitioners">10. Summary Checklist for Practitioners</h2>
+<p>When using NZOSA to review client books or compile financial statements:</p>
+<ol><li><strong>Verify Bank Feed Completeness:</strong> Run <code>Bank import → Check against the bank's own balances</code> to ensure zero missing or duplicated transactions.</li><li><strong>Review Uncoded &amp; Guess Rates:</strong> Ensure that 100% of transactions are confirmed decisions, with zero unreviewed guesses.</li><li><strong>Check Inter-Account Transfers:</strong> Confirm that all inter-account sweep and credit card payments are paired as transfer journals.</li><li><strong>Reconcile Invoices &amp; Debtors:</strong> Verify that customer receipts settle invoices rather than posting directly to revenue.</li><li><strong>Reconcile Fixed Assets &amp; Disposals:</strong> Check that capital gains, losses on disposal, and depreciation recovery have been recognised.</li><li><strong>Input Opening Balances:</strong> Carry forward opening retained earnings, opening shareholder current accounts, and opening fixed asset values from last year's signed financial report.</li><li><strong>Review Tax Adjustments:</strong> Apply the 50% non-deductible entertainment split and remove non-assessable capital gains before finalizing taxable income.</li></ol>
+<p>With these safeguards in place, NZOSA provides an exceptionally rigorous, auditable, and transparent accounting platform for New Zealand small businesses and their professional advisors.</p>
+      <p class="foot">
+        NZOSA &mdash; New Zealand open-source accounting. Free software under an
+        MIT licence, provided as is and without warranty of any kind.
+        Built from <code>accountant-guide.md</code>.
+      </p>
+    </main>
+  </div>
+</body>
+</html>

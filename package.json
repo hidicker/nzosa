@@ -1,0 +1,25 @@
+{
+  "name": "nzosa",
+  "private": true,
+  "version": "0.1.0",
+  "description": "Bank flat files in, a clean categorised ledger out.",
+  "license": "MIT",
+  "type": "module",
+  "workspaces": [
+    "packages/*",
+    "apps/*"
+  ],
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "build": "npm run build --workspaces --if-present",
+    "test": "npm run test --workspaces --if-present",
+    "typecheck": "tsc --build",
+    "docs": "node tools/build-docs.mjs",
+    "clean": "rimraf packages/*/dist apps/*/dist"
+  },
+  "devDependencies": {
+    "typescript": "^5.6.0"
+  }
+}

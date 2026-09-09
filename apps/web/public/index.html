@@ -1,0 +1,576 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NZOSA</title>
+    <meta
+      name="description"
+      content="Turn bank flat files into a clean, deduplicated transaction ledger. Runs entirely in your browser."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📒</text></svg>"
+    />
+  </head>
+  <body>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <button
+            id="sidebar-toggle"
+            type="button"
+            class="sidebar-toggle"
+            aria-expanded="true"
+            title="Narrow the menu to icons"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M4 5h12M4 10h12M4 15h12" />
+            </svg>
+          </button>
+          <span class="wordmark">NZOSA</span>
+          <button
+            id="theme-toggle"
+            type="button"
+            class="theme-toggle"
+            title="Light, dark, or whatever this computer is set to"
+          ></button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Sections">
+          <button type="button" data-page="reconcile" class="active">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 7h12M4 13h12M8 4l-4 3 4 3M12 10l4 3-4 3"/></svg>
+            <span>Reconcile</span>
+          </button>
+          <button type="button" data-page="import">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>
+            <span>Bank import</span>
+          </button>
+          <button type="button" data-page="invoices">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
+            <span>Invoices</span>
+          </button>
+          <button type="button" data-page="reports">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16V9M8.5 16V5M13 16v-4M17 16h-14"/></svg>
+            <span>Reports</span>
+          </button>
+          <p class="sidebar-heading">Set up and check</p>
+          <button type="button" data-page="setup">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.4 5.4l1.4 1.4M13.2 13.2l1.4 1.4M14.6 5.4l-1.4 1.4M6.8 13.2l-1.4 1.4"/></svg>
+            <span>Setup</span>
+          </button>
+          <button type="button" data-page="opening">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v14"/><path d="M5 8h10"/><path d="M4 12h5M11 12h5"/></svg>
+            <span>Opening balances</span>
+          </button>
+          <button type="button" data-page="gst">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 5h12v10H4z"/><path d="M7 9h6M7 12h3"/></svg>
+            <span>GST reconciliation</span>
+          </button>
+          <button type="button" data-page="check">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5 8 14l8-8"/></svg>
+            <span>Coding reconciliation</span>
+          </button>
+          <button type="button" data-page="rules">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h12M4 10h12M4 14h7"/><circle cx="14.5" cy="14" r="1.5"/></svg>
+            <span>Rules</span>
+          </button>
+          <button type="button" data-page="entities">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 16V8l4-3 4 3v8"/><path d="M11 16V11l3-2 3 2v5"/><path d="M2 16h16"/></svg>
+            <span>Entities &amp; accounts</span>
+          </button>
+          <button type="button" data-page="history">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2"/></svg>
+            <span>History</span>
+          </button>
+          <button type="button" data-page="assets">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3z"/><path d="M7 7V5h6v2"/><path d="M3 11h14"/></svg>
+            <span>Fixed assets</span>
+          </button>
+          <button type="button" data-page="books">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 4h4v12H4zM9 4h3v12H9z"/><path d="M13.5 4.8l3 .8-2.6 11-3-.8z"/></svg>
+            <span>Books</span>
+          </button>
+        </nav>
+
+        <div class="sidebar-foot">
+          <!-- Which books are open. Switching happens on the Books page now,
+               but the name stays: not knowing which set you are coding into is
+               how work ends up in the wrong one. -->
+          <button type="button" class="ledger-open" id="ledger-open" data-page="books" hidden>
+            <span class="ledger-open-label">Books</span>
+            <span class="ledger-open-name" id="ledger-open-name"></span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="shell-body">
+        <header class="topbar">
+          <h1 id="page-title">Reconcile</h1>
+          <label class="entity-filter">
+            <span>Entity</span>
+            <select id="entity-filter"></select>
+          </label>
+        </header>
+        <p id="startup-status" class="startup-status" hidden></p>
+
+        <main>
+      <section id="page-reconcile" class="page">
+        <div class="page-head">
+          <h2>Bank lines to code</h2>
+          <div class="page-actions">
+            <div class="chips" id="reconcile-accounts" role="group" aria-label="Accounts"></div>
+            <input id="reconcile-search" type="search" placeholder="Search payee or amount&hellip;" />
+            <button id="accept-all" type="button">Accept all</button>
+            <select id="reconcile-filter" title="Which lines to show">
+              <option value="todo">Still to confirm</option>
+              <option value="suggested">Suggested, not yet confirmed</option>
+              <option value="nocode">Nothing suggested</option>
+              <option value="coded">Coded</option>
+              <option value="all">All</option>
+            </select>
+          </div>
+        </div>
+        <p class="page-hint" id="reconcile-hint">
+          Each line carries a suggested code and GST treatment from the rules. Accept it, or
+          change it, and the line is coded and stays that way.
+        </p>
+        <div id="reconcile-body"></div>
+      </section>
+
+      <section id="page-check" class="page" hidden>
+        <div class="page-head">
+          <h2>Coding reconciliation</h2>
+          <div class="page-actions">
+            <div class="chips" id="check-accounts" role="group" aria-label="Accounts"></div>
+            <button id="check-clear" type="button">Clear</button>
+          </div>
+        </div>
+        <p class="page-hint">
+          Load what your accounting system or spreadsheet already recorded, and every coding
+          this app proposes is lined up against it. Where the two agree, that coding can
+          become a rule you keep; where they differ, you can see which one is wrong. This is
+          how a year gets coded back through without doing it line by line. Matching is on
+          amount and nearest date.
+        </p>
+        <details class="how-to">
+          <summary>How to get the file out of Xero</summary>
+          <ol>
+            <li>Go to <strong>Reporting &rarr; Account Transactions</strong>.</li>
+            <li>Select <strong>all accounts</strong>.</li>
+            <li>Under columns, select <strong>all columns</strong>.</li>
+            <li>Set <strong>Grouping/Summarising</strong> to <strong>None</strong>. This matters:
+              grouped output hides the account each posting went to, which is the whole point of
+              the check.</li>
+            <li>Click <strong>Update</strong>, then <strong>Export &rarr; Excel</strong>.</li>
+          </ol>
+          <p>
+            Load the resulting <code>.xlsx</code> or <code>.csv</code> here. A chart of accounts
+            export helps too, so a code and a name are recognised as the same account.
+          </p>
+        </details>
+        <details class="how-to">
+          <summary>Loading a spreadsheet instead</summary>
+          <p>
+            Your own spreadsheet is accepted, and needs three columns:
+          </p>
+          <ul>
+            <li><strong>Date</strong> and <strong>Amount</strong> — required, and found by
+              those headings.</li>
+            <li>A column saying what each line was coded to. Its heading can be
+              <code>What</code>, <code>Account</code>, <code>Code</code>, <code>Coding</code>,
+              <code>Category</code> or <code>Class</code> — whichever yours uses.</li>
+          </ul>
+          <p>
+            If none of those headings fits, the file is not refused: you are shown the headings
+            it found and can point at the right three columns yourself. Nothing needs renaming
+            first.
+          </p>
+        </details>
+        <!-- The file button belongs where the file goes, and looking like the
+             one on the Import page, rather than tucked in the header beside a
+             filter. -->
+        <div id="check-drop" class="dropzone dropzone-slim">
+          <p class="dropzone-title">Drop the Account Transactions export here</p>
+          <p class="dropzone-sub">
+            From Xero, or your own spreadsheet. <code>.xlsx</code> or <code>.csv</code>.
+            <br />Read and parsed in this tab. Nothing is uploaded.
+          </p>
+          <button id="check-pick" type="button" class="primary">Choose file</button>
+          <input id="check-input" type="file" accept=".csv,.xlsx" multiple hidden />
+        </div>
+        <div id="check-body"></div>
+      </section>
+
+      <section id="page-rules" class="page" hidden>
+        <div class="page-head">
+          <h2>Coding rules</h2>
+          <div class="page-actions">
+            <input id="rules-search" type="search" placeholder="Search keyword, code&hellip;" />
+            <button id="rules-pick" type="button">Load rules&hellip;</button>
+            <input id="rules-input" type="file" accept=".json,application/json" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          Rules suggest a code; they never decide one. Higher priority wins, and an account
+          restriction makes a rule apply only on that account.
+        </p>
+        <div id="rules-status"></div>
+        <div id="rules-body"></div>
+      </section>
+
+      <section id="page-setup" class="page" hidden>
+        <div class="page-head">
+          <h2>Setup</h2>
+          <div class="page-actions">
+            <select id="setup-source">
+              <option value="xero">I use Xero</option>
+              <option value="sheet">I use a spreadsheet</option>
+              <option value="new">I am starting from new</option>
+            </select>
+          </div>
+        </div>
+        <p class="page-hint">
+          Nobody starts with rules. If you have transactions somebody has already coded,
+          the quickest way in is to read that work rather than retype it: load what you
+          have, and the coding you already did becomes the rules. Starting from new, the
+          rules come from the first few decisions you make instead.
+        </p>
+        <div id="setup-intro"></div>
+        <div id="setup-drop" class="dropzone dropzone-slim">
+          <p class="dropzone-title">Drop everything you exported here</p>
+          <p class="dropzone-sub">
+            Bank statements, chart of accounts, account transactions, journal report,
+            fixed assets, invoices, daily balances — all at once, in any order. Each file
+            is recognised by its own columns and goes where it belongs.
+            <br />Read and parsed in this tab. Nothing is uploaded.
+          </p>
+          <button id="setup-pick" type="button" class="primary">Choose files</button>
+          <input id="setup-input" type="file" accept=".csv,.xlsx,.txt" multiple hidden />
+          <div id="setup-loaded"></div>
+        </div>
+        <div id="setup-body"></div>
+      </section>
+
+      <section id="page-history" class="page" hidden>
+        <div class="page-head">
+          <h2>History</h2>
+          <div class="page-actions">
+            <label class="who-label">
+              <span>You are</span>
+              <input id="who" type="text" placeholder="Your name" />
+            </label>
+            <select id="history-kind"><option value="">Everything</option></select>
+          </div>
+        </div>
+        <p class="page-hint">
+          Every change, most recent first, and how to put it back. The name is recorded with
+          each change but nothing verifies it &mdash; this is attribution between people who
+          trust each other, not an audit trail. The log stays on this machine and is not
+          carried by an exported ledger.
+        </p>
+        <div id="history-body"></div>
+      </section>
+
+      <section id="page-invoices" class="page" hidden>
+        <div class="page-head">
+          <h2>Invoices</h2>
+          <div class="page-actions">
+            <input id="invoice-search" type="search" placeholder="Search contact, number&hellip;" />
+            <button id="invoice-new" type="button" class="primary">New invoice</button>
+            <button id="invoices-pick" type="button">Load invoices&hellip;</button>
+            <input id="invoices-input" type="file" accept=".csv,text/csv" hidden />
+            <button id="allocations-pick" type="button">Load allocations&hellip;</button>
+            <input id="allocations-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          Which money settled which invoice. An invoice number on the bank line is believed
+          outright; a recorded allocation is next; amount and date only when they are exact.
+          Anything less is proposed rather than matched, because closing the gap means writing
+          money off.
+        </p>
+        <div id="invoice-editor"></div>
+        <div id="invoices-body"></div>
+      </section>
+
+      <section id="page-reports" class="page" hidden>
+        <div class="page-head">
+          <h2>Reports</h2>
+          <div class="page-actions">
+            <select id="report-basis">
+              <option value="posted">Accrual (our postings)</option>
+              <option value="accrual">Accrual (imported file)</option>
+              <option value="cash">Cash (bank data)</option>
+            </select>
+            <select id="report-gst" title="Whether the figures include GST">
+              <option value="net">Excluding GST</option>
+              <option value="gross">Including GST</option>
+            </select>
+            <select id="report-kind">
+              <option value="pl">Profit and loss</option>
+              <option value="charts">Charts</option>
+              <option value="owner">Income by owner</option>
+              <option value="depreciation">Depreciation schedule</option>
+              <option value="balancesheet">Balance sheet</option>
+              <option value="ir10">IR10 summary (Inland Revenue)</option>
+              <option value="shareholders">Shareholder current account</option>
+              <option value="manual">Manual journals</option>
+              <option value="journal">Journal &amp; trial balance</option>
+              <option value="general">General ledger (every line)</option>
+              <option value="extract">Account transactions (extract)</option>
+            </select>
+            <select id="report-owner"></select>
+            <select id="report-year"></select>
+            <button id="journals-pick" type="button">Load ledger&hellip;</button>
+            <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
+            <button id="assets-pick" type="button">Load assets&hellip;</button>
+            <input id="assets-input" type="file" accept=".csv,text/csv" hidden />
+            <button id="report-download" type="button">Download CSV</button>
+          </div>
+        </div>
+        <p class="page-hint" id="reports-hint"></p>
+        <div id="reports-body"></div>
+      </section>
+
+      <section id="page-assets" class="page" hidden>
+        <div class="page-head">
+          <h2>Fixed assets</h2>
+        </div>
+        <p class="page-hint">
+          The asset register is the one thing bank data can never produce: a payment for a
+          vehicle is a payment, and only the register says it is a vehicle being written off
+          over five years. Depreciation, and the disposal figures that go with it, are
+          computed from what is loaded here.
+        </p>
+        <div id="assets-drop" class="dropzone dropzone-slim">
+          <p class="dropzone-title">Drop your fixed asset register here</p>
+          <p class="dropzone-sub">
+            Xero: <strong>Accounting &rarr; Fixed assets</strong>, then
+            <strong>Export</strong>. A <code>.csv</code> or <code>.xlsx</code>.
+            <br />Read and parsed in this tab. Nothing is uploaded.
+          </p>
+          <button id="assets-pick2" type="button" class="primary">Choose file</button>
+        </div>
+        <div id="assets-body"></div>
+      </section>
+
+      <section id="page-books" class="page" hidden>
+        <div class="page-head">
+          <h2>Books</h2>
+        </div>
+        <p class="page-hint">
+          Every set of books in your ledgers folder. Clearing one empties it and keeps a
+          dated copy beside it, so it can be put back — nothing here deletes a folder.
+        </p>
+        <div id="books-body"></div>
+      </section>
+
+      <section id="page-entities" class="page" hidden>
+        <div class="page-head">
+          <h2>Entities &amp; accounts</h2>
+          <div class="page-actions">
+            <button id="chart-pick" type="button">Load chart&hellip;</button>
+            <button id="chart-save" type="button">Export chart&hellip;</button>
+            <input id="chart-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          An account belongs to exactly one entity. A bank account may serve several, because
+          one current account often pays for all of them. The GST treatment set here is what
+          the returns use for anything coded to that account, so an account with none is an
+          account whose GST would only be assumed.
+        </p>
+        <div id="entities-body"></div>
+      </section>
+
+      <section id="page-opening" class="page" hidden>
+        <div class="page-head">
+          <h2>Opening balances</h2>
+          <div class="page-actions">
+            <button id="opening-pick" type="button">Load trial balance&hellip;</button>
+            <input id="opening-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          What each account stood at before this ledger begins. Without them a balance sheet
+          shows only the movement since the first bank line, which is a wrong balance sheet
+          rather than a short one. Take them from a trial balance at the previous year end:
+          it carries the cents and every account, so the figures balance on their own.
+        </p>
+        <div id="opening-body"></div>
+      </section>
+
+      <section id="page-import" class="page" hidden>
+        <div class="page-head">
+          <h2>Bank import</h2>
+        </div>
+      <section id="dropzone" class="dropzone" aria-label="Import bank files">
+        <p class="dropzone-title">Drop bank exports here</p>
+        <p class="dropzone-sub">
+          CSV from BNZ, ANZ or Wise. Several at once is fine.
+          <br />Read and parsed in this tab. Nothing is uploaded.
+        </p>
+        <button id="pick-button" type="button" class="primary">Choose files</button>
+        <input id="file-input" type="file" accept=".csv,.txt,text/csv" multiple hidden />
+
+        <div class="options">
+          <label>
+            <span>Account id</span>
+            <input id="account" type="text" placeholder="e.g. visa-platinum" />
+            <small>Used only for files that do not name their own account, like card exports.</small>
+          </label>
+          <label>
+            <span>Currency</span>
+            <input id="currency" type="text" value="NZD" size="4" />
+            <small>The currency the account is denominated in.</small>
+          </label>
+          <label class="checkbox">
+            <input id="day-first" type="checkbox" checked />
+            <span>Dates are DD/MM/YYYY</span>
+            <small>Uncheck for MM/DD/YYYY exports.</small>
+          </label>
+        </div>
+      </section>
+
+      <p id="busy" class="busy" hidden>Parsing&hellip;</p>
+
+      <p id="storage-warning" class="warning" hidden>
+        This browser will not let the page store data, so nothing will survive closing this
+        tab. Export your ledger before you leave.
+      </p>
+
+      <section id="reports" class="reports" aria-live="polite"></section>
+
+
+
+      <section class="stats">
+        <div class="stat">
+          <span class="stat-value" id="stat-total">0</span>
+          <span class="stat-label">transactions</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-review">0</span>
+          <span class="stat-label">need review</span>
+        </div>
+        <div class="stat">
+          <span class="stat-value" id="stat-accounts">0</span>
+          <span class="stat-label">accounts</span>
+        </div>
+        <div class="stat wide">
+          <span class="stat-value" id="stat-range">--</span>
+          <span class="stat-label">date range</span>
+        </div>
+      </section>
+
+      <section class="balance-check">
+        <div class="balance-head">
+          <h3>Check against the bank's own balances</h3>
+          <button id="balances-pick" type="button">Load daily balances&hellip;</button>
+          <input id="balances-input" type="file" accept=".csv,text/csv" hidden />
+        </div>
+        <p class="page-hint">
+          An import can be missing a transaction, or hold the same one twice, and no
+          total will show it &mdash; the total is made of exactly the rows that are
+          there. The bank's daily balance is the outside witness. Export it from
+          internet banking for the same period as the transactions.
+        </p>
+        <div id="balances-body"></div>
+      </section>
+
+      <section class="toolbar">
+        <div class="filters" role="group" aria-label="Filter transactions">
+          <button id="filter-all" type="button" class="active">All</button>
+          <button id="filter-review" type="button">Needs review (0)</button>
+          <button id="filter-duplicate" type="button">Duplicates (0)</button>
+        </div>
+        <input id="search" type="search" placeholder="Search payee, particulars, amount&hellip;" />
+        <div class="ledger-actions">
+          <button id="export-button" type="button">Export ledger</button>
+          <button id="import-ledger-button" type="button">Import ledger</button>
+          <input id="ledger-input" type="file" accept=".json,application/json" hidden />
+          <button id="clear-button" type="button" class="danger">Clear</button>
+        </div>
+      </section>
+
+      <div class="table-scroll">
+        <table>
+          <thead>
+            <tr>
+              <th>Date</th>
+              <th>Amount</th>
+              <th>Other party</th>
+              <th>Particulars / code / reference</th>
+              <th>Account</th>
+              <th>Source</th>
+              <th>Status</th>
+            </tr>
+          </thead>
+          <tbody id="rows">
+            <tr>
+              <td colspan="7" class="empty">
+                No transactions yet. Drop a bank export above to get started.
+              </td>
+            </tr>
+          </tbody>
+        </table>
+      </div>
+
+      <h3 class="feed-heading">Or connect a bank feed</h3>
+      <p class="page-hint">
+        A live connection instead of dropping files: transactions arrive on their own.
+        Either way in produces the same ledger, and using both is fine &mdash; a line that
+        arrives twice is caught as a duplicate.
+      </p>
+      <div id="feed-body"></div>
+
+      </section>
+
+      <section id="page-gst" class="page" hidden>
+      <section class="variance" id="variance">
+        <div class="variance-head">
+          <h2>GST reconciliation</h2>
+          <div class="variance-actions">
+            <button id="variance-pick" type="button">Load filed returns&hellip;</button>
+            <input id="variance-input" type="file" accept=".xlsx" multiple hidden />
+            <div class="chips" id="variance-accounts" role="group" aria-label="Accounts"></div>
+          </div>
+        </div>
+        <p class="variance-hint" id="variance-hint">
+          Load the GST return workbooks your accounting system exports. They are read in this
+          page and compared against returns recomputed from the ledger above.
+        </p>
+        <div id="variance-body"></div>
+      </section>
+      </section>
+
+      <section class="help" hidden>
+        <h2>Where to get the files</h2>
+        <ul id="formats"></ul>
+        <h2>What happens to duplicates</h2>
+        <p>
+          Nothing is ever deleted automatically. Rows identical to one already in the ledger are
+          marked <span class="chip duplicate">duplicate</span> and left out, so re-importing an
+          overlapping statement is safe. Rows that only <em>look</em> like duplicates &mdash; the
+          same amount and payee with a different bank serial, or a day apart on a feed with no
+          serial &mdash; are marked <span class="chip review">review</span> and kept, for you to
+          decide.
+        </p>
+      </section>
+        </main>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        NZOSA is open source under the MIT licence. Your ledger stays in this browser until
+        you export it.
+        <br />It keeps running in the background after you close this tab. To stop it,
+        double-click <strong>Stop NZOSA</strong> in the folder you started it from.
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

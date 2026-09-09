@@ -1731,7 +1731,11 @@ function showPage(page: string): void {
     button.classList.toggle("active", button.dataset["page"] === page);
   }
   const sidebarSublinks = document.getElementById("sidebar-import-sublinks");
-  if (sidebarSublinks) sidebarSublinks.hidden = page !== "import";
+  if (sidebarSublinks) {
+    const isImport = page === "import";
+    sidebarSublinks.classList.toggle("open", isImport);
+    sidebarSublinks.hidden = !isImport;
+  }
   // The page name lives in the topbar now rather than inside each section, so
   // it is read off the sidebar rather than repeated in a second list that
   // could drift from it.
@@ -1786,7 +1790,8 @@ function balanceMovementSection(
   const wrap = document.createElement("div");
   wrap.className = "feed-accounts";
 
-  const heading = document.createElement("h3");
+  const heading = document.createElement("h4");
+  heading.className = "feed-subheading";
   heading.textContent = "Against the bank's own balance";
   wrap.append(heading);
 

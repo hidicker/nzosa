@@ -1986,14 +1986,22 @@ button.working {
   color: var(--text);
 }
 
-/* Sidebar Bank import sublinks */
+/* Sidebar Bank import sublinks: hidden until Bank import is selected */
 .sidebar-sublinks {
-  display: flex;
+  display: none;
   flex-direction: column;
   margin-left: 28px;
   margin-bottom: 8px;
   margin-top: -4px;
   gap: 3px;
+}
+
+.sidebar-sublinks.open {
+  display: flex;
+}
+
+.sidebar-sublinks[hidden] {
+  display: none !important;
 }
 
 .sidebar-sublink {
@@ -2012,5 +2020,15 @@ button.working {
 
 .shell.narrow .sidebar-sublinks {
   display: none !important;
+}
+
+/* Feed inner sub-heading */
+.feed-subheading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 1.2rem 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
 }
 

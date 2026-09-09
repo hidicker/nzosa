@@ -7805,7 +7805,7 @@ function setupNameField(): HTMLElement {
       : "Only needed once. If one set of books holds several things -- a company and two " +
         "rentals, say -- add the others on Entities & accounts.";
 
-  const commit = (): void => {
+  const commit = async (): Promise<void> => {
     const wanted = input.value.trim();
     if (wanted === "") return;
     const live = state.ledger.entities ?? emptyEntityModel();
@@ -7814,27 +7814,58 @@ function setupNameField(): HTMLElement {
       // The id is derived from the name once, when the entity is made. A
       // rename afterwards keeps it: everything assigned to the entity points
       // at the id, and changing it would orphan the lot.
-      void saveEntities({
-        ...live,
-        entities: [
-          ...live.entities,
-          { id: entityId(wanted), name: wanted, kind: "business", gstRegistered: true },
-        ],
-      });
+      save.disabled = true;
+      save.classList.add("working");
+      try {
+        await saveEntities({
+          ...live,
+          entities: [
+            ...live.entities,
+            { id: entityId(wanted), name: wanted, kind: "business", gstRegistered: true },
+          ],
+        });
+        save.textContent = "Saved ✓";
+        renderSetupBody();
+      } finally {
+        save.disabled = false;
+        save.classList.remove("working");
+      }
       return;
     }
-    if (existing.name === wanted) return;
-    void saveEntities(
-      {
-        ...live,
-        entities: live.entities.map((e) => (e.id === existing.id ? { ...e, name: wanted } : e)),
-      },
-      `Renamed ${existing.name} to ${wanted}`,
-    );
+    if (existing.name === wanted) {
+      save.textContent = "Saved ✓";
+      return;
+    }
+    save.disabled = true;
+    save.classList.add("working");
+    try {
+      await saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((e) => (e.id === existing.id ? { ...e, name: wanted } : e)),
+        },
+        `Renamed ${existing.name} to ${wanted}`,
+      );
+      save.textContent = "Renamed ✓";
+      renderSetupBody();
+    } finally {
+      save.disabled = false;
+      save.classList.remove("working");
+    }
   };
-  save.addEventListener("click", commit);
+  save.addEventListener("click", () => void commit());
   input.addEventListener("keydown", (event) => {
-    if (event.key === "Enter") commit();
+    if (event.key === "Enter") void commit();
+  });
+  input.addEventListener("input", () => {
+    const live = state.ledger.entities ?? emptyEntityModel();
+    const existing = live.entities[0];
+    const wanted = input.value.trim();
+    if (existing && existing.name === wanted) {
+      save.textContent = "Saved ✓";
+    } else {
+      save.textContent = existing === undefined ? "Save" : "Rename";
+    }
   });
 
   wrap.append(label, input, save, said);
@@ -7875,6 +7906,10 @@ function renderSetupIntro(): void {
 
 function renderSetup(): void {
   renderSetupIntro();
+  renderSetupBody();
+}
+
+function renderSetupBody(): void {
   const body = $("setup-body");
   body.textContent = "";
 

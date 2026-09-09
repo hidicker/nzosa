@@ -7424,6 +7424,30 @@ function bankLinkState(): { total: number; unlinked: string[] } {
   return { total: rows.length, unlinked };
 }
 
+let cachedStarterAccounts: Account[] | null = null;
+function defaultStarterAccounts(): Account[] {
+  if (!cachedStarterAccounts) {
+    cachedStarterAccounts = starterChart();
+  }
+  return cachedStarterAccounts;
+}
+
+function isDefaultStarterChart(chart: Account[]): boolean {
+  const starter = defaultStarterAccounts();
+  if (chart.length !== starter.length) return false;
+  for (let i = 0; i < chart.length; i++) {
+    if (chart[i].code !== starter[i].code || chart[i].name !== starter[i].name) {
+      return false;
+    }
+  }
+  return true;
+}
+
+function hasLoadedChart(): boolean {
+  if (state.chart.length === 0) return false;
+  return !isDefaultStarterChart(state.chart);
+}
+
 function setupSteps(): SetupStep[] {
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
@@ -7432,6 +7456,7 @@ function setupSteps(): SetupStep[] {
   const entities = led.entities?.entities ?? [];
   const typed = state.chart.filter((a) => a.type.trim() !== "").length;
   const bankLinks = bankLinkState();
+  const chartLoaded = fromNew ? state.chart.length > 0 : hasLoadedChart();
 
   // Renaming the one entity these books belong to is the smallest useful act
   // of setting them up, and the only one that cannot be inferred: a chart
@@ -7471,13 +7496,12 @@ function setupSteps(): SetupStep[] {
     },
     {
       what: "Chart of accounts",
-      done: state.chart.length > 0,
-      detail:
-        state.chart.length > 0
-          ? `${state.chart.length} accounts, ${typed} with a type set`
-          : xero
-            ? "Export from Xero's Chart of accounts page and drop it above."
-            : "Load your chart of accounts.",
+      done: chartLoaded,
+      detail: chartLoaded
+        ? `${state.chart.length} accounts, ${typed} with a type set`
+        : xero
+          ? "Standard starter chart active (66 accounts). Export and drop your Xero chart to use your own."
+          : "Standard starter chart active (66 accounts). Load your chart of accounts.",
       unlocks: "Names accounts consistently, and carries entities and GST treatments",
       page: "entities",
     },
@@ -7714,99 +7738,81 @@ interface SourceFile {
 function filesToFetch(): { title: string; hint: string; files: SourceFile[] } {
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
-  const bank: SourceFile = {
-    what: "Bank import",
-    where:
-      "Connect a bank feed (best) on the Bank import page, or your bank's own CSV export, " +
-      "every account, as far back as you keep",
-    why:
-      "A bank feed is best — it brings in transactions and daily balances automatically. " +
-      "Everything else hangs off these. A daily balance export too, if importing CSVs: " +
-      "it is the only outside witness there is.",
-    have: led.transactions.length > 0,
-    page: "import",
-  };
 
   if (source === "new") {
     return {
-      title: "What to fetch",
-      hint: "Starting from new, there is only one thing to get.",
-      files: [bank],
+      title: "",
+      hint: "",
+      files: [],
     };
   }
 
   if (source === "sheet") {
     return {
-      title: "What to fetch",
-      hint: "Two things, and the second is whatever you already keep.",
+      title: "Migration files from spreadsheet",
+      hint: "",
       files: [
-        bank,
         {
-          what: "Your coded spreadsheet",
-          where: "However you keep it, with a column saying what each line was coded to",
-          why: "The coding you have already done becomes the rules, rather than being retyped.",
+          what: "Coded spreadsheet",
+          where: "Spreadsheet with account code per transaction",
+          why: "Existing coding becomes rules",
           have: state.reference.length > 0,
         },
       ],
     };
   }
 
-  // Xero. Named by the menu path rather than by the file, because the export
-  // is found by walking that menu and the file is called something else
-  // entirely by the time it lands in a downloads folder.
+  // Xero migration files
   return {
-    title: "Export these from Xero, in one visit",
-    hint:
-      "All of them now, rather than one at a time as each is wanted: they come from the " +
-      "same place and the whole set takes a few minutes. Then drop the lot below, in any " +
-      "order. Each file is recognised by its own columns.",
+    title: "Migration files from Xero",
+    hint: "",
     files: [
-      bank,
       {
         what: "Chart of accounts",
-        where: "Accounting -> Chart of accounts -> Export",
-        why: "Names every account consistently, and carries the GST treatment each one uses.",
-        have: state.chart.length > 0,
+        where: "Accounting → Chart of accounts → Export",
+        why: "Names accounts & GST treatments",
+        have: hasLoadedChart(),
+        page: "entities",
       },
       {
         what: "Account transactions",
-        where: XERO_ACCOUNT_TRANSACTIONS,
-        why: "Every line somebody has already coded. This is what teaches the rules.",
+        where: "Accounting → Reports → Account Transactions (all columns)",
+        why: "Teaches coding rules from existing work",
         have: state.reference.length > 0,
       },
       {
         what: "Trial balance",
-        where: "Accounting -> Reports -> Trial Balance, at your previous year end",
-        why: "Opening balances. Without them a balance sheet is wrong rather than short.",
+        where: "Accounting → Reports → Trial Balance (previous year end)",
+        why: "Opening balances for balance sheet",
         have: led.openingBalances !== undefined,
       },
       {
         what: "Invoices",
-        where: "Business -> Invoices -> Export",
-        why: "Accrual income, and which receipt settled which invoice.",
+        where: "Business → Invoices → Export",
+        why: "Accrual income & receipt allocations",
         have: (led.invoices ?? []).length > 0,
+        page: "invoices",
       },
       {
         what: "Fixed assets",
-        where: "Accounting -> Fixed assets -> Export",
-        why: "Depreciation, which is the one figure bank data can never produce.",
+        where: "Accounting → Fixed assets → Export",
+        why: "Asset register & depreciation",
         have: (led.assets ?? []).length > 0,
+        page: "assets",
       },
       {
         what: "Journal report",
-        where: "Accounting -> Reports -> Journal Report, all columns",
-        why:
-          "The year-end judgements your accountant made, which no bank line shows. A " +
-          "General Ledger Detail export is taken here too and values every line, but it " +
-          "has no narration column -- so it cannot tell a manual journal from an " +
-          "ordinary posting. Fetch this one.",
+        where: "Accounting → Reports → Journal Report (all columns)",
+        why: "Accountant year-end journals",
         have: (led.journals ?? []).length > 0,
+        page: "journals",
       },
       {
         what: "Filed GST returns",
-        where: "The returns you have already filed, as they were filed",
-        why: "Checks every period against what was actually filed, and finds what moved.",
+        where: "Accounting → Reports → GST Return (past filed returns)",
+        why: "Filed return audit history",
         have: state.filed.length > 0,
+        page: "returns",
       },
     ],
   };
@@ -7925,13 +7931,18 @@ function renderSetupIntro(): void {
   intro.append(setupNameField());
 
   const { title, hint, files } = filesToFetch();
+  if (files.length === 0) return;
+
   const box = document.createElement("div");
   box.className = "setup-files";
   const heading = document.createElement("h3");
   heading.textContent = title;
-  const said = document.createElement("p");
-  said.textContent = hint;
-  box.append(heading, said);
+  box.append(heading);
+  if (hint && hint.trim() !== "") {
+    const said = document.createElement("p");
+    said.textContent = hint;
+    box.append(said);
+  }
 
   for (const file of files) {
     const row = document.createElement("div");

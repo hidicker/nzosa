@@ -1603,6 +1603,8 @@ main:has(#page-check:not([hidden])) { max-width: none; }
   padding: 0.55rem 0.7rem; border: 1px solid rgba(128,128,128,0.28); border-radius: 5px; }
 .setup-step.done { border-color: rgba(31,111,74,0.4); background: rgba(31,111,74,0.05); }
 .setup-step > div { flex: 1; }
+.setup-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem; }
+.setup-what-sub { font-size: 0.82rem; font-weight: 400; color: var(--muted, #667); }
 .setup-mark { width: 1rem; color: #1f6f4a; font-weight: 700; }
 .setup-detail { font-size: 0.8rem; color: var(--muted, #667); margin-top: 0.1rem; }
 .setup-unlocks { font-size: 0.78rem; color: #6a4b9c; margin-top: 0.15rem; }

@@ -7617,10 +7617,12 @@ function setupSteps(): SetupStep[] {
     const files = xero ? xeroMigrationFiles() : spreadsheetMigrationFiles();
     const loadedCount = files.filter((f) => f.have).length;
     steps.push({
-      what: xero ? "Migration from Xero" : "Migration from spreadsheet",
+      what: xero
+        ? "Migration from Xero - the more provided the more of the following set-up will be complete"
+        : "Migration from spreadsheet - the more provided the more of the following set-up will be complete",
       done: loadedCount > 0,
       optional: true,
-      detail: "As many of the below as you can provide.",
+      detail: loadedCount > 0 ? `${loadedCount} of ${files.length} loaded` : "",
       unlocks: "Teaches rules, carries opening balances, invoices, assets, and past returns",
       extra: migrationStepContent(source),
     });
@@ -8056,12 +8058,28 @@ function renderSetupBody(): void {
     if (step.optional === true && !step.done) mark.title = "Optional";
 
     const text = document.createElement("div");
-    const title = document.createElement("strong");
-    title.textContent = step.what;
-    const detail = document.createElement("div");
-    detail.className = "setup-detail";
-    detail.textContent = step.detail;
-    text.append(title, detail);
+    const title = document.createElement("div");
+    title.className = "setup-title";
+    const parts = step.what.split(" - ");
+    if (parts.length > 1) {
+      const strong = document.createElement("strong");
+      strong.textContent = parts[0];
+      const rest = document.createElement("span");
+      rest.className = "setup-what-sub";
+      rest.textContent = ` - ${parts.slice(1).join(" - ")}`;
+      title.append(strong, rest);
+    } else {
+      const strong = document.createElement("strong");
+      strong.textContent = step.what;
+      title.append(strong);
+    }
+    text.append(title);
+    if (step.detail && step.detail.trim() !== "") {
+      const detail = document.createElement("div");
+      detail.className = "setup-detail";
+      detail.textContent = step.detail;
+      text.append(detail);
+    }
     if (step.extra) {
       text.append(step.extra);
     }

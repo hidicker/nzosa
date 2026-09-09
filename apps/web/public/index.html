@@ -47,6 +47,12 @@
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>
             <span>Bank import</span>
           </button>
+          <div class="sidebar-sublinks" id="sidebar-import-sublinks" hidden>
+            <a href="#import-feed" class="sidebar-sublink">Bank Feed – Akahu</a>
+            <a href="#import-balances" class="sidebar-sublink">Import Bank Balances</a>
+            <a href="#import-files" class="sidebar-sublink">Import Bank files</a>
+            <a href="#import-table" class="sidebar-sublink">Differences &amp; review</a>
+          </div>
           <button type="button" data-page="invoices">
             <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
             <span>Invoices</span>
@@ -405,126 +411,148 @@
       <section id="page-import" class="page" hidden>
         <div class="page-head">
           <h2>Bank import</h2>
+          <nav class="import-subnav" aria-label="Bank import subsections">
+            <a href="#import-feed" class="import-subnav-link active">Bank Feed – Akahu</a>
+            <a href="#import-balances" class="import-subnav-link">Import Bank Balances</a>
+            <a href="#import-files" class="import-subnav-link">Import Bank files</a>
+            <a href="#import-table" class="import-subnav-link">Differences &amp; review</a>
+          </nav>
         </div>
-      <section id="dropzone" class="dropzone" aria-label="Import bank files">
-        <p class="dropzone-title">Drop bank exports here</p>
-        <p class="dropzone-sub">
-          CSV from BNZ, ANZ or Wise. Several at once is fine.
-          <br />Read and parsed in this tab. Nothing is uploaded.
-        </p>
-        <button id="pick-button" type="button" class="primary">Choose files</button>
-        <input id="file-input" type="file" accept=".csv,.txt,text/csv" multiple hidden />
 
-        <div class="options">
-          <label>
-            <span>Account id</span>
-            <input id="account" type="text" placeholder="e.g. visa-platinum" />
-            <small>Used only for files that do not name their own account, like card exports.</small>
-          </label>
-          <label>
-            <span>Currency</span>
-            <input id="currency" type="text" value="NZD" size="4" />
-            <small>The currency the account is denominated in.</small>
-          </label>
-          <label class="checkbox">
-            <input id="day-first" type="checkbox" checked />
-            <span>Dates are DD/MM/YYYY</span>
-            <small>Uncheck for MM/DD/YYYY exports.</small>
-          </label>
-        </div>
-      </section>
+        <!-- 1. Bank Feed - Akahu -->
+        <section id="import-feed" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Bank Feed – Akahu</h3>
+          </div>
+          <p class="page-hint">
+            A live connection instead of dropping files: transactions arrive on their own.
+            Either way in produces the same ledger, and using both is fine &mdash; a line that
+            arrives twice is caught as a duplicate.
+          </p>
+          <div id="feed-body"></div>
+        </section>
 
-      <p id="busy" class="busy" hidden>Parsing&hellip;</p>
+        <!-- 2. Import Bank Balances -->
+        <section id="import-balances" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Import Bank Balances</h3>
+            <button id="balances-pick" type="button">Load daily balances&hellip;</button>
+            <input id="balances-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+          <p class="page-hint">
+            An import can be missing a transaction, or hold the same one twice, and no
+            total will show it &mdash; the total is made of exactly the rows that are
+            there. The bank's daily balance is the outside witness. Export it from
+            internet banking for the same period as the transactions.
+          </p>
+          <div id="balances-body"></div>
+        </section>
 
-      <p id="storage-warning" class="warning" hidden>
-        This browser will not let the page store data, so nothing will survive closing this
-        tab. Export your ledger before you leave.
-      </p>
+        <!-- 3. Import Bank files -->
+        <section id="import-files" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Import Bank files</h3>
+          </div>
+          <section id="dropzone" class="dropzone" aria-label="Import bank files">
+            <p class="dropzone-title">Drop bank exports here</p>
+            <p class="dropzone-sub">
+              CSV from BNZ, ANZ or Wise. Several at once is fine.
+              <br />Read and parsed in this tab. Nothing is uploaded.
+            </p>
+            <button id="pick-button" type="button" class="primary">Choose files</button>
+            <input id="file-input" type="file" accept=".csv,.txt,text/csv" multiple hidden />
 
-      <section id="reports" class="reports" aria-live="polite"></section>
+            <div class="options">
+              <label>
+                <span>Account id</span>
+                <input id="account" type="text" placeholder="e.g. visa-platinum" />
+                <small>Used only for files that do not name their own account, like card exports.</small>
+              </label>
+              <label>
+                <span>Currency</span>
+                <input id="currency" type="text" value="NZD" size="4" />
+                <small>The currency the account is denominated in.</small>
+              </label>
+              <label class="checkbox">
+                <input id="day-first" type="checkbox" checked />
+                <span>Dates are DD/MM/YYYY</span>
+                <small>Uncheck for MM/DD/YYYY exports.</small>
+              </label>
+            </div>
+          </section>
 
+          <p id="busy" class="busy" hidden>Parsing&hellip;</p>
 
+          <p id="storage-warning" class="warning" hidden>
+            This browser will not let the page store data, so nothing will survive closing this
+            tab. Export your ledger before you leave.
+          </p>
 
-      <section class="stats">
-        <div class="stat">
-          <span class="stat-value" id="stat-total">0</span>
-          <span class="stat-label">transactions</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="stat-review">0</span>
-          <span class="stat-label">need review</span>
-        </div>
-        <div class="stat">
-          <span class="stat-value" id="stat-accounts">0</span>
-          <span class="stat-label">accounts</span>
-        </div>
-        <div class="stat wide">
-          <span class="stat-value" id="stat-range">--</span>
-          <span class="stat-label">date range</span>
-        </div>
-      </section>
+          <section id="reports" class="reports" aria-live="polite"></section>
 
-      <section class="balance-check">
-        <div class="balance-head">
-          <h3>Check against the bank's own balances</h3>
-          <button id="balances-pick" type="button">Load daily balances&hellip;</button>
-          <input id="balances-input" type="file" accept=".csv,text/csv" hidden />
-        </div>
-        <p class="page-hint">
-          An import can be missing a transaction, or hold the same one twice, and no
-          total will show it &mdash; the total is made of exactly the rows that are
-          there. The bank's daily balance is the outside witness. Export it from
-          internet banking for the same period as the transactions.
-        </p>
-        <div id="balances-body"></div>
-      </section>
+          <section class="stats">
+            <div class="stat">
+              <span class="stat-value" id="stat-total">0</span>
+              <span class="stat-label">transactions</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-review">0</span>
+              <span class="stat-label">need review</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-accounts">0</span>
+              <span class="stat-label">accounts</span>
+            </div>
+            <div class="stat wide">
+              <span class="stat-value" id="stat-range">--</span>
+              <span class="stat-label">date range</span>
+            </div>
+          </section>
+        </section>
 
-      <section class="toolbar">
-        <div class="filters" role="group" aria-label="Filter transactions">
-          <button id="filter-all" type="button" class="active">All</button>
-          <button id="filter-review" type="button">Needs review (0)</button>
-          <button id="filter-duplicate" type="button">Duplicates (0)</button>
-        </div>
-        <input id="search" type="search" placeholder="Search payee, particulars, amount&hellip;" />
-        <div class="ledger-actions">
-          <button id="export-button" type="button">Export ledger</button>
-          <button id="import-ledger-button" type="button">Import ledger</button>
-          <input id="ledger-input" type="file" accept=".json,application/json" hidden />
-          <button id="clear-button" type="button" class="danger">Clear</button>
-        </div>
-      </section>
+        <!-- 4. The table with differences & review -->
+        <section id="import-table" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Differences &amp; review</h3>
+          </div>
+          <section class="toolbar">
+            <div class="filters" role="group" aria-label="Filter transactions">
+              <button id="filter-all" type="button">All</button>
+              <button id="filter-review" type="button" class="active">Needs review (0)</button>
+              <button id="filter-duplicate" type="button">Duplicates (0)</button>
+            </div>
+            <input id="search" type="search" placeholder="Search payee, particulars, amount&hellip;" />
+            <div class="ledger-actions">
+              <button id="export-button" type="button">Export ledger</button>
+              <button id="import-ledger-button" type="button">Import ledger</button>
+              <input id="ledger-input" type="file" accept=".json,application/json" hidden />
+              <button id="clear-button" type="button" class="danger">Clear</button>
+            </div>
+          </section>
 
-      <div class="table-scroll">
-        <table>
-          <thead>
-            <tr>
-              <th>Date</th>
-              <th>Amount</th>
-              <th>Other party</th>
-              <th>Particulars / code / reference</th>
-              <th>Account</th>
-              <th>Source</th>
-              <th>Status</th>
-            </tr>
-          </thead>
-          <tbody id="rows">
-            <tr>
-              <td colspan="7" class="empty">
-                No transactions yet. Drop a bank export above to get started.
-              </td>
-            </tr>
-          </tbody>
-        </table>
-      </div>
-
-      <h3 class="feed-heading">Or connect a bank feed</h3>
-      <p class="page-hint">
-        A live connection instead of dropping files: transactions arrive on their own.
-        Either way in produces the same ledger, and using both is fine &mdash; a line that
-        arrives twice is caught as a duplicate.
-      </p>
-      <div id="feed-body"></div>
-
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Other party</th>
+                  <th>Particulars / code / reference</th>
+                  <th>Account</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="rows">
+                <tr>
+                  <td colspan="7" class="empty">
+                    No transactions yet. Drop a bank export above to get started.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
       </section>
 
       <section id="page-gst" class="page" hidden>

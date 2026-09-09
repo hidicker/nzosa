@@ -309,7 +309,7 @@ const state = {
    * arrived. Choosing a tab by hand still holds until the next import brings
    * something new to decide.
    */
-  filter: "all" as Filter,
+  filter: "review" as Filter,
   search: "",
   busy: false,
 };
@@ -618,6 +618,41 @@ function wireUp(): void {
     button.addEventListener("click", () => {
       showPage(button.dataset["page"] ?? "reconcile");
     });
+  }
+
+  for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link, .sidebar-sublink")) {
+    link.addEventListener("click", (e) => {
+      const href = link.getAttribute("href");
+      if (!href?.startsWith("#")) return;
+      e.preventDefault();
+      if (state.page !== "import") {
+        showPage("import");
+      }
+      const target = document.getElementById(href.slice(1));
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        for (const other of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
+          other.classList.toggle("active", other.getAttribute("href") === href);
+        }
+      }
+    });
+  }
+
+  const importObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && state.page === "import") {
+          const id = entry.target.id;
+          for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
+            link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
+          }
+        }
+      }
+    },
+    { rootMargin: "-10% 0px -70% 0px" },
+  );
+  for (const section of document.querySelectorAll(".import-subsection")) {
+    importObserver.observe(section);
   }
   $<HTMLInputElement>("reconcile-search").addEventListener("input", (e) => {
     state.reconcileSearch = (e.target as HTMLInputElement).value;
@@ -1695,6 +1730,8 @@ function showPage(page: string): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
     button.classList.toggle("active", button.dataset["page"] === page);
   }
+  const sidebarSublinks = document.getElementById("sidebar-import-sublinks");
+  if (sidebarSublinks) sidebarSublinks.hidden = page !== "import";
   // The page name lives in the topbar now rather than inside each section, so
   // it is read off the sidebar rather than repeated in a second list that
   // could drift from it.
@@ -2329,7 +2366,7 @@ function shownSuggestions(): Suggestion[] {
  * a list of five thousand rows with thirty-two that mattered somewhere in it.
  */
 function showWhatNeedsDeciding(): void {
-  state.filter = state.entries.some((e) => e.status === "review") ? "review" : "all";
+  state.filter = "review";
 }
 
 function renderReconcile(): void {

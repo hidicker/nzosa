@@ -1917,6 +1917,8 @@ button.working {
 .setup-file:first-of-type { border-top: 0; }
 .setup-file.have { opacity: 0.55; }
 .setup-file-what { font-weight: 600; font-size: 0.85rem; }
+.setup-file-what a { color: var(--accent); text-decoration: none; }
+.setup-file-what a:hover { text-decoration: underline; }
 .setup-file-where { font-size: 0.8rem; }
 .setup-file-why { grid-column: 2; font-size: 0.75rem; color: var(--muted); }
 @media (max-width: 640px) { .setup-file { grid-template-columns: 1fr; }

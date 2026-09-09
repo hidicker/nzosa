@@ -7449,7 +7449,7 @@ function setupSteps(): SetupStep[] {
       detail:
         led.transactions.length > 0
           ? `${led.transactions.length} imported`
-          : "Connect a bank feed, or drop your bank CSVs, on the Bank import page. " +
+          : "Connect a bank feed (best), or drop your bank CSVs, on the Bank import page. " +
             "Everything else hangs off these.",
       unlocks: "",
       links: [{ label: "Bank import", page: "import" }],
@@ -7708,18 +7708,23 @@ interface SourceFile {
   where: string;
   why: string;
   have: boolean;
+  page?: string;
 }
 
 function filesToFetch(): { title: string; hint: string; files: SourceFile[] } {
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
   const bank: SourceFile = {
-    what: "Bank statements",
-    where: "Your bank's own CSV export, every account, as far back as you keep",
+    what: "Bank import",
+    where:
+      "Connect a bank feed (best) on the Bank import page, or your bank's own CSV export, " +
+      "every account, as far back as you keep",
     why:
-      "Everything else hangs off these. A daily balance export too, if the bank offers " +
-      "one: it is the only outside witness there is.",
+      "A bank feed is best — it brings in transactions and daily balances automatically. " +
+      "Everything else hangs off these. A daily balance export too, if importing CSVs: " +
+      "it is the only outside witness there is.",
     have: led.transactions.length > 0,
+    page: "import",
   };
 
   if (source === "new") {
@@ -7933,7 +7938,18 @@ function renderSetupIntro(): void {
     row.className = file.have ? "setup-file have" : "setup-file";
     const what = document.createElement("div");
     what.className = "setup-file-what";
-    what.textContent = file.have ? `✓ ${file.what}` : file.what;
+    if (file.page) {
+      const link = document.createElement("a");
+      link.href = `#page-${file.page}`;
+      link.textContent = file.have ? `✓ ${file.what}` : file.what;
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        showPage(file.page!);
+      });
+      what.append(link);
+    } else {
+      what.textContent = file.have ? `✓ ${file.what}` : file.what;
+    }
     const where = document.createElement("div");
     where.className = "setup-file-where";
     where.textContent = file.where;

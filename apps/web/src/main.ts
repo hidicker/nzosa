@@ -7656,19 +7656,16 @@ function setupSteps(): SetupStep[] {
       page: "entities",
     },
     {
-      what: "Your bank accounts",
+      what: "Link bank accounts on chart of accounts",
       done: bankLinks.total > 0 && bankLinks.unlinked.length === 0,
       detail:
-        bankLinks.total === 0
-          ? "These arrive with the chart of accounts. Load that first."
-          : bankLinks.unlinked.length === 0
-            ? `${bankLinks.total} bank account${bankLinks.total === 1 ? "" : "s"} tied to ` +
-              "an account in this ledger"
-            : `${bankLinks.unlinked.length} of ${bankLinks.total} not yet tied to an ` +
-              `account in this ledger: ${bankLinks.unlinked.join(", ")}. Set each one ` +
-              "under “Entity, or which account”.",
-      unlocks:
-        "Transfers between your own accounts, instead of the receiving leg reading as income",
+        bankLinks.total > 0 && bankLinks.unlinked.length === 0
+          ? `${bankLinks.total} bank account${bankLinks.total === 1 ? "" : "s"} mapped to accounts from bank import`
+          : bankLinks.unlinked.length > 0
+            ? "The bank import pulls in account numbers directly, on the chart of account look at your existing bank accounts and make sure mapped to the accounts from bank import. " +
+              `(${bankLinks.unlinked.length} of ${bankLinks.total} not yet mapped: ${bankLinks.unlinked.join(", ")})`
+            : "The bank import pulls in account numbers directly, on the chart of account look at your existing bank accounts and make sure mapped to the accounts from bank import.",
+      unlocks: "Helps correctly allocate transfers between your own accounts",
       page: "entities",
     },
     {

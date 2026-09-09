@@ -1979,6 +1979,71 @@ button.working {
   }
 }
 
+.setup-migration-wrap {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.setup-migration-details {
+  margin: 0.15rem 0;
+}
+.setup-migration-summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 500;
+  user-select: none;
+  padding: 0.15rem 0;
+}
+.setup-migration-summary:hover {
+  text-decoration: underline;
+}
+.setup-migration-details[open] .setup-migration-summary {
+  margin-bottom: 0.35rem;
+}
+.setup-migration-details .setup-files {
+  margin: 0.3rem 0;
+}
+.dropzone-mini {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1.5px dashed rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.03);
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone-mini.dragging {
+  border-color: var(--accent);
+  background: rgba(106, 75, 156, 0.08);
+}
+.dropzone-mini-text {
+  font-size: 0.78rem;
+}
+.dropzone-mini-btn {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+.dropzone-mini-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#setup-loaded {
+  flex: 1 0 100%;
+  font-size: 0.76rem;
+  color: #1f6f4a;
+}
+
 /* Bank import subsections and navigation */
 .import-subnav {
   display: flex;

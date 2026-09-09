@@ -244,19 +244,13 @@
           rules come from the first few decisions you make instead.
         </p>
         <div id="setup-intro"></div>
-        <div id="setup-drop" class="dropzone dropzone-slim">
-          <p class="dropzone-title">Drop everything you exported here</p>
-          <p class="dropzone-sub">
-            Bank statements, chart of accounts, account transactions, journal report,
-            fixed assets, invoices, daily balances — all at once, in any order. Each file
-            is recognised by its own columns and goes where it belongs.
-            <br />Read and parsed in this tab. Nothing is uploaded.
-          </p>
-          <button id="setup-pick" type="button" class="primary">Choose files</button>
+        <div id="setup-body"></div>
+        <div id="setup-drop" class="dropzone dropzone-mini" hidden>
+          <span class="dropzone-mini-text">Drop exported files here, or</span>
+          <button id="setup-pick" type="button" class="dropzone-mini-btn">Choose files</button>
           <input id="setup-input" type="file" accept=".csv,.xlsx,.txt" multiple hidden />
           <div id="setup-loaded"></div>
         </div>
-        <div id="setup-body"></div>
       </section>
 
       <section id="page-history" class="page" hidden>

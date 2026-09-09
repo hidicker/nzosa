@@ -7387,6 +7387,8 @@ interface SetupStep {
    * is shown and explained but left out of the count.
    */
   optional?: boolean;
+  /** Additional interactive content (e.g. collapsed file list and mini file drop) */
+  extra?: HTMLElement;
 }
 
 /**
@@ -7448,6 +7450,136 @@ function hasLoadedChart(): boolean {
   return !isDefaultStarterChart(state.chart);
 }
 
+interface SourceFile {
+  what: string;
+  where: string;
+  why: string;
+  have: boolean;
+  page?: string;
+}
+
+function xeroMigrationFiles(): SourceFile[] {
+  const led = state.ledger;
+  return [
+    {
+      what: "Chart of accounts",
+      where: "Accounting → Chart of accounts → Export",
+      why: "Names accounts & GST treatments",
+      have: hasLoadedChart(),
+      page: "entities",
+    },
+    {
+      what: "Account transactions",
+      where: "Reporting → Account Transactions, select all columns, set grouping to None",
+      why: "Teaches coding rules from existing work",
+      have: state.reference.length > 0,
+      page: "check",
+    },
+    {
+      what: "Trial balance",
+      where: "Accounting → Reports → Trial Balance (previous year end)",
+      why: "Opening balances for balance sheet",
+      have: led.openingBalances !== undefined,
+      page: "opening",
+    },
+    {
+      what: "Invoices",
+      where: "Business → Invoices → Export",
+      why: "Accrual income & receipt allocations",
+      have: (led.invoices ?? []).length > 0,
+      page: "invoices",
+    },
+    {
+      what: "Fixed assets",
+      where: "Accounting → Fixed assets → Export",
+      why: "Asset register & depreciation",
+      have: (led.assets ?? []).length > 0,
+      page: "assets",
+    },
+    {
+      what: "Journal report",
+      where: "Accounting → Reports → Journal Report (all columns)",
+      why: "Accountant year-end journals",
+      have: (led.journals ?? []).length > 0,
+      page: "reports",
+    },
+    {
+      what: "Filed GST reports",
+      where: "Reporting → GST → For each prior return, export Excel",
+      why: "Filed return audit history",
+      have: state.filed.length > 0,
+      page: "returns",
+    },
+  ];
+}
+
+function spreadsheetMigrationFiles(): SourceFile[] {
+  return [
+    {
+      what: "Coded spreadsheet",
+      where: "Spreadsheet with account code per transaction",
+      why: "Existing coding becomes rules",
+      have: state.reference.length > 0,
+      page: "check",
+    },
+  ];
+}
+
+function migrationStepContent(source: string): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "setup-migration-wrap";
+
+  const files = source === "xero" ? xeroMigrationFiles() : spreadsheetMigrationFiles();
+  const loaded = files.filter((f) => f.have).length;
+
+  const details = document.createElement("details");
+  details.className = "setup-migration-details";
+
+  const summary = document.createElement("summary");
+  summary.className = "setup-migration-summary";
+  summary.textContent = `Show migration files (${loaded} of ${files.length} loaded)`;
+  details.append(summary);
+
+  const box = document.createElement("div");
+  box.className = "setup-files";
+  for (const file of files) {
+    const row = document.createElement("div");
+    row.className = file.have ? "setup-file have" : "setup-file";
+    const what = document.createElement("div");
+    what.className = "setup-file-what";
+    if (file.page) {
+      const link = document.createElement("a");
+      link.href = `#page-${file.page}`;
+      link.textContent = file.have ? `✓ ${file.what}` : file.what;
+      link.addEventListener("click", (e) => {
+        e.preventDefault();
+        showPage(file.page!);
+      });
+      what.append(link);
+    } else {
+      what.textContent = file.have ? `✓ ${file.what}` : file.what;
+    }
+    const where = document.createElement("div");
+    where.className = "setup-file-where";
+    where.textContent = file.where;
+    const why = document.createElement("div");
+    why.className = "setup-file-why";
+    why.textContent = file.why;
+    row.append(what, where, why);
+    box.append(row);
+  }
+  details.append(box);
+  wrap.append(details);
+
+  const drop = $("setup-drop");
+  if (drop) {
+    drop.hidden = false;
+    wrap.append(drop);
+  }
+
+  return wrap;
+}
+
 function setupSteps(): SetupStep[] {
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
@@ -7467,7 +7599,7 @@ function setupSteps(): SetupStep[] {
   const named =
     entities.length > 0 && !entities.some((entity) => entity.name === DEFAULT_ENTITY_NAME);
 
-  return [
+  const steps: SetupStep[] = [
     {
       what: "Bank transactions",
       done: led.transactions.length > 0,
@@ -7479,6 +7611,22 @@ function setupSteps(): SetupStep[] {
       unlocks: "",
       links: [{ label: "Bank import", page: "import" }],
     },
+  ];
+
+  if (xero || source === "sheet") {
+    const files = xero ? xeroMigrationFiles() : spreadsheetMigrationFiles();
+    const loadedCount = files.filter((f) => f.have).length;
+    steps.push({
+      what: xero ? "Migration from Xero" : "Migration from spreadsheet",
+      done: loadedCount > 0,
+      optional: true,
+      detail: "As many of the below as you can provide.",
+      unlocks: "Teaches rules, carries opening balances, invoices, assets, and past returns",
+      extra: migrationStepContent(source),
+    });
+  }
+
+  steps.push(
     {
       // The chart step used to be judged on this as well, so a chart that had
       // imported perfectly sat unticked and the fix was on another page --
@@ -7670,7 +7818,8 @@ function setupSteps(): SetupStep[] {
       unlocks: "Checks every period against what was actually filed, and finds what moved",
       page: "gst",
     },
-  ];
+  );
+  return steps;
 }
 
 /** Worked examples for inference: our transactions paired with their coding. */
@@ -7719,104 +7868,7 @@ function codedExamples(): CodedExample[] {
  *
  * It was said seven times instead, a line at a time on whichever step wanted
  * that file -- so setting up read as seven separate trips to the accounting
- * system, and the natural way to work the list was to make all seven. They
- * come from one place and are exported in one visit, and somebody who knows
- * that fetches the lot in five minutes. The checklist below then stops being
- * a list of errands and becomes a receipt: what arrived, and what did not.
- *
- * `have` is what the ledger already holds, so a second visit shows what is
- * still outstanding rather than asking again for what is already in.
- */
-interface SourceFile {
-  what: string;
-  where: string;
-  why: string;
-  have: boolean;
-  page?: string;
-}
 
-function filesToFetch(): { title: string; hint: string; files: SourceFile[] } {
-  const led = state.ledger;
-  const source = $<HTMLSelectElement>("setup-source").value;
-
-  if (source === "new") {
-    return {
-      title: "",
-      hint: "",
-      files: [],
-    };
-  }
-
-  if (source === "sheet") {
-    return {
-      title: "Migration files from spreadsheet",
-      hint: "",
-      files: [
-        {
-          what: "Coded spreadsheet",
-          where: "Spreadsheet with account code per transaction",
-          why: "Existing coding becomes rules",
-          have: state.reference.length > 0,
-        },
-      ],
-    };
-  }
-
-  // Xero migration files
-  return {
-    title: "Migration files from Xero",
-    hint: "",
-    files: [
-      {
-        what: "Chart of accounts",
-        where: "Accounting → Chart of accounts → Export",
-        why: "Names accounts & GST treatments",
-        have: hasLoadedChart(),
-        page: "entities",
-      },
-      {
-        what: "Account transactions",
-        where: "Accounting → Reports → Account Transactions (all columns)",
-        why: "Teaches coding rules from existing work",
-        have: state.reference.length > 0,
-      },
-      {
-        what: "Trial balance",
-        where: "Accounting → Reports → Trial Balance (previous year end)",
-        why: "Opening balances for balance sheet",
-        have: led.openingBalances !== undefined,
-      },
-      {
-        what: "Invoices",
-        where: "Business → Invoices → Export",
-        why: "Accrual income & receipt allocations",
-        have: (led.invoices ?? []).length > 0,
-        page: "invoices",
-      },
-      {
-        what: "Fixed assets",
-        where: "Accounting → Fixed assets → Export",
-        why: "Asset register & depreciation",
-        have: (led.assets ?? []).length > 0,
-        page: "assets",
-      },
-      {
-        what: "Journal report",
-        where: "Accounting → Reports → Journal Report (all columns)",
-        why: "Accountant year-end journals",
-        have: (led.journals ?? []).length > 0,
-        page: "journals",
-      },
-      {
-        what: "Filed GST returns",
-        where: "Accounting → Reports → GST Return (past filed returns)",
-        why: "Filed return audit history",
-        have: state.filed.length > 0,
-        page: "returns",
-      },
-    ],
-  };
-}
 
 /**
  * The name of the books, asked for where it is first wanted.
@@ -7929,48 +7981,6 @@ function renderSetupIntro(): void {
   const intro = $("setup-intro");
   intro.textContent = "";
   intro.append(setupNameField());
-
-  const { title, hint, files } = filesToFetch();
-  if (files.length === 0) return;
-
-  const box = document.createElement("div");
-  box.className = "setup-files";
-  const heading = document.createElement("h3");
-  heading.textContent = title;
-  box.append(heading);
-  if (hint && hint.trim() !== "") {
-    const said = document.createElement("p");
-    said.textContent = hint;
-    box.append(said);
-  }
-
-  for (const file of files) {
-    const row = document.createElement("div");
-    row.className = file.have ? "setup-file have" : "setup-file";
-    const what = document.createElement("div");
-    what.className = "setup-file-what";
-    if (file.page) {
-      const link = document.createElement("a");
-      link.href = `#page-${file.page}`;
-      link.textContent = file.have ? `✓ ${file.what}` : file.what;
-      link.addEventListener("click", (e) => {
-        e.preventDefault();
-        showPage(file.page!);
-      });
-      what.append(link);
-    } else {
-      what.textContent = file.have ? `✓ ${file.what}` : file.what;
-    }
-    const where = document.createElement("div");
-    where.className = "setup-file-where";
-    where.textContent = file.where;
-    const why = document.createElement("div");
-    why.className = "setup-file-why";
-    why.textContent = file.why;
-    row.append(what, where, why);
-    box.append(row);
-  }
-  intro.append(box);
 }
 
 function renderSetup(): void {
@@ -7979,6 +7989,13 @@ function renderSetup(): void {
 }
 
 function renderSetupBody(): void {
+  const source = $<HTMLSelectElement>("setup-source").value;
+  const setupDrop = $("setup-drop");
+  if (setupDrop) {
+    $("page-setup").append(setupDrop);
+    setupDrop.hidden = source === "new";
+  }
+
   const body = $("setup-body");
   body.textContent = "";
 
@@ -8045,6 +8062,9 @@ function renderSetupBody(): void {
     detail.className = "setup-detail";
     detail.textContent = step.detail;
     text.append(title, detail);
+    if (step.extra) {
+      text.append(step.extra);
+    }
     if (!step.done && step.unlocks !== "") {
       const unlocks = document.createElement("div");
       unlocks.className = "setup-unlocks";

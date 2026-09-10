@@ -1428,6 +1428,11 @@ main:has(#page-check:not([hidden])) { max-width: none; }
   margin: 0.6rem 0 1rem; padding: 0.65rem 0.85rem; font-size: 0.85rem;
   border-left: 3px solid #c62828; background: rgba(198, 40, 40, 0.12); }
 .coding-reconciliation-warning button.link-button { font-weight: 600; text-decoration: underline; cursor: pointer; }
+.highlight-flash { animation: flash-highlight 2.2s ease-out; }
+@keyframes flash-highlight {
+  0% { background-color: rgba(234, 179, 8, 0.45); }
+  100% { background-color: transparent; }
+}
 .balance-sheet .bs-total td:first-child { padding-left: 1rem; }
 .balance-sheet .bs-grand td { font-weight: 700; border-top: 2px solid var(--border);
   border-bottom: 2px solid var(--border); }

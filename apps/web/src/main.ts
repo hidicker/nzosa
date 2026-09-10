@@ -1791,22 +1791,38 @@ function showPage(page: string, scrollTo?: "top" | "bottom" | number): void {
   if (page === "gst") renderVariance();
 
   if (scrollTo === "bottom") {
+    let scrolled = false;
     const doScrollBottom = () => {
-      const b = Math.max(
-        document.documentElement.scrollHeight,
-        document.body.scrollHeight,
-        document.getElementById("page-entities")?.scrollHeight ?? 0,
-        999999,
-      );
-      window.scrollTo(0, b);
-      document.documentElement.scrollTop = b;
-      document.body.scrollTop = b;
+      const unlinkedSelect = Array.from(
+        document.querySelectorAll<HTMLSelectElement>("table.accounts-table select.bank-link"),
+      ).find((sel) => sel.value === "");
+      const bankRow =
+        unlinkedSelect?.closest("tr") ??
+        document.querySelectorAll<HTMLSelectElement>("table.accounts-table select.bank-link")[0]?.closest("tr");
+      if (bankRow) {
+        bankRow.scrollIntoView({ behavior: "smooth", block: "center" });
+        if (!scrolled) {
+          bankRow.classList.add("highlight-flash");
+          setTimeout(() => bankRow.classList.remove("highlight-flash"), 2200);
+          scrolled = true;
+        }
+      } else {
+        const b = Math.max(
+          document.documentElement.scrollHeight,
+          document.body.scrollHeight,
+          document.getElementById("page-entities")?.scrollHeight ?? 0,
+          999999,
+        );
+        window.scrollTo(0, b);
+        document.documentElement.scrollTop = b;
+        document.body.scrollTop = b;
+      }
     };
     doScrollBottom();
     requestAnimationFrame(doScrollBottom);
-    setTimeout(doScrollBottom, 50);
-    setTimeout(doScrollBottom, 150);
-    setTimeout(doScrollBottom, 350);
+    setTimeout(doScrollBottom, 60);
+    setTimeout(doScrollBottom, 200);
+    setTimeout(doScrollBottom, 450);
   } else if (typeof scrollTo === "number") {
     window.scrollTo({ top: scrollTo, behavior: "instant" });
   } else if (moved) {

@@ -4933,32 +4933,20 @@ function section(
   suffix?: string,
 ): HTMLElement {
   const wrap = document.createElement("div");
+  wrap.className = "check-section";
   const heading = document.createElement("h3");
   heading.textContent = suffix
     ? `${title} (${rows.length}) - ${suffix}`
     : `${title} (${rows.length})`;
   wrap.append(heading);
 
-  const table = document.createElement("table");
-  table.className = "check-table";
-  const head = document.createElement("thead");
-  head.innerHTML =
-    '<tr><th class="col-date">Date</th><th class="col-amount">Amount</th>' +
-    '<th class="col-payee">Payee</th><th class="col-proposed">Rules propose</th>' +
-    '<th class="col-coded">You coded</th>' +
-    `<th class="${gst ? "col-gst" : "col-imported"}">${gst ? "GST ours / theirs" : "Xero says"}</th>` +
-    '<th class="col-use">Use</th></tr>';
-  const tbody = document.createElement("tbody");
-
-  for (const row of [...rows].sort(
+  const sortedRows = [...rows].sort(
     (a, b) => Math.abs(b.transaction.amount) - Math.abs(a.transaction.amount),
-  )) {
-    const tr = document.createElement("tr");
+  );
+
+  const rowOptions = sortedRows.map((row) => {
     const override = (state.ledger.overrides ?? {})[row.transaction.id];
     const proposed = proposedBy.get(row.transaction.id) ?? "";
-    // Whatever the override says is what the engine uses and what the
-    // comparison compared, confirmed or not. Showing only confirmed ones made
-    // a row look like it disagreed over nothing more than a name.
     const coded =
       override?.code === undefined
         ? ""
@@ -4966,10 +4954,262 @@ function section(
           ? override.code
           : `${override.code} (unconfirmed)`;
     const imported = row.theirs?.label ?? "";
+    const parts = row.theirs?.parts;
+    const isSplit = Boolean(parts && parts.length > 1);
 
-    // Payee, the bank's own code field, and the reference, run together. Any
-    // of the three can be the part that identifies a payment, and which one it
-    // is differs by bank and by transaction type.
+    const canUseRules = proposed !== "" && proposed !== coded;
+    const canUseXero = imported !== "" && !isSplit;
+    const canUseSplit = isSplit;
+
+    return {
+      row,
+      override,
+      proposed,
+      coded,
+      imported,
+      parts,
+      isSplit,
+      canUseRules,
+      canUseXero,
+      canUseSplit,
+    };
+  });
+
+  const totalRows = rowOptions.length;
+  const totalXero = rowOptions.filter((o) => o.canUseXero).length;
+  const totalRules = rowOptions.filter((o) => o.canUseRules).length;
+  const totalSplits = rowOptions.filter((o) => o.canUseSplit).length;
+
+  const actionsBar = document.createElement("div");
+  actionsBar.className = "check-section-actions";
+
+  const selectAllLabel = document.createElement("label");
+  selectAllLabel.className = "check-select-all-label";
+  const selectAllCheckbox = document.createElement("input");
+  selectAllCheckbox.type = "checkbox";
+  selectAllCheckbox.className = "check-select-all";
+  selectAllCheckbox.title = "Select or deselect all rows in this section";
+  const selectAllText = document.createElement("span");
+  selectAllText.textContent = "Select all";
+  selectAllLabel.append(selectAllCheckbox, selectAllText);
+  actionsBar.append(selectAllLabel);
+
+  let btnXero: HTMLButtonElement | null = null;
+  if (totalXero > 0) {
+    btnXero = document.createElement("button");
+    btnXero.type = "button";
+    btnXero.className = "check-batch-btn primary-batch";
+    actionsBar.append(btnXero);
+  }
+
+  let btnRules: HTMLButtonElement | null = null;
+  if (totalRules > 0) {
+    btnRules = document.createElement("button");
+    btnRules.type = "button";
+    btnRules.className = "check-batch-btn";
+    actionsBar.append(btnRules);
+  }
+
+  let btnSplits: HTMLButtonElement | null = null;
+  if (totalSplits > 0) {
+    btnSplits = document.createElement("button");
+    btnSplits.type = "button";
+    btnSplits.className = "check-batch-btn primary-batch";
+    actionsBar.append(btnSplits);
+  }
+
+  wrap.append(actionsBar);
+
+  const table = document.createElement("table");
+  table.className = "check-table";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  headRow.innerHTML =
+    '<th class="col-check"></th>' +
+    '<th class="col-date">Date</th><th class="col-amount">Amount</th>' +
+    '<th class="col-payee">Payee</th><th class="col-proposed">Rules propose</th>' +
+    '<th class="col-coded">You coded</th>' +
+    `<th class="${gst ? "col-gst" : "col-imported"}">${gst ? "GST ours / theirs" : "Xero says"}</th>` +
+    '<th class="col-use">Use</th>';
+
+  const thCheck = headRow.querySelector(".col-check") as HTMLElement;
+  const thCheckbox = document.createElement("input");
+  thCheckbox.type = "checkbox";
+  thCheckbox.title = "Select or deselect all rows in this section";
+  thCheck.append(thCheckbox);
+  head.append(headRow);
+
+  const tbody = document.createElement("tbody");
+
+  const updateToolbar = (): void => {
+    const checkedBoxes = Array.from(
+      tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked"),
+    );
+    const selectedIds = new Set(checkedBoxes.map((cb) => cb.dataset.id!));
+    const selectedCount = selectedIds.size;
+
+    const allChecked = selectedCount === totalRows && totalRows > 0;
+    const noneChecked = selectedCount === 0;
+
+    selectAllCheckbox.checked = allChecked;
+    selectAllCheckbox.indeterminate = !noneChecked && !allChecked;
+    thCheckbox.checked = allChecked;
+    thCheckbox.indeterminate = !noneChecked && !allChecked;
+
+    if (btnXero) {
+      if (noneChecked) {
+        btnXero.textContent = `Use Xero for all (${totalXero})`;
+        btnXero.disabled = totalXero === 0;
+      } else {
+        const count = rowOptions.filter(
+          (o) => selectedIds.has(o.row.transaction.id) && o.canUseXero,
+        ).length;
+        btnXero.textContent = `Use Xero for ${count} selected`;
+        btnXero.disabled = count === 0;
+      }
+    }
+
+    if (btnRules) {
+      if (noneChecked) {
+        btnRules.textContent = `Use rules for all (${totalRules})`;
+        btnRules.disabled = totalRules === 0;
+      } else {
+        const count = rowOptions.filter(
+          (o) => selectedIds.has(o.row.transaction.id) && o.canUseRules,
+        ).length;
+        btnRules.textContent = `Use rules for ${count} selected`;
+        btnRules.disabled = count === 0;
+      }
+    }
+
+    if (btnSplits) {
+      if (noneChecked) {
+        btnSplits.textContent = `Use all splits (${totalSplits})`;
+        btnSplits.disabled = totalSplits === 0;
+      } else {
+        const count = rowOptions.filter(
+          (o) => selectedIds.has(o.row.transaction.id) && o.canUseSplit,
+        ).length;
+        btnSplits.textContent = `Use split for ${count} selected`;
+        btnSplits.disabled = count === 0;
+      }
+    }
+  };
+
+  if (btnXero) {
+    btnXero.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked")).map(
+          (cb) => cb.dataset.id!,
+        ),
+      );
+      const targets = (
+        selectedIds.size > 0
+          ? rowOptions.filter((o) => selectedIds.has(o.row.transaction.id) && o.canUseXero)
+          : rowOptions.filter((o) => o.canUseXero)
+      ).map((o) => ({
+        transaction: o.row.transaction,
+        code: o.imported,
+        kind: "imported",
+        rate: gst ? o.row.gstDiffers?.theirs : undefined,
+      }));
+      if (targets.length === 0) return;
+      btnXero!.disabled = true;
+      btnXero!.classList.add("working");
+      void acceptCodesBulk(targets);
+    });
+  }
+
+  if (btnRules) {
+    btnRules.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked")).map(
+          (cb) => cb.dataset.id!,
+        ),
+      );
+      const targets = (
+        selectedIds.size > 0
+          ? rowOptions.filter((o) => selectedIds.has(o.row.transaction.id) && o.canUseRules)
+          : rowOptions.filter((o) => o.canUseRules)
+      ).map((o) => ({
+        transaction: o.row.transaction,
+        code: o.proposed,
+        kind: "proposed",
+      }));
+      if (targets.length === 0) return;
+      btnRules!.disabled = true;
+      btnRules!.classList.add("working");
+      void acceptCodesBulk(targets);
+    });
+  }
+
+  if (btnSplits) {
+    btnSplits.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked")).map(
+          (cb) => cb.dataset.id!,
+        ),
+      );
+      const targets = (
+        selectedIds.size > 0
+          ? rowOptions.filter((o) => selectedIds.has(o.row.transaction.id) && o.canUseSplit)
+          : rowOptions.filter((o) => o.canUseSplit)
+      ).map((o) => ({
+        transaction: o.row.transaction,
+        parts: o.parts!,
+      }));
+      if (targets.length === 0) return;
+      btnSplits!.disabled = true;
+      btnSplits!.classList.add("working");
+      void acceptSplitsBulk(targets);
+    });
+  }
+
+  const setAllRowsChecked = (checked: boolean) => {
+    const rowCheckboxes = tbody.querySelectorAll<HTMLInputElement>("input.check-row-select");
+    for (const cb of rowCheckboxes) {
+      cb.checked = checked;
+    }
+    updateToolbar();
+  };
+
+  selectAllCheckbox.addEventListener("change", () => {
+    setAllRowsChecked(selectAllCheckbox.checked);
+  });
+
+  thCheckbox.addEventListener("change", () => {
+    setAllRowsChecked(thCheckbox.checked);
+  });
+
+  for (const opt of rowOptions) {
+    const { row, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit } = opt;
+    const tr = document.createElement("tr");
+
+    const tdCheck = document.createElement("td");
+    tdCheck.className = "col-check";
+    const rowCheckbox = document.createElement("input");
+    rowCheckbox.type = "checkbox";
+    rowCheckbox.className = "check-row-select";
+    rowCheckbox.dataset.id = row.transaction.id;
+    rowCheckbox.addEventListener("change", updateToolbar);
+    tdCheck.append(rowCheckbox);
+    tr.append(tdCheck);
+
+    tr.addEventListener("click", (e) => {
+      const target = e.target as HTMLElement | null;
+      if (
+        target &&
+        (target.closest("button") ||
+          target.closest("a") ||
+          target.closest("input") ||
+          target.closest("select"))
+      ) {
+        return;
+      }
+      rowCheckbox.checked = !rowCheckbox.checked;
+      updateToolbar();
+    });
+
     const who = [row.transaction.otherParty, row.transaction.code, row.transaction.reference]
       .filter((part) => part !== undefined && part.trim() !== "")
       .join(" ");
@@ -4988,16 +5228,10 @@ function section(
       const td = document.createElement("td");
       td.textContent = text;
       td.className = classes[index] ?? "";
-      // The column is narrow and the text is truncated, so the full value has
-      // to be reachable without leaving the page.
       if (text !== "") td.title = text;
       tr.append(td);
     });
 
-    // A payment split across accounts cannot be represented by one code, so it
-    // is offered as a split rather than pretending one of its parts is the
-    // whole answer.
-    const parts = row.theirs?.parts;
     if (parts && parts.length > 1) {
       const marker = document.createElement("button");
       marker.type = "button";
@@ -5016,19 +5250,15 @@ function section(
 
     const actions = document.createElement("td");
     actions.className = "check-actions";
-    if (proposed !== "" && proposed !== coded) {
+    if (canUseRules) {
       actions.append(useButton("proposed", row.transaction, proposed));
     }
-    if (imported !== "" && !(parts && parts.length > 1)) {
-      // In the section that exists because the *rate* disagrees, the rate is
-      // what the button has to bring across. It took only the account, which
-      // in that section already matched -- so the one button offered to settle
-      // a GST disagreement changed nothing at all, thirty-nine times over.
+    if (canUseXero) {
       actions.append(
         useButton("imported", row.transaction, imported, gst ? row.gstDiffers?.theirs : undefined),
       );
     }
-    if (parts && parts.length > 1) {
+    if (canUseSplit && parts) {
       const useSplit = document.createElement("button");
       useSplit.type = "button";
       useSplit.className = "use-button";
@@ -5045,7 +5275,7 @@ function section(
       const detail = document.createElement("tr");
       detail.className = "split-detail";
       const cell = document.createElement("td");
-      cell.colSpan = 7;
+      cell.colSpan = 8;
       const table = document.createElement("table");
       const body = document.createElement("tbody");
       for (const part of parts) {
@@ -5070,6 +5300,8 @@ function section(
     }
   }
 
+  updateToolbar();
+
   table.append(head, tbody);
   const scroll = document.createElement("div");
   scroll.className = "check-scroll";
@@ -5092,6 +5324,190 @@ function useButton(
   button.title = rate === undefined ? code : `${code} · ${rate}`;
   button.addEventListener("click", () => void acceptCode(transaction, code, kind, rate));
   return button;
+}
+
+/**
+ * Accept multiple offered codings in one batch.
+ */
+async function acceptCodesBulk(
+  items: readonly {
+    transaction: Transaction;
+    code: string;
+    kind: string;
+    rate?: string;
+  }[],
+): Promise<void> {
+  if (items.length === 0) return;
+
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const batchEvents: CodingBatchEntry[] = [];
+  const unmapped = new Set<string>();
+  let applied = 0;
+
+  for (const item of items) {
+    let chosen = item.code;
+    if (item.kind === "imported") {
+      const mapped = mapToOurVocabulary(item.code);
+      if (mapped === null) {
+        unmapped.add(item.code);
+        continue;
+      }
+      chosen = mapped;
+    }
+
+    const one = state.suggestions?.get(item.transaction.id);
+    const stated =
+      item.rate === undefined || item.rate.trim() === ""
+        ? null
+        : accountTreatment({ code: "", name: "", type: "", taxCode: item.rate, description: "" });
+
+    const wasCoded = overrides[item.transaction.id];
+    const side = stated?.side ?? (stated !== null ? "none" : one?.classification.side);
+    overrides[item.transaction.id] = {
+      confirmed: true,
+      code: chosen,
+      treatment: stated?.treatment ?? one?.classification.treatment ?? "standard",
+      ...(side !== undefined && side !== "none" ? { side } : {}),
+      note:
+        stated === null
+          ? `Accepted the ${item.kind} coding on the Coding reconciliation page.`
+          : `Accepted the ${item.kind} coding and its rate (${item.rate}) on the Coding reconciliation page.`,
+      at: new Date().toISOString().slice(0, 10),
+    };
+    batchEvents.push({
+      id: item.transaction.id,
+      before: wasCoded ?? null,
+    });
+    applied++;
+  }
+
+  if (unmapped.size > 0) {
+    alert(
+      `Nothing in your chart of accounts matches: "${[...unmapped].join('", "')}". ` +
+        (applied > 0
+          ? `${applied} other line${applied === 1 ? " was" : "s were"} updated.`
+          : "No lines were updated. Add those accounts with their tax codes to find them."),
+    );
+  }
+
+  if (applied === 0) {
+    renderCheck();
+    return;
+  }
+
+  state.ledger = { ...state.ledger, overrides };
+  state.persistent = await savePart(state.ledger, "overrides");
+
+  if (applied === 1 && batchEvents[0]) {
+    const single = items[0]!;
+    const chosenCode = single.kind === "imported" ? (mapToOurVocabulary(single.code) ?? single.code) : single.code;
+    await record(
+      "coding",
+      `${single.transaction.date} ${formatAmount(single.transaction.amount)} ${single.transaction.otherParty} → ${chosenCode} (accepted the ${single.kind} coding)`,
+      batchEvents[0].before,
+      overrides[single.transaction.id],
+      single.transaction.id,
+    );
+  } else {
+    const kindDesc = items[0]?.kind === "imported" ? "Xero" : "rules";
+    await record(
+      "codingBatch",
+      `Accepted ${kindDesc} coding for ${applied} lines on Coding reconciliation page`,
+      batchEvents,
+      null,
+    );
+  }
+
+  renderCheck();
+}
+
+/**
+ * Accept multiple splits recorded by the other system.
+ */
+async function acceptSplitsBulk(
+  items: readonly { transaction: Transaction; parts: readonly ReferencePart[] }[],
+): Promise<void> {
+  if (items.length === 0) return;
+
+  const splits = { ...(state.ledger.splits ?? {}) };
+  const unmappedAll = new Set<string>();
+  const mismatchIds = new Set<string>();
+  let applied = 0;
+
+  for (const item of items) {
+    const mapped: SplitPart[] = [];
+    const unmapped: string[] = [];
+    const side = item.transaction.amount < 0 ? "purchases" : "sales";
+
+    for (const part of item.parts) {
+      const code = mapToOurVocabulary(part.code);
+      if (code === null) {
+        unmapped.push(part.code);
+        unmappedAll.add(part.code);
+      }
+      const isTax = /(^|[ ])GST([ ]|$)/i.test(part.code) && !/^15%/.test(part.gstRate);
+      const rated = /^15%/.test(part.gstRate);
+
+      mapped.push({
+        amount: part.amount,
+        ...(code !== null ? { code } : {}),
+        treatment: isTax || rated ? "standard" : "out-of-scope",
+        side: isTax ? "imports" : rated ? side : "none",
+        note: `Xero: ${part.description}`,
+      });
+    }
+
+    if (unmapped.length > 0) continue;
+
+    const total = mapped.reduce((sum, part) => sum + part.amount, 0);
+    if (total !== item.transaction.amount) {
+      mismatchIds.add(item.transaction.id);
+      continue;
+    }
+
+    const before = splits[item.transaction.id];
+    splits[item.transaction.id] = mapped;
+    applied++;
+
+    if (items.length === 1) {
+      await record(
+        "split",
+        `${item.transaction.date} ${formatAmount(item.transaction.amount)} ${item.transaction.otherParty} split into ${mapped.length} from Xero`,
+        before ?? null,
+        mapped,
+        item.transaction.id,
+      );
+    }
+  }
+
+  if (unmappedAll.size > 0) {
+    alert(
+      `No account in your rules matches: ${[...unmappedAll].join(", ")}. ` +
+        "Add a code treatment first, otherwise the GST on those parts would only be assumed.",
+    );
+  }
+
+  if (mismatchIds.size > 0) {
+    alert(`${mismatchIds.size} split(s) could not be applied because part amounts did not match the bank line.`);
+  }
+
+  if (applied === 0) {
+    renderCheck();
+    return;
+  }
+
+  state.ledger = { ...state.ledger, splits };
+  state.persistent = await savePart(state.ledger, "splits");
+  if (items.length > 1) {
+    await record(
+      "codingBatch",
+      `Loaded ${applied} splits from Xero on Coding reconciliation page`,
+      [],
+      null,
+    );
+  }
+  state.expandedSplit = null;
+  renderCheck();
 }
 
 /**
@@ -5149,7 +5565,7 @@ async function acceptCode(
     at: new Date().toISOString().slice(0, 10),
   };
   state.ledger = { ...state.ledger, overrides };
-  state.persistent = await save(state.ledger);
+  state.persistent = await savePart(state.ledger, "overrides");
   await record(
     "coding",
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${chosen} (accepted the ${kind} coding)`,
@@ -5211,7 +5627,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   const before = (state.ledger.splits ?? {})[transaction.id];
   const splits = { ...(state.ledger.splits ?? {}), [transaction.id]: mapped };
   state.ledger = { ...state.ledger, splits };
-  state.persistent = await save(state.ledger);
+  state.persistent = await savePart(state.ledger, "splits");
   await record(
     "split",
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} split into ${mapped.length} from Xero`,

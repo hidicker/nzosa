@@ -39,6 +39,76 @@
   border: 1px solid rgba(128,128,128,0.45); border-radius: 3px; background: transparent; color: inherit; }
 .use-button:hover { border-color: currentColor; }
 
+.check-section { margin-bottom: 2rem; }
+.check-section-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0.4rem 0 0.75rem;
+}
+.check-select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+}
+.check-select-all-label:hover {
+  color: var(--text);
+  background: rgba(128, 128, 128, 0.08);
+}
+.check-batch-btn {
+  font-size: 0.76rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.12s ease;
+}
+.check-batch-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.check-batch-btn.primary-batch {
+  border-color: rgba(31, 111, 74, 0.4);
+  background: rgba(31, 111, 74, 0.08);
+  color: #1f6f4a;
+  font-weight: 600;
+}
+.check-batch-btn.primary-batch:hover:not(:disabled) {
+  background: #1f6f4a;
+  color: #fff;
+  border-color: #1f6f4a;
+}
+.check-batch-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#check-body .check-table .col-check {
+  width: 2.2rem;
+  text-align: center;
+  vertical-align: middle;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+#check-body .check-table .col-check input[type="checkbox"],
+.check-select-all-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+.check-table tbody tr { cursor: pointer; }
+
 .how-to { margin: 0 0 1rem; font-size: 0.82rem; }
 .how-to summary { cursor: pointer; color: #1f6f4a; font-weight: 600; }
 .how-to ol { margin: 0.5rem 0; padding-left: 1.3rem; }

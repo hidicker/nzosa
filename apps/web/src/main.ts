@@ -7798,9 +7798,7 @@ function setupSteps(): SetupStep[] {
         state.balanceChecks.length > 0
           ? `${state.balanceChecks.filter((c) => c.account !== null && c.breaks.length === 0).length} of ` +
             `${state.balanceChecks.length} accounts tie to the bank`
-          : "Optional, and the best check there is. A separate export from your " +
-            "bank, worth fetching in the same visit as your transactions: same " +
-            "accounts, same dates. Drop it on the Bank import page.",
+          : "Optional, however a worthwhile check.",
       unlocks: "Proves nothing is missing or counted twice, and settles questionable duplicates",
       page: "import",
     },

@@ -8114,7 +8114,31 @@ function setupSteps(): SetupStep[] {
               `(${bankLinks.unlinked.length} of ${bankLinks.total} not yet mapped: ${bankLinks.unlinked.join(", ")})`
             : "The bank import pulls in account numbers directly, on the chart of account look at your existing bank accounts and make sure mapped to the accounts from bank import.",
       unlocks: "Helps correctly allocate transfers between your own accounts",
-      page: "entities",
+      links: [
+        {
+          label: bankLinks.total > 0 && bankLinks.unlinked.length === 0 ? "Review" : "Go",
+          action: () => {
+            showPage("entities");
+            setTimeout(() => {
+              const unlinkedSelect = Array.from(
+                document.querySelectorAll<HTMLSelectElement>("select.bank-link"),
+              ).find((sel) => sel.value === "");
+              const target =
+                unlinkedSelect?.closest("tr") ??
+                document.querySelector(".bank-link")?.closest("tr") ??
+                document.querySelector(".accounts-table");
+              if (target) {
+                target.scrollIntoView({ behavior: "smooth", block: "center" });
+              } else {
+                window.scrollTo({
+                  top: document.documentElement.scrollHeight,
+                  behavior: "smooth",
+                });
+              }
+            }, 60);
+          },
+        },
+      ],
     },
     {
       // Required for a ledger that starts partway through a company's life,

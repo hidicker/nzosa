@@ -1403,6 +1403,16 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .balance-sheet .bs-total td { font-weight: 600; }
 .opening-heading { margin-top: 2rem; }
 .opening-table { max-width: 46rem; }
+.opening-table.multi-year { max-width: 100%; }
+.opening-table.multi-year th { text-align: right; font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+.opening-table.multi-year th:first-child,
+.opening-table.multi-year th:nth-child(2) { text-align: left; }
+.opening-table.multi-year th .opening-col-sub { display: block; font-weight: 400; font-size: 0.7rem; color: var(--muted, #667); }
+.opening-table.multi-year td.amount { text-align: right; font-variant-numeric: tabular-nums; }
+.opening-table.multi-year td.type-cell { color: var(--muted, #667); font-size: 0.75rem; }
+.opening-table.multi-year .diff-ok { color: #1f6f4a; font-weight: 600; }
+.opening-table.multi-year .diff-bad { color: #c62828; font-weight: 700; }
+.opening-table .credit-val { color: var(--text); }
 
 /* A payout is worth interrupting for: coding it as it arrives is wrong in
    three places at once, and it looks like an ordinary receipt. */

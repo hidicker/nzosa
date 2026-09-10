@@ -28,6 +28,8 @@ export interface OpeningBalances {
   source?: string;
   /** Debit positive, credit negative, keyed by account code or bank account. */
   accounts: Record<string, Cents>;
+  /** Balances for each financial year end date (e.g. "2024-03-31"). */
+  byDate?: Record<IsoDate, Record<string, Cents>>;
 }
 
 export interface BalanceSheetLine {

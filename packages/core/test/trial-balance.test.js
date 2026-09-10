@@ -88,3 +88,16 @@ test("a file that is not a trial balance is refused rather than half-read", () =
   assert.equal(parsed.accounts.length, 0);
   assert.ok(parsed.problems.length > 0);
 });
+
+test("multiple date columns can populate OpeningBalances with byDate", () => {
+  const tb = parseTrialBalance(REPORT);
+  const byDate = {};
+  for (const d of tb.dates) {
+    const built = openingBalancesFrom(tb, d);
+    if (Object.keys(built.balances.accounts).length > 0) {
+      byDate[d] = built.balances.accounts;
+    }
+  }
+  assert.ok(byDate["2025-03-31"]);
+  assert.equal(byDate["2025-03-31"]["610"], 228000);
+});

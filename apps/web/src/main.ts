@@ -312,6 +312,7 @@ const state = {
   filter: "review" as Filter,
   search: "",
   busy: false,
+  openingYear: "all",
 };
 
 const $ = <T extends HTMLElement>(id: string): T => {
@@ -765,6 +766,10 @@ function wireUp(): void {
     const file = (e.target as HTMLInputElement).files?.[0];
     if (file) void loadOpeningBalances(file);
     (e.target as HTMLInputElement).value = "";
+  });
+  $("opening-year").addEventListener("change", (e) => {
+    state.openingYear = (e.target as HTMLSelectElement).value;
+    renderOpeningBalances();
   });
 
   $("chart-pick").addEventListener("click", () => $<HTMLInputElement>("chart-input").click());
@@ -5637,13 +5642,125 @@ function bankTable(model: EntityModel): HTMLElement {
  * is not a set of opening balances, and accepting one would put the error
  * inside every report that follows and leave nothing to find it by.
  */
+interface FinancialYearBalances {
+  year: number;
+  asAt: IsoDate;
+  accounts: Record<string, Cents>;
+  source?: string;
+  isOpening: boolean;
+  editable: boolean;
+}
+
+/**
+ * Returns account balances for each financial year.
+ *
+ * Sources include:
+ * 1. Imported multi-year trial balance columns preserved in `held.byDate`.
+ * 2. Active opening balances in `held.accounts`.
+ * 3. Subsequent financial years rolled forward from transactions and journals via `computeBalanceSheet`.
+ */
+function balancesByFinancialYear(): FinancialYearBalances[] {
+  const result = new Map<number, FinancialYearBalances>();
+  const held = state.ledger.openingBalances;
+
+  const fyFromDate = (date: IsoDate): number => {
+    if (date.endsWith("-04-01")) return Number(date.slice(0, 4));
+    return financialYearOf(date);
+  };
+
+  // 1. From held.byDate (e.g. historical columns from Xero trial balance export)
+  if (held?.byDate) {
+    for (const [dateStr, accts] of Object.entries(held.byDate)) {
+      if (Object.keys(accts).length === 0) continue;
+      const yr = fyFromDate(dateStr);
+      result.set(yr, {
+        year: yr,
+        asAt: `${yr}-03-31`,
+        accounts: accts,
+        source: held.source,
+        isOpening: true,
+        editable: true,
+      });
+    }
+  }
+
+  // 2. The active opening balances
+  if (held && Object.keys(held.accounts).length > 0) {
+    const activeYr = fyFromDate(held.asAt);
+    result.set(activeYr, {
+      year: activeYr,
+      asAt: `${activeYr}-03-31`,
+      accounts: held.accounts,
+      source: held.source,
+      isOpening: true,
+      editable: true,
+    });
+  }
+
+  // 3. Roll forward subsequent years using computeBalanceSheet
+  const activeOpeningYr = held ? fyFromDate(held.asAt) : null;
+  const txnYears = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))].sort((a, b) => a - b);
+
+  for (const yr of txnYears) {
+    // Keep imported trial balance figures for years <= active opening year
+    if (activeOpeningYr !== null && yr <= activeOpeningYr && result.has(yr)) {
+      continue;
+    }
+    const asAt: IsoDate = `${yr}-03-31`;
+    const sheet = computeBalanceSheet({
+      asAt,
+      ...(held ? { openingBalances: held } : {}),
+      journals: postedJournals(),
+      chart: state.chart,
+    });
+
+    const accts: Record<string, Cents> = {};
+    for (const line of [...sheet.currentAssets.lines, ...sheet.nonCurrentAssets.lines]) {
+      if (line.closing !== 0) accts[line.code] = line.closing;
+    }
+    for (const line of [...sheet.currentLiabilities.lines, ...sheet.nonCurrentLiabilities.lines]) {
+      if (line.closing !== 0) accts[line.code] = -line.closing;
+    }
+    for (const line of sheet.equity.lines) {
+      if (line.code !== "" && line.closing !== 0) {
+        accts[line.code] = -line.closing;
+      }
+    }
+    if (sheet.profitForPeriod !== 0) {
+      const retainedCode =
+        state.chart.find((a) => a.type === "Equity" && /retained/i.test(a.name))?.code ?? "960";
+      accts[retainedCode] = (accts[retainedCode] ?? 0) - sheet.profitForPeriod;
+    }
+
+    if (Object.keys(accts).length > 0) {
+      result.set(yr, {
+        year: yr,
+        asAt,
+        accounts: accts,
+        isOpening: false,
+        editable: false,
+      });
+    }
+  }
+
+  return [...result.values()].sort((a, b) => a.year - b.year);
+}
+
 function renderOpeningBalances(): void {
   const body = $("opening-body");
   body.textContent = "";
 
+  const yearSelect = $<HTMLSelectElement>("opening-year");
   const held = state.ledger.openingBalances;
   const money = (cents: Cents): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  const formatAccounting = (cents: Cents): string => {
+    if (cents === 0) return "—";
+    const val = Math.abs(cents) / 100;
+    const formatted = val.toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    return cents < 0 ? `(${formatted})` : formatted;
+  };
 
   const add = document.createElement("button");
   add.type = "button";
@@ -5651,7 +5768,10 @@ function renderOpeningBalances(): void {
   add.textContent = "add an account";
   add.addEventListener("click", () => openingRow("", 0));
 
-  if (held === undefined) {
+  const years = balancesByFinancialYear();
+
+  if (years.length === 0) {
+    yearSelect.style.display = "none";
     body.append(
       note(
         "None set. That is right for a ledger starting at the beginning of the company: " +
@@ -5663,25 +5783,27 @@ function renderOpeningBalances(): void {
     return;
   }
 
-  const entries = Object.entries(held.accounts).sort(([a], [b]) => a.localeCompare(b));
-  const total = entries.reduce((sum, [, cents]) => sum + cents, 0);
+  // Populate year selector
+  yearSelect.style.display = "";
+  yearSelect.textContent = "";
 
-  const summary = document.createElement("p");
-  summary.className = total === 0 ? "journal-balanced" : "journal-out";
-  summary.textContent =
-    total === 0
-      ? `Balanced. ${entries.length} accounts as at ${held.asAt}, debits equal credits.`
-      : `Out of balance by ${money(total)}. These are not opening balances until they sum ` +
-        "to nothing, and every report built on them carries the difference.";
-  body.append(summary);
+  const allOpt = document.createElement("option");
+  allOpt.value = "all";
+  allOpt.textContent = "All financial years";
+  yearSelect.append(allOpt);
 
-  if (held.source !== undefined && held.source !== "") body.append(note(held.source));
+  const descYears = [...years].sort((a, b) => b.year - a.year);
+  for (const y of descYears) {
+    const opt = document.createElement("option");
+    opt.value = String(y.year);
+    opt.textContent = `FY${y.year} (as at 31 Mar ${y.year})`;
+    yearSelect.append(opt);
+  }
 
-  const table = document.createElement("table");
-  table.className = "report-table opening-table";
-  const head = document.createElement("thead");
-  head.innerHTML = "<tr><th>Account</th><th>Debit</th><th>Credit</th><th></th></tr>";
-  const tbody = document.createElement("tbody");
+  if (!years.some((y) => String(y.year) === state.openingYear) && state.openingYear !== "all") {
+    state.openingYear = years.length > 1 ? "all" : String(years[0].year);
+  }
+  yearSelect.value = state.openingYear;
 
   const byCode = new Map(state.chart.map((a) => [a.code, a]));
   const labels = new Map<string, string>();
@@ -5690,45 +5812,204 @@ function renderOpeningBalances(): void {
     if (label !== "") labels.set(transaction.account, label);
   }
 
-  for (const [code, cents] of entries) {
-    const row = document.createElement("tr");
-    const account = byCode.get(code);
-    const bank = labels.get(code);
-    row.append(nameCell(account ? `${code} ${account.name}` : (bank ?? code)));
-    // Debits and credits in their own columns, the way a trial balance is
-    // written. One signed column reads as a mistake to anybody used to the
-    // other, and this is a page an accountant will check.
-    row.append(amountCell(cents > 0 ? money(cents) : ""));
-    row.append(amountCell(cents < 0 ? money(-cents) : ""));
+  if (state.openingYear === "all") {
+    // Multi-year comparison view
+    const outOfBalance = years.filter((y) => {
+      const sum = Object.values(y.accounts).reduce((s, c) => s + c, 0);
+      return sum !== 0;
+    });
 
-    const actions = document.createElement("td");
-    const edit = document.createElement("button");
-    edit.type = "button";
-    edit.className = "link-button";
-    edit.textContent = "edit";
-    edit.addEventListener("click", () => openingRow(code, cents));
-    actions.append(edit);
-    row.append(actions);
-    tbody.append(row);
+    const summary = document.createElement("p");
+    if (outOfBalance.length === 0) {
+      summary.className = "journal-balanced";
+      summary.textContent = `Balanced across all ${years.length} financial years. Debits equal credits for each year.`;
+    } else {
+      summary.className = "journal-out";
+      summary.textContent = `Out of balance in ${outOfBalance.map((y) => `FY${y.year}`).join(", ")}. These are not opening balances until they sum to nothing.`;
+    }
+    body.append(summary);
+
+    if (held?.source) body.append(note(held.source));
+
+    const codeSet = new Set<string>();
+    for (const y of years) {
+      for (const [code, cents] of Object.entries(y.accounts)) {
+        if (cents !== 0) codeSet.add(code);
+      }
+    }
+    const allCodes = [...codeSet].sort((a, b) => a.localeCompare(b, undefined, { numeric: true }));
+
+    const table = document.createElement("table");
+    table.className = "report-table opening-table multi-year";
+
+    const thead = document.createElement("thead");
+    const headRow = document.createElement("tr");
+
+    const thAccount = document.createElement("th");
+    thAccount.textContent = "Account";
+    headRow.append(thAccount);
+
+    const thType = document.createElement("th");
+    thType.textContent = "Type";
+    headRow.append(thType);
+
+    for (const y of years) {
+      const th = document.createElement("th");
+      th.innerHTML = `FY${y.year}<span class="opening-col-sub">31 Mar ${y.year}</span>`;
+      headRow.append(th);
+    }
+    thead.append(headRow);
+
+    const tbody = document.createElement("tbody");
+    for (const code of allCodes) {
+      const row = document.createElement("tr");
+      const account = byCode.get(code);
+      const bank = labels.get(code);
+      row.append(nameCell(account ? `${code} ${account.name}` : (bank ?? code)));
+
+      const tdType = document.createElement("td");
+      tdType.className = "type-cell";
+      tdType.textContent = account?.type ?? (labels.has(code) ? "Bank" : "—");
+      row.append(tdType);
+
+      for (const y of years) {
+        const cents = y.accounts[code] ?? 0;
+        const td = document.createElement("td");
+        td.className = "amount";
+        if (cents < 0) td.classList.add("credit-val");
+        td.textContent = formatAccounting(cents);
+        row.append(td);
+      }
+      tbody.append(row);
+    }
+
+    const tfoot = document.createElement("tfoot");
+
+    const debitsRow = document.createElement("tr");
+    debitsRow.className = "bs-total";
+    debitsRow.append(nameCell("Total Debits"));
+    debitsRow.append(document.createElement("td"));
+    for (const y of years) {
+      const debits = Object.values(y.accounts).reduce((s, c) => s + (c > 0 ? c : 0), 0);
+      const td = document.createElement("td");
+      td.className = "amount";
+      td.textContent = money(debits);
+      debitsRow.append(td);
+    }
+    tfoot.append(debitsRow);
+
+    const creditsRow = document.createElement("tr");
+    creditsRow.className = "bs-total";
+    creditsRow.append(nameCell("Total Credits"));
+    creditsRow.append(document.createElement("td"));
+    for (const y of years) {
+      const credits = Object.values(y.accounts).reduce((s, c) => s + (c < 0 ? -c : 0), 0);
+      const td = document.createElement("td");
+      td.className = "amount";
+      td.textContent = money(credits);
+      creditsRow.append(td);
+    }
+    tfoot.append(creditsRow);
+
+    const diffRow = document.createElement("tr");
+    diffRow.className = "bs-grand";
+    diffRow.append(nameCell("Difference"));
+    diffRow.append(document.createElement("td"));
+    for (const y of years) {
+      const sum = Object.values(y.accounts).reduce((s, c) => s + c, 0);
+      const td = document.createElement("td");
+      td.className = "amount";
+      if (sum === 0) {
+        td.classList.add("diff-ok");
+        td.textContent = "✓ Balanced";
+      } else {
+        td.classList.add("diff-bad");
+        td.textContent = `Out: ${money(sum)}`;
+      }
+      diffRow.append(td);
+    }
+    tfoot.append(diffRow);
+
+    table.append(thead, tbody, tfoot);
+    body.append(table);
+    body.append(add);
+  } else {
+    // Single financial year view
+    const selected = years.find((y) => String(y.year) === state.openingYear) ?? years[years.length - 1];
+    const entries = Object.entries(selected.accounts).sort(([a], [b]) => a.localeCompare(b));
+    const total = entries.reduce((sum, [, cents]) => sum + cents, 0);
+
+    const summary = document.createElement("p");
+    summary.className = total === 0 ? "journal-balanced" : "journal-out";
+    summary.textContent =
+      total === 0
+        ? `Balanced. ${entries.length} accounts as at ${selected.asAt}, debits equal credits.`
+        : `Out of balance by ${money(total)}. These are not opening balances until they sum ` +
+          "to nothing, and every report built on them carries the difference.";
+    body.append(summary);
+
+    if (selected.source) body.append(note(selected.source));
+    if (!selected.isOpening) {
+      body.append(
+        note(`Balances as at 31 March ${selected.year} rolled forward from opening balances and transactions.`),
+      );
+    }
+
+    const table = document.createElement("table");
+    table.className = "report-table opening-table";
+    const head = document.createElement("thead");
+    head.innerHTML = selected.editable
+      ? "<tr><th>Account</th><th>Debit</th><th>Credit</th><th></th></tr>"
+      : "<tr><th>Account</th><th>Debit</th><th>Credit</th></tr>";
+    const tbody = document.createElement("tbody");
+
+    for (const [code, cents] of entries) {
+      const row = document.createElement("tr");
+      const account = byCode.get(code);
+      const bank = labels.get(code);
+      row.append(nameCell(account ? `${code} ${account.name}` : (bank ?? code)));
+      row.append(amountCell(cents > 0 ? money(cents) : ""));
+      row.append(amountCell(cents < 0 ? money(-cents) : ""));
+
+      if (selected.editable) {
+        const actions = document.createElement("td");
+        const edit = document.createElement("button");
+        edit.type = "button";
+        edit.className = "link-button";
+        edit.textContent = "edit";
+        edit.addEventListener("click", () => openingRow(code, cents, selected.asAt));
+        actions.append(edit);
+        row.append(actions);
+      }
+      tbody.append(row);
+    }
+
+    const sum = document.createElement("tr");
+    sum.className = "bs-grand";
+    sum.append(nameCell("Total"));
+    sum.append(amountCell(money(entries.reduce((s, [, c]) => s + (c > 0 ? c : 0), 0))));
+    sum.append(amountCell(money(entries.reduce((s, [, c]) => s + (c < 0 ? -c : 0), 0))));
+    if (selected.editable) sum.append(document.createElement("td"));
+    tbody.append(sum);
+
+    table.append(head, tbody);
+    body.append(table);
+
+    if (selected.editable) {
+      const addThisYear = document.createElement("button");
+      addThisYear.type = "button";
+      addThisYear.className = "link-button";
+      addThisYear.textContent = "add an account";
+      addThisYear.addEventListener("click", () => openingRow("", 0, selected.asAt));
+      body.append(addThisYear);
+    }
   }
-
-  const sum = document.createElement("tr");
-  sum.className = "bs-grand";
-  sum.append(nameCell("Total"));
-  sum.append(amountCell(money(entries.reduce((s, [, c]) => s + (c > 0 ? c : 0), 0))));
-  sum.append(amountCell(money(entries.reduce((s, [, c]) => s + (c < 0 ? -c : 0), 0))));
-  sum.append(document.createElement("td"));
-  tbody.append(sum);
-
-  table.append(head, tbody);
-  body.append(table);
-  body.append(add);
 }
 
 /** Add or change one opening balance. */
-function openingRow(code: string, cents: Cents): void {
+function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): void {
   const held = state.ledger.openingBalances;
-  const asAt = held?.asAt ?? `${new Date().getFullYear()}-04-01`;
+  const asAt = targetAsAt ?? held?.asAt ?? `${new Date().getFullYear()}-04-01`;
   const which = window.prompt("Account code, or a bank account number", code);
   if (which === null || which.trim() === "") return;
   const amount = window.prompt(
@@ -5742,10 +6023,15 @@ function openingRow(code: string, cents: Cents): void {
     alert(`"${amount}" is not an amount.`);
     return;
   }
-  void saveOpeningBalance(which.trim(), parsed, code);
+  void saveOpeningBalance(which.trim(), parsed, code, asAt);
 }
 
-async function saveOpeningBalance(code: string, cents: Cents, replacing: string): Promise<void> {
+async function saveOpeningBalance(
+  code: string,
+  cents: Cents,
+  replacing: string,
+  targetAsAt?: IsoDate,
+): Promise<void> {
   const held = state.ledger.openingBalances;
   const accounts = { ...(held?.accounts ?? {}) };
   // Renaming an account is a move, not a copy. Leaving the old key would state
@@ -5754,11 +6040,31 @@ async function saveOpeningBalance(code: string, cents: Cents, replacing: string)
   if (cents === 0) delete accounts[code];
   else accounts[code] = cents;
 
+  const fyFromDate = (date: IsoDate): number => {
+    if (date.endsWith("-04-01")) return Number(date.slice(0, 4));
+    return financialYearOf(date);
+  };
+
+  const asAt = targetAsAt ?? held?.asAt ?? `${new Date().getFullYear()}-04-01`;
+  const byDate = held?.byDate ? { ...held.byDate } : undefined;
+  if (byDate) {
+    for (const d of Object.keys(byDate)) {
+      if (fyFromDate(d) === fyFromDate(asAt)) {
+        const accts = { ...(byDate[d] ?? {}) };
+        if (replacing !== "" && replacing !== code) delete accts[replacing];
+        if (cents === 0) delete accts[code];
+        else accts[code] = cents;
+        byDate[d] = accts;
+      }
+    }
+  }
+
   const before = held ?? null;
   const openingBalances: OpeningBalances = {
-    asAt: held?.asAt ?? `${new Date().getFullYear()}-04-01`,
+    asAt,
     ...(held?.source ? { source: held.source } : {}),
     accounts,
+    ...(byDate ? { byDate } : {}),
   };
   state.ledger = { ...state.ledger, openingBalances };
   state.persistent = await savePart(state.ledger);
@@ -5846,13 +6152,26 @@ async function loadOpeningBalances(file: File): Promise<void> {
   );
   if (!ok) return;
 
+  // Capture all columns present in the file into byDate
+  const byDate: Record<IsoDate, Record<string, Cents>> = {};
+  for (const d of parsed.dates) {
+    const builtForDate = openingBalancesFrom(parsed, d, {
+      bankAccountFor: (name) => banks.get(name.trim().toLowerCase()),
+    });
+    if (Object.keys(builtForDate.balances.accounts).length > 0) {
+      byDate[d] = builtForDate.balances.accounts;
+    }
+  }
+
   const before = state.ledger.openingBalances ?? null;
   const openingBalances: OpeningBalances = {
     accounts,
     asAt: dayAfter(chosen),
     source: `${file.name}, ${chosen} column`,
+    byDate,
   };
   state.ledger = { ...state.ledger, openingBalances };
+  state.openingYear = "all";
   state.persistent = await savePart(state.ledger);
   await record(
     "openingBalance",

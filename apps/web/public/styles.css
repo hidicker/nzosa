@@ -2330,3 +2330,67 @@ button.working {
   min-height: 1.25rem;
 }
 
+/* ---------- demo banner for online / browser-only demonstration ---------- */
+
+.demo-banner {
+  background: #c62828;
+  color: #ffffff;
+  padding: 6px 36px 6px 16px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+.demo-banner[hidden] {
+  display: none !important;
+}
+.demo-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.demo-banner-badge {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.demo-banner a {
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.demo-banner a:hover {
+  color: #ffebee;
+}
+.demo-banner-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.demo-banner-close:hover {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+

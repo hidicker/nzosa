@@ -570,6 +570,14 @@ function reclassify(): void {
 }
 
 function wireUp(): void {
+  const demoBanner = document.getElementById("demo-banner");
+  if (demoBanner) {
+    demoBanner.hidden = writesToFolder();
+    $("demo-banner-close")?.addEventListener("click", () => {
+      demoBanner.hidden = true;
+    });
+  }
+
   const picker = $<HTMLInputElement>("file-input");
   const drop = $<HTMLElement>("dropzone");
 

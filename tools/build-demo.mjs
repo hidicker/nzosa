@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync, spawnSync } from "node:child_process";
@@ -20,7 +20,9 @@ rmSync(demoDir, { recursive: true, force: true });
 mkdirSync(demoDir, { recursive: true });
 
 // Copy static web assets and demo dataset
-cpSync(join(webDist, "index.html"), join(demoDir, "index.html"));
+let demoHtml = readFileSync(join(webDist, "index.html"), "utf-8");
+demoHtml = demoHtml.replace('id="demo-banner" class="demo-banner" hidden', 'id="demo-banner" class="demo-banner"');
+writeFileSync(join(demoDir, "index.html"), demoHtml, "utf-8");
 cpSync(join(webDist, "styles.css"), join(demoDir, "styles.css"));
 cpSync(join(webDist, "app.js"), join(demoDir, "app.js"));
 if (existsSync(join(webDist, "app.js.map"))) {

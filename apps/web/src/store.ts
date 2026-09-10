@@ -182,6 +182,7 @@ export interface StoredLedger {
    * and neither can be left pointing at a leg that does not point back.
    */
   transfers?: Record<string, string>;
+  singleEntityConfirmed?: boolean;
 }
 
 export function emptyLedger(): StoredLedger {
@@ -396,6 +397,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.assetProceeds ? { assetProceeds: ledger.assetProceeds } : {}),
     ...(ledger.payouts ? { payouts: ledger.payouts } : {}),
     ...(ledger.manualJournals ? { manualJournals: ledger.manualJournals } : {}),
+    ...(ledger.singleEntityConfirmed ? { singleEntityConfirmed: true } : {}),
   };
 }
 

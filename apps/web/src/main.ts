@@ -7372,11 +7372,19 @@ interface SetupStep {
    * Where to go and do it.
    *
    * More than one where there is more than one way in: bank data arrives from
-   * a feed or from a file, and offering only one of them told half the people
-   * reading it that the other was not there.
-   */
+export interface SetupLink {
+  label: string;
   page?: string;
-  links?: { label: string; page: string }[];
+  action?: () => void;
+}
+
+interface SetupStep {
+  what: string;
+  done: boolean;
+  detail: string;
+  unlocks: string;
+  page?: string;
+  links?: SetupLink[];
   /**
    * Not everybody needs this one, and not doing it is not being behind.
    *
@@ -7737,15 +7745,43 @@ function setupSteps(): SetupStep[] {
     },
     {
       what: "More than one entity?",
-      done: entities.length > 1,
+      done: entities.length > 1 || led.singleEntityConfirmed === true,
       optional: true,
       detail:
         entities.length > 1
           ? entities.map((e) => e.name).join(", ")
-          : "Only if one set of books holds several things — a company and two " +
-            "rentals, say. One company or one person needs none of this.",
+          : led.singleEntityConfirmed === true
+            ? entities.length === 1 && entities[0].name !== DEFAULT_ENTITY_NAME
+              ? `Only one entity: ${entities[0].name}.`
+              : "Only one entity."
+            : "Only if one set of books holds several things — a company and two " +
+              "rentals, say. One company or one person needs none of this.",
       unlocks: "Per-entity reports, and owner shares on a return",
-      page: "entities",
+      links: led.singleEntityConfirmed === true
+        ? [
+            {
+              label: "Change",
+              action: () => {
+                delete led.singleEntityConfirmed;
+                void save(led);
+                renderSetup();
+              },
+            },
+            { label: "Review", page: "entities" },
+          ]
+        : entities.length > 1
+          ? [{ label: "Review", page: "entities" }]
+          : [
+              { label: "Go", page: "entities" },
+              {
+                label: "Only one entity",
+                action: () => {
+                  led.singleEntityConfirmed = true;
+                  void save(led);
+                  renderSetup();
+                },
+              },
+            ],
     },
     {
       what: "Invoices",
@@ -8086,7 +8122,7 @@ function renderSetupBody(): void {
     }
 
     row.append(mark, text);
-    const links = step.links ?? (step.page === undefined
+    const links: SetupLink[] = step.links ?? (step.page === undefined
       ? []
       : [{ label: step.done ? "Review" : "Go", page: step.page }]);
     if (links.length > 0) {
@@ -8096,7 +8132,13 @@ function renderSetupBody(): void {
         const go = document.createElement("button");
         go.type = "button";
         go.textContent = link.label;
-        go.addEventListener("click", () => showPage(link.page));
+        go.addEventListener("click", () => {
+          if (link.action) {
+            link.action();
+          } else if (link.page) {
+            showPage(link.page);
+          }
+        });
         buttons.append(go);
       }
       row.append(buttons);

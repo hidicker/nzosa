@@ -1609,6 +1609,7 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .setup-detail { font-size: 0.8rem; color: var(--muted, #667); margin-top: 0.1rem; }
 .setup-unlocks { font-size: 0.78rem; color: #6a4b9c; margin-top: 0.15rem; }
 .setup-step button { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
+.setup-go { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 .setup-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
 
 /* A control that reads as a quiet offer rather than an action to take. */

@@ -1736,7 +1736,7 @@ function renderEntityFilter(): void {
   select.hidden = model.entities.length === 0;
 }
 
-function showPage(page: string): void {
+function showPage(page: string, scrollTo?: "top" | "bottom" | number): void {
   // Arriving at a page half way down it is disorienting: the sections are all
   // one scrolling document, so the position simply carried over from wherever
   // you were on the last one. Only on an actual change of page, because this
@@ -1790,7 +1790,28 @@ function showPage(page: string): void {
   if (page === "opening") renderOpeningBalances();
   if (page === "gst") renderVariance();
 
-  if (moved) window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  if (scrollTo === "bottom") {
+    const doScrollBottom = () => {
+      const b = Math.max(
+        document.documentElement.scrollHeight,
+        document.body.scrollHeight,
+        document.getElementById("page-entities")?.scrollHeight ?? 0,
+        999999,
+      );
+      window.scrollTo(0, b);
+      document.documentElement.scrollTop = b;
+      document.body.scrollTop = b;
+    };
+    doScrollBottom();
+    requestAnimationFrame(doScrollBottom);
+    setTimeout(doScrollBottom, 50);
+    setTimeout(doScrollBottom, 150);
+    setTimeout(doScrollBottom, 350);
+  } else if (typeof scrollTo === "number") {
+    window.scrollTo({ top: scrollTo, behavior: "instant" });
+  } else if (moved) {
+    window.scrollTo({ top: 0, behavior: "instant" as ScrollBehavior });
+  }
 }
 
 /**
@@ -6742,7 +6763,7 @@ function renderEntities(): void {
     // income or expense code the other side of it was coded to. Asking for
     // one here put an amber "not set" against every bank account in the
     // chart, which was a job that could never be finished.
-    const isBankAccount = account.type === "Bank";
+    const isBankAccount = account.type.trim().toLowerCase() === "bank";
     const gstCell = document.createElement("td");
     if (isBankAccount) {
       const none = document.createElement("span");
@@ -8118,24 +8139,7 @@ function setupSteps(): SetupStep[] {
         {
           label: bankLinks.total > 0 && bankLinks.unlinked.length === 0 ? "Review" : "Go",
           action: () => {
-            showPage("entities");
-            setTimeout(() => {
-              const unlinkedSelect = Array.from(
-                document.querySelectorAll<HTMLSelectElement>("select.bank-link"),
-              ).find((sel) => sel.value === "");
-              const target =
-                unlinkedSelect?.closest("tr") ??
-                document.querySelector(".bank-link")?.closest("tr") ??
-                document.querySelector(".accounts-table");
-              if (target) {
-                target.scrollIntoView({ behavior: "smooth", block: "center" });
-              } else {
-                window.scrollTo({
-                  top: document.documentElement.scrollHeight,
-                  behavior: "smooth",
-                });
-              }
-            }, 60);
+            showPage("entities", "bottom");
           },
         },
       ],

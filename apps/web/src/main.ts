@@ -4757,8 +4757,8 @@ function renderCheck(): void {
         ? String(splitRows.length)
         : `${splitRows.length} / ${splitsToDo.length}`,
       splitsToDo.length === 0
-        ? "split in Xero, all matched here"
-        : "split in Xero / still to match",
+        ? "split in Xero/Imported, all matched here"
+        : "split in Xero/Imported / still to match",
     ],
     [String(result.unreferenced.length), "coded, nothing to check against"],
     [String(result.uncoded.length - alreadySettled), "not coded yet"],
@@ -4792,11 +4792,11 @@ function renderCheck(): void {
   // that is really freight, border GST and a fee cannot be coded to one
   // account at all, so coding it before splitting it means doing it twice.
   if (splitsToDo.length > 0) {
-    body.append(section("Xero splits these", splitsToDo, proposedBy, false));
+    body.append(section("Xero/Imported splits these", splitsToDo, proposedBy, false));
     body.append(
       note(
         "A split payment cannot be compared on one code, so these are kept out of the counts " +
-          "above. Open one to see Xero's parts; loading them replaces whatever split is held here.",
+          "above. Open one to see its parts; loading them replaces whatever split is held here.",
       ),
     );
   }
@@ -4833,7 +4833,7 @@ function renderCheck(): void {
     body.append(section("Not coded here, coded in the file", adoptable, proposedBy, false));
     body.append(
       note(
-        "These have a coding in the file and none here. “Use Xero” takes it, one " +
+        "These have a coding in the file and none here. “Use Xero/Imported” takes it, one " +
           "line at a time -- which is the way through the ones no rule can gather: a " +
           "supplier whose payee changes with every payment, or one coded to a " +
           "different account each time.",
@@ -5002,20 +5002,20 @@ function section(
     actionsBar.append(btnXero);
   }
 
-  let btnRules: HTMLButtonElement | null = null;
-  if (totalRules > 0) {
-    btnRules = document.createElement("button");
-    btnRules.type = "button";
-    btnRules.className = "check-batch-btn";
-    actionsBar.append(btnRules);
-  }
-
   let btnSplits: HTMLButtonElement | null = null;
   if (totalSplits > 0) {
     btnSplits = document.createElement("button");
     btnSplits.type = "button";
     btnSplits.className = "check-batch-btn primary-batch";
     actionsBar.append(btnSplits);
+  }
+
+  let btnRules: HTMLButtonElement | null = null;
+  if (totalRules > 0) {
+    btnRules = document.createElement("button");
+    btnRules.type = "button";
+    btnRules.className = "check-batch-btn";
+    actionsBar.append(btnRules);
   }
 
   wrap.append(actionsBar);
@@ -5029,7 +5029,7 @@ function section(
     '<th class="col-date">Date</th><th class="col-amount">Amount</th>' +
     '<th class="col-payee">Payee</th><th class="col-proposed">Rules propose</th>' +
     '<th class="col-coded">You coded</th>' +
-    `<th class="${gst ? "col-gst" : "col-imported"}">${gst ? "GST ours / theirs" : "Xero says"}</th>` +
+    `<th class="${gst ? "col-gst" : "col-imported"}">${gst ? "GST ours / theirs" : "Xero/Imported says"}</th>` +
     '<th class="col-use">Use</th>';
 
   const thCheck = headRow.querySelector(".col-check") as HTMLElement;
@@ -5058,13 +5058,13 @@ function section(
 
     if (btnXero) {
       if (noneChecked) {
-        btnXero.textContent = `Use Xero for all (${totalXero})`;
+        btnXero.textContent = `Use Xero/Imported for all (${totalXero}) (recommended)`;
         btnXero.disabled = totalXero === 0;
       } else {
         const count = rowOptions.filter(
           (o) => selectedIds.has(o.row.transaction.id) && o.canUseXero,
         ).length;
-        btnXero.textContent = `Use Xero for ${count} selected`;
+        btnXero.textContent = `Use Xero/Imported for ${count} selected (recommended)`;
         btnXero.disabled = count === 0;
       }
     }
@@ -5084,13 +5084,13 @@ function section(
 
     if (btnSplits) {
       if (noneChecked) {
-        btnSplits.textContent = `Use all splits (${totalSplits})`;
+        btnSplits.textContent = `Use all splits (${totalSplits}) (recommended)`;
         btnSplits.disabled = totalSplits === 0;
       } else {
         const count = rowOptions.filter(
           (o) => selectedIds.has(o.row.transaction.id) && o.canUseSplit,
         ).length;
-        btnSplits.textContent = `Use split for ${count} selected`;
+        btnSplits.textContent = `Use split for ${count} selected (recommended)`;
         btnSplits.disabled = count === 0;
       }
     }
@@ -5238,7 +5238,7 @@ function section(
       marker.className = "split-marker";
       const held = (state.ledger.splits ?? {})[row.transaction.id];
       marker.textContent =
-        `Xero splits this into ${parts.length}` +
+        `Xero/Imported splits this into ${parts.length}` +
         (held ? ` — split into ${held.length} here` : " — one line here");
       marker.addEventListener("click", () => {
         state.expandedSplit = state.expandedSplit === row.transaction.id ? null : row.transaction.id;
@@ -5250,9 +5250,7 @@ function section(
 
     const actions = document.createElement("td");
     actions.className = "check-actions";
-    if (canUseRules) {
-      actions.append(useButton("proposed", row.transaction, proposed));
-    }
+    // 1. Recommended choices first: Xero/Imported or split (in green)
     if (canUseXero) {
       actions.append(
         useButton("imported", row.transaction, imported, gst ? row.gstDiffers?.theirs : undefined),
@@ -5261,12 +5259,16 @@ function section(
     if (canUseSplit && parts) {
       const useSplit = document.createElement("button");
       useSplit.type = "button";
-      useSplit.className = "use-button";
+      useSplit.className = "use-button use-recommended";
       useSplit.textContent = (state.ledger.splits ?? {})[row.transaction.id]
-        ? "reload split"
-        : "use split";
+        ? "reload split (recommended)"
+        : "use split (recommended)";
       useSplit.addEventListener("click", () => void acceptSplit(row.transaction, parts));
       actions.append(useSplit);
+    }
+    // 2. Rules proposal second
+    if (canUseRules) {
+      actions.append(useButton("proposed", row.transaction, proposed));
     }
     tr.append(actions);
     tbody.append(tr);
@@ -5319,8 +5321,8 @@ function useButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "use-button";
-  button.textContent = kind === "imported" ? "use Xero" : "use rules";
+  button.className = kind === "imported" ? "use-button use-recommended" : "use-button";
+  button.textContent = kind === "imported" ? "use Xero/Imported (recommended)" : "use rules";
   button.title = rate === undefined ? code : `${code} · ${rate}`;
   button.addEventListener("click", () => void acceptCode(transaction, code, kind, rate));
   return button;
@@ -5403,13 +5405,13 @@ async function acceptCodesBulk(
     const chosenCode = single.kind === "imported" ? (mapToOurVocabulary(single.code) ?? single.code) : single.code;
     await record(
       "coding",
-      `${single.transaction.date} ${formatAmount(single.transaction.amount)} ${single.transaction.otherParty} → ${chosenCode} (accepted the ${single.kind} coding)`,
+      `${single.transaction.date} ${formatAmount(single.transaction.amount)} ${single.transaction.otherParty} → ${chosenCode} (accepted the ${single.kind === "imported" ? "Xero/Imported" : single.kind} coding)`,
       batchEvents[0].before,
       overrides[single.transaction.id],
       single.transaction.id,
     );
   } else {
-    const kindDesc = items[0]?.kind === "imported" ? "Xero" : "rules";
+    const kindDesc = items[0]?.kind === "imported" ? "Xero/Imported" : "rules";
     await record(
       "codingBatch",
       `Accepted ${kindDesc} coding for ${applied} lines on Coding reconciliation page`,
@@ -5453,7 +5455,7 @@ async function acceptSplitsBulk(
         ...(code !== null ? { code } : {}),
         treatment: isTax || rated ? "standard" : "out-of-scope",
         side: isTax ? "imports" : rated ? side : "none",
-        note: `Xero: ${part.description}`,
+        note: `Xero/Imported: ${part.description}`,
       });
     }
 
@@ -5472,7 +5474,7 @@ async function acceptSplitsBulk(
     if (items.length === 1) {
       await record(
         "split",
-        `${item.transaction.date} ${formatAmount(item.transaction.amount)} ${item.transaction.otherParty} split into ${mapped.length} from Xero`,
+        `${item.transaction.date} ${formatAmount(item.transaction.amount)} ${item.transaction.otherParty} split into ${mapped.length} from Xero/Imported`,
         before ?? null,
         mapped,
         item.transaction.id,
@@ -5501,7 +5503,7 @@ async function acceptSplitsBulk(
   if (items.length > 1) {
     await record(
       "codingBatch",
-      `Loaded ${applied} splits from Xero on Coding reconciliation page`,
+      `Loaded ${applied} splits from Xero/Imported on Coding reconciliation page`,
       [],
       null,
     );
@@ -5553,6 +5555,7 @@ async function acceptCode(
   const overrides = { ...(state.ledger.overrides ?? {}) };
   const wasCoded = overrides[transaction.id];
   const side = stated?.side ?? (stated !== null ? "none" : one?.classification.side);
+  const kindName = kind === "imported" ? "Xero/Imported" : kind;
   overrides[transaction.id] = {
     confirmed: true,
     code: chosen,
@@ -5560,15 +5563,15 @@ async function acceptCode(
     ...(side !== undefined && side !== "none" ? { side } : {}),
     note:
       stated === null
-        ? `Accepted the ${kind} coding on the Coding reconciliation page.`
-        : `Accepted the ${kind} coding and its rate (${rate}) on the Coding reconciliation page.`,
+        ? `Accepted the ${kindName} coding on the Coding reconciliation page.`
+        : `Accepted the ${kindName} coding and its rate (${rate}) on the Coding reconciliation page.`,
     at: new Date().toISOString().slice(0, 10),
   };
   state.ledger = { ...state.ledger, overrides };
   state.persistent = await savePart(state.ledger, "overrides");
   await record(
     "coding",
-    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${chosen} (accepted the ${kind} coding)`,
+    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${chosen} (accepted the ${kindName} coding)`,
     wasCoded ?? null,
     overrides[transaction.id],
     transaction.id,
@@ -5606,7 +5609,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
       ...(code !== null ? { code } : {}),
       treatment: isTax || rated ? "standard" : "out-of-scope",
       side: isTax ? "imports" : rated ? side : "none",
-      note: `Xero: ${part.description}`,
+      note: `Xero/Imported: ${part.description}`,
     });
   }
 
@@ -5630,7 +5633,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   state.persistent = await savePart(state.ledger, "splits");
   await record(
     "split",
-    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} split into ${mapped.length} from Xero`,
+    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} split into ${mapped.length} from Xero/Imported`,
     before ?? null,
     mapped,
     transaction.id,

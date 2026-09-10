@@ -38,6 +38,17 @@
 .use-button { font-size: 0.68rem; padding: 0.1rem 0.4rem; margin-left: 0.2rem; cursor: pointer;
   border: 1px solid rgba(128,128,128,0.45); border-radius: 3px; background: transparent; color: inherit; }
 .use-button:hover { border-color: currentColor; }
+.use-button.use-recommended {
+  border-color: rgba(31, 111, 74, 0.45);
+  color: #1f6f4a;
+  background: rgba(31, 111, 74, 0.08);
+  font-weight: 600;
+}
+.use-button.use-recommended:hover {
+  border-color: #1f6f4a;
+  background: #1f6f4a;
+  color: #ffffff;
+}
 
 .check-section { margin-bottom: 2rem; }
 .check-section-actions {

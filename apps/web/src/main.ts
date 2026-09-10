@@ -2412,6 +2412,9 @@ function renderReconcile(): void {
   const unresolved = unresolvedNote();
   if (unresolved) body.append(unresolved);
 
+  const codingWarning = codingReconciliationWarning();
+  if (codingWarning) body.append(codingWarning);
+
   // Payouts before anything else, because coding one as it arrives is the
   // mistake this page is most likely to make: it looks like an ordinary
   // receipt and is three postings wearing one figure.
@@ -4357,6 +4360,94 @@ function ourGstRate(transaction: Transaction): string | null {
   return rateLabel(one.classification);
 }
 
+/** Check if there are outstanding action items on the Coding reconciliation page. */
+function codingReconciliationOutstanding(): { total: number } | null {
+  if (state.reference.length === 0 || state.ledger.transactions.length === 0) return null;
+  const suggestions = suggest(
+    state.ledger.transactions,
+    state.rules,
+    state.ledger.overrides ?? {},
+    accountsFor(state.checkAccounts),
+  );
+  const suggestionMap = new Map(suggestions.map((one) => [one.transaction.id, one]));
+  const coded = suggestions.map((one) => ({ transaction: one.transaction, code: one.code }));
+  const accountMap = inferAccountMapping(coded, state.reference);
+  const sameAcct = (ours: Transaction, theirs: ReferenceLine): boolean => {
+    if (theirs.account === undefined) return true;
+    const expected = accountMap.get(ours.account);
+    if (expected !== undefined) return expected === theirs.account;
+    return accountMap.size === 0;
+  };
+  const gstRate = (transaction: Transaction): string | null => {
+    const one = suggestionMap.get(transaction.id);
+    if (!one) return null;
+    return rateLabel(one.classification);
+  };
+  const result = compareCodings(coded, state.reference, {
+    chart: state.chart,
+    accountMatches: sameAcct,
+    gstRateOf: gstRate,
+  });
+
+  const ourSplits = state.ledger.splits ?? {};
+  const isSplit = (r: CodingRow): boolean => (r.theirs?.parts?.length ?? 0) > 1;
+  const splitRows = [...result.agreed, ...result.differed, ...result.uncoded].filter(isSplit);
+  const sameParts = (row: CodingRow): boolean => {
+    const held = ourSplits[row.transaction.id];
+    const theirs = row.theirs?.parts;
+    if (held === undefined || theirs === undefined) return false;
+    if (held.length !== theirs.length) return false;
+    const sorted = (amounts: readonly number[]): string =>
+      [...amounts].sort((a, b) => a - b).join(",");
+    return sorted(held.map((p) => p.amount)) === sorted(theirs.map((p) => p.amount));
+  };
+  const splitsToDo = splitRows.filter((row) => !sameParts(row));
+
+  const assigned = invoiceAssignments();
+  const ourTransfers = state.ledger.transfers ?? {};
+  const settledElsewhere = (row: CodingRow): boolean =>
+    assigned.has(row.transaction.id) || ourTransfers[row.transaction.id] !== undefined;
+
+  const comparable = result.uncoded.filter((r) => r.theirs !== null && !isSplit(r));
+  const adoptable = comparable.filter((r) => !settledElsewhere(r));
+  const differed = result.differed.filter((r) => !isSplit(r));
+  const gstFlags = [...result.agreed, ...result.differed].filter(
+    (r) => r.gstDiffers && !isSplit(r),
+  );
+
+  const outstandingIds = new Set<string>([
+    ...splitsToDo.map((r) => r.transaction.id),
+    ...differed.map((r) => r.transaction.id),
+    ...adoptable.map((r) => r.transaction.id),
+    ...gstFlags.map((r) => r.transaction.id),
+  ]);
+
+  if (outstandingIds.size === 0) return null;
+  return { total: outstandingIds.size };
+}
+
+/** Warning banner displayed on Reconcile page when Coding reconciliation has pending items. */
+function codingReconciliationWarning(): HTMLElement | null {
+  const outstanding = codingReconciliationOutstanding();
+  if (!outstanding || outstanding.total === 0) return null;
+
+  const wrap = document.createElement("div");
+  wrap.className = "coding-reconciliation-warning";
+
+  const msg = document.createElement("span");
+  msg.textContent =
+    "You have coding reconciliation items outstanding, complete those before starting reconciliation.";
+
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "link-button";
+  go.textContent = `Go to Coding reconciliation (${outstanding.total} waiting)`;
+  go.addEventListener("click", () => showPage("check"));
+
+  wrap.append(msg, " ", go);
+  return wrap;
+}
+
 /**
  * Ask which columns to read, for a table nothing could name.
  *
@@ -4678,7 +4769,15 @@ function renderCheck(): void {
   // out of a hundred and seventy means the other system's coding can be
   // trusted here, and eighty means it cannot.
   if (differed.length > 0) {
-    body.append(section("Coding disagrees", differed, proposedBy, false));
+    body.append(
+      section(
+        "Coding disagrees",
+        differed,
+        proposedBy,
+        false,
+        "choose option from the Use column",
+      ),
+    );
   }
 
   // Then the lines we have not coded, that the other system did.
@@ -4794,10 +4893,13 @@ function section(
   rows: readonly CodingRow[],
   proposedBy: ReadonlyMap<string, string | null>,
   gst: boolean,
+  suffix?: string,
 ): HTMLElement {
   const wrap = document.createElement("div");
   const heading = document.createElement("h3");
-  heading.textContent = `${title} (${rows.length})`;
+  heading.textContent = suffix
+    ? `${title} (${rows.length}) - ${suffix}`
+    : `${title} (${rows.length})`;
   wrap.append(heading);
 
   const table = document.createElement("table");

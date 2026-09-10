@@ -460,82 +460,100 @@ async function seedStarterChart(): Promise<void> {
   );
 }
 
+function setLoadingStatus(message: string): void {
+  const el = document.getElementById("loading-msg");
+  if (el) el.textContent = message;
+}
+
+function dismissLoading(): void {
+  const el = document.getElementById("app-loading");
+  if (!el) return;
+  el.classList.add("dismissed");
+  setTimeout(() => el.remove(), 400);
+}
+
 async function init(): Promise<void> {
-  const loaded = await load();
-  state.ledger = loaded.ledger;
-  state.persistent = loaded.persistent;
+  setLoadingStatus("Opening books…");
+  try {
+    const loaded = await load();
+    state.ledger = loaded.ledger;
+    state.persistent = loaded.persistent;
 
-  // Classify what is already stored, so the review queue survives a reload.
-  reclassify();
-  // Once, here -- not in reclassify, which runs on every coding change and
-  // would drag somebody back to the queue each time they coded a line.
-  showWhatNeedsDeciding();
-  state.chart = state.ledger.chart ?? [];
-  // Ask before anything is written, so the first save is already protected.
-  state.durable = await requestPersistence();
-  // Only when there is no folder behind the app. The data/ folder is a seed
-  // for a browser that has nothing in it; a ledger folder is the books
-  // themselves, and loading a second set of files over the top is the muddle
-  // that makes clearing look as though it had not worked.
-  if (!writesToFolder()) await seedBrowser();
+    // Classify what is already stored, so the review queue survives a reload.
+    reclassify();
+    // Once, here -- not in reclassify, which runs on every coding change and
+    // would drag somebody back to the queue each time they coded a line.
+    showWhatNeedsDeciding();
+    state.chart = state.ledger.chart ?? [];
+    // Ask before anything is written, so the first save is already protected.
+    state.durable = await requestPersistence();
+    // Only when there is no folder behind the app. The data/ folder is a seed
+    // for a browser that has nothing in it; a ledger folder is the books
+    // themselves, and loading a second set of files over the top is the muddle
+    // that makes clearing look as though it had not worked.
+    if (!writesToFolder()) await seedBrowser();
 
-  renderFormats();
-  wireUp();
-  render();
-  const storedRules = await loadRules();
-  if (storedRules) {
-    state.rules = storedRules.rules;
-    state.rulesName = storedRules.name;
-    state.rulesLoadedAt = storedRules.loadedAt;
+    setLoadingStatus("Preparing workspace…");
+    renderFormats();
+    wireUp();
+    render();
+    const storedRules = await loadRules();
+    if (storedRules) {
+      state.rules = storedRules.rules;
+      state.rulesName = storedRules.name;
+      state.rulesLoadedAt = storedRules.loadedAt;
+    }
+    // Before anything below can record what it did. `record` appends to
+    // `state.events` and writes the lot back, so anything recording before the
+    // log is read would save a log of one and lose what was there -- which the
+    // entity setup below has always been one changed ledger away from doing.
+    state.events = await loadEvents();
+    state.who = await loadUser();
+
+    // A new set of books starts with a chart rather than with nothing.
+    await seedStarterChart();
+    // A ledger folder holds the chart with its entity columns, but the model
+    // those columns describe is derived rather than stored -- it used to be built
+    // when a chart CSV was loaded, which never happens when the chart comes from
+    // the folder. Building it here means a folder is enough on its own.
+    if ((state.ledger.entities?.entities ?? []).length === 0 && state.chart.length > 0) {
+      await applyChartColumns(state.chart);
+    }
+    // A chart that named entities has made them by now; one that named none
+    // gets the single entity these books plainly are.
+    await ensureDefaultEntity();
+    // And the rows that carried the mapping have done their job.
+    await tidyChart();
+
+    state.rulesArchive = await loadRulesArchive();
+    state.filed = state.ledger.filedReturns ?? [];
+    state.varianceAccounts = state.ledger.varianceAccounts ?? [];
+    // Deduplicated on the way in as well as on the way out, so a set of books
+    // that already holds the same export twice is put right by opening it rather
+    // than by the person working out what happened and loading the file again.
+    state.reference = dedupeReference(state.ledger.reference ?? []);
+    if (state.reference.length !== (state.ledger.reference ?? []).length) {
+      state.ledger = { ...state.ledger, reference: state.reference };
+      state.persistent = await savePart(state.ledger, "reference");
+    }
+    // Restoring the returns is not enough: the comparison against them is derived,
+    // so without this the page has the filed figures and nothing to show.
+    if (state.filed.length > 0) recomputeVariance();
+
+    // Last, and not waited for. A feed that is slow, or a bank that is down,
+    // must not hold up an app whose books are already on the screen.
+    void autoFetchFromFeed();
+
+    // Someone opening this for the first time has nothing to reconcile, and the
+    // Reconcile page cannot say what to do about that. Setup can: it lists what
+    // is missing and what each thing would give them. Once there are
+    // transactions, Reconcile is the page you actually live on.
+    if (state.ledger.transactions.length === 0) state.page = "setup";
+
+    showPage(state.page);
+  } finally {
+    dismissLoading();
   }
-  // Before anything below can record what it did. `record` appends to
-  // `state.events` and writes the lot back, so anything recording before the
-  // log is read would save a log of one and lose what was there -- which the
-  // entity setup below has always been one changed ledger away from doing.
-  state.events = await loadEvents();
-  state.who = await loadUser();
-
-  // A new set of books starts with a chart rather than with nothing.
-  await seedStarterChart();
-  // A ledger folder holds the chart with its entity columns, but the model
-  // those columns describe is derived rather than stored -- it used to be built
-  // when a chart CSV was loaded, which never happens when the chart comes from
-  // the folder. Building it here means a folder is enough on its own.
-  if ((state.ledger.entities?.entities ?? []).length === 0 && state.chart.length > 0) {
-    await applyChartColumns(state.chart);
-  }
-  // A chart that named entities has made them by now; one that named none
-  // gets the single entity these books plainly are.
-  await ensureDefaultEntity();
-  // And the rows that carried the mapping have done their job.
-  await tidyChart();
-
-  state.rulesArchive = await loadRulesArchive();
-  state.filed = state.ledger.filedReturns ?? [];
-  state.varianceAccounts = state.ledger.varianceAccounts ?? [];
-  // Deduplicated on the way in as well as on the way out, so a set of books
-  // that already holds the same export twice is put right by opening it rather
-  // than by the person working out what happened and loading the file again.
-  state.reference = dedupeReference(state.ledger.reference ?? []);
-  if (state.reference.length !== (state.ledger.reference ?? []).length) {
-    state.ledger = { ...state.ledger, reference: state.reference };
-    state.persistent = await savePart(state.ledger, "reference");
-  }
-  // Restoring the returns is not enough: the comparison against them is derived,
-  // so without this the page has the filed figures and nothing to show.
-  if (state.filed.length > 0) recomputeVariance();
-
-  // Last, and not waited for. A feed that is slow, or a bank that is down,
-  // must not hold up an app whose books are already on the screen.
-  void autoFetchFromFeed();
-
-  // Someone opening this for the first time has nothing to reconcile, and the
-  // Reconcile page cannot say what to do about that. Setup can: it lists what
-  // is missing and what each thing would give them. Once there are
-  // transactions, Reconcile is the page you actually live on.
-  if (state.ledger.transactions.length === 0) state.page = "setup";
-
-  showPage(state.page);
 }
 
 /**
@@ -7412,6 +7430,7 @@ async function loadStartupFiles(folder = "data", replace = false): Promise<void>
     // `replace` is for a deliberate load, where the point is to overwrite.
     if (!replace && entry.have()) continue;
     try {
+      setLoadingStatus(`Loading ${entry.what}…`);
       const response = await fetch(`${folder}/${entry.file}`);
       if (!response.ok) continue;
       // Xero writes Windows-1252; a plain UTF-8 read mangles anything accented.

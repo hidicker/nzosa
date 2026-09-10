@@ -17,6 +17,7 @@
     "test": "npm run test --workspaces --if-present",
     "typecheck": "tsc --build",
     "docs": "node tools/build-docs.mjs",
+    "build:demo": "node tools/build-demo.mjs",
     "clean": "rimraf packages/*/dist apps/*/dist"
   },
   "devDependencies": {

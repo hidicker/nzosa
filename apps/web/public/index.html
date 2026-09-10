@@ -15,6 +15,28 @@
     />
   </head>
   <body>
+    <div id="app-loading" class="app-loading" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-brand">
+          <span class="loading-logo" aria-hidden="true">📒</span>
+          <span class="loading-title">NZOSA</span>
+        </div>
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loading-msg" class="loading-msg">Loading books&hellip;</p>
+      </div>
+    </div>
+    <script>
+      (function () {
+        // Safety fallback: if app.js is cached or delayed, ensure loader never hangs forever
+        setTimeout(function () {
+          var el = document.getElementById("app-loading");
+          if (el && !el.classList.contains("dismissed")) {
+            el.classList.add("dismissed");
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+          }
+        }, 10000);
+      })();
+    </script>
     <div class="shell">
       <aside class="sidebar">
         <div class="sidebar-head">

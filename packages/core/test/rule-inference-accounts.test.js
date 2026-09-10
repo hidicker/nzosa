@@ -15,14 +15,14 @@ test("a supplier whose payee changes every time is still gathered", () => {
   // payee, so every payment arrives under a different name. They all name the
   // same account.
   const examples = [
-    { transaction: paid({ otherParty: "Accountant Felicity Casa Montess year end", otherPartyAccount: "38-9017-0066701-00" }), code: "412 Consulting" },
-    { transaction: paid({ otherParty: "Accountant Felicity GST return Q2", otherPartyAccount: "38-9017-0066701-00" }), code: "412 Consulting" },
+    { transaction: paid({ otherParty: "Acme Advisory Services year end", otherPartyAccount: "12-3456-0012345-00" }), code: "412 Consulting" },
+    { transaction: paid({ otherParty: "Acme Advisory Services GST return Q2", otherPartyAccount: "12-3456-0012345-00" }), code: "412 Consulting" },
   ];
   const proposals = inferRules(examples);
   const byAccount = proposals.filter((p) => p.rule.where?.otherPartyAccount);
   assert.equal(byAccount.length, 1);
   assert.equal(byAccount[0].rule.code, "412 Consulting");
-  assert.equal(byAccount[0].rule.where.otherPartyAccount, "38-9017-0066701-00");
+  assert.equal(byAccount[0].rule.where.otherPartyAccount, "12-3456-0012345-00");
   assert.equal(byAccount[0].seen, 2);
 });
 
@@ -64,12 +64,12 @@ test("the number is written as the bank spells it", () => {
   // counterparty in two, but a rule quoting a number nobody recognises is a
   // rule nobody can check.
   const examples = [
-    { transaction: paid({ otherPartyAccount: "38-9017-0066701-00" }), code: "412 Consulting" },
-    { transaction: paid({ otherPartyAccount: "38-9017-0066701-000" }), code: "412 Consulting" },
+    { transaction: paid({ otherPartyAccount: "12-3456-0012345-00" }), code: "412 Consulting" },
+    { transaction: paid({ otherPartyAccount: "12-3456-0012345-000" }), code: "412 Consulting" },
   ];
   const [proposal] = inferRules(examples).filter((p) => p.rule.where?.otherPartyAccount);
   assert.equal(proposal.seen, 2, "the padded suffix did not split it");
-  assert.equal(proposal.rule.where.otherPartyAccount, "38-9017-0066701-00");
+  assert.equal(proposal.rule.where.otherPartyAccount, "12-3456-0012345-00");
 });
 
 test("the proposals it makes actually code what it claims", () => {

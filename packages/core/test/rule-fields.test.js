@@ -81,15 +81,15 @@ test("a rule can match the account the money went to", () => {
   const paid = (payee, amount) => ({
     id: payee, date: "2026-03-03", account: "02-1100-0022001-000", amount,
     currency: "NZD", otherParty: payee, particulars: "", code: "", reference: "",
-    otherPartyAccount: "38-9022-0374960-00",
+    otherPartyAccount: "12-3456-0099999-00",
   });
   const rules = { rules: [{
     priority: 100,
-    where: { otherPartyAccount: "38-9022-0374960-00" },
+    where: { otherPartyAccount: "12-3456-0099999-00" },
     code: "413 Subcontractors",
   }]};
 
-  for (const payee of ["Kowhai Joinery wof prado", "Kowhai Joinery PRO-2625-A", "Kowhai Joinery gear"]) {
+  for (const payee of ["Kowhai Joinery site visit", "Kowhai Joinery timber invoice", "Kowhai Joinery gear"]) {
     assert.equal(categorise(paid(payee, -100000), rules).code, "413 Subcontractors", payee);
   }
 });
@@ -97,22 +97,22 @@ test("a rule can match the account the money went to", () => {
 test("a padded suffix is the same account", () => {
   // Feeds disagree about how many digits the suffix has, and a rule quoting
   // one form must not miss the other.
-  const rules = { rules: [{ priority: 100, where: { otherPartyAccount: "38-9022-0374960-00" }, code: "413" }] };
+  const rules = { rules: [{ priority: 100, where: { otherPartyAccount: "12-3456-0099999-00" }, code: "413" }] };
   const line = (account) => ({
     id: account, date: "2026-03-03", account: "02-1100-0022001-000", amount: -1000,
     currency: "NZD", otherParty: "anyone", particulars: "", code: "", reference: "",
     otherPartyAccount: account,
   });
-  assert.equal(categorise(line("38-9022-0374960-000"), rules).code, "413");
-  assert.equal(categorise(line("38-9022-0374960-00"), rules).code, "413");
+  assert.equal(categorise(line("12-3456-0099999-000"), rules).code, "413");
+  assert.equal(categorise(line("12-3456-0099999-00"), rules).code, "413");
 });
 
 test("another account is not caught by it", () => {
-  const rules = { rules: [{ priority: 100, where: { otherPartyAccount: "38-9022-0374960-00" }, code: "413" }] };
+  const rules = { rules: [{ priority: 100, where: { otherPartyAccount: "12-3456-0099999-00" }, code: "413" }] };
   const other = {
     id: "x", date: "2026-03-03", account: "02-1100-0022001-000", amount: -1000,
     currency: "NZD", otherParty: "anyone", particulars: "", code: "", reference: "",
-    otherPartyAccount: "38-9022-0374961-00",
+    otherPartyAccount: "12-3456-0099991-00",
   };
   assert.equal(categorise(other, rules).code, null);
   // And a line with no counterparty account at all is not a wildcard.

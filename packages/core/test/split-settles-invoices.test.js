@@ -4,7 +4,7 @@ import { expandSplits, postInvoice, postTransaction, splitPartId } from "../dist
 
 const payment = {
   id: "pay1", date: "2026-04-05", account: "02-1100-0022001-001", amount: 80000,
-  otherParty: "SAMPLE CUSTOMER #0130/0135", particulars: "", reference: "", otherPartyAccount: "",
+  otherParty: "SAMPLE CUSTOMER #9001/9002", particulars: "", reference: "", otherPartyAccount: "",
   source: "bnz", extras: {},
 };
 
@@ -16,24 +16,24 @@ const invoice = (number, total) => ({
   }],
 });
 
-const INV_A = invoice("INV-0135", 50000);
-const INV_B = invoice("INV-0130", 30000);
+const INV_A = invoice("INV-9001", 50000);
+const INV_B = invoice("INV-9002", 30000);
 
 /** One payment divided so each part settles its own invoice. */
 const splits = {
   pay1: [
-    { amount: 50000, treatment: "standard", side: "sales", note: "Settles INV-0135", code: "Sales - 200" },
-    { amount: 30000, treatment: "standard", side: "sales", note: "Settles INV-0130", code: "Sales - 200" },
+    { amount: 50000, treatment: "standard", side: "sales", note: "Settles INV-9001", code: "Sales - 200" },
+    { amount: 30000, treatment: "standard", side: "sales", note: "Settles INV-9002", code: "Sales - 200" },
   ],
 };
-const matches = { [splitPartId("pay1", 0)]: "INV-0135", [splitPartId("pay1", 1)]: "INV-0130" };
+const matches = { [splitPartId("pay1", 0)]: "INV-9001", [splitPartId("pay1", 1)]: "INV-9002" };
 
 const journals = () => {
   const expanded = expandSplits([payment], splits, {});
   const out = [postInvoice(INV_A), postInvoice(INV_B)];
   for (const t of expanded.transactions) {
     const number = matches[t.id];
-    const inv = number === "INV-0135" ? INV_A : number === "INV-0130" ? INV_B : undefined;
+    const inv = number === "INV-9001" ? INV_A : number === "INV-9002" ? INV_B : undefined;
     assert.ok(inv, `every part settles an invoice, but ${t.id} did not`);
     out.push(postTransaction(t, [], {
       settles: { number: inv.number, kind: inv.kind, taxType: "OUTPUT2", total: inv.total },

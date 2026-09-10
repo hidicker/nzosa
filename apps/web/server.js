@@ -233,7 +233,13 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
   takeLock(folderOf(current));
 
   const server = createServer(async (request, response) => {
-    const url = new URL(request.url ?? "/", `http://${request.headers.host}`);
+    const host = request.headers.host;
+    if (!host || !/^(127\.0\.0\.1|localhost)(:\d+)?$/.test(host)) {
+      send(response, 403, { error: "that request did not come from this app" });
+      return;
+    }
+
+    const url = new URL(request.url ?? "/", `http://${host}`);
     const path = url.pathname;
 
     try {

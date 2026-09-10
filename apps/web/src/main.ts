@@ -5977,7 +5977,7 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
     // Some banks write the particulars into the payee, so every payment to one
     // supplier arrives under a different name -- and all of them name the same
     // account number.
-    ["whereOtherAccount", "Paid to/from account", "e.g. 38-9022-0374960-00"],
+    ["whereOtherAccount", "Paid to/from account", "e.g. 12-3456-0012345-00"],
   ];
 
   const impact = document.createElement("p");

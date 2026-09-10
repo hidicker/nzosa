@@ -16,7 +16,7 @@ const at = (journal, code, sign) =>
     .reduce((total, l) => total + l.amount, 0);
 
 test("sold above cost: all the depreciation comes back, and the rest is capital", () => {
-  // FA-0036 Sup Air Eona, disposed 18 Dec 2025. Cost 869.57, depreciation
+  // FA-0001 Workshop Equipment, disposed 18 Dec 2025. Cost 869.57, depreciation
   // claimed to the previous year end 339.86, sold for 1,130.43 excluding GST.
   const d = disposalOf({ cost: 86957, accumulatedDepreciation: 33986, proceeds: 113043 });
   assert.equal(d.bookValue, 52971);
@@ -35,7 +35,7 @@ test("sold below cost but above book value: recovery only, no capital gain", () 
 });
 
 test("sold below book value: a deductible loss and nothing recovered", () => {
-  // FA-0021 Ozone Alpina, disposed 28 Jul 2025. Cost 2,608.70, depreciation
+  // FA-0002 Office Machinery, disposed 28 Jul 2025. Cost 2,608.70, depreciation
   // 1,165.22, sold for 1,399.56.
   const d = disposalOf({ cost: 260870, accumulatedDepreciation: 116522, proceeds: 139956 });
   assert.equal(d.bookValue, 144348);
@@ -69,10 +69,10 @@ test("recovery never exceeds the depreciation actually claimed", () => {
 });
 
 test("the journal reproduces the one the accounting system posted", () => {
-  // Xero journal 3389, "Disposal of asset FA-0036 on 18 Dec 2025".
+  // Xero journal 3389, "Disposal of asset FA-0001 on 18 Dec 2025".
   const d = disposalOf({ cost: 86957, accumulatedDepreciation: 33986, proceeds: 113043 });
   const journal = postDisposal(
-    { assetNumber: "FA-0036", assetName: "Sup Air Eona (paraglider)", date: "2025-12-18", disposal: d },
+    { assetNumber: "FA-0001", assetName: "Workshop Machinery", date: "2025-12-18", disposal: d },
     ACCOUNTS,
   );
   assert.equal(sum(journal), 0, "it balances");
@@ -87,7 +87,7 @@ test("the journal reproduces the one the accounting system posted", () => {
 test("a loss posts to the loss account and balances too", () => {
   const d = disposalOf({ cost: 260870, accumulatedDepreciation: 116522, proceeds: 139956 });
   const journal = postDisposal(
-    { assetNumber: "FA-0021", assetName: "Ozone Alpina", date: "2025-07-28", disposal: d },
+    { assetNumber: "FA-0002", assetName: "Office Machinery", date: "2025-07-28", disposal: d },
     ACCOUNTS,
   );
   assert.equal(sum(journal), 0);
@@ -100,7 +100,7 @@ test("the asset leaves the balance sheet entirely", () => {
   // Cost out, depreciation out: nothing of it is left carried anywhere.
   const d = disposalOf({ cost: 86957, accumulatedDepreciation: 33986, proceeds: 113043 });
   const journal = postDisposal(
-    { assetNumber: "FA-0036", assetName: "Sup Air Eona", date: "2025-12-18", disposal: d },
+    { assetNumber: "FA-0001", assetName: "Workshop Machinery", date: "2025-12-18", disposal: d },
     ACCOUNTS,
   );
   // The asset account nets to the proceeds less the cost; the credit for those
@@ -114,7 +114,7 @@ test("proceeds credited somewhere other than the asset account still balance", (
   // journal clears it from there instead.
   const d = disposalOf({ cost: 86957, accumulatedDepreciation: 33986, proceeds: 113043 });
   const journal = postDisposal(
-    { assetNumber: "FA-0036", assetName: "Sup Air Eona", date: "2025-12-18", disposal: d },
+    { assetNumber: "FA-0001", assetName: "Workshop Machinery", date: "2025-12-18", disposal: d },
     ACCOUNTS,
     { proceedsCode: "260", proceedsName: "Other Revenue" },
   );

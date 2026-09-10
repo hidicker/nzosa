@@ -64,7 +64,7 @@ export interface CategoryRule {
      * supplier arrives under a different name and no keyword can gather them --
      * but they all name the same account number, every time. Written how you
      * like: both sides are normalised, so a rule quoting
-     * `38-9022-0374960-00` still matches a feed that pads the suffix.
+     * `12-3456-0012345-00` still matches a feed that pads the suffix.
      */
     otherPartyAccount?: string;
   };

@@ -5,7 +5,7 @@ import { payoutGroups, settlingPart } from "../dist/index.js";
 const row = (o) => ({
   date: o.date ?? "2025-04-12",
   account: o.account ?? "BNZ 01",
-  contact: o.contact ?? "Nick Pando",
+  contact: o.contact ?? "Alex Sample",
   description: o.description ?? "",
   reference: o.reference ?? "",
   invoiceNumber: o.invoice ?? "",

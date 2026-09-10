@@ -578,6 +578,11 @@ function wireUp(): void {
     });
   }
 
+  const demoNotice = document.getElementById("demo-import-privacy-notice");
+  if (demoNotice) {
+    demoNotice.hidden = writesToFolder();
+  }
+
   const picker = $<HTMLInputElement>("file-input");
   const drop = $<HTMLElement>("dropzone");
 
@@ -853,6 +858,10 @@ async function handleFiles(files: File[]): Promise<void> {
   const incoming: Transaction[] = [];
 
   for (const file of files) {
+    if (file.size > 50 * 1024 * 1024) {
+      alert(`"${file.name}" is over 50MB. Bank export files are normally much smaller. Skipped to prevent memory exhaustion.`);
+      continue;
+    }
     const text = await file.text();
 
     try {
@@ -1147,6 +1156,10 @@ async function loadWhatever(files: File[]): Promise<void> {
   const rest: { file: File; identified: Identified }[] = [];
 
   for (const file of files) {
+    if (file.size > 50 * 1024 * 1024) {
+      say(`Skipped "${file.name}": file is over 50MB.`);
+      continue;
+    }
     const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
     const identified = identifyExport(text);
     if (identified.kind === "bank") banks.push(file);

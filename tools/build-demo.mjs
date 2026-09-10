@@ -22,6 +22,7 @@ mkdirSync(demoDir, { recursive: true });
 // Copy static web assets and demo dataset
 let demoHtml = readFileSync(join(webDist, "index.html"), "utf-8");
 demoHtml = demoHtml.replace('id="demo-banner" class="demo-banner" hidden', 'id="demo-banner" class="demo-banner"');
+demoHtml = demoHtml.replace('id="demo-import-privacy-notice" class="demo-privacy-notice" hidden', 'id="demo-import-privacy-notice" class="demo-privacy-notice"');
 writeFileSync(join(demoDir, "index.html"), demoHtml, "utf-8");
 cpSync(join(webDist, "styles.css"), join(demoDir, "styles.css"));
 cpSync(join(webDist, "app.js"), join(demoDir, "app.js"));
@@ -31,6 +32,20 @@ if (existsSync(join(webDist, "app.js.map"))) {
 if (existsSync(join(webDist, "demo"))) {
   cpSync(join(webDist, "demo"), join(demoDir, "demo"), { recursive: true });
 }
+
+// Add .htaccess for cPanel / Apache security
+const htaccessContent = `# NZOSA Online Demo Security Configuration
+# Prevent directory listing
+Options -Indexes
+
+# Defensive HTTP headers
+<IfModule mod_headers.c>
+  Header set X-Frame-Options "SAMEORIGIN"
+  Header set X-Content-Type-Options "nosniff"
+  Header set Referrer-Policy "strict-origin-when-cross-origin"
+</IfModule>
+`;
+writeFileSync(join(demoDir, ".htaccess"), htaccessContent, "utf-8");
 
 // Add instructions for upload
 const readmeContent = `# NZOSA Online Demo Build
@@ -46,6 +61,7 @@ Ensure the following files and folders sit in \`/nzosa/\`:
 - \`styles.css\`
 - \`app.js\`
 - \`app.js.map\`
+- \`.htaccess\` (prevents directory browsing & adds security headers)
 - \`demo/\` (contains demo CSV and JSON seeds)
 
 ## Rebuilding

@@ -177,7 +177,7 @@ function writeStore(root, store) {
   mkdirSync(root, { recursive: true });
   const file = feedFile(root);
   const temporary = `${file}.writing`;
-  writeFileSync(temporary, JSON.stringify(store, null, 1));
+  writeFileSync(temporary, JSON.stringify(store, null, 1), { mode: 0o600 });
   renameSync(temporary, file);
 }
 

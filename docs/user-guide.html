@@ -140,8 +140,14 @@ strong { font-weight: 650; }
 <h3 id="4-opening-balances">4. Opening balances</h3>
 <p>On its own page. Load the trial balance from your previous year end. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.</p>
 <h3 id="5-let-it-learn-your-coding">5. Let it learn your coding</h3>
-<p>On <strong>Coding reconciliation</strong>, load the coded history you exported. The software compares its guesses against what you actually did last year and writes rules from the agreement.</p>
+<p>On <strong>Coding reconciliation</strong>, load the coded history you exported. The software lines up every coding it proposes against what you actually did, and writes rules from the agreement.</p>
 <p>You never type keyword rules. Your own past decisions are the rules.</p>
+<p><strong>You do not work through this a row at a time.</strong> A year is hundreds of lines and most of them are not in dispute, so each section has a toolbar across the top:</p>
+<div class="scroll"><table><thead><tr><th>Button</th><th>What it does</th></tr></thead><tbody><tr><td><strong>Use Xero/Imported for all (N) (recommended)</strong></td><td>Takes the coding your accounting system already had</td></tr><tr><td><strong>Use all splits (N) (recommended)</strong></td><td>Takes its splits, where a payment was divided across accounts</td></tr><tr><td><strong>Use rules for all (N)</strong></td><td>Takes this app's own proposal instead</td></tr></tbody></table></div>
+<p>The green ones are first because they are usually right: a coding somebody already reviewed and filed beats a guess, and where the two agree the choice does not matter anyway.</p>
+<p><strong>Read the number on the button before clicking it.</strong> With nothing ticked, these apply to <em>every</em> row in that section, and the label says <code>for all (312)</code>. Tick some rows and the same button changes to <code>for 12 selected</code>. The label always tells you the scope — it is the one thing worth checking, because there is a lot of difference between twelve and three hundred.</p>
+<p>Use the <strong>Select all</strong> checkbox to take a whole section, or tick individual rows when only some should go one way.</p>
+<p>So the usual shape of a year is: accept the bulk of it in a few clicks, then deal with the handful the two sources disagree about — which is exactly the handful worth your attention.</p>
 <hr>
 <h2 id="the-everyday-job">The everyday job</h2>
 <p><strong>Reconcile</strong> is where you spend your time. It shows bank lines that still need a decision, with a suggestion against each one.</p>
@@ -168,7 +174,7 @@ strong { font-weight: 650; }
 <hr>
 <h2 id="when-something-looks-wrong">When something looks wrong</h2>
 <p><strong>A number you cannot account for.</strong> Every figure decomposes. Click through from the report to the account to the transactions behind it.</p>
-<p><strong>Check nothing is missing.</strong> <strong>Bank import → Import Bank Balances</strong> compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.</p>
+<p><strong>Check nothing is missing.</strong> <strong>Bank import → Import bank balances</strong> compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.</p>
 <p><strong>Undo it.</strong> <strong>History</strong> records every change, most recent first, with a way to put it back.</p>
 <p><strong>A balance sheet that does not balance</strong> almost always means opening balances, not coding.</p>
 <hr>

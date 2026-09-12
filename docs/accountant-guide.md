@@ -148,7 +148,7 @@ The GST engine operates according to the Goods and Services Tax Act 1985:
 A major source of accounting error is missing transactions or duplicate imports. NZOSA addresses this at two levels:
 
 1. **Akahu Open Banking Integration:** Direct, read-only OAuth connection to New Zealand registered banks (ANZ, ASB, BNZ, Westpac, Kiwibank). Pulls transactions directly with end-to-end data integrity.
-2. **Daily Balance Verification (`Bank import → Import Bank Balances`):** Compares the running balance of imported transactions against the bank’s official daily closing balances. If a transaction is missed or duplicated, NZOSA flags the exact calendar day and exact dollar variance immediately.
+2. **Daily Balance Verification (`Bank import → Import bank balances`):** Compares the running balance of imported transactions against the bank’s official daily closing balances. If a transaction is missed or duplicated, NZOSA flags the exact calendar day and exact dollar variance immediately.
 
 ---
 
@@ -269,7 +269,7 @@ A validation has passed when every difference is *explained*, not when every dif
 
 When using NZOSA to review client books or compile financial statements:
 
-1. **Verify Bank Feed Completeness:** Run `Bank import → Import Bank Balances` to ensure zero missing or duplicated transactions.
+1. **Verify Bank Feed Completeness:** Run `Bank import → Import bank balances` to ensure zero missing or duplicated transactions.
 2. **Review Uncoded & Guess Rates:** Ensure that 100% of transactions are confirmed decisions, with zero unreviewed guesses.
 3. **Check Inter-Account Transfers:** Confirm that all inter-account sweep and credit card payments are paired as transfer journals.
 4. **Reconcile Invoices & Debtors:** Verify that customer receipts settle invoices rather than posting directly to revenue.

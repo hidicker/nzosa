@@ -130,9 +130,25 @@ On its own page. Load the trial balance from your previous year end. Skip this o
 
 ### 5. Let it learn your coding
 
-On **Coding reconciliation**, load the coded history you exported. The software compares its guesses against what you actually did last year and writes rules from the agreement.
+On **Coding reconciliation**, load the coded history you exported. The software lines up every coding it proposes against what you actually did, and writes rules from the agreement.
 
 You never type keyword rules. Your own past decisions are the rules.
+
+**You do not work through this a row at a time.** A year is hundreds of lines and most of them are not in dispute, so each section has a toolbar across the top:
+
+| Button | What it does |
+|---|---|
+| **Use Xero/Imported for all (N) (recommended)** | Takes the coding your accounting system already had |
+| **Use all splits (N) (recommended)** | Takes its splits, where a payment was divided across accounts |
+| **Use rules for all (N)** | Takes this app's own proposal instead |
+
+The green ones are first because they are usually right: a coding somebody already reviewed and filed beats a guess, and where the two agree the choice does not matter anyway.
+
+**Read the number on the button before clicking it.** With nothing ticked, these apply to *every* row in that section, and the label says `for all (312)`. Tick some rows and the same button changes to `for 12 selected`. The label always tells you the scope — it is the one thing worth checking, because there is a lot of difference between twelve and three hundred.
+
+Use the **Select all** checkbox to take a whole section, or tick individual rows when only some should go one way.
+
+So the usual shape of a year is: accept the bulk of it in a few clicks, then deal with the handful the two sources disagree about — which is exactly the handful worth your attention.
 
 ---
 
@@ -190,7 +206,7 @@ Expect your accountant to make adjustments. That is what they are for. The point
 
 **A number you cannot account for.** Every figure decomposes. Click through from the report to the account to the transactions behind it.
 
-**Check nothing is missing.** **Bank import → Import Bank Balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
+**Check nothing is missing.** **Bank import → Import bank balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
 
 **Undo it.** **History** records every change, most recent first, with a way to put it back.
 

@@ -67,3 +67,6 @@ nzosa-log.txt
 # is the real data and must never be committed. The demo ships as a template
 # under apps/web/public/demo instead.
 /ledgers/
+
+# Golden-master captures hold real figures from real books.
+golden/

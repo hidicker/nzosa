@@ -93,6 +93,14 @@ Five phases, each shippable on its own, each leaving the app working.
 
 ### Phase 0 — safety net *(done)*
 
+**The golden master.** `tools/golden-master.js` captures every figure the app can show — 225 variants on a real ledger: 216 report combinations (11 kinds x 3 bases x 2 GST settings x 3 years, plus the owner sweep), the GST comparison, opening balances per year, the reconcile summary, entities and the setup checklist. It stores a SHA-256 per variant rather than the text, because the text runs to half a megabyte and the question being asked is only "did this change".
+
+Run it, save a baseline, refactor, run it again, diff. An empty diff is the only pass.
+
+**It has to wait for the app to go quiet first.** Opening the app starts work that finishes seconds later: the bank feed fetches, and new transactions move every figure resting on a balance. Captured too early, a sweep records a book that is still arriving. This was not theoretical -- an early comparison showed 115 of 225 variants "changed", and the whole of it was box 28 moving from 39,183.31 to 39,232.89 about twenty-five seconds after load. The harness now watches one report until it stops moving before it begins.
+
+**Certified so far:** phase 1 against `main`, **225 of 225 identical**.
+
 `tsc` green and wired into `npm test`. Without this a refactor of a 13,000-line file is guesswork: the compiler is the thing that says whether a moved block still holds together, and it was reporting 33 errors, so a new one would not have stood out.
 
 ### Phase 1 — shared presentation *(prototyped on this branch)*

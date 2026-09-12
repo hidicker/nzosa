@@ -99,7 +99,9 @@ Run it, save a baseline, refactor, run it again, diff. An empty diff is the only
 
 **It has to wait for the app to go quiet first.** Opening the app starts work that finishes seconds later: the bank feed fetches, and new transactions move every figure resting on a balance. Captured too early, a sweep records a book that is still arriving. This was not theoretical -- an early comparison showed 115 of 225 variants "changed", and the whole of it was box 28 moving from 39,183.31 to 39,232.89 about twenty-five seconds after load. The harness now watches one report until it stops moving before it begins.
 
-**Certified so far:** phase 1 against `main`, **225 of 225 identical**.
+**Capture against books that cannot change.** A ledger with a bank feed behind it moves on its own. Between a baseline taken one afternoon and a comparison the next morning, 415 transactions arrived and 117 of 225 variants differed -- every year of them, including years long closed, because the feed had backfilled. None of it was the code. Golden-master a static ledger; `arrow-rock-test` has no feed credentials and is the right subject.
+
+**Certified so far**, main at `0dd781b` against the branch, on the static ledger: **129 of 129 identical**, covering phase 1 and the first two functions of phase 2.
 
 `tsc` green and wired into `npm test`. Without this a refactor of a 13,000-line file is guesswork: the compiler is the thing that says whether a moved block still holds together, and it was reporting 33 errors, so a new one would not have stood out.
 

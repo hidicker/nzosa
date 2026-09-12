@@ -17,6 +17,13 @@
  *
  * One ledger per run: switching books reloads the page. Capture each set of
  * books separately and diff them separately.
+ *
+ * **Use books that cannot change.** A ledger with a bank feed behind it moves
+ * on its own: between a baseline taken one afternoon and a comparison the next
+ * morning, 415 transactions arrived and 117 of 225 variants "changed" -- every
+ * year of them, including years long closed, because the feed had backfilled.
+ * None of it was the code. A static ledger with no feed credentials is the
+ * only subject a golden master can actually speak about.
  */
 (() => {
   const settle = (ms = 320) => new Promise((r) => setTimeout(r, ms));

@@ -3,6 +3,7 @@ import type { Combobox } from "./combobox.js";
 import {
   categorise,
   financialYearOf,
+  financialYearBalances,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -114,6 +115,7 @@ import type {
   Entity,
   EntityKind,
   Invoice,
+  FinancialYearBalances,
   InvoiceAssignment,
   SheetRows,
   InvoiceBalance,
@@ -6223,15 +6225,6 @@ function bankTable(model: EntityModel): HTMLElement {
  * is not a set of opening balances, and accepting one would put the error
  * inside every report that follows and leave nothing to find it by.
  */
-interface FinancialYearBalances {
-  year: number;
-  asAt: IsoDate;
-  accounts: Record<string, Cents>;
-  source?: string;
-  isOpening: boolean;
-  editable: boolean;
-}
-
 /**
  * Returns account balances for each financial year.
  *
@@ -6241,90 +6234,15 @@ interface FinancialYearBalances {
  * 3. Subsequent financial years rolled forward from transactions and journals via `computeBalanceSheet`.
  */
 function balancesByFinancialYear(): FinancialYearBalances[] {
-  const result = new Map<number, FinancialYearBalances>();
-  const held = state.ledger.openingBalances;
-
-  const fyFromDate = (date: IsoDate): number => {
-    if (date.endsWith("-04-01")) return Number(date.slice(0, 4));
-    return financialYearOf(date);
-  };
-
-  // 1. From held.byDate (e.g. historical columns from Xero trial balance export)
-  if (held?.byDate) {
-    for (const [dateStr, accts] of Object.entries(held.byDate)) {
-      if (Object.keys(accts).length === 0) continue;
-      const yr = fyFromDate(dateStr);
-      result.set(yr, {
-        year: yr,
-        asAt: `${yr}-03-31`,
-        accounts: accts,
-        ...(held.source !== undefined ? { source: held.source } : {}),
-        isOpening: true,
-        editable: true,
-      });
-    }
-  }
-
-  // 2. The active opening balances
-  if (held && Object.keys(held.accounts).length > 0) {
-    const activeYr = fyFromDate(held.asAt);
-    result.set(activeYr, {
-      year: activeYr,
-      asAt: `${activeYr}-03-31`,
-      accounts: held.accounts,
-      ...(held.source !== undefined ? { source: held.source } : {}),
-      isOpening: true,
-      editable: true,
-    });
-  }
-
-  // 3. Roll forward subsequent years using computeBalanceSheet
-  const activeOpeningYr = held ? fyFromDate(held.asAt) : null;
-  const txnYears = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))].sort((a, b) => a - b);
-
-  for (const yr of txnYears) {
-    // Keep imported trial balance figures for years <= active opening year
-    if (activeOpeningYr !== null && yr <= activeOpeningYr && result.has(yr)) {
-      continue;
-    }
-    const asAt: IsoDate = `${yr}-03-31`;
-    const sheet = computeBalanceSheet({
-      asAt,
-      ...(held ? { openingBalances: held } : {}),
-      journals: postedJournals(),
-      chart: state.chart,
-    });
-
-    const accts: Record<string, Cents> = {};
-    for (const line of [...sheet.currentAssets.lines, ...sheet.nonCurrentAssets.lines]) {
-      if (line.closing !== 0) accts[line.code] = line.closing;
-    }
-    for (const line of [...sheet.currentLiabilities.lines, ...sheet.nonCurrentLiabilities.lines]) {
-      if (line.closing !== 0) accts[line.code] = -line.closing;
-    }
-    for (const line of sheet.equity.lines) {
-      if (line.code !== "" && line.closing !== 0) {
-        accts[line.code] = -line.closing;
-      }
-    }
-    if (sheet.profitForPeriod !== 0) {
-      const retainedCode =
-        state.chart.find((a) => a.type === "Equity" && /retained/i.test(a.name))?.code ?? "960";
-      accts[retainedCode] = (accts[retainedCode] ?? 0) - sheet.profitForPeriod;
-    }
-
-    if (Object.keys(accts).length > 0) {
-      result.set(yr, {
-        year: yr,
-        asAt,
-        accounts: accts,
-        isOpening: false,
-        editable: false,
-      });
-    }
-  }
-
-  return [...result.values()].sort((a, b) => a.year - b.year);
+  // The arithmetic is in core, where it is tested. This says only which parts
+  // of the app's state answer its questions -- and asks for the journals once
+  // rather than rebuilding them inside the loop, a year at a time.
+  return financialYearBalances({
+    ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
+    transactions: state.ledger.transactions,
+    chart: state.chart,
+    journals: postedJournals(),
+  });
 }
 
 function renderOpeningBalances(): void {

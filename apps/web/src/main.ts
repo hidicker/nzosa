@@ -7,6 +7,7 @@ import {
   depreciationJournals as coreDepreciationJournals,
   disposalJournals as coreDisposalJournals,
   bestAccountMatch,
+  postLedger,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -10183,107 +10184,40 @@ async function loadAssets(file: File): Promise<void> {
  * direction of the money — posting the raw part would silently drop its GST.
  */
 function postedJournals(): PostedJournal[] {
+  // Composition is in core, where the three rules that go expensively wrong --
+  // a settled invoice not counting as a fresh sale, a transfer posting once
+  // rather than twice, judgements coming last -- are tested. This gathers what
+  // the app knows and hands it over.
   const engine = reportEngine();
   if (!engine) return [];
 
-  const byName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
   const resolveAccount = (code: string): { code: string; name: string } => {
+    const byName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
     const { code: digits, name } = splitAccountLabel(code);
     const account = byName.get(name.toLowerCase());
     return { code: digits || account?.code || "", name: account?.name ?? name };
   };
-  const labels = new Map(
-    state.ledger.transactions.map((t) => [t.account, String(t.extras?.["accountLabel"] ?? t.account)]),
-  );
 
-  const options = {
-    resolveAccount,
-    nameBankAccount: (a: string) => labels.get(a) ?? a,
-  };
-
-  // Which receipt settled which invoice. Anything a person has accepted wins;
-  // the matcher fills in the rest. Without this an invoiced sale is posted
-  // twice — once when raised and again when the money arrives — which on this
-  // ledger overstated income by a third.
-  const invoices = state.ledger.invoices ?? [];
-  const byNumber = new Map(invoices.map((i) => [i.number, i]));
-  const settled = invoiceAssignments();
-
-  // A transfer is one journal for two bank lines. Posting each leg separately
-  // is right only if both happen to be coded to the same clearing account;
-  // posted as a pair there is no account in the middle at all. The pair is
-  // emitted once, from the leg the money left, and the other leg is skipped --
-  // otherwise the movement is counted twice.
-  const transfers = state.ledger.transfers ?? {};
-  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
-  const transferJournals: PostedJournal[] = [];
-  const postedAsTransfer = new Set<string>();
-  for (const [legId, partnerId] of Object.entries(transfers)) {
-    const leg = byId.get(legId);
-    const partner = byId.get(partnerId);
-    if (leg === undefined || partner === undefined) continue;
-    // Both halves are recorded, so take the outgoing one and ignore its mirror.
-    if (leg.amount >= 0) continue;
-    transferJournals.push(postTransfer({ from: leg, to: partner }, options));
-    postedAsTransfer.add(leg.id);
-    postedAsTransfer.add(partner.id);
-  }
-
-  const bank = engine.transactions.flatMap((t) => {
-    if (postedAsTransfer.has(t.id)) return [];
-    const invoice = byNumber.get(settled.get(t.id) ?? "");
-    if (invoice) {
-      return [
-        postTransaction(t, [], {
-          ...options,
-          settles: {
-            number: invoice.number,
-            kind: invoice.kind,
-            taxType: taxTypeFromRate(invoice.lines[0]?.taxType ?? "", invoice.kind),
-            total: invoice.total,
-          },
-        }),
-      ];
-    }
-    return [
-      postTransaction(
-        t,
-        [{ amount: t.amount, code: engine.codeOf(t), classification: engine.classify(t) }],
-        options,
-      ),
-    ];
+  return postLedger({
+    transactions: engine.transactions,
+    codeOf: engine.codeOf,
+    classify: engine.classify,
+    chart: state.chart,
+    bankLabels: new Map(
+      state.ledger.transactions.map((t) => [
+        t.account,
+        String(t.extras?.["accountLabel"] ?? t.account),
+      ]),
+    ),
+    byId: new Map(state.ledger.transactions.map((t) => [t.id, t])),
+    invoices: state.ledger.invoices ?? [],
+    settled: invoiceAssignments(),
+    transfers: state.ledger.transfers ?? {},
+    manualJournals: state.ledger.manualJournals ?? [],
+    assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
   });
-
-  const raised = invoices.map((invoice) => postInvoice(invoice, options));
-  return [
-    ...bank,
-    ...transferJournals,
-    ...raised,
-    ...depreciationJournals(),
-    ...disposalJournals(options),
-    // The judgements, last, because they correct what everything above worked
-    // out: an expense reclassified, a balance brought to what a third party
-    // actually holds. An unbalanced one is refused rather than posted.
-    ...(state.ledger.manualJournals ?? [])
-      .map((journal) => postManualJournal(journal, options))
-      .filter((journal): journal is PostedJournal => journal !== null),
-  ];
 }
 
-/**
- * The disposals, posted.
- *
- * An asset that leaves has to leave the balance sheet too: its cost out of the
- * asset account, the depreciation claimed out of the contra, and the difference
- * between what it was worth and what it fetched split three ways -- recovered
- * depreciation, capital gain, loss on sale -- because New Zealand taxes those
- * differently and one combined figure loses the distinction.
- *
- * Only where the proceeds are known. Without them nothing is posted at all,
- * because a disposal is not a fact about the asset alone: guessing at nil
- * proceeds would write off the whole book value as a loss and understate the
- * profit by exactly the amount it sold for.
- */
 function disposalJournals(options: {
   resolveAccount: (code: string) => { code: string; name: string };
 }): PostedJournal[] {

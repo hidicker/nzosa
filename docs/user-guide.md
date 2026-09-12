@@ -190,7 +190,7 @@ Expect your accountant to make adjustments. That is what they are for. The point
 
 **A number you cannot account for.** Every figure decomposes. Click through from the report to the account to the transactions behind it.
 
-**Check nothing is missing.** **Bank import → Check against the bank's own balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
+**Check nothing is missing.** **Bank import → Import Bank Balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
 
 **Undo it.** **History** records every change, most recent first, with a way to put it back.
 

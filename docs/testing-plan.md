@@ -154,7 +154,7 @@ different from where it started.
 
 ## Stage 6 — Check the coding against Xero
 
-Coding reconciliation → Load reference → the Account Transactions `.xlsx` **and** the
+Coding reconciliation → Choose file → the Account Transactions `.xlsx` **and** the
 chart CSV together.
 
 | Record | Expect |

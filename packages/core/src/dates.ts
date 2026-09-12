@@ -176,6 +176,23 @@ export function financialYear(
   return { from, to };
 }
 
+/**
+ * Which financial year a date falls in, labelled by the year it ends in.
+ *
+ * The inverse of `financialYear`: 15 April 2025 is in the 2026 year, and
+ * 15 March 2026 is too. Configurable for the same reason, and wrong in the
+ * same expensive way -- a date placed in the wrong year moves income between
+ * tax returns.
+ *
+ * Lived in the web app, where nothing could test it, and was used nine times.
+ */
+export function financialYearOf(date: IsoDate, options: FinancialYearOptions = {}): number {
+  const endMonth = options.endMonth ?? 3;
+  const year = Number(date.slice(0, 4));
+  const month = Number(date.slice(5, 7));
+  return month > endMonth ? year + 1 : year;
+}
+
 /** The day after the previous year's end, which is where the year starts. */
 function addDay(end: IsoDate, previousYear: number): IsoDate {
   const month = Number(end.slice(5, 7));

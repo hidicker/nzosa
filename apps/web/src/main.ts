@@ -2,6 +2,7 @@ import { combobox } from "./combobox.js";
 import type { Combobox } from "./combobox.js";
 import {
   categorise,
+  financialYearOf,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -9930,11 +9931,6 @@ async function saveEntities(model: EntityModel, what = "Entities changed"): Prom
  *
  * New Zealand's ends on 31 March, so April 2025 to March 2026 is FY2026.
  */
-function financialYearOf(date: string): number {
-  const year = Number(date.slice(0, 4));
-  return date.slice(5, 7) >= "04" ? year + 1 : year;
-}
-
 /** Which codes belong to the entity being reported on, and how each is treated. */
 /**
  * How a posted line is named on a report.

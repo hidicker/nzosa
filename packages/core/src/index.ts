@@ -172,6 +172,7 @@ export {
   daysBetween,
   daysInMonth,
   financialYear,
+  financialYearOf,
   inRange,
 } from "./dates.js";
 export type {

@@ -14,7 +14,7 @@
   },
   "scripts": {
     "build": "npm run build --workspaces --if-present",
-    "test": "npm run test --workspaces --if-present",
+    "test": "npm run typecheck && npm run test --workspaces --if-present",
     "typecheck": "tsc --build",
     "docs": "node tools/build-docs.mjs",
     "build:demo": "node tools/build-demo.mjs",

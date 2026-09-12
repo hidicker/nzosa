@@ -5132,7 +5132,9 @@ function section(
         transaction: o.row.transaction,
         code: o.imported,
         kind: "imported",
-        rate: gst ? o.row.gstDiffers?.theirs : undefined,
+        ...(gst && o.row.gstDiffers?.theirs !== undefined
+          ? { rate: o.row.gstDiffers.theirs }
+          : {}),
       }));
       if (targets.length === 0) return;
       btnXero!.disabled = true;
@@ -5419,7 +5421,7 @@ async function acceptCodesBulk(
   }
 
   state.ledger = { ...state.ledger, overrides };
-  state.persistent = await savePart(state.ledger, "overrides");
+  state.persistent = await savePart(state.ledger);
 
   if (applied === 1 && batchEvents[0]) {
     const single = items[0]!;
@@ -5520,7 +5522,7 @@ async function acceptSplitsBulk(
   }
 
   state.ledger = { ...state.ledger, splits };
-  state.persistent = await savePart(state.ledger, "splits");
+  state.persistent = await savePart(state.ledger);
   if (items.length > 1) {
     await record(
       "codingBatch",
@@ -5589,7 +5591,7 @@ async function acceptCode(
     at: new Date().toISOString().slice(0, 10),
   };
   state.ledger = { ...state.ledger, overrides };
-  state.persistent = await savePart(state.ledger, "overrides");
+  state.persistent = await savePart(state.ledger);
   await record(
     "coding",
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${chosen} (accepted the ${kindName} coding)`,
@@ -5651,7 +5653,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   const before = (state.ledger.splits ?? {})[transaction.id];
   const splits = { ...(state.ledger.splits ?? {}), [transaction.id]: mapped };
   state.ledger = { ...state.ledger, splits };
-  state.persistent = await savePart(state.ledger, "splits");
+  state.persistent = await savePart(state.ledger);
   await record(
     "split",
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} split into ${mapped.length} from Xero/Imported`,
@@ -6274,7 +6276,7 @@ function balancesByFinancialYear(): FinancialYearBalances[] {
         year: yr,
         asAt: `${yr}-03-31`,
         accounts: accts,
-        source: held.source,
+        ...(held.source !== undefined ? { source: held.source } : {}),
         isOpening: true,
         editable: true,
       });
@@ -6288,7 +6290,7 @@ function balancesByFinancialYear(): FinancialYearBalances[] {
       year: activeYr,
       asAt: `${activeYr}-03-31`,
       accounts: held.accounts,
-      source: held.source,
+      ...(held.source !== undefined ? { source: held.source } : {}),
       isOpening: true,
       editable: true,
     });
@@ -6366,8 +6368,10 @@ function renderOpeningBalances(): void {
   add.addEventListener("click", () => openingRow("", 0));
 
   const years = balancesByFinancialYear();
+  const [firstYear] = years;
+  const lastYear = years[years.length - 1];
 
-  if (years.length === 0) {
+  if (firstYear === undefined || lastYear === undefined) {
     yearSelect.style.display = "none";
     body.append(
       note(
@@ -6398,7 +6402,7 @@ function renderOpeningBalances(): void {
   }
 
   if (!years.some((y) => String(y.year) === state.openingYear) && state.openingYear !== "all") {
-    state.openingYear = years.length > 1 ? "all" : String(years[0].year);
+    state.openingYear = years.length > 1 ? "all" : String(firstYear.year);
   }
   yearSelect.value = state.openingYear;
 
@@ -6532,7 +6536,7 @@ function renderOpeningBalances(): void {
     body.append(add);
   } else {
     // Single financial year view
-    const selected = years.find((y) => String(y.year) === state.openingYear) ?? years[years.length - 1];
+    const selected = years.find((y) => String(y.year) === state.openingYear) ?? lastYear;
     const entries = Object.entries(selected.accounts).sort(([a], [b]) => a.localeCompare(b));
     const total = entries.reduce((sum, [, cents]) => sum + cents, 0);
 
@@ -8276,6 +8280,14 @@ async function undo(event: LedgerEvent): Promise<void> {
  * optional and says so, with what it unlocks — an optional file nobody can see
  * the point of does not get provided.
  */
+export interface SetupLink {
+  label: string;
+  /** The page this goes to, when it goes to one. */
+  page?: string;
+  /** Something to do in place, for a step that is one click rather than a page. */
+  action?: () => void;
+}
+
 interface SetupStep {
   what: string;
   done: boolean;
@@ -8286,17 +8298,9 @@ interface SetupStep {
    * Where to go and do it.
    *
    * More than one where there is more than one way in: bank data arrives from
-export interface SetupLink {
-  label: string;
-  page?: string;
-  action?: () => void;
-}
-
-interface SetupStep {
-  what: string;
-  done: boolean;
-  detail: string;
-  unlocks: string;
+   * a feed or from a file, and offering only one of them told half the people
+   * reading it that the other was not there.
+   */
   page?: string;
   links?: SetupLink[];
   /**
@@ -8309,7 +8313,7 @@ interface SetupStep {
    * is shown and explained but left out of the count.
    */
   optional?: boolean;
-  /** Additional interactive content (e.g. collapsed file list and mini file drop) */
+  /** Interactive content of its own: a file list, a drop zone. */
   extra?: HTMLElement;
 }
 
@@ -8360,7 +8364,10 @@ function isDefaultStarterChart(chart: Account[]): boolean {
   const starter = defaultStarterAccounts();
   if (chart.length !== starter.length) return false;
   for (let i = 0; i < chart.length; i++) {
-    if (chart[i].code !== starter[i].code || chart[i].name !== starter[i].name) {
+    const mine = chart[i];
+    const theirs = starter[i];
+    if (mine === undefined || theirs === undefined) return false;
+    if (mine.code !== theirs.code || mine.name !== theirs.name) {
       return false;
     }
   }
@@ -8672,7 +8679,7 @@ function setupSteps(): SetupStep[] {
         entities.length > 1
           ? entities.map((e) => e.name).join(", ")
           : led.singleEntityConfirmed === true
-            ? entities.length === 1 && entities[0].name !== DEFAULT_ENTITY_NAME
+            ? entities[0] !== undefined && entities[0].name !== DEFAULT_ENTITY_NAME
               ? `Only one entity: ${entities[0].name}.`
               : "Only one entity."
             : "Only if one set of books holds several things — a company and two " +
@@ -9015,7 +9022,7 @@ function renderSetupBody(): void {
     const parts = step.what.split(" - ");
     if (parts.length > 1) {
       const strong = document.createElement("strong");
-      strong.textContent = parts[0];
+      strong.textContent = parts[0] ?? step.what;
       const rest = document.createElement("span");
       rest.className = "setup-what-sub";
       rest.textContent = ` - ${parts.slice(1).join(" - ")}`;

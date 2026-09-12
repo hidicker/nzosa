@@ -308,6 +308,7 @@ export * from "./ir10.js";
 export * from "./balance-sheet.js";
 export * from "./financial-years.js";
 export * from "./depreciation-journals.js";
+export * from "./disposal-journals.js";
 export * from "./trial-balance.js";
 export * from "./text.js";
 export * from "./disposal.js";

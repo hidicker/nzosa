@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { contraAccountFor, depreciationJournals } from "../dist/index.js";
+import { bestAccountMatch, depreciationJournals } from "../dist/index.js";
 
 const account = (code, name, type = "Fixed Asset") => ({
   code, name, type, taxCode: "No GST", description: "",
@@ -17,9 +17,9 @@ test("the contra account is scored, not taken first", () => {
   // with "Office Equipment", and the office account comes first. Taking the
   // first match put a whole year of roasting depreciation against the wrong
   // contra -- which still balances, and is still wrong.
-  assert.equal(contraAccountFor("Roasting Equipment", ACCUMULATED).code, "731");
-  assert.equal(contraAccountFor("Office Equipment", ACCUMULATED).code, "711");
-  assert.equal(contraAccountFor("Motor Vehicles", ACCUMULATED).code, "741");
+  assert.equal(bestAccountMatch(ACCUMULATED, "Roasting Equipment").code, "731");
+  assert.equal(bestAccountMatch(ACCUMULATED, "Office Equipment").code, "711");
+  assert.equal(bestAccountMatch(ACCUMULATED, "Motor Vehicles").code, "741");
 });
 
 test("a longer word outweighs a shorter one", () => {
@@ -29,7 +29,7 @@ test("a longer word outweighs a shorter one", () => {
     account("711", "Accumulated Depreciation Equipment"),
     account("731", "Accumulated Depreciation Roasting Equipment"),
   ];
-  assert.equal(contraAccountFor("Roasting Equipment", both).code, "731");
+  assert.equal(bestAccountMatch(both, "Roasting Equipment").code, "731");
 });
 
 test("short words are ignored, so 'the' and 'and' decide nothing", () => {
@@ -37,14 +37,14 @@ test("short words are ignored, so 'the' and 'and' decide nothing", () => {
     account("711", "Accumulated Depreciation and the Office"),
     account("731", "Accumulated Depreciation Roasting"),
   ];
-  assert.equal(contraAccountFor("Roasting and the Equipment", accounts).code, "731");
+  assert.equal(bestAccountMatch(accounts, "Roasting and the Equipment").code, "731");
 });
 
 test("a type that matches nothing still lands somewhere rather than nowhere", () => {
   // Better a visible figure against the first contra than a journal quietly
   // posted to an empty account code.
-  assert.equal(contraAccountFor("Nothing Alike", ACCUMULATED).code, "711");
-  assert.equal(contraAccountFor("Nothing Alike", []), undefined);
+  assert.equal(bestAccountMatch(ACCUMULATED, "Nothing Alike").code, "711");
+  assert.equal(bestAccountMatch([], "Nothing Alike"), undefined);
 });
 
 const ASSET = {

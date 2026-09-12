@@ -29,15 +29,22 @@ export interface DepreciationJournalsOptions {
   fallbackExpenseCode?: string;
 }
 
-/** Which accumulated-depreciation account a class of asset belongs against. */
-export function contraAccountFor(
+/**
+ * The account whose name best fits a class of asset.
+ *
+ * Used for both halves of an asset posting -- the asset account and the
+ * accumulated depreciation contra -- because the question is the same one and
+ * getting two answers to it is how a class's depreciation ends up credited
+ * against another class's contra.
+ */
+export function bestAccountMatch(
+  candidates: readonly Account[],
   type: string,
-  accumulated: readonly Account[],
 ): Account | undefined {
   const words = type.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
   let best = 0;
-  let chosen = accumulated[0];
-  for (const account of accumulated) {
+  let chosen = candidates[0];
+  for (const account of candidates) {
     const name = account.name.toLowerCase();
     const score = words.reduce((sum, w) => (name.includes(w) ? sum + w.length : sum), 0);
     if (score > best) {
@@ -64,7 +71,7 @@ export function depreciationJournals(options: DepreciationJournalsOptions): Post
     });
     for (const group of schedule.byType) {
       if (group.depreciation === 0) continue;
-      const contra = contraAccountFor(group.type, accumulated);
+      const contra = bestAccountMatch(accumulated, group.type);
       out.push(
         postDepreciation({
           name: group.type,

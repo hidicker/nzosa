@@ -5,6 +5,8 @@ import {
   financialYearOf,
   financialYearBalances,
   depreciationJournals as coreDepreciationJournals,
+  disposalJournals as coreDisposalJournals,
+  bestAccountMatch,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -10285,98 +10287,15 @@ function postedJournals(): PostedJournal[] {
 function disposalJournals(options: {
   resolveAccount: (code: string) => { code: string; name: string };
 }): PostedJournal[] {
-  const assets = state.ledger.assets ?? [];
-  const proceeds = state.ledger.assetProceeds ?? {};
-  if (assets.length === 0 || Object.keys(proceeds).length === 0) return [];
-
-  const years = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))];
-  const accumulated = state.chart.filter((a) => /accumulated depreciation/i.test(a.name));
-
-  const out: PostedJournal[] = [];
-  for (const year of years) {
-    const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
-    });
-    for (const row of schedule.rows) {
-      if (!row.disposedInPeriod) continue;
-      const sold = proceeds[row.asset.number];
-      if (sold === undefined) continue;
-
-      // The asset account, and the contra that carries its depreciation. Both
-      // are found by name against the asset's own class, the way the
-      // depreciation posting does it, so a ledger with several asset classes
-      // does not credit one class's depreciation to another's contra.
-      const assetAccount = chartAccountFor(row.asset.type);
-      const contra = bestMatch(accumulated, row.asset.type);
-
-      const disposal = disposalOf({
-        cost: row.asset.cost,
-        accumulatedDepreciation: row.asset.cost - row.bookValueAtDisposal,
-        proceeds: sold,
-      });
-
-      out.push(
-        postDisposal(
-          {
-            assetNumber: row.asset.number,
-            assetName: row.asset.name,
-            date: row.asset.disposed ?? `${year}-03-31`,
-            disposal,
-          },
-          {
-            assetCode: assetAccount?.code ?? "730",
-            ...(assetAccount?.name ? { assetName: assetAccount.name } : {}),
-            accumulatedCode: contra?.code ?? "731",
-            ...(contra?.name ? { accumulatedName: contra.name } : {}),
-          },
-          options,
-        ),
-      );
-    }
-  }
-  return out;
+  return coreDisposalJournals({
+    assets: state.ledger.assets ?? [],
+    proceeds: state.ledger.assetProceeds ?? {},
+    transactions: state.ledger.transactions,
+    chart: state.chart,
+    posting: options,
+  });
 }
 
-/** The chart account an asset class is carried in, by name. */
-function chartAccountFor(type: string): Account | undefined {
-  const fixed = state.chart.filter(
-    (a) => /fixed asset/i.test(a.type) && !/accumulated depreciation/i.test(a.name),
-  );
-  return bestMatch(fixed, type);
-}
-
-/**
- * The account whose name best matches an asset class.
- *
- * Scored rather than first-found: "Roasting equipment" shares the word
- * "equipment" with Office Equipment, and taking the first hit put a whole
- * class's depreciation against the wrong contra account. The distinctive word
- * is the long one, so longer matches count for more.
- */
-function bestMatch(candidates: readonly Account[], type: string): Account | undefined {
-  const words = type.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
-  let chosen = candidates[0];
-  let best = 0;
-  for (const candidate of candidates) {
-    const name = candidate.name.toLowerCase();
-    let score = 0;
-    for (const word of words) if (name.includes(word)) score += word.length;
-    if (score > best) {
-      best = score;
-      chosen = candidate;
-    }
-  }
-  return chosen;
-}
-
-/**
- * A year's depreciation, posted per asset class.
- *
- * The contra is looked up in the chart by name, because an accumulated
- * depreciation account is named after the class it belongs to and getting it
- * wrong would put the credit in the wrong place on a balance sheet.
- */
 function depreciationJournals(): PostedJournal[] {
   // The matching and the arithmetic are in core, where they are tested. The
   // `resolveAccount` this used to take was never read.

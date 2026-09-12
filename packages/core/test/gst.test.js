@@ -116,22 +116,25 @@ test("exempt and out-of-scope never reach the return", () => {
   assert.equal(result.excluded.length, 2, "excluded rows are still reported, not dropped");
 });
 
-test("GST is computed on the box total, not per transaction", () => {
+test("the two rounding methods differ by a cent, and both are available", () => {
   // 3/23 of $10.00 is 130.43 cents, which rounds down to 130 on each line.
-  // Three of those is 390, but the form calculates on the $30.00 total, giving
-  // 391.30 -> 391. The form's figure is the one that must be filed.
+  // Three of those is 390; the form calculates on the $30.00 total instead,
+  // giving 391.30 -> 391. Neither is wrong. The default is per-line because it
+  // is what the systems people migrate from actually file, so a return can be
+  // reconciled against the ones already lodged.
   const resolve = () => ({ treatment: "standard", side: "sales" });
   const amounts = [1000, 1000, 1000];
-  const result = gstReturn(
-    amounts.map((a, i) => txn(`2025-04-1${i}`, a)),
-    PERIOD,
-    { resolve, basis: "payments" },
-  );
+  const lines = amounts.map((a, i) => txn(`2025-04-1${i}`, a));
 
   const perTransaction = amounts.reduce((n, a) => n + gstContent(a), 0);
   assert.equal(perTransaction, 390, "summing each line loses a cent");
-  assert.equal(result.boxes.box8, 391, "the form calculates on the box total");
-  assert.equal(result.boxes.box8, gstContent(3000));
+
+  const byDefault = gstReturn(lines, PERIOD, { resolve, basis: "payments" });
+  assert.equal(byDefault.boxes.box8, 390, "the default sums the lines");
+
+  const byForm = gstReturn(lines, PERIOD, { resolve, basis: "payments", rounding: "form" });
+  assert.equal(byForm.boxes.box8, 391, "the form calculates on the box total");
+  assert.equal(byForm.boxes.box8, gstContent(3000));
 });
 
 test("only transactions inside the period count", () => {

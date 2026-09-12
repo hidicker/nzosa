@@ -124,10 +124,7 @@ export function accountTransactionRows(
     .sort((a, b) => a.date.localeCompare(b.date) || a.account.localeCompare(b.account))
     .map((transaction) => {
       const classification = options.classify(transaction);
-      const percent = classification.deductiblePercent ?? 100;
-      // Half-deductible entertainment claims half the GST. The cost is still
-      // the whole cost: only the tax is apportioned.
-      const gst = Math.round((gstWithin(transaction.amount, classification) * percent) / 100);
+      const gst = gstWithin(transaction.amount, classification);
       const code = options.codeOf(transaction);
       const rate =
         classification.treatment === "standard" && classification.side !== "none" ? 15 : 0;

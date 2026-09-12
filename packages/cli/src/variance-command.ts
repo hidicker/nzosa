@@ -139,10 +139,9 @@ function writeDetail(one: FiledReturn, mine: GstReturnResult): void {
   const oursLines = mine.lines
     .filter((line) => line.classification.side !== "imports")
     .map((line) => {
-      const percent = line.classification.deductiblePercent ?? 100;
       return {
         date: line.transaction.date,
-        amount: percent === 100 ? line.amount : Math.round((line.amount * percent) / 100),
+        amount: line.amount,
         who: line.transaction.otherParty,
         what: line.transaction.particulars || line.transaction.reference || "",
       };

@@ -100,9 +100,7 @@ export function rateLabel(classification: GstClassification): string {
   if (classification.side === "imports") return "GST on Imports";
   if (classification.treatment === "zero-rated") return "Zero Rated";
   if (classification.treatment !== "standard") return "No GST";
-  const half = classification.deductiblePercent;
-  const suffix = half !== undefined && half !== 100 ? ` (${half}% deductible)` : "";
-  return (classification.side === "sales" ? "15% GST on Income" : "15% GST on Expenses") + suffix;
+  return classification.side === "sales" ? "15% GST on Income" : "15% GST on Expenses";
 }
 
 /**

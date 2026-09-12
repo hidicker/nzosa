@@ -38,7 +38,6 @@ export interface GeneralLedgerRow {
   taxType: string;
   /** The GST-inclusive amount the tax was worked out from, where there is one. */
   taxBase: Cents | null;
-  deductiblePercent: number | null;
 }
 
 export function generalLedgerRows(
@@ -60,7 +59,6 @@ export function generalLedgerRows(
         amount: line.amount,
         taxType: line.taxType,
         taxBase: line.taxBase ?? null,
-        deductiblePercent: line.deductiblePercent ?? null,
       });
     }
   }
@@ -104,7 +102,6 @@ const COLUMNS = [
   "Credit",
   "Tax Type",
   "Tax Base",
-  "Deductible %",
 ] as const;
 
 function csvCell(value: string): string {
@@ -149,7 +146,6 @@ export function formatGeneralLedger(
         plain(row.credit),
         row.taxType,
         row.taxBase === null ? "" : plain(row.taxBase),
-        row.deductiblePercent === null ? "" : String(row.deductiblePercent),
       ]
         .map(csvCell)
         .join(","),

@@ -59,15 +59,14 @@ test("a line nothing coded says so rather than looking coded to nothing", () => 
   assert.equal(row.relatedAccount, "(not coded)");
 });
 
-test("half-deductible entertainment claims half the GST and all of the cost", () => {
+test("a standard-rated cost carries the tax on the whole of it", () => {
   const [row] = accountTransactionRows([tx({ amount: -23000 })], {
     codeOf: () => "420 - Entertainment",
-    classify: () => ({ treatment: "standard", side: "purchases", deductiblePercent: 50 }),
+    classify: () => ({ treatment: "standard", side: "purchases" }),
   });
-  // 230.00 gross carries 30.00 of GST; half of it may be claimed.
-  assert.equal(row.gst, -1500);
+  assert.equal(row.gst, -3000);
   assert.equal(row.gross, -23000);
-  assert.equal(row.net, -21500);
+  assert.equal(row.net, -20000);
 });
 
 test("money in is a receipt", () => {

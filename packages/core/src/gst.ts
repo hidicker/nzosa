@@ -32,13 +32,19 @@ export type GstBasis = "payments" | "invoice" | "hybrid";
  *
  * `form` follows the printed GST101A: total the box, then take 3/23 of it.
  *
- * `per-line` follows what Xero actually does, which is the other way round --
- * round the GST on each line to the cent, add those up to get Box 8, and then
- * back-derive Box 5 as Box 8 x 23/3. That is why every filed Box 5 carries four
- * decimal places and ends in a repeating fraction.
+ * `per-line` works the other way round -- round the GST on each line to the
+ * cent, add those up to get Box 8, and back-derive Box 5 as Box 8 x 23/3.
  *
- * The two differ by a few cents. The form's method is what the form says; the
- * per-line method is what was filed. Use `per-line` to reproduce a return.
+ * `per-line` is the default, because it is what the accounting systems people
+ * are migrating from actually file, and a return that cannot be reconciled
+ * against the ones already filed is worth less than a few cents of theoretical
+ * tidiness. A real filed return reads `Box 5  8678.0533` against `Box 8
+ * 1131.92`: four decimal places, and 1131.92 x 23/3 to the last of them. Box 5
+ * there is not a total of anything -- it is Box 8 read backwards.
+ *
+ * Use `form` where the form's own arithmetic is wanted: Box 5 is then a true
+ * total of sales and Box 8 derives from it, which is what the paper says.
+ * The two differ by a few cents.
  */
 export type GstRounding = "form" | "per-line";
 
@@ -73,19 +79,6 @@ export type GstSide =
 export interface GstClassification {
   treatment: GstTreatment;
   side: GstSide;
-  /**
-   * How much of the expenditure is deductible, as a percentage.
-   *
-   * Entertainment is the case that matters: New Zealand allows half of most
-   * entertainment expenditure, and only half its GST may be claimed. Xero
-   * models this by splitting the line in two -- half to an entertainment
-   * account carrying GST, half to a non-deductible one carrying none -- and
-   * the arithmetic here is the same, without requiring every such transaction
-   * to be split by hand.
-   *
-   * Defaults to 100.
-   */
-  deductiblePercent?: number;
   /** Optional human-readable reason, surfaced in the detail listing. */
   reason?: string;
   /**
@@ -182,7 +175,7 @@ export interface GstReturnOptions {
   adjustments?: Cents;
   /** Box 13 credit adjustments, if any. */
   creditAdjustments?: Cents;
-  /** How to arrive at the GST content. Defaults to `form`. */
+  /** How to arrive at the GST content. Defaults to `per-line`. */
   rounding?: GstRounding;
 }
 
@@ -337,10 +330,7 @@ export function gstReturn(
       // Box 11 is stated as a positive cost, but purchases are negative in the
       // ledger, so the sign is flipped once, here. A supplier refund is
       // positive in the ledger and correctly reduces Box 11.
-      //
-      // Only the deductible portion reaches the return at all: the rest is
-      // not a claimable input, so it belongs in neither box.
-      const claimable = applyShare(-amount, classification.deductiblePercent ?? 100);
+      const claimable = -amount;
       box11 += claimable;
       perLinePurchaseGst += gstContent(claimable);
     }
@@ -348,7 +338,7 @@ export function gstReturn(
     lines.push(entry);
   }
 
-  const rounding = options.rounding ?? "form";
+  const rounding = options.rounding ?? "per-line";
 
   // Xero rounds each line's GST and adds those up, then works the box total
   // back from it. The form does the reverse. Which one is used changes the

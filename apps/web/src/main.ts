@@ -7825,11 +7825,8 @@ function treatmentOf(label: string): string | null {
     treatment === "out-of-scope" ? "0" : treatment === "standard" || treatment === undefined ? "15" : treatment;
 
   if (typeof value === "string") return rateFor(value);
-  const shape = value as { treatment?: string; side?: string; deductiblePercent?: number };
+  const shape = value as { treatment?: string; side?: string };
   if (shape.side === "imports") return "100";
-  if (shape.deductiblePercent !== undefined && shape.deductiblePercent !== 100) {
-    return `${shape.deductiblePercent}% deductible`;
-  }
   return rateFor(shape.treatment);
 }
 
@@ -8098,11 +8095,9 @@ function saveChart(): void {
 /** A stored treatment in the wording the chart file uses. */
 function describeTreatment(raw: unknown): string {
   if (typeof raw === "string") return raw;
-  const shape = raw as { treatment?: string; side?: string; deductiblePercent?: number };
+  const shape = raw as { treatment?: string; side?: string };
   if (shape.side === "imports") return "imports";
-  const percent = shape.deductiblePercent;
-  const base = shape.treatment ?? "standard";
-  return percent !== undefined && percent !== 100 ? `${base} ${percent}%` : base;
+  return shape.treatment ?? "standard";
 }
 
 /** Turn the chart file's wording back into a stored treatment. */
@@ -8110,10 +8105,12 @@ function parseTreatment(text: string): unknown | null {
   const value = text.trim();
   if (value === "") return null;
   if (value === "imports") return { treatment: "standard", side: "imports" };
-  const percent = /^(\S+)\s+(\d{1,3})%$/.exec(value);
-  if (percent?.[1] && percent[2]) {
-    return { treatment: percent[1], side: "purchases", deductiblePercent: Number(percent[2]) };
-  }
+  // A chart written before partial deduction was removed may still say
+  // "standard 50%". The treatment is kept and the percentage dropped: a part
+  // deduction is expressed by splitting the line, as Xero does it, so there is
+  // nothing here for a percentage to mean.
+  const percent = /^(\S+)\s+\d{1,3}%$/.exec(value);
+  if (percent?.[1]) return percent[1];
   return value;
 }
 

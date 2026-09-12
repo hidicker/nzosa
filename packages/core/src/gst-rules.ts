@@ -57,8 +57,6 @@ export interface CodeTreatment {
   treatment: GstTreatment;
   /** Overrides the side implied by the direction of the amount. */
   side?: GstSide;
-  /** Percentage of the expenditure that is deductible. Defaults to 100. */
-  deductiblePercent?: number;
 }
 
 export interface GstRulesOptions {
@@ -262,15 +260,10 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
         // needs nothing more than "standard" still reads as one word.
         const detail: CodeTreatment = typeof entry === "string" ? { treatment: entry } : entry;
         const taxable = detail.treatment === "standard" || detail.treatment === "zero-rated";
-        const percent = detail.deductiblePercent;
         return {
           treatment: detail.treatment,
           side: detail.side ?? (taxable ? defaultSide(sign) : "none"),
-          ...(percent !== undefined ? { deductiblePercent: percent } : {}),
-          reason:
-            percent !== undefined && percent !== 100
-              ? `Code ${code} is ${detail.treatment}, ${percent}% deductible`
-              : `Code ${code} is treated as ${detail.treatment}`,
+          reason: `Code ${code} is treated as ${detail.treatment}`,
         };
       }
     }
@@ -280,11 +273,9 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
       const implied = options.chartTreatment?.(code) ?? null;
       if (implied !== null) {
         const taxable = implied.treatment === "standard" || implied.treatment === "zero-rated";
-        const percent = implied.deductiblePercent;
         return {
           treatment: implied.treatment,
           side: implied.side ?? (taxable ? defaultSide(sign) : "none"),
-          ...(percent !== undefined ? { deductiblePercent: percent } : {}),
           reason: `Chart of accounts treats ${code} as ${implied.treatment}`,
         };
       }

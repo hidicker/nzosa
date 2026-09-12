@@ -85,8 +85,6 @@ export interface PostedLine {
    * return never has to reverse-engineer one from the other.
    */
   taxBase?: Cents;
-  /** Half-deductible entertainment, carried so a return can adjust it. */
-  deductiblePercent?: number;
   description: string;
 }
 
@@ -275,10 +273,6 @@ export function postTransaction(
         amount: -net,
         taxType,
         ...(tax !== 0 ? { taxBase: part.amount } : {}),
-        ...(part.classification.deductiblePercent !== undefined &&
-        part.classification.deductiblePercent !== 100
-          ? { deductiblePercent: part.classification.deductiblePercent }
-          : {}),
         description: part.description ?? "",
       });
     }
@@ -289,14 +283,6 @@ export function postTransaction(
         accountName: gstName,
         amount: -tax,
         taxType,
-        // Repeated from the supply line above. A split can mix a fully
-        // deductible part with a half deductible one, and the return has to
-        // tell their tax lines apart -- there is nothing else linking a tax
-        // line back to the part it belongs to.
-        ...(part.classification.deductiblePercent !== undefined &&
-        part.classification.deductiblePercent !== 100
-          ? { deductiblePercent: part.classification.deductiblePercent }
-          : {}),
         description: part.description ?? "",
       });
     }
@@ -451,25 +437,14 @@ export function taxSummary(
           summary.box6 += line.taxBase;
         }
       } else if (line.taxType === "INPUT2") {
-        const percent = line.deductiblePercent ?? 100;
-
-        // A half-deductible cost claims half the *gross* and takes the tax
-        // content of that, rather than halving the tax. The two differ by a
-        // cent often enough to matter, and a return does it this way round.
         if (line.taxBase !== undefined) {
-          const claimable =
-            percent === 100 ? -line.taxBase : Math.round((-line.taxBase * percent) / 100);
-          summary.box11 += claimable;
-          // Either because the claim is scaled, or -- as when a bill is settled
-          // -- because this journal posts no tax line to take it from.
-          if (percent !== 100 || !posted.has("INPUT2")) {
-            summary.box12 += gstContent(claimable);
-          }
+          summary.box11 += -line.taxBase;
+          // A settled bill posts no tax line of its own -- the tax went with
+          // the invoice when it was raised -- so the claim is taken from the
+          // gross instead.
+          if (!posted.has("INPUT2")) summary.box12 += gstContent(-line.taxBase);
         }
-        // A tax line for a part that is not fully deductible was already
-        // accounted for from its supply line's gross, so taking it again here
-        // would claim it twice.
-        if (isTaxLine && percent === 100) summary.box12 += line.amount;
+        if (isTaxLine) summary.box12 += line.amount;
       } else if (line.taxType === "GSTONIMPORTS") {
         summary.box13 += line.amount;
       }

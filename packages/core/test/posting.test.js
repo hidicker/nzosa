@@ -420,25 +420,26 @@ test("part paying a bill claims GST on what was paid", () => {
   assert.equal(summary.box12, Math.round((10000 * 3) / 23), "claimed on the instalment only");
 });
 
-test("a split scales each part by its own deductibility, not the journal's", () => {
-  // $115 of stationery, fully deductible, and $115 of client dinner at 50%,
-  // paid as one $230 transaction. The percentage used to be read off the first
-  // partial line and applied to the whole journal, so the stationery was
-  // halved along with the dinner and $50 of claim went missing.
-  const journal = postTransaction(bank(-23000), [
-    { amount: -11500, code: "461", classification: { treatment: "standard", side: "purchases" } },
-    {
-      amount: -11500,
-      code: "420",
-      classification: { treatment: "standard", side: "purchases", deductiblePercent: 50 },
-    },
+test("a part-deductible cost is split, the way an accounting system does it", () => {
+  // $55 at a restaurant, half deductible. No percentage sits on the code: the
+  // line is divided, half to entertainment carrying GST and half to a
+  // non-deductible account carrying none. Only the deductible half reaches the
+  // return, and these are the figures Xero produces for the same transaction.
+  const journal = postTransaction(bank(-5500), [
+    { amount: -2750, code: "420", classification: { treatment: "standard", side: "purchases" } },
+    { amount: -2750, code: "424", classification: { treatment: "out-of-scope", side: "none" } },
   ]);
 
   assert.equal(journalImbalance(journal), 0);
 
+  const entertainment = journal.lines.find((l) => l.accountCode === "420");
+  const nonDeductible = journal.lines.find((l) => l.accountCode === "424");
+  assert.equal(entertainment.amount, 2391, "23.91 of deductible cost");
+  assert.equal(nonDeductible.amount, 2750, "27.50 that is not deductible, and carries no GST");
+
   const summary = taxSummary([journal], { basis: "payments" });
-  assert.equal(summary.box11, 17250, "the whole stationery plus half the dinner");
-  assert.equal(summary.box12, 2250, "and the tax on that, not on half of both");
+  assert.equal(summary.box11, 2750, "the deductible half, GST-inclusive");
+  assert.equal(summary.box12, 359, "and the tax content of that half");
 });
 
 test("a split of two fully deductible parts is unaffected", () => {
@@ -451,15 +452,4 @@ test("a split of two fully deductible parts is unaffected", () => {
   assert.equal(summary.box12, 3000);
 });
 
-test("a wholly half-deductible cost is unchanged by scaling per line", () => {
-  const journal = postTransaction(bank(-11500), [
-    {
-      amount: -11500,
-      code: "420",
-      classification: { treatment: "standard", side: "purchases", deductiblePercent: 50 },
-    },
-  ]);
-  const summary = taxSummary([journal], { basis: "payments" });
-  assert.equal(summary.box11, 5750);
-  assert.equal(summary.box12, 750);
-});
+

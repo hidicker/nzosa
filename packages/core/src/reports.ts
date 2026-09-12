@@ -205,13 +205,7 @@ export function profitAndLoss(
 
     const classification = options.classify(transaction);
     const gst = gstWithin(transaction.amount, classification);
-    // Half-deductible entertainment reaches the profit figure at half, which is
-    // the whole reason the percentage is carried on the classification.
-    const percent = classification.deductiblePercent ?? 100;
-    const net =
-      percent === 100
-        ? transaction.amount - gst
-        : Math.round(((transaction.amount - gst) * percent) / 100);
+    const net = transaction.amount - gst;
 
     const existing = lines.get(code) ?? { code, gross: 0, gst: 0, net: 0, count: 0 };
     existing.gross += transaction.amount;

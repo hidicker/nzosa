@@ -84,8 +84,9 @@ GST options:
   --anchor <1-12>     A month a period ends in, which fixes the cycle.
                       3 = Jan/Mar/May/Jul/Sep/Nov      (default: 3)
   --basis <b>         payments, invoice or hybrid      (default: payments)
-  --rounding <mode>   form (3/23 of the box total, as GST101A says) or
-                      per-line (round each line, as Xero does) (default: form)
+  --rounding <mode>   per-line (round each line, as the systems people migrate
+                      from file) or form (3/23 of the box total, as GST101A
+                      says)                            (default: per-line)
   --share <percent>   Your share, for co-owned property (default: 100)
   --accounts <ids>    Comma-separated account ids to include
   --rules <path>      JSON rule set for coding transactions
@@ -217,7 +218,7 @@ function parseArgs(argv: readonly string[]): { command: string; options: Options
     months: 2,
     anchorMonth: 3,
     basis: "payments",
-    rounding: "form",
+    rounding: "per-line",
     sharePercent: 100,
     accounts: [],
     rulesPath: undefined,

@@ -86,7 +86,7 @@ test("the file says what it is, and carries its own proof", () => {
   assert.equal(lines[0], "General Ledger");
   assert.equal(lines[1], "Kea Coffee Roasters Limited");
   assert.equal(lines[2], "For the period 2026-04-01 to 2027-03-31");
-  assert.match(lines[3] ?? "", /^Date,Source,Journal,Narration,Account Code,Account,Description,Debit,Credit,Tax Type,Tax Base,Deductible %$/);
+  assert.match(lines[3] ?? "", /^Date,Source,Journal,Narration,Account Code,Account,Description,Debit,Credit,Tax Type,Tax Base$/);
   // Totals in the file, so somebody handed it does not have to add it up.
   assert.match(csv, /Totals,,,,90726\.00/.test(csv) ? /x^/ : /Totals/);
   assert.match(csv, /Debits less credits: 0\.00/);

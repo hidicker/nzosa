@@ -2409,3 +2409,6 @@ button.working {
 
 
 
+
+/* Coding to the GST account is a question with two answers and no default. */
+.split-gst-ask { border-color: var(--accent); font-weight: 600; }

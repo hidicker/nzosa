@@ -1,4 +1,4 @@
-import { categorise, formatAmount, gstResolver } from "@nzosa/core";
+import { categorise, formatAmount, gstResolver, splitAccountLabel } from "@nzosa/core";
 import type {
   GstClassification,
   RuleFile,
@@ -125,6 +125,32 @@ export const GST_OPTIONS: readonly { value: GstRate; label: string; hint: string
 ];
 
 export type GstRate = "0" | "15" | "100";
+
+/**
+ * Whether a coding names the GST control account.
+ *
+ * Coding a line there is the one case where the rate is a real question rather
+ * than a property of the account, and where no answer is safe to assume. Two
+ * quite different things are coded to it, and the sums are nothing alike:
+ *
+ *  * **Settling the liability** -- the payment to, or refund from, Inland
+ *    Revenue. It is not a supply and claims nothing. Rate 0%.
+ *  * **GST paid at the border** on imported goods. The whole line is tax, and
+ *    the whole of it is claimed through Box 13. Rate 100%.
+ *
+ * Left at the ordinary 15%, the engine reads the line as a tax-inclusive
+ * price and splits it -- so a $150 customs entry becomes $130.43 of expense
+ * that never happened and a $19.57 claim where $150.00 was due. Assuming the
+ * other way is no better: 100% on a payment to Inland Revenue claims the
+ * payment back as a credit.
+ *
+ * Matched on the account number rather than the name, because a chart writes
+ * it as `820 GST`, `GST - 820` or plain `820`, and a name match would also
+ * catch `Subcontractors (GST Registered)`.
+ */
+export function isGstAccount(label: string): boolean {
+  return splitAccountLabel(label).code === "820" || label.trim() === "820";
+}
 
 /** What a chosen rate means to the return. */
 export function rateToClassification(

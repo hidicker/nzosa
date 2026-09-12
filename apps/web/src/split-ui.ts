@@ -1,7 +1,12 @@
 import { combobox } from "./combobox.js";
 import { formatAmount, parseAmount } from "@nzosa/core";
 import type { SplitPart, Transaction } from "@nzosa/core";
-import { GST_OPTIONS, classificationToRate, rateToClassification } from "./reconcile.js";
+import {
+  GST_OPTIONS,
+  classificationToRate,
+  isGstAccount,
+  rateToClassification,
+} from "./reconcile.js";
 import type { GstRate } from "./reconcile.js";
 
 /**
@@ -32,18 +37,23 @@ export interface SplitEditorOptions {
 interface Draft {
   amount: string;
   code: string;
-  rate: GstRate;
+  rate: GstRate | "";
   note: string;
 }
 
 function toDraft(part: SplitPart): Draft {
+  const code = part.code ?? "";
+  const rate = classificationToRate({
+    treatment: part.treatment ?? "standard",
+    side: part.side ?? "none",
+  });
   return {
     amount: (part.amount / 100).toFixed(2),
-    code: part.code ?? "",
-    rate: classificationToRate({
-      treatment: part.treatment ?? "standard",
-      side: part.side ?? "none",
-    }),
+    code,
+    // A part already coded to GST at the ordinary rate was never a decision:
+    // 15% is what a new part starts at, and on this account it is the one
+    // answer that is wrong either way round. Reopened, it asks again.
+    rate: isGstAccount(code) && rate !== "0" && rate !== "100" ? "" : rate,
     note: part.note ?? "",
   };
 }
@@ -118,7 +128,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     options.onSave(
       drafts.map((draft) => {
         const amount = parseAmount(draft.amount) ?? 0;
-        const { treatment, side } = rateToClassification(draft.rate, amount);
+        const { treatment, side } = rateToClassification(draft.rate as GstRate, amount);
         return {
           amount,
           ...(draft.code !== "" ? { code: draft.code } : {}),
@@ -176,9 +186,19 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
       const codes = options.codes.includes(draft.code) || draft.code === ""
         ? options.codes
         : [draft.code, ...options.codes];
-      const code = combobox(codes, draft.code === "" ? null : draft.code, "Account");
-      code.element.addEventListener("change", () => {
+      // The picker's own callback, not a change event: it commits on a
+      // mousedown it has already handled and dispatches nothing, which is why
+      // the draft is read back below as well.
+      const code = combobox(codes, draft.code === "" ? null : draft.code, "Account", () => {
         draft.code = code.value;
+        // Choosing the GST account un-answers the rate: whatever it said, it
+        // was an answer about a different account.
+        if (isGstAccount(draft.code) && draft.rate !== "0" && draft.rate !== "100") {
+          draft.rate = "";
+        }
+        // After the picker has finished with its own elements, since this
+        // rebuilds the row the callback came from.
+        setTimeout(() => draw(), 0);
       });
       // The combobox commits on picking, which fires no change event of its
       // own, so the draft is read back whenever the row is read.
@@ -187,16 +207,41 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
       });
 
       const gst = document.createElement("select");
-      for (const rate of GST_OPTIONS) {
-        const option = document.createElement("option");
-        option.value = rate.value;
-        option.textContent = rate.label;
-        option.title = rate.hint;
-        option.selected = rate.value === draft.rate;
-        gst.append(option);
+      const askingGst = isGstAccount(draft.code);
+      if (askingGst) {
+        // Two answers, and no default. Both are ordinary things to code here
+        // and they claim nothing and everything respectively, so guessing on
+        // somebody's behalf is guessing at their return.
+        gst.className = "split-gst-ask";
+        const ask = document.createElement("option");
+        ask.value = "";
+        ask.textContent = "Which is it?";
+        ask.disabled = true;
+        ask.selected = draft.rate === "";
+        gst.append(ask);
+        for (const [value, label] of [
+          ["0", "Settles the GST bill — a payment to or refund from IRD"],
+          ["100", "GST paid at the border — claim all of it (Box 13)"],
+        ] as const) {
+          const option = document.createElement("option");
+          option.value = value;
+          option.textContent = label;
+          option.selected = value === draft.rate;
+          gst.append(option);
+        }
+      } else {
+        for (const rate of GST_OPTIONS) {
+          const option = document.createElement("option");
+          option.value = rate.value;
+          option.textContent = rate.label;
+          option.title = rate.hint;
+          option.selected = rate.value === draft.rate;
+          gst.append(option);
+        }
       }
       gst.addEventListener("change", () => {
         draft.rate = gst.value as GstRate;
+        refresh();
       });
 
       const note = document.createElement("input");
@@ -224,8 +269,15 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
   function refresh(): void {
     const sum = total();
     const difference = transaction.amount - sum;
-    saveButton.disabled = difference !== 0 || drafts.length < 2;
-    balance.className = difference === 0 ? "split-balance ok" : "split-balance off";
+    const undecided = drafts.filter((d) => isGstAccount(d.code) && d.rate === "").length;
+    saveButton.disabled = difference !== 0 || drafts.length < 2 || undecided > 0;
+    balance.className = difference === 0 && undecided === 0 ? "split-balance ok" : "split-balance off";
+    if (undecided > 0) {
+      balance.textContent =
+        `${undecided} part${undecided === 1 ? "" : "s"} coded to GST: say whether it settles ` +
+        "the GST bill or is GST you paid at the border. They claim nothing and all of it.";
+      return;
+    }
     balance.textContent =
       difference === 0
         ? `Parts total ${formatAmount(sum)} — matches the bank line`

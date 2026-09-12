@@ -144,6 +144,18 @@ import type {
 } from "@nzosa/core";
 import { buildRows, detailFor, readFiledReturns } from "./variance.js";
 import {
+  THEME_KEY,
+  amountCell,
+  currentTheme,
+  download,
+  escapeHtml,
+  invoiceCell,
+  nameCell,
+  note,
+  setLoadingStatus,
+} from "./ui.js";
+import type { Theme } from "./ui.js";
+import {
   GST_OPTIONS,
   classificationToRate,
   knownCodes,
@@ -460,10 +472,6 @@ async function seedStarterChart(): Promise<void> {
   );
 }
 
-function setLoadingStatus(message: string): void {
-  const el = document.getElementById("loading-msg");
-  if (el) el.textContent = message;
-}
 
 function dismissLoading(): void {
   const el = document.getElementById("app-loading");
@@ -1667,10 +1675,6 @@ async function chooseLedger(value: string): Promise<void> {
  * a fact about them and this screen, not about the ledger, and it should not
  * travel in a folder that gets copied to a colleague.
  */
-type Theme = "system" | "light" | "dark";
-
-const THEME_KEY = "nzosa:theme";
-
 /**
  * Whether the menu is narrowed to icons.
  *
@@ -1697,15 +1701,6 @@ function toggleNarrow(): void {
   applyNarrow(narrow);
 }
 
-function currentTheme(): Theme {
-  try {
-    const held = localStorage.getItem(THEME_KEY);
-    if (held === "light" || held === "dark" || held === "system") return held;
-  } catch {
-    // A browser refusing storage is not a reason to render nothing.
-  }
-  return "system";
-}
 
 function applyTheme(theme: Theme): void {
   const root = document.documentElement;
@@ -2561,12 +2556,6 @@ function rawFields(transaction: Transaction): HTMLElement {
   return table;
 }
 
-function note(text: string): HTMLElement {
-  const p = document.createElement("p");
-  p.className = "page-hint";
-  p.textContent = text;
-  return p;
-}
 
 function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const row = document.createElement("div");
@@ -6158,14 +6147,6 @@ function downloadRules(): void {
 }
 
 /** Hand a generated file to the browser to save. */
-function download(text: string, filename: string, type: string): void {
-  const url = URL.createObjectURL(new Blob([text], { type }));
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = filename;
-  link.click();
-  URL.revokeObjectURL(url);
-}
 
 /**
  * Which bank accounts serve which entities.
@@ -12129,51 +12110,9 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
 }
 
 /** A table cell of plain text. */
-function nameCell(text: string): HTMLTableCellElement {
-  const td = document.createElement("td");
-  td.className = "report-name";
-  td.textContent = text;
-  return td;
-}
 
 /** A right-aligned figure. */
-function amountCell(text: string): HTMLTableCellElement {
-  const td = document.createElement("td");
-  td.className = "report-amount";
-  td.textContent = text;
-  return td;
-}
 
-/**
- * The invoice, with enough on screen to recognise it.
- *
- * A number alone is not evidence: deciding whether a receipt settles INV-0121
- * means knowing who it was to, what it was for and when it was raised. Showing
- * only the number made the page ask a question it had not given you the means
- * to answer.
- */
-function invoiceCell(invoice: Invoice | undefined, fallback: string): HTMLTableCellElement {
-  const td = document.createElement("td");
-  td.className = "report-name match-cell";
-  const number = document.createElement("strong");
-  number.textContent = invoice?.number ?? fallback;
-  td.append(number);
-  if (invoice === undefined) return td;
-
-  const who = document.createElement("div");
-  who.className = "match-sub";
-  who.textContent = invoice.contact;
-  td.append(who);
-
-  const detail = [invoice.reference, invoice.issued].filter((p) => p !== "").join(" · ");
-  if (detail !== "") {
-    const line = document.createElement("div");
-    line.className = "match-sub";
-    line.textContent = detail;
-    td.append(line);
-  }
-  return td;
-}
 
 /** The bank line, named the way it appears on a statement. */
 function bankCell(transaction: Transaction | undefined): HTMLTableCellElement {
@@ -13644,20 +13583,5 @@ function dateRange(transactions: readonly Transaction[]): { from: string; to: st
   return { from, to };
 }
 
-/**
- * Escape before inserting into HTML.
- *
- * Payee and particulars fields are attacker-influenced in the sense that
- * anyone who can pay you can choose what appears in them, and a ledger is
- * exactly the kind of file people forward to an accountant.
- */
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;")
-    .replace(/'/g, "&#39;");
-}
 
 void init();

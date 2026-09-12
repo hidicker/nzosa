@@ -17,6 +17,8 @@ import {
   splitInvoiceNumber,
   matchPayouts,
   sameEntityBanks as coreSameEntityBanks,
+  codingCounts,
+  accountsAtExportLimit,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -130,6 +132,7 @@ import type {
   Invoice,
   FinancialYearBalances,
   CodingEngine,
+  CodingCounts,
   InvoiceAssignment,
   SheetRows,
   InvoiceBalance,
@@ -4171,13 +4174,7 @@ async function ruleFromDecision(transaction: Transaction, code: string): Promise
  * else's work.
  */
 function codedNow(): number {
-  const rules = {
-    ...((state.rules as RuleFileShape | undefined) ?? {}),
-    overrides: state.ledger.overrides ?? {},
-  } as RuleSet;
-  let coded = 0;
-  for (const line of state.ledger.transactions) if (categorise(line, rules).code) coded += 1;
-  return coded;
+  return codingProgress().coded;
 }
 
 /**
@@ -7345,10 +7342,10 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
  * thousand transactions is not a sum to do ninety-three times.
  */
 let codedIndex:
-  | { transactions: readonly Transaction[]; rules: unknown; counts: Map<string, number> }
+  | { transactions: readonly Transaction[]; rules: unknown; counts: CodingCounts }
   | undefined;
 
-function codedToEach(): Map<string, number> {
+function codingProgress(): CodingCounts {
   if (
     codedIndex !== undefined &&
     codedIndex.transactions === state.ledger.transactions &&
@@ -7356,17 +7353,16 @@ function codedToEach(): Map<string, number> {
   ) {
     return codedIndex.counts;
   }
-  const rules = {
+  const counts = codingCounts(state.ledger.transactions, {
     ...((state.rules as RuleFileShape | undefined) ?? {}),
     overrides: state.ledger.overrides ?? {},
-  } as RuleSet;
-  const counts = new Map<string, number>();
-  for (const line of state.ledger.transactions) {
-    const { code } = categorise(line, rules);
-    if (code) counts.set(code, (counts.get(code) ?? 0) + 1);
-  }
+  } as RuleSet);
   codedIndex = { transactions: state.ledger.transactions, rules: state.rules, counts };
   return counts;
+}
+
+function codedToEach(): Map<string, number> {
+  return codingProgress().byCode;
 }
 
 /** Take one account out of the chart, and out of everything keyed to it. */
@@ -13011,11 +13007,7 @@ function appendTruncationWarning(container: HTMLElement): void {
  * the tell, and it is worth saying out loud at the moment of import.
  */
 function truncatedAccounts(): string[] {
-  const counts = new Map<string, number>();
-  for (const t of state.ledger.transactions) {
-    counts.set(t.account, (counts.get(t.account) ?? 0) + 1);
-  }
-  return [...counts.entries()].filter(([, n]) => n === 1000).map(([account]) => account);
+  return accountsAtExportLimit(state.ledger.transactions);
 }
 
 function renderTable(): void {

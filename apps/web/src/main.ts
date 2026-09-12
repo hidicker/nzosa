@@ -10,6 +10,11 @@ import {
   postLedger,
   codingEngine,
   invoiceAssignments as coreInvoiceAssignments,
+  invoiceCandidates as coreInvoiceCandidates,
+  invoiceBalancesFor,
+  nextInvoiceNumber,
+  invoicePrefix,
+  splitInvoiceNumber,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -2911,27 +2916,14 @@ function invoiceAssignments(): Map<string, string> {
 }
 
 function invoiceBalanceMap(): Map<string, InvoiceBalance> {
-  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
-  // Split parts as well, because one payment can settle several invoices and
-  // each part is what actually landed on its own. Addressed by the same id
-  // `expandSplits` gives them, so a part assignment means the same thing here,
-  // in the postings, and in the history.
-  for (const [id, parts] of Object.entries(state.ledger.splits ?? {})) {
-    const parent = byId.get(id);
-    if (parent === undefined) continue;
-    parts.forEach((part, index) => {
-      byId.set(splitPartId(id, index), { ...parent, id: splitPartId(id, index), amount: part.amount });
-    });
-  }
-  const assignments: InvoiceAssignment[] = [];
-  for (const [transactionId, invoiceNumber] of invoiceAssignments()) {
-    const transaction = byId.get(transactionId);
-    if (transaction !== undefined) assignments.push({ invoiceNumber, amount: transaction.amount });
-  }
-  return invoiceBalances(state.ledger.invoices ?? [], assignments);
+  return invoiceBalancesFor({
+    invoices: state.ledger.invoices ?? [],
+    transactions: state.ledger.transactions,
+    splits: state.ledger.splits ?? {},
+    assignments: invoiceAssignments(),
+  });
 }
 
-/** What one invoice still has owing, or its full total when it is unknown. */
 function remainingOn(invoice: Invoice): Cents {
   return invoiceBalanceMap().get(invoice.number)?.remaining ?? invoice.total;
 }
@@ -2944,58 +2936,17 @@ function remainingOn(invoice: Invoice): Cents {
  * you what they are paying, and beats an amount that merely agrees.
  */
 function invoiceCandidates(transaction: Transaction): Invoice[] {
-  const invoices = state.ledger.invoices ?? [];
-  if (invoices.length === 0 || transaction.amount === 0) return [];
-
-  const wanted = Math.abs(transaction.amount);
-  const kind: InvoiceKind = transaction.amount > 0 ? "sales" : "purchase";
-  const text = `${transaction.reference ?? ""} ${transaction.particulars ?? ""} ${transaction.otherParty ?? ""}`
-    .toUpperCase();
-
-  const balances = invoiceBalanceMap();
-
-  const scored: { invoice: Invoice; score: number }[] = [];
-  for (const invoice of invoices) {
-    if (invoice.kind !== kind) continue;
-
-    // Against what is still owing, not the original total. An invoice already
-    // part paid is looking for the rest, and judging the next receipt against
-    // the full amount would neither call it exact nor rank it properly -- so
-    // the second half of a half-paid invoice never came up as a candidate.
-    const owing = balances.get(invoice.number)?.remaining ?? invoice.total;
-
-    // Nothing left to settle. It stays visible on the Invoices page, but it is
-    // not what this receipt is for.
-    if (owing <= 0) continue;
-
-    const named = invoice.number !== "" && text.includes(invoice.number.toUpperCase());
-    const exact = owing === wanted;
-    // A payment can be a part payment, so a smaller receipt against a larger
-    // balance is still a candidate -- just a weaker one than an exact figure.
-    const partial = !exact && wanted < owing;
-    // The first word of the contact is enough: bank lines abbreviate, so
-    // "TAUTAHI,MERE" should still recognise "Tautahi".
-    const firstWord = invoice.contact.toUpperCase().split(/[ ,]/)[0] ?? "";
-    const sameContact = firstWord.length >= 3 && text.includes(firstWord);
-    const days = Math.abs(daysBetween(invoice.issued, transaction.date));
-    if (days > 180) continue;
-    if (!named && !exact && !(partial && sameContact)) continue;
-
-    const score = (named ? 8 : 0) + (exact ? 4 : 0) + (sameContact ? 2 : 0) + (days <= 30 ? 1 : 0);
-    scored.push({ invoice, score });
-  }
-
-  scored.sort((a, b) => b.score - a.score || a.invoice.issued.localeCompare(b.invoice.issued));
-  return scored.slice(0, 6).map((s) => s.invoice);
+  return coreInvoiceCandidates(transaction, {
+    invoices: state.ledger.invoices ?? [],
+    balances: invoiceBalanceMap(),
+  });
 }
 
 /**
- * Bank accounts and their names, worked out once per set of transactions.
+ * The bank accounts this ledger holds, and what each is called.
  *
- * Both of these used to walk all 2,832 transactions, once per row, for 200
- * rows. Nothing about the answer changes between rows, so it is cached against
- * the transaction list it was derived from and recomputed when that changes --
- * which is the only thing that can change it.
+ * Cached against the transaction list it was derived from and recomputed when
+ * that changes -- which is the only thing that can change it.
  */
 let bankIndex:
   | { source: readonly Transaction[]; accounts: Set<string>; labels: Map<string, string> }
@@ -11195,45 +11146,8 @@ async function readXeroText(file: File): Promise<string> {
  */
 let editingInvoice: string | null = null;
 
-/** An invoice number split into its prefix and its number, when it has both. */
-interface NumberedInvoice {
-  prefix: string;
-  digits: string;
-  value: number;
-}
-
-function splitInvoiceNumber(number: string): NumberedInvoice | null {
-  const parts = /^([A-Za-z-]*)(\d+)$/.exec(number.trim());
-  if (parts === null) return null;
-  return { prefix: parts[1] ?? "", digits: parts[2] ?? "", value: Number(parts[2]) };
-}
-
-/** What each kind of document is called. Money in is INV, money out is BILL. */
-function invoicePrefix(kind: InvoiceKind): string {
-  return kind === "purchase" ? "BILL-" : "INV-";
-}
-
-/**
- * The next number, counting across every prefix rather than within each.
- *
- * One sequence for the whole book: a credit note does not restart the count,
- * and CN-0155 never sits alongside INV-0155 meaning something different. So the
- * number is the highest in use anywhere plus one.
- *
- * The prefix is separate, and says what the document is rather than what the
- * last one happened to be -- taking the highest entry's prefix made the next
- * sales invoice a CN the moment a credit note was the latest thing raised.
- */
 function suggestInvoiceNumber(kind: InvoiceKind): string {
-  const numbered = (state.ledger.invoices ?? [])
-    .map((i) => splitInvoiceNumber(i.number))
-    .filter((n): n is NumberedInvoice => n !== null);
-  const prefix = invoicePrefix(kind);
-  if (numbered.length === 0) return `${prefix}0001`;
-
-  const highest = numbered.reduce((best, n) => (n.value > best.value ? n : best));
-  const width = Math.max(...numbered.map((n) => n.digits.length));
-  return prefix + String(highest.value + 1).padStart(width, "0");
+  return nextInvoiceNumber(kind, state.ledger.invoices ?? []);
 }
 
 function blankInvoice(): Invoice {

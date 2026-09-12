@@ -15,6 +15,8 @@ import {
   nextInvoiceNumber,
   invoicePrefix,
   splitInvoiceNumber,
+  matchPayouts,
+  sameEntityBanks as coreSameEntityBanks,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -2978,18 +2980,12 @@ function banks(): { accounts: Set<string>; labels: Map<string, string> } {
  * offered and the caller says the scoping is missing.
  */
 function sameEntityBanks(account: string): { accounts: Set<string>; scoped: boolean } {
-  const model = state.ledger.entities ?? emptyEntityModel();
-  const mine = model.banks[account] ?? [];
-  if (mine.length === 0) return { accounts: banks().accounts, scoped: false };
-
-  const accounts = new Set<string>();
-  for (const [bank, ids] of Object.entries(model.banks)) {
-    if (ids.some((id) => mine.includes(id))) accounts.add(bank);
-  }
-  return { accounts, scoped: true };
+  return coreSameEntityBanks(account, {
+    model: state.ledger.entities ?? emptyEntityModel(),
+    allBanks: banks().accounts,
+  });
 }
 
-/** A bank account's readable name, falling back to its id. */
 function bankLabel(account: string): string {
   return banks().labels.get(account) ?? account;
 }
@@ -3009,38 +3005,12 @@ function bankLabel(account: string): string {
  * 296.98 finds nothing, whatever else is tried.
  */
 function payoutMatches(): { payout: Payout; transaction: Transaction }[] {
-  const payouts = state.ledger.payouts ?? [];
-  if (payouts.length === 0) return [];
-
-  const byAmount = new Map<Cents, Transaction[]>();
-  for (const transaction of state.ledger.transactions) {
-    const list = byAmount.get(transaction.amount);
-    if (list) list.push(transaction);
-    else byAmount.set(transaction.amount, [transaction]);
-  }
-
-  const taken = new Set<string>();
-  const out: { payout: Payout; transaction: Transaction }[] = [];
-  for (const payout of payouts) {
-    // The bank shows the payout a day or two after the processor records it,
-    // so the date is a window rather than a key. The amount is exact: it is
-    // the sum of the parts, and if it does not match to the cent this is not
-    // the line.
-    const candidates = (byAmount.get(payout.net) ?? []).filter((t) => !taken.has(t.id));
-    let best: { gap: number; transaction: Transaction } | undefined;
-    for (const transaction of candidates) {
-      const gap = Math.abs(daysBetween(payout.date, transaction.date));
-      if (gap > 10) continue;
-      if (!best || gap < best.gap) best = { gap, transaction };
-    }
-    if (best === undefined) continue;
-    taken.add(best.transaction.id);
-    out.push({ payout, transaction: best.transaction });
-  }
-  return out;
+  return matchPayouts({
+    payouts: state.ledger.payouts ?? [],
+    transactions: state.ledger.transactions,
+  });
 }
 
-/** Payouts whose bank line has not been split yet. */
 function payoutsToApply(): { payout: Payout; transaction: Transaction }[] {
   const splits = state.ledger.splits ?? {};
   return payoutMatches().filter(({ transaction }) => splits[transaction.id] === undefined);

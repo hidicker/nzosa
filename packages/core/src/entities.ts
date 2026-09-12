@@ -374,3 +374,32 @@ export function entityCoverage(
   }
   return { assigned, total: chart.length, byEntity };
 }
+
+/**
+ * Which bank accounts belong to the same entities as this one.
+ *
+ * The set a transfer is allowed to move within. A movement between two of an
+ * entity's own accounts is not a supply; the same movement to an account
+ * belonging to somebody else is drawings, or a loan, and pairing the two would
+ * quietly move money between two sets of books.
+ *
+ * `scoped` says whether the answer is actually an entity's accounts or just
+ * every account in the ledger. Unscoped is the honest default for books that
+ * hold one entity -- there is nothing to separate -- but it is also what you
+ * get when nobody has said which accounts are whose, and those two look alike
+ * from here. The caller can tell them apart; this reports which it gave.
+ */
+export function sameEntityBanks(
+  account: string,
+  options: { model: EntityModel; allBanks: ReadonlySet<string> },
+): { accounts: Set<string>; scoped: boolean } {
+  const { model, allBanks } = options;
+  const mine = model.banks[account] ?? [];
+  if (mine.length === 0) return { accounts: new Set(allBanks), scoped: false };
+
+  const accounts = new Set<string>();
+  for (const [bank, ids] of Object.entries(model.banks)) {
+    if (ids.some((id) => mine.includes(id))) accounts.add(bank);
+  }
+  return { accounts, scoped: true };
+}

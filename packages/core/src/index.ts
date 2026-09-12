@@ -140,6 +140,7 @@ export {
   parseOwners,
   ownersTotal,
   shareOf,
+  sameEntityBanks,
 } from "./entities.js";
 export type { Owner, EntityKind } from "./entities.js";
 
@@ -313,6 +314,7 @@ export * from "./post-ledger.js";
 export * from "./assignments.js";
 export * from "./coding-engine.js";
 export * from "./invoice-candidates.js";
+export * from "./payout-matching.js";
 export * from "./trial-balance.js";
 export * from "./text.js";
 export * from "./disposal.js";

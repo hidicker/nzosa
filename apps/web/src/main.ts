@@ -8,6 +8,8 @@ import {
   disposalJournals as coreDisposalJournals,
   bestAccountMatch,
   postLedger,
+  codingEngine,
+  invoiceAssignments as coreInvoiceAssignments,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -120,6 +122,7 @@ import type {
   EntityKind,
   Invoice,
   FinancialYearBalances,
+  CodingEngine,
   InvoiceAssignment,
   SheetRows,
   InvoiceBalance,
@@ -2889,48 +2892,24 @@ function transferSuggestions(): Set<string> {
 }
 
 function invoiceAssignments(): Map<string, string> {
+  // Cached against the ledger it was built from, because this is asked for on
+  // every render and the matching is not cheap. The rules themselves are in
+  // core, where the ordering that stops a payment being counted twice is
+  // tested.
   if (assignmentCache !== null && assignmentCache.ledger === state.ledger) {
     return assignmentCache.map;
   }
-
-  const invoices = state.ledger.invoices ?? [];
-  const settled = new Map<string, string>(Object.entries(state.ledger.invoiceMatches ?? {}));
-  if (invoices.length > 0) {
-    const found = matchInvoices({
-      invoices,
-      transactions: state.ledger.transactions,
-      ...(state.ledger.allocations ? { allocations: state.ledger.allocations } : {}),
-    });
-    // A payment whose parts settle invoices is already answered, and answered
-    // more precisely than the matcher could. Letting the matcher also claim the
-    // parent would count the same money twice -- once as the whole payment
-    // against one invoice, and again as its parts against several.
-    const splitAcross = new Set<string>();
-    for (const [id, parts] of Object.entries(state.ledger.splits ?? {})) {
-      const anyPart = parts.some((_, index) => settled.has(splitPartId(id, index)));
-      if (anyPart) splitAcross.add(id);
-    }
-    for (const match of found.matched) {
-      for (const t of match.transactions) {
-        if (splitAcross.has(t.id)) continue;
-        if (!settled.has(t.id)) settled.set(t.id, match.invoice.number);
-      }
-    }
-  }
-
-  // A refusal was only ever there to stop the matcher claiming the line. It is
-  // not an assignment, so it does not leave this function as one.
-  for (const [id, number] of [...settled]) if (number === "") settled.delete(id);
-
+  const settled = coreInvoiceAssignments({
+    invoices: state.ledger.invoices ?? [],
+    transactions: state.ledger.transactions,
+    ...(state.ledger.allocations ? { allocations: state.ledger.allocations } : {}),
+    accepted: state.ledger.invoiceMatches ?? {},
+    splits: state.ledger.splits ?? {},
+  });
   assignmentCache = { ledger: state.ledger, map: settled };
   return settled;
 }
 
-/**
- * What every invoice still has owing, from the receipts assigned to it.
- *
- * The imported paid figure is not what is counted -- see `invoiceBalances`.
- */
 function invoiceBalanceMap(): Map<string, InvoiceBalance> {
   const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
   // Split parts as well, because one payment can settle several invoices and
@@ -10017,40 +9996,20 @@ function currentReport(
  * Splits are expanded first: a payment divided across accounts reaches the
  * profit figure as its parts, not as whichever code the parent carries.
  */
-function reportEngine(): {
-  transactions: Transaction[];
-  codeOf: (t: Transaction) => string | null;
-  classify: (t: Transaction) => ReturnType<ReturnType<typeof gstResolver>>;
-} | null {
-  if (state.ledger.transactions.length === 0) return null;
-  const expanded = expandSplits(
-    state.ledger.transactions,
-    state.ledger.splits ?? {},
-    state.ledger.overrides ?? {},
-  );
-  const ruleFile = state.rules as RuleFileShape | undefined;
-  const codingRules = { ...(ruleFile ?? {}), overrides: expanded.overrides } as RuleSet;
-  const codeOf = (t: Transaction) => categorise(t, codingRules).code;
-  const all = new Set(state.ledger.transactions.map((t) => t.account));
-  const classify = gstResolver({
-    ownAccounts: all,
-    relatedAccounts: all,
-    ...(ruleFile?.gstRules ? { rules: ruleFile.gstRules as never } : {}),
-    ...(ruleFile?.codeTreatments ? { codeTreatments: ruleFile.codeTreatments as never } : {}),
-    // So a report says the same thing the Entities and Accounts page shows.
+function reportEngine(): CodingEngine | null {
+  // Coding and GST treatment are decided together in core, because a
+  // correction to either has to reach both. This says only where the app keeps
+  // the inputs -- and passes the chart lookup rather than repeating it, so a
+  // report and the Entities page cannot come to different answers.
+  return codingEngine({
+    transactions: state.ledger.transactions,
+    splits: state.ledger.splits ?? {},
+    overrides: state.ledger.overrides ?? {},
+    ...(state.rules ? { rules: state.rules as RuleFileShape } : {}),
     chartTreatment: (code: string) => chartTreatmentOf(code) as never,
-    codeOf,
-    overrides: expanded.overrides,
   });
-  return { transactions: expanded.transactions, codeOf, classify };
 }
 
-/**
- * Every entity's result for the year, with who owns it.
- *
- * Built once and shared, because an owner summary needs all of them and a
- * profit and loss needs one.
- */
 function entityReports(year: number): {
   entity: Entity;
   report: ProfitAndLoss;
@@ -10191,8 +10150,11 @@ function postedJournals(): PostedJournal[] {
   const engine = reportEngine();
   if (!engine) return [];
 
+  // Built once, not once per lookup: this is called for every line of every
+  // journal, and rebuilding the chart index inside it made posting the ledger
+  // quadratic in the size of the chart.
+  const byName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
   const resolveAccount = (code: string): { code: string; name: string } => {
-    const byName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
     const { code: digits, name } = splitAccountLabel(code);
     const account = byName.get(name.toLowerCase());
     return { code: digits || account?.code || "", name: account?.name ?? name };

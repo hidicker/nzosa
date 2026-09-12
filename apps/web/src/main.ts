@@ -4,6 +4,7 @@ import {
   categorise,
   financialYearOf,
   financialYearBalances,
+  depreciationJournals as coreDepreciationJournals,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -10256,7 +10257,7 @@ function postedJournals(): PostedJournal[] {
     ...bank,
     ...transferJournals,
     ...raised,
-    ...depreciationJournals(options),
+    ...depreciationJournals(),
     ...disposalJournals(options),
     // The judgements, last, because they correct what everything above worked
     // out: an expense reclassified, a balance brought to what a third party
@@ -10376,56 +10377,16 @@ function bestMatch(candidates: readonly Account[], type: string): Account | unde
  * depreciation account is named after the class it belongs to and getting it
  * wrong would put the credit in the wrong place on a balance sheet.
  */
-function depreciationJournals(options: {
-  resolveAccount: (code: string) => { code: string; name: string };
-}): PostedJournal[] {
-  const assets = state.ledger.assets ?? [];
-  if (assets.length === 0) return [];
-
-  const years = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))];
-  const accumulated = state.chart.filter((a) => /accumulated depreciation/i.test(a.name));
-  const expense = state.chart.find((a) => /^depreciation$/i.test(a.name.trim()));
-
-  const out: PostedJournal[] = [];
-  for (const year of years) {
-    const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
-    });
-    for (const group of schedule.byType) {
-      if (group.depreciation === 0) continue;
-      // Score, do not take the first hit. "Roasting equipment" shares the
-      // word "equipment" with Office Equipment, and first-found put the whole
-      // roasting charge against the wrong contra account. The distinctive
-      // word is the long one, so longer matches count for more.
-      const words = group.type.toLowerCase().split(/\s+/).filter((w) => w.length > 3);
-      let contra = accumulated[0];
-      let best = 0;
-      for (const account of accumulated) {
-        const name = account.name.toLowerCase();
-        const score = words.reduce((sum, w) => (name.includes(w) ? sum + w.length : sum), 0);
-        if (score > best) {
-          best = score;
-          contra = account;
-        }
-      }
-      out.push(
-        postDepreciation({
-          name: group.type,
-          expenseCode: expense?.code ?? "416",
-          expenseName: expense?.name ?? "Depreciation",
-          accumulatedCode: contra?.code ?? "",
-          accumulatedName: contra?.name ?? `Less Accumulated Depreciation — ${group.type}`,
-          amount: group.depreciation,
-          date: `${year}-03-31`,
-        }),
-      );
-    }
-  }
-  return out;
+function depreciationJournals(): PostedJournal[] {
+  // The matching and the arithmetic are in core, where they are tested. The
+  // `resolveAccount` this used to take was never read.
+  return coreDepreciationJournals({
+    assets: state.ledger.assets ?? [],
+    transactions: state.ledger.transactions,
+    chart: state.chart,
+  });
 }
 
-/** Our own postings, in the shape the accrual report reads. */
 function ourAccrualJournals(): Journal[] {
   return postedJournals().map((journal, index) => ({
     id: journal.transactionId,

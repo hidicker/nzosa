@@ -104,6 +104,26 @@ export function accountKey(text: string, chart: readonly Account[] = []): string
   for (const account of chart) {
     if (bareAccountName(account.name) === cleaned) return account.code;
   }
+
+  // An account whose code is a word rather than a number. Nothing says a code
+  // has to be digits, and a chart that uses one -- "Donation" for charitable
+  // donations -- is written "Charitable Donation - Donation" here and
+  // "Donation Charitable Donation" by the other system. Compared as strings
+  // those differ for ever: the line is reported as a disagreement, accepting
+  // the other system's coding writes the code already held, and the row comes
+  // straight back. It cannot be settled by anybody, which is worse than being
+  // wrong, so the label is resolved through the chart in either arrangement.
+  for (const account of chart) {
+    const code = account.code.trim();
+    if (code === "" || /^\d{3,4}$/.test(code)) continue;
+    const forms = [
+      `${account.name} - ${code}`,
+      `${code} ${account.name}`,
+      `${account.name} ${code}`,
+    ];
+    if (forms.some((form) => bareAccountName(form) === cleaned)) return code;
+  }
+
   return cleaned;
 }
 

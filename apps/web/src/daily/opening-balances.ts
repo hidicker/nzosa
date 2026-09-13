@@ -54,6 +54,29 @@ export function renderOpeningBalances(): void {
 
   const yearSelect = $<HTMLSelectElement>("opening-year");
   const held = state.ledger.openingBalances;
+
+  // Say which of the two things is on this page, because they look identical
+  // and mean opposite things. Everything below can be worked out from the bank
+  // data -- where each account had got to by each year end -- and that is a
+  // movement since the first statement, not a position. An opening balance is
+  // the part no statement contains, and until a trial balance is loaded there
+  // is not one, however full the table looks.
+  const status = document.createElement("p");
+  if (held === undefined) {
+    status.className = "journal-out";
+    status.textContent =
+      "No opening balances loaded. The figures below are worked out from the bank data, " +
+      "so they are the movement since your first statement rather than the position before " +
+      "it. Load a trial balance at your previous year end to set the real ones.";
+  } else {
+    status.className = "journal-balanced";
+    const count = Object.keys(held.accounts).length;
+    status.textContent =
+      `${count} opening balance${count === 1 ? "" : "s"} loaded as at ${held.asAt}` +
+      (held.source ? `, from ${held.source}` : "") +
+      ". The figures below start from those rather than from nothing.";
+  }
+  body.append(status);
   const money = (cents: Cents): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 

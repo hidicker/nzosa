@@ -508,8 +508,13 @@ function setupSteps(): SetupStep[] {
       detail: named
         ? entities.map((e) => e.name).join(", ")
         : "The one thing no export contains: a chart arrives with sixty accounts and " +
-          "not one of them says whose they are. Set it at the top of this page.",
+          "not one of them says whose they are.",
       unlocks: "Every report, and every return, can say who it is for",
+      // The field itself, rather than a step telling you to go and find it.
+      // It was sitting above the list saying the same words as the first step
+      // of the list, and the step had nothing to click -- so the one step you
+      // could not act on was the one you had to do first.
+      extra: setupNameField(),
     },
     {
       what: "Chart of accounts",
@@ -737,13 +742,12 @@ function setupNameField(): HTMLElement {
   const first = model.entities[0];
   const placeholderOnly = first !== undefined && first.name === DEFAULT_ENTITY_NAME;
 
-  const label = document.createElement("label");
-  label.textContent = "Whose books are these?";
-  label.htmlFor = "setup-entity-name";
-
+  // No visible label: the step this sits in is headed "Whose books are these?"
+  // already, and saying it twice reads as two questions.
   const input = document.createElement("input");
   input.type = "text";
   input.id = "setup-entity-name";
+  input.setAttribute("aria-label", "Whose books are these?");
   input.placeholder = "Your company, trust, or your own name";
   input.value = first === undefined || placeholderOnly ? "" : first.name;
 
@@ -824,14 +828,21 @@ function setupNameField(): HTMLElement {
     }
   });
 
-  wrap.append(label, input, save, said);
+  wrap.append(input, save, said);
   return wrap;
 }
 
+/**
+ * Nothing above the list any more.
+ *
+ * The name field used to sit here, repeating the words of the first step
+ * directly beneath it. It is in that step now; this clears what the old
+ * arrangement may have left behind and takes its own space back.
+ */
 function renderSetupIntro(): void {
   const intro = $("setup-intro");
   intro.textContent = "";
-  intro.append(setupNameField());
+  intro.hidden = true;
 }
 
 export function renderSetup(): void {

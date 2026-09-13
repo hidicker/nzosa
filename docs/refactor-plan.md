@@ -27,7 +27,12 @@ Nothing here is a matter of taste. Every claim below came from reading the file 
 
 ### What is *not* wrong
 
-* **Almost no dead code.** Four uncalled functions, 39 lines between them.
+* **Almost no dead code.** Four uncalled functions, 39 lines between them. Dead
+  *imports* were another matter: twenty-nine had been left behind by earlier
+  moves, invisible in a file this size. `noUnusedLocals` is on for the web app
+  now, so the next one is a compile error. Two remain in `packages/core` and are
+  deliberately untouched — `findInstalments` is a documented matcher that nothing
+  currently calls, and deleting accounting logic is a decision, not a tidy-up.
 * Types are green and enforced — `npm test` runs `tsc` first as of the previous commit.
 
 ---
@@ -101,7 +106,11 @@ Run it, save a baseline, refactor, run it again, diff. An empty diff is the only
 
 **Capture against books that cannot change.** A ledger with a bank feed behind it moves on its own. Between a baseline taken one afternoon and a comparison the next morning, 415 transactions arrived and 117 of 225 variants differed -- every year of them, including years long closed, because the feed had backfilled. None of it was the code. Golden-master a static ledger; `arrow-rock-test` has no feed credentials and is the right subject.
 
-**Certified so far**, main at `0dd781b` against the branch, on the static ledger: **129 of 129 identical**, covering phase 1 and the first two functions of phase 2.
+**Certified so far**, main at `0dd781b` against the branch, on the static ledger:
+**129 of 129 identical**, re-run after every commit through phases 1, 2 and the
+migration half of phase 3. Not one figure has moved. The sweep is checked against
+all thirteen pages drawing as well, because the harness reads reports and would
+not notice a screen that had stopped rendering.
 
 `tsc` green and wired into `npm test`. Without this a refactor of a 13,000-line file is guesswork: the compiler is the thing that says whether a moved block still holds together, and it was reporting 33 errors, so a new one would not have stood out.
 
@@ -117,22 +126,44 @@ Take the 50 ledger-only functions, give them parameters, move them to `apps/web/
 
 Go one function at a time. Each is independently verifiable, and a mistake is a compile error rather than a wrong figure.
 
-### Phase 3 — split the pages
+### Phase 3 — split the pages *(migration side done)*
 
 ```
 apps/web/src/
-  migrate/     setup, coding reconciliation, rules proposals, file recognisers,
-               opening balances, demo seeding          ~2,600 lines
-  daily/       reconcile, reports, GST, invoices, history, assets, entities,
-               bank import                             ~3,800 lines
-  ui.ts        presentation primitives
-  derive.ts    ledger questions, tested
-  main.ts      bootstrap and routing only
+  app.ts       the page registry and the router            166 lines
+  state.ts     the state and its caches                    214
+  books.ts     what every page asks of the books           505
+  ui.ts        presentation primitives                     120
+  pickers.ts   selectors filled from the books              61
+  migrate/
+    coding-reconciliation.ts  agreeing an imported ledger  1,773
+    setup-wizard.ts           setting a set of books up    1,140
+  main.ts      everything not yet placed                 9,575
 ```
 
-### Phase 4 — the four straddlers
+**What made it possible was not the pages; it was the calls between them.** A page
+is drawn from the state, so anything changing the state has to say which pages
+are stale — and saying so by calling the other page's render function meant
+saving an entity had to see the function that draws an entity list. Neither
+could move without the other. `app.ts` holds one map from a page's name to
+whatever is drawing it; a save now says "the entity list is stale" and knows
+nothing else. Ninety call sites, fourteen pages, and the same set of functions
+that had dragged 2,037 lines behind it pulled 303 afterwards.
 
-`wireUp` splits along the same line: each half wires its own listeners, `main.ts` calls both. `setupSteps` stays a checklist about everything and imports what it needs to ask. `renderReconcile`'s one cross-call becomes `showPage(state.page)` — which the developer guide already prescribes, for a bug this exact pattern has caused before.
+The two migration modules import nothing from `main.ts`. Neither does anything
+else on this list — that is the test of whether a thing has actually left.
+
+Still to place on the daily side: reports, invoices, entities, GST, history,
+assets, bank import. Those are the remaining bulk of `main.ts` and none of them
+is blocked any more.
+
+### Phase 4 — the straddlers
+
+`wireUp` splits along the same line: each half wires its own listeners, `main.ts`
+calls both. `setupSteps` turned out not to straddle at all — it reads widely but
+nothing outside the wizard reads it, so it moved whole. `renderReconcile`'s one
+cross-call is now `redraw("reconcile")`, which is the registry doing the job the
+developer guide prescribed for it.
 
 ---
 

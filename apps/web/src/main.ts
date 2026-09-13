@@ -1,3 +1,5 @@
+import { $, caches, state } from "./state.js";
+import type { FileReport, Filter } from "./state.js";
 import { combobox } from "./combobox.js";
 import type { Combobox } from "./combobox.js";
 import {
@@ -246,117 +248,8 @@ import type { CodingBatchEntry, EventKind, LedgerEvent } from "./events.js";
  * which is a property worth keeping as it grows.
  */
 
-interface FileReport {
-  name: string;
-  importer: string;
-  account: string;
-  count: number;
-  problems: ImportProblem[];
-  error?: string;
-}
 
-type Filter = "all" | "review" | "duplicate";
 
-const state = {
-  ledger: emptyLedger() as StoredLedger,
-  filed: [] as FiledReturn[],
-  rules: undefined as RuleSet | undefined,
-  varianceRows: [] as VarianceRow[],
-  varianceProblems: [] as string[],
-  varianceAccounts: [] as string[],
-  page: "reconcile",
-  reconcileAccounts: [] as string[],
-  reconcileSearch: "",
-  /** What the feed said last time it was asked, when it went wrong. */
-  feedProblem: "",
-  /** Loaded files whose columns nothing could name, awaiting a person. */
-  checkUnreadable: [] as ReferenceLoad["unreadable"],
-  /**
-   * The last daily-balance comparison, kept so the import review can use it.
-   *
-   * The bank's balance is the only outside witness this app has, and a
-   * questionable duplicate is exactly the question it can answer.
-   */
-  balanceChecks: [] as BalanceCheck[],
-  /**
-   * Which reconcile lines to show.
-   *
-   * `todo` is everything not yet confirmed, which is where the work is.
-   * `nocode` narrows to the lines no rule could code at all -- those cannot be
-   * accepted in a hurry, so they are the ones worth finding.
-   */
-  reconcileFilter: "todo" as "todo" | "suggested" | "nocode" | "coded" | "all",
-  splitting: null as string | null,
-  expanded: null as string | null,
-  reference: [] as ReferenceLine[],
-  chart: [] as Account[],
-  checkAccounts: [] as string[],
-  checkProblems: [] as string[],
-  suggestions: null as Map<string, Suggestion> | null,
-  accountMap: new Map<string, string>(),
-  expandedSplit: null as string | null,
-  rulesName: "",
-  rulesLoadedAt: "",
-  rulesMessage: "",
-  pendingRules: null as { rules: RuleFileShape; name: string } | null,
-  rulesArchive: { version: 1, entries: [] } as RulesArchive,
-  /**
-   * The rule the last coding decision wrote, until the page has said so.
-   *
-   * Writing a rule out of somebody's coding is helpful and is also the tool
-   * doing something they did not press a button for, so it is said once on
-   * the page it happened on and then cleared.
-   */
-  lastRule: null as { keyword: string; code: string; alsoCoded: number } | null,
-  /** A rule being edited or added, or null when the table is just a table. */
-  /**
-   * The entity every page is looking at, or "" for all of them.
-   *
-   * One person's affairs are several sets of books sharing a bank account.
-   * Choosing one narrows every page to the accounts that belong to it, so a
-   * question about the company is not answered with the rentals mixed in.
-   */
-  entityFilter: "",
-  /**
-   * True when the browser has promised not to evict this data.
-   *
-   * Distinct from `persistent`, which only says storage works at all.
-   */
-  durable: false,
-  /** Every change made in this browser, newest first. */
-  events: [] as LedgerEvent[],
-  /** Whose name goes on a change. Claimed, never verified. */
-  who: "",
-  /** What the app loaded for itself on startup, so it is never a mystery. */
-  startupMessage: "",
-  /** What the invoices page last did, shown at the top of it. */
-  invoiceMessage: "",
-  ruleDraft: null as RuleDraft | null,
-  /** Rules have been changed in the page but not yet written to storage. */
-  rulesDirty: false,
-  openPeriod: null as string | null,
-  persistent: true,
-  entries: [] as DedupeEntry[],
-  reports: [] as FileReport[],
-  /**
-   * Which rows the Import page is showing.
-   *
-   * Set to the review queue whenever there is one, because that is the only
-   * part of that page anybody has to act on -- the rest is a record of what
-   * arrived. Choosing a tab by hand still holds until the next import brings
-   * something new to decide.
-   */
-  filter: "review" as Filter,
-  search: "",
-  busy: false,
-  openingYear: "all",
-};
-
-const $ = <T extends HTMLElement>(id: string): T => {
-  const element = document.getElementById(id);
-  if (!element) throw new Error(`Missing element #${id}`);
-  return element as T;
-};
 
 /**
  * Where a fetch from the feed should start.
@@ -2844,31 +2737,11 @@ async function saveSplit(id: string, parts: SplitPart[] | null): Promise<void> {
   renderReconcile();
 }
 
-/**
- * Which bank line settles which invoice, from both sources at once.
- *
- * A person's own decision wins; the matcher fills in the rest. This used to be
- * worked out separately in each place that needed it, which meant the Invoices
- * page could call an invoice unmatched while the Reconcile page showed it
- * settled -- and the balance owing depends on getting one answer, not two.
- */
-let assignmentCache:
-  | { ledger: unknown; map: Map<string, string> }
-  | null = null;
 
-/**
- * Which lines the matcher can offer a transfer for.
- *
- * Worked out once and kept until the ledger is replaced, because the answer
- * for one line is found by looking at every other line -- doing that per row
- * while filtering three thousand of them is the difference between a list and
- * a wait.
- */
-let transferCache: { ledger: unknown; ids: Set<string> } | null = null;
 
 function transferSuggestions(): Set<string> {
-  if (transferCache !== null && transferCache.ledger === state.ledger) {
-    return transferCache.ids;
+  if (caches.transfer !== null && caches.transfer.ledger === state.ledger) {
+    return caches.transfer.ids;
   }
   const transfers = state.ledger.transfers ?? {};
   const taken = new Set(Object.keys(transfers));
@@ -2882,7 +2755,7 @@ function transferSuggestions(): Set<string> {
     });
     if (candidates.length > 0) ids.add(transaction.id);
   }
-  transferCache = { ledger: state.ledger, ids };
+  caches.transfer = { ledger: state.ledger, ids };
   return ids;
 }
 
@@ -2891,8 +2764,8 @@ function invoiceAssignments(): Map<string, string> {
   // every render and the matching is not cheap. The rules themselves are in
   // core, where the ordering that stops a payment being counted twice is
   // tested.
-  if (assignmentCache !== null && assignmentCache.ledger === state.ledger) {
-    return assignmentCache.map;
+  if (caches.assignment !== null && caches.assignment.ledger === state.ledger) {
+    return caches.assignment.map;
   }
   const settled = coreInvoiceAssignments({
     invoices: state.ledger.invoices ?? [],
@@ -2901,7 +2774,7 @@ function invoiceAssignments(): Map<string, string> {
     accepted: state.ledger.invoiceMatches ?? {},
     splits: state.ledger.splits ?? {},
   });
-  assignmentCache = { ledger: state.ledger, map: settled };
+  caches.assignment = { ledger: state.ledger, map: settled };
   return settled;
 }
 
@@ -2932,19 +2805,10 @@ function invoiceCandidates(transaction: Transaction): Invoice[] {
   });
 }
 
-/**
- * The bank accounts this ledger holds, and what each is called.
- *
- * Cached against the transaction list it was derived from and recomputed when
- * that changes -- which is the only thing that can change it.
- */
-let bankIndex:
-  | { source: readonly Transaction[]; accounts: Set<string>; labels: Map<string, string> }
-  | undefined;
 
 function banks(): { accounts: Set<string>; labels: Map<string, string> } {
   const source = state.ledger.transactions;
-  if (bankIndex?.source === source) return bankIndex;
+  if (caches.bank?.source === source) return caches.bank;
 
   const accounts = new Set<string>();
   const labels = new Map<string, string>();
@@ -2955,8 +2819,8 @@ function banks(): { accounts: Set<string>; labels: Map<string, string> } {
       if (label !== undefined) labels.set(t.account, label);
     }
   }
-  bankIndex = { source, accounts, labels };
-  return bankIndex;
+  caches.bank = { source, accounts, labels };
+  return caches.bank;
 }
 
 /**
@@ -7313,33 +7177,20 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
   return cell;
 }
 
-/**
- * How many transactions are coded to each account.
- *
- * Through `categorise`, so a rule counts as much as a hand-coding: an account
- * nothing has been coded to by hand may still be where a rule sends fifty
- * lines, and removing it because the overrides are empty would break exactly
- * the accounts that are working hardest. Worked out once per set of
- * transactions rather than per row, because ninety-three rows against five
- * thousand transactions is not a sum to do ninety-three times.
- */
-let codedIndex:
-  | { transactions: readonly Transaction[]; rules: unknown; counts: CodingCounts }
-  | undefined;
 
 function codingProgress(): CodingCounts {
   if (
-    codedIndex !== undefined &&
-    codedIndex.transactions === state.ledger.transactions &&
-    codedIndex.rules === state.rules
+    caches.coded !== undefined &&
+    caches.coded.transactions === state.ledger.transactions &&
+    caches.coded.rules === state.rules
   ) {
-    return codedIndex.counts;
+    return caches.coded.counts;
   }
   const counts = codingCounts(state.ledger.transactions, {
     ...((state.rules as RuleFileShape | undefined) ?? {}),
     overrides: state.ledger.overrides ?? {},
   } as RuleSet);
-  codedIndex = { transactions: state.ledger.transactions, rules: state.rules, counts };
+  caches.coded = { transactions: state.ledger.transactions, rules: state.rules, counts };
   return counts;
 }
 
@@ -7544,17 +7395,6 @@ function accountsForEditing(): AccountRow[] {
   );
 }
 
-/**
- * The treatment an account's own chart row implies, from its tax code.
- *
- * The chart already says how most accounts are treated -- it is the column the
- * accounting package it came from used to work out GST -- and reading it means
- * a freshly loaded chart arrives with its treatments rather than with ninety
- * rows saying "not set" and a day's work to fill them in.
- */
-let chartTreatmentCache:
-  | { chart: unknown; rules: unknown; ledger: unknown; map: Map<string, unknown> }
-  | null = null;
 
 function cachedChartTreatments(): Map<string, unknown> {
   // Built once and kept until one of the three things it derives from is
@@ -7564,12 +7404,12 @@ function cachedChartTreatments(): Map<string, unknown> {
   // the chart, the rules and the ledger are all replaced wholesale, never
   // edited in place, so a stale cache cannot survive a change.
   if (
-    chartTreatmentCache !== null &&
-    chartTreatmentCache.chart === state.chart &&
-    chartTreatmentCache.rules === state.rules &&
-    chartTreatmentCache.ledger === state.ledger
+    caches.chartTreatment !== null &&
+    caches.chartTreatment.chart === state.chart &&
+    caches.chartTreatment.rules === state.rules &&
+    caches.chartTreatment.ledger === state.ledger
   ) {
-    return chartTreatmentCache.map;
+    return caches.chartTreatment.map;
   }
 
   // The map itself is core's; what stays here is the cache in front of it.
@@ -7579,7 +7419,7 @@ function cachedChartTreatments(): Map<string, unknown> {
     state.ledger.overrides ?? {},
   );
 
-  chartTreatmentCache = {
+  caches.chartTreatment = {
     chart: state.chart,
     rules: state.rules,
     ledger: state.ledger,

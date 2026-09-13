@@ -65,49 +65,6 @@ export interface InvoiceMatchResult {
   proposals: InvoiceMatchProposal[];
 }
 
-/**
- * Find a set of receipts that together settle an invoice.
- *
- * An invoice paid by deposit and instalments has no single matching receipt,
- * so combinations are tried -- but only small ones, and only within the
- * payment window. Searching wider would eventually find a coincidental set of
- * unrelated receipts that happens to add up, which is worse than not matching.
- */
-function findInstalments(
-  invoice: Invoice,
-  pool: readonly Transaction[],
-  maxParts: number,
-): Transaction[] | undefined {
-  const found: Transaction[][] = [];
-
-  const walk = (start: number, chosen: Transaction[], remaining: number): void => {
-    // Stop once a second combination turns up: the point is to detect
-    // ambiguity, not to collect every possibility.
-    if (found.length > 1) return;
-    if (remaining === 0 && chosen.length >= 2) {
-      found.push([...chosen]);
-      return;
-    }
-    if (chosen.length >= maxParts || remaining <= 0) return;
-
-    for (let i = start; i < pool.length; i += 1) {
-      const candidate = pool[i] as Transaction;
-      if (candidate.amount > remaining) continue;
-      chosen.push(candidate);
-      walk(i + 1, chosen, remaining - candidate.amount);
-      chosen.pop();
-      if (found.length > 1) return;
-    }
-  };
-
-  walk(0, [], invoice.total);
-
-  // Any amount can be reached several ways once there are enough small
-  // receipts to choose from, and a coincidental set is indistinguishable from a
-  // real one. Only a single possible answer is trustworthy.
-  return found.length === 1 ? found[0] : undefined;
-}
-
 export function matchInvoices(options: InvoiceMatchOptions): InvoiceMatchResult {
   const { invoices, transactions } = options;
   const toleranceCents = options.tolerance ?? 500;

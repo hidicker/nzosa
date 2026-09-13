@@ -1,5 +1,5 @@
 import type { Cents } from "./money.js";
-import type { Disposal, DisposalAccounts, DisposalPosting } from "./disposal.js";
+import type { DisposalAccounts, DisposalPosting } from "./disposal.js";
 import type { IsoDate } from "./dates.js";
 import type { Transaction } from "./types.js";
 import type { GstClassification } from "./gst.js";

@@ -214,12 +214,6 @@ export function depreciationSchedule(
   period: DateRange,
 ): DepreciationSchedule {
   const rows: DepreciationRow[] = [];
-  const dayBefore = (date: IsoDate): IsoDate => {
-    const d = new Date(`${date}T00:00:00Z`);
-    d.setUTCDate(d.getUTCDate() - 1);
-    return d.toISOString().slice(0, 10) as IsoDate;
-  };
-  const priorEnd = dayBefore(period.from);
 
   for (const asset of assets) {
     const from = asset.depreciationFrom;

@@ -1,6 +1,9 @@
 {
   "extends": "../../tsconfig.base.json",
   "compilerOptions": {
+    // Dead code in the accounting is worse than dead code in a page: it
+    // reads as a rule that applies and does not.
+    "noUnusedLocals": true,
     "rootDir": "./src",
     "outDir": "./dist"
   },

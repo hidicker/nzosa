@@ -252,7 +252,7 @@ export async function renderBooks(): Promise<void> {
 
       const label = document.createElement("label");
       const says = document.createElement("span");
-      says.textContent = `Type ${CLEAR_PHRASE} to enable the button.`;
+      says.textContent = `Type "${CLEAR_PHRASE}" to enable the button.`;
       const typed = document.createElement("input");
       typed.type = "text";
       typed.placeholder = CLEAR_PHRASE;

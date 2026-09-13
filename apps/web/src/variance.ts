@@ -2,7 +2,6 @@ import {
   categorise,
   expandSplits,
   explained,
-  formatAmount,
   gstPeriods,
   gstResolver,
   gstReturn,

@@ -99,10 +99,27 @@ tools/           the privacy audit, run before anything is pushed</code></pre>
 <p><strong>Core has no I/O and no ambient DOM or Node types.</strong> Everything is a pure function over strings and plain objects. That is what lets identical code run in a browser tab with the file never leaving the machine, in a Node CLI, or behind a server. Storage is the caller's problem, deliberately.</p>
 <p><strong>Zero dependencies in core.</strong> Including the <code>.xlsx</code> reader, which parses the ZIP central directory by hand and inflates with <code>DecompressionStream</code> (<code>deflate-raw</code>) — native in Node 18+ and every current browser.</p>
 <p>The web app must remain deployable to a free static host: no backend, no build step at runtime, no network calls from the page.</p>
+<h3 id="inside-the-web-app">Inside the web app</h3>
+<pre><code>apps/web/src/
+  main.ts        the imports, the page registry, init and wireUp. Nothing else.
+  app.ts         which page is showing, and who draws it
+  state.ts       the one state object and the caches over it
+  books.ts       what every page asks of the books, and what changes them
+  ui.ts          presentation primitives -- elements in, elements out
+  widgets.ts     furniture more than one page shows, and that reads the books
+  chrome.ts      theme, sidebar width, the loading screen
+  store.ts       the folder or the browser, behind one interface
+  daily/         the pages a ledger in use needs
+  migrate/       the pages used once, to get a set of books in</code></pre>
+<p><strong>No page imports another page, and nothing imports <code>main.ts</code>.</strong> Those two properties are the point of the arrangement, and they are worth re-checking whenever you move something: a page reaching into another page is how this app became a single 13,000-line file the first time.</p>
+<p>What makes it possible is that a page never calls another page's render function. Changing the state makes other pages stale, and a page says which ones by name -- <code>redraw("entities")</code> -- with <code>app.ts</code> holding the one map from a name to whatever is currently drawing it. A save that called <code>renderEntities</code> directly would have to be able to see it, and then neither could move.</p>
+<p>Each page also wires its own controls, exporting a <code>wire</code> function that <code>main.ts</code> calls by name. Adding a button means touching one file.</p>
+<p><strong>Where a thing belongs.</strong> If it draws and reads the state, it is a page. If more than one page asks it and it returns an answer rather than an element, it is <code>books.ts</code>. If it takes elements and returns elements without reaching for <code>state</code>, it is <code>ui.ts</code> -- and a helper that <em>does</em> reach for <code>state</code> is not a primitive, it is a piece of a page wearing a general-sounding name. If it computes rather than presents, it does not belong in the app at all: it belongs in <code>packages/core</code>, where it can be tested without a browser.</p>
+<p><strong><code>migrate/</code> is separable on purpose.</strong> Nothing in it runs once the books are in: a ledger kept day to day has no other system to agree with. Somebody auditing what the tool does with money every month can read <code>daily/</code> and skip it; somebody checking that a migration was faithful has it in one place.</p>
 <h3 id="build-and-test">Build and test</h3>
 <pre><code>npm install
 ./node_modules/.bin/tsc --build          # typechecks every package
-node --test packages/core/test/*.test.js # 339 tests
+node --test packages/core/test/*.test.js # 579 tests
 node --test packages/cli/test/*.test.js  # 18 more, over the command line
 npm test                                 # both, through the workspaces
 cd apps/web &amp;&amp; node build.js             # bundle to apps/web/dist
@@ -201,7 +218,7 @@ cd apps/web &amp;&amp; node build.js --serve     # dev server on :3210</code></p
 <p><code>compareCodings</code> deliberately excludes Accounts Payable and Receivable as "structural": letting a payment match a control-account line pairs it with the wrong side of a posting. Uncoded transactions need a placeholder code to be matched at all, or they are set aside and never paired.</p>
 <p><code>inferAccountMapping</code> pairs bank accounts between systems from the payments themselves, because the two name nothing alike — a card called <code>Kea Coffee Tradin</code> here is <code>BNZ Visa - Business Card</code> there. An account with <strong>no</strong> inferred pairing is excluded rather than left unconstrained once a mapping exists, otherwise a transfer marries an unrelated loan of the same amount.</p>
 <h3 id="invoices-written-by-hand">Invoices written by hand</h3>
-<p><code>renderInvoiceEditor</code> in <code>main.ts</code> writes to <code>ledger.invoices</code> (its own store part) under the <code>invoice</code> event kind, which carries one invoice so undoing an edit does not revert every other invoice touched since -- the same rule as <code>chart</code>.</p>
+<p><code>renderInvoiceEditor</code> in <code>daily/invoices.ts</code> writes to <code>ledger.invoices</code> (its own store part) under the <code>invoice</code> event kind, which carries one invoice so undoing an edit does not revert every other invoice touched since -- the same rule as <code>chart</code>.</p>
 <p>Two things it is careful about: the account is stored as the bare chart code (<code>200</code>), the way an imported invoice holds it, rather than the picker's label; and <code>outstanding</code> is derived as <code>total - paid</code> rather than typed, because <code>matchInvoices</code> reads it.</p>
 <p>Every invoice reaches exactly one bucket, and a test pins that. One with <code>paid === 0</code> belongs in <code>unmatched</code> -- it is awaiting payment, or was just written by hand. Skipping those drops them from every bucket, which makes them invisible rather than outstanding.</p>
 <h3 id="transfers">Transfers</h3>

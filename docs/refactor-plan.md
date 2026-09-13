@@ -1,6 +1,9 @@
 # Separating migration from daily use
 
-A plan for splitting `apps/web/src/main.ts`, with the measurements behind it.
+**Done.** `main.ts` was 13,663 lines and is 383. What follows is the plan and
+the measurements it was made from, kept because the reasoning is the useful
+part: it says why the seam falls where it does, and what would have to be true
+for a future change to be safe.
 
 Nothing here is a matter of taste. Every claim below came from reading the file with a script, and the numbers are reproducible.
 
@@ -126,52 +129,66 @@ Take the 50 ledger-only functions, give them parameters, move them to `apps/web/
 
 Go one function at a time. Each is independently verifiable, and a mistake is a compile error rather than a wrong figure.
 
-### Phase 3 — split the pages *(migration side done)*
+### Phase 3 — split the pages *(done)*
 
 ```
 apps/web/src/
-  app.ts       the page registry and the router            166 lines
-  state.ts     the state and its caches                    214
-  books.ts     what every page asks of the books           505
-  ui.ts        presentation primitives                     120
-  pickers.ts   selectors filled from the books              61
-  migrate/
-    coding-reconciliation.ts  agreeing an imported ledger  1,773
-    setup-wizard.ts           setting a set of books up    1,140
-  main.ts      everything not yet placed                 9,575
+  main.ts        383   imports, the page registry, init, wireUp
+  app.ts         166   which page is showing, and who draws it
+  state.ts       214   the state object and its caches
+  books.ts       727   what every page asks of the books
+  ui.ts          120   presentation primitives
+  widgets.ts     137   furniture more than one page shows
+  chrome.ts       75   theme, sidebar, loading screen
+  daily/        6,400  reconcile, reports, entities, invoices, bank import,
+                       opening balances, GST, rules, assets, history, books
+  migrate/      3,300  coding reconciliation, setup wizard, file intake
 ```
 
-**What made it possible was not the pages; it was the calls between them.** A page
-is drawn from the state, so anything changing the state has to say which pages
-are stale — and saying so by calling the other page's render function meant
-saving an entity had to see the function that draws an entity list. Neither
-could move without the other. `app.ts` holds one map from a page's name to
-whatever is drawing it; a save now says "the entity list is stale" and knows
+**What made it possible was not the pages; it was the calls between them.** A
+page is drawn from the state, so anything changing the state has to say which
+pages are stale -- and saying so by calling the other page's render function
+meant saving an entity had to see the function that draws an entity list.
+Neither could move without the other. `app.ts` holds one map from a page's name
+to whatever is drawing it; a save now says "the entity list is stale" and knows
 nothing else. Ninety call sites, fourteen pages, and the same set of functions
 that had dragged 2,037 lines behind it pulled 303 afterwards.
 
-The two migration modules import nothing from `main.ts`. Neither does anything
-else on this list — that is the test of whether a thing has actually left.
+**Two properties are the test of whether it worked**, and both hold: nothing
+imports `main.ts`, and no page imports another page. The import graph carries
+one cycle, `events.ts` and `store.ts` referring to each other's types; it
+predates this work and is type-only in both directions, so it erases at
+compile time.
 
-Still to place on the daily side: reports, invoices, entities, GST, history,
-assets, bank import. Those are the remaining bulk of `main.ts` and none of them
-is blocked any more.
+### Phase 4 — the straddlers *(done)*
 
-### Phase 4 — the straddlers
+`wireUp` was the last thing that had to know every page's DOM ids: fifty
+listeners across thirteen screens. Each page now exports a `wire` of its own
+and `main.ts` calls the fourteen of them by name.
 
-`wireUp` splits along the same line: each half wires its own listeners, `main.ts`
-calls both. `setupSteps` turned out not to straddle at all — it reads widely but
-nothing outside the wizard reads it, so it moved whole. `renderReconcile`'s one
-cross-call is now `redraw("reconcile")`, which is the registry doing the job the
-developer guide prescribed for it.
+Safe to divide because no element carries two handlers for the same event --
+fifty distinct element-and-event pairs, no document or window listeners -- so
+registration order cannot matter. That was checked before anything moved.
+Three statements stayed: the sidebar navigation, the entity filter, and who is
+making the changes, each about the app rather than a page.
+
+`setupSteps` turned out not to straddle at all. It reads widely, but nothing
+outside the wizard reads it, so it moved whole. `renderReconcile`'s one
+cross-call is now `redraw("reconcile")`.
 
 ---
 
 ## 5. What this buys, and what it does not
 
-**Buys:** an auditor can read `daily/` without wading through Xero parsing. Roughly 2,400 lines move from untestable to tested. The migration code becomes separable to the point where you could plausibly not ship it. A new Xero import page has an obvious home instead of landing in a 13,000-line file and making it worse.
+**Bought:** an auditor can read `daily/` without wading through Xero parsing.
+Core went from 339 tests to 579, most of them over logic that previously only a
+browser could exercise. The migration code is separable to the point where you
+could plausibly not ship it. A new Xero import page has an obvious home instead
+of landing in a 13,000-line file and making it worse.
 
-**Does not buy:** any change in behaviour. If a figure moves, something is wrong.
+**Did not buy:** any change in behaviour. The golden master was re-run after
+every commit and never moved: 129 of 129 identical, each time, and all thirteen
+pages drawing to the same character count as before the work began.
 
 **The risk worth respecting:** `main.ts` shares a single 44-field `state` object and eight caches through closures. Moving a function out means it can no longer see them, which is the point and also the hazard. Phase 2 is deliberately first because it converts that hidden coupling into visible parameters, and it does so one function at a time with the compiler checking each.
 

@@ -26,12 +26,55 @@ ZIP central directory by hand and inflates with `DecompressionStream`
 The web app must remain deployable to a free static host: no backend, no build
 step at runtime, no network calls from the page.
 
+### Inside the web app
+
+```
+apps/web/src/
+  main.ts        the imports, the page registry, init and wireUp. Nothing else.
+  app.ts         which page is showing, and who draws it
+  state.ts       the one state object and the caches over it
+  books.ts       what every page asks of the books, and what changes them
+  ui.ts          presentation primitives -- elements in, elements out
+  widgets.ts     furniture more than one page shows, and that reads the books
+  chrome.ts      theme, sidebar width, the loading screen
+  store.ts       the folder or the browser, behind one interface
+  daily/         the pages a ledger in use needs
+  migrate/       the pages used once, to get a set of books in
+```
+
+**No page imports another page, and nothing imports `main.ts`.** Those two
+properties are the point of the arrangement, and they are worth re-checking
+whenever you move something: a page reaching into another page is how this app
+became a single 13,000-line file the first time.
+
+What makes it possible is that a page never calls another page's render
+function. Changing the state makes other pages stale, and a page says which
+ones by name -- `redraw("entities")` -- with `app.ts` holding the one map from
+a name to whatever is currently drawing it. A save that called `renderEntities`
+directly would have to be able to see it, and then neither could move.
+
+Each page also wires its own controls, exporting a `wire` function that
+`main.ts` calls by name. Adding a button means touching one file.
+
+**Where a thing belongs.** If it draws and reads the state, it is a page. If
+more than one page asks it and it returns an answer rather than an element, it
+is `books.ts`. If it takes elements and returns elements without reaching for
+`state`, it is `ui.ts` -- and a helper that *does* reach for `state` is not a
+primitive, it is a piece of a page wearing a general-sounding name. If it
+computes rather than presents, it does not belong in the app at all: it belongs
+in `packages/core`, where it can be tested without a browser.
+
+**`migrate/` is separable on purpose.** Nothing in it runs once the books are
+in: a ledger kept day to day has no other system to agree with. Somebody
+auditing what the tool does with money every month can read `daily/` and skip
+it; somebody checking that a migration was faithful has it in one place.
+
 ### Build and test
 
 ```bash
 npm install
 ./node_modules/.bin/tsc --build          # typechecks every package
-node --test packages/core/test/*.test.js # 339 tests
+node --test packages/core/test/*.test.js # 579 tests
 node --test packages/cli/test/*.test.js  # 18 more, over the command line
 npm test                                 # both, through the workspaces
 cd apps/web && node build.js             # bundle to apps/web/dist
@@ -461,7 +504,7 @@ otherwise a transfer marries an unrelated loan of the same amount.
 
 ### Invoices written by hand
 
-`renderInvoiceEditor` in `main.ts` writes to `ledger.invoices` (its own store
+`renderInvoiceEditor` in `daily/invoices.ts` writes to `ledger.invoices` (its own store
 part) under the `invoice` event kind, which carries one invoice so undoing an
 edit does not revert every other invoice touched since -- the same rule as
 `chart`.

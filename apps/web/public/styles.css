@@ -2412,3 +2412,11 @@ button.working {
 
 /* Coding to the GST account is a question with two answers and no default. */
 .split-gst-ask { border-color: var(--accent); font-weight: 600; }
+
+/* A report line opened to show what is in it. The figure stays where it was
+   and the entries appear under it, so the eye does not lose its place. */
+tr.report-open > td { font-weight: 600; }
+tr.report-behind > td { padding: 0 0 0.75rem 1.5rem; background: var(--surface-sunken, rgba(0, 0, 0, 0.03)); }
+tr.report-behind table { margin: 0; width: 100%; }
+tr.report-behind th { font-weight: 500; opacity: 0.75; }
+.report-name .link-button { text-align: left; }

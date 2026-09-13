@@ -33,6 +33,15 @@ import type { Journal, JournalLine } from "./journals.js";
 export interface ReportLine {
   /** The account this is coded to. */
   code: string;
+  /**
+   * The bank lines behind the figure, in the order they were counted.
+   *
+   * Carried by the report rather than worked out again from the same
+   * arguments, because a total and a list of what is in it that were derived
+   * separately can disagree -- and then the person checking is worse off than
+   * if they had been given no list at all.
+   */
+  transactionIds: string[];
   /** Signed, GST-inclusive, as the bank moved it. */
   gross: Cents;
   /** The GST within `gross`, signed the same way. */
@@ -207,11 +216,14 @@ export function profitAndLoss(
     const gst = gstWithin(transaction.amount, classification);
     const net = transaction.amount - gst;
 
-    const existing = lines.get(code) ?? { code, gross: 0, gst: 0, net: 0, count: 0 };
+    const existing = lines.get(code) ?? {
+      code, gross: 0, gst: 0, net: 0, count: 0, transactionIds: [],
+    };
     existing.gross += transaction.amount;
     existing.gst += gst;
     existing.net += net;
     existing.count += 1;
+    existing.transactionIds.push(transaction.id);
     lines.set(code, existing);
   }
 
@@ -528,11 +540,16 @@ export function accrualProfitAndLoss(
       // way this report reads -- money in positive, money out negative.
       const gross = line.taxBase ?? net;
 
-      const existing = lines.get(code) ?? { code, gross: 0, gst: 0, net: 0, count: 0 };
+      const existing = lines.get(code) ?? {
+        code, gross: 0, gst: 0, net: 0, count: 0, transactionIds: [],
+      };
       existing.gross += gross;
       existing.gst += gross - net;
       existing.net += net;
       existing.count += 1;
+      // The journal's own id, which for a posting derived from a bank line is
+      // that line, and for a year-end journal is the journal.
+      existing.transactionIds.push(journal.id);
       lines.set(code, existing);
     }
   }

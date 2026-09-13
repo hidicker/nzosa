@@ -2,6 +2,7 @@ import { redraw } from "../app.js";
 import {
   accountsFor,
   accountsForEditing,
+  bankLabel,
   banks,
   entityBankAccounts,
   postedJournals,
@@ -32,6 +33,7 @@ import {
   formatProfitAndLoss,
   generalLedgerRows,
   generalLedgerTotals,
+  gstWithin,
   ir10IsCalculated,
   ir10Summary,
   manualJournalsIn,
@@ -58,6 +60,7 @@ import type {
   ManualJournal,
   OwnerSummary,
   ProfitAndLoss,
+  ReportLine,
   ReportSection,
   RuleSet,
   TaxExtra,
@@ -1436,11 +1439,16 @@ export function renderReportsPage(): void {
   const money = (cents: number): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
-  const addRow = (label: string, value: string, cls = "", count = ""): void => {
+  const addRow = (
+    label: string,
+    value: string,
+    cls = "",
+    count = "",
+    line?: ReportLine,
+  ): void => {
     const tr = document.createElement("tr");
     if (cls !== "") tr.className = cls;
     const name = document.createElement("td");
-    name.textContent = label;
     name.className = "report-name";
     const n = document.createElement("td");
     n.textContent = count;
@@ -1448,16 +1456,45 @@ export function renderReportsPage(): void {
     const amount = document.createElement("td");
     amount.textContent = value;
     amount.className = "report-amount";
+
+    // A figure is only checkable if you can see what is in it. The account
+    // lines open; the section headings and totals have nothing of their own
+    // behind them, so they stay plain rather than offering an empty panel.
+    if (line !== undefined && line.transactionIds.length > 0) {
+      const open = document.createElement("button");
+      open.type = "button";
+      open.className = "link-button";
+      open.textContent = label;
+      open.title = `Show the ${line.transactionIds.length} entries behind this figure`;
+      let shown: HTMLTableRowElement | null = null;
+      open.addEventListener("click", () => {
+        if (shown) {
+          shown.remove();
+          shown = null;
+          tr.classList.remove("report-open");
+          return;
+        }
+        shown = behindRow(line, money, line.net === line.gross && line.gst !== 0);
+        tr.classList.add("report-open");
+        tr.after(shown);
+      });
+      name.append(open);
+    } else {
+      name.textContent = label;
+    }
+
     tr.append(name, n, amount);
     tbody.append(tr);
   };
 
   addRow("Income", "", "report-section");
-  for (const line of report.income) addRow(line.code, money(line.net), "", String(line.count));
+  for (const line of report.income) addRow(line.code, money(line.net), "", String(line.count), line);
   addRow("Total Income", money(report.totalIncome), "report-total");
 
   addRow("Expenses", "", "report-section");
-  for (const line of report.expenses) addRow(line.code, money(-line.net), "", String(line.count));
+  for (const line of report.expenses) {
+    addRow(line.code, money(-line.net), "", String(line.count), line);
+  }
   addRow("Total Expenses", money(report.totalExpenses), "report-total");
 
   addRow("Net Profit", money(report.netProfit), "report-net");
@@ -1896,4 +1933,92 @@ export function wireReports(): void {
   $("report-owner").addEventListener("change", () => redraw("reports"));
   $("report-year").addEventListener("change", () => redraw("reports"));
   $("report-download").addEventListener("click", () => downloadReport());
+}
+
+/**
+ * The entries behind one line of a report.
+ *
+ * A total nobody can look inside is a total nobody can check, and "where does
+ * 18,342.72 of sales come from" is the first question anyone asks of a set of
+ * accounts. The bank lines are the report's own -- it carries the ids it
+ * counted -- so what is listed always adds up to the figure it opened from,
+ * which a second query over the same arguments could not promise.
+ *
+ * A row that is not a bank line is shown by its id rather than dropped: on the
+ * accrual basis a figure can come from a year-end journal, and a report that
+ * silently listed fewer entries than it counted would be worse than one that
+ * admits what it cannot name.
+ */
+function behindRow(
+  line: ReportLine,
+  money: (cents: number) => string,
+  grossBasis: boolean,
+): HTMLTableRowElement {
+  const row = document.createElement("tr");
+  row.className = "report-behind";
+  const cell = document.createElement("td");
+  cell.colSpan = 3;
+
+  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
+  const engine = reportEngine();
+  const table = document.createElement("table");
+  table.className = "report-table match-table";
+  const head = document.createElement("thead");
+  // Gross, GST and net, because the figure on the report is the net and the
+  // figure on the statement is the gross. Showing only one of them invites the
+  // question this panel exists to answer.
+  head.innerHTML =
+    "<tr><th>Date</th><th>Account</th><th>Who</th><th>Reference</th>" +
+    "<th>Gross</th><th>GST</th><th>Net</th></tr>";
+  const tbody = document.createElement("tbody");
+
+  let shown = 0;
+  let unnamed = 0;
+  for (const id of line.transactionIds) {
+    const transaction = byId.get(id);
+    if (transaction === undefined) {
+      unnamed += 1;
+      continue;
+    }
+    shown += 1;
+    const gst = engine ? gstWithin(transaction.amount, engine.classify(transaction)) : 0;
+    const tr = document.createElement("tr");
+    tr.append(nameCell(transaction.date));
+    tr.append(nameCell(bankLabel(transaction.account)));
+    tr.append(nameCell(transaction.otherParty || transaction.particulars || ""));
+    tr.append(nameCell(transaction.reference ?? ""));
+    tr.append(amountCell(money(transaction.amount)));
+    tr.append(amountCell(gst === 0 ? "" : money(gst)));
+    tr.append(amountCell(money(grossBasis ? transaction.amount : transaction.amount - gst)));
+    tbody.append(tr);
+  }
+
+  // The report's own totals, so the panel cannot disagree with the line it
+  // opened from. Signed as the bank moved it: an expense is money out here and
+  // is shown positive on the report above, which is what a profit and loss
+  // does to expenses.
+  const total = document.createElement("tr");
+  total.className = "report-total";
+  total.append(nameCell(`${shown} entr${shown === 1 ? "y" : "ies"}`));
+  total.append(nameCell(""));
+  total.append(nameCell(""));
+  total.append(nameCell(""));
+  total.append(amountCell(money(line.gross)));
+  total.append(amountCell(line.gst === 0 ? "" : money(line.gst)));
+  total.append(amountCell(money(line.net)));
+  tbody.append(total);
+
+  table.append(head, tbody);
+  if (unnamed > 0) {
+    cell.append(
+      note(
+        `${shown} bank line${shown === 1 ? "" : "s"}, and ${unnamed} ` +
+          `entr${unnamed === 1 ? "y" : "ies"} from a journal rather than a bank line — ` +
+          "year-end adjustments, depreciation and the like, which have no statement behind them.",
+      ),
+    );
+  }
+  cell.append(table);
+  row.append(cell);
+  return row;
 }

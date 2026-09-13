@@ -283,6 +283,7 @@ export type {
 } from "./invoices.js";
 export * from "./xero.js";
 export * from "./journals.js";
+export * from "./stripe-settlements.js";
 export * from "./chart.js";
 export * from "./variance.js";
 export * from "./xlsx.js";

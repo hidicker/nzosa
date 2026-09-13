@@ -44,6 +44,32 @@ export interface ReferenceLine {
   /** GST rate as the source names it, e.g. `15% GST on Expenses`. */
   gstRate?: string;
   /**
+   * The invoice the source says this settles.
+   *
+   * Xero states it outright in the Account Transactions export, and a source
+   * saying so beats every way of working it out: an amount that agrees is a
+   * coincidence until something says otherwise, and this is the something.
+   */
+  invoiceNumber?: string;
+  /**
+   * The source's own reference for the entry.
+   *
+   * For a card payment this is the processor's charge id, which is what ties a
+   * payment to the fee taken out of it and the surcharge added to cover that
+   * fee -- three entries that reach the bank as a single line.
+   */
+  reference?: string;
+  /** Who the entry was with, as the source names them. */
+  contact?: string;
+  /**
+   * The ledger posting's own description.
+   *
+   * Carried because it is where a processor states the charge a fee belongs
+   * to -- "Transaction fees for ch_..." -- and that is the only thing tying a
+   * fee to the payment it was taken out of.
+   */
+  description?: string;
+  /**
    * The postings behind one payment, when it was split across accounts.
    *
    * A courier payment is freight plus border GST plus an entry fee, each with
@@ -369,10 +395,13 @@ interface SheetPosting {
   movement: Cents;
   /** `730 - Roasting Equipment, 820 - GST`, when the export carries it. */
   related: string;
+  /** What the export says this settles, and how it names the entry. */
+  invoiceNumber?: string;
+  reference?: string;
+  contact?: string;
   /** The GST rate, which sits on the ledger posting, never on the bank one. */
   gstRate: string;
 }
-
 
 /**
  * Split a block by arithmetic, when no journal report says how.
@@ -535,6 +564,9 @@ export function parseAccountTransactionsSheet(
       movement: debit - credit,
       related: at(row, "Related account"),
       gstRate: at(row, "GST Rate Name"),
+      invoiceNumber: at(row, "Invoice Number"),
+      reference: at(row, "Reference"),
+      contact,
     };
     const list = groups.get(groupKey);
     if (list) list.push(posting);
@@ -615,6 +647,13 @@ export function parseAccountTransactionsSheet(
       source,
       account: first.account,
       ...(principal?.gstRate ? { gstRate: principal.gstRate } : {}),
+      // From the bank row, because that is the row the export states them on.
+      ...(first.invoiceNumber ? { invoiceNumber: first.invoiceNumber } : {}),
+      ...(first.reference ? { reference: first.reference } : {}),
+      ...(first.contact ? { contact: first.contact } : {}),
+      // From the ledger side, not the bank side: the bank row of a fee says
+      // nothing, and the posting against the expense account says what it was.
+      ...(principal?.description ? { description: principal.description } : {}),
       // Offered only when they reconstruct the payment exactly. A split that
       // does not add up would change a return with no bank line behind it.
       ...(parts.length > 1 && partsTotal === first.amount ? { parts } : {}),

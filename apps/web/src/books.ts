@@ -1,17 +1,20 @@
-import { redraw } from "./app.js";
+import { redraw, showPage } from "./app.js";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
-import { suggest, transferCandidates } from "./reconcile.js";
+import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
+import { describeRules } from "./rules-ui.js";
 import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
-import { saveEvents, savePart, saveRules } from "./store.js";
+import { clearStore, emptyLedger, saveEvents, savePart, saveRules } from "./store.js";
 import {
   DEFAULT_ENTITY_NAME,
   dedupe,
   defaultEntityModel,
   emptyEntityModel,
   formatAmount,
+  labelForChartAccount,
+  splitAccountLabel,
   invoiceAssignments as coreInvoiceAssignments,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
@@ -358,4 +361,145 @@ export async function persistRules(): Promise<void> {
   });
   state.rulesDirty = false;
   if (state.page === "rules") redraw("rules");
+}
+
+/**
+ * An account, paired with the name a coding actually stores against it.
+ *
+ * These are not the same string. A chart export calls an account `310` /
+ * `Cost of Goods Sold`; the rules, and therefore every coded transaction and
+ * every GST treatment, call it `NB Cost of Goods Sold - 310`. Looking a
+ * treatment up by anything else silently finds nothing, which would show every
+ * account as untreated and write new treatments under names nothing reads.
+ */
+export interface AccountRow {
+  account: Account;
+  /** The key used in codeTreatments and stored on a coding. */
+  label: string;
+}
+
+/**
+ * Every account worth showing: the chart, plus anything the rules already
+ * name.
+ *
+ * A chart export is not the whole picture. Sixteen accounts here exist only as
+ * a GST treatment, because no keyword will ever match them -- deciding a meal
+ * was non-deductible is a judgement, not a payee.
+ */
+export function accountsForEditing(): AccountRow[] {
+  const known = knownCodes(state.rules, state.ledger.overrides ?? {});
+  const out: AccountRow[] = [];
+  const claimed = new Set<string>();
+
+  for (const account of state.chart) {
+    const label = labelForChartAccount(account, known);
+    claimed.add(label);
+    out.push({ account, label });
+  }
+
+  for (const code of known) {
+    if (claimed.has(code)) continue;
+    claimed.add(code);
+    const { code: digits, name } = splitAccountLabel(code);
+    out.push({
+      account: { code: digits, name, type: "From the rules", taxCode: "", description: "" },
+      label: code,
+    });
+  }
+
+  return out.sort((a, b) =>
+    (a.account.code || "zzz").localeCompare(b.account.code || "zzz") ||
+    a.account.name.localeCompare(b.account.name),
+  );
+}
+
+/** Set once the demo has been seeded, or a book deliberately cleared. */
+export const DEMO_SEEDED = "nzosa:demo-seeded";
+
+/** Remember that this browser has had its one automatic seed. */
+export function markDemoSeeded(): void {
+  try {
+    localStorage.setItem(DEMO_SEEDED, new Date().toISOString());
+  } catch {
+    // Nothing to do: without storage the seed simply happens again next time,
+    // which is the same as any other browser that keeps nothing.
+  }
+}
+
+/**
+ * Empty the browser's store, in memory and on disk.
+ *
+ * Shared by the demo loader and the clear button: loading a demo over a part
+ * coded book would leave the old book's decisions attached to transactions
+ * that are no longer there.
+ */
+export async function wipe(): Promise<void> {
+  state.ledger = emptyLedger();
+  state.chart = [];
+  state.rules = undefined;
+  state.rulesName = "";
+  state.rulesLoadedAt = "";
+  state.rulesArchive = { version: 1, entries: [] };
+  state.suggestions = null;
+  state.reference = [];
+  state.events = [];
+  state.startupMessage = "";
+  // Cleared means cleared: without this the automatic seed refills the browser
+  // on the next refresh, and a clear that undoes itself is indistinguishable
+  // from one that never worked.
+  markDemoSeeded();
+  await clearStore();
+}
+
+export async function clearEverything(button: HTMLButtonElement): Promise<void> {
+  button.disabled = true;
+  await wipe();
+  reclassify();
+  state.entityFilter = "";
+  showPage("setup");
+}
+
+/** Said, and the answer is that this ledger holds no money in this account. */
+export const NOT_IN_LEDGER = "none";
+
+/**
+ * The ledger account a chart's bank row is, if it is one of them.
+ *
+ * The same account has two names: the accounting system calls it "BNZ
+ * Advantage Visa Classic" and the ledger calls it by the id the bank feed
+ * gives, so neither recognises the other. Matched on the id, or on the
+ * ledger's own label for the account word for word -- and on nothing looser.
+ * "Platinum Credit Card used for Business Transactions" and "BNZ Advantage
+ * Visa Platinum" are the same card to a person and nothing a computer should
+ * decide, and a wrong guess here files somebody's spending under another
+ * entity.
+ */
+export function ledgerAccountFor(name: string, account?: Account): string | null {
+  // What somebody said, before anything a name suggests. "Platinum Credit
+  // Card used for Business Transactions" is the same card as the one the feed
+  // calls by its id, and only a person can know that.
+  const said = account?.ledgerAccount;
+  if (said === NOT_IN_LEDGER) return null;
+  if (said !== undefined && said !== "") return said;
+
+  const wanted = name.trim();
+  const { accounts, labels } = banks();
+  if (accounts.has(wanted)) return wanted;
+  const tidy = (text: string): string => text.trim().toLowerCase().replace(/\s+/g, " ");
+  const target = tidy(wanted);
+  for (const [id, label] of labels) if (tidy(label) === target) return id;
+  return null;
+}
+
+/** The sentence that has to be typed before anything is cleared. */
+export const CLEAR_PHRASE = "Confirm this will clear all records";
+
+export async function useRules(rules: RuleFileShape, name: string, verb: string): Promise<void> {
+  state.rules = rules;
+  state.rulesName = name;
+  state.rulesLoadedAt = new Date().toISOString().slice(0, 16).replace("T", " ");
+  state.pendingRules = null;
+  state.rulesMessage = `${verb} ${name}: ${describeRules(rules)}.`;
+  await saveRules({ version: 1, name, loadedAt: state.rulesLoadedAt, rules });
+  redraw("rules");
 }

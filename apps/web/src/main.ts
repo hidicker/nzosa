@@ -19,6 +19,11 @@ import {
   sameEntityBanks as coreSameEntityBanks,
   codingCounts,
   accountsAtExportLimit,
+  rateForTreatment,
+  reportLookups as coreReportLookups,
+  reportLabeller as coreReportLabeller,
+  mapToOurVocabulary as coreMapToOurVocabulary,
+  feedResumeDate,
   checkManualJournal,
   computeBalanceSheet,
   decodeText,
@@ -367,27 +372,7 @@ const $ = <T extends HTMLElement>(id: string): T => {
  * account is empty, because everything it holds is still to come.
  */
 function feedStartDate(mapping: Record<string, string>): string | undefined {
-  const mapped = [...new Set(Object.values(mapping).filter((to) => to !== ""))];
-  if (mapped.length === 0) return undefined;
-
-  const latestFor = new Map<string, string>();
-  for (const transaction of state.ledger.transactions) {
-    const seen = latestFor.get(transaction.account);
-    if (seen === undefined || transaction.date > seen) {
-      latestFor.set(transaction.account, transaction.date);
-    }
-  }
-
-  if (mapped.some((account) => !latestFor.has(account))) return undefined;
-
-  const earliest = mapped.map((account) => latestFor.get(account) as string).sort()[0];
-  if (earliest === undefined) return undefined;
-
-  // The same week of overlap, because a charge settles after the date it
-  // carries and resuming exactly where an account ends steps over it.
-  const day = new Date(`${earliest}T00:00:00Z`);
-  day.setUTCDate(day.getUTCDate() - 7);
-  return day.toISOString().slice(0, 10);
+  return feedResumeDate({ mapping, transactions: state.ledger.transactions });
 }
 
 /**
@@ -5560,14 +5545,11 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
 
 /** `910 - Loan from Director` -> whatever the rules already call account 910. */
 function mapToOurVocabulary(code: string): string | null {
-  // The chart counts as something we know about. Without it, an account that
-  // exists only in the chart -- which is every account on a freshly imported
-  // one, before anything has been coded to it -- was unknown, and taking the
-  // other system's coding for it was refused with the advice to go and set up
-  // the very thing that was already set up.
-  const known = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
-  if (known.includes(code)) return code;
-  return matchAccountName(code, known);
+  return coreMapToOurVocabulary(code, {
+    chart: state.chart,
+    ...(state.rules ? { rules: state.rules as RuleSet } : {}),
+    overrides: state.ledger.overrides ?? {},
+  });
 }
 
 /**
@@ -7619,19 +7601,7 @@ function chartTreatmentOf(label: string): unknown | null {
  */
 function treatmentOf(label: string): string | null {
   const file = state.rules as RuleFileShape | undefined;
-  const value = (file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label) ?? undefined;
-  if (value === undefined) return null;
-
-  // Only "standard" is a rate this picker has a percentage for. Exempt and
-  // zero-rated are neither 15% nor out of scope, and reporting them as 15%
-  // would let looking at the page quietly change what they are.
-  const rateFor = (treatment: string | undefined): string =>
-    treatment === "out-of-scope" ? "0" : treatment === "standard" || treatment === undefined ? "15" : treatment;
-
-  if (typeof value === "string") return rateFor(value);
-  const shape = value as { treatment?: string; side?: string };
-  if (shape.side === "imports") return "100";
-  return rateFor(shape.treatment);
+  return rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));
 }
 
 /**
@@ -9764,40 +9734,21 @@ async function saveEntities(model: EntityModel, what = "Entities changed"): Prom
  * the three agree about what an account is called.
  */
 function reportLabeller(): (line: { accountCode: string; accountName: string }) => string {
-  const known = knownCodes(state.rules, state.ledger.overrides ?? {});
-  const byCode = new Map<string, Account>();
-  const byName = new Map<string, Account>();
-  for (const account of state.chart) {
-    const code = account.code.trim();
-    if (code !== "") byCode.set(code, account);
-    const name = account.name.trim().toLowerCase();
-    if (name !== "" && !byName.has(name)) byName.set(name, account);
-  }
-
-  return (line) => {
-    const code = line.accountCode.trim();
-    const found = code !== "" ? byCode.get(code) : byName.get(line.accountName.trim().toLowerCase());
-    if (found) return labelForChartAccount(found, known);
-    if (code !== "") return `${code} ${line.accountName}`.trim();
-    return line.accountName.trim();
-  };
+  return coreReportLabeller({
+    chart: state.chart,
+    ...(state.rules ? { rules: state.rules as RuleSet } : {}),
+    overrides: state.ledger.overrides ?? {},
+  });
 }
 
 function reportLookups(): {
   entityOfCode: Map<string, string>;
   sectionOf: (code: string) => ReportSection | null;
 } {
-  const model = state.ledger.entities ?? emptyEntityModel();
-  const entityOfCode = new Map<string, string>();
-  const sections = new Map<string, ReportSection | null>();
-
-  for (const { account, label } of accountsForEditing()) {
-    const id = model.accounts[accountEntityKey(account)];
-    if (id !== undefined) entityOfCode.set(label, id);
-    sections.set(label, sectionForType(account.type));
-  }
-
-  return { entityOfCode, sectionOf: (code) => sections.get(code) ?? null };
+  return coreReportLookups({
+    model: state.ledger.entities ?? emptyEntityModel(),
+    accounts: accountsForEditing(),
+  });
 }
 
 /** Build the report currently selected, or null when there is nothing to build. */

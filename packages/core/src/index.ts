@@ -316,6 +316,7 @@ export * from "./coding-engine.js";
 export * from "./invoice-candidates.js";
 export * from "./payout-matching.js";
 export * from "./coding-progress.js";
+export * from "./report-labels.js";
 export * from "./trial-balance.js";
 export * from "./text.js";
 export * from "./disposal.js";

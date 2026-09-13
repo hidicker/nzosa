@@ -56,3 +56,49 @@ export function matchPayouts(options: PayoutMatchOptions): PayoutMatch[] {
   }
   return out;
 }
+
+/**
+ * Where a bank feed should resume from.
+ *
+ * The latest date already held on the *earliest-ending* mapped account, less a
+ * week. The earliest because a feed fetch is one window for every account, and
+ * starting where the furthest-ahead account ends would skip whatever the
+ * others are missing.
+ *
+ * The week of overlap is not caution for its own sake: a card charge settles
+ * after the date it carries, so resuming exactly where an account ends steps
+ * over the transactions still to arrive for the last few days. Overlap is
+ * cheap -- a line that arrives twice is caught as a duplicate -- and the gap
+ * it prevents is not.
+ *
+ * Nothing at all when an account has been mapped but holds no transactions
+ * yet: there is no "resume" for an account that has not started, and guessing
+ * a date would quietly decide how much history it gets.
+ */
+export function feedResumeDate(options: {
+  /** Feed account to ledger account; empty values are unmapped. */
+  mapping: Readonly<Record<string, string>>;
+  transactions: readonly Transaction[];
+  /** Days of overlap. Defaults to 7. */
+  overlapDays?: number;
+}): string | undefined {
+  const mapped = [...new Set(Object.values(options.mapping).filter((to) => to !== ""))];
+  if (mapped.length === 0) return undefined;
+
+  const latestFor = new Map<string, string>();
+  for (const transaction of options.transactions) {
+    const seen = latestFor.get(transaction.account);
+    if (seen === undefined || transaction.date > seen) {
+      latestFor.set(transaction.account, transaction.date);
+    }
+  }
+
+  if (mapped.some((account) => !latestFor.has(account))) return undefined;
+
+  const earliest = mapped.map((account) => latestFor.get(account) as string).sort()[0];
+  if (earliest === undefined) return undefined;
+
+  const day = new Date(`${earliest}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - (options.overlapDays ?? 7));
+  return day.toISOString().slice(0, 10);
+}

@@ -129,6 +129,70 @@ export function parseXeroJournalReport(text: string): JournalImportResult {
 }
 
 /**
+ * Keep the narrations when a better-valued report replaces the one holding them.
+ *
+ * Two exports of the same journals answer different questions. The Journal
+ * Report carries a Narration, which is the only thing that tells a year-end
+ * adjustment from an ordinary posting -- "YE26 - Remove interest expense" is
+ * not a fact about debits and credits, and nothing else in the file says it.
+ * General Ledger Detail carries no narration at all, but it values every line
+ * -- gross, tax and net -- which the Journal Report does not.
+ *
+ * Neither is the better file. Loading the valued one over the narrated one
+ * used to lose every manual journal silently, which on real books was three of
+ * them and 3,354.78 of interest that came back as an expense. So the values
+ * come from the incoming report and the narration is carried across by journal
+ * id, and the result is the only version of these journals that answers both
+ * questions.
+ *
+ * Carried only where the incoming journal has none of its own. A report that
+ * states a narration is describing the journal it is describing, and the one
+ * already held is the older account of it.
+ */
+export function mergeJournalNarrations(
+  incoming: readonly Journal[],
+  held: readonly Journal[],
+): { journals: Journal[]; carried: number } {
+  const said = new Map<string, Journal>();
+  for (const journal of held) said.set(journal.id, journal);
+
+  let carried = 0;
+  const journals = incoming.map((journal) => {
+    const before = said.get(journal.id);
+    if (before === undefined) return journal;
+
+    const narration = journal.narration.trim() === "" ? before.narration : journal.narration;
+    const postedBy = journal.postedBy.trim() === "" ? before.postedBy : journal.postedBy;
+    const postedDate = journal.postedDate ?? before.postedDate;
+    if (narration === journal.narration && postedBy === journal.postedBy && postedDate === journal.postedDate) {
+      return journal;
+    }
+    if (narration !== journal.narration && narration.trim() !== "") carried += 1;
+    return { ...journal, narration, postedBy, postedDate };
+  });
+
+  return { journals, carried };
+}
+
+/**
+ * Journals that would be lost by replacing what is held with what has arrived.
+ *
+ * Replacing is usually what is wanted -- a fresh export of the same period --
+ * but an export of one year over a file holding two drops the other year
+ * without saying so. Only the narrated ones are reported: those are the
+ * entries a person wrote and nothing can re-derive.
+ */
+export function narratedJournalsLost(
+  incoming: readonly Journal[],
+  held: readonly Journal[],
+): Journal[] {
+  const arriving = new Set(incoming.map((journal) => journal.id));
+  return held.filter(
+    (journal) => journal.narration.trim() !== "" && !arriving.has(journal.id),
+  );
+}
+
+/**
  * Check each journal against itself.
  *
  * Double entry means the lines must sum to zero. A journal that does not

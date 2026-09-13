@@ -7,7 +7,17 @@ import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
 import type { StoredLedger } from "../store.js";
 import { readFiledReturns } from "../variance.js";
-import { identifyExport, manualJournalsIn, parseFixedAssets, parseXeroAllocations, parseXeroInvoices, parseXeroJournalReport, validateInvoices } from "@nzosa/core";
+import {
+  identifyExport,
+  manualJournalsIn,
+  mergeJournalNarrations,
+  narratedJournalsLost,
+  parseFixedAssets,
+  parseXeroAllocations,
+  parseXeroInvoices,
+  parseXeroJournalReport,
+  validateInvoices,
+} from "@nzosa/core";
 import type { Identified, Journal } from "@nzosa/core";
 
 /**
@@ -213,31 +223,55 @@ export async function loadJournals(file: File): Promise<void> {
     );
     return;
   }
-  // A General Ledger Detail export parses into journals perfectly well and
-  // values every line, which the Journal Report does not -- but it carries no
-  // Narration column, and a narration is the only thing that distinguishes a
-  // manual year-end journal from an ordinary posting. Replacing a narrated set
-  // with an unnarrated one therefore loses every manual journal silently,
-  // which on one real ledger was three of them and 3,354.78 of interest that
-  // came back as an expense. So it is asked about rather than done.
+  // Two exports of the same journals answer different questions: the Journal
+  // Report carries the narration that tells a year-end adjustment from an
+  // ordinary posting, and General Ledger Detail values every line -- gross,
+  // tax and net -- which the Journal Report does not. So the values come from
+  // whichever has just arrived and the narrations are carried across by
+  // journal id, rather than one report being made to win.
   const held = state.ledger.journals ?? [];
-  const incomingNarrated = parsed.journals.some((j) => j.narration.trim() !== "");
-  const heldNarrated = held.filter((j) => j.narration.trim() !== "").length;
-  if (!incomingNarrated && heldNarrated > 0) {
+  const merged = mergeJournalNarrations(parsed.journals, held);
+
+  // Carrying a narration across cannot help a journal the incoming report does
+  // not mention at all. An export of one year loaded over a file holding two
+  // drops the other year, and a narrated journal is an entry a person wrote
+  // that nothing can work out again -- so those are named and asked about.
+  const lost = narratedJournalsLost(parsed.journals, held);
+  if (lost.length > 0) {
+    const listed = lost
+      .slice(0, 8)
+      .map((j) => `  ${j.date}  ${j.narration.slice(0, 58)}`)
+      .join("\n");
+    const more = lost.length > 8 ? `\n  and ${lost.length - 8} more` : "";
     const ok = confirm(
-      `${file.name} has no Narration column, so no journal in it can be recognised as a ` +
-        `manual one.\n\nThe ${held.length} journals already loaded include ${heldNarrated} ` +
-        "with a narration. Replacing them would lose every year-end journal your accountant " +
-        "made.\n\nReplace them anyway?",
+      `${file.name} holds ${parsed.journals.length} journals, and does not include ` +
+        `${lost.length} that carry a narration:\n\n${listed}${more}\n\n` +
+        "Those are year-end entries nothing can work out again. Load this report anyway?",
     );
     if (!ok) return;
   }
 
-  state.ledger = { ...state.ledger, journals: parsed.journals };
+  state.ledger = { ...state.ledger, journals: merged.journals };
   state.persistent = await savePart(state.ledger, "journals");
   redraw("reports");
 
-  await offerManualJournals(parsed.journals);
+  if (merged.carried > 0) {
+    sayNarrationsKept(merged.carried);
+  }
+  await offerManualJournals(merged.journals);
+}
+
+/**
+ * Say that the narrations survived.
+ *
+ * Silence here reads as having lost them, which is the thing this file load
+ * was changed to stop doing.
+ */
+function sayNarrationsKept(n: number): void {
+  const said = document.createElement("div");
+  said.textContent =
+    `Kept the narration on ${n} journal${n === 1 ? "" : "s"} from the report already loaded.`;
+  $("setup-loaded").append(said);
 }
 
 /**

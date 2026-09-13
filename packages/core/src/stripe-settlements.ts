@@ -1,6 +1,8 @@
 import type { Cents } from "./money.js";
 import type { ReferenceLine } from "./coding-check.js";
 import type { IsoDate } from "./dates.js";
+import type { SplitPart } from "./splits.js";
+import type { Transaction } from "./types.js";
 
 /**
  * One card payment, as the three entries it really is.
@@ -91,4 +93,132 @@ export function stripeSettlements(lines: readonly ReferenceLine[]): StripeSettle
     });
   }
   return out;
+}
+
+/** A bank line, and the settlements that make it up. */
+export interface StripeMatch {
+  transaction: Transaction;
+  settlements: StripeSettlement[];
+}
+
+export interface StripeMatchOptions {
+  settlements: readonly StripeSettlement[];
+  transactions: readonly Transaction[];
+  /** How far the bank may lag the processor. Defaults to 10 days. */
+  windowDays?: number;
+  /** Most settlements one payout may combine. Defaults to 4. */
+  maxPerPayout?: number;
+}
+
+/**
+ * Which bank line each settlement arrived as.
+ *
+ * A processor does not always pay out one charge at a time: two charges on
+ * consecutive days can reach the bank as a single transfer, and on real books
+ * one did -- 800.67 and 792.44 arriving together as 1,593.11. So a payout is
+ * matched to a *set* of settlements, not only to one.
+ *
+ * The amount is the key and the date is only a window. A settlement's net is
+ * computed from the processor's own figures, so a bank line that is not equal
+ * to the cent is not that payout however close the date; the date, by
+ * contrast, is routinely two to four days out, because the processor records
+ * the charge when it takes it and the bank records the money when it lands.
+ *
+ * Combinations are tried only after every single settlement has had its
+ * chance, are capped at a handful, and are taken only when exactly one set
+ * adds up. Searching wider would eventually find an unrelated set that happens
+ * to total the same, which is worse than not matching: a split put on the
+ * wrong payment is a silent error, and an unmatched payout is a visible one.
+ */
+export function matchStripeSettlements(options: StripeMatchOptions): StripeMatch[] {
+  const windowDays = options.windowDays ?? 10;
+  const maxPerPayout = options.maxPerPayout ?? 4;
+  const within = (a: IsoDate, b: IsoDate): boolean =>
+    Math.abs(Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) <= windowDays * 86_400_000;
+
+  const taken = new Set<string>();
+  const out: StripeMatch[] = [];
+
+  // One settlement to one line first. A payout that is a single charge must
+  // never be explained as a coincidental combination of two others.
+  for (const transaction of options.transactions) {
+    const found = options.settlements.filter(
+      (s) => !taken.has(s.charge) && s.net === transaction.amount && within(s.date, transaction.date),
+    );
+    if (found.length !== 1) continue;
+    const one = found[0] as StripeSettlement;
+    taken.add(one.charge);
+    out.push({ transaction, settlements: [one] });
+  }
+
+  const matched = new Set(out.map((m) => m.transaction.id));
+  for (const transaction of options.transactions) {
+    if (matched.has(transaction.id)) continue;
+    const pool = options.settlements.filter(
+      (s) => !taken.has(s.charge) && within(s.date, transaction.date),
+    );
+    if (pool.length < 2) continue;
+
+    const sets: StripeSettlement[][] = [];
+    const walk = (from: number, chosen: StripeSettlement[], left: Cents): void => {
+      if (sets.length > 1) return; // ambiguous already; stop looking
+      if (left === 0 && chosen.length >= 2) {
+        sets.push([...chosen]);
+        return;
+      }
+      if (chosen.length >= maxPerPayout) return;
+      for (let i = from; i < pool.length; i += 1) {
+        const next = pool[i] as StripeSettlement;
+        chosen.push(next);
+        walk(i + 1, chosen, left - next.net);
+        chosen.pop();
+        if (sets.length > 1) return;
+      }
+    };
+    walk(0, [], transaction.amount);
+
+    if (sets.length !== 1) continue; // none, or more than one way: leave it
+    const only = sets[0] as StripeSettlement[];
+    for (const s of only) taken.add(s.charge);
+    out.push({ transaction, settlements: only });
+  }
+
+  return out;
+}
+
+/**
+ * The parts a matched payout should be split into.
+ *
+ * Three kinds, and each is a different thing: the invoice settled, the
+ * surcharge the customer paid to cover the fee, and the fee itself. The
+ * surcharge is income and carries GST; the fee is an expense. Rolling them
+ * together as one receipt against the invoice reads as an overpayment, leaves
+ * the fee account empty, and never declares the GST on the surcharge.
+ */
+export function stripeSplitParts(
+  match: StripeMatch,
+  accounts: { sales: string; fees: string },
+): SplitPart[] {
+  const parts: SplitPart[] = [];
+  for (const s of match.settlements) {
+    const named = s.invoiceNumber === "" ? "an invoice" : s.invoiceNumber;
+    parts.push({
+      amount: s.payment,
+      note: `Settles ${named}`,
+      treatment: "out-of-scope",
+    });
+    if (s.surcharge !== 0) {
+      parts.push({
+        amount: s.surcharge,
+        code: accounts.sales,
+        note: `Fee surcharge reimbursed on ${named}`,
+      });
+    }
+    parts.push({
+      amount: -s.fee,
+      code: accounts.fees,
+      note: `Processor fee on ${named}`,
+    });
+  }
+  return parts;
 }

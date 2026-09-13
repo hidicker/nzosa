@@ -119,3 +119,137 @@ test("a settlement where the surcharge exactly covers the fee still nets out", (
   assert.equal(found[0].surcharge, 725);
   assert.equal(found[0].fee, 725);
 });
+
+import { matchStripeSettlements, stripeSplitParts } from "../dist/index.js";
+
+const settle = (over) => ({
+  charge: "ch_x", date: "2026-06-13", invoiceNumber: "INV-1",
+  payment: 100000, surcharge: 2900, fee: 2757, net: 100143, ...over,
+});
+const txn = (id, date, amount) => ({
+  id, date, amount, account: "BNZ 01", otherParty: "Stripe Payments", particulars: "",
+  code: "", reference: "STRIPE", description: "", currency: "NZD", source: "bank",
+});
+
+test("a payout is matched on its amount, days after the charge", () => {
+  // The processor records the charge when it takes it and the bank records the
+  // money when it lands: two to four days apart on real books.
+  const m = matchStripeSettlements({
+    settlements: [settle({})],
+    transactions: [txn("a", "2026-06-17", 100143)],
+  });
+  assert.equal(m.length, 1);
+  assert.equal(m[0].transaction.id, "a");
+  assert.equal(m[0].settlements.length, 1);
+});
+
+test("a bank line a cent out is not that payout", () => {
+  // The net is computed from the processor's own figures, so anything but an
+  // exact agreement means it is a different payout.
+  const m = matchStripeSettlements({
+    settlements: [settle({})],
+    transactions: [txn("a", "2026-06-17", 100144)],
+  });
+  assert.deepEqual(m, []);
+});
+
+test("a charge far outside the window is not matched", () => {
+  const m = matchStripeSettlements({
+    settlements: [settle({})],
+    transactions: [txn("a", "2026-08-30", 100143)],
+  });
+  assert.deepEqual(m, []);
+});
+
+test("two charges paid out as one transfer are matched together", () => {
+  // A real case: 800.67 and 792.44 reaching the bank as 1,593.11.
+  const m = matchStripeSettlements({
+    settlements: [
+      settle({ charge: "ch_a", date: "2024-12-15", invoiceNumber: "INV-0015", net: 80067 }),
+      settle({ charge: "ch_b", date: "2024-12-16", invoiceNumber: "INV-0017", net: 79244 }),
+    ],
+    transactions: [txn("payout", "2024-12-18", 159311)],
+  });
+  assert.equal(m.length, 1);
+  assert.equal(m[0].settlements.length, 2);
+  assert.deepEqual(m[0].settlements.map((s) => s.invoiceNumber).sort(), ["INV-0015", "INV-0017"]);
+});
+
+test("a single match is preferred over a combination that also adds up", () => {
+  // 100.00 arriving is the 100.00 charge, never the 60.00 and 40.00 beside it.
+  const m = matchStripeSettlements({
+    settlements: [
+      settle({ charge: "ch_exact", net: 10000, invoiceNumber: "EXACT" }),
+      settle({ charge: "ch_a", net: 6000 }),
+      settle({ charge: "ch_b", net: 4000 }),
+    ],
+    transactions: [txn("a", "2026-06-14", 10000)],
+  });
+  assert.equal(m.length, 1);
+  assert.equal(m[0].settlements.length, 1);
+  assert.equal(m[0].settlements[0].invoiceNumber, "EXACT");
+});
+
+test("two different combinations adding to the same total are left alone", () => {
+  // Guessing between them would put a split on the wrong payment, which is a
+  // silent error. An unmatched payout is a visible one.
+  const m = matchStripeSettlements({
+    settlements: [
+      settle({ charge: "ch_a", net: 5000 }),
+      settle({ charge: "ch_b", net: 5000 }),
+      settle({ charge: "ch_c", net: 2500 }),
+      settle({ charge: "ch_d", net: 7500 }),
+    ],
+    transactions: [txn("a", "2026-06-14", 10000)],
+  });
+  assert.deepEqual(m, []);
+});
+
+test("one settlement is never used for two payouts", () => {
+  const m = matchStripeSettlements({
+    settlements: [settle({ charge: "ch_only", net: 10000 })],
+    transactions: [txn("a", "2026-06-14", 10000), txn("b", "2026-06-15", 10000)],
+  });
+  assert.equal(m.length, 1);
+});
+
+test("the split is the three things the payout really was", () => {
+  const [m] = matchStripeSettlements({
+    settlements: [settle({})],
+    transactions: [txn("a", "2026-06-17", 100143)],
+  });
+  const parts = stripeSplitParts(m, { sales: "200 Sales", fees: "506 Stripe Fees" });
+  assert.equal(parts.length, 3);
+  assert.equal(parts.reduce((sum, p) => sum + p.amount, 0), 100143, "the parts must sum to the line");
+  assert.equal(parts[0].amount, 100000);
+  assert.equal(parts[0].treatment, "out-of-scope", "settling a receivable is not a fresh sale");
+  assert.equal(parts[1].code, "200 Sales");
+  assert.equal(parts[2].amount, -2757);
+  assert.equal(parts[2].code, "506 Stripe Fees");
+  assert.ok(parts.every((p) => p.note !== ""), "every part says what it is");
+});
+
+test("a batched payout splits into the parts of both settlements", () => {
+  const [m] = matchStripeSettlements({
+    settlements: [
+      settle({ charge: "ch_a", date: "2024-12-15", invoiceNumber: "INV-0015",
+               payment: 80000, surcharge: 2320, fee: 2253, net: 80067 }),
+      settle({ charge: "ch_b", date: "2024-12-16", invoiceNumber: "INV-0017",
+               payment: 80000, surcharge: 2320, fee: 3076, net: 79244 }),
+    ],
+    transactions: [txn("payout", "2024-12-18", 159311)],
+  });
+  const parts = stripeSplitParts(m, { sales: "200 Sales", fees: "506 Stripe Fees" });
+  assert.equal(parts.length, 6);
+  assert.equal(parts.reduce((sum, p) => sum + p.amount, 0), 159311);
+});
+
+test("a settlement with no surcharge has two parts, not an empty one", () => {
+  const [m] = matchStripeSettlements({
+    settlements: [settle({ surcharge: 0, net: 97243, payment: 100000, fee: 2757 })],
+    transactions: [txn("a", "2026-06-17", 97243)],
+  });
+  const parts = stripeSplitParts(m, { sales: "200 Sales", fees: "506 Stripe Fees" });
+  assert.equal(parts.length, 2);
+  assert.equal(parts.reduce((sum, p) => sum + p.amount, 0), 97243);
+});

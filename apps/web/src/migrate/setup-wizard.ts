@@ -1215,3 +1215,8 @@ export async function seedBrowser(): Promise<void> {
     "through a year. Nothing here is real, and you can change anything. To keep " +
     "books of your own, run NZOSA on your own computer: see the guide for owners.";
 }
+
+/** Choosing which system the books are coming from. */
+export function wireSetup(): void {
+  $<HTMLSelectElement>("setup-source").addEventListener("change", () => redraw("setup"));
+}

@@ -1,34 +1,19 @@
-import { redraw, registerPages, showPage } from "./app.js";
+import { registerPages, showPage } from "./app.js";
 import {
-  NARROW_KEY,
-  applyNarrow,
-  applyTheme,
-  cycleTheme,
   dismissLoading,
-  toggleNarrow,
+  wireChrome,
 } from "./chrome.js";
 import {
-  clearCheck,
-  exportLedger,
-  importLedger,
-  loadAllocations,
-  loadAssets,
-  loadFiledReturns,
-  loadInvoices,
-  loadJournals,
-  loadWhatever,
+  wireFileIntake,
 } from "./migrate/file-intake.js";
 import {
   autoFetchFromFeed,
-  checkBankBalances,
-  downloadReport,
-  handleFiles,
   render,
   renderFeed,
   renderFormats,
   renderTable,
-  saveChart,
   showWhatNeedsDeciding,
+  wireBankImport,
 } from "./daily/bank-import.js";
 import {
   recomputeVariance,
@@ -39,34 +24,40 @@ import {
 import {
   renderBooks,
   renderOpenBooks,
+  wireBooksPage,
 } from "./daily/books-page.js";
 import {
-  loadRulesFile,
   renderRules,
+  wireRules,
 } from "./daily/rules.js";
 import {
   renderAssetsPage,
+  wireAssets,
 } from "./daily/assets.js";
 import {
   renderHistory,
+  wireHistory,
 } from "./daily/history.js";
 import {
   renderVariance,
+  wireGstReconcile,
 } from "./daily/gst-reconcile.js";
 import {
-  loadOpeningBalances,
   renderOpeningBalances,
+  wireOpeningBalances,
 } from "./daily/opening-balances.js";
 import {
   renderReconcile,
+  wireReconcile,
 } from "./daily/reconcile-page.js";
 import {
   renderReportsPage,
+  wireReports,
 } from "./daily/reports.js";
 import {
   renderInvoiceEditor,
   renderInvoices,
-  startNewInvoice,
+  wireInvoices,
 } from "./daily/invoices.js";
 import {
   renderEntities,
@@ -76,24 +67,21 @@ import {
   renderSetupBody,
   seedBrowser,
   seedStarterChart,
+  wireSetup,
 } from "./migrate/setup-wizard.js";
 import {
-  acceptAllShown,
   applyChartColumns,
-  loadCheckFiles,
   renderCheck,
+  wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
 import { $, state } from "./state.js";
 import {
   dedupeReference,
 } from "@nzosa/core";
 import {
-  currentTheme,
   setLoadingStatus,
 } from "./ui.js";
 import {
-  clear,
-  emptyLedger,
   load,
   loadRules,
   loadRulesArchive,
@@ -225,160 +213,11 @@ async function init(): Promise<void> {
 }
 
 function wireUp(): void {
-  const demoBanner = document.getElementById("demo-banner");
-  if (demoBanner) {
-    demoBanner.hidden = writesToFolder();
-    $("demo-banner-close")?.addEventListener("click", () => {
-      demoBanner.hidden = true;
-    });
-  }
-
-  const demoNotice = document.getElementById("demo-import-privacy-notice");
-  if (demoNotice) {
-    demoNotice.hidden = writesToFolder();
-  }
-
-  const picker = $<HTMLInputElement>("file-input");
-  const drop = $<HTMLElement>("dropzone");
-
-  $("pick-button").addEventListener("click", () => picker.click());
-  picker.addEventListener("change", () => {
-    if (picker.files) void handleFiles([...picker.files]);
-    picker.value = "";
-  });
-
-  for (const event of ["dragenter", "dragover"]) {
-    drop.addEventListener(event, (e) => {
-      e.preventDefault();
-      drop.classList.add("dragging");
-    });
-  }
-  for (const event of ["dragleave", "drop"]) {
-    drop.addEventListener(event, (e) => {
-      e.preventDefault();
-      drop.classList.remove("dragging");
-    });
-  }
-  drop.addEventListener("drop", (e) => {
-    const files = (e as DragEvent).dataTransfer?.files;
-    if (files) void handleFiles([...files]);
-  });
-
-  // The same thing on Setup, except it takes anything and sorts it out itself.
-  const setupPicker = $<HTMLInputElement>("setup-input");
-  const setupDrop = $<HTMLElement>("setup-drop");
-  $("setup-pick").addEventListener("click", () => setupPicker.click());
-  setupPicker.addEventListener("change", () => {
-    if (setupPicker.files) void loadWhatever([...setupPicker.files]);
-    setupPicker.value = "";
-  });
-  for (const event of ["dragenter", "dragover"]) {
-    setupDrop.addEventListener(event, (e) => {
-      e.preventDefault();
-      setupDrop.classList.add("dragging");
-    });
-  }
-  for (const event of ["dragleave", "drop"]) {
-    setupDrop.addEventListener(event, (e) => {
-      e.preventDefault();
-      setupDrop.classList.remove("dragging");
-    });
-  }
-  setupDrop.addEventListener("drop", (e) => {
-    const files = (e as DragEvent).dataTransfer?.files;
-    if (files) void loadWhatever([...files]);
-  });
-
-  for (const filter of ["all", "review", "duplicate"] as const) {
-    $(`filter-${filter}`).addEventListener("click", () => {
-      state.filter = filter;
-      render();
-    });
-  }
-
-  $<HTMLInputElement>("search").addEventListener("input", (e) => {
-    state.search = (e.target as HTMLInputElement).value.toLowerCase();
-    redraw("importRows");
-  });
-
   for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
     button.addEventListener("click", () => {
       showPage(button.dataset["page"] ?? "reconcile");
     });
   }
-
-  for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link, .sidebar-sublink")) {
-    link.addEventListener("click", (e) => {
-      const href = link.getAttribute("href");
-      if (!href?.startsWith("#")) return;
-      e.preventDefault();
-      if (state.page !== "import") {
-        showPage("import");
-      }
-      const target = document.getElementById(href.slice(1));
-      if (target) {
-        target.scrollIntoView({ behavior: "smooth", block: "start" });
-        for (const other of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
-          other.classList.toggle("active", other.getAttribute("href") === href);
-        }
-      }
-    });
-  }
-
-  const importObserver = new IntersectionObserver(
-    (entries) => {
-      for (const entry of entries) {
-        if (entry.isIntersecting && state.page === "import") {
-          const id = entry.target.id;
-          for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
-            link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
-          }
-        }
-      }
-    },
-    { rootMargin: "-10% 0px -70% 0px" },
-  );
-  for (const section of document.querySelectorAll(".import-subsection")) {
-    importObserver.observe(section);
-  }
-  $<HTMLInputElement>("reconcile-search").addEventListener("input", (e) => {
-    state.reconcileSearch = (e.target as HTMLInputElement).value;
-    redraw("reconcile");
-  });
-  $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
-  try {
-    applyNarrow(localStorage.getItem(NARROW_KEY) === "yes");
-  } catch {
-    applyNarrow(false);
-  }
-  $("theme-toggle").addEventListener("click", () => cycleTheme());
-  applyTheme(currentTheme());
-  // Following the computer means noticing when the computer changes its mind.
-  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
-    if (currentTheme() === "system") applyTheme("system");
-  });
-
-  $("accept-all").addEventListener("click", () => void acceptAllShown());
-  $<HTMLSelectElement>("reconcile-filter").addEventListener("change", (e) => {
-    state.reconcileFilter = (e.target as HTMLSelectElement)
-      .value as typeof state.reconcileFilter;
-    redraw("reconcile");
-  });
-  $<HTMLInputElement>("rules-search").addEventListener("input", () => redraw("rules"));
-  $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
-  $("check-clear").addEventListener("click", () => clearCheck());
-  $<HTMLInputElement>("check-input").addEventListener("change", (e) => {
-    const files = [...((e.target as HTMLInputElement).files ?? [])];
-    if (files.length > 0) void loadCheckFiles(files);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("variance-pick").addEventListener("click", () => $<HTMLInputElement>("variance-input").click());
-  $<HTMLInputElement>("variance-input").addEventListener("change", (e) => {
-    const files = [...((e.target as HTMLInputElement).files ?? [])];
-    if (files.length > 0) void loadFiledReturns(files);
-    (e.target as HTMLInputElement).value = "";
-  });
 
   $<HTMLSelectElement>("entity-filter").addEventListener("change", () => {
     state.entityFilter = $<HTMLSelectElement>("entity-filter").value;
@@ -397,103 +236,24 @@ function wireUp(): void {
     state.who = $<HTMLInputElement>("who").value.trim();
     void saveUser(state.who);
   });
-  $<HTMLSelectElement>("history-kind").addEventListener("change", () => redraw("history"));
-  $<HTMLSelectElement>("setup-source").addEventListener("change", () => redraw("setup"));
-  $("balances-pick").addEventListener("click", () => $("balances-input").click());
-  $<HTMLInputElement>("balances-input").addEventListener("change", (event) => {
-    const file = (event.target as HTMLInputElement).files?.[0];
-    if (file) void checkBankBalances(file);
-  });
-  $("invoice-new").addEventListener("click", () => startNewInvoice());
 
-  $("invoices-pick").addEventListener("click", () => $<HTMLInputElement>("invoices-input").click());
-  $<HTMLInputElement>("invoices-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadInvoices(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-  $("allocations-pick").addEventListener("click", () =>
-    $<HTMLInputElement>("allocations-input").click(),
-  );
-  $<HTMLInputElement>("allocations-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadAllocations(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-  $<HTMLInputElement>("invoice-search").addEventListener("input", () => redraw("invoices"));
-
-  $("report-basis").addEventListener("change", () => redraw("reports"));
-  $("report-gst").addEventListener("change", () => redraw("reports"));
-  $("journals-pick").addEventListener("click", () => $<HTMLInputElement>("journals-input").click());
-  $<HTMLInputElement>("journals-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadJournals(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("assets-pick").addEventListener("click", () => $<HTMLInputElement>("assets-input").click());
-  $("assets-pick2").addEventListener("click", () => $<HTMLInputElement>("assets-input").click());
-  $<HTMLInputElement>("assets-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadAssets(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("report-kind").addEventListener("change", () => redraw("reports"));
-  $("report-owner").addEventListener("change", () => redraw("reports"));
-  $("report-year").addEventListener("change", () => redraw("reports"));
-  $("report-download").addEventListener("click", () => downloadReport());
-
-  $("opening-pick").addEventListener("click", () => $<HTMLInputElement>("opening-input").click());
-  $<HTMLInputElement>("opening-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadOpeningBalances(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-  $("opening-year").addEventListener("change", (e) => {
-    state.openingYear = (e.target as HTMLSelectElement).value;
-    redraw("openingBalances");
-  });
-
-  $("chart-pick").addEventListener("click", () => $<HTMLInputElement>("chart-input").click());
-  $("chart-save").addEventListener("click", () => saveChart());
-  $<HTMLInputElement>("chart-input").addEventListener("change", (e) => {
-    const files = [...((e.target as HTMLInputElement).files ?? [])];
-    if (files.length > 0) void loadCheckFiles(files);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("rules-pick").addEventListener("click", () => $<HTMLInputElement>("rules-input").click());
-  $<HTMLInputElement>("rules-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void loadRulesFile(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("export-button").addEventListener("click", exportLedger);
-  $("import-ledger-button").addEventListener("click", () =>
-    $<HTMLInputElement>("ledger-input").click(),
-  );
-  $<HTMLInputElement>("ledger-input").addEventListener("change", (e) => {
-    const file = (e.target as HTMLInputElement).files?.[0];
-    if (file) void importLedger(file);
-    (e.target as HTMLInputElement).value = "";
-  });
-
-  $("clear-button").addEventListener("click", () => {
-    const count = state.ledger.transactions.length;
-    if (count === 0) return;
-    if (!confirm(`Delete all ${count} transactions from this browser? This cannot be undone.`)) {
-      return;
-    }
-    void (async () => {
-      await clear();
-      state.ledger = emptyLedger();
-      state.reports = [];
-      reclassify();
-      render();
-    })();
-  });
+  // Each page wires its own controls. main.ts knows their names and
+  // nothing else about them -- not which elements they touch, nor what
+  // those do.
+  wireChrome();
+  wireBankImport();
+  wireFileIntake();
+  wireReconcile();
+  wireCodingReconciliation();
+  wireRules();
+  wireGstReconcile();
+  wireHistory();
+  wireSetup();
+  wireInvoices();
+  wireReports();
+  wireAssets();
+  wireOpeningBalances();
+  wireBooksPage();
 }
 
 /** Fill the header selector from the entities that exist. */

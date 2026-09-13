@@ -50,6 +50,7 @@ import type {
   SplitPart,
   Transaction,
 } from "@nzosa/core";
+import { clearCheck } from "../migrate/file-intake.js";
 
 /**
  * Import reconciliation: agreeing this ledger with the one it came from.
@@ -1770,4 +1771,17 @@ async function acceptProposals(proposals: readonly RuleProposal[]): Promise<void
   // ignored -- they had in fact been accepted, and said so the moment you
   // navigated away and back.
   showPage(state.page);
+}
+
+/** Loading what the other system coded, clearing it, and accepting in bulk. */
+export function wireCodingReconciliation(): void {
+
+  $("accept-all").addEventListener("click", () => void acceptAllShown());
+  $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
+  $("check-clear").addEventListener("click", () => clearCheck());
+  $<HTMLInputElement>("check-input").addEventListener("change", (e) => {
+    const files = [...((e.target as HTMLInputElement).files ?? [])];
+    if (files.length > 0) void loadCheckFiles(files);
+    (e.target as HTMLInputElement).value = "";
+  });
 }

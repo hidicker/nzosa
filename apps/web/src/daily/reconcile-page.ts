@@ -1632,3 +1632,16 @@ function codingReconciliationWarning(): HTMLElement | null {
   wrap.append(msg, " ", go);
   return wrap;
 }
+
+/** Searching and filtering the coding queue. */
+export function wireReconcile(): void {
+  $<HTMLInputElement>("reconcile-search").addEventListener("input", (e) => {
+    state.reconcileSearch = (e.target as HTMLInputElement).value;
+    redraw("reconcile");
+  });
+  $<HTMLSelectElement>("reconcile-filter").addEventListener("change", (e) => {
+    state.reconcileFilter = (e.target as HTMLSelectElement)
+      .value as typeof state.reconcileFilter;
+    redraw("reconcile");
+  });
+}

@@ -662,3 +662,18 @@ export function renderBalanceChecks(
     ),
   );
 }
+
+/** Loading an opening position, and choosing which year is being edited. */
+export function wireOpeningBalances(): void {
+
+  $("opening-pick").addEventListener("click", () => $<HTMLInputElement>("opening-input").click());
+  $<HTMLInputElement>("opening-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadOpeningBalances(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+  $("opening-year").addEventListener("change", (e) => {
+    state.openingYear = (e.target as HTMLSelectElement).value;
+    redraw("openingBalances");
+  });
+}

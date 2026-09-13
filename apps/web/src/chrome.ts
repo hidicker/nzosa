@@ -1,6 +1,7 @@
 import { $ } from "./state.js";
 import { THEME_KEY, currentTheme } from "./ui.js";
 import type { Theme } from "./ui.js";
+import { writesToFolder } from "./store.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -72,4 +73,32 @@ export function cycleTheme(): void {
     // Not remembered, but still applied for this session.
   }
   applyTheme(next);
+}
+
+/** The frame: theme, sidebar width, and the demo banner. */
+export function wireChrome(): void {
+  const demoBanner = document.getElementById("demo-banner");
+  if (demoBanner) {
+    demoBanner.hidden = writesToFolder();
+    $("demo-banner-close")?.addEventListener("click", () => {
+      demoBanner.hidden = true;
+    });
+  }
+
+  const demoNotice = document.getElementById("demo-import-privacy-notice");
+  if (demoNotice) {
+    demoNotice.hidden = writesToFolder();
+  }
+  $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
+  try {
+    applyNarrow(localStorage.getItem(NARROW_KEY) === "yes");
+  } catch {
+    applyNarrow(false);
+  }
+  $("theme-toggle").addEventListener("click", () => cycleTheme());
+  applyTheme(currentTheme());
+  // Following the computer means noticing when the computer changes its mind.
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (currentTheme() === "system") applyTheme("system");
+  });
 }

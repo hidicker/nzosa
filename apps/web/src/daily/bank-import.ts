@@ -1,7 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import { accountsForEditing, ensureDefaultEntity, reclassify, } from "../books.js";
 import { balanceMovementSection, renderBalanceChecks } from "../daily/opening-balances.js";
-import { currentReport, ownerSummaryFor } from "../daily/reports.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, writesToFolder } from "../store.js";
@@ -13,16 +12,11 @@ import {
   checkDailyBalances,
   dedupe,
   dedupeKey,
-  depreciationSchedule,
   emptyEntityModel,
   feedResumeDate,
-  financialYearOf,
   formatAmount,
   formatChartOfAccounts,
-  formatDepreciationSchedule,
-  formatOwnerSummary,
   formatOwners,
-  formatProfitAndLoss,
   fromAkahu,
   hash,
   importFile,
@@ -39,6 +33,7 @@ import type {
   ImportProblem,
   Transaction,
 } from "@nzosa/core";
+import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
 
 /**
  * Getting bank data in, by file or by feed.
@@ -781,65 +776,6 @@ export async function checkBankBalances(file: File): Promise<void> {
   }
 }
 
-export function downloadReport(): void {
-  const years = [
-    ...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date))),
-  ].sort((a, b) => b - a);
-  const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
-
-  if ($<HTMLSelectElement>("report-kind").value === "depreciation") {
-    const assets = state.ledger.assets ?? [];
-    if (assets.length === 0 || year === undefined) return;
-    download(
-      formatDepreciationSchedule(
-        depreciationSchedule(assets, { from: `${year - 1}-04-01`, to: `${year}-03-31` }),
-        `Depreciation schedule, FY${year}`,
-      ),
-      `depreciation-schedule-fy${year}.csv`,
-      "text/csv",
-    );
-    return;
-  }
-
-  if ($<HTMLSelectElement>("report-kind").value === "owner") {
-    const owner = $<HTMLSelectElement>("report-owner").value;
-    if (owner === "" || year === undefined) return;
-    download(
-      formatOwnerSummary(ownerSummaryFor(owner, year), year),
-      `rental-income-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
-      "text/csv",
-    );
-    return;
-  }
-
-  const built = currentReport();
-  if (!built) return;
-
-  // The exported file has to say what it is. It leaves this app and gets read
-  // months later beside three others, and a figure whose basis is guessed at is
-  // worse than no figure.
-  const exportBasis = $<HTMLSelectElement>("report-basis").value;
-  const exportNote =
-    (exportBasis === "cash"
-      ? "Cash basis, from bank data. No depreciation or year-end journals."
-      : exportBasis === "posted"
-        ? "Accrual basis, from our postings."
-        : "Accrual basis, from the imported file.") +
-    ($<HTMLSelectElement>("report-gst").value === "gross" && exportBasis !== "accrual"
-      ? " GST inclusive."
-      : " GST exclusive.");
-
-  download(
-    formatProfitAndLoss(
-      built.report,
-      `${built.title} — Profit and Loss, FY${built.year}`,
-      exportNote,
-    ),
-    `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${built.year}.csv`,
-    "text/csv",
-  );
-}
-
 export function render(): void {
   renderStatus();
   renderReports();
@@ -1084,4 +1020,94 @@ function dateRange(transactions: readonly Transaction[]): { from: string; to: st
     if (transaction.date > to) to = transaction.date;
   }
   return { from, to };
+}
+
+/** Dropping statements in, picking them, filtering what arrived, and the chart that maps them. */
+export function wireBankImport(): void {
+
+  const picker = $<HTMLInputElement>("file-input");
+  const drop = $<HTMLElement>("dropzone");
+
+  $("pick-button").addEventListener("click", () => picker.click());
+  picker.addEventListener("change", () => {
+    if (picker.files) void handleFiles([...picker.files]);
+    picker.value = "";
+  });
+
+  for (const event of ["dragenter", "dragover"]) {
+    drop.addEventListener(event, (e) => {
+      e.preventDefault();
+      drop.classList.add("dragging");
+    });
+  }
+  for (const event of ["dragleave", "drop"]) {
+    drop.addEventListener(event, (e) => {
+      e.preventDefault();
+      drop.classList.remove("dragging");
+    });
+  }
+  drop.addEventListener("drop", (e) => {
+    const files = (e as DragEvent).dataTransfer?.files;
+    if (files) void handleFiles([...files]);
+  });
+
+  for (const filter of ["all", "review", "duplicate"] as const) {
+    $(`filter-${filter}`).addEventListener("click", () => {
+      state.filter = filter;
+      render();
+    });
+  }
+
+  $<HTMLInputElement>("search").addEventListener("input", (e) => {
+    state.search = (e.target as HTMLInputElement).value.toLowerCase();
+    redraw("importRows");
+  });
+
+  for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link, .sidebar-sublink")) {
+    link.addEventListener("click", (e) => {
+      const href = link.getAttribute("href");
+      if (!href?.startsWith("#")) return;
+      e.preventDefault();
+      if (state.page !== "import") {
+        showPage("import");
+      }
+      const target = document.getElementById(href.slice(1));
+      if (target) {
+        target.scrollIntoView({ behavior: "smooth", block: "start" });
+        for (const other of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
+          other.classList.toggle("active", other.getAttribute("href") === href);
+        }
+      }
+    });
+  }
+
+  const importObserver = new IntersectionObserver(
+    (entries) => {
+      for (const entry of entries) {
+        if (entry.isIntersecting && state.page === "import") {
+          const id = entry.target.id;
+          for (const link of document.querySelectorAll<HTMLAnchorElement>(".import-subnav-link")) {
+            link.classList.toggle("active", link.getAttribute("href") === `#${id}`);
+          }
+        }
+      }
+    },
+    { rootMargin: "-10% 0px -70% 0px" },
+  );
+  for (const section of document.querySelectorAll(".import-subsection")) {
+    importObserver.observe(section);
+  }
+  $("balances-pick").addEventListener("click", () => $("balances-input").click());
+  $<HTMLInputElement>("balances-input").addEventListener("change", (event) => {
+    const file = (event.target as HTMLInputElement).files?.[0];
+    if (file) void checkBankBalances(file);
+  });
+
+  $("chart-pick").addEventListener("click", () => $<HTMLInputElement>("chart-input").click());
+  $("chart-save").addEventListener("click", () => saveChart());
+  $<HTMLInputElement>("chart-input").addEventListener("change", (e) => {
+    const files = [...((e.target as HTMLInputElement).files ?? [])];
+    if (files.length > 0) void loadCheckFiles(files);
+    (e.target as HTMLInputElement).value = "";
+  });
 }

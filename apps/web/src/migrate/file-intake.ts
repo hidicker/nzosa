@@ -304,3 +304,56 @@ async function readXeroText(file: File): Promise<string> {
   // spreadsheet -- and Xero hands you one depending on which button you press.
   return asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
 }
+
+/** The one drop zone that takes everything, and the single-purpose pickers beside it. */
+export function wireFileIntake(): void {
+
+  // The same thing on Setup, except it takes anything and sorts it out itself.
+  const setupPicker = $<HTMLInputElement>("setup-input");
+  const setupDrop = $<HTMLElement>("setup-drop");
+  $("setup-pick").addEventListener("click", () => setupPicker.click());
+  setupPicker.addEventListener("change", () => {
+    if (setupPicker.files) void loadWhatever([...setupPicker.files]);
+    setupPicker.value = "";
+  });
+  for (const event of ["dragenter", "dragover"]) {
+    setupDrop.addEventListener(event, (e) => {
+      e.preventDefault();
+      setupDrop.classList.add("dragging");
+    });
+  }
+  for (const event of ["dragleave", "drop"]) {
+    setupDrop.addEventListener(event, (e) => {
+      e.preventDefault();
+      setupDrop.classList.remove("dragging");
+    });
+  }
+  setupDrop.addEventListener("drop", (e) => {
+    const files = (e as DragEvent).dataTransfer?.files;
+    if (files) void loadWhatever([...files]);
+  });
+  $("allocations-pick").addEventListener("click", () =>
+    $<HTMLInputElement>("allocations-input").click(),
+  );
+  $<HTMLInputElement>("allocations-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadAllocations(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+  $("journals-pick").addEventListener("click", () => $<HTMLInputElement>("journals-input").click());
+  $<HTMLInputElement>("journals-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadJournals(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+
+  $("export-button").addEventListener("click", exportLedger);
+  $("import-ledger-button").addEventListener("click", () =>
+    $<HTMLInputElement>("ledger-input").click(),
+  );
+  $<HTMLInputElement>("ledger-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void importLedger(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+}

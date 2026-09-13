@@ -479,3 +479,15 @@ export async function loadRulesFile(file: File): Promise<void> {
   state.pendingRules = { rules: incoming, name: file.name };
   redraw("rules");
 }
+
+/** Searching the rules, and loading a rule file. */
+export function wireRules(): void {
+  $<HTMLInputElement>("rules-search").addEventListener("input", () => redraw("rules"));
+
+  $("rules-pick").addEventListener("click", () => $<HTMLInputElement>("rules-input").click());
+  $<HTMLInputElement>("rules-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadRulesFile(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+}

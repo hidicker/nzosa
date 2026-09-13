@@ -26,6 +26,7 @@ import type {
   InvoiceSupplier,
   Transaction,
 } from "@nzosa/core";
+import { loadInvoices } from "../migrate/file-intake.js";
 
 /**
  * Writing an invoice by hand.
@@ -834,4 +835,17 @@ async function acceptMatch(transactionId: string, invoiceNumber: string): Promis
 export function startNewInvoice(): void {
   editingInvoice = "";
   redraw("invoiceEditor");
+}
+
+/** Starting an invoice, loading a batch of them, and searching what is there. */
+export function wireInvoices(): void {
+  $("invoice-new").addEventListener("click", () => startNewInvoice());
+
+  $("invoices-pick").addEventListener("click", () => $<HTMLInputElement>("invoices-input").click());
+  $<HTMLInputElement>("invoices-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadInvoices(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+  $<HTMLInputElement>("invoice-search").addEventListener("input", () => redraw("invoices"));
 }

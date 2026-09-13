@@ -11,6 +11,7 @@ import {
   parseAmount,
 } from "@nzosa/core";
 import type { Cents } from "@nzosa/core";
+import { loadAssets } from "../migrate/file-intake.js";
 
 /**
  * Fixed assets, their depreciation, and what happens when one is sold.
@@ -343,4 +344,16 @@ export function renderAssetsPage(): void {
   body.append(table);
 
   renderDisposals(body);
+}
+
+/** Loading a fixed-asset schedule. */
+export function wireAssets(): void {
+
+  $("assets-pick").addEventListener("click", () => $<HTMLInputElement>("assets-input").click());
+  $("assets-pick2").addEventListener("click", () => $<HTMLInputElement>("assets-input").click());
+  $<HTMLInputElement>("assets-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadAssets(file);
+    (e.target as HTMLInputElement).value = "";
+  });
 }

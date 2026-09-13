@@ -134,3 +134,8 @@ export function renderHistory(): void {
   table.append(head, tbody);
   body.append(table);
 }
+
+/** Filtering the change log by what kind of change it was. */
+export function wireHistory(): void {
+  $<HTMLSelectElement>("history-kind").addEventListener("change", () => redraw("history"));
+}

@@ -10,6 +10,10 @@ import {
   writesToFolder,
 } from "../store.js";
 import { note } from "../ui.js";
+import { reclassify } from "../books.js";
+import { render } from "../daily/bank-import.js";
+import { state } from "../state.js";
+import { clear, emptyLedger } from "../store.js";
 
 /**
  * The dated copies kept beside these books.
@@ -328,4 +332,23 @@ export async function renderOpenBooks(): Promise<void> {
   const open = all.find((one) => one.id === current);
   $("ledger-open-name").textContent = open?.name ?? current;
   button.hidden = false;
+}
+
+/** Clearing these books and starting again. */
+export function wireBooksPage(): void {
+
+  $("clear-button").addEventListener("click", () => {
+    const count = state.ledger.transactions.length;
+    if (count === 0) return;
+    if (!confirm(`Delete all ${count} transactions from this browser? This cannot be undone.`)) {
+      return;
+    }
+    void (async () => {
+      await clear();
+      state.ledger = emptyLedger();
+      state.reports = [];
+      reclassify();
+      render();
+    })();
+  });
 }

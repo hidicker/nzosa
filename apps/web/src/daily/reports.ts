@@ -26,7 +26,10 @@ import {
   financialYearOf,
   formatAccountTransactions,
   formatAmount,
+  formatDepreciationSchedule,
   formatGeneralLedger,
+  formatOwnerSummary,
+  formatProfitAndLoss,
   generalLedgerRows,
   generalLedgerTotals,
   ir10IsCalculated,
@@ -1831,4 +1834,75 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
   if (rows.length > 300) {
     body.append(note(`Showing the first 300 of ${rows.length}. The export holds them all.`));
   }
+}
+
+export function downloadReport(): void {
+  const years = [
+    ...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date))),
+  ].sort((a, b) => b - a);
+  const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
+
+  if ($<HTMLSelectElement>("report-kind").value === "depreciation") {
+    const assets = state.ledger.assets ?? [];
+    if (assets.length === 0 || year === undefined) return;
+    download(
+      formatDepreciationSchedule(
+        depreciationSchedule(assets, { from: `${year - 1}-04-01`, to: `${year}-03-31` }),
+        `Depreciation schedule, FY${year}`,
+      ),
+      `depreciation-schedule-fy${year}.csv`,
+      "text/csv",
+    );
+    return;
+  }
+
+  if ($<HTMLSelectElement>("report-kind").value === "owner") {
+    const owner = $<HTMLSelectElement>("report-owner").value;
+    if (owner === "" || year === undefined) return;
+    download(
+      formatOwnerSummary(ownerSummaryFor(owner, year), year),
+      `rental-income-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
+      "text/csv",
+    );
+    return;
+  }
+
+  const built = currentReport();
+  if (!built) return;
+
+  // The exported file has to say what it is. It leaves this app and gets read
+  // months later beside three others, and a figure whose basis is guessed at is
+  // worse than no figure.
+  const exportBasis = $<HTMLSelectElement>("report-basis").value;
+  const exportNote =
+    (exportBasis === "cash"
+      ? "Cash basis, from bank data. No depreciation or year-end journals."
+      : exportBasis === "posted"
+        ? "Accrual basis, from our postings."
+        : "Accrual basis, from the imported file.") +
+    ($<HTMLSelectElement>("report-gst").value === "gross" && exportBasis !== "accrual"
+      ? " GST inclusive."
+      : " GST exclusive.");
+
+  download(
+    formatProfitAndLoss(
+      built.report,
+      `${built.title} — Profit and Loss, FY${built.year}`,
+      exportNote,
+    ),
+    `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${built.year}.csv`,
+    "text/csv",
+  );
+}
+
+/** The five choices that decide which report is shown, and downloading it. */
+export function wireReports(): void {
+
+  $("report-basis").addEventListener("change", () => redraw("reports"));
+  $("report-gst").addEventListener("change", () => redraw("reports"));
+
+  $("report-kind").addEventListener("change", () => redraw("reports"));
+  $("report-owner").addEventListener("change", () => redraw("reports"));
+  $("report-year").addEventListener("change", () => redraw("reports"));
+  $("report-download").addEventListener("click", () => downloadReport());
 }

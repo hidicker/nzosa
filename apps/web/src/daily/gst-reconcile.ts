@@ -5,6 +5,7 @@ import { detailFor } from "../variance.js";
 import type { VarianceRow } from "../variance.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
 import { formatAmount, gstWithin } from "@nzosa/core";
+import { loadFiledReturns } from "../migrate/file-intake.js";
 
 /**
  * Agreeing a filed GST return with what the books now say.
@@ -176,4 +177,15 @@ function renderDetail(row: VarianceRow): HTMLElement {
   section("In the filed return, not in ours", detail.onlyFiled);
   section("In ours, not in the filed return", detail.onlyOurs);
   return wrap;
+}
+
+/** Loading filed returns to compare against. */
+export function wireGstReconcile(): void {
+
+  $("variance-pick").addEventListener("click", () => $<HTMLInputElement>("variance-input").click());
+  $<HTMLInputElement>("variance-input").addEventListener("change", (e) => {
+    const files = [...((e.target as HTMLInputElement).files ?? [])];
+    if (files.length > 0) void loadFiledReturns(files);
+    (e.target as HTMLInputElement).value = "";
+  });
 }

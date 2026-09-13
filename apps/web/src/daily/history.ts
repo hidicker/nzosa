@@ -7,6 +7,10 @@ import { $, state } from "../state.js";
 import { save, saveEvents } from "../store.js";
 import { note } from "../ui.js";
 import type { RuleSet } from "@nzosa/core";
+import { postedJournals } from "../books.js";
+import { daysWork, formatAmount, localDay, sourceIdsOf } from "@nzosa/core";
+import type { PostedJournal } from "@nzosa/core";
+import { amountCell, nameCell } from "../ui.js";
 
 /**
  * Every change, and the ability to take one back.
@@ -63,6 +67,8 @@ export function renderHistory(): void {
     option.selected = kind === chosen;
     kindSelect.append(option);
   }
+
+  todaySection(body);
 
   if (state.events.length === 0) {
     body.append(
@@ -138,4 +144,115 @@ export function renderHistory(): void {
 /** Filtering the change log by what kind of change it was. */
 export function wireHistory(): void {
   $<HTMLSelectElement>("history-kind").addEventListener("change", () => redraw("history"));
+}
+
+/**
+ * What today's decisions did to the accounts.
+ *
+ * The log below records changes -- a code replaced, a transfer paired -- and a
+ * change is not an answer to "what have I done to the books today". That
+ * answer is the journals: the debits and credits those decisions caused, which
+ * are what the reports are built from and what an accountant would ask to see.
+ *
+ * Shown at the top and only when there is something, because on a day nobody
+ * has coded anything an empty panel is noise.
+ */
+function todaySection(body: HTMLElement): void {
+  const today = localDay(new Date().toISOString(), -new Date().getTimezoneOffset());
+  const work = daysWork({
+    events: state.events,
+    transactions: state.ledger.transactions,
+    journals: postedJournals(),
+    on: today,
+    offsetMinutes: -new Date().getTimezoneOffset(),
+    transfers: state.ledger.transfers ?? {},
+  });
+  if (work.events.length === 0) return;
+
+  const heading = document.createElement("h3");
+  heading.textContent = "Today";
+  body.append(heading);
+
+  const decisions = work.events.length;
+  const lines = work.transactions.length;
+  body.append(
+    note(
+      `${decisions} decision${decisions === 1 ? "" : "s"} today, about ${lines} bank ` +
+        `line${lines === 1 ? "" : "s"}, posting ${work.journals.length} ` +
+        `journal${work.journals.length === 1 ? "" : "s"}: ` +
+        `${formatAmount(work.debits)} of debits and ${formatAmount(work.credits)} of credits.` +
+        (work.debits !== work.credits
+          ? " These do not agree, which means something is posting wrongly -- worth reporting."
+          : "") +
+        (work.missing.length > 0
+          ? ` ${work.missing.length} decision${work.missing.length === 1 ? " names a line" : "s name lines"}` +
+            " the ledger no longer holds, usually because the books were cleared and loaded again."
+          : ""),
+    ),
+  );
+
+  const table = document.createElement("table");
+  table.className = "report-table owner-table match-table";
+  const head = document.createElement("thead");
+  head.innerHTML =
+    "<tr><th>Date</th><th>Bank line</th><th>Amount</th><th>Posted to</th><th>Debit</th><th>Credit</th></tr>";
+  const tbody = document.createElement("tbody");
+
+  // A journal can belong to two lines at once: a transfer posts once for the
+  // pair, and showing it against both legs would double what the day appears
+  // to have posted. So it is listed against the first leg that claims it.
+  const byTransaction = new Map<string, PostedJournal[]>();
+  const claimed = new Set<PostedJournal>();
+  for (const transaction of work.transactions) {
+    for (const journal of work.journals) {
+      if (claimed.has(journal)) continue;
+      if (!sourceIdsOf(journal.transactionId).includes(transaction.id)) continue;
+      claimed.add(journal);
+      const held = byTransaction.get(transaction.id);
+      if (held) held.push(journal);
+      else byTransaction.set(transaction.id, [journal]);
+    }
+  }
+
+  for (const transaction of work.transactions) {
+    const journals = byTransaction.get(transaction.id) ?? [];
+    const rows = journals.flatMap((j) => j.lines);
+    // A line with no journal of its own is worth seeing rather than hiding. A
+    // transfer posts once for the pair, so one leg is explained by the other
+    // and says so; anything else means a decision was made and nothing
+    // posted, which is a fault worth noticing.
+    if (rows.length === 0) {
+      const tr = document.createElement("tr");
+      tr.append(nameCell(transaction.date));
+      tr.append(nameCell(transaction.otherParty || transaction.particulars || ""));
+      tr.append(amountCell(formatAmount(transaction.amount)));
+      const pairHasIt = work.journals.some((j) =>
+        sourceIdsOf(j.transactionId).includes(transaction.id),
+      );
+      tr.append(
+        nameCell(
+          pairHasIt || work.postedWithPair.has(transaction.id)
+            ? "posted once, shown against the other leg of this transfer"
+            : "nothing posted",
+        ),
+      );
+      tr.append(amountCell(""));
+      tr.append(amountCell(""));
+      tbody.append(tr);
+      continue;
+    }
+    rows.forEach((line, index) => {
+      const tr = document.createElement("tr");
+      tr.append(nameCell(index === 0 ? transaction.date : ""));
+      tr.append(nameCell(index === 0 ? transaction.otherParty || transaction.particulars || "" : ""));
+      tr.append(amountCell(index === 0 ? formatAmount(transaction.amount) : ""));
+      tr.append(nameCell(`${line.accountCode} ${line.accountName}`.trim()));
+      tr.append(amountCell(line.amount > 0 ? formatAmount(line.amount) : ""));
+      tr.append(amountCell(line.amount < 0 ? formatAmount(-line.amount) : ""));
+      tbody.append(tr);
+    });
+  }
+
+  table.append(head, tbody);
+  body.append(table);
 }

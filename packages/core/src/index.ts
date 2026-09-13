@@ -282,6 +282,7 @@ export type {
   InvoiceStatus,
 } from "./invoices.js";
 export * from "./xero.js";
+export * from "./days-work.js";
 export * from "./journals.js";
 export * from "./chart.js";
 export * from "./variance.js";

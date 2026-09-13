@@ -5,9 +5,9 @@ import {
   banks,
   entityBankAccounts,
   postedJournals,
-  reclassify,
   record,
   reportEngine,
+  saveManualJournals,
 } from "../books.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { knownCodes } from "../reconcile.js";
@@ -444,15 +444,6 @@ async function importManualJournals(): Promise<void> {
     .join("\n");
   if (!confirm(`Take ${found.length} manual journal${found.length === 1 ? "" : "s"}?\n\n${listed}`)) return;
   await saveManualJournals([...held, ...found], `Read ${found.length} manual journals from the report`);
-}
-
-async function saveManualJournals(journals: ManualJournal[], what: string): Promise<void> {
-  const before = state.ledger.manualJournals ?? null;
-  state.ledger = { ...state.ledger, manualJournals: journals };
-  state.persistent = await savePart(state.ledger);
-  await record("manualJournal", what, before, journals, "manualJournals");
-  reclassify();
-  redraw("reports");
 }
 
 /**

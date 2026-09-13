@@ -1,5 +1,5 @@
 import { redraw, showPage } from "../app.js";
-import { asCsvText, reclassify, recomputeVariance } from "../books.js";
+import { asCsvText, reclassify, recomputeVariance, saveManualJournals } from "../books.js";
 import { checkBankBalances, handleFiles, render } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
@@ -7,15 +7,8 @@ import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
 import type { StoredLedger } from "../store.js";
 import { readFiledReturns } from "../variance.js";
-import {
-  identifyExport,
-  parseFixedAssets,
-  parseXeroAllocations,
-  parseXeroInvoices,
-  parseXeroJournalReport,
-  validateInvoices,
-} from "@nzosa/core";
-import type { Identified } from "@nzosa/core";
+import { identifyExport, manualJournalsIn, parseFixedAssets, parseXeroAllocations, parseXeroInvoices, parseXeroJournalReport, validateInvoices } from "@nzosa/core";
+import type { Identified, Journal } from "@nzosa/core";
 
 /**
  * Taking whatever the old system produced, in one go.
@@ -243,6 +236,48 @@ export async function loadJournals(file: File): Promise<void> {
   state.ledger = { ...state.ledger, journals: parsed.journals };
   state.persistent = await savePart(state.ledger, "journals");
   redraw("reports");
+
+  await offerManualJournals(parsed.journals);
+}
+
+/**
+ * Take the year-end journals out of the report that just arrived.
+ *
+ * The journal report is the only place these exist. Loading it and stopping
+ * there left them sitting in a file the books had already read: on one real
+ * ledger three of them -- a 3,354.78 interest reversal, a 3,324.10 GST
+ * correction and a rounding adjustment -- sat in the report for months and in
+ * nobody's books, because taking them was a separate button on a page there
+ * was no reason to open.
+ *
+ * Offered rather than done. A manual journal moves the profit and the balance
+ * sheet, and a figure that changes because a file was dropped is the kind of
+ * change nobody can explain later.
+ *
+ * What is on the list is decided by the other system's own markers: a manual
+ * entry's narration ends "- Manual", and one that was later reversed is left
+ * off -- otherwise the correction is applied twice and the reversal never.
+ */
+async function offerManualJournals(journals: readonly Journal[]): Promise<void> {
+  const held = state.ledger.manualJournals ?? [];
+  const found = manualJournalsIn(journals).filter(
+    (j) => !held.some((existing) => existing.id === j.id),
+  );
+  if (found.length === 0) return;
+
+  const many = found.length !== 1;
+  const listed = found.map((j) => `  ${j.date}  ${j.narration.slice(0, 64)}`).join("\n");
+  const ask =
+    `${found.length} manual journal${many ? "s" : ""} in that report ${many ? "are" : "is"} ` +
+    `not in your books:\n\n${listed}\n\n` +
+    "These are year-end adjustments, and they change the profit and the " +
+    "balance sheet. Take them?";
+  if (!confirm(ask)) return;
+
+  await saveManualJournals(
+    [...held, ...found],
+    `Read ${found.length} manual journal${many ? "s" : ""} from the report`,
+  );
 }
 
 /** Read a fixed asset register and keep it with the ledger. */

@@ -32,6 +32,7 @@ import {
 } from "@nzosa/core";
 import type {
   Account,
+  ManualJournal,
   CodingCounts,
   CodingEngine,
   EntityModel,
@@ -724,4 +725,26 @@ export function postedJournals(): PostedJournal[] {
     manualJournals: state.ledger.manualJournals ?? [],
     assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
   });
+}
+
+/**
+ * Keep a set of manual journals with the books.
+ *
+ * Year-end adjustments are the entries nobody can re-derive: an accountant
+ * decided them, and they exist in the other system's journal report and
+ * nowhere else. They are saved here rather than from the page that happened to
+ * read them, because two screens now take them -- the Reports page on request,
+ * and the file load as the report arrives -- and both have to leave the same
+ * books behind.
+ *
+ * `reclassify` runs because a manual journal changes what the coding queue has
+ * left to say about a transaction.
+ */
+export async function saveManualJournals(journals: ManualJournal[], what: string): Promise<void> {
+  const before = state.ledger.manualJournals ?? null;
+  state.ledger = { ...state.ledger, manualJournals: journals };
+  state.persistent = await savePart(state.ledger);
+  await record("manualJournal", what, before, journals, "manualJournals");
+  reclassify();
+  redraw("reports");
 }

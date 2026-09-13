@@ -170,6 +170,7 @@ export type { Cents } from "./money.js";
 export {
   parseDate,
   fromExcelSerial,
+  dayAfter,
   daysBetween,
   daysInMonth,
   financialYear,

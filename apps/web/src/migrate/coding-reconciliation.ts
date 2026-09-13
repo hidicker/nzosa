@@ -18,7 +18,7 @@ import {
   readChosenColumns,
 } from "../check-ui.js";
 import type { CodingBatchEntry, TransferPair } from "../events.js";
-import { fillAccounts } from "../pickers.js";
+import { fillAccounts } from "../widgets.js";
 import { knownCodes, rateLabel, suggest, transferCandidates } from "../reconcile.js";
 import type { Suggestion } from "../reconcile.js";
 import type { RuleFileShape } from "../rules-ui.js";

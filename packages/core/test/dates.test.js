@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { parseDate, fromExcelSerial, daysBetween, financialYear, financialYearOf } from "../dist/index.js";
+import { dayAfter, parseDate, fromExcelSerial, daysBetween, financialYear, financialYearOf } from "../dist/index.js";
 
 test("parses ISO dates", () => {
   assert.equal(parseDate("2024-07-01"), "2024-07-01");
@@ -92,4 +92,14 @@ test("it agrees with the range financialYear gives for the same year", () => {
     assert.equal(financialYearOf(from), year, `${from} opens the ${year} year`);
     assert.equal(financialYearOf(to), year, `${to} closes it`);
   }
+});
+
+test("the next day crosses a month, a year and a leap day", () => {
+  // Not arithmetic on the last two characters, and not local time: a date that
+  // shifts under daylight saving moves a transaction between two tax years
+  // twice a year.
+  assert.equal(dayAfter("2026-03-31"), "2026-04-01");
+  assert.equal(dayAfter("2026-12-31"), "2027-01-01");
+  assert.equal(dayAfter("2028-02-28"), "2028-02-29", "2028 is a leap year");
+  assert.equal(dayAfter("2027-02-28"), "2027-03-01", "2027 is not");
 });

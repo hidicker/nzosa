@@ -143,6 +143,20 @@ export function daysBetween(a: IsoDate, b: IsoDate): number {
   return Math.round((Date.parse(`${b}T00:00:00Z`) - Date.parse(`${a}T00:00:00Z`)) / 86_400_000);
 }
 
+/**
+ * The next day.
+ *
+ * Through UTC rather than by adding to the string, because a month or a year
+ * boundary is not arithmetic on the last two characters, and a local-time date
+ * shifts under daylight saving -- which would silently move a transaction
+ * between two tax years twice a year.
+ */
+export function dayAfter(date: IsoDate): IsoDate {
+  const at = new Date(`${date}T00:00:00Z`);
+  at.setUTCDate(at.getUTCDate() + 1);
+  return at.toISOString().slice(0, 10) as IsoDate;
+}
+
 export interface DateRange {
   from: IsoDate;
   to: IsoDate;

@@ -4,11 +4,22 @@ import type { EventKind } from "./events.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { describeRules } from "./rules-ui.js";
+import { buildRows } from "./variance.js";
 import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { clearStore, emptyLedger, saveEvents, savePart, saveRules } from "./store.js";
 import {
   DEFAULT_ENTITY_NAME,
+  chartTreatments,
+  codingCounts,
+  codingEngine,
+  depreciationJournals as coreDepreciationJournals,
+  disposalJournals as coreDisposalJournals,
+  decodeText,
+  invoiceBalancesFor,
+  postLedger,
+  readXlsx,
+  sheetToCsv,
   dedupe,
   defaultEntityModel,
   emptyEntityModel,
@@ -19,7 +30,15 @@ import {
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
 } from "@nzosa/core";
-import type { Account, EntityModel, RuleSet } from "@nzosa/core";
+import type {
+  Account,
+  CodingCounts,
+  CodingEngine,
+  EntityModel,
+  InvoiceBalance,
+  PostedJournal,
+  RuleSet,
+} from "@nzosa/core";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -502,4 +521,207 @@ export async function useRules(rules: RuleFileShape, name: string, verb: string)
   state.rulesMessage = `${verb} ${name}: ${describeRules(rules)}.`;
   await saveRules({ version: 1, name, loadedAt: state.rulesLoadedAt, rules });
   redraw("rules");
+}
+
+export function recomputeVariance(): void {
+  if (state.filed.length === 0) {
+    state.varianceRows = [];
+    return;
+  }
+  state.varianceRows = buildRows(state.filed, {
+    transactions: state.ledger.transactions,
+    splits: state.ledger.splits ?? {},
+    overrides: state.ledger.overrides ?? {},
+    rules: state.rules,
+    notes: state.ledger.varianceNotes ?? [],
+    // The same fallback the profit and loss uses, so an account treated by the
+    // chart is treated the same way in both.
+    chartTreatment: (code: string) => chartTreatmentOf(code),
+    // Narrowed by the chosen entity, as every other page's selection is.
+    // Choosing an entity narrowed the account chips here and left the figures
+    // alone, so a page headed by one company's name compared everybody's bank
+    // accounts against that company's filed returns and reported the rest of
+    // the household as a disagreement.
+    accounts: accountsFor(state.varianceAccounts),
+  });
+}
+
+export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
+  return invoiceBalancesFor({
+    invoices: state.ledger.invoices ?? [],
+    transactions: state.ledger.transactions,
+    splits: state.ledger.splits ?? {},
+    assignments: invoiceAssignments(),
+  });
+}
+
+export function bankLabel(account: string): string {
+  return banks().labels.get(account) ?? account;
+}
+
+export function codingProgress(): CodingCounts {
+  if (
+    caches.coded !== undefined &&
+    caches.coded.transactions === state.ledger.transactions &&
+    caches.coded.rules === state.rules
+  ) {
+    return caches.coded.counts;
+  }
+  const counts = codingCounts(state.ledger.transactions, {
+    ...((state.rules as RuleFileShape | undefined) ?? {}),
+    overrides: state.ledger.overrides ?? {},
+  } as RuleSet);
+  caches.coded = { transactions: state.ledger.transactions, rules: state.rules, counts };
+  return counts;
+}
+
+export function cachedChartTreatments(): Map<string, unknown> {
+  // Built once and kept until one of the three things it derives from is
+  // replaced. It is consulted per transaction, and rebuilding a ninety-row map
+  // three thousand times is the difference between a report and a wait.
+  // Identity is the key rather than a flag somebody has to remember to clear:
+  // the chart, the rules and the ledger are all replaced wholesale, never
+  // edited in place, so a stale cache cannot survive a change.
+  if (
+    caches.chartTreatment !== null &&
+    caches.chartTreatment.chart === state.chart &&
+    caches.chartTreatment.rules === state.rules &&
+    caches.chartTreatment.ledger === state.ledger
+  ) {
+    return caches.chartTreatment.map;
+  }
+
+  // The map itself is core's; what stays here is the cache in front of it.
+  const map: Map<string, unknown> = chartTreatments(
+    state.chart,
+    state.rules,
+    state.ledger.overrides ?? {},
+  );
+
+  caches.chartTreatment = {
+    chart: state.chart,
+    rules: state.rules,
+    ledger: state.ledger,
+    map,
+  };
+  return map;
+}
+
+export function chartTreatmentOf(label: string): unknown | null {
+  return cachedChartTreatments().get(label) ?? null;
+}
+
+/**
+ * Coding and GST, set up once for a report.
+ *
+ * Splits are expanded first: a payment divided across accounts reaches the
+ * profit figure as its parts, not as whichever code the parent carries.
+ */
+export function reportEngine(): CodingEngine | null {
+  // Coding and GST treatment are decided together in core, because a
+  // correction to either has to reach both. This says only where the app keeps
+  // the inputs -- and passes the chart lookup rather than repeating it, so a
+  // report and the Entities page cannot come to different answers.
+  return codingEngine({
+    transactions: state.ledger.transactions,
+    splits: state.ledger.splits ?? {},
+    overrides: state.ledger.overrides ?? {},
+    ...(state.rules ? { rules: state.rules as RuleFileShape } : {}),
+    chartTreatment: (code: string) => chartTreatmentOf(code) as never,
+  });
+}
+
+/**
+ * A dropped file as CSV text, whichever of the two shapes it arrived in.
+ *
+ * The readers here are written against the CSV a system exports, because that
+ * is where the column names are stable. But the same report often comes out of
+ * the same system as a spreadsheet -- Xero's Journal Report does -- and
+ * refusing it means going back to export it again in another format, knowing
+ * to. The sheet is turned into the text the reader already understands.
+ */
+export async function asCsvText(name: string, bytes: Uint8Array): Promise<string> {
+  // A spreadsheet is a zip, and every zip starts "PK". Checked as well as the
+  // extension, because a spreadsheet saved as .csv is still a zip inside.
+  const zipped = bytes[0] === 0x50 && bytes[1] === 0x4b;
+  if (/[.]xlsx$/i.test(name) || zipped) {
+    const workbook = await readXlsx(bytes);
+    const sheet = workbook.sheets[0];
+    if (sheet !== undefined) return sheetToCsv(sheet);
+  }
+
+  // A plain UTF-8 read mangles anything written in Windows-1252, which is what
+  // Xero writes. `decodeText` tries UTF-8 strictly and falls back.
+  return decodeText(bytes);
+}
+
+function disposalJournals(options: {
+  resolveAccount: (code: string) => { code: string; name: string };
+}): PostedJournal[] {
+  return coreDisposalJournals({
+    assets: state.ledger.assets ?? [],
+    proceeds: state.ledger.assetProceeds ?? {},
+    transactions: state.ledger.transactions,
+    chart: state.chart,
+    posting: options,
+  });
+}
+
+function depreciationJournals(): PostedJournal[] {
+  // The matching and the arithmetic are in core, where they are tested. The
+  // `resolveAccount` this used to take was never read.
+  return coreDepreciationJournals({
+    assets: state.ledger.assets ?? [],
+    transactions: state.ledger.transactions,
+    chart: state.chart,
+  });
+}
+
+/**
+ * Post the ledger as double entry.
+ *
+ * Postings are derived, not stored: recomputed from the transaction and its
+ * coding every time, so correcting a rule corrects the journal. The bank data
+ * stays the source of truth.
+ *
+ * Split lines are posted from their expanded rows rather than their raw parts,
+ * because a part written without a side has one resolved for it from the
+ * direction of the money — posting the raw part would silently drop its GST.
+ */
+export function postedJournals(): PostedJournal[] {
+  // Composition is in core, where the three rules that go expensively wrong --
+  // a settled invoice not counting as a fresh sale, a transfer posting once
+  // rather than twice, judgements coming last -- are tested. This gathers what
+  // the app knows and hands it over.
+  const engine = reportEngine();
+  if (!engine) return [];
+
+  // Built once, not once per lookup: this is called for every line of every
+  // journal, and rebuilding the chart index inside it made posting the ledger
+  // quadratic in the size of the chart.
+  const byName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
+  const resolveAccount = (code: string): { code: string; name: string } => {
+    const { code: digits, name } = splitAccountLabel(code);
+    const account = byName.get(name.toLowerCase());
+    return { code: digits || account?.code || "", name: account?.name ?? name };
+  };
+
+  return postLedger({
+    transactions: engine.transactions,
+    codeOf: engine.codeOf,
+    classify: engine.classify,
+    chart: state.chart,
+    bankLabels: new Map(
+      state.ledger.transactions.map((t) => [
+        t.account,
+        String(t.extras?.["accountLabel"] ?? t.account),
+      ]),
+    ),
+    byId: new Map(state.ledger.transactions.map((t) => [t.id, t])),
+    invoices: state.ledger.invoices ?? [],
+    settled: invoiceAssignments(),
+    transfers: state.ledger.transfers ?? {},
+    manualJournals: state.ledger.manualJournals ?? [],
+    assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
+  });
 }

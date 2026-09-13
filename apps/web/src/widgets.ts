@@ -1,5 +1,16 @@
+import { showPage } from "./app.js";
 import { entityBankAccounts } from "./books.js";
+import { formatAmount } from "@nzosa/core";
 import { $, state } from "./state.js";
+
+/**
+ * Small pieces of page furniture that more than one page shows.
+ *
+ * Not primitives -- each of these reads the books to know what to draw, which
+ * is exactly what keeps them out of `ui.ts`. They are here rather than in
+ * whichever page happened to need them first, because a second page needing
+ * one is how a page module ends up importing another page module.
+ */
 
 /**
  * Choosing which bank accounts a page is about.
@@ -58,4 +69,44 @@ export function fillAccounts(id: string, chosen: string[], onChange: () => void)
     });
     holder.append(chip);
   }
+}
+
+/**
+ * Say when a figure is built on transactions still in question.
+ *
+ * A duplicate the app is unsure of is kept and flagged, which is right: two
+ * payments of the same amount a few days apart can genuinely be two payments,
+ * and dropping one on a guess would lose real money. But kept means counted,
+ * and the flag lives on the Import page while the damage is done here -- a
+ * profit figure, or a return, quietly too big by whatever those rows come to.
+ *
+ * So the pages that state a figure say what is still unsettled underneath it,
+ * and how much it is worth. Being wrong is survivable; being wrong with
+ * nothing on the screen to say so is not.
+ */
+export function unresolvedNote(): HTMLElement | null {
+  const waiting = state.entries.filter((e) => e.status === "review");
+  if (waiting.length === 0) return null;
+
+  const worth = waiting.reduce((sum, e) => sum + Math.abs(e.transaction.amount), 0);
+  const note = document.createElement("p");
+  note.className = "unresolved-note";
+  note.textContent =
+    `${waiting.length} transaction${waiting.length === 1 ? " is" : "s are"} still in question ` +
+    `— possibly the same thing counted twice, worth ${formatAmount(worth)} in total. ` +
+    // Not "the figures below": this line appears on the reconcile queue as well,
+    // where there are no figures below it, and a warning that describes the
+    // wrong page is one somebody learns to skip.
+    "They count towards every total until you decide.";
+
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "link-button";
+  go.textContent = "settle them";
+  go.addEventListener("click", () => {
+    state.filter = "review";
+    showPage("import");
+  });
+  note.append(" ", go);
+  return note;
 }

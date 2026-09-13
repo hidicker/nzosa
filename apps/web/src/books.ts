@@ -3,8 +3,9 @@ import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
 import { suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
+import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
-import { saveEvents, savePart } from "./store.js";
+import { saveEvents, savePart, saveRules } from "./store.js";
 import {
   DEFAULT_ENTITY_NAME,
   dedupe,
@@ -336,4 +337,25 @@ export async function tidyChart(): Promise<void> {
   state.chart = tidied;
   state.ledger = { ...state.ledger, chart: tidied };
   state.persistent = await savePart(state.ledger, "chart");
+}
+
+/**
+ * Put the rules back where they came from.
+ *
+ * Rules are edited from three screens and undone from a fourth, and every one
+ * of them has to leave the same file behind. The dirty flag clears here rather
+ * than at each call site for the same reason: whether there is unsaved work is
+ * a fact about the rules, not about whichever screen last touched them.
+ */
+export async function persistRules(): Promise<void> {
+  const file = state.rules as RuleFileShape | undefined;
+  if (!file) return;
+  await saveRules({
+    version: 1,
+    name: state.rulesName,
+    loadedAt: state.rulesLoadedAt,
+    rules: file,
+  });
+  state.rulesDirty = false;
+  if (state.page === "rules") redraw("rules");
 }

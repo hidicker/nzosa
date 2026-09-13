@@ -1,0 +1,306 @@
+import { redraw, showPage } from "../app.js";
+import { asCsvText, reclassify, recomputeVariance } from "../books.js";
+import { checkBankBalances, handleFiles, render } from "../daily/bank-import.js";
+import { loadOpeningBalances } from "../daily/opening-balances.js";
+import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
+import { $, state } from "../state.js";
+import { save, savePart } from "../store.js";
+import type { StoredLedger } from "../store.js";
+import { readFiledReturns } from "../variance.js";
+import {
+  identifyExport,
+  parseFixedAssets,
+  parseXeroAllocations,
+  parseXeroInvoices,
+  parseXeroJournalReport,
+  validateInvoices,
+} from "@nzosa/core";
+import type { Identified } from "@nzosa/core";
+
+/**
+ * Taking whatever the old system produced, in one go.
+ *
+ * Setting a set of books up used to be seven errands: each report fetched on
+ * the same visit to the same system, then loaded here on a different page,
+ * through a different button, in an order nobody was told. Most of that is
+ * navigation rather than work, and none of it is necessary -- every one of
+ * these reports announces itself in its own heading row, and the parsers
+ * already knew those headings because each checks for its own before reading
+ * a line.
+ *
+ * So: hand over the lot. Each file is identified, sent where it belongs, and
+ * named in the list underneath, with anything unrecognised said plainly rather
+ * than pushed through the nearest parser -- which is the failure worth
+ * avoiding, because a chart of accounts read as a bank statement does not
+ * announce itself either.
+ */
+
+export function exportLedger(): void {
+  const blob = new Blob([`${JSON.stringify(state.ledger, null, 2)}\n`], {
+    type: "application/json",
+  });
+  const url = URL.createObjectURL(blob);
+  const link = document.createElement("a");
+  link.href = url;
+  link.download = "ledger.json";
+  link.click();
+  URL.revokeObjectURL(url);
+}
+
+export async function importLedger(file: File): Promise<void> {
+  try {
+    const parsed = JSON.parse(await file.text()) as Partial<StoredLedger>;
+    if (parsed.version !== 1 || !Array.isArray(parsed.transactions)) {
+      throw new Error("That file is not a NZOSA ledger.");
+    }
+    // Setup is not transaction data. The chart, entities, asset register,
+    // ledger and hand-entered income were configured in this browser and are
+    // not in an exported ledger file, so importing one must not silently
+    // discard them -- it did, which turned a refresh into a reset.
+    state.ledger = {
+      ...state.ledger,
+      version: 1,
+      legitimateDuplicates: parsed.legitimateDuplicates ?? [],
+      transactions: parsed.transactions,
+      ...(parsed.splits ? { splits: parsed.splits } : {}),
+      ...(parsed.overrides ? { overrides: parsed.overrides } : {}),
+      ...(parsed.varianceNotes ? { varianceNotes: parsed.varianceNotes } : {}),
+      ...(parsed.chart ? { chart: parsed.chart } : {}),
+      ...(parsed.entities ? { entities: parsed.entities } : {}),
+      ...(parsed.assets ? { assets: parsed.assets } : {}),
+      ...(parsed.journals ? { journals: parsed.journals } : {}),
+      ...(parsed.invoices ? { invoices: parsed.invoices } : {}),
+      ...(parsed.allocations ? { allocations: parsed.allocations } : {}),
+      ...(parsed.taxExtras ? { taxExtras: parsed.taxExtras } : {}),
+    };
+    state.chart = state.ledger.chart ?? [];
+    reclassify();
+    state.persistent = await save(state.ledger);
+    state.reports = [];
+    render();
+  } catch (error) {
+    alert((error as Error).message);
+  }
+}
+
+export async function loadFiledReturns(files: File[]): Promise<void> {
+  const { returns, problems } = await readFiledReturns(files);
+  // Re-importing a period replaces it rather than adding a second copy.
+  const byPeriod = new Map(state.filed.map((one) => [one.periodEnd, one]));
+  for (const one of returns) byPeriod.set(one.periodEnd, one);
+  state.filed = [...byPeriod.values()].sort((a, b) => a.periodEnd.localeCompare(b.periodEnd));
+  state.varianceProblems = problems;
+  // Kept with the ledger rather than in memory. A return that has been filed is
+  // a fact about the year, not about this browser session, and re-loading the
+  // same workbook after every reload was work nobody should have to repeat.
+  state.ledger = { ...state.ledger, filedReturns: state.filed };
+  state.persistent = await save(state.ledger);
+  recomputeVariance();
+  redraw("variance");
+}
+
+/**
+ * Take whatever came out of the accounting system, in one go.
+ *
+ * Setting a set of books up was seven errands: each report fetched on the same
+ * visit to the same system, then loaded on a different page here, through a
+ * different button, in an order nobody was told. Most of that is navigation
+ * rather than work, and none of it is necessary -- every one of these reports
+ * announces itself in its own heading row, and the parsers already knew those
+ * headings because each checks for its own before reading a line.
+ *
+ * So: hand over the lot. Each file is identified, sent where it belongs, and
+ * named in the list underneath, with anything unrecognised said plainly rather
+ * than pushed through the nearest parser.
+ */
+export async function loadWhatever(files: File[]): Promise<void> {
+  const told = $("setup-loaded");
+  told.textContent = "";
+  const said: string[] = [];
+  const say = (line: string): void => {
+    said.push(line);
+    told.textContent = "";
+    for (const one of said) {
+      const row = document.createElement("div");
+      row.textContent = one;
+      told.append(row);
+    }
+  };
+
+  // Bank statements go through the importer together: it dedupes across the
+  // files it is given, and feeding them one at a time would ask about the same
+  // overlap once per file.
+  const banks: File[] = [];
+  const rest: { file: File; identified: Identified }[] = [];
+
+  for (const file of files) {
+    if (file.size > 50 * 1024 * 1024) {
+      say(`Skipped "${file.name}": file is over 50MB.`);
+      continue;
+    }
+    const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+    const identified = identifyExport(text);
+    if (identified.kind === "bank") banks.push(file);
+    else rest.push({ file, identified });
+  }
+
+  if (banks.length > 0) {
+    say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} — importing…`);
+    await handleFiles(banks);
+    said.pop();
+    say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} imported.`);
+  }
+
+  for (const { file, identified } of rest) {
+    try {
+      switch (identified.kind) {
+        case "chart":
+        case "account-transactions":
+          // The same reader takes both: it lifts the chart out of a chart
+          // export, and the coding and the invoice payments out of an account
+          // transactions one.
+          await loadCheckFiles([file]);
+          break;
+        case "journal-report":
+        case "general-ledger-detail":
+          await loadJournals(file);
+          break;
+        case "trial-balance":
+          await loadOpeningBalances(file);
+          break;
+        case "fixed-assets":
+          await loadAssets(file);
+          break;
+        case "invoices":
+          await loadInvoices(file);
+          break;
+        case "daily-balances":
+          await checkBankBalances(file);
+          break;
+        case "gst-return":
+          await loadFiledReturns([file]);
+          break;
+        default:
+          say(`${file.name} — not recognised, so nothing was done with it.`);
+          continue;
+      }
+      say(
+        `${file.name} — ${identified.what}` +
+          (identified.alsoUseFor === "allocations" ? ", and the invoice payments in it" : "") +
+          ".",
+      );
+    } catch (error) {
+      say(`${file.name} — could not be read: ${(error as Error).message}`);
+    }
+  }
+
+  if (said.length === 0) say("Nothing was loaded.");
+  // Only reachable from Setup today, but named by page rather than by hand for
+  // the same reason as above: the next thing to call this may not be.
+  showPage(state.page);
+}
+
+export function clearCheck(): void {
+  state.reference = [];
+  state.checkProblems = [];
+  state.ledger = { ...state.ledger, reference: [] };
+  void savePart(state.ledger, "reference");
+  redraw("check");
+}
+
+export async function loadJournals(file: File): Promise<void> {
+  const bytes = new Uint8Array(await file.arrayBuffer());
+  const text = await asCsvText(file.name, bytes);
+
+  const parsed = parseXeroJournalReport(text);
+  if (parsed.journals.length === 0) {
+    alert(
+      `${file.name} holds no journals. Export one from Xero as ` +
+        "Accounting > Reports > Journal Report.",
+    );
+    return;
+  }
+  // A General Ledger Detail export parses into journals perfectly well and
+  // values every line, which the Journal Report does not -- but it carries no
+  // Narration column, and a narration is the only thing that distinguishes a
+  // manual year-end journal from an ordinary posting. Replacing a narrated set
+  // with an unnarrated one therefore loses every manual journal silently,
+  // which on one real ledger was three of them and 3,354.78 of interest that
+  // came back as an expense. So it is asked about rather than done.
+  const held = state.ledger.journals ?? [];
+  const incomingNarrated = parsed.journals.some((j) => j.narration.trim() !== "");
+  const heldNarrated = held.filter((j) => j.narration.trim() !== "").length;
+  if (!incomingNarrated && heldNarrated > 0) {
+    const ok = confirm(
+      `${file.name} has no Narration column, so no journal in it can be recognised as a ` +
+        `manual one.\n\nThe ${held.length} journals already loaded include ${heldNarrated} ` +
+        "with a narration. Replacing them would lose every year-end journal your accountant " +
+        "made.\n\nReplace them anyway?",
+    );
+    if (!ok) return;
+  }
+
+  state.ledger = { ...state.ledger, journals: parsed.journals };
+  state.persistent = await savePart(state.ledger, "journals");
+  redraw("reports");
+}
+
+/** Read a fixed asset register and keep it with the ledger. */
+export async function loadAssets(file: File): Promise<void> {
+  const parsed = parseFixedAssets(await file.text());
+  if (parsed.assets.length === 0) {
+    alert(
+      `${file.name} holds no assets. Export one from Xero as Accounting > Fixed assets > Export.`,
+    );
+    return;
+  }
+  state.ledger = { ...state.ledger, assets: parsed.assets };
+  state.persistent = await savePart(state.ledger, "assets");
+  if (parsed.problems.length > 0) {
+    alert(
+      `${parsed.assets.length} assets loaded. ${parsed.problems.length} could not be read:\n` +
+        parsed.problems.slice(0, 5).map((p) => p.message).join("\n"),
+    );
+  }
+  redraw("reports");
+}
+
+export async function loadInvoices(file: File): Promise<void> {
+  const parsed = parseXeroInvoices(await readXeroText(file));
+  if (parsed.invoices.length === 0) {
+    alert(`${file.name} holds no invoices. Export one from Xero as Business > Invoices > Export.`);
+    return;
+  }
+  state.ledger = { ...state.ledger, invoices: parsed.invoices };
+  state.persistent = await savePart(state.ledger, "invoices");
+  const issues = validateInvoices(parsed.invoices);
+  if (issues.length > 0) {
+    state.invoiceMessage =
+      `${parsed.invoices.length} invoices loaded. ${issues.length} look wrong: ` +
+      issues.slice(0, 3).map((i) => i.message).join("; ");
+  } else {
+    state.invoiceMessage = `${parsed.invoices.length} invoices loaded from ${file.name}.`;
+  }
+  redraw("invoices");
+}
+
+export async function loadAllocations(file: File): Promise<void> {
+  const parsed = parseXeroAllocations(await readXeroText(file));
+  if (parsed.allocations.length === 0) {
+    alert(`${file.name} holds no payment allocations.`);
+    return;
+  }
+  state.ledger = { ...state.ledger, allocations: parsed.allocations };
+  state.persistent = await savePart(state.ledger, "allocations");
+  state.invoiceMessage = `${parsed.allocations.length} allocations loaded from ${file.name}.`;
+  redraw("invoices");
+}
+
+/** Xero writes Windows-1252, so a plain UTF-8 read mangles anything accented. */
+async function readXeroText(file: File): Promise<string> {
+  // Through the same reader as everything else that comes out of Xero. This
+  // used to decode the bytes as text and stop there, so the invoice and
+  // allocation imports were the two places in the app that could not take a
+  // spreadsheet -- and Xero hands you one depending on which button you press.
+  return asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+}

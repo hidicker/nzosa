@@ -2,6 +2,7 @@ import { showPage } from "./app.js";
 import { entityBankAccounts } from "./books.js";
 import { formatAmount } from "@nzosa/core";
 import { $, state } from "./state.js";
+import { emptyEntityModel } from "@nzosa/core";
 
 /**
  * Small pieces of page furniture that more than one page shows.
@@ -109,4 +110,28 @@ export function unresolvedNote(): HTMLElement | null {
   });
   note.append(" ", go);
   return note;
+}
+
+export function renderEntityFilter(): void {
+  const select = $<HTMLSelectElement>("entity-filter");
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const chosen = state.entityFilter;
+  select.textContent = "";
+  const all = document.createElement("option");
+  all.value = "";
+  all.textContent = "All entities";
+  select.append(all);
+  for (const entity of model.entities) {
+    const option = document.createElement("option");
+    option.value = entity.id;
+    option.textContent = entity.name;
+    option.selected = entity.id === chosen;
+    select.append(option);
+  }
+  // Hide the whole control, not just the select. Hiding the select alone left
+  // the word "Entity" sitting under the title next to nothing, which is what
+  // every first run saw.
+  const control = select.closest("label");
+  if (control instanceof HTMLElement) control.hidden = model.entities.length === 0;
+  select.hidden = model.entities.length === 0;
 }

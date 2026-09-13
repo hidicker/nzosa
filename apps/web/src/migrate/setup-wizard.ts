@@ -29,6 +29,8 @@ import {
   starterChart,
 } from "@nzosa/core";
 import type { Account, } from "@nzosa/core";
+import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
+import { savePart } from "../store.js";
 
 /**
  * Setting a set of books up, and the steps that say what is left to do.
@@ -1137,4 +1139,79 @@ async function loadDemoData(button: HTMLButtonElement): Promise<void> {
     button.disabled = false;
     button.textContent = "Load demo data";
   }
+}
+
+/**
+ * Give a brand new set of books the standard chart of accounts.
+ *
+ * Starting empty is honest and useless. With no chart there is nothing to code
+ * to, the account picker is empty, and the first thing anybody has to do is go
+ * and find a chart of accounts somewhere else -- and what they would find is
+ * very nearly this one, because it is the standard New Zealand small-company
+ * chart, in the numbering an accountant here expects.
+ *
+ * Only when the books are genuinely new: no chart, nothing imported, nothing
+ * coded. Someone who has deliberately cleared their chart down to the accounts
+ * they use has a ledger with transactions in it, and must not find sixty-six
+ * accounts back the next time they open the app.
+ */
+export async function seedStarterChart(): Promise<void> {
+  if (state.chart.length > 0) return;
+  if (state.ledger.transactions.length > 0) return;
+  if (Object.keys(state.ledger.overrides ?? {}).length > 0) return;
+
+  const chart = starterChart();
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record(
+    "chart",
+    `Started with the standard chart of accounts, ${chart.length} accounts`,
+    null,
+    null,
+  );
+}
+
+/**
+ * What a browser with nothing in it should open on.
+ *
+ * With no folder behind the app there is nowhere for real books to live
+ * durably, so a copy served as plain files is a demonstration whether or not
+ * it says so. Somebody arriving at an empty one has nothing to look at and no
+ * way to tell whether any of it works, and the honest fix is to fill it: the
+ * invented books are already shipped beside the app, so they load themselves.
+ *
+ * Never over anything. Only a ledger with no transactions in it is seeded, and
+ * only once -- the flag is what stops a deliberate clear from being undone on
+ * the next refresh, which looks exactly like the clear not having worked.
+ * `wipe()` sets it for the same reason, so clearing means cleared.
+ *
+ * A folder-backed app never reaches here. There the books are the folder, and
+ * a demo belongs in a folder of its own.
+ */
+export async function seedBrowser(): Promise<void> {
+  // A copy that ships its own data still wins: `data/` is somebody's
+  // deliberate seed, and the demo is only the fallback for an empty one.
+  await loadStartupFiles();
+  if (state.ledger.transactions.length > 0) return;
+
+  let already = true;
+  try {
+    already = localStorage.getItem(DEMO_SEEDED) !== null;
+  } catch {
+    // Storage can throw outright rather than come back empty -- a browser set
+    // to block site data, or a preview pane. Treated as "already", because
+    // seeding on every single load is worse than never seeding.
+    already = true;
+  }
+  if (already) return;
+
+  await loadStartupFiles("demo", true);
+  if (state.ledger.transactions.length === 0) return; // nothing shipped; say nothing
+  markDemoSeeded();
+  reclassify();
+  state.startupMessage =
+    "These are demo books — an invented coffee roastery and a rental, part way " +
+    "through a year. Nothing here is real, and you can change anything. To keep " +
+    "books of your own, run NZOSA on your own computer: see the guide for owners.";
 }

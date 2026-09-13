@@ -448,3 +448,34 @@ function downloadRules(): void {
     "application/json",
   );
 }
+
+/**
+ * Loading a rule file.
+ *
+ * When one is already in use the choice is put to the user rather than
+ * guessed at: adding and replacing produce very different codings, and
+ * replacing silently would change every uncoded suggestion at once.
+ */
+export async function loadRulesFile(file: File): Promise<void> {
+  let incoming: RuleFileShape;
+  try {
+    incoming = JSON.parse(await file.text()) as RuleFileShape;
+  } catch (error) {
+    state.rulesMessage = `${file.name}: ${(error as Error).message}`;
+    redraw("rules");
+    return;
+  }
+  if (!Array.isArray(incoming.rules)) {
+    state.rulesMessage = `${file.name} has no rules array, so it is not a rule file.`;
+    redraw("rules");
+    return;
+  }
+
+  if (state.rules === undefined) {
+    await useRules(incoming, file.name, "Loaded");
+    return;
+  }
+
+  state.pendingRules = { rules: incoming, name: file.name };
+  redraw("rules");
+}

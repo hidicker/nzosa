@@ -309,3 +309,23 @@ export async function renderBooks(): Promise<void> {
   const openName = books.find((b) => b.id === open)?.name ?? "";
   await renderArchives(body, openName);
 }
+
+/**
+ * Which set of books is open, in the corner of the menu.
+ *
+ * This was a dropdown that also switched between them. Switching lives on the
+ * Books page now, where there is room to say what each set holds before you
+ * open it -- but the name stays here, because not knowing which books you are
+ * coding into is how a morning's work ends up in the wrong ones.
+ */
+export async function renderOpenBooks(): Promise<void> {
+  const button = $("ledger-open");
+  if (!writesToFolder()) {
+    button.hidden = true;
+    return;
+  }
+  const [all, current] = await Promise.all([ledgers(), currentLedger()]);
+  const open = all.find((one) => one.id === current);
+  $("ledger-open-name").textContent = open?.name ?? current;
+  button.hidden = false;
+}

@@ -1,7 +1,6 @@
 import { recomputeVariance } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { } from "../ui.js";
 import { detailFor } from "../variance.js";
 import type { VarianceRow } from "../variance.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";

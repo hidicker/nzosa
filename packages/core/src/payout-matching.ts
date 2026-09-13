@@ -21,11 +21,19 @@ export interface PayoutMatchOptions {
   transactions: readonly Transaction[];
   /** How far the bank may lag the processor. Defaults to 10 days. */
   windowDays?: number;
+  /** Most payouts one bank line may combine. Defaults to 4. */
+  maxPerTransfer?: number;
 }
 
 export interface PayoutMatch {
   payout: Payout;
   transaction: Transaction;
+}
+
+/** A bank line and every payout that arrived in it. */
+export interface PayoutTransfer {
+  transaction: Transaction;
+  payouts: Payout[];
 }
 
 export function matchPayouts(options: PayoutMatchOptions): PayoutMatch[] {
@@ -101,4 +109,67 @@ export function feedResumeDate(options: {
   const day = new Date(`${earliest}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() - (options.overlapDays ?? 7));
   return day.toISOString().slice(0, 10);
+}
+
+/**
+ * Which bank line each payout arrived in, allowing for several at once.
+ *
+ * A processor does not always transfer one charge at a time. On real books two
+ * charges a day apart reached the bank as a single line -- 800.67 and 792.44
+ * arriving together as 1,593.11 -- and matching one payout to one line could
+ * never explain it, so both were left uncoded and the fees with them.
+ *
+ * Single payouts are matched first and exhaustively, so a transfer that is one
+ * charge is never explained as a coincidental pair. Only then are combinations
+ * tried, capped at a handful, and taken only when exactly one set adds up:
+ * searching wider would eventually find an unrelated set totalling the same,
+ * and a split put on the wrong payment is a silent error where an unmatched
+ * transfer is a visible one.
+ */
+export function matchPayoutTransfers(options: PayoutMatchOptions): PayoutTransfer[] {
+  const windowDays = options.windowDays ?? 10;
+  const maxPerTransfer = options.maxPerTransfer ?? 4;
+  const near = (a: string, b: string): boolean => Math.abs(daysBetween(a, b)) <= windowDays;
+
+  const out: PayoutTransfer[] = [];
+  const taken = new Set<string>();
+
+  for (const { payout, transaction } of matchPayouts(options)) {
+    taken.add(payout.reference);
+    out.push({ transaction, payouts: [payout] });
+  }
+
+  const claimed = new Set(out.map((t) => t.transaction.id));
+  for (const transaction of options.transactions) {
+    if (claimed.has(transaction.id)) continue;
+    const pool = options.payouts.filter(
+      (p) => !taken.has(p.reference) && near(p.date, transaction.date),
+    );
+    if (pool.length < 2) continue;
+
+    const found: Payout[][] = [];
+    const walk = (from: number, chosen: Payout[], left: Cents): void => {
+      if (found.length > 1) return;
+      if (left === 0 && chosen.length >= 2) {
+        found.push([...chosen]);
+        return;
+      }
+      if (chosen.length >= maxPerTransfer) return;
+      for (let i = from; i < pool.length; i += 1) {
+        const next = pool[i] as Payout;
+        chosen.push(next);
+        walk(i + 1, chosen, left - next.net);
+        chosen.pop();
+        if (found.length > 1) return;
+      }
+    };
+    walk(0, [], transaction.amount);
+
+    if (found.length !== 1) continue;
+    const only = found[0] as Payout[];
+    for (const p of only) taken.add(p.reference);
+    out.push({ transaction, payouts: only });
+  }
+
+  return out;
 }

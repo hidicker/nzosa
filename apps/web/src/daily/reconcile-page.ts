@@ -37,7 +37,7 @@ import {
   invoiceCandidates as coreInvoiceCandidates,
   keywordFor,
   matchAccountName,
-  matchPayouts,
+  matchPayoutTransfers,
   splitAccountLabel,
   splitPartId,
 } from "@nzosa/core";
@@ -51,6 +51,7 @@ import type {
   Invoice,
   InvoiceKind,
   Payout,
+  PayoutTransfer,
   ReferenceLine,
   RuleSet,
   SplitPart,
@@ -163,7 +164,11 @@ export function renderReconcile(): void {
     return;
   }
 
-  const codes = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const codes = knownCodes(
+    state.rules,
+    state.ledger.overrides ?? {},
+    state.chart,
+  );
   for (const one of shown.slice(0, 200)) body.append(renderLine(one, codes));
   if (shown.length > 200) {
     body.append(note(`Showing the first 200 of ${shown.length}.`));
@@ -176,14 +181,20 @@ function rawFields(transaction: Transaction): HTMLElement {
   table.className = "code-raw";
   const body = document.createElement("tbody");
   const rows: [string, string][] = [
-    ["Account", `${transaction.extras?.["accountLabel"] ?? ""} ${transaction.account}`.trim()],
+    [
+      "Account",
+      `${transaction.extras?.["accountLabel"] ?? ""} ${transaction.account}`.trim(),
+    ],
     ["Other party", transaction.otherParty],
     ["Other party account", transaction.otherPartyAccount ?? ""],
     ["Particulars", transaction.particulars ?? ""],
     ["Code", transaction.code ?? ""],
     ["Reference", transaction.reference ?? ""],
     ["Type", transaction.type ?? ""],
-    ["Serial / TRN", `${transaction.serial ?? ""} ${transaction.trn ?? ""}`.trim()],
+    [
+      "Serial / TRN",
+      `${transaction.serial ?? ""} ${transaction.trn ?? ""}`.trim(),
+    ],
     ["Source", `${transaction.source.file} line ${transaction.source.line}`],
     ["Id", transaction.id],
   ];
@@ -221,7 +232,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const flowLine = document.createElement("div");
   flowLine.className = flow.internal ? "code-flow internal" : "code-flow";
   const arrow = flow.direction === "out" ? "out to" : "in from";
-  const here = one.transaction.extras?.["accountLabel"] ?? one.transaction.account;
+  const here =
+    one.transaction.extras?.["accountLabel"] ?? one.transaction.account;
   flowLine.textContent =
     flow.direction === "out"
       ? `${here} → ${flow.counterparty}`
@@ -242,17 +254,21 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const details = document.createElement("button");
   details.type = "button";
   details.className = "code-details";
-  details.textContent = state.expanded === one.transaction.id ? "hide details" : "details";
+  details.textContent =
+    state.expanded === one.transaction.id ? "hide details" : "details";
   details.addEventListener("click", () => {
-    state.expanded = state.expanded === one.transaction.id ? null : one.transaction.id;
+    state.expanded =
+      state.expanded === one.transaction.id ? null : one.transaction.id;
     redraw("reconcile");
   });
 
   bank.append(date, who, what, flowLine, details);
-  if (state.expanded === one.transaction.id) bank.append(rawFields(one.transaction));
+  if (state.expanded === one.transaction.id)
+    bank.append(rawFields(one.transaction));
 
   const amount = document.createElement("div");
-  amount.className = one.transaction.amount < 0 ? "code-amount out" : "code-amount in";
+  amount.className =
+    one.transaction.amount < 0 ? "code-amount out" : "code-amount in";
   amount.textContent = formatAmount(one.transaction.amount);
 
   const form = document.createElement("div");
@@ -280,7 +296,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   to.className = "code-contact";
   to.placeholder = "To";
   to.value = one.contact;
-  to.title = "Who this was to or from. Set it for every matching line on the Rules page.";
+  to.title =
+    "Who this was to or from. Set it for every matching line on the Rules page.";
 
   const description = document.createElement("input");
   description.type = "text";
@@ -316,14 +333,23 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
       void linkTransfer(one.transaction, pendingTransfer);
       return;
     }
-    void confirmLine(one, codeSelect.value, gstSelect.value as GstRate, description.value, to.value);
+    void confirmLine(
+      one,
+      codeSelect.value,
+      gstSelect.value as GstRate,
+      description.value,
+      to.value,
+    );
   });
 
   const splitButton = document.createElement("button");
   splitButton.type = "button";
-  splitButton.textContent = (state.ledger.splits ?? {})[one.transaction.id] ? "Edit split" : "Split";
+  splitButton.textContent = (state.ledger.splits ?? {})[one.transaction.id]
+    ? "Edit split"
+    : "Split";
   splitButton.addEventListener("click", () => {
-    state.splitting = state.splitting === one.transaction.id ? null : one.transaction.id;
+    state.splitting =
+      state.splitting === one.transaction.id ? null : one.transaction.id;
     redraw("reconcile");
   });
 
@@ -392,7 +418,11 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     // Only a transfer already on record leaves nothing for the tick to do. An
     // invoice match still wants confirming, and so does a transfer that has
     // been chosen but not yet agreed to.
-    ok.disabled = transferChosen && !invoiceChosen && !splitChosen && pendingTransfer === null;
+    ok.disabled =
+      transferChosen &&
+      !invoiceChosen &&
+      !splitChosen &&
+      pendingTransfer === null;
     // The one control still worth pressing must not be dimmed with the ones
     // that are finished with. Flattening the whole row made the tick read as
     // already pressed, which is the opposite of what it was waiting to say.
@@ -405,12 +435,15 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         ? "The accounts and the GST come from the split below."
         : invoiceChosen
           ? "The account and the GST come from the invoice this settles."
-        : one.confirmed
-          ? "Save a change to this coding"
-          : "Confirm this line as coded";
+          : one.confirmed
+            ? "Save a change to this coding"
+            : "Confirm this line as coded";
   };
 
-  const setCodingOff = (off: boolean, partnerId: string | null = null): void => {
+  const setCodingOff = (
+    off: boolean,
+    partnerId: string | null = null,
+  ): void => {
     transferChosen = off;
     pendingTransfer = off ? partnerId : null;
     applyCoding();
@@ -447,7 +480,10 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   // Shown, not enforced. The code on offer may well be the right principal
   // account; what it cannot do is carry two GST treatments at once. Once the
   // line has been split the caution has been answered, so it goes.
-  if (one.warn !== undefined && !(state.ledger.splits ?? {})[one.transaction.id]) {
+  if (
+    one.warn !== undefined &&
+    !(state.ledger.splits ?? {})[one.transaction.id]
+  ) {
     const caution = document.createElement("div");
     caution.className = "code-warn";
     caution.textContent = one.warn;
@@ -511,16 +547,18 @@ export function invoiceCandidates(transaction: Transaction): Invoice[] {
  * payout equals none of the figures involved -- searching for an invoice of
  * 296.98 finds nothing, whatever else is tried.
  */
-function payoutMatches(): { payout: Payout; transaction: Transaction }[] {
-  return matchPayouts({
+function payoutMatches(): PayoutTransfer[] {
+  return matchPayoutTransfers({
     payouts: state.ledger.payouts ?? [],
     transactions: state.ledger.transactions,
   });
 }
 
-function payoutsToApply(): { payout: Payout; transaction: Transaction }[] {
+function payoutsToApply(): PayoutTransfer[] {
   const splits = state.ledger.splits ?? {};
-  return payoutMatches().filter(({ transaction }) => splits[transaction.id] === undefined);
+  return payoutMatches().filter(
+    ({ transaction }) => splits[transaction.id] === undefined,
+  );
 }
 
 /**
@@ -530,39 +568,50 @@ function payoutsToApply(): { payout: Payout; transaction: Transaction }[] {
  * debtor is recorded as settling its invoice rather than coded -- so the
  * invoice closes, which is the whole point.
  */
-async function applyPayout(payout: Payout, transaction: Transaction): Promise<void> {
+async function applyPayout(
+  payouts: readonly Payout[],
+  transaction: Transaction,
+): Promise<void> {
   const known = knownCodes(state.rules, state.ledger.overrides ?? {});
   const receivable = (account: string): boolean => /receivable/i.test(account);
-  const invoice = payout.invoices[0];
 
   const parts: SplitPart[] = [];
   const invoiceOf = new Map<number, string>();
-  for (const part of payout.parts) {
-    if (part.amount === 0) continue;
-    const settles = receivable(part.account) && invoice !== undefined;
-    if (settles) invoiceOf.set(parts.length, invoice);
-    // The export writes "200 - Sales" and this ledger may know it as
-    // "Sales - 200" or "200 Sales". `matchAccountName` reads all of them;
-    // `canonicalCodeFor` wants a bare number and returns nothing for a label,
-    // which left every part of a payout uncoded.
-    //
-    // Falling back to the chart, because the account this most needs is the
-    // one nothing has ever been coded to: a ledger that has been booking
-    // payouts as sales has no processor-fee coding to recognise, and that
-    // missing expense is half the reason to do this at all.
-    const code = settles ? null : (matchAccountName(part.account, known) ?? chartLabelFor(part.account));
-    parts.push({
-      amount: part.amount,
-      note: settles
-        ? `Settles ${invoice} (${payout.reference})`
-        : `${part.source} (${payout.reference})`,
-      ...(code !== null ? { code } : {}),
-      // The GST comes from the export rather than being assumed. A processor's
-      // fee is charged from offshore and carries no New Zealand GST, and
-      // treating it as standard-rated strips out 15% that was never there --
-      // 332.51 of fees reported as 289.14, which is the ratio exactly.
-      ...(settles ? {} : gstFor(part, part.amount)),
-    });
+  // Several charges can reach the bank as one transfer, and then the line is
+  // every part of every one of them. Each keeps its own invoice: settling two
+  // invoices from one receipt is exactly the case that must not be collapsed.
+  for (const payout of payouts) {
+    const invoice = payout.invoices[0];
+    for (const part of payout.parts) {
+      if (part.amount === 0) continue;
+      const settles = receivable(part.account) && invoice !== undefined;
+      if (settles) invoiceOf.set(parts.length, invoice);
+      // The export writes "200 - Sales" and this ledger may know it as
+      // "Sales - 200" or "200 Sales". `matchAccountName` reads all of them;
+      // `canonicalCodeFor` wants a bare number and returns nothing for a label,
+      // which left every part of a payout uncoded.
+      //
+      // Falling back to the chart, because the account this most needs is the
+      // one nothing has ever been coded to: a ledger that has been booking
+      // payouts as sales has no processor-fee coding to recognise, and that
+      // missing expense is half the reason to do this at all.
+      const code = settles
+        ? null
+        : (matchAccountName(part.account, known) ??
+          chartLabelFor(part.account));
+      parts.push({
+        amount: part.amount,
+        note: settles
+          ? `Settles ${invoice} (${payout.reference})`
+          : `${part.source} (${payout.reference})`,
+        ...(code !== null ? { code } : {}),
+        // The GST comes from the export rather than being assumed. A processor's
+        // fee is charged from offshore and carries no New Zealand GST, and
+        // treating it as standard-rated strips out 15% that was never there --
+        // 332.51 of fees reported as 289.14, which is the ratio exactly.
+        ...(settles ? {} : gstFor(part, part.amount)),
+      });
+    }
   }
   if (parts.length < 2) return;
 
@@ -579,10 +628,13 @@ async function applyPayout(payout: Payout, transaction: Transaction): Promise<vo
 
   state.ledger = { ...state.ledger, splits, invoiceMatches };
   state.persistent = await save(state.ledger);
+  const settled = [...invoiceOf.values()];
+  const references = payouts.map((p) => p.reference).join(", ");
   await record(
     "split",
-    `${transaction.date} ${formatAmount(transaction.amount)} split as a payout ` +
-      `(${payout.reference})` + (invoice !== undefined ? `, settling ${invoice}` : ""),
+    `${transaction.date} ${formatAmount(transaction.amount)} split as ` +
+      `${payouts.length === 1 ? "a payout" : `${payouts.length} payouts`} (${references})` +
+      (settled.length > 0 ? `, settling ${settled.join(", ")}` : ""),
     before.split,
     parts,
     transaction.id,
@@ -606,7 +658,8 @@ function gstFor(
 
   // The rate when the export gives one, which it does on a ledger row.
   if (said !== "") {
-    if (said.includes("no gst")) return { treatment: "out-of-scope", side: "none" };
+    if (said.includes("no gst"))
+      return { treatment: "out-of-scope", side: "none" };
     if (said.includes("zero")) return { treatment: "zero-rated", side };
     return { treatment: "standard", side };
   }
@@ -615,7 +668,9 @@ function gstFor(
   // reached, and a GST control account among them says the amount is
   // tax-inclusive. A processor's fee reaches no such account, because it is
   // supplied from offshore and carries none.
-  return part.hasGst ? { treatment: "standard", side } : { treatment: "out-of-scope", side: "none" };
+  return part.hasGst
+    ? { treatment: "standard", side }
+    : { treatment: "out-of-scope", side: "none" };
 }
 
 /** An account the chart knows, labelled the way this app writes codings. */
@@ -635,7 +690,10 @@ function payoutBanner(): HTMLElement | null {
   wrap.className = "payout-banner";
 
   const said = document.createElement("span");
-  const total = waiting.reduce((sum, { transaction }) => sum + transaction.amount, 0);
+  const total = waiting.reduce(
+    (sum, { transaction }) => sum + transaction.amount,
+    0,
+  );
   said.textContent =
     `${waiting.length} bank line${waiting.length === 1 ? " is" : "s are"} a payment-processor ` +
     `payout, ${formatAmount(total)} in all. Each is really an invoice payment, the customer's ` +
@@ -655,15 +713,22 @@ function payoutBanner(): HTMLElement | null {
 async function applyAllPayouts(): Promise<void> {
   const waiting = payoutsToApply();
   if (waiting.length === 0) return;
-  const invoices = waiting.filter((w) => w.payout.invoices.length > 0).length;
+  const invoices = waiting.filter((w) =>
+    w.payouts.some((p) => p.invoices.length > 0),
+  ).length;
+  const shared = waiting.filter((w) => w.payouts.length > 1).length;
   const ok = confirm(
     `Split ${waiting.length} payout${waiting.length === 1 ? "" : "s"} into their parts?\n\n` +
       `${invoices} of them name the invoice they settle, which will be closed.\n` +
+      (shared > 0
+        ? `${shared} arrived as one transfer covering several charges.\n`
+        : "") +
       "The processor's fee goes to the fee account the export names, and the surcharge to sales.\n\n" +
       "Each bank line keeps its total; only what it is made of changes.",
   );
   if (!ok) return;
-  for (const { payout, transaction } of waiting) await applyPayout(payout, transaction);
+  for (const { payouts, transaction } of waiting)
+    await applyPayout(payouts, transaction);
   redraw("reconcile");
 }
 
@@ -752,7 +817,8 @@ function transferLineFor(
 ): HTMLElement | null {
   const transfers = state.ledger.transfers ?? {};
   const recorded = transfers[transaction.id];
-  const settlesInvoice = (state.ledger.invoiceMatches ?? {})[transaction.id] !== undefined;
+  const settlesInvoice =
+    (state.ledger.invoiceMatches ?? {})[transaction.id] !== undefined;
   if (settlesInvoice && recorded === undefined) return null;
 
   const { accounts, scoped } = sameEntityBanks(transaction.account);
@@ -767,7 +833,9 @@ function transferLineFor(
   // A rejection outranks the offer. The candidate stays available, so changing
   // your mind is picking it again, but nothing is chosen for you and the row is
   // a row to code.
-  const refused = (state.ledger.rejectedTransfers ?? []).includes(transaction.id);
+  const refused = (state.ledger.rejectedTransfers ?? []).includes(
+    transaction.id,
+  );
 
   // One candidate is not a choice, so it is shown as the answer rather than as
   // a question -- the same way a receipt the matcher has already tied to an
@@ -775,7 +843,9 @@ function transferLineFor(
   // the tick is what records it, and until that is pressed the row can still be
   // sent back with one press of "not a transfer".
   const found =
-    !refused && candidates.length === 1 ? (candidates[0]?.transaction.id ?? undefined) : undefined;
+    !refused && candidates.length === 1
+      ? (candidates[0]?.transaction.id ?? undefined)
+      : undefined;
   const partnerId = recorded ?? found;
 
   if (partnerId === undefined && candidates.length === 0) return null;
@@ -800,7 +870,8 @@ function transferLineFor(
       partner === undefined
         ? 0
         : Math.round(
-            Math.abs(Date.parse(partner.date) - Date.parse(transaction.date)) / 86_400_000,
+            Math.abs(Date.parse(partner.date) - Date.parse(transaction.date)) /
+              86_400_000,
           );
     label.textContent = partner
       ? `Matched to transfer — ${bankLabel(transaction.account)} ` +
@@ -819,7 +890,8 @@ function transferLineFor(
       how.className = "transfer-auto";
       how.textContent = "found automatically";
       label.append(" · ", how);
-      label.title = "Found by matching your own accounts. Press the tick to record it.";
+      label.title =
+        "Found by matching your own accounts. Press the tick to record it.";
     }
 
     // One sentence either way, because it is one thing to the person reading
@@ -862,7 +934,8 @@ function transferLineFor(
   for (const candidate of candidates.slice(0, 8)) {
     const option = document.createElement("option");
     option.value = candidate.transaction.id;
-    const when = candidate.daysApart === 0 ? "same day" : `${candidate.daysApart}d apart`;
+    const when =
+      candidate.daysApart === 0 ? "same day" : `${candidate.daysApart}d apart`;
     option.textContent =
       `${bankLabel(candidate.transaction.account)} · ${candidate.transaction.date} · ` +
       `${formatAmount(candidate.transaction.amount)} · ${when}` +
@@ -872,7 +945,10 @@ function transferLineFor(
 
   setCodingOff(false, null);
   select.addEventListener("change", () => {
-    setCodingOff(select.value !== "", select.value === "" ? null : select.value);
+    setCodingOff(
+      select.value !== "",
+      select.value === "" ? null : select.value,
+    );
     // Saying no is a decision, and is kept like one -- otherwise the next
     // render offers the same candidate again and greys the row straight back
     // out, which is what made this look like a control that did nothing.
@@ -900,7 +976,10 @@ function transferLineFor(
  * account in the middle at all, and re-importing cannot split them because the
  * ids are content hashes.
  */
-async function linkTransfer(transaction: Transaction, partnerId: string): Promise<void> {
+async function linkTransfer(
+  transaction: Transaction,
+  partnerId: string,
+): Promise<void> {
   const partner = state.ledger.transactions.find((t) => t.id === partnerId);
   if (partner === undefined) return;
 
@@ -910,7 +989,9 @@ async function linkTransfer(transaction: Transaction, partnerId: string): Promis
   // Captured before the change: the only moment the old value exists.
   const existing = state.ledger.transfers ?? {};
   const before =
-    existing[out.id] !== undefined ? { from: out.id, to: existing[out.id] as string } : null;
+    existing[out.id] !== undefined
+      ? { from: out.id, to: existing[out.id] as string }
+      : null;
 
   const transfers = { ...existing, [out.id]: into.id, [into.id]: out.id };
   state.ledger = { ...state.ledger, transfers };
@@ -934,7 +1015,10 @@ async function linkTransfer(transaction: Transaction, partnerId: string): Promis
  * again on every open and an answer that lives only on screen is an answer
  * given once a day for ever.
  */
-async function rejectTransfer(transactionId: string, rejected: boolean): Promise<void> {
+async function rejectTransfer(
+  transactionId: string,
+  rejected: boolean,
+): Promise<void> {
   const before = state.ledger.rejectedTransfers ?? [];
   const has = before.includes(transactionId);
   if (has === rejected) return;
@@ -956,7 +1040,11 @@ async function unlinkTransfer(transactionId: string): Promise<void> {
   delete transfers[partnerId];
   // Both legs, because either one on its own would be offered the other again.
   const rejectedTransfers = [
-    ...new Set([...(state.ledger.rejectedTransfers ?? []), transactionId, partnerId]),
+    ...new Set([
+      ...(state.ledger.rejectedTransfers ?? []),
+      transactionId,
+      partnerId,
+    ]),
   ];
   state.ledger = { ...state.ledger, transfers, rejectedTransfers };
   state.persistent = await savePart(state.ledger, "transfers");
@@ -1000,7 +1088,8 @@ function invoiceLineFor(
 
   setInvoiceChosen(matched !== undefined);
 
-  const isTransfer = (state.ledger.transfers ?? {})[transaction.id] !== undefined;
+  const isTransfer =
+    (state.ledger.transfers ?? {})[transaction.id] !== undefined;
   if (isTransfer && matched === undefined) return null;
 
   // Already answered by its own parts. A payment divided to settle two invoices
@@ -1010,13 +1099,16 @@ function invoiceLineFor(
   const parts = (state.ledger.splits ?? {})[transaction.id] ?? [];
   const settledByParts = parts.some(
     (_, index) =>
-      ((state.ledger.invoiceMatches ?? {})[splitPartId(transaction.id, index)] ?? "") !== "",
+      ((state.ledger.invoiceMatches ?? {})[
+        splitPartId(transaction.id, index)
+      ] ?? "") !== "",
   );
   if (settledByParts) {
     setInvoiceChosen(true);
     return null;
   }
-  const candidates = matched === undefined ? invoiceCandidates(transaction) : [];
+  const candidates =
+    matched === undefined ? invoiceCandidates(transaction) : [];
 
   const wrap = document.createElement("div");
   wrap.className = "code-invoice";
@@ -1033,7 +1125,11 @@ function invoiceLineFor(
     const owing = balances.get(invoice.number)?.remaining ?? invoice.total;
     const after = owing - paying;
     const what =
-      after === 0 ? "settles it" : after > 0 ? `leaves ${formatAmount(after)}` : `over by ${formatAmount(-after)}`;
+      after === 0
+        ? "settles it"
+        : after > 0
+          ? `leaves ${formatAmount(after)}`
+          : `over by ${formatAmount(-after)}`;
     return (
       `${invoice.number} · ${invoice.contact.slice(0, 24)} · ` +
       `${formatAmount(owing)} owing · ${invoice.issued} · ${what}`
@@ -1057,7 +1153,8 @@ function invoiceLineFor(
   const numberOf = (text: string): string => text.split(" · ")[0] ?? "";
 
   const label = document.createElement("span");
-  label.textContent = candidates.length === 1 ? "Settles invoice?" : "Settles which invoice?";
+  label.textContent =
+    candidates.length === 1 ? "Settles invoice?" : "Settles which invoice?";
 
   // Pre-filled when there is a single candidate, so the decision stays one
   // press. Anything else has to be typed, and the box refuses what is not on
@@ -1083,9 +1180,13 @@ function invoiceLineFor(
   tally.className = "invoice-tally";
 
   const owingOn = (number: string): Cents => {
-    const invoice = (state.ledger.invoices ?? []).find((i) => i.number === number);
+    const invoice = (state.ledger.invoices ?? []).find(
+      (i) => i.number === number,
+    );
     if (invoice === undefined) return 0;
-    return Math.abs(invoiceBalanceMap().get(number)?.remaining ?? invoice.total);
+    return Math.abs(
+      invoiceBalanceMap().get(number)?.remaining ?? invoice.total,
+    );
   };
 
   const match = document.createElement("button");
@@ -1116,7 +1217,10 @@ function invoiceLineFor(
     // only the chips said "300.00 still unaccounted for" at the exact moment
     // the last invoice had been picked and the set was complete.
     const pending = numberOf(picker.value);
-    const all = pending === "" || gathered.includes(pending) ? gathered : [...gathered, pending];
+    const all =
+      pending === "" || gathered.includes(pending)
+        ? gathered
+        : [...gathered, pending];
     const taken = all.reduce((sum, number) => sum + owingOn(number), 0);
     const paying = Math.abs(transaction.amount);
     const left = paying - taken;
@@ -1132,7 +1236,9 @@ function invoiceLineFor(
     tally.classList.toggle("invoice-tally-over", left < 0);
 
     match.textContent =
-      gathered.length === 0 ? "Match" : `Settle ${gathered.length + 1} invoices`;
+      gathered.length === 0
+        ? "Match"
+        : `Settle ${gathered.length + 1} invoices`;
     add.hidden = gathered.length === 0 && numberOf(picker.value) === "";
   };
 
@@ -1167,7 +1273,9 @@ function invoiceLineFor(
   // including when the matcher got it wrong, which is the case that most needs
   // a way out.
   if (matched !== undefined) {
-    const invoice = (state.ledger.invoices ?? []).find((i) => i.number === matched);
+    const invoice = (state.ledger.invoices ?? []).find(
+      (i) => i.number === matched,
+    );
     const label2 = document.createElement("button");
     label2.type = "button";
     label2.className = "invoice-matched";
@@ -1208,7 +1316,9 @@ function invoiceLineFor(
     undo.className = "link-button";
     undo.textContent = confirmed ? "unmatch" : "not an invoice payment";
     undo.addEventListener("click", () =>
-      confirmed ? void unmatchInvoice(transaction.id) : void refuseInvoice(transaction.id),
+      confirmed
+        ? void unmatchInvoice(transaction.id)
+        : void refuseInvoice(transaction.id),
     );
 
     wrap.append(label2, undo);
@@ -1242,15 +1352,26 @@ function invoiceLineFor(
  * guessed again. Only when the invoice has a single account: a split invoice
  * is a split, and belongs in the split editor where the parts must balance.
  */
-async function matchToInvoice(transaction: Transaction, number: string): Promise<void> {
-  const invoice = (state.ledger.invoices ?? []).find((i) => i.number === number);
+async function matchToInvoice(
+  transaction: Transaction,
+  number: string,
+): Promise<void> {
+  const invoice = (state.ledger.invoices ?? []).find(
+    (i) => i.number === number,
+  );
   // Captured before the change, because that is the only moment it exists.
-  const wasMatched = (state.ledger.invoiceMatches ?? {})[transaction.id] ?? null;
+  const wasMatched =
+    (state.ledger.invoiceMatches ?? {})[transaction.id] ?? null;
   const wasCodedBefore = (state.ledger.overrides ?? {})[transaction.id];
-  const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}), [transaction.id]: number };
+  const invoiceMatches = {
+    ...(state.ledger.invoiceMatches ?? {}),
+    [transaction.id]: number,
+  };
   const overrides = { ...(state.ledger.overrides ?? {}) };
 
-  const codes = new Set((invoice?.lines ?? []).map((l) => l.accountCode).filter((c) => c !== ""));
+  const codes = new Set(
+    (invoice?.lines ?? []).map((l) => l.accountCode).filter((c) => c !== ""),
+  );
   const only = codes.size === 1 ? [...codes][0] : undefined;
   let coded = false;
   if (invoice && only !== undefined) {
@@ -1287,7 +1408,9 @@ async function matchToInvoice(transaction: Transaction, number: string): Promise
       (invoice ? ` (${invoice.contact})` : "") +
       (coded ? ", coded from the invoice" : ", still to code"),
     // The coding rides with the match, so undoing one undoes both.
-    wasMatched === null ? null : { number: wasMatched, override: wasCodedBefore },
+    wasMatched === null
+      ? null
+      : { number: wasMatched, override: wasCodedBefore },
     { number, override: overrides[transaction.id] },
     transaction.id,
   );
@@ -1315,7 +1438,10 @@ async function matchToInvoice(transaction: Transaction, number: string): Promise
  * exactly -- so which invoices a payment settles is a question only the person
  * paying attention can answer, and this records their answer.
  */
-async function matchToInvoices(transaction: Transaction, numbers: readonly string[]): Promise<void> {
+async function matchToInvoices(
+  transaction: Transaction,
+  numbers: readonly string[],
+): Promise<void> {
   const invoices = state.ledger.invoices ?? [];
   const chosen = numbers
     .map((number) => invoices.find((i) => i.number === number))
@@ -1338,7 +1464,9 @@ async function matchToInvoices(transaction: Transaction, numbers: readonly strin
       treatment: "standard",
       side: transaction.amount > 0 ? "sales" : "purchases",
       note: `Settles ${invoice.number} (${invoice.contact})`,
-      ...(codeFromInvoice(invoice) !== null ? { code: codeFromInvoice(invoice) as string } : {}),
+      ...(codeFromInvoice(invoice) !== null
+        ? { code: codeFromInvoice(invoice) as string }
+        : {}),
     });
     assigned.push(invoice.number);
     left -= take;
@@ -1384,9 +1512,14 @@ async function matchToInvoices(transaction: Transaction, numbers: readonly strin
 
 /** The single account an invoice codes to, when it has only one. */
 function codeFromInvoice(invoice: Invoice): string | null {
-  const codes = new Set((invoice.lines ?? []).map((l) => l.accountCode).filter((c) => c !== ""));
+  const codes = new Set(
+    (invoice.lines ?? []).map((l) => l.accountCode).filter((c) => c !== ""),
+  );
   if (codes.size !== 1) return null;
-  return canonicalCodeFor([...codes][0] as string, knownCodes(state.rules, state.ledger.overrides ?? {}));
+  return canonicalCodeFor(
+    [...codes][0] as string,
+    knownCodes(state.rules, state.ledger.overrides ?? {}),
+  );
 }
 
 /**
@@ -1399,7 +1532,10 @@ function codeFromInvoice(invoice: Invoice): string | null {
  */
 async function refuseInvoice(transactionId: string): Promise<void> {
   const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}) };
-  const before = invoiceMatches[transactionId] ?? invoiceAssignments().get(transactionId) ?? null;
+  const before =
+    invoiceMatches[transactionId] ??
+    invoiceAssignments().get(transactionId) ??
+    null;
   invoiceMatches[transactionId] = "";
   state.ledger = { ...state.ledger, invoiceMatches };
   state.persistent = await savePart(state.ledger, "invoiceMatches");
@@ -1420,7 +1556,13 @@ async function unmatchInvoice(transactionId: string): Promise<void> {
   delete invoiceMatches[transactionId];
   state.ledger = { ...state.ledger, invoiceMatches };
   state.persistent = await savePart(state.ledger, "invoiceMatches");
-  await record("invoiceMatch", `Unmatched ${before ?? ""}`, before ?? null, null, transactionId);
+  await record(
+    "invoiceMatch",
+    `Unmatched ${before ?? ""}`,
+    before ?? null,
+    null,
+    transactionId,
+  );
   redraw("reconcile");
 }
 
@@ -1431,14 +1573,18 @@ async function confirmLine(
   description: string,
   contact: string,
 ): Promise<void> {
-  const { treatment, side } = rateToClassification(rate, one.transaction.amount);
+  const { treatment, side } = rateToClassification(
+    rate,
+    one.transaction.amount,
+  );
   // A description is worth having when a suggestion is overruled, but it is not
   // required: blocking the line only moved the friction onto the person doing
   // the work, who then types a full stop. The change log records what changed
   // and who changed it either way. This is still wanted for the note below,
   // which must not claim a changed coding was accepted as it stood.
   const changed =
-    code !== (one.code ?? "") || rate !== classificationToRate(one.classification);
+    code !== (one.code ?? "") ||
+    rate !== classificationToRate(one.classification);
 
   const overrides = { ...(state.ledger.overrides ?? {}) };
   const wasCoded = overrides[one.transaction.id];
@@ -1449,7 +1595,9 @@ async function confirmLine(
     side,
     // Stored only when it differs from what the rules already say, so the
     // override records a decision rather than a copy of the suggestion.
-    ...(contact.trim() !== "" && contact.trim() !== one.contact ? { contact: contact.trim() } : {}),
+    ...(contact.trim() !== "" && contact.trim() !== one.contact
+      ? { contact: contact.trim() }
+      : {}),
     note:
       description.trim() !== ""
         ? description.trim()
@@ -1470,7 +1618,8 @@ async function confirmLine(
 
   // Nothing suggested a code and a person supplied one: that is a rule being
   // stated, not merely a line being coded.
-  if ((one.code ?? "") === "" && code !== "") await ruleFromDecision(one.transaction, code);
+  if ((one.code ?? "") === "" && code !== "")
+    await ruleFromDecision(one.transaction, code);
 
   redraw("reconcile");
 }
@@ -1494,17 +1643,30 @@ async function confirmLine(
  * of lines it newly codes is on the page and in the change log, so a rule that
  * reached further than expected can be found and undone.
  */
-async function ruleFromDecision(transaction: Transaction, code: string): Promise<void> {
+async function ruleFromDecision(
+  transaction: Transaction,
+  code: string,
+): Promise<void> {
   const keyword = keywordFor(transaction);
   if (keyword.length < 4 || GENERIC_PAYEES.has(keyword)) return;
 
   const file = (state.rules as RuleFileShape | undefined) ?? { rules: [] };
   const rules = [...(file.rules ?? [])];
-  if (rules.some((r) => (r.keyword ?? "").toUpperCase() === keyword && r.account === undefined)) {
+  if (
+    rules.some(
+      (r) =>
+        (r.keyword ?? "").toUpperCase() === keyword && r.account === undefined,
+    )
+  ) {
     return;
   }
 
-  const rule: CategoryRule = { priority: 100, keyword, code, note: "From a coding decision" };
+  const rule: CategoryRule = {
+    priority: 100,
+    keyword,
+    code,
+    note: "From a coding decision",
+  };
 
   // What it reaches, counted with the engine that will do the coding rather
   // than by re-matching the keyword here -- the two disagree, and a promise
@@ -1547,15 +1709,21 @@ function codedNow(): number {
 
 /** Check if there are outstanding action items on the Coding reconciliation page. */
 function codingReconciliationOutstanding(): { total: number } | null {
-  if (state.reference.length === 0 || state.ledger.transactions.length === 0) return null;
+  if (state.reference.length === 0 || state.ledger.transactions.length === 0)
+    return null;
   const suggestions = suggest(
     state.ledger.transactions,
     state.rules,
     state.ledger.overrides ?? {},
     accountsFor(state.checkAccounts),
   );
-  const suggestionMap = new Map(suggestions.map((one) => [one.transaction.id, one]));
-  const coded = suggestions.map((one) => ({ transaction: one.transaction, code: one.code }));
+  const suggestionMap = new Map(
+    suggestions.map((one) => [one.transaction.id, one]),
+  );
+  const coded = suggestions.map((one) => ({
+    transaction: one.transaction,
+    code: one.code,
+  }));
   const accountMap = inferAccountMapping(coded, state.reference);
   const sameAcct = (ours: Transaction, theirs: ReferenceLine): boolean => {
     if (theirs.account === undefined) return true;
@@ -1576,7 +1744,11 @@ function codingReconciliationOutstanding(): { total: number } | null {
 
   const ourSplits = state.ledger.splits ?? {};
   const isSplit = (r: CodingRow): boolean => (r.theirs?.parts?.length ?? 0) > 1;
-  const splitRows = [...result.agreed, ...result.differed, ...result.uncoded].filter(isSplit);
+  const splitRows = [
+    ...result.agreed,
+    ...result.differed,
+    ...result.uncoded,
+  ].filter(isSplit);
   const sameParts = (row: CodingRow): boolean => {
     const held = ourSplits[row.transaction.id];
     const theirs = row.theirs?.parts;
@@ -1584,16 +1756,21 @@ function codingReconciliationOutstanding(): { total: number } | null {
     if (held.length !== theirs.length) return false;
     const sorted = (amounts: readonly number[]): string =>
       [...amounts].sort((a, b) => a - b).join(",");
-    return sorted(held.map((p) => p.amount)) === sorted(theirs.map((p) => p.amount));
+    return (
+      sorted(held.map((p) => p.amount)) === sorted(theirs.map((p) => p.amount))
+    );
   };
   const splitsToDo = splitRows.filter((row) => !sameParts(row));
 
   const assigned = invoiceAssignments();
   const ourTransfers = state.ledger.transfers ?? {};
   const settledElsewhere = (row: CodingRow): boolean =>
-    assigned.has(row.transaction.id) || ourTransfers[row.transaction.id] !== undefined;
+    assigned.has(row.transaction.id) ||
+    ourTransfers[row.transaction.id] !== undefined;
 
-  const comparable = result.uncoded.filter((r) => r.theirs !== null && !isSplit(r));
+  const comparable = result.uncoded.filter(
+    (r) => r.theirs !== null && !isSplit(r),
+  );
   const adoptable = comparable.filter((r) => !settledElsewhere(r));
   const differed = result.differed.filter((r) => !isSplit(r));
   const gstFlags = [...result.agreed, ...result.differed].filter(

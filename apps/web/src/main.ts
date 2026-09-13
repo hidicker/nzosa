@@ -1,3 +1,4 @@
+import { redraw, registerPages } from "./app.js";
 import { $, caches, state } from "./state.js";
 import type { FileReport, Filter } from "./state.js";
 import { combobox } from "./combobox.js";
@@ -379,6 +380,25 @@ function dismissLoading(): void {
 }
 
 async function init(): Promise<void> {
+  // Before the first load, because loading changes the state and the state is
+  // what a page is drawn from. Every page at once: leaving one out does not
+  // compile, which is the point of taking the whole set.
+  registerPages({
+    assets: renderAssetsPage,
+    check: renderCheck,
+    entities: renderEntities,
+    history: renderHistory,
+    importRows: renderTable,
+    invoiceEditor: renderInvoiceEditor,
+    invoices: renderInvoices,
+    openingBalances: renderOpeningBalances,
+    reconcile: renderReconcile,
+    reports: renderReportsPage,
+    rules: renderRules,
+    setup: renderSetup,
+    setupBody: renderSetupBody,
+    variance: renderVariance,
+  });
   setLoadingStatus("Opening books…");
   try {
     const loaded = await load();
@@ -549,7 +569,7 @@ function wireUp(): void {
 
   $<HTMLInputElement>("search").addEventListener("input", (e) => {
     state.search = (e.target as HTMLInputElement).value.toLowerCase();
-    renderTable();
+    redraw("importRows");
   });
 
   for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
@@ -594,7 +614,7 @@ function wireUp(): void {
   }
   $<HTMLInputElement>("reconcile-search").addEventListener("input", (e) => {
     state.reconcileSearch = (e.target as HTMLInputElement).value;
-    renderReconcile();
+    redraw("reconcile");
   });
   $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
   try {
@@ -613,9 +633,9 @@ function wireUp(): void {
   $<HTMLSelectElement>("reconcile-filter").addEventListener("change", (e) => {
     state.reconcileFilter = (e.target as HTMLSelectElement)
       .value as typeof state.reconcileFilter;
-    renderReconcile();
+    redraw("reconcile");
   });
-  $<HTMLInputElement>("rules-search").addEventListener("input", () => renderRules());
+  $<HTMLInputElement>("rules-search").addEventListener("input", () => redraw("rules"));
   $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
   $("check-clear").addEventListener("click", () => clearCheck());
   $<HTMLInputElement>("check-input").addEventListener("change", (e) => {
@@ -648,8 +668,8 @@ function wireUp(): void {
     state.who = $<HTMLInputElement>("who").value.trim();
     void saveUser(state.who);
   });
-  $<HTMLSelectElement>("history-kind").addEventListener("change", () => renderHistory());
-  $<HTMLSelectElement>("setup-source").addEventListener("change", () => renderSetup());
+  $<HTMLSelectElement>("history-kind").addEventListener("change", () => redraw("history"));
+  $<HTMLSelectElement>("setup-source").addEventListener("change", () => redraw("setup"));
   $("balances-pick").addEventListener("click", () => $("balances-input").click());
   $<HTMLInputElement>("balances-input").addEventListener("change", (event) => {
     const file = (event.target as HTMLInputElement).files?.[0];
@@ -657,7 +677,7 @@ function wireUp(): void {
   });
   $("invoice-new").addEventListener("click", () => {
     editingInvoice = "";
-    renderInvoiceEditor();
+    redraw("invoiceEditor");
   });
 
   $("invoices-pick").addEventListener("click", () => $<HTMLInputElement>("invoices-input").click());
@@ -674,10 +694,10 @@ function wireUp(): void {
     if (file) void loadAllocations(file);
     (e.target as HTMLInputElement).value = "";
   });
-  $<HTMLInputElement>("invoice-search").addEventListener("input", () => renderInvoices());
+  $<HTMLInputElement>("invoice-search").addEventListener("input", () => redraw("invoices"));
 
-  $("report-basis").addEventListener("change", () => renderReportsPage());
-  $("report-gst").addEventListener("change", () => renderReportsPage());
+  $("report-basis").addEventListener("change", () => redraw("reports"));
+  $("report-gst").addEventListener("change", () => redraw("reports"));
   $("journals-pick").addEventListener("click", () => $<HTMLInputElement>("journals-input").click());
   $<HTMLInputElement>("journals-input").addEventListener("change", (e) => {
     const file = (e.target as HTMLInputElement).files?.[0];
@@ -693,9 +713,9 @@ function wireUp(): void {
     (e.target as HTMLInputElement).value = "";
   });
 
-  $("report-kind").addEventListener("change", () => renderReportsPage());
-  $("report-owner").addEventListener("change", () => renderReportsPage());
-  $("report-year").addEventListener("change", () => renderReportsPage());
+  $("report-kind").addEventListener("change", () => redraw("reports"));
+  $("report-owner").addEventListener("change", () => redraw("reports"));
+  $("report-year").addEventListener("change", () => redraw("reports"));
   $("report-download").addEventListener("click", () => downloadReport());
 
   $("opening-pick").addEventListener("click", () => $<HTMLInputElement>("opening-input").click());
@@ -706,7 +726,7 @@ function wireUp(): void {
   });
   $("opening-year").addEventListener("change", (e) => {
     state.openingYear = (e.target as HTMLSelectElement).value;
-    renderOpeningBalances();
+    redraw("openingBalances");
   });
 
   $("chart-pick").addEventListener("click", () => $<HTMLInputElement>("chart-input").click());
@@ -976,7 +996,7 @@ async function loadFiledReturns(files: File[]): Promise<void> {
   state.ledger = { ...state.ledger, filedReturns: state.filed };
   state.persistent = await save(state.ledger);
   recomputeVariance();
-  renderVariance();
+  redraw("variance");
 }
 
 function recomputeVariance(): void {
@@ -1365,7 +1385,7 @@ async function saveProceeds(number: string, cents: Cents): Promise<void> {
     number,
   );
   reclassify();
-  renderAssetsPage();
+  redraw("assets");
 }
 
 /**
@@ -1463,7 +1483,7 @@ async function proceedsFromJournals(): Promise<void> {
     "proceeds",
   );
   reclassify();
-  renderAssetsPage();
+  redraw("assets");
 }
 
 function renderAssetsPage(): void {
@@ -1687,22 +1707,22 @@ function showPage(page: string, scrollTo?: "top" | "bottom" | number): void {
 
   renderEntityFilter();
   void renderOpenBooks();
-  if (page === "reconcile") renderReconcile();
-  if (page === "check") renderCheck();
-  if (page === "rules") renderRules();
-  if (page === "entities") renderEntities();
-  if (page === "reports") renderReportsPage();
+  if (page === "reconcile") redraw("reconcile");
+  if (page === "check") redraw("check");
+  if (page === "rules") redraw("rules");
+  if (page === "entities") redraw("entities");
+  if (page === "reports") redraw("reports");
   if (page === "invoices") {
-    renderInvoiceEditor();
-    renderInvoices();
+    redraw("invoiceEditor");
+    redraw("invoices");
   }
-  if (page === "history") renderHistory();
+  if (page === "history") redraw("history");
   if (page === "books") void renderBooks();
-  if (page === "assets") renderAssetsPage();
-  if (page === "setup") renderSetup();
+  if (page === "assets") redraw("assets");
+  if (page === "setup") redraw("setup");
   if (page === "import") void renderFeed();
-  if (page === "opening") renderOpeningBalances();
-  if (page === "gst") renderVariance();
+  if (page === "opening") redraw("openingBalances");
+  if (page === "gst") redraw("variance");
 
   if (scrollTo === "bottom") {
     let scrolled = false;
@@ -2499,7 +2519,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   details.textContent = state.expanded === one.transaction.id ? "hide details" : "details";
   details.addEventListener("click", () => {
     state.expanded = state.expanded === one.transaction.id ? null : one.transaction.id;
-    renderReconcile();
+    redraw("reconcile");
   });
 
   bank.append(date, who, what, flowLine, details);
@@ -2578,7 +2598,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   splitButton.textContent = (state.ledger.splits ?? {})[one.transaction.id] ? "Edit split" : "Split";
   splitButton.addEventListener("click", () => {
     state.splitting = state.splitting === one.transaction.id ? null : one.transaction.id;
-    renderReconcile();
+    redraw("reconcile");
   });
 
   const reason = document.createElement("div");
@@ -2718,7 +2738,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
       onRemove: () => void saveSplit(one.transaction.id, null),
       onCancel: () => {
         state.splitting = null;
-        renderReconcile();
+        redraw("reconcile");
       },
     });
     editor.classList.add("split-attached");
@@ -2734,7 +2754,7 @@ async function saveSplit(id: string, parts: SplitPart[] | null): Promise<void> {
   state.ledger = { ...state.ledger, splits };
   state.persistent = await save(state.ledger);
   state.splitting = null;
-  renderReconcile();
+  redraw("reconcile");
 }
 
 
@@ -3009,7 +3029,7 @@ async function applyAllPayouts(): Promise<void> {
   );
   if (!ok) return;
   for (const { payout, transaction } of waiting) await applyPayout(payout, transaction);
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /**
@@ -3179,7 +3199,7 @@ function transferLineFor(
         void unlinkTransfer(transaction.id);
         return;
       }
-      void rejectTransfer(transaction.id, true).then(() => renderReconcile());
+      void rejectTransfer(transaction.id, true).then(() => redraw("reconcile"));
     });
     wrap.append(label, undo);
     return wrap;
@@ -3269,7 +3289,7 @@ async function linkTransfer(transaction: Transaction, partnerId: string): Promis
     out.id,
   );
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /**
@@ -3313,7 +3333,7 @@ async function unlinkTransfer(transactionId: string): Promise<void> {
     transactionId,
   );
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /** The invoice row under a bank line: what it settles, or what it might. */
@@ -3637,7 +3657,7 @@ async function matchToInvoice(transaction: Transaction, number: string): Promise
     transaction.id,
   );
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /**
@@ -3724,7 +3744,7 @@ async function matchToInvoices(transaction: Transaction, numbers: readonly strin
     transaction.id,
   );
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /** The single account an invoice codes to, when it has only one. */
@@ -3756,7 +3776,7 @@ async function refuseInvoice(transactionId: string): Promise<void> {
     transactionId,
   );
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 async function unmatchInvoice(transactionId: string): Promise<void> {
@@ -3766,7 +3786,7 @@ async function unmatchInvoice(transactionId: string): Promise<void> {
   state.ledger = { ...state.ledger, invoiceMatches };
   state.persistent = await savePart(state.ledger, "invoiceMatches");
   await record("invoiceMatch", `Unmatched ${before ?? ""}`, before ?? null, null, transactionId);
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /**
@@ -3902,7 +3922,7 @@ async function acceptAllShown(): Promise<void> {
     );
   }
   reclassify();
-  renderReconcile();
+  redraw("reconcile");
 }
 
 async function confirmLine(
@@ -3953,7 +3973,7 @@ async function confirmLine(
   // stated, not merely a line being coded.
   if ((one.code ?? "") === "" && code !== "") await ruleFromDecision(one.transaction, code);
 
-  renderReconcile();
+  redraw("reconcile");
 }
 
 /**
@@ -4127,7 +4147,7 @@ function clearCheck(): void {
   state.checkProblems = [];
   state.ledger = { ...state.ledger, reference: [] };
   void savePart(state.ledger, "reference");
-  renderCheck();
+  redraw("check");
 }
 
 /**
@@ -4327,7 +4347,7 @@ function columnPicker(file: {
     state.reference = [...state.reference, ...lines];
     state.ledger = { ...state.ledger, reference: state.reference };
     state.checkUnreadable = state.checkUnreadable.filter((f) => f !== file);
-    void savePart(state.ledger, "reference").then(() => renderCheck());
+    void savePart(state.ledger, "reference").then(() => redraw("check"));
   });
 
   form.append(load);
@@ -5007,7 +5027,7 @@ function section(
         (held ? ` — split into ${held.length} here` : " — one line here");
       marker.addEventListener("click", () => {
         state.expandedSplit = state.expandedSplit === row.transaction.id ? null : row.transaction.id;
-        renderCheck();
+        redraw("check");
       });
       const cell = tr.querySelector(gst ? ".col-gst" : ".col-imported");
       cell?.append(document.createElement("br"), marker);
@@ -5158,7 +5178,7 @@ async function acceptCodesBulk(
   }
 
   if (applied === 0) {
-    renderCheck();
+    redraw("check");
     return;
   }
 
@@ -5185,7 +5205,7 @@ async function acceptCodesBulk(
     );
   }
 
-  renderCheck();
+  redraw("check");
 }
 
 /**
@@ -5259,7 +5279,7 @@ async function acceptSplitsBulk(
   }
 
   if (applied === 0) {
-    renderCheck();
+    redraw("check");
     return;
   }
 
@@ -5274,7 +5294,7 @@ async function acceptSplitsBulk(
     );
   }
   state.expandedSplit = null;
-  renderCheck();
+  redraw("check");
 }
 
 /**
@@ -5341,7 +5361,7 @@ async function acceptCode(
     overrides[transaction.id],
     transaction.id,
   );
-  renderCheck();
+  redraw("check");
 }
 
 /**
@@ -5404,7 +5424,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
     transaction.id,
   );
   state.expandedSplit = null;
-  renderCheck();
+  redraw("check");
 }
 
 /** `910 - Loan from Director` -> whatever the rules already call account 910. */
@@ -5429,12 +5449,12 @@ async function loadRulesFile(file: File): Promise<void> {
     incoming = JSON.parse(await file.text()) as RuleFileShape;
   } catch (error) {
     state.rulesMessage = `${file.name}: ${(error as Error).message}`;
-    renderRules();
+    redraw("rules");
     return;
   }
   if (!Array.isArray(incoming.rules)) {
     state.rulesMessage = `${file.name} has no rules array, so it is not a rule file.`;
-    renderRules();
+    redraw("rules");
     return;
   }
 
@@ -5444,7 +5464,7 @@ async function loadRulesFile(file: File): Promise<void> {
   }
 
   state.pendingRules = { rules: incoming, name: file.name };
-  renderRules();
+  redraw("rules");
 }
 
 async function useRules(rules: RuleFileShape, name: string, verb: string): Promise<void> {
@@ -5454,7 +5474,7 @@ async function useRules(rules: RuleFileShape, name: string, verb: string): Promi
   state.pendingRules = null;
   state.rulesMessage = `${verb} ${name}: ${describeRules(rules)}.`;
   await saveRules({ version: 1, name, loadedAt: state.rulesLoadedAt, rules });
-  renderRules();
+  redraw("rules");
 }
 
 async function replaceRules(): Promise<void> {
@@ -5496,7 +5516,7 @@ async function addRules(): Promise<void> {
       report.conflictingTreatments.map((c) => c.code).slice(0, 5).join(", ") +
       ".";
   }
-  renderRules();
+  redraw("rules");
 }
 
 async function restoreRules(index: number): Promise<void> {
@@ -5555,7 +5575,7 @@ function renderRulesStatus(): void {
     cancel.textContent = "Cancel";
     cancel.addEventListener("click", () => {
       state.pendingRules = null;
-      renderRules();
+      redraw("rules");
     });
 
     choice.append(add, replace, cancel);
@@ -5803,7 +5823,7 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
   cancel.textContent = "Cancel";
   cancel.addEventListener("click", () => {
     state.ruleDraft = null;
-    renderRules();
+    redraw("rules");
   });
 
   const buttons = document.createElement("div");
@@ -5877,7 +5897,7 @@ async function persistRules(): Promise<void> {
     rules: file,
   });
   state.rulesDirty = false;
-  if (state.page === "rules") renderRules();
+  if (state.page === "rules") redraw("rules");
 }
 
 /**
@@ -6323,7 +6343,7 @@ async function saveOpeningBalance(
     openingBalances,
     code,
   );
-  renderOpeningBalances();
+  redraw("openingBalances");
 }
 
 /** The day after an ISO date, so a year end becomes the day a ledger opens. */
@@ -6428,8 +6448,8 @@ async function loadOpeningBalances(file: File): Promise<void> {
     openingBalances,
     "opening",
   );
-  renderOpeningBalances();
-  renderEntities();
+  redraw("openingBalances");
+  redraw("entities");
 }
 
 function renderEntities(): void {
@@ -7078,7 +7098,7 @@ async function setLedgerAccount(account: Account, to: string): Promise<void> {
     chart[index] ?? null,
     `${account.code}|${account.name}`,
   );
-  renderEntities();
+  redraw("entities");
 }
 
 /**
@@ -7224,7 +7244,7 @@ async function removeChartAccount(account: Account, label: string): Promise<void
     await persistRules();
   }
   reclassify();
-  renderEntities();
+  redraw("entities");
 }
 
 /**
@@ -7312,7 +7332,7 @@ async function renameChartAccount(
   );
 
   reclassify();
-  renderEntities();
+  redraw("entities");
 }
 
 /**
@@ -7342,7 +7362,7 @@ async function setAccountType(account: Account, label: string, type: string): Pr
     chart[index >= 0 ? index : chart.length - 1] ?? null,
     `${account.code}|${account.name}`,
   );
-  renderEntities();
+  redraw("entities");
 }
 
 /**
@@ -7480,7 +7500,7 @@ function setTreatment(label: string, rate: string): void {
     label,
   );
   reclassify();
-  void persistRules().then(() => renderEntities());
+  void persistRules().then(() => redraw("entities"));
 }
 
 /**
@@ -7879,7 +7899,7 @@ async function undo(event: LedgerEvent): Promise<void> {
   state.events = state.events.map((e) => (e.id === event.id ? { ...e, reverted: true } : e));
   await saveEvents(state.events);
   reclassify();
-  renderHistory();
+  redraw("history");
 }
 
 /**
@@ -8302,7 +8322,7 @@ function setupSteps(): SetupStep[] {
               action: () => {
                 delete led.singleEntityConfirmed;
                 void save(led);
-                renderSetup();
+                redraw("setup");
               },
             },
             { label: "Review", page: "entities" },
@@ -8316,7 +8336,7 @@ function setupSteps(): SetupStep[] {
                 action: () => {
                   led.singleEntityConfirmed = true;
                   void save(led);
-                  renderSetup();
+                  redraw("setup");
                 },
               },
             ],
@@ -8501,7 +8521,7 @@ function setupNameField(): HTMLElement {
           ],
         });
         save.textContent = "Saved ✓";
-        renderSetupBody();
+        redraw("setupBody");
       } finally {
         save.disabled = false;
         save.classList.remove("working");
@@ -8523,7 +8543,7 @@ function setupNameField(): HTMLElement {
         `Renamed ${existing.name} to ${wanted}`,
       );
       save.textContent = "Renamed ✓";
-      renderSetupBody();
+      redraw("setupBody");
     } finally {
       save.disabled = false;
       save.classList.remove("working");
@@ -8556,7 +8576,7 @@ function renderSetupIntro(): void {
 
 function renderSetup(): void {
   renderSetupIntro();
-  renderSetupBody();
+  redraw("setupBody");
 }
 
 function renderSetupBody(): void {
@@ -9551,7 +9571,7 @@ async function saveEntities(model: EntityModel, what = "Entities changed"): Prom
   state.ledger = { ...state.ledger, entities: model };
   state.persistent = await savePart(state.ledger, "entities");
   await record("entities", what, before ?? null, model);
-  renderEntities();
+  redraw("entities");
 }
 
 /**
@@ -9816,7 +9836,7 @@ async function loadJournals(file: File): Promise<void> {
 
   state.ledger = { ...state.ledger, journals: parsed.journals };
   state.persistent = await savePart(state.ledger, "journals");
-  renderReportsPage();
+  redraw("reports");
 }
 
 /** Read a fixed asset register and keep it with the ledger. */
@@ -9836,7 +9856,7 @@ async function loadAssets(file: File): Promise<void> {
         parsed.problems.slice(0, 5).map((p) => p.message).join("\n"),
     );
   }
-  renderReportsPage();
+  redraw("reports");
 }
 
 /**
@@ -10097,7 +10117,7 @@ async function saveManualJournals(journals: ManualJournal[], what: string): Prom
   state.persistent = await savePart(state.ledger);
   await record("manualJournal", what, before, journals, "manualJournals");
   reclassify();
-  renderReportsPage();
+  redraw("reports");
 }
 
 /**
@@ -10833,7 +10853,7 @@ async function addExtra(extra: TaxExtra): Promise<void> {
     before,
     taxExtras,
   );
-  renderReportsPage();
+  redraw("reports");
 }
 
 async function removeExtra(extra: TaxExtra): Promise<void> {
@@ -10847,7 +10867,7 @@ async function removeExtra(extra: TaxExtra): Promise<void> {
     before,
     taxExtras,
   );
-  renderReportsPage();
+  redraw("reports");
 }
 
 async function loadInvoices(file: File): Promise<void> {
@@ -10866,7 +10886,7 @@ async function loadInvoices(file: File): Promise<void> {
   } else {
     state.invoiceMessage = `${parsed.invoices.length} invoices loaded from ${file.name}.`;
   }
-  renderInvoices();
+  redraw("invoices");
 }
 
 async function loadAllocations(file: File): Promise<void> {
@@ -10878,7 +10898,7 @@ async function loadAllocations(file: File): Promise<void> {
   state.ledger = { ...state.ledger, allocations: parsed.allocations };
   state.persistent = await savePart(state.ledger, "allocations");
   state.invoiceMessage = `${parsed.allocations.length} allocations loaded from ${file.name}.`;
-  renderInvoices();
+  redraw("invoices");
 }
 
 /** Xero writes Windows-1252, so a plain UTF-8 read mangles anything accented. */
@@ -11255,8 +11275,8 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     built.number,
   );
   editingInvoice = null;
-  renderInvoiceEditor();
-  renderInvoices();
+  redraw("invoiceEditor");
+  redraw("invoices");
 }
 
 async function deleteInvoice(invoice: Invoice): Promise<void> {
@@ -11271,8 +11291,8 @@ async function deleteInvoice(invoice: Invoice): Promise<void> {
     invoice.number,
   );
   editingInvoice = null;
-  renderInvoiceEditor();
-  renderInvoices();
+  redraw("invoiceEditor");
+  redraw("invoices");
 }
 
 /**
@@ -11296,7 +11316,7 @@ async function checkBankBalances(file: File): Promise<void> {
     state.balanceChecks = checks;
     renderBalanceChecks(body, file.name, checks, parsed.problems);
     // The review list asks about duplicates the balances can now settle.
-    renderTable();
+    redraw("importRows");
   } catch (error) {
     body.append(note(`Could not read ${file.name}: ${(error as Error).message}`));
   }
@@ -11435,7 +11455,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
   edit.textContent = "edit";
   edit.addEventListener("click", () => {
     editingInvoice = invoice.number;
-    renderInvoiceEditor();
+    redraw("invoiceEditor");
     $("invoice-editor").scrollIntoView({ block: "nearest" });
   });
   td.append(edit);
@@ -11792,7 +11812,7 @@ async function acceptMatch(transactionId: string, invoiceNumber: string): Promis
   state.ledger = { ...state.ledger, invoiceMatches };
   state.persistent = await savePart(state.ledger, "invoiceMatches");
   state.invoiceMessage = `Matched ${invoiceNumber}. The difference is still yours to code.`;
-  renderInvoices();
+  redraw("invoices");
 }
 
 /**
@@ -12697,7 +12717,7 @@ function renderDetail(row: VarianceRow): HTMLElement {
 function render(): void {
   renderStatus();
   renderReports();
-  renderTable();
+  redraw("importRows");
 }
 
 function renderStatus(): void {

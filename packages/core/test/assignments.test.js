@@ -3,7 +3,7 @@ import test from "node:test";
 import { invoiceAssignments } from "../dist/index.js";
 
 const txn = (id, amount, date = "2025-06-10") => ({
-  id, date, account: "BNZ 01", amount, otherParty: "Nick Pando", particulars: "",
+  id, date, account: "BNZ 01", amount, otherParty: "Sample Customer", particulars: "",
   code: "", reference: "", description: "", currency: "NZD", source: "bank",
 });
 
@@ -11,7 +11,7 @@ const txn = (id, amount, date = "2025-06-10") => ({
 // bank line against an invoice that system already settled, so one it still
 // shows as outstanding is not a candidate.
 const invoice = (number, total, issued = "2025-06-01") => ({
-  number, kind: "sales", contact: "Nick Pando", reference: "", issued,
+  number, kind: "sales", contact: "Sample Customer", reference: "", issued,
   due: "2025-06-20", total, tax: 0, paid: total, outstanding: 0, currency: "NZD",
   status: "Paid",
   lines: [{ description: "", accountCode: "200", taxType: "", gross: total, tax: 0, net: total }],

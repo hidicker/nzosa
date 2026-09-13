@@ -22,7 +22,7 @@ const base = (over = {}) => ({
 });
 
 const INVOICE = {
-  number: "INV-0001", kind: "sales", contact: "Nick Pando", reference: "", issued: "2025-05-01",
+  number: "INV-0001", kind: "sales", contact: "Sample Customer", reference: "", issued: "2025-05-01",
   due: "2025-05-15", total: 115000, tax: 15000, paid: 115000, outstanding: 0, currency: "NZD",
   status: "Paid", lines: [{ description: "Work", accountCode: "200", taxType: "15% GST on Income",
     gross: 115000, tax: 15000, net: 100000 }],

@@ -176,6 +176,15 @@ export interface StoredLedger {
    */
   invoiceMatches?: Record<string, string>;
   /**
+   * Credit note number to the invoice it credits.
+   *
+   * Nominated by a person rather than read from the file: an accounting
+   * system's export does not carry the link -- the reference is free text --
+   * and guessing from the contact and the amount would settle the wrong
+   * invoice quietly, which is worse than leaving it unapplied.
+   */
+  creditNotes?: Record<string, string>;
+  /**
    * Bank transaction id to the opposite leg of the transfer it is half of.
    *
    * Written for both legs, so either one finds its partner in a single lookup
@@ -382,6 +391,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     overrides: ledger.overrides ?? {},
     splits: ledger.splits ?? {},
     invoiceMatches: ledger.invoiceMatches ?? {},
+    creditNotes: ledger.creditNotes ?? {},
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

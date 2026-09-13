@@ -553,6 +553,7 @@ export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
     transactions: state.ledger.transactions,
     splits: state.ledger.splits ?? {},
     assignments: invoiceAssignments(),
+    credits: state.ledger.creditNotes ?? {},
   });
 }
 

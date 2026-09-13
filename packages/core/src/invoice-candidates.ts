@@ -18,6 +18,8 @@ export function invoiceBalancesFor(options: {
   transactions: readonly Transaction[];
   splits: Splits;
   assignments: ReadonlyMap<string, string>;
+  /** Credit note number to the invoice it credits, as nominated by a person. */
+  credits?: Readonly<Record<string, string>>;
 }): Map<string, InvoiceBalance> {
   const { invoices, transactions, splits, assignments } = options;
   const byId = new Map(transactions.map((t) => [t.id, t]));
@@ -38,7 +40,7 @@ export function invoiceBalancesFor(options: {
     const transaction = byId.get(transactionId);
     if (transaction !== undefined) paid.push({ invoiceNumber, amount: transaction.amount });
   }
-  return invoiceBalances(invoices, paid);
+  return invoiceBalances(invoices, paid, undefined, options.credits ?? {});
 }
 
 /**

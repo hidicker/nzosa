@@ -267,6 +267,7 @@ export {
   invoiceGross,
   allocateAcrossLines,
   invoiceBalances,
+  isCreditNote,
 } from "./invoices.js";
 export type {
   Invoice,

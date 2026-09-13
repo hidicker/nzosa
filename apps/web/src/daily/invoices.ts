@@ -21,6 +21,7 @@ import {
 } from "@nzosa/core";
 import type {
   Invoice,
+  InvoiceBalance,
   InvoiceKind,
   InvoiceLine,
   InvoiceSupplier,
@@ -678,6 +679,7 @@ export function renderInvoices(): void {
   // unmatched, and the question being asked here is "what is still owed",
   // which only the balance can answer.
   const balances = invoiceBalanceMap();
+  creditNoteSection(body, balances, money);
   const owing = [...balances.values()]
     .filter((b) => b.remaining > 0)
     .sort((a, b) => b.remaining - a.remaining);
@@ -848,4 +850,114 @@ export function wireInvoices(): void {
     (e.target as HTMLInputElement).value = "";
   });
   $<HTMLInputElement>("invoice-search").addEventListener("input", () => redraw("invoices"));
+}
+
+/**
+ * Credit notes, and the invoice each one credits.
+ *
+ * A credit note reverses a sale that was billed. It is not a payment and it is
+ * not a second invoice, and treating it as either gets the debtors figure
+ * wrong in a way nobody notices: measured as an invoice it read as overpaid
+ * the moment it arrived, and left unapplied it leaves the original sale
+ * showing as owing for ever, uncollectable.
+ *
+ * The link is made here by hand because the accounting system's export does
+ * not carry it. On these books one credit note's reference reads "write off
+ * bad debt as per the accountant" -- free text, naming no invoice. Matching on
+ * the contact and the amount would settle the wrong one silently, and a
+ * debtors ledger that is quietly wrong is worse than one that is visibly
+ * incomplete.
+ *
+ * The date is the credit note's own. On the payments basis the GST on a
+ * reversal belongs to the period the credit was raised in, not the period of
+ * the sale it reverses.
+ */
+function creditNoteSection(
+  body: HTMLElement,
+  balances: Map<string, InvoiceBalance>,
+  money: (cents: number) => string,
+): void {
+  const notes = [...balances.values()].filter((b) => b.status === "credit note");
+  if (notes.length === 0) return;
+
+  const links = state.ledger.creditNotes ?? {};
+  const heading = document.createElement("h3");
+  heading.textContent = `Credit notes (${notes.length})`;
+  body.append(heading);
+  body.append(
+    note(
+      "A credit note reverses a sale. Say which invoice each one credits and it comes off " +
+        "what that invoice is owed, dated on the credit note. Until then it is counted " +
+        "against nothing, and the invoice it belongs to still reads as outstanding.",
+    ),
+  );
+
+  const table = document.createElement("table");
+  table.className = "report-table owner-table match-table";
+  const head = document.createElement("thead");
+  head.innerHTML =
+    "<tr><th>Credit note</th><th>Date</th><th>Contact</th><th>Amount</th>" +
+    "<th>Reference</th><th>Credits</th></tr>";
+  const tbody = document.createElement("tbody");
+
+  // Only invoices that could still take a credit: one already settled by money
+  // would be pushed into a negative balance, which is a different mistake.
+  const open = [...balances.values()]
+    .filter((b) => b.status !== "credit note" && b.invoice.total > 0)
+    .sort((a, b) => (a.invoice.issued < b.invoice.issued ? 1 : -1));
+
+  for (const balance of notes) {
+    const cn = balance.invoice;
+    const tr = document.createElement("tr");
+    tr.append(invoiceCell(cn, cn.number));
+    tr.append(nameCell(cn.issued));
+    tr.append(nameCell(cn.contact));
+    tr.append(amountCell(money(Math.abs(cn.total))));
+    tr.append(nameCell(cn.reference));
+
+    const cell = document.createElement("td");
+    const pick = document.createElement("select");
+    pick.className = "bank-link";
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "not yet said";
+    pick.append(none);
+    for (const other of open) {
+      const option = document.createElement("option");
+      option.value = other.invoice.number;
+      option.textContent =
+        `${other.invoice.number} · ${other.invoice.issued} · ${other.invoice.contact} · ` +
+        `${money(other.invoice.total)} (${money(other.remaining)} owing)`;
+      pick.append(option);
+    }
+    pick.value = links[cn.number] ?? "";
+    pick.addEventListener("change", () => {
+      void saveCreditNote(cn.number, pick.value);
+    });
+    cell.append(pick);
+    tr.append(cell);
+    tbody.append(tr);
+  }
+
+  table.append(head, tbody);
+  body.append(table);
+}
+
+/** Record which invoice a credit note credits, or take the link away. */
+async function saveCreditNote(note: string, invoice: string): Promise<void> {
+  const before = state.ledger.creditNotes ?? {};
+  const after = { ...before };
+  if (invoice === "") delete after[note];
+  else after[note] = invoice;
+
+  state.ledger = { ...state.ledger, creditNotes: after };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "invoice",
+    invoice === "" ? `${note} credits nothing` : `${note} credits ${invoice}`,
+    before,
+    after,
+    note,
+  );
+  redraw("invoices");
 }

@@ -419,7 +419,20 @@ export function parseXeroAllocations(text: string): AllocationImportResult {
  * calls settled with no receipt behind it means the receipt has not been found
  * yet -- and a list of those is a day's work, not a bug.
  */
-export type InvoiceStatus = "unpaid" | "part paid" | "paid" | "overpaid";
+/**
+ * Where an invoice stands.
+ *
+ * `credit note` is its own answer rather than a kind of payment. A credit note
+ * is billed in the opposite direction, so measuring it the way an invoice is
+ * measured made every one of them read as overpaid the moment it arrived,
+ * before any money had moved at all.
+ */
+export type InvoiceStatus =
+  | "unpaid"
+  | "part paid"
+  | "paid"
+  | "overpaid"
+  | "credit note";
 
 export interface InvoiceBalance {
   invoice: Invoice;
@@ -428,6 +441,14 @@ export interface InvoiceBalance {
   /** `total` less `assigned`. Negative when more arrived than was billed. */
   remaining: Cents;
   status: InvoiceStatus;
+  /**
+   * Credit notes applied against this invoice, as a positive amount.
+   *
+   * Part of what settles an invoice, beside the money: a sale reversed by a
+   * credit note is not still owing, and an invoice showing it as outstanding
+   * for ever is a debtors figure that cannot be collected.
+   */
+  credited: Cents;
   /**
    * What the imported file said was still owing, when it said anything.
    *
@@ -444,11 +465,26 @@ export interface InvoiceAssignment {
   amount: Cents;
 }
 
+/** A document billed in the opposite direction to the invoices around it. */
+export function isCreditNote(invoice: Invoice): boolean {
+  return invoice.total < 0;
+}
+
 export function invoiceBalances(
   invoices: readonly Invoice[],
   assignments: Iterable<InvoiceAssignment>,
   /** True for an invoice imported from elsewhere, whose `paid` means something. */
   imported: (invoice: Invoice) => boolean = (invoice) => invoice.paid !== 0 || invoice.outstanding !== 0,
+  /**
+   * Credit note number to the invoice it credits.
+   *
+   * Nominated by a person, because the accounting system's export does not
+   * carry the link: the reference is free text, and on real books it says
+   * things like "write off bad debt as per the accountant" rather than an
+   * invoice number. Guessing from the contact and the amount would settle the
+   * wrong invoice quietly, which is worse than leaving it unapplied.
+   */
+  credits: Readonly<Record<string, string>> = {},
 ): Map<string, InvoiceBalance> {
   const assigned = new Map<string, Cents>();
   for (const item of assignments) {
@@ -457,16 +493,36 @@ export function invoiceBalances(
     assigned.set(item.invoiceNumber, (assigned.get(item.invoiceNumber) ?? 0) + Math.abs(item.amount));
   }
 
+  // What each invoice has been credited, from the credit notes pointed at it.
+  const byNumber = new Map(invoices.map((invoice) => [invoice.number, invoice]));
+  const credited = new Map<string, Cents>();
+  for (const [note, target] of Object.entries(credits)) {
+    const source = byNumber.get(note);
+    if (source === undefined || target === "") continue;
+    credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
+  }
+
   const out = new Map<string, InvoiceBalance>();
   for (const invoice of invoices) {
     const paid = assigned.get(invoice.number) ?? 0;
-    const remaining = invoice.total - paid;
-    const status: InvoiceStatus =
-      remaining < 0 ? "overpaid" : remaining === 0 ? "paid" : paid === 0 ? "unpaid" : "part paid";
+    const off = credited.get(invoice.number) ?? 0;
+    // A credit note is measured as itself. Subtracting what it is "owed"
+    // reported every one of them as overpaid before any money had moved.
+    const remaining = isCreditNote(invoice) ? invoice.total + paid : invoice.total - paid - off;
+    const status: InvoiceStatus = isCreditNote(invoice)
+      ? "credit note"
+      : remaining < 0
+        ? "overpaid"
+        : remaining === 0
+          ? "paid"
+          : paid === 0 && off === 0
+            ? "unpaid"
+            : "part paid";
     out.set(invoice.number, {
       invoice,
       assigned: paid,
       remaining,
+      credited: off,
       status,
       fileRemaining: imported(invoice) ? invoice.outstanding : null,
     });

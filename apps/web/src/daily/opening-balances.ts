@@ -525,8 +525,8 @@ export async function loadOpeningBalances(file: File): Promise<void> {
   // A bank account has no chart code: the export names it and this ledger
   // numbers it. The link between the two has already been made, on the chart
   // of accounts, and asking there first is the difference between recognising
-  // these and not -- the export writes "BNZ 01 -  Arrow Rock Trading Account"
-  // where the bank import recorded "Arrow Rock Trading", which no amount of
+  // these and not -- the export writes "BNZ 01 -  Harbour Roastery Account"
+  // where the bank import recorded "Harbour Roastery", which no amount of
   // lowercasing will reconcile.
   const byName = new Map<string, Account>();
   for (const account of state.chart) {

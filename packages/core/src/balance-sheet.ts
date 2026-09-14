@@ -36,7 +36,7 @@ export interface OpeningBalances {
  * Re-key opening balances whose account has since been identified.
  *
  * A trial balance names its bank rows the way the other system does -- "BNZ 01
- * -  Arrow Rock Trading Account" -- and this ledger numbers them. If it is
+ * -  Harbour Roastery Account" -- and this ledger numbers them. If it is
  * loaded before anybody has said which is which, those rows are stored under
  * the name, and they sit apart from the account they belong to for ever:
  * reports show both, and neither is right.

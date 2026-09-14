@@ -217,3 +217,30 @@ test("a journal before the year is a balance, not this year's trading", () => {
   assert.equal(box(s, 2), 0);
   assert.equal(box(s, 31), 70000);
 });
+
+test("an account is placed by what it is called, not by another chart's numbering", () => {
+  // Numbered differently from the chart the codes were written against, these
+  // were placed wholesale in the wrong boxes: cost of goods sold as depreciation
+  // recovered, accounting fees as interest, advertising as repairs, drawings as
+  // stock.
+  for (const [code, type, name, expected] of [
+    ["300", "Direct Costs", "Cost of goods sold", 4],
+    ["310", "Direct Costs", "Packaging", 4],
+    ["210", "Revenue", "Rent received", 9],
+    ["437", "Overhead", "Accounting fees", 16],
+    ["473", "Overhead", "Advertising", 24],
+    ["477", "Overhead", "Telephone and internet", 24],
+    ["469", "Overhead", "Subscriptions", 24],
+    ["461", "Overhead", "Rent paid", 18],
+    ["500", "Depreciation", "Depreciation", 13],
+    ["604", "Overhead", "Rates", 17],
+    ["600", "Overhead", "Property repairs", 19],
+    ["630", "Current Liability", "Drawings", 47],
+    ["980", "Overhead", "Sundry expenses", 24],
+    ["260", "Revenue", "Other Revenue", 10],
+  ]) {
+    assert.equal(ir10BoxForAccount(code, type, 0, name), expected, `${code} ${name}`);
+  }
+  // An account with no name falls back to the standard numbering.
+  assert.equal(ir10BoxForAccount("416", "Overhead", 0, ""), 13);
+});

@@ -126,9 +126,12 @@ const SHAREHOLDER_CODES = new Set(["910", "970", "980"]);
  * balance with the company, which the company owes back while it is in credit.
  */
 function shareholderAccount(digits: string, name: string, type: string): boolean {
-  if (SHAREHOLDER_CODES.has(digits)) return true;
-  if (!type.includes("liability") && type !== "equity") return false;
-  return /\b(director|shareholder|drawings?|funds introduced|current account)\b/.test(name);
+  // Only a liability or equity account can be one. Codes are another chart's
+  // numbering, so they count only where the type allows it: 980 is drawings in
+  // one chart and an expense in the next.
+  if (!type.includes("liability") && type !== "equity" && type !== "") return false;
+  if (/\b(director|shareholder|drawings?|funds introduced|current account)\b/.test(name)) return true;
+  return SHAREHOLDER_CODES.has(digits) && name === "";
 }
 
 /**
@@ -168,34 +171,39 @@ export function ir10BoxForAccount(
   const expenseType =
     t === "expense" || t === "overhead" || t === "depreciation" || t === "direct costs";
 
+  const incomeType = t === "revenue" || t === "sales" || t === "other income";
+  // An account with a name is placed by what it is called. The codes below are
+  // Xero's standard numbering and are used only for an account that carries no
+  // name: on a chart numbered any other way they misplace accounts wholesale --
+  // cost of goods sold at 300 became "depreciation recovered", accounting fees
+  // at 437 became interest, advertising at 473 became repairs.
+  const unnamed = n === "" || n === c.toLowerCase();
+
   // --- Income. A capital gain is not income at all: the form reports it as an
   // untaxed realised gain, below the line. ---
-  if (digits === "301" || /capital gain/.test(n)) return 53;
+  if (/capital gain/.test(n) || (unnamed && digits === "301")) return 53;
   // Income tax is not an IR10 expense: the form works to profit before tax.
-  if (digits === "505") return null;
   if (expenseType && /income tax/.test(n)) return null;
-  if (digits === "200") return 2;
-  if (digits === "270" || /interest (income|received)/.test(n)) return 7;
-  if (/dividends? (income|received)/.test(n)) return 8;
-  if ((t === "revenue" || t === "sales" || t === "other income") && /\b(rent|rental|lease|licen[cs]e)\b/.test(n)) {
-    return 9;
+  if (unnamed && digits === "505") return null;
+  if (incomeType) {
+    if (/interest/.test(n)) return 7;
+    if (/dividend/.test(n)) return 8;
+    if (/\b(rent|rental|lease|licen[cs]e)\b/.test(n)) return 9;
+    if (/depreciation recovered|other (revenue|income)|recover/.test(n)) return 10;
+    if (unnamed) {
+      if (digits === "270") return 7;
+      if (digits === "260" || digits === "300") return 10;
+    }
+    return t === "other income" ? 10 : 2;
   }
-  if (digits === "260" || digits === "300") return 10;
 
   // --- Trading. Stock on hand is a current asset; boxes 3 and 5 read the same
   // account at two dates, which the summary does itself. ---
-  if (digits === "310") return 4;
-  if (digits === "630" || t === "inventory") return 32;
+  if (t === "inventory" || (unnamed && digits === "630")) return 32;
+  if (t === "direct costs" && !/contractor/.test(n)) return 4;
+  if (unnamed && digits === "310") return 4;
 
-  // --- Expenses: named boxes by code, then by name within an expense account.
-  if (digits === "416") return 13;
-  if (digits === "433") return 14;
-  if (digits === "437") return 15;
-  if (digits === "412" || digits === "441") return 16;
-  if (digits === "469") return 18;
-  if (digits === "473") return 19;
-  if (digits === "477" || digits === "478") return 22;
-  if (digits === "413" || digits === "414") return 23;
+  // --- Expenses: named boxes by name within an expense account. ---
   if (expenseType) {
     if (/bad debt/.test(n)) return 12;
     if (/depreciation|amortisation/.test(n)) return 13;
@@ -209,7 +217,17 @@ export function ir10BoxForAccount(
     if (/director'?s? (fees|remuneration)|shareholder salar/.test(n)) return 21;
     if (/salar|wages|kiwisaver/.test(n)) return 22;
     if (/contractor/.test(n)) return 23;
-    return t === "direct costs" ? 4 : 24;
+    if (unnamed) {
+      if (digits === "416") return 13;
+      if (digits === "433") return 14;
+      if (digits === "437") return 15;
+      if (digits === "412" || digits === "441") return 16;
+      if (digits === "469") return 18;
+      if (digits === "473") return 19;
+      if (digits === "477" || digits === "478") return 22;
+      if (digits === "413" || digits === "414") return 23;
+    }
+    return 24;
   }
 
   // --- Assets. ---
@@ -368,7 +386,9 @@ export function ir10Summary(options: Ir10Options): Ir10Summary {
         continue;
       }
       if (/non[- ]?deductible/i.test(name)) nonDeductible += moved;
-      if (digits === "470" || /loss on (the )?(sale|disposal)/i.test(name)) lossOnDisposal += moved;
+      if (/loss on (the )?(sale|disposal)/i.test(name) || (digits === "470" && name.trim() === "")) {
+        lossOnDisposal += moved;
+      }
       // Income is a credit and the form wants it positive; a cost is a debit and
       // already is.
       put(box, INCOME.has(box) ? -moved : moved);
@@ -393,7 +413,8 @@ export function ir10Summary(options: Ir10Options): Ir10Summary {
   for (const account of chart) {
     const isStock =
       account.type.trim().toLowerCase() === "inventory" ||
-      /(\d{3,4})/.exec(account.code)?.[1] === "630";
+      (ir10BoxForAccount(account.code, account.type, 1, account.name) === 32 &&
+        /(\d{3,4})/.exec(account.code)?.[1] === "630");
     if (!isStock) continue;
     put(3, priorClosing.get(account.code) ?? 0);
     put(5, closing.get(account.code) ?? 0);

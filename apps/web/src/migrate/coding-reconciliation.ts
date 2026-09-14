@@ -572,13 +572,21 @@ export function renderCheck(): void {
   const gstFlags = [...result.agreed, ...result.differed].filter(
     (r) => r.gstDiffers && !isSplit(r),
   );
-  const differed = result.differed.filter((r) => !isSplit(r));
+  // A difference somebody has looked at and settled is no longer a question.
+  // Keeping it on the list would make the one action that says "mine is right"
+  // do nothing visible, which reads as a broken button rather than a decision.
+  const settled = (r: CodingRow): boolean =>
+    (state.ledger.overrides ?? {})[r.transaction.id]?.note ===
+    "Checked against the imported coding and kept, on the Coding reconciliation page.";
+  const differed = result.differed.filter((r) => !isSplit(r) && !settled(r));
+  const kept = result.differed.filter((r) => !isSplit(r) && settled(r)).length;
 
   const summary = document.createElement("div");
   summary.className = "check-summary";
   for (const [value, label] of [
     [String(result.agreed.length), "agree"],
     [String(differed.length), "differ"],
+    ...(kept > 0 ? ([[String(kept), "kept as ours"]] as const) : []),
     [`${rate.toFixed(1)}%`, "of checkable lines agree"],
     [String(gstFlags.length), "GST rate differs"],
     [
@@ -1100,6 +1108,23 @@ function section(
     // 2. Rules proposal second
     if (canUseRules) {
       actions.append(useButton("proposed", row.transaction, proposed));
+    }
+    // 3. And the answer nobody could give: that the coding here is right.
+    //
+    // A difference offered only one way out -- take the other system's coding
+    // -- and where the rules already agreed with what was coded, the "use
+    // rules" button was hidden as redundant. So a line somebody had looked at
+    // and judged correct had no button that settled it, and came back on every
+    // draw. Disagreeing with the other system is a decision like any other and
+    // is recorded like one.
+    if (coded !== "") {
+      const keep = document.createElement("button");
+      keep.type = "button";
+      keep.className = "use-button";
+      keep.textContent = "keep mine";
+      keep.title = `${coded} — records that this was checked and stands`;
+      keep.addEventListener("click", () => void keepOurCoding(row.transaction, coded));
+      actions.append(keep);
     }
     tr.append(actions);
     tbody.append(tr);
@@ -1784,4 +1809,42 @@ export function wireCodingReconciliation(): void {
     if (files.length > 0) void loadCheckFiles(files);
     (e.target as HTMLInputElement).value = "";
   });
+}
+
+/**
+ * Record that the coding here is right and the other system's is not.
+ *
+ * The same shape as accepting: a confirmed override, with a note saying where
+ * the decision was made. The code does not change -- it is already what the
+ * person wants -- but the line stops being an open question, which is the
+ * whole point. A return built afterwards can be defended by pointing at the
+ * decision rather than at the absence of one.
+ */
+async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
+  const one = state.suggestions?.get(transaction.id);
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const was = overrides[transaction.id];
+  const side = one?.classification.side;
+
+  overrides[transaction.id] = {
+    ...(was ?? {}),
+    confirmed: true,
+    code,
+    treatment: was?.treatment ?? one?.classification.treatment ?? "standard",
+    ...(side !== undefined && side !== "none" ? { side } : {}),
+    note: "Checked against the imported coding and kept, on the Coding reconciliation page.",
+    at: new Date().toISOString().slice(0, 10),
+  };
+
+  state.ledger = { ...state.ledger, overrides };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "coding",
+    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${code} ` +
+      "(kept, against the imported coding)",
+    was ?? null,
+    overrides[transaction.id],
+    transaction.id,
+  );
+  redraw("check");
 }

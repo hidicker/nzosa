@@ -855,6 +855,51 @@ export function inferAccountMapping(
   return mapping;
 }
 
+/**
+ * Words a bank line and a reference line have in common.
+ *
+ * Amount and date pair most entries, and cannot pair the ones that matter: a
+ * business with five 20.00 payments in a week has five identical amounts a few
+ * days apart, and taking the nearest date hands each reference to whichever
+ * bank line happens to come first. On real books that put a courier bill onto
+ * a PayPal payment and a membership subscription onto the courier, and the two
+ * rows that resulted could not be settled by anybody, because each was being
+ * compared against a bill it never was.
+ *
+ * The export says who it was with, and so does the statement. "Rapido" against
+ * "RAPIDO COURIERS NZD2000" is not a coincidence of amounts.
+ *
+ * Words of four letters or more, because "to" and "nz" agree with everything.
+ * Company suffixes are dropped for the same reason: every second payee is a
+ * limited company and matching on "ltd" would rank them all equally.
+ */
+const NOISE = new Set([
+  "limited", "ltd", "company", "holdings", "trust", "group",
+  "zealand", "payment", "invoice", "purchase", "eftpos", "visa", "card",
+  "from", "with", "this", "that", "your", "their",
+]);
+
+export function nameAgreement(line: ReferenceLine, transaction: Transaction): number {
+  const theirs = `${line.contact ?? ""} ${line.description ?? ""}`.toLowerCase();
+  const ours = [transaction.otherParty, transaction.particulars, transaction.reference]
+    .filter((part) => part !== undefined && part !== "")
+    .join(" ")
+    .toLowerCase();
+  if (theirs.trim() === "" || ours.trim() === "") return 0;
+
+  const words = (text: string): Set<string> =>
+    new Set(
+      text
+        .split(/[^a-z0-9]+/)
+        .filter((word) => word.length >= 4 && !NOISE.has(word)),
+    );
+
+  const mine = words(ours);
+  let hits = 0;
+  for (const word of words(theirs)) if (mine.has(word)) hits += 1;
+  return hits;
+}
+
 export function compareCodings(
   coded: readonly CodedTransaction[],
   reference: readonly ReferenceLine[],
@@ -878,7 +923,65 @@ export function compareCodings(
   const unpaired: CodedTransaction[] = [];
   const tally = new Map<string, { wrong: number; right: number }>();
 
-  for (const entry of [...coded].sort((a, b) => a.transaction.date.localeCompare(b.transaction.date))) {
+  const inOrder = [...coded].sort((a, b) =>
+    a.transaction.date.localeCompare(b.transaction.date),
+  );
+
+  // Who a payment was with decides the pairing, and the date only breaks ties.
+  //
+  // Done before the comparison rather than inside it, because the two passes
+  // have to see each other: taking each transaction in turn and giving it the
+  // nearest unused line lets the earliest one claim a reference that plainly
+  // belongs to a later one. Every agreement on a name is settled first, best
+  // first, and only then is what remains paired by date.
+  const near = (line: ReferenceLine, entry: CodedTransaction): number =>
+    Math.abs(daysBetween(line.date, entry.transaction.date));
+  const openTo = (entry: CodedTransaction): ReferenceLine[] =>
+    (byAmount.get(entry.transaction.amount) ?? []).filter(
+      (l) =>
+        !used.has(l) &&
+        near(l, entry) <= windowDays &&
+        // A reference line that names its account may only pair with a
+        // transaction on that same account.
+        (l.account === undefined ||
+          options.accountMatches === undefined ||
+          options.accountMatches(entry.transaction, l)),
+    );
+
+  const chosen = new Map<CodedTransaction, ReferenceLine>();
+  const named: { entry: CodedTransaction; line: ReferenceLine; score: number; gap: number }[] = [];
+  for (const entry of inOrder) {
+    if (entry.code === null) continue;
+    for (const line of openTo(entry)) {
+      const score = nameAgreement(line, entry.transaction);
+      if (score > 0) named.push({ entry, line, score, gap: near(line, entry) });
+    }
+  }
+  named.sort((a, b) => b.score - a.score || a.gap - b.gap);
+  for (const one of named) {
+    if (chosen.has(one.entry) || used.has(one.line)) continue;
+    chosen.set(one.entry, one.line);
+    used.add(one.line);
+  }
+
+  for (const entry of inOrder) {
+    if (entry.code === null || chosen.has(entry)) continue;
+    let best: ReferenceLine | undefined;
+    let bestGap = Number.POSITIVE_INFINITY;
+    for (const line of openTo(entry)) {
+      const gap = near(line, entry);
+      if (gap < bestGap) {
+        best = line;
+        bestGap = gap;
+      }
+    }
+    if (best !== undefined) {
+      chosen.set(entry, best);
+      used.add(best);
+    }
+  }
+
+  for (const entry of inOrder) {
     // An uncoded transaction still gets looked up. It used to be filed here
     // with `theirs: null` before any lookup was attempted, which threw away
     // the one thing worth having: on a ledger nobody has coded yet, the
@@ -893,31 +996,11 @@ export function compareCodings(
       continue;
     }
 
-    const candidates = (byAmount.get(entry.transaction.amount) ?? []).filter(
-      (l) =>
-        !used.has(l) &&
-        // A reference line that names its account may only pair with a
-        // transaction on that same account.
-        (l.account === undefined ||
-          options.accountMatches === undefined ||
-          options.accountMatches(entry.transaction, l)),
-    );
-    let best: ReferenceLine | undefined;
-    let bestGap = Number.POSITIVE_INFINITY;
-    for (const candidate of candidates) {
-      const gap = Math.abs(daysBetween(candidate.date, entry.transaction.date));
-      if (gap < bestGap) {
-        best = candidate;
-        bestGap = gap;
-      }
-    }
-
-    if (!best || bestGap > windowDays) {
+    const best = chosen.get(entry);
+    if (best === undefined) {
       unreferenced.push({ transaction: entry.transaction, ours: entry.code, theirs: null });
       continue;
     }
-
-    used.add(best);
     const row: CodingRow = { transaction: entry.transaction, ours: entry.code, theirs: best };
 
     // A GST rate that disagrees changes a return even when the account agrees,

@@ -629,6 +629,13 @@ export interface TaxExtra {
   gross: Cents;
   /** RWT, imputation or PIE tax credits attached to it. */
   credits: Cents;
+  /**
+   * Imputation credits on a dividend, where it carried RWT as well.
+   *
+   * The two are different credits on a return: RWT is tax paid and refundable,
+   * imputation is company tax already paid and only reduces tax owed.
+   */
+  imputation?: Cents;
   note?: string;
 }
 

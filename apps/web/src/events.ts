@@ -90,6 +90,8 @@ export type EventKind =
   | "manualJournal"
   /** Income entered by hand, whole. */
   | "taxExtras"
+  /** An individual return's details from outside the books, whole. */
+  | "ir3Details"
   /** The explanations of GST return differences, whole. */
   | "varianceNote";
 
@@ -364,6 +366,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, entities: event.before as EntityModel };
     case "taxExtras":
       return { ...ledger, taxExtras: (event.before ?? []) as NonNullable<StoredLedger["taxExtras"]> };
+    case "ir3Details":
+      return { ...ledger, ir3Details: (event.before ?? []) as NonNullable<StoredLedger["ir3Details"]> };
     // Rules live outside the ledger, so the caller applies these itself.
     case "rule":
     case "codeTreatment":
@@ -414,5 +418,6 @@ export const KIND_LABELS: Record<EventKind, string> = {
   rule: "Rule",
   codeTreatment: "GST treatment",
   taxExtras: "Other income",
+  ir3Details: "IR3 details",
   varianceNote: "GST explanation",
 };

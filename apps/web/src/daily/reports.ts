@@ -19,6 +19,11 @@ import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
 import { unresolvedNote } from "../widgets.js";
 import {
+  ir3Return,
+  isRental,
+  ownerRentalSchedule,
+  rentalSchedule,
+  splitAccountLabel,
   IR10_LAYOUT,
   TAX_EXTRA_CATEGORIES,
   accountTransactionRows,
@@ -56,6 +61,10 @@ import {
   trialBalance,
 } from "@nzosa/core";
 import type {
+  Ir3Details,
+  OwnerRentalSchedule,
+  RentalLine,
+  RentalSchedule,
   BalanceSheetLine,
   Cents,
   DateRange,
@@ -1347,6 +1356,479 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   }
 }
 
+/** A financial year as a date range, labelled by the year it ends in. */
+function yearPeriod(year: number): DateRange {
+  return { from: `${year - 1}-04-01`, to: `${year}-03-31` };
+}
+
+/**
+ * One entity's profit and loss, on the basis the page is set to.
+ *
+ * The same three sources the profit and loss reads, narrowed to the accounts
+ * the entity holds, so a rental schedule and the profit and loss filtered to
+ * the same property cannot disagree. The journals are gathered once and the
+ * returned function reused for every property and year.
+ */
+function entityReporter(): (entity: Entity, period: DateRange) => ProfitAndLoss | null {
+  const { entityOfCode, sectionOf } = reportLookups();
+  const basis = $<HTMLSelectElement>("report-basis").value;
+  const labelOf = reportLabeller();
+  const imported = state.ledger.journals ?? [];
+  const journals =
+    basis === "posted" ? ourAccrualJournals() : basis === "accrual" && imported.length > 0 ? imported : null;
+  const engine = journals === null ? reportEngine() : null;
+  return (entity, period) => {
+    const includeCode = (code: string): boolean => entityOfCode.get(code) === entity.id;
+    if (journals !== null) return accrualProfitAndLoss(journals, { period, sectionOf, labelOf, includeCode });
+    if (!engine) return null;
+    return profitAndLoss(engine.transactions, {
+      period,
+      codeOf: engine.codeOf,
+      classify: engine.classify,
+      sectionOf,
+      includeCode,
+    });
+  };
+}
+
+/** An account as a schedule names it: without the code on the end. */
+function scheduleName(code: string): string {
+  const { name } = splitAccountLabel(code);
+  return name.trim() === "" ? code : name;
+}
+
+/** Every rental's schedule for a year, and for the year before where asked. */
+function rentalSchedulesFor(
+  year: number,
+  withPrior = true,
+): { entity: Entity; now: RentalSchedule; before: RentalSchedule | null }[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const reportOf = entityReporter();
+  const out: { entity: Entity; now: RentalSchedule; before: RentalSchedule | null }[] = [];
+  for (const entity of model.entities.filter(isRental)) {
+    const now = reportOf(entity, yearPeriod(year));
+    if (now === null) continue;
+    const before = withPrior ? reportOf(entity, yearPeriod(year - 1)) : null;
+    out.push({
+      entity,
+      now: rentalSchedule(entity, now, scheduleName),
+      before: before === null ? null : rentalSchedule(entity, before, scheduleName),
+    });
+  }
+  return out;
+}
+
+interface ScheduleRow {
+  name: string;
+  now: Cents;
+  before: Cents;
+}
+
+/** This year's lines beside last year's, one row per account name. */
+function pairLines(now: readonly RentalLine[], before: readonly RentalLine[]): ScheduleRow[] {
+  const rows = new Map<string, ScheduleRow>();
+  const at = (name: string): ScheduleRow => {
+    const found = rows.get(name) ?? { name, now: 0, before: 0 };
+    rows.set(name, found);
+    return found;
+  };
+  for (const line of now) at(line.name).now += line.amount;
+  for (const line of before) at(line.name).before += line.amount;
+  return [...rows.values()].sort((a, b) => a.name.localeCompare(b.name));
+}
+
+/** Whole dollars, a dash for nothing, a loss in brackets -- as schedules print. */
+function wholeDollars(cents: Cents): string {
+  const dollars = Math.round(cents / 100);
+  if (dollars === 0) return "-";
+  const text = Math.abs(dollars).toLocaleString("en-NZ");
+  return dollars < 0 ? `(${text})` : text;
+}
+
+/** Dollars and cents, a negative in brackets -- as a return prints. */
+function centsSaid(cents: Cents): string {
+  const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  return cents < 0 ? `(${text})` : text;
+}
+
+function scheduleTable(
+  year: number,
+  sections: readonly { title: string; lines: readonly ScheduleRow[]; total: readonly [string, Cents, Cents] }[],
+  bottom: readonly [string, Cents, Cents],
+): HTMLTableElement {
+  const table = document.createElement("table");
+  table.className = "report-table rental-schedule";
+  const head = document.createElement("thead");
+  head.innerHTML = `<tr><th></th><th>${year}</th><th>${year - 1}</th></tr>`;
+  const tbody = document.createElement("tbody");
+  const row = (cells: readonly string[], className = ""): void => {
+    const tr = document.createElement("tr");
+    if (className !== "") tr.className = className;
+    cells.forEach((text, index) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      td.className = index === 0 ? "report-name" : "report-amount";
+      tr.append(td);
+    });
+    tbody.append(tr);
+  };
+  for (const section of sections) {
+    row([section.title, "", ""], "bs-section");
+    for (const line of section.lines) row([line.name, wholeDollars(line.now), wholeDollars(line.before)]);
+    row([section.total[0], wholeDollars(section.total[1]), wholeDollars(section.total[2])], "report-total");
+  }
+  row([bottom[0], wholeDollars(bottom[1]), wholeDollars(bottom[2])], "bs-grand");
+  table.append(head, tbody);
+  return table;
+}
+
+/**
+ * Rental schedules: one per property, then all of them as one statement.
+ *
+ * Set out as a practitioner's rental summaries are -- whole dollars, last year
+ * beside this one, income, expenses and what is left -- so the two can be read
+ * side by side a line at a time.
+ */
+function renderRentalSchedules(body: HTMLElement, year: number): void {
+  const built = rentalSchedulesFor(year);
+  if (built.length === 0) {
+    body.append(
+      note(
+        "No rental properties yet. On Entities & accounts, give each property an entity of " +
+          "kind Residential rental or Commercial rental, with its owners and its accounts.",
+      ),
+    );
+    return;
+  }
+
+  for (const { entity, now, before } of built) {
+    const heading = document.createElement("h3");
+    heading.textContent = `Rental schedule — ${entity.name}`;
+    body.append(heading);
+    const owners = (entity.owners ?? []).map((o) => `${o.name} ${o.percent}%`).join(", ");
+    body.append(
+      note(
+        `${entity.kind === "residential" ? "Residential" : "Commercial"} rental` +
+          (owners !== "" ? `, owned ${owners}` : ", with no owners set") +
+          ". " +
+          (entity.gstRegistered === false
+            ? "Not registered for GST, so the figures include it."
+            : "Registered for GST, so the figures exclude it."),
+      ),
+    );
+    body.append(
+      scheduleTable(
+        year,
+        [
+          {
+            title: "Income",
+            lines: pairLines(now.income, before?.income ?? []),
+            total: ["Total Income", now.totalIncome, before?.totalIncome ?? 0],
+          },
+          {
+            title: "Expenses",
+            lines: pairLines(now.expenses, before?.expenses ?? []),
+            total: ["Total Expenses", now.totalExpenses, before?.totalExpenses ?? 0],
+          },
+        ],
+        ["Net Rental Income", now.net, before?.net ?? 0],
+      ),
+    );
+  }
+
+  if (built.length > 1) {
+    const heading = document.createElement("h3");
+    heading.textContent = "Statement of profit or loss — all rentals";
+    body.append(heading);
+    const sum = (pick: (s: RentalSchedule) => Cents, prior: boolean): Cents =>
+      built.reduce((total, b) => total + (prior ? (b.before ? pick(b.before) : 0) : pick(b.now)), 0);
+    const merged = (pick: (s: RentalSchedule) => readonly RentalLine[]): ScheduleRow[] =>
+      pairLines(
+        built.flatMap((b) => pick(b.now)),
+        built.flatMap((b) => (b.before ? pick(b.before) : [])),
+      );
+    body.append(
+      scheduleTable(
+        year,
+        [
+          {
+            title: "Trading Income",
+            lines: merged((s) => s.income),
+            total: ["Total Trading Income", sum((s) => s.totalIncome, false), sum((s) => s.totalIncome, true)],
+          },
+          {
+            title: "Expenses",
+            lines: merged((s) => s.expenses),
+            total: ["Total Expenses", sum((s) => s.totalExpenses, false), sum((s) => s.totalExpenses, true)],
+          },
+        ],
+        ["Net Profit (Loss) for the Year", sum((s) => s.net, false), sum((s) => s.net, true)],
+      ),
+    );
+  }
+}
+
+/** One owner's return for a year, from the books and what was entered for it. */
+function ir3For(owner: string, year: number): ReturnType<typeof ir3Return> {
+  const shares: OwnerRentalSchedule[] = [];
+  for (const { now } of rentalSchedulesFor(year, false)) {
+    const share = ownerRentalSchedule(now, owner);
+    if (share !== null) shares.push(share);
+  }
+  const details = (state.ledger.ir3Details ?? []).find((d) => d.owner === owner && d.year === year);
+  return ir3Return({
+    owner,
+    year,
+    extras: state.ledger.taxExtras ?? [],
+    rentals: shares,
+    ...(details?.provisionalTaxPaid !== undefined ? { provisionalTaxPaid: details.provisionalTaxPaid } : {}),
+    ...(details?.ietcEligible !== undefined ? { ietcEligible: details.ietcEligible } : {}),
+    ...(details?.residentialBroughtForward !== undefined
+      ? { residentialBroughtForward: details.residentialBroughtForward }
+      : {}),
+  });
+}
+
+/** One owner's share of one property, under the headings the IR3 schedule uses. */
+function ownerScheduleTable(schedule: OwnerRentalSchedule): HTMLElement {
+  const wrap = document.createElement("div");
+  const title = document.createElement("h4");
+  title.textContent = `${schedule.property} — ${schedule.percent}% share`;
+  wrap.append(title);
+  const table = document.createElement("table");
+  table.className = "report-table owner-schedule";
+  const tbody = document.createElement("tbody");
+  const row = (label: string, amount: Cents | null, className = ""): void => {
+    const tr = document.createElement("tr");
+    if (className !== "") tr.className = className;
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = label;
+    const value = document.createElement("td");
+    value.className = "report-amount";
+    value.textContent = amount === null ? "" : centsSaid(amount);
+    tr.append(name, value);
+    tbody.append(tr);
+  };
+  const residential = schedule.residential;
+  row("Income", null, "bs-section");
+  row(residential ? "Gross residential rental income" : "Total rents", schedule.rents);
+  row(residential ? "Other residential income" : "Other income", schedule.otherIncome);
+  row("Total income", schedule.totalIncome, "report-total");
+  row("Expenses", null, "bs-section");
+  for (const heading of schedule.headings) {
+    if (heading.heading !== "other") {
+      row(heading.heading === "interest" && residential ? "Total interest" : heading.label, heading.amount);
+      continue;
+    }
+    if (schedule.other.length === 0) row("Other", 0);
+    for (const item of schedule.other) row(`Other: ${item.name}`, item.amount);
+  }
+  row("Total expenses", schedule.totalExpenses, "report-total");
+  row("Net rents", schedule.netRents, "bs-grand");
+  table.append(tbody);
+  wrap.append(table);
+  return wrap;
+}
+
+/**
+ * An owner's IR3, box by box, with the schedules behind it.
+ *
+ * Box numbers are the 2026 form's. The rental figures are this owner's share,
+ * line by line, of each property's schedule on the basis the page is set to;
+ * everything else is what was entered below.
+ */
+function renderIr3(body: HTMLElement, owner: string, year: number): void {
+  const result = ir3For(owner, year);
+
+  const heading = document.createElement("h3");
+  heading.textContent = `${owner} — Individual income tax return (IR3), 1 April ${year - 1} to 31 March ${year}`;
+  body.append(heading);
+  for (const said of result.notes) body.append(note(said));
+
+  const table = document.createElement("table");
+  table.className = "report-table ir10-form";
+  const tbody = document.createElement("tbody");
+  for (const line of result.boxes) {
+    const tr = document.createElement("tr");
+    if (line.total === true) tr.classList.add("ir10-total");
+    const number = document.createElement("td");
+    number.className = "ir10-box";
+    number.textContent = line.box;
+    const title = document.createElement("td");
+    title.textContent = line.title;
+    const amount = document.createElement("td");
+    amount.className = "report-amount";
+    amount.textContent = line.text ?? centsSaid(line.amount ?? 0);
+    tr.append(number, title, amount);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(table);
+
+  if (result.nextYearProvisional !== null) {
+    const [first = 0, second = 0, third = 0] = result.instalments;
+    body.append(
+      note(
+        `${year + 1} provisional tax of ${centsSaid(result.nextYearProvisional)} on the standard ` +
+          `option -- this year's residual income tax plus 5% -- in instalments of ` +
+          `${centsSaid(first)}, ${centsSaid(second)} and ${centsSaid(third)}.`,
+      ),
+    );
+  }
+  if (result.refundOrToPay === null && result.residualIncomeTax !== null) {
+    body.append(note("Enter the provisional tax paid for the year below to see the refund or the tax to pay."));
+  }
+
+  if (result.residential.properties.length > 0) {
+    const title = document.createElement("h3");
+    title.textContent = "Residential property income schedules";
+    body.append(title);
+    for (const property of result.residential.properties) body.append(ownerScheduleTable(property));
+    if (result.residential.carriedForward > 0) {
+      body.append(
+        note(
+          `Residential deductions of ${centsSaid(result.residential.carriedForward)} are more than ` +
+            "the residential income can use. They are ring-fenced and carried forward to next " +
+            "year, not set against other income.",
+        ),
+      );
+    }
+  }
+  if (result.otherRentals.length > 0) {
+    const title = document.createElement("h3");
+    title.textContent = "Rental income schedules";
+    body.append(title);
+    for (const property of result.otherRentals) body.append(ownerScheduleTable(property));
+  }
+
+  renderIr3Details(body, owner, year);
+  renderTaxExtras(body, owner, year);
+}
+
+/** The return's facts from outside the books, entered by hand. */
+function renderIr3Details(body: HTMLElement, owner: string, year: number): void {
+  const heading = document.createElement("h3");
+  heading.textContent = "From Inland Revenue and last year's return";
+  body.append(heading);
+  const details = (state.ledger.ir3Details ?? []).find((d) => d.owner === owner && d.year === year);
+
+  const form = document.createElement("div");
+  form.className = "extra-add ir3-details";
+  const field = (placeholder: string, value: Cents | undefined, title: string): HTMLInputElement => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.placeholder = placeholder;
+    input.title = title;
+    input.value = value === undefined ? "" : (value / 100).toFixed(2);
+    return input;
+  };
+  const paid = field(
+    "Provisional tax paid",
+    details?.provisionalTaxPaid,
+    "Provisional tax paid for the year, as the Inland Revenue account shows it -- including anything transferred in.",
+  );
+  const carried = field(
+    "Residential deductions brought forward",
+    details?.residentialBroughtForward,
+    "Excess residential rental deductions carried forward on last year's return.",
+  );
+  const ietc = document.createElement("select");
+  const chosen = details?.ietcEligible === undefined ? "" : details.ietcEligible ? "yes" : "no";
+  for (const [value, caption] of [
+    ["", "IETC: assume eligible"],
+    ["yes", "IETC: eligible"],
+    ["no", "IETC: not eligible"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = caption;
+    option.selected = value === chosen;
+    ietc.append(option);
+  }
+  ietc.title =
+    "The independent earner tax credit is ruled out by New Zealand Super, a main benefit or Working for Families.";
+
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save";
+  save.addEventListener("click", () => {
+    const next: Ir3Details = { owner, year };
+    for (const [input, key, what] of [
+      [paid, "provisionalTaxPaid", "Provisional tax paid"],
+      [carried, "residentialBroughtForward", "Deductions brought forward"],
+    ] as const) {
+      if (input.value.trim() === "") continue;
+      const amount = parseAmount(input.value);
+      if (amount === null) {
+        alert(`${what} needs to be an amount.`);
+        return;
+      }
+      next[key] = amount;
+    }
+    if (ietc.value !== "") next.ietcEligible = ietc.value === "yes";
+    void saveIr3Details(next);
+  });
+
+  form.append(paid, carried, ietc, save);
+  body.append(form);
+}
+
+async function saveIr3Details(details: Ir3Details): Promise<void> {
+  const before = state.ledger.ir3Details ?? [];
+  const ir3Details = [
+    ...before.filter((d) => !(d.owner === details.owner && d.year === details.year)),
+    details,
+  ];
+  state.ledger = { ...state.ledger, ir3Details };
+  state.persistent = await savePart(state.ledger);
+  await record("ir3Details", `${details.owner} FY${details.year}: details for the IR3`, before, ir3Details);
+  redraw("reports");
+}
+
+function csvOf(rows: readonly (readonly string[])[]): string {
+  return (
+    rows
+      .map((row) => row.map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","))
+      .join("\r\n") + "\r\n"
+  );
+}
+
+function rentalSchedulesCsv(year: number): string {
+  const dollars = (cents: Cents): string => (cents / 100).toFixed(2);
+  const rows: string[][] = [[`Rental schedules, FY${year}`], []];
+  for (const { entity, now, before } of rentalSchedulesFor(year)) {
+    rows.push([entity.name, String(year), String(year - 1)]);
+    rows.push(["Income"]);
+    for (const line of pairLines(now.income, before?.income ?? [])) {
+      rows.push([line.name, dollars(line.now), dollars(line.before)]);
+    }
+    rows.push(["Total Income", dollars(now.totalIncome), dollars(before?.totalIncome ?? 0)]);
+    rows.push(["Expenses"]);
+    for (const line of pairLines(now.expenses, before?.expenses ?? [])) {
+      rows.push([line.name, dollars(line.now), dollars(line.before)]);
+    }
+    rows.push(["Total Expenses", dollars(now.totalExpenses), dollars(before?.totalExpenses ?? 0)]);
+    rows.push(["Net Rental Income", dollars(now.net), dollars(before?.net ?? 0)]);
+    rows.push([]);
+  }
+  return csvOf(rows);
+}
+
+function ir3Csv(owner: string, year: number): string {
+  const result = ir3For(owner, year);
+  const rows: string[][] = [[`${owner} — IR3, FY${year}`], ["Box", "Description", "Amount"]];
+  for (const box of result.boxes) {
+    rows.push([box.box, box.title, box.text ?? ((box.amount ?? 0) / 100).toFixed(2)]);
+  }
+  for (const said of result.notes) rows.push(["", said, ""]);
+  return csvOf(rows);
+}
+
 function renderOwnerReport(body: HTMLElement, owner: string, year: number): void {
   const summary = ownerSummaryFor(owner, year);
 
@@ -1467,7 +1949,12 @@ function renderTaxExtras(body: HTMLElement, owner: string, year: number): void {
       [label, "report-name"],
       [extra.payer, "report-name"],
       [money(extra.gross), "report-amount"],
-      [money(extra.credits), "report-amount"],
+      [
+        extra.imputation
+          ? `${money(extra.credits)} + ${money(extra.imputation)} imputation`
+          : money(extra.credits),
+        "report-amount",
+      ],
     ] as const) {
       const td = document.createElement("td");
       td.textContent = text;
@@ -1523,7 +2010,16 @@ function renderTaxExtras(body: HTMLElement, owner: string, year: number): void {
   gross.placeholder = "Gross";
   const credits = document.createElement("input");
   credits.type = "text";
-  credits.placeholder = "Tax credits";
+  credits.placeholder = "Tax credits (PAYE, RWT, PIE tax)";
+  // Only a dividend carries two kinds of credit, and the return keeps them
+  // apart: RWT is tax paid, imputation is company tax that only reduces tax owed.
+  const imputation = document.createElement("input");
+  imputation.type = "text";
+  imputation.placeholder = "Imputation credits";
+  imputation.hidden = category.value !== "dividends";
+  category.addEventListener("change", () => {
+    imputation.hidden = category.value !== "dividends";
+  });
 
   const add = document.createElement("button");
   add.type = "button";
@@ -1542,10 +2038,13 @@ function renderTaxExtras(body: HTMLElement, owner: string, year: number): void {
       payer: payer.value.trim(),
       gross: amount,
       credits: parseAmount(credits.value) ?? 0,
+      ...(category.value === "dividends" && parseAmount(imputation.value) !== null
+        ? { imputation: parseAmount(imputation.value) as number }
+        : {}),
     });
   });
 
-  form.append(category, payer, gross, credits, add);
+  form.append(category, payer, gross, credits, imputation, add);
   body.append(form);
 }
 
@@ -1594,6 +2093,8 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   depreciation: "Each asset's depreciation for the year, and its book value.",
   shareholders: "What each shareholder has put in and taken out.",
   ir10: "Inland Revenue's financial statement, box by box, as it is filed.",
+  rentals: "Each rental property's income and expenses, and all of them together.",
+  ir3: "One owner's individual return: their rental schedules, other income and the tax.",
   journal: "Every posting for the year, and the trial balance they prove.",
   general: "Every line in the ledger, account by account.",
   manual: "Year-end and correcting journals written by hand.",
@@ -1724,6 +2225,20 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "rentals") {
+    return (
+      "Each property's own schedule, from the accounts given to it on Entities & accounts, " +
+      "with last year beside it. A rental registered for GST is shown net of GST; one that " +
+      "is not includes it, because it cannot claim it back."
+    );
+  }
+  if (kind === "ir3") {
+    return (
+      "One owner's return. Their share of each rental comes from the books; salary, " +
+      "interest, dividends and PIE income are entered below, from the income summary " +
+      "and the certificates."
+    );
+  }
   if (kind === "depreciation") {
     return (
       "Depreciation for the year, worked out from the asset register rather " +
@@ -1862,7 +2377,7 @@ export function renderReportsPage(): void {
     option.selected = owner === chosenOwner;
     ownerSelect.append(option);
   }
-  ownerSelect.hidden = kind !== "owner";
+  ownerSelect.hidden = kind !== "owner" && kind !== "ir3";
   $("assets-pick").hidden = kind !== "depreciation";
 
   const chosenYearNow = Number($<HTMLSelectElement>("report-year").value) || years[0];
@@ -1918,6 +2433,27 @@ export function renderReportsPage(): void {
   if (kind === "general") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderGeneralLedger(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "rentals") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderRentalSchedules(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "ir3") {
+    if (owners.length === 0) {
+      body.append(
+        note(
+          "No owners set. On Entities & accounts, give each rental its owners — " +
+            "for example “Ana Whitcombe 50%; Tom Whitcombe 50%”.",
+        ),
+      );
+      return;
+    }
+    const owner = ownerSelect.value || owners[0];
+    if (owner !== undefined && chosenYearNow !== undefined) renderIr3(body, owner, chosenYearNow);
     return;
   }
 
@@ -2429,6 +2965,23 @@ export function downloadReport(): void {
         `Depreciation schedule, FY${year}`,
       ),
       `depreciation-schedule-fy${year}.csv`,
+      "text/csv",
+    );
+    return;
+  }
+
+  if ($<HTMLSelectElement>("report-kind").value === "rentals") {
+    if (year === undefined) return;
+    download(rentalSchedulesCsv(year), `rental-schedules-fy${year}.csv`, "text/csv");
+    return;
+  }
+
+  if ($<HTMLSelectElement>("report-kind").value === "ir3") {
+    const owner = $<HTMLSelectElement>("report-owner").value;
+    if (owner === "" || year === undefined) return;
+    download(
+      ir3Csv(owner, year),
+      `ir3-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
       "text/csv",
     );
     return;

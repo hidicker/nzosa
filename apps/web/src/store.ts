@@ -1,5 +1,6 @@
 import { entityId } from "@nzosa/core";
 import type {
+  Ir3Details,
   Account, Cents, EntityModel, FixedAsset, Invoice, Journal, ManualJournal,
   PaymentAllocation, Payout, TaxExtra,
 } from "@nzosa/core";
@@ -120,6 +121,8 @@ export interface StoredLedger {
   assets?: FixedAsset[];
   /** Income that never reaches these accounts, entered by hand. */
   taxExtras?: TaxExtra[];
+  /** What an individual's return needs that the books cannot know, by owner and year. */
+  ir3Details?: Ir3Details[];
   /**
    * What each account stood at before this ledger begins.
    *
@@ -399,6 +402,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     varianceNotes: ledger.varianceNotes ?? [],
     varianceAccounts: ledger.varianceAccounts ?? [],
     taxExtras: ledger.taxExtras ?? [],
+    ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     // Written back with everything else. Left out, the file was read on open
     // and then quietly erased by the first coding anybody confirmed -- the
     // decisions part is rebuilt from this list, so an omission here is a

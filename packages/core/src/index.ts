@@ -340,3 +340,4 @@ export * from "./shareholders.js";
 export * from "./payouts.js";
 export * from "./manual-journals.js";
 export * from "./ir3.js";
+export * from "./rental-schedules.js";

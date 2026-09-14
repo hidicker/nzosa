@@ -114,6 +114,7 @@ export {
   TAX_EXTRA_CATEGORIES,
   groupProfitAndLoss,
   plClassForType,
+  balanceSheetRole,
   totalExtras,
 } from "./reports.js";
 export type {

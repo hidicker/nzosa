@@ -19,6 +19,7 @@ import { unresolvedNote } from "../widgets.js";
 import {
   TAX_EXTRA_CATEGORIES,
   accountTransactionRows,
+  balanceSheetRole,
   accrualProfitAndLoss,
   checkManualJournal,
   computeBalanceSheet,
@@ -125,11 +126,40 @@ export function reportLookups(): {
   entityOfCode: Map<string, string>;
   sectionOf: (code: string) => ReportSection | null;
   classOf: (code: string) => PlClass | null;
+  roleOf: (code: string) => string | null;
 } {
   return coreReportLookups({
     model: state.ledger.entities ?? emptyEntityModel(),
     accounts: accountsForEditing(),
   });
+}
+
+/**
+ * What each line below the profit is, in words.
+ *
+ * The chart answers for its own accounts. Two kinds of line are not in it: a
+ * bank account the postings name by its number, and the lines posted to no
+ * account at all. Both are said plainly rather than left as "no type set",
+ * which would send somebody looking for a setting that is not the problem.
+ */
+function lineRoles(): (code: string) => string {
+  const lookups = reportLookups();
+  const held = new Set<string>();
+  for (const account of new Set(state.ledger.transactions.map((t) => t.account))) {
+    const named = bankLabel(account);
+    held.add(named);
+    held.add(`${named} ${named}`);
+  }
+  for (const t of state.ledger.transactions) {
+    const label = String(t.extras?.["accountLabel"] ?? t.account);
+    held.add(label);
+    held.add(`${label} ${label}`);
+  }
+  return (code) => {
+    if (held.has(code)) return balanceSheetRole("Bank", code);
+    if (code.trim() === "(uncoded)") return "Not coded to an account yet";
+    return lookups.roleOf(code) ?? "No account type set";
+  };
 }
 
 /** Build the report currently selected, or null when there is nothing to build. */
@@ -1521,26 +1551,31 @@ export function renderReportsPage(): void {
     body.append(h);
     body.append(
       note(
-        "Transfers between your own accounts, drawings, loan principal — and anything whose " +
-          "account has no type set. Give an account a type on Entities & accounts and it moves " +
-          "onto the report.",
+        "Accounts that belong on the balance sheet, not the profit: each figure is the year's " +
+          "movement on it, and the second column says what it is. One reading \"No account type " +
+          "set\" can be given a type on Entities & accounts, and moves onto the report if it is " +
+          "income or an expense.",
       ),
     );
     const other = document.createElement("table");
     other.className = "report-table";
     const otherBody = document.createElement("tbody");
+    const roleOf = lineRoles();
     for (const line of report.unclassified) {
       const tr = document.createElement("tr");
       const name = document.createElement("td");
       name.textContent = line.code;
       name.className = "report-name";
+      const role = document.createElement("td");
+      role.textContent = roleOf(line.code);
+      role.className = "report-name";
       const n = document.createElement("td");
       n.textContent = String(line.count);
       n.className = "report-count";
       const amount = document.createElement("td");
       amount.textContent = money(line.net);
       amount.className = "report-amount";
-      tr.append(name, n, amount);
+      tr.append(name, role, n, amount);
       otherBody.append(tr);
     }
     other.append(otherBody);
@@ -1932,6 +1967,7 @@ export function downloadReport(): void {
       `${built.title} — Profit and Loss, FY${built.year}`,
       exportNote,
       reportLookups().classOf,
+      lineRoles(),
     ),
     `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${built.year}.csv`,
     "text/csv",

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  balanceSheetRole,
   feedResumeDate,
   mapToOurVocabulary,
   rateForTreatment,
@@ -117,4 +118,34 @@ test("the overlap is deliberate, and adjustable", () => {
   const on = { mapping: { a: "BNZ 01" }, transactions: [txn("BNZ 01", "2026-03-10")] };
   assert.equal(feedResumeDate({ ...on, overlapDays: 0 }), "2026-03-10");
   assert.equal(feedResumeDate({ ...on, overlapDays: 30 }), "2026-02-08");
+});
+
+test("a line off the profit and loss says what it is", () => {
+  // Listed by name alone these read as leftovers. Each is an ordinary thing
+  // with a reason not to be in the profit, and saying which lets it be checked.
+  assert.match(balanceSheetRole("Bank", "BNZ Visa - Business Card"), /^Bank account/);
+  assert.match(balanceSheetRole("GST", "GST"), /GST return/);
+  assert.match(balanceSheetRole("Equity", "Owner Drawings"), /drawings/);
+  assert.match(balanceSheetRole("Equity", "Owner Funds Introduced"), /put in/);
+  assert.match(balanceSheetRole("Fixed Asset", "Less Accumulated Depreciation on Paragliding Equipment"), /Depreciation written off/);
+  assert.match(balanceSheetRole("Fixed Asset", "Paragliding Equipment"), /Asset cost/);
+  assert.match(balanceSheetRole("Accounts Receivable", "Accounts Receivable"), /customers/);
+  assert.match(balanceSheetRole("Accounts Payable", "Accounts Payable"), /suppliers/);
+  assert.match(balanceSheetRole("Non-current Liability", "Loan from Director"), /^Loan/);
+  assert.match(balanceSheetRole("Current Liability", "PAYE Payable"), /PAYE/);
+  assert.match(balanceSheetRole("Current Liability", "Suspense"), /Suspense/);
+  assert.equal(balanceSheetRole("From the rules", "Something"), "No account type set");
+});
+
+test("the lookups say what each balance-sheet code is, and nothing for a profit one", () => {
+  const lookups = reportLookups({
+    model: { entities: [], accounts: {}, banks: {} },
+    accounts: [
+      { account: account("820", "GST", "GST"), label: "GST - 820" },
+      { account: account("400", "Advertising"), label: "Advertising - 400" },
+    ],
+  });
+  assert.match(lookups.roleOf("GST - 820"), /GST return/);
+  assert.equal(lookups.roleOf("Advertising - 400"), null);
+  assert.equal(lookups.roleOf("never heard of it"), null);
 });

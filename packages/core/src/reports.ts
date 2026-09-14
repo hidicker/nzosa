@@ -148,6 +148,50 @@ export function plClassForType(type: string): PlClass | null {
   return CLASS_BY_TYPE[type.trim().toLowerCase()] ?? null;
 }
 
+/**
+ * What an account off the profit and loss is, in a few plain words.
+ *
+ * The lines below the profit are every balance-sheet account the year's
+ * postings touched, each with its movement. Listed by name alone they read as
+ * leftovers -- "02-1234-0567890-001", "GST - 820" -- when each is a perfectly
+ * ordinary thing with a reason not to be in the profit: money in the bank, tax
+ * collected for Inland Revenue, what the owner took out. Saying which is what
+ * lets somebody check the list rather than wonder about it.
+ *
+ * Decided by the account type first, and by the name where one type covers
+ * several things -- a current liability may be wages, PAYE, or a suspense
+ * account waiting to be cleared.
+ */
+export function balanceSheetRole(type: string, name: string): string {
+  const t = type.trim().toLowerCase();
+  const n = name.toLowerCase();
+  if (t === "bank") return "Bank account — money in and out";
+  if (t === "gst" || /\bgst\b/.test(n)) return "GST — settled with each GST return";
+  if (t === "accounts receivable") return "Owed by customers";
+  if (t === "accounts payable") return "Owed to suppliers";
+  if (t === "unpaid expense claims") return "Expense claims to repay";
+  if (/accumulated depreciation/.test(n)) return "Depreciation written off assets so far";
+  if (t === "fixed asset") return "Asset cost, and what it sold for";
+  if (t === "inventory") return "Stock on hand";
+  if (/drawing/.test(n)) return "Owner drawings — money taken out";
+  if (/funds introduced|capital introduced/.test(n)) return "Owner money put in";
+  if (t === "retained earnings") return "Past years' profits";
+  if (/loan/.test(n)) return "Loan — borrowed or repaid, not an expense";
+  if (/paye|kiwisaver/.test(n)) return "PAYE and KiwiSaver owed to Inland Revenue";
+  if (/withholding|income tax|provisional/.test(n)) return "Income tax — paid, or owed to Inland Revenue";
+  if (/wages/.test(n)) return "Wages owed";
+  if (t === "rounding" || /rounding/.test(n)) return "Rounding";
+  if (/suspense/.test(n)) return "Suspense — waiting to be sorted";
+  if (t === "tracking") return "Tracking transfers";
+  if (t === "historical") return "Adjustment from moving to this system";
+  if (t === "current asset") return "Other asset";
+  if (t === "current liability" || t === "non-current liability" || t === "liability") {
+    return "Other amount owed";
+  }
+  if (t === "equity") return "Owner's equity";
+  return "No account type set";
+}
+
 export interface PlGroup {
   key: PlClass;
   title: string;
@@ -397,6 +441,8 @@ export function formatProfitAndLoss(
   note = "Cash basis, GST exclusive. No depreciation or year-end journals.",
   /** When given, the figures are set out under the subheadings an accountant uses. */
   classOf?: (code: string) => PlClass | null,
+  /** When given, what each line below the profit is, in place of "Unclassified". */
+  roleOf?: (code: string) => string | null,
 ): string {
   const money = (cents: Cents): string => (cents / 100).toFixed(2);
   const rows: string[][] = [
@@ -446,7 +492,7 @@ export function formatProfitAndLoss(
     rows.push([]);
     rows.push(["Not in the profit figure — transfers, drawings, loans, or no account type set"]);
     for (const line of report.unclassified) {
-      rows.push(["Unclassified", line.code, String(line.count), money(line.gross), money(line.gst), money(line.net)]);
+      rows.push([roleOf?.(line.code) ?? "Unclassified", line.code, String(line.count), money(line.gross), money(line.gst), money(line.net)]);
     }
   }
   if (report.uncoded.count > 0) {

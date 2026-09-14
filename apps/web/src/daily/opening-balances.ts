@@ -1,15 +1,10 @@
 import { redraw } from "../app.js";
-import { postedJournals, record } from "../books.js";
+import { ledgerAccountFor, postedJournals, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { financialYearBalances, financialYearOf, parseAmount } from "@nzosa/core";
-import type {
-  Cents,
-  FinancialYearBalances,
-  IsoDate,
-  OpeningBalances,
-} from "@nzosa/core";
+import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
 import { asCsvText } from "../books.js";
 import { dayAfter, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
@@ -528,16 +523,30 @@ export async function loadOpeningBalances(file: File): Promise<void> {
   if (chosen === null || chosen === undefined || !dates.includes(chosen)) return;
 
   // A bank account has no chart code: the export names it and this ledger
-  // numbers it. Matched on the label the bank import already recorded.
+  // numbers it. The link between the two has already been made, on the chart
+  // of accounts, and asking there first is the difference between recognising
+  // these and not -- the export writes "BNZ 01 -  Arrow Rock Trading Account"
+  // where the bank import recorded "Arrow Rock Trading", which no amount of
+  // lowercasing will reconcile.
+  const byName = new Map<string, Account>();
+  for (const account of state.chart) {
+    const name = account.name.trim().toLowerCase();
+    if (name !== "") byName.set(name, account);
+  }
   const banks = new Map<string, string>();
   for (const transaction of state.ledger.transactions) {
     const label = String(transaction.extras?.["accountLabel"] ?? "").trim();
     if (label !== "") banks.set(label.toLowerCase(), transaction.account);
   }
+  const bankAccountFor = (name: string): string | undefined => {
+    const wanted = name.trim().toLowerCase();
+    // What somebody said on the chart, before anything a name suggests.
+    const mapped = ledgerAccountFor(name, byName.get(wanted));
+    if (mapped !== null && mapped !== "") return mapped;
+    return banks.get(wanted);
+  };
 
-  const built = openingBalancesFrom(parsed, chosen, {
-    bankAccountFor: (name) => banks.get(name.trim().toLowerCase()),
-  });
+  const built = openingBalancesFrom(parsed, chosen, { bankAccountFor });
   const accounts = built.balances.accounts;
   const total = Object.values(accounts).reduce((sum, c) => sum + c, 0);
   const money = (cents: number): string => (cents / 100).toFixed(2);
@@ -567,9 +576,7 @@ export async function loadOpeningBalances(file: File): Promise<void> {
   // Capture all columns present in the file into byDate
   const byDate: Record<IsoDate, Record<string, Cents>> = {};
   for (const d of parsed.dates) {
-    const builtForDate = openingBalancesFrom(parsed, d, {
-      bankAccountFor: (name) => banks.get(name.trim().toLowerCase()),
-    });
+    const builtForDate = openingBalancesFrom(parsed, d, { bankAccountFor });
     if (Object.keys(builtForDate.balances.accounts).length > 0) {
       byDate[d] = builtForDate.balances.accounts;
     }

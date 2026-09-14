@@ -499,7 +499,10 @@ export function ledgerAccountFor(name: string, account?: Account): string | null
   // Card used for Business Transactions" is the same card as the one the feed
   // calls by its id, and only a person can know that.
   const said = account?.ledgerAccount;
-  if (said === NOT_IN_LEDGER) return null;
+  // Case-insensitively: a chart edited by hand, or written by another tool,
+  // holds "None" as readily as "none", and reading one of them as the name of
+  // a ledger account maps the row to an account that does not exist.
+  if (said !== undefined && said.trim().toLowerCase() === NOT_IN_LEDGER) return null;
   if (said !== undefined && said !== "") return said;
 
   const wanted = name.trim();

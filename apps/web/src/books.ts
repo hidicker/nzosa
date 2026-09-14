@@ -222,8 +222,31 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
    * thing it could not be made to do.
    */
   const linked = state.ledger.transfers ?? {};
+
+  /**
+   * Whether a line has been given an account, by any of the ways there are.
+   *
+   * A code is the usual one. A split is a better one -- it is what the line
+   * actually was. An invoice match is the third: a receipt settling an invoice
+   * posts against the debtor rather than to an account of its own.
+   */
+  const hasCoding = (one: Suggestion): boolean =>
+    one.code !== null ||
+    (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
+    invoiceAssignments().has(one.transaction.id);
+
+  /**
+   * A line that needs nothing further.
+   *
+   * Confirmed is not enough on its own. A line confirmed with no account is a
+   * decision to post nothing, which is not a decision anybody means to make --
+   * and because confirming took it out of this queue, it left no trace: on
+   * these books 33 receipts worth 20,551.49 had been accepted in bulk with no
+   * code, were absent from every report, and showed nowhere as outstanding.
+   * So it stays in the queue until it has an account.
+   */
   const settled = (one: Suggestion): boolean =>
-    one.confirmed || linked[one.transaction.id] !== undefined;
+    (one.confirmed && hasCoding(one)) || linked[one.transaction.id] !== undefined;
 
   const shown = all.filter((one) => {
     if (state.reconcileFilter === "todo" && settled(one)) return false;

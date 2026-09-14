@@ -333,6 +333,22 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
       void linkTransfer(one.transaction, pendingTransfer);
       return;
     }
+    // An account is required. A line confirmed with nothing on it posts
+    // nowhere, and confirming used to take it out of the queue, so it left no
+    // trace at all: it was neither in the reports nor in the work outstanding.
+    // A split or an invoice match is an account by another route, and both
+    // count.
+    const hasSplit = (state.ledger.splits ?? {})[one.transaction.id] !== undefined;
+    const hasInvoice = invoiceAssignments().has(one.transaction.id);
+    if (codeSelect.value.trim() === "" && !hasSplit && !hasInvoice) {
+      alert(
+        "This line needs an account before it can be confirmed.\n\n" +
+          "Pick one, split it into parts, or match it to an invoice. Confirming " +
+          "with nothing on it would take it off the list and post it nowhere.",
+      );
+
+      return;
+    }
     void confirmLine(
       one,
       codeSelect.value,
@@ -1573,6 +1589,14 @@ async function confirmLine(
   description: string,
   contact: string,
 ): Promise<void> {
+  // An account is required, by whichever route. The button asks first and
+  // says why; this is the rule itself, so no other caller can get round it.
+  // A line confirmed with nothing on it posts nowhere and leaves the queue,
+  // which is the one combination that hides work rather than recording it.
+  const hasSplit = (state.ledger.splits ?? {})[one.transaction.id] !== undefined;
+  const hasInvoice = invoiceAssignments().has(one.transaction.id);
+  if (code.trim() === "" && !hasSplit && !hasInvoice) return;
+
   const { treatment, side } = rateToClassification(
     rate,
     one.transaction.amount,
@@ -1610,7 +1634,7 @@ async function confirmLine(
   state.persistent = await save(state.ledger);
   await record(
     "coding",
-    `${one.transaction.date} ${formatAmount(one.transaction.amount)} ${one.transaction.otherParty} → ${code || "no code"}`,
+    `${one.transaction.date} ${formatAmount(one.transaction.amount)} ${one.transaction.otherParty} → ${code || "settled by its split or invoice"}`,
     wasCoded ?? null,
     overrides[one.transaction.id],
     one.transaction.id,

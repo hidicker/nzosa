@@ -132,6 +132,17 @@ function shareholderAccount(digits: string, name: string, type: string): boolean
 }
 
 /**
+ * Whether an account is part of a shareholder's current account.
+ *
+ * The one test the IR10 and the balance sheet both use, so the two cannot set
+ * the same accounts out differently.
+ */
+export function isShareholderCurrentAccount(code: string, name: string, type: string): boolean {
+  const digits = /(\d{3,4})/.exec(String(code))?.[1] ?? String(code);
+  return shareholderAccount(digits, name.trim().toLowerCase(), type.trim().toLowerCase());
+}
+
+/**
  * Which IR10 box an account belongs to, or null when it belongs to none.
  *
  * `balance` is the account's closing balance, debit positive, and is consulted

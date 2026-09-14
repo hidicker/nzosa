@@ -288,3 +288,51 @@ test("the imported basis reads the other system's journals, its bank keyed as th
   assert.ok(lines.some((l) => l.code === "Some Other Card"), "a bank nobody linked keeps its own name");
   assert.equal(Math.abs(sheet.profitForPeriod), 8000, "the file's profit, not a figure from elsewhere");
 });
+
+// A chart typed the way a real one often is: the director's loan non-current,
+// the drawings and funds introduced as equity.
+const TYPED = [
+  ...CHART.filter((a) => a.code !== "910" && a.code !== "980"),
+  { code: "910", name: "Loan from Director", type: "Non-current Liability" },
+  { code: "970", name: "Owner Funds Introduced", type: "Equity" },
+  { code: "980", name: "Owner Drawings", type: "Equity" },
+];
+const SHAREHOLDER_OPENING = {
+  asAt: "2025-04-01",
+  accounts: { "02-1100-0022001-001": 1000000, "910": -600000, "960": -400000 },
+};
+const SHAREHOLDER_JOURNALS = [
+  journal("2025-06-01", [line("980", "Owner Drawings", 200000), bankLine("02-1100-0022001-001", -200000)]),
+  journal("2025-07-01", [bankLine("02-1100-0022001-001", 50000), line("200", "Sales", -50000)]),
+];
+
+test("a company's shareholder current accounts are one current liability, net of drawings", () => {
+  const sheet = computeBalanceSheet({
+    asAt: "2026-03-31", openingBalances: SHAREHOLDER_OPENING, journals: SHAREHOLDER_JOURNALS, chart: TYPED,
+    shareholderCurrentAccounts: true, profitInRetainedEarnings: true,
+  });
+  const current = sheet.currentLiabilities.lines.find((l) => l.name === "Shareholder current accounts");
+  assert.ok(current, "one line, as the statements print it");
+  assert.equal(current.closing, 400000, "the loan less the drawings");
+  assert.equal(current.opening, 600000);
+  assert.equal(sheet.nonCurrentLiabilities.total, 0, "not left under non-current liabilities");
+  assert.equal(sheet.equity.lines.find((l) => l.code === "980"), undefined, "drawings are not equity here");
+
+  // Equity reads the right way up: 4,000 retained, and 500 of profit on top.
+  const retained = sheet.equity.lines.find((l) => l.code === "960");
+  assert.equal(retained.closing, 450000, "retained earnings with the year's profit in it");
+  assert.equal(sheet.equity.lines.find((l) => l.name === "Profit for the period"), undefined);
+  assert.equal(sheet.netAssets, 450000, "8,500 in the bank less the 4,000 owed to the shareholder");
+  assert.equal(sheet.totalEquity, sheet.netAssets);
+  assert.equal(sheet.imbalance, 0);
+});
+
+test("without the option each account stays where its type puts it", () => {
+  const sheet = computeBalanceSheet({
+    asAt: "2026-03-31", openingBalances: SHAREHOLDER_OPENING, journals: SHAREHOLDER_JOURNALS, chart: TYPED,
+  });
+  assert.equal(sheet.nonCurrentLiabilities.lines.find((l) => l.code === "910")?.closing, 600000);
+  assert.equal(sheet.equity.lines.find((l) => l.code === "980")?.closing, -200000);
+  assert.ok(sheet.equity.lines.find((l) => l.name === "Profit for the period"));
+  assert.equal(sheet.imbalance, 0);
+});

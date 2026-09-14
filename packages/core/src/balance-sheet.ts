@@ -3,6 +3,7 @@ import type { IsoDate } from "./dates.js";
 import type { Account } from "./chart.js";
 import type { Journal } from "./journals.js";
 import type { PostedJournal, PostedLine } from "./posting.js";
+import { isShareholderCurrentAccount } from "./ir10.js";
 
 /**
  * The balance sheet, derived from the postings and nothing else.
@@ -201,6 +202,22 @@ export function computeBalanceSheet(options: {
   openingBalances?: OpeningBalances;
   journals: readonly PostedJournal[];
   chart: readonly Account[];
+  /**
+   * Set a company's shareholder current accounts out as one current liability.
+   *
+   * A director's loan, their drawings and the funds they put in are one
+   * running balance the company owes back, and signed statements print it as
+   * "Shareholder Current Accounts" under current liabilities -- whatever types
+   * the chart gave the accounts. Left to their types, the loan sat under
+   * non-current liabilities and the drawings in equity: the totals the same,
+   * but net assets read 23,000 lower than the statements beside them.
+   */
+  shareholderCurrentAccounts?: boolean;
+  /**
+   * Show the year's profit inside retained earnings, as the statements do,
+   * rather than on a line of its own.
+   */
+  profitInRetainedEarnings?: boolean;
 }): BalanceSheet {
   const { asAt, openingBalances, journals, chart } = options;
   const byCode = new Map(chart.map((a) => [a.code, a]));
@@ -227,6 +244,7 @@ export function computeBalanceSheet(options: {
   // absent from one of them.
   const codes = new Set<string>([...openingOf.keys(), ...movementOf.keys()]);
   const sections = new Map<Section, BalanceSheetLine[]>();
+  const shareholder = { opening: 0, movement: 0, closing: 0 };
   let profitForPeriod = 0;
 
   for (const code of [...codes].sort()) {
@@ -240,6 +258,16 @@ export function computeBalanceSheet(options: {
     // the bank side against the account itself, which carries no chart code.
     // It is the only such posting, which is what makes the fallback safe.
     const type = account?.type ?? "Bank";
+    if (
+      options.shareholderCurrentAccounts === true &&
+      account !== undefined &&
+      isShareholderCurrentAccount(code, account.name, type)
+    ) {
+      shareholder.opening += openingAmount;
+      shareholder.movement += movement;
+      shareholder.closing += closing;
+      continue;
+    }
     const section = sectionFor(type, closing);
     if (section === "ignore") continue;
 
@@ -258,6 +286,17 @@ export function computeBalanceSheet(options: {
     const list = sections.get(section);
     if (list) list.push(line);
     else sections.set(section, [line]);
+  }
+
+  if (shareholder.opening !== 0 || shareholder.movement !== 0 || shareholder.closing !== 0) {
+    const line: BalanceSheetLine = {
+      code: "",
+      name: "Shareholder current accounts",
+      ...shareholder,
+    };
+    const list = sections.get("current-liability");
+    if (list) list.push(line);
+    else sections.set("current-liability", [line]);
   }
 
   /** A section as a reader sees it: liabilities and equity the right way up. */
@@ -283,18 +322,33 @@ export function computeBalanceSheet(options: {
   // The period's result is equity too, and it is the movement on the revenue
   // and expense accounts rather than a figure worked out somewhere else. A
   // credit balance is a profit, so it flips with the rest of equity.
+  const profitLine = {
+    code: "",
+    name: "Profit for the period",
+    opening: 0,
+    movement: flip(profitForPeriod),
+    closing: flip(profitForPeriod),
+  };
+  const isRetained = (line: BalanceSheetLine): boolean =>
+    byCode.get(line.code)?.type.trim().toLowerCase() === "retained earnings";
+  const retained = held.lines.find(isRetained);
+  const equityLines =
+    options.profitInRetainedEarnings !== true
+      ? [...held.lines, profitLine]
+      : retained === undefined
+        ? [...held.lines, { ...profitLine, name: "Retained earnings" }]
+        : held.lines.map((line) =>
+            line === retained
+              ? {
+                  ...line,
+                  movement: line.movement + profitLine.movement,
+                  closing: line.closing + profitLine.closing,
+                }
+              : line,
+          );
   const equity: BalanceSheetSection = {
     title: "Equity",
-    lines: [
-      ...held.lines,
-      {
-        code: "",
-        name: "Profit for the period",
-        opening: 0,
-        movement: flip(profitForPeriod),
-        closing: flip(profitForPeriod),
-      },
-    ],
+    lines: equityLines,
     total: held.total - profitForPeriod,
   };
 

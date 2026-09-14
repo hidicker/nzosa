@@ -884,14 +884,24 @@ const NO_JOURNAL_REPORT =
   "No journal report is loaded, so this is built from your postings rather than read " +
   "from the other system. Load one on the Coding reconciliation page to compare.";
 
+/**
+ * Whether these books are a company's.
+ *
+ * A company owes its shareholders what they lend it through their current
+ * accounts, so the IR10 and the balance sheet set those out as a liability; for
+ * anyone else the same accounts are the owner's equity. The entity records
+ * what kind of income it earns, not whether it is a company, so its name
+ * decides -- and with no entity, a company is the likelier answer.
+ */
+function companyBooks(): boolean {
+  const entity = reportingEntity();
+  return entity === undefined || /\b(limited|ltd)\b/i.test(entity.name);
+}
+
 function renderIr10(body: HTMLElement, year: number): void {
   const { journals, basis, fromImport } = positionJournals();
   const entity = reportingEntity();
-  // A company owes its shareholders what they lend it through their current
-  // accounts; for anyone else the same accounts are the owner's equity. The
-  // entity records what kind of income it earns, not whether it is a company,
-  // so its name decides.
-  const company = entity === undefined || /\b(limited|ltd)\b/i.test(entity.name);
+  const company = companyBooks();
   const summary = ir10Summary({
     yearEnding: `${year}-03-31`,
     yearStarting: `${year - 1}-04-01`,
@@ -990,11 +1000,16 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   const asAt = `${year}-03-31`;
   const opening = state.ledger.openingBalances;
   const { journals, basis, fromImport } = positionJournals();
+  // Set out as signed statements are: a company's shareholder current accounts
+  // as one current liability, and the year's profit inside retained earnings.
+  const company = companyBooks();
   const sheet = computeBalanceSheet({
     asAt,
     ...(opening ? { openingBalances: opening } : {}),
     journals,
     chart: state.chart,
+    shareholderCurrentAccounts: company,
+    profitInRetainedEarnings: company,
   });
 
   const heading = document.createElement("h3");
@@ -1100,6 +1115,16 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 
   table.append(head, tbody);
   body.append(table);
+
+  if (company) {
+    body.append(
+      note(
+        "Shareholder current accounts are the director's loan, drawings and funds introduced as " +
+          "one balance, a current liability because the company owes it; retained earnings " +
+          "include the year's profit. This is how the signed statements set them out.",
+      ),
+    );
+  }
 
   body.append(
     note(

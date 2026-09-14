@@ -119,6 +119,121 @@ export function sectionForType(type: string): ReportSection | null {
 }
 
 /**
+ * The subheadings a profit and loss is set out under.
+ *
+ * Income and expenses answer "did it make money"; an accountant reading the
+ * report wants to know how. Trading income less the cost of sales is the gross
+ * profit, which says whether the thing being sold earns its keep before any
+ * overhead -- and other income, a depreciation recovery or a gain on a sale, is
+ * kept apart so it cannot flatter that figure. This is the layout Xero prints,
+ * and a report read beside one should not need translating.
+ *
+ * Decided by account type, the same field that already decides income from
+ * expense, so the subheadings can never disagree with the totals.
+ */
+export type PlClass = "trading" | "costOfSales" | "otherIncome" | "operatingExpenses";
+
+const CLASS_BY_TYPE: Record<string, PlClass> = {
+  revenue: "trading",
+  sales: "trading",
+  "direct costs": "costOfSales",
+  "other income": "otherIncome",
+  expense: "operatingExpenses",
+  overhead: "operatingExpenses",
+  depreciation: "operatingExpenses",
+};
+
+/** Which subheading an account type sits under, or null off the profit and loss. */
+export function plClassForType(type: string): PlClass | null {
+  return CLASS_BY_TYPE[type.trim().toLowerCase()] ?? null;
+}
+
+export interface PlGroup {
+  key: PlClass;
+  title: string;
+  lines: ReportLine[];
+  /** A magnitude: income as earned, costs and expenses as spent. */
+  total: Cents;
+}
+
+export interface GroupedProfitAndLoss {
+  trading: PlGroup;
+  costOfSales: PlGroup;
+  grossProfit: Cents;
+  otherIncome: PlGroup;
+  operatingExpenses: PlGroup;
+  netProfit: Cents;
+}
+
+const PL_TITLES: Record<PlClass, string> = {
+  trading: "Trading Income",
+  costOfSales: "Cost of Sales",
+  otherIncome: "Other Income",
+  operatingExpenses: "Operating Expenses",
+};
+
+/**
+ * Set a profit and loss out under its subheadings.
+ *
+ * A partition of the lines the report already holds, never a second
+ * calculation: every income line lands under trading or other income, every
+ * expense under cost of sales or operating expenses, so the net profit here is
+ * the report's own to the cent. An income line whose type says nothing more
+ * specific goes to trading, and an expense to operating expenses -- the
+ * headings an unlabelled line most plausibly belongs under, and the ones that
+ * keep the totals whole.
+ *
+ * Alphabetical within each heading, as the other system prints it. The report
+ * itself orders by size, which is the right order for "where did it go" and
+ * the wrong one for finding a line you are looking for.
+ */
+export function groupProfitAndLoss(
+  report: ProfitAndLoss,
+  classOf: (code: string) => PlClass | null,
+): GroupedProfitAndLoss {
+  const lines: Record<PlClass, ReportLine[]> = {
+    trading: [],
+    costOfSales: [],
+    otherIncome: [],
+    operatingExpenses: [],
+  };
+  for (const line of report.income) {
+    lines[classOf(line.code) === "otherIncome" ? "otherIncome" : "trading"].push(line);
+  }
+  for (const line of report.expenses) {
+    lines[classOf(line.code) === "costOfSales" ? "costOfSales" : "operatingExpenses"].push(line);
+  }
+
+  const alphabetical = (a: ReportLine, b: ReportLine): number =>
+    a.code.localeCompare(b.code, "en-NZ", { sensitivity: "base" });
+  // An account that nets to nothing is left off, as the other system leaves it
+  // off. On these books that is interest of 3,354.78 posted and then reversed
+  // at year end: a line reading "-0.00" is not a figure anybody needs, and it
+  // reads as though something were wrong. The totals are untouched, because a
+  // line of nothing adds nothing.
+  const group = (key: PlClass, income: boolean): PlGroup => {
+    const sorted = lines[key].filter((line) => line.net !== 0).sort(alphabetical);
+    const total = sorted.reduce((sum, line) => sum + (income ? line.net : -line.net), 0);
+    return { key, title: PL_TITLES[key], lines: sorted, total };
+  };
+
+  const trading = group("trading", true);
+  const costOfSales = group("costOfSales", false);
+  const otherIncome = group("otherIncome", true);
+  const operatingExpenses = group("operatingExpenses", false);
+  const grossProfit = trading.total - costOfSales.total;
+
+  return {
+    trading,
+    costOfSales,
+    grossProfit,
+    otherIncome,
+    operatingExpenses,
+    netProfit: grossProfit + otherIncome.total - operatingExpenses.total,
+  };
+}
+
+/**
  * Balance-sheet types, named so that "not on the profit and loss" can be
  * told apart from "nobody has said what this is".
  *
@@ -280,6 +395,8 @@ export function formatProfitAndLoss(
    * a fixed line could state the opposite of what the file below it contains.
    */
   note = "Cash basis, GST exclusive. No depreciation or year-end journals.",
+  /** When given, the figures are set out under the subheadings an accountant uses. */
+  classOf?: (code: string) => PlClass | null,
 ): string {
   const money = (cents: Cents): string => (cents / 100).toFixed(2);
   const rows: string[][] = [
@@ -290,18 +407,40 @@ export function formatProfitAndLoss(
     ["Section", "Account", "Transactions", "Gross", "GST", "Net"],
   ];
 
-  for (const line of report.income) {
-    rows.push(["Income", line.code, String(line.count), money(line.gross), money(line.gst), money(line.net)]);
-  }
-  rows.push(["", "Total Income", "", "", "", money(report.totalIncome)]);
-  rows.push([]);
+  if (classOf !== undefined) {
+    const grouped = groupProfitAndLoss(report, classOf);
+    const block = (group: PlGroup, income: boolean): void => {
+      if (group.lines.length === 0) return;
+      for (const line of group.lines) {
+        rows.push([
+          group.title, line.code, String(line.count),
+          money(line.gross), money(line.gst), money(income ? line.net : -line.net),
+        ]);
+      }
+      rows.push(["", `Total ${group.title}`, "", "", "", money(group.total)]);
+      rows.push([]);
+    };
+    block(grouped.trading, true);
+    block(grouped.costOfSales, false);
+    rows.push(["", "Gross Profit", "", "", "", money(grouped.grossProfit)]);
+    rows.push([]);
+    block(grouped.otherIncome, true);
+    block(grouped.operatingExpenses, false);
+    rows.push(["", "Net Profit", "", "", "", money(grouped.netProfit)]);
+  } else {
+    for (const line of report.income) {
+      rows.push(["Income", line.code, String(line.count), money(line.gross), money(line.gst), money(line.net)]);
+    }
+    rows.push(["", "Total Income", "", "", "", money(report.totalIncome)]);
+    rows.push([]);
 
-  for (const line of report.expenses) {
-    rows.push(["Expenses", line.code, String(line.count), money(line.gross), money(line.gst), money(-line.net)]);
+    for (const line of report.expenses) {
+      rows.push(["Expenses", line.code, String(line.count), money(line.gross), money(line.gst), money(-line.net)]);
+    }
+    rows.push(["", "Total Expenses", "", "", "", money(report.totalExpenses)]);
+    rows.push([]);
+    rows.push(["", "Net Profit", "", "", "", money(report.netProfit)]);
   }
-  rows.push(["", "Total Expenses", "", "", "", money(report.totalExpenses)]);
-  rows.push([]);
-  rows.push(["", "Net Profit", "", "", "", money(report.netProfit)]);
 
   if (report.unclassified.length > 0) {
     rows.push([]);

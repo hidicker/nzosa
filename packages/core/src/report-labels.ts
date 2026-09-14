@@ -4,8 +4,8 @@ import { matchAccountName } from "./coding-names.js";
 import { accountEntityKey } from "./entities.js";
 import type { EntityModel } from "./entities.js";
 import type { Overrides } from "./overrides.js";
-import { sectionForType } from "./reports.js";
-import type { ReportSection } from "./reports.js";
+import { plClassForType, sectionForType } from "./reports.js";
+import type { PlClass, ReportSection } from "./reports.js";
 import type { RuleSet } from "./rules.js";
 
 /**
@@ -56,17 +56,25 @@ export function reportLookups(options: {
 }): {
   entityOfCode: Map<string, string>;
   sectionOf: (code: string) => ReportSection | null;
+  /** Which subheading of the profit and loss each code sits under. */
+  classOf: (code: string) => PlClass | null;
 } {
   const entityOfCode = new Map<string, string>();
   const sections = new Map<string, ReportSection | null>();
+  const classes = new Map<string, PlClass | null>();
 
   for (const { account, label } of options.accounts) {
     const id = options.model.accounts[accountEntityKey(account)];
     if (id !== undefined) entityOfCode.set(label, id);
     sections.set(label, sectionForType(account.type));
+    classes.set(label, plClassForType(account.type));
   }
 
-  return { entityOfCode, sectionOf: (code) => sections.get(code) ?? null };
+  return {
+    entityOfCode,
+    sectionOf: (code) => sections.get(code) ?? null,
+    classOf: (code) => classes.get(code) ?? null,
+  };
 }
 
 /**

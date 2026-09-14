@@ -110,8 +110,19 @@ export type {
   DepreciationSchedule,
 } from "./assets.js";
 
-export { TAX_EXTRA_CATEGORIES, totalExtras } from "./reports.js";
-export type { TaxExtra, TaxExtraCategory } from "./reports.js";
+export {
+  TAX_EXTRA_CATEGORIES,
+  groupProfitAndLoss,
+  plClassForType,
+  totalExtras,
+} from "./reports.js";
+export type {
+  GroupedProfitAndLoss,
+  PlClass,
+  PlGroup,
+  TaxExtra,
+  TaxExtraCategory,
+} from "./reports.js";
 
 export {
   accrualProfitAndLoss,

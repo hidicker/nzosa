@@ -33,6 +33,7 @@ import {
   formatProfitAndLoss,
   generalLedgerRows,
   generalLedgerTotals,
+  groupProfitAndLoss,
   gstWithin,
   ir10IsCalculated,
   ir10Summary,
@@ -59,6 +60,8 @@ import type {
   Journal,
   ManualJournal,
   OwnerSummary,
+  PlClass,
+  PlGroup,
   PostedJournal,
   ProfitAndLoss,
   ReportLine,
@@ -121,6 +124,7 @@ export function reportLabeller(): (line: { accountCode: string; accountName: str
 export function reportLookups(): {
   entityOfCode: Map<string, string>;
   sectionOf: (code: string) => ReportSection | null;
+  classOf: (code: string) => PlClass | null;
 } {
   return coreReportLookups({
     model: state.ledger.entities ?? emptyEntityModel(),
@@ -1488,17 +1492,26 @@ export function renderReportsPage(): void {
     tbody.append(tr);
   };
 
-  addRow("Income", "", "report-section");
-  for (const line of report.income) addRow(line.code, money(line.net), "", String(line.count), line);
-  addRow("Total Income", money(report.totalIncome), "report-total");
+  // Set out the way an accountant reads one: trading income less the cost of
+  // sales is the gross profit, and other income is kept apart so it cannot
+  // flatter it. The grouping is a partition of the same lines, so the net
+  // profit below is the report's own.
+  const grouped = groupProfitAndLoss(report, reportLookups().classOf);
+  const showGroup = (group: PlGroup, income: boolean): void => {
+    if (group.lines.length === 0) return;
+    addRow(group.title, "", "report-section");
+    for (const line of group.lines) {
+      addRow(line.code, money(income ? line.net : -line.net), "", String(line.count), line);
+    }
+    addRow(`Total ${group.title}`, money(group.total), "report-total");
+  };
 
-  addRow("Expenses", "", "report-section");
-  for (const line of report.expenses) {
-    addRow(line.code, money(-line.net), "", String(line.count), line);
-  }
-  addRow("Total Expenses", money(report.totalExpenses), "report-total");
-
-  addRow("Net Profit", money(report.netProfit), "report-net");
+  showGroup(grouped.trading, true);
+  showGroup(grouped.costOfSales, false);
+  addRow("Gross Profit", money(grouped.grossProfit), "report-total");
+  showGroup(grouped.otherIncome, true);
+  showGroup(grouped.operatingExpenses, false);
+  addRow("Net Profit", money(grouped.netProfit), "report-net");
   table.append(tbody);
   body.append(table);
 
@@ -1918,6 +1931,7 @@ export function downloadReport(): void {
       built.report,
       `${built.title} — Profit and Loss, FY${built.year}`,
       exportNote,
+      reportLookups().classOf,
     ),
     `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${built.year}.csv`,
     "text/csv",

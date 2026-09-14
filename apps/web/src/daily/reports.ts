@@ -1061,7 +1061,13 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
     `<tr><th>Account</th><th>Opening</th><th>Movement</th><th>As at 31 Mar ${year}</th></tr>`;
   const tbody = document.createElement("tbody");
 
-  const section = (title: string, lines: readonly BalanceSheetLine[], total: Cents): void => {
+  // A section's own total is left off where a grand total below says the same.
+  const section = (
+    title: string,
+    lines: readonly BalanceSheetLine[],
+    total: Cents,
+    withTotal = true,
+  ): void => {
     if (lines.length === 0 && total === 0) return;
     const header = document.createElement("tr");
     header.className = "bs-section";
@@ -1080,6 +1086,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
       tbody.append(row);
     }
 
+    if (!withTotal) return;
     const sum = document.createElement("tr");
     sum.className = "bs-total";
     sum.append(nameCell(`Total ${title.toLowerCase()}`));
@@ -1110,7 +1117,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   );
   grand("Total liabilities", sheet.totalLiabilities);
   grand("Net assets", sheet.netAssets);
-  section(sheet.equity.title, sheet.equity.lines, sheet.equity.total);
+  section(sheet.equity.title, sheet.equity.lines, sheet.equity.total, false);
   grand("Total equity", sheet.totalEquity);
 
   table.append(head, tbody);

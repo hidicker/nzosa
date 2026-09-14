@@ -624,7 +624,11 @@ have no type until one is set, and get promoted into the chart when it is.
   boxes 11 and 25 are rounded from exact totals, with 10 and 24 taking the
   rounding; 6, 27, 29, 43, 48, 50 and 51 are arithmetic on rounded boxes. This
   reproduces a filed return box for box; round any other way and it stops
-  agreeing.
+  agreeing. `ir10BoxForAccount` places an account by type, then name; Xero's
+  standard codes are a fallback for an unnamed account only, because on another
+  chart's numbering they misplace accounts (300 cost of goods sold read as
+  depreciation recovered). A shareholder current account must be a liability
+  or equity account.
 - **The reports list** is built from the `optgroup`s of `#report-kind`, so the
   list and the picker cannot disagree. Favourites are per browser, in
   `localStorage`.

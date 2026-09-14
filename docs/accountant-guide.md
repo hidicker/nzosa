@@ -191,6 +191,8 @@ Every company income tax return (IR4) is filed with an IR10 or a full set of fin
 * **Assets (30–43):** debtors, cash and deposits, other current assets, then fixed assets by class — vehicles (33), plant and machinery (34), furniture, land, buildings and so on — each net of its accumulated depreciation.
 * **Liabilities (44–50):** provisions, creditors, current loans, other current liabilities and non-current liabilities. For a company, shareholder current accounts are a current liability (47).
 * **Owners equity (51)** is total assets less total liabilities.
+
+Each account is placed by its type and its name, not its number: "Accounting fees" is a professional fee and "Rent" is rent whatever code a chart gives them. Xero's standard numbering (`437` interest, `473` repairs and so on) is used only for an account with no name, so a chart numbered any other way still lands in the right boxes. Check the account names before relying on the form: an expense called "General" goes to other expenses (24), even if it is really rent.
 * **Disclosures (52–60):** tax depreciation (taken to equal accounting depreciation), untaxed realised gains, additions and disposals from the asset register, dividends paid, drawings, current account year-end balances, and a tax-deductible loss on disposal.
 
 Rounding follows a signed return. Each box is its accounts summed and rounded to the dollar; total income (11) and total expenses (25) are rounded from their exact figures, and other income (10) and other expenses (24) take the rounding that remains, so every total adds up. Laid beside an IR10 filed by a practitioner, all 60 boxes agreed, from both the ledger's own postings and the imported general ledger.

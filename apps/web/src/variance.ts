@@ -191,6 +191,8 @@ export interface DetailLine {
 
 export interface Detail {
   matched: number;
+  /** Bank lines that match two or three of the filed lines added together. */
+  grouped: number;
   onlyFiled: DetailLine[];
   onlyOurs: DetailLine[];
   filedGst: number;
@@ -253,10 +255,51 @@ export function detailFor(row: VarianceRow): Detail | null {
     }
   }
 
+  // A payment the other system divided between invoices is one line in the
+  // bank and two or three in the return: a receipt of 890.00 against lines of
+  // 800.00 and 90.00. Paired by amount alone they read as differences on both
+  // sides, though the GST agrees, and on real books they were most of what the
+  // detail listed. So what is left on our side is tried against two or three
+  // filed lines within a week that add up to it exactly -- nearest dates first.
+  const near = (a: string, b: string): number => Math.abs(Date.parse(a) - Date.parse(b)) / 86_400_000;
+  let grouped = 0;
+  const unmatchedOurs: DetailLine[] = [];
+  for (const line of onlyOurs) {
+    const pool = available
+      .map((candidate, index) => ({ candidate, index }))
+      .filter(({ candidate }) => near(candidate.date, line.date) <= 7);
+    let best: { indices: number[]; gap: number } | null = null;
+    const consider = (picked: { candidate: DetailLine; index: number }[]): void => {
+      if (picked.reduce((sum, p) => sum + p.candidate.amount, 0) !== line.amount) return;
+      const gap = picked.reduce((sum, p) => sum + near(p.candidate.date, line.date), 0);
+      if (best === null || gap < best.gap) best = { indices: picked.map((p) => p.index), gap };
+    };
+    for (let i = 0; i < pool.length; i += 1) {
+      for (let j = i + 1; j < pool.length; j += 1) {
+        const a = pool[i];
+        const b = pool[j];
+        if (a === undefined || b === undefined) continue;
+        consider([a, b]);
+        for (let k = j + 1; k < pool.length; k += 1) {
+          const c = pool[k];
+          if (c !== undefined) consider([a, b, c]);
+        }
+      }
+    }
+    const chosen = best as { indices: number[]; gap: number } | null;
+    if (chosen === null) {
+      unmatchedOurs.push(line);
+      continue;
+    }
+    for (const index of [...chosen.indices].sort((x, y) => y - x)) available.splice(index, 1);
+    grouped += 1;
+  }
+
   return {
     matched,
+    grouped,
     onlyFiled: available,
-    onlyOurs,
+    onlyOurs: unmatchedOurs,
     filedGst: gstOf(filedLines),
     ourGst: gstOf(ourLines),
   };

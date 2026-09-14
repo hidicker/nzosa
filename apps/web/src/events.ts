@@ -8,6 +8,7 @@ import type {
   Invoice,
   SplitPart,
   TransactionOverride,
+  VarianceNote,
 } from "@nzosa/core";
 import type { StoredLedger } from "./store.js";
 
@@ -88,7 +89,9 @@ export type EventKind =
   /** A journal somebody wrote by hand. */
   | "manualJournal"
   /** Income entered by hand, whole. */
-  | "taxExtras";
+  | "taxExtras"
+  /** The explanations of GST return differences, whole. */
+  | "varianceNote";
 
 /**
  * A match and the coding it produced, recorded together.
@@ -365,6 +368,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
     case "rule":
     case "codeTreatment":
       return ledger;
+    case "varianceNote":
+      return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
   }
 }
 
@@ -409,4 +414,5 @@ export const KIND_LABELS: Record<EventKind, string> = {
   rule: "Rule",
   codeTreatment: "GST treatment",
   taxExtras: "Other income",
+  varianceNote: "GST explanation",
 };

@@ -1,10 +1,11 @@
-import { recomputeVariance } from "../books.js";
+import { recomputeVariance, record } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { detailFor } from "../variance.js";
 import type { VarianceRow } from "../variance.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
-import { formatAmount, gstWithin } from "@nzosa/core";
+import { formatAmount, gstWithin, parseAmount } from "@nzosa/core";
+import type { VarianceNote } from "@nzosa/core";
 import { loadFiledReturns } from "../migrate/file-intake.js";
 
 /**
@@ -142,8 +143,12 @@ function renderDetail(row: VarianceRow): HTMLElement {
   const summary = document.createElement("p");
   summary.className = "variance-note";
   summary.textContent =
-    `${detail.matched} lines agree exactly. ` +
-    `Filed GST ${formatAmount(detail.filedGst)}, ours ${formatAmount(detail.ourGst)}.`;
+    `${detail.matched} lines agree exactly` +
+    (detail.grouped > 0
+      ? `, and ${detail.grouped} bank line${detail.grouped === 1 ? " matches" : "s match"} ` +
+        "the other system's split across invoices"
+      : "") +
+    `. Filed GST ${formatAmount(detail.filedGst)}, ours ${formatAmount(detail.ourGst)}.`;
   wrap.append(summary);
 
   const section = (heading: string, lines: readonly { date: string; amount: number; who: string; what: string }[]) => {
@@ -176,7 +181,99 @@ function renderDetail(row: VarianceRow): HTMLElement {
 
   section("In the filed return, not in ours", detail.onlyFiled);
   section("In ours, not in the filed return", detail.onlyOurs);
+  wrap.append(explanationsFor(row));
   return wrap;
+}
+
+/**
+ * The explanations for one period, and a way to add one.
+ *
+ * A difference that has been looked at and understood -- a card line dated a
+ * day later by the other system, a receipt it later reversed -- is worth
+ * writing down once, so the period's "Left" column shows only what nobody has
+ * explained yet. There was no way to write one here: they could only arrive
+ * in a file.
+ *
+ * Signed as the comparison is, ours less filed, so notes add up to the
+ * difference they explain.
+ */
+function explanationsFor(row: VarianceRow): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "variance-explanations";
+
+  const heading = document.createElement("h4");
+  heading.textContent = "Explanations";
+  box.append(heading);
+
+  const all = state.ledger.varianceNotes ?? [];
+  const mine = all.filter((note) => note.period === row.periodEnd);
+  for (const note of mine) {
+    const line = document.createElement("p");
+    line.className = "variance-note";
+    line.textContent = `${formatAmount(note.amount)} — ${note.reason} `;
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "link-button";
+    remove.textContent = "remove";
+    remove.addEventListener("click", () =>
+      void saveExplanations(
+        all.filter((one) => one !== note),
+        `Removed explanation for ${row.periodEnd}: ${note.reason}`,
+      ),
+    );
+    line.append(remove);
+    box.append(line);
+  }
+
+  const form = document.createElement("div");
+  form.className = "page-actions";
+  const amount = document.createElement("input");
+  amount.type = "text";
+  amount.inputMode = "decimal";
+  amount.size = 10;
+  const left = row.left ?? 0;
+  amount.placeholder = left === 0 ? "Amount" : formatAmount(left);
+  amount.title = "How much of the difference this explains, ours less filed";
+  const reason = document.createElement("input");
+  reason.type = "text";
+  reason.size = 60;
+  reason.placeholder = "What differs, and which side is right";
+  const add = document.createElement("button");
+  add.type = "button";
+  add.textContent = "Add explanation";
+  add.addEventListener("click", () => {
+    const cents = parseAmount(amount.value.trim());
+    if (cents === null || cents === 0) {
+      alert("Enter the amount this explains, ours less filed: negative where ours is lower.");
+      return;
+    }
+    if (reason.value.trim() === "") {
+      alert("Say what the difference is.");
+      return;
+    }
+    const note: VarianceNote = {
+      period: row.periodEnd,
+      amount: cents,
+      reason: reason.value.trim(),
+      at: new Date().toISOString().slice(0, 10),
+    };
+    void saveExplanations(
+      [...all, note],
+      `Explained ${formatAmount(cents)} of ${row.periodEnd}: ${note.reason}`,
+    );
+  });
+  form.append(amount, reason, add);
+  box.append(form);
+  return box;
+}
+
+async function saveExplanations(notes: VarianceNote[], summary: string): Promise<void> {
+  const before = state.ledger.varianceNotes ?? [];
+  state.ledger = { ...state.ledger, varianceNotes: notes };
+  state.persistent = await save(state.ledger);
+  await record("varianceNote", summary, before, notes, "varianceNotes");
+  recomputeVariance();
+  renderVariance();
 }
 
 /** Loading filed returns to compare against. */

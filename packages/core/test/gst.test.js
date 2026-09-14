@@ -502,3 +502,40 @@ test("a transfer recorded between your own accounts is out of scope, however the
   assert.equal(result.boxes.box5, 0, "nothing in sales");
   assert.equal(result.boxes.box11, 0, "nothing in purchases");
 });
+
+test("a refund sits on the side of the return its account is on, not the side its sign suggests", () => {
+  // Saved by sign, a subscription refund reached Box 5 as a sale and a refund
+  // paid to a customer reached Box 11 as a purchase. The GST came out the same;
+  // the boxes did not match the return as filed.
+  const refund = txn("2025-04-08", 3669, { id: "refund-in" });
+  const repaid = txn("2025-04-09", -80000, { id: "refund-out" });
+  const overrides = {
+    "refund-in": { treatment: "standard", side: "sales", code: "485 Subscriptions", note: "saved by sign" },
+    "refund-out": { treatment: "standard", side: "purchases", code: "200 Sales", note: "saved by sign" },
+  };
+  const codes = { "refund-in": "485 Subscriptions", "refund-out": "200 Sales" };
+  const sides = { "485 Subscriptions": "purchases", "200 Sales": "sales" };
+  const resolve = gstResolver({
+    overrides,
+    codeOf: (t) => codes[t.id] ?? null,
+    chartTreatment: (code) => (sides[code] ? { treatment: "standard", side: sides[code] } : null),
+  });
+  assert.equal(resolve(refund).side, "purchases");
+  assert.equal(resolve(repaid).side, "sales");
+
+  const result = gstReturn([refund, repaid], { from: "2025-04-01", to: "2025-05-31" }, { resolve, basis: "payments" });
+  assert.equal(result.boxes.box5, -80000, "a refund to a customer reduces sales");
+  // Box 11 is stated from the tax rather than summed from the lines, so the
+  // refund shows as the tax it carries: 4.79 off Box 12, and Box 11 down with it.
+  assert.equal(result.boxes.box12, -479, "a refund from a supplier reduces the tax claimed");
+  assert.ok(result.boxes.box11 < 0, "and reduces purchases, not sales");
+});
+
+test("a line with no account side keeps the side it was given", () => {
+  const spend = txn("2025-04-10", -2300, { id: "plain" });
+  const resolve = gstResolver({
+    overrides: { plain: { treatment: "standard", side: "purchases", note: "by hand" } },
+    codeOf: () => null,
+  });
+  assert.equal(resolve(spend).side, "purchases");
+});

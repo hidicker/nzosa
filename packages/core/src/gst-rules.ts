@@ -240,6 +240,37 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
 
   const transfers = options.transfers ?? {};
 
+  // Which side of the return a coded line sits on is a property of its
+  // account, not of which way the money moved. A refund from a supplier is a
+  // purchase that went the other way, and reduces Box 11; a refund to a
+  // customer reduces Box 5. Saved by sign, a subscription refund reached Box 5
+  // as a sale and a customer refund reached Box 11 as a purchase -- the GST
+  // came out the same, but on real books 13 lines sat in the wrong box beside
+  // the return as filed. So where the account says which side it is on, that
+  // is the side, whatever was saved.
+  const onAccountSide = (
+    classification: GstClassification,
+    transaction: Transaction,
+  ): GstClassification => {
+    if (classification.side !== "sales" && classification.side !== "purchases") return classification;
+    if (classification.treatment !== "standard" && classification.treatment !== "zero-rated") {
+      return classification;
+    }
+    const code = options.codeOf?.(transaction) ?? null;
+    if (code === null) return classification;
+    const entry = options.codeTreatments?.[code];
+    const stated = entry !== undefined && typeof entry !== "string" ? entry.side : undefined;
+    const side = stated ?? options.chartTreatment?.(code)?.side;
+    if ((side !== "sales" && side !== "purchases") || side === classification.side) {
+      return classification;
+    }
+    return {
+      ...classification,
+      side,
+      reason: `${classification.reason}; on the ${side} side, as its account is`,
+    };
+  };
+
   return (transaction: Transaction): GstClassification => {
     // First, as it is in the postings: a leg of a recorded transfer is not a
     // supply, whatever else has been said about it.
@@ -252,7 +283,7 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
     }
 
     const manual = gstOverride(transaction, options.overrides);
-    if (manual) return manual;
+    if (manual) return onAccountSide(manual, transaction);
 
     const haystack = searchText(transaction);
     const sign = transaction.amount < 0 ? "DR" : "CR";

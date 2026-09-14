@@ -97,7 +97,10 @@ export function invoiceCandidates(
     const days = Math.abs(daysBetween(invoice.issued, transaction.date));
     if (days > windowDays) continue;
 
-    const named = invoice.number !== "" && text.includes(invoice.number.toUpperCase());
+    // Written in full, or by its digits alone. Scored the same: a customer who
+    // writes "0126" has named the invoice as surely as one who writes
+    // "INV-0126".
+    const named = namesInvoice(text, invoice.number);
     const exact = owing === wanted;
     const partial = !exact && wanted < owing;
     const firstWord = invoice.contact.toUpperCase().split(/[ ,]/)[0] ?? "";
@@ -107,12 +110,42 @@ export function invoiceCandidates(
 
     scored.push({
       invoice,
-      score: (named ? 8 : 0) + (exact ? 4 : 0) + (sameContact ? 2 : 0) + (days <= 30 ? 1 : 0),
+      score:
+        (named ? 8 : 0) +
+        (exact ? 4 : 0) +
+        (sameContact ? 2 : 0) +
+        (days <= 30 ? 1 : 0),
     });
   }
 
   scored.sort((a, b) => b.score - a.score || a.invoice.issued.localeCompare(b.invoice.issued));
   return scored.slice(0, options.limit ?? 6).map((s) => s.invoice);
+}
+
+/**
+ * Whether a bank line names an invoice.
+ *
+ * Customers do not write an invoice number the way the invoice writes it. On
+ * real books the same field arrives as "INV-0141", "INV0150", "0126" and
+ * "#0101/0102", and matching the full number as written recognised only the
+ * first -- so a payment whose reference *was* the invoice number fell through
+ * to being matched on amount and date like any other. Where two invoices of
+ * the same size sit a day apart that pairs them by luck, and on these books it
+ * settled one customer's payment against another customer's invoice.
+ *
+ * The digits must agree exactly, leading zeros included. "0126" is a far more
+ * particular thing than "126", which turns up in account numbers, dates and
+ * amounts.
+ */
+export function namesInvoice(text: string, invoiceNumber: string): boolean {
+  if (invoiceNumber === "") return false;
+  const said = text.toUpperCase();
+  if (said.includes(invoiceNumber.toUpperCase())) return true;
+
+  const digits = splitInvoiceNumber(invoiceNumber)?.digits ?? "";
+  if (digits.length < 3) return false;
+  const runs: readonly string[] = said.match(/\d+/g) ?? [];
+  return runs.includes(digits);
 }
 
 /** An invoice number split into its prefix and its number, when it has both. */

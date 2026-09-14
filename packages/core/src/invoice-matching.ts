@@ -2,6 +2,7 @@ import type { Cents } from "./money.js";
 import { daysBetween } from "./dates.js";
 import type { Transaction } from "./types.js";
 import type { Invoice, PaymentAllocation } from "./invoices.js";
+import { namesInvoice } from "./invoice-candidates.js";
 
 /**
  * Matching invoices to the money that settled them.
@@ -106,7 +107,7 @@ export function matchInvoices(options: InvoiceMatchOptions): InvoiceMatchResult 
     const named = (byAmount.get(invoice.total) ?? []).filter(
       (t) =>
         !used.has(t.id) &&
-        `${t.reference} ${t.particulars ?? ""}`.toUpperCase().includes(invoice.number.toUpperCase()),
+        namesInvoice(`${t.reference} ${t.particulars ?? ""} ${t.otherParty ?? ""}`, invoice.number),
     );
     // Only when it is unambiguous. Two bank lines naming the same invoice is a
     // question for a person, not something to resolve by picking one.

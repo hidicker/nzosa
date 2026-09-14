@@ -15,6 +15,7 @@ import {
   codingEngine,
   depreciationJournals as coreDepreciationJournals,
   disposalJournals as coreDisposalJournals,
+  proceedsFromDisposalJournals,
   decodeText,
   invoiceBalancesFor,
   postLedger,
@@ -32,6 +33,7 @@ import {
 } from "@nzosa/core";
 import type {
   Account,
+  Cents,
   ManualJournal,
   CodingCounts,
   CodingEngine,
@@ -39,6 +41,7 @@ import type {
   InvoiceBalance,
   PostedJournal,
   RuleSet,
+  Transaction,
 } from "@nzosa/core";
 
 /**
@@ -170,6 +173,60 @@ export function transferSuggestions(): Set<string> {
   }
   caches.transfer = { ledger: state.ledger, ids };
   return ids;
+}
+
+/**
+ * Whether a line has been given an account, by any route: a confirmed code, a
+ * split, or an invoice it settles.
+ *
+ * Built once and asked many times, since the invoice matching behind it is not
+ * cheap to ask for line by line.
+ */
+export function accountDecided(): (id: string) => boolean {
+  const overrides = state.ledger.overrides ?? {};
+  const splits = state.ledger.splits ?? {};
+  const assigned = invoiceAssignments();
+  return (id) => {
+    const override = overrides[id];
+    return (
+      (override?.confirmed === true && (override.code ?? "") !== "") ||
+      splits[id] !== undefined ||
+      assigned.has(id)
+    );
+  };
+}
+
+/**
+ * Lines recorded as a transfer and given an account as well.
+ *
+ * The books have no meaning for that. Posted, the transfer wins and the
+ * account gets nothing, so a receipt coded to sales that is also paired as a
+ * transfer is silently missing from the profit and loss -- which is how two
+ * customer payments left real books. Nothing should make one any more; this
+ * finds any made before that was so.
+ */
+export function transfersAlsoCoded(): Transaction[] {
+  const transfers = state.ledger.transfers ?? {};
+  const decided = accountDecided();
+  return state.ledger.transactions.filter(
+    (t) => transfers[t.id] !== undefined && decided(t.id),
+  );
+}
+
+/**
+ * Refuse to code a line that is one leg of a recorded transfer, and say why.
+ *
+ * True when refused. Every route that confirms a coding asks this first, so
+ * none of them can put an account on a transfer behind the others' backs.
+ */
+export function codingRefusedForTransfer(transaction: Transaction): boolean {
+  if ((state.ledger.transfers ?? {})[transaction.id] === undefined) return false;
+  alert(
+    `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} is recorded as a ` +
+      "transfer between your own accounts, so it cannot be coded to an account as well.\n\n" +
+      'If it is not a transfer, press "not a transfer" on it on the Reconcile page, then code it.',
+  );
+  return true;
 }
 
 export function invoiceAssignments(): Map<string, string> {
@@ -683,12 +740,40 @@ export async function asCsvText(name: string, bytes: Uint8Array): Promise<string
   return decodeText(bytes);
 }
 
+/**
+ * What each disposed asset sold for, as the journal report's disposal journals
+ * say.
+ *
+ * Read rather than asked for: the other system has already posted the sale,
+ * and its journal carries everything needed to work the proceeds back out.
+ */
+export function importedAssetProceeds(): Map<string, Cents> {
+  return proceedsFromDisposalJournals({
+    assets: state.ledger.assets ?? [],
+    journals: state.ledger.journals ?? [],
+    transactions: state.ledger.transactions,
+  });
+}
+
+/**
+ * The proceeds the disposals are posted with.
+ *
+ * An amount entered by hand wins, because it is a person's decision; the
+ * journal report fills in every disposal nobody has entered.
+ */
+export function assetProceedsInUse(): Record<string, Cents> {
+  return {
+    ...Object.fromEntries(importedAssetProceeds()),
+    ...(state.ledger.assetProceeds ?? {}),
+  };
+}
+
 function disposalJournals(options: {
   resolveAccount: (code: string) => { code: string; name: string };
 }): PostedJournal[] {
   return coreDisposalJournals({
     assets: state.ledger.assets ?? [],
-    proceeds: state.ledger.assetProceeds ?? {},
+    proceeds: assetProceedsInUse(),
     transactions: state.ledger.transactions,
     chart: state.chart,
     posting: options,

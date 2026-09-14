@@ -1,5 +1,5 @@
 import { redraw } from "../app.js";
-import { reclassify, record } from "../books.js";
+import { importedAssetProceeds, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
@@ -66,7 +66,11 @@ function renderDisposals(body: HTMLElement): void {
     }
   }
 
-  const proceeds = state.ledger.assetProceeds ?? {};
+  // Entered by hand wins; the journal report's disposal journals fill the rest,
+  // so a sale Xero has already posted needs nothing typed in.
+  const entered = state.ledger.assetProceeds ?? {};
+  const imported = importedAssetProceeds();
+  const proceeds: Record<string, Cents> = { ...Object.fromEntries(imported), ...entered };
   const missing = disposed.filter((a) => proceeds[a.number] === undefined).length;
   if (missing > 0) {
     body.append(
@@ -78,11 +82,41 @@ function renderDisposals(body: HTMLElement): void {
     );
   }
 
-  const fromJournals = document.createElement("button");
-  fromJournals.type = "button";
-  fromJournals.textContent = "Read proceeds from the journal report";
-  fromJournals.addEventListener("click", () => void proceedsFromJournals());
-  body.append(fromJournals);
+  const read = disposed.filter(
+    (a) => entered[a.number] === undefined && imported.has(a.number),
+  ).length;
+  if (read > 0) {
+    body.append(
+      note(
+        `Proceeds for ${read} disposal${read === 1 ? " are" : "s are"} read from the disposal ` +
+          "journals in the journal report, so nothing needs entering. An amount entered by " +
+          "hand is used instead.",
+      ),
+    );
+  }
+  // A figure typed in that the journal disagrees with is most likely a typing
+  // slip, and a slip here moves the gain by exactly as much.
+  const disagree = disposed.filter(
+    (a) =>
+      entered[a.number] !== undefined &&
+      imported.has(a.number) &&
+      imported.get(a.number) !== entered[a.number],
+  );
+  if (disagree.length > 0) {
+    body.append(
+      note(
+        "Entered by hand and different from the journal report: " +
+          disagree
+            .map(
+              (a) =>
+                `${a.number} ${formatAmount(entered[a.number] ?? 0)} entered, ` +
+                `${formatAmount(imported.get(a.number) ?? 0)} in the journal`,
+            )
+            .join("; ") +
+          '. Press "use" on the row to take the journal\'s figure.',
+      ),
+    );
+  }
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -153,6 +187,19 @@ function renderDisposals(body: HTMLElement): void {
     edit.textContent = "edit";
     edit.addEventListener("click", () => askProceeds(asset.number, asset.name, sold));
     actions.append(edit);
+    const fromJournal = imported.get(asset.number);
+    if (entered[asset.number] === undefined) {
+      const from = document.createElement("span");
+      from.textContent = " · from the journal report";
+      actions.append(from);
+    } else if (fromJournal !== undefined && fromJournal !== sold) {
+      const use = document.createElement("button");
+      use.type = "button";
+      use.className = "link-button";
+      use.textContent = `use ${formatAmount(fromJournal)}`;
+      use.addEventListener("click", () => void saveProceeds(asset.number, fromJournal));
+      actions.append(" · ", use);
+    }
     tr.append(actions);
     tbody.append(tr);
   }
@@ -195,104 +242,6 @@ async function saveProceeds(number: string, cents: Cents): Promise<void> {
     before[number] ?? null,
     cents,
     number,
-  );
-  reclassify();
-  redraw("assets");
-}
-
-/**
- * Take the proceeds from the disposal journals the accounting system posted.
- *
- * Its journal names the asset and carries the outcome -- what was recovered,
- * any capital gain, any loss -- so the proceeds can be worked back out of it:
- * book value plus what was recovered plus any gain, less any loss. That is
- * arithmetic on figures somebody else already agreed, not a guess.
- *
- * Reversals are why this cannot simply add up every journal mentioning the
- * asset. A disposal reversed and re-posted appears three times, and summing
- * them would give a figure that never happened; the last one dated on or
- * before the disposal date is the one that stands.
- */
-async function proceedsFromJournals(): Promise<void> {
-  const journals = state.ledger.journals ?? [];
-  if (journals.length === 0) {
-    alert(
-      "No journal report loaded. Load one on the Coding reconciliation page, and the disposal journals " +
-        "in it can be read for what each asset sold for.",
-    );
-    return;
-  }
-
-  const assets = state.ledger.assets ?? [];
-  const years = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))];
-  const bookValues = new Map<string, Cents>();
-  for (const year of years) {
-    const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
-    });
-    for (const row of schedule.rows) {
-      if (row.disposedInPeriod) bookValues.set(row.asset.number, row.bookValueAtDisposal);
-    }
-  }
-
-  const found = new Map<string, Cents>();
-  const skipped: string[] = [];
-  for (const asset of assets) {
-    if (asset.disposed === null) continue;
-    const book = bookValues.get(asset.number);
-    if (book === undefined) continue;
-
-    // The live disposal for this asset: its own journals, reversals left out,
-    // latest first.
-    const mine = journals
-      .filter(
-        (j) =>
-          j.narration.includes(asset.number) &&
-          /disposal/i.test(j.narration) &&
-          !/^reversed:/i.test(j.narration.trim()),
-      )
-      .sort((a, b) => b.date.localeCompare(a.date));
-    const journal = mine[0];
-    if (journal === undefined) {
-      skipped.push(asset.number);
-      continue;
-    }
-
-    const on = (code: string): Cents =>
-      journal.lines.filter((l) => l.accountCode === code).reduce((sum, l) => sum + l.amount, 0);
-    const recovered = -on("300");
-    const gain = -on("301");
-    const loss = on("470");
-    found.set(asset.number, book + recovered + gain - loss);
-  }
-
-  if (found.size === 0) {
-    alert("No disposal journals found for the assets in the register.");
-    return;
-  }
-
-  const lines = [...found]
-    .map(([number, cents]) => `  ${number}  ${(cents / 100).toFixed(2)}`)
-    .join("\n");
-  const ok = confirm(
-    `Proceeds worked back from ${found.size} disposal journal${found.size === 1 ? "" : "s"}:\n\n` +
-      lines +
-      (skipped.length > 0 ? `\n\nNo journal found for: ${skipped.join(", ")}` : "") +
-      "\n\nThis replaces any proceeds already entered.",
-  );
-  if (!ok) return;
-
-  const before = state.ledger.assetProceeds ?? {};
-  const assetProceeds = { ...before, ...Object.fromEntries(found) };
-  state.ledger = { ...state.ledger, assetProceeds };
-  state.persistent = await savePart(state.ledger);
-  await record(
-    "disposal",
-    `Proceeds read from the journal report for ${found.size} assets`,
-    before,
-    assetProceeds,
-    "proceeds",
   );
   reclassify();
   redraw("assets");

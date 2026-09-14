@@ -1,5 +1,7 @@
 import { redraw, showPage } from "../app.js";
 import {
+  accountDecided,
+  codingRefusedForTransfer,
   accountsFor,
   ensureDefaultEntity,
   invoiceAssignments,
@@ -17,7 +19,7 @@ import {
   loadReference,
   readChosenColumns,
 } from "../check-ui.js";
-import type { CodingBatchEntry, TransferPair } from "../events.js";
+import type { CodingBatchEntry } from "../events.js";
 import { fillAccounts } from "../widgets.js";
 import { knownCodes, rateLabel, suggest, transferCandidates } from "../reconcile.js";
 import type { Suggestion } from "../reconcile.js";
@@ -90,49 +92,46 @@ export async function acceptAllShown(): Promise<void> {
   const offered = shownSuggestions().filter((one) => !one.confirmed && one.code !== null);
 
   /**
-   * Lines that are a transfer, or are one press away from being one.
+   * Lines that are a transfer, or could be one, are left for a person.
    *
-   * This is the button the guard is really for. Working down a screen and
-   * confirming it in one go is exactly when a transfer row -- which looks like
-   * any other row, and has its only candidate already chosen -- gets coded as
-   * an expense or, worse, as income. One at a time somebody might notice; two
-   * hundred at a time nobody will.
+   * A line is a transfer or it is coded to an account, never both: posted, the
+   * transfer wins and the account silently gets nothing. Accepting a screen in
+   * one go is exactly when that went wrong -- on real books two customer
+   * receipts were paired with card purchases of the same amount while coded to
+   * sales, and the sales left the profit and loss. So the batch neither codes
+   * nor pairs a line that has a possible partner. It confirms the rest, and
+   * leaves these unconfirmed to be looked at one at a time.
+   *
+   * A partner that already has an account has been decided as not a transfer,
+   * so it holds nothing back; nor does a line already sent back with "not a
+   * transfer".
    */
-  const taken = new Set(Object.keys(state.ledger.transfers ?? {}));
+  const transfersNow = state.ledger.transfers ?? {};
   const rejected = new Set(state.ledger.rejectedTransfers ?? []);
-  const partnerFor = (one: Suggestion): string | null => {
-    if (taken.has(one.transaction.id) || rejected.has(one.transaction.id)) return null;
-    const candidates = transferCandidates(one.transaction, state.ledger.transactions, {
+  const decided = accountDecided();
+  const unavailable = new Set([
+    ...Object.keys(transfersNow),
+    ...state.ledger.transactions.filter((t) => decided(t.id)).map((t) => t.id),
+  ]);
+  const couldBeTransfer = (one: Suggestion): boolean =>
+    !rejected.has(one.transaction.id) &&
+    transferCandidates(one.transaction, state.ledger.transactions, {
       sameEntity: sameEntityBanks(one.transaction.account).accounts,
-      taken,
-    });
-    return candidates.length === 1 ? (candidates[0]?.transaction.id ?? null) : null;
-  };
+      taken: unavailable,
+    }).length > 0;
 
-  /*
-   * The transfers first, then the coding of whatever is left.
-   *
-   * Two passes, because a line can be the partner of a pairing found later. In
-   * one pass it was coded when its turn came and then paired when its partner's
-   * turn came, so fourteen lines on one screen ended up both coded and paired
-   * -- a state the books have no meaning for. Nothing is coded until every
-   * pairing is known.
-   */
-  const pairs: { one: Suggestion; partnerId: string }[] = [];
-  for (const one of offered) {
-    const partnerId = partnerFor(one);
-    if (partnerId === null || taken.has(partnerId)) continue;
-    pairs.push({ one, partnerId });
-    // Taken as they are found, so one leg cannot be spent on two transfers.
-    taken.add(one.transaction.id);
-    taken.add(partnerId);
-  }
+  // A recorded transfer is settled already, and never coded on top.
+  const eligible = offered.filter((one) => transfersNow[one.transaction.id] === undefined);
+  const held = new Set(eligible.filter(couldBeTransfer).map((one) => one.transaction.id));
+  const lines = eligible.filter((one) => !held.has(one.transaction.id));
 
-  const paired = new Set(pairs.flatMap((p) => [p.one.transaction.id, p.partnerId]));
-  const lines = offered.filter((one) => !paired.has(one.transaction.id));
-
-  if (lines.length === 0 && pairs.length === 0) {
-    alert("Nothing on screen to accept: every line here is settled already, or has no suggestion to accept.");
+  if (lines.length === 0) {
+    alert(
+      held.size > 0
+        ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
+            "transfer between your own accounts. Check each one on its own."
+        : "Nothing on screen to accept: every line here is settled already, or has no suggestion to accept.",
+    );
     return;
   }
 
@@ -143,14 +142,12 @@ export async function acceptAllShown(): Promise<void> {
       : `across ${accounts.size} accounts`;
   if (
     !confirm(
-      (lines.length > 0
-        ? `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?`
-        : "Confirm what is on screen?") +
+      `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?` +
         "\n\n" +
-        (pairs.length > 0
-          ? `${pairs.length} line${pairs.length === 1 ? " is" : "s are"} a transfer between your ` +
-            `own accounts, and will be recorded as ${pairs.length === 1 ? "one" : "transfers"} ` +
-            "rather than coded.\n\n"
+        (held.size > 0
+          ? `${held.size} line${held.size === 1 ? " matches" : "s match"} a line of the same amount in ` +
+            `another of your accounts and could be a transfer. ${held.size === 1 ? "It is" : "They are"} ` +
+            "left unconfirmed -- neither coded nor paired -- to check one at a time.\n\n"
           : "") +
         "This confirms them exactly as shown. The change log can undo the whole batch.",
     )
@@ -173,39 +170,14 @@ export async function acceptAllShown(): Promise<void> {
     };
   }
 
-  // The transfers on screen, recorded as transfers. Both keys of each pair,
-  // because half a transfer is a balance representing nothing.
-  const transfers = { ...(state.ledger.transfers ?? {}) };
-  const made: TransferPair[] = [];
-  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
-  for (const { one, partnerId } of pairs) {
-    const partner = byId.get(partnerId);
-    if (partner === undefined) continue;
-    const out = one.transaction.amount < 0 ? one.transaction : partner;
-    const into = one.transaction.amount < 0 ? partner : one.transaction;
-    transfers[out.id] = into.id;
-    transfers[into.id] = out.id;
-    made.push({ from: out.id, to: into.id });
-  }
-
-  state.ledger = { ...state.ledger, overrides, transfers };
+  state.ledger = { ...state.ledger, overrides };
   state.persistent = await save(state.ledger);
-  if (lines.length > 0) {
-    await record(
-      "codingBatch",
-      `Accepted ${lines.length} suggestions ${summary}`,
-      batch,
-      null,
-    );
-  }
-  if (made.length > 0) {
-    await record(
-      "transferBatch",
-      `Recorded ${made.length} transfer${made.length === 1 ? "" : "s"} while accepting a screen`,
-      null,
-      made,
-    );
-  }
+  await record(
+    "codingBatch",
+    `Accepted ${lines.length} suggestions ${summary}`,
+    batch,
+    null,
+  );
   reclassify();
   redraw("reconcile");
 }
@@ -1203,6 +1175,10 @@ async function acceptCodesBulk(
   let applied = 0;
 
   for (const item of items) {
+    // One leg of a recorded transfer has no account of its own, and coding it
+    // as well is what took two sales out of real books. Left as it is; the row
+    // still shows the difference for somebody to look at.
+    if ((state.ledger.transfers ?? {})[item.transaction.id] !== undefined) continue;
     let chosen = item.code;
     if (item.kind === "imported") {
       const mapped = mapToOurVocabulary(item.code);
@@ -1398,6 +1374,8 @@ async function acceptCode(
     }
     chosen = mapped;
   }
+
+  if (codingRefusedForTransfer(transaction)) return;
 
   const one = state.suggestions?.get(transaction.id);
 
@@ -1821,6 +1799,7 @@ export function wireCodingReconciliation(): void {
  * decision rather than at the absence of one.
  */
 async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
+  if (codingRefusedForTransfer(transaction)) return;
   const one = state.suggestions?.get(transaction.id);
   const overrides = { ...(state.ledger.overrides ?? {}) };
   const was = overrides[transaction.id];

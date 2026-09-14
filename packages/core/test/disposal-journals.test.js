@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { disposalJournals } from "../dist/index.js";
+import { depreciationSchedule, disposalJournals, proceedsFromDisposalJournals } from "../dist/index.js";
 
 const account = (code, name, type) => ({ code, name, type, taxCode: "No GST", description: "" });
 
@@ -79,4 +79,53 @@ test("a chart naming neither account still posts somewhere nameable", () => {
   const [journal] = run({ chart: [] });
   const codes = journal.lines.map((l) => l.accountCode);
   assert.ok(codes.includes("730") && codes.includes("731"), "the conventional pair");
+});
+
+const disposalJournal = (id, narration, lines) => ({
+  id, date: "2025-09-01", narration, postedDate: null, postedBy: "",
+  lines: lines.map(([accountCode, accountName, amount], line) => ({
+    accountCode, accountName, description: "", amount, line,
+  })),
+});
+const bookValue = () =>
+  depreciationSchedule([asset()], { from: "2025-04-01", to: "2026-03-31" })
+    .rows.find((r) => r.asset.number === "FA-0036").bookValueAtDisposal;
+const worked = (journals) =>
+  proceedsFromDisposalJournals({
+    assets: [asset()], journals, transactions: [txn("2025-06-01")],
+  }).get("FA-0036");
+const NARRATION = "Disposal of asset FA-0036 on 1 Sep 2025";
+
+test("proceeds are worked back from a disposal journal: book value, plus recovered, plus gain, less loss", () => {
+  const gain = [disposalJournal("12", NARRATION, [
+    ["300", "Depreciation Recovered", -10000],
+    ["301", "Capital Gain (Loss) on Disposal of Assets", -5000],
+  ])];
+  assert.equal(worked(gain), bookValue() + 15000);
+  const loss = [disposalJournal("12", NARRATION, [["470", "Loss on sale of Fixed Assets", 4392]])];
+  assert.equal(worked(loss), bookValue() - 4392);
+});
+
+test("a disposal that was reversed is not read, though its own narration never says so", () => {
+  // Only the reversal says "Reversed". The disposal it undid reads like any
+  // other, and reading it gave 790.57 for a sale of 1,130.43 on real books.
+  const journals = [
+    disposalJournal("10", NARRATION, [["470", "Loss on sale of Fixed Assets", 26086]]),
+    disposalJournal("11", `Reversed: ${NARRATION} - Reversal of ID 10`, [["470", "Loss on sale of Fixed Assets", -26086]]),
+    disposalJournal("12", NARRATION, [["301", "Capital Gain (Loss) on Disposal of Assets", -26086]]),
+  ];
+  assert.equal(worked(journals), bookValue() + 26086);
+});
+
+test("an asset number inside a longer one is not taken for it", () => {
+  const journals = [disposalJournal("12", "Disposal of asset FA-00361 on 1 Sep 2025", [["300", "Depreciation Recovered", -10000]])];
+  assert.equal(worked(journals), undefined);
+});
+
+test("no disposal journal, no proceeds: nothing is guessed", () => {
+  assert.equal(worked([]), undefined);
+  assert.equal(
+    worked([disposalJournal("5", "Depreciation of FA-0036 on 31 Aug 2025.", [["416", "Depreciation", 100]])]),
+    undefined,
+  );
 });

@@ -10,6 +10,9 @@ import {
   reconcileRows,
   record,
   sameEntityBanks,
+  accountDecided,
+  codingRefusedForTransfer,
+  transfersAlsoCoded,
 } from "../books.js";
 import { compareCodings, inferAccountMapping } from "../check-ui.js";
 import { combobox } from "../combobox.js";
@@ -158,6 +161,20 @@ export function renderReconcile(): void {
   $("reconcile-hint").textContent =
     `${showing[state.reconcileFilter]}. ${done} of ${all.length} coded in all. ` +
     "Accept the suggestion or change it; either way the line is coded and stays that way.";
+
+  // Any made before a line could not be both. Said at the top, because the
+  // account they were coded to is short by exactly these.
+  const clashes = transfersAlsoCoded();
+  if (clashes.length > 0) {
+    body.append(
+      note(
+        `${clashes.length} line${clashes.length === 1 ? " is" : "s are"} recorded as a transfer and ` +
+          "coded to an account as well. Only the transfer posts, so the account is short: " +
+          clashes.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
+          '. Set the filter to All, find each one, and press "not a transfer" on any that is not.',
+      ),
+    );
+  }
 
   if (shown.length === 0) {
     body.append(note("Nothing left to code here."));
@@ -838,12 +855,22 @@ function transferLineFor(
   if (settlesInvoice && recorded === undefined) return null;
 
   const { accounts, scoped } = sameEntityBanks(transaction.account);
+  // A line that already has an account has been decided as not a transfer, so
+  // it is nobody's partner. Offering it paired a customer's receipt, already
+  // coded to sales, with a card purchase of the same amount -- and the sale
+  // left the books.
+  const decided = accountDecided();
   const candidates =
     recorded !== undefined
       ? []
       : transferCandidates(transaction, state.ledger.transactions, {
           sameEntity: accounts,
-          taken: new Set(Object.keys(transfers)),
+          taken: new Set([
+            ...Object.keys(transfers),
+            ...state.ledger.transactions
+              .filter((t) => t.id !== transaction.id && decided(t.id))
+              .map((t) => t.id),
+          ]),
         });
 
   // A rejection outranks the offer. The candidate stays available, so changing
@@ -858,8 +885,11 @@ function transferLineFor(
   // invoice says which invoice rather than asking. It is found, not recorded:
   // the tick is what records it, and until that is pressed the row can still be
   // sent back with one press of "not a transfer".
+  //
+  // Never on a line that has an account already: that one is still asked, since
+  // it may have been coded in error, but nothing is chosen for it.
   const found =
-    !refused && candidates.length === 1
+    !refused && !decided(transaction.id) && candidates.length === 1
       ? (candidates[0]?.transaction.id ?? undefined)
       : undefined;
   const partnerId = recorded ?? found;
@@ -999,6 +1029,46 @@ async function linkTransfer(
   const partner = state.ledger.transactions.find((t) => t.id === partnerId);
   if (partner === undefined) return;
 
+  // A line is a transfer or it has an account, never both: posted, the
+  // transfer wins and the account silently gets nothing. A split or an invoice
+  // match is too much to undo from here; a plain code is removed, once
+  // somebody has said so.
+  const decided = accountDecided();
+  const coded = [transaction, partner].filter((t) => decided(t.id));
+  const involved = coded.filter(
+    (t) => (state.ledger.splits ?? {})[t.id] !== undefined || invoiceAssignments().has(t.id),
+  );
+  if (involved.length > 0) {
+    alert(
+      involved.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("\n") +
+        "\n\nThis is split or settles an invoice, so it cannot be a transfer as well. " +
+        "Remove the split or the invoice match first.",
+    );
+    return;
+  }
+  const overridesNow = state.ledger.overrides ?? {};
+  const removed = coded.map((t) => ({ t, before: overridesNow[t.id] ?? null }));
+  if (removed.length > 0) {
+    const listed = removed
+      .map(
+        ({ t, before }) =>
+          `  ${t.date} ${formatAmount(t.amount)} ${t.otherParty}, coded to ${before?.code ?? ""}`,
+      )
+      .join("\n");
+    if (
+      !confirm(
+        "A line is either a transfer or coded to an account, not both.\n\n" +
+          listed +
+          `\n\nRecord the transfer and remove ${removed.length === 1 ? "that coding" : "those codings"}?`,
+      )
+    ) {
+      return;
+    }
+    const overrides = { ...overridesNow };
+    for (const { t } of removed) delete overrides[t.id];
+    state.ledger = { ...state.ledger, overrides };
+  }
+
   const out = transaction.amount < 0 ? transaction : partner;
   const into = transaction.amount < 0 ? partner : transaction;
 
@@ -1020,6 +1090,16 @@ async function linkTransfer(
     { from: out.id, to: into.id },
     out.id,
   );
+  // Each removed coding is its own entry, so the change log can put it back.
+  for (const { t, before } of removed) {
+    await record(
+      "coding",
+      `${t.date} ${formatAmount(t.amount)} ${t.otherParty} → coding removed, recorded as a transfer`,
+      before,
+      null,
+      t.id,
+    );
+  }
   reclassify();
   redraw("reconcile");
 }
@@ -1593,6 +1673,7 @@ async function confirmLine(
   // says why; this is the rule itself, so no other caller can get round it.
   // A line confirmed with nothing on it posts nowhere and leaves the queue,
   // which is the one combination that hides work rather than recording it.
+  if (codingRefusedForTransfer(one.transaction)) return;
   const hasSplit = (state.ledger.splits ?? {})[one.transaction.id] !== undefined;
   const hasInvoice = invoiceAssignments().has(one.transaction.id);
   if (code.trim() === "" && !hasSplit && !hasInvoice) return;

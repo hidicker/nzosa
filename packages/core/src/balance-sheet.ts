@@ -1,7 +1,8 @@
 import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
 import type { Account } from "./chart.js";
-import type { PostedJournal } from "./posting.js";
+import type { Journal } from "./journals.js";
+import type { PostedJournal, PostedLine } from "./posting.js";
 
 /**
  * The balance sheet, derived from the postings and nothing else.
@@ -312,4 +313,47 @@ export function computeBalanceSheet(options: {
     profitForPeriod: flip(profitForPeriod),
     imbalance: netAssets - equity.total === 0 ? 0 : netAssets - equity.total,
   };
+}
+
+/**
+ * The other system's journal report, in the shape a balance sheet reads.
+ *
+ * So the imported basis is the other system's own answer rather than ours
+ * under its heading: its journals, over the same opening balances, each
+ * account placed by the same type. It used to be ours on every basis -- the
+ * page said it was read from the file you loaded, and showed this ledger's
+ * profit and this ledger's bank balances.
+ *
+ * The one translation is the bank. The report names a bank account ("BNZ 01 -
+ * Harbour Roastery Account") where this ledger and its opening balances number
+ * it, so a bank line is re-keyed through the link made on the chart. Left under
+ * its name, the account's movement and its opening balance would sit on two
+ * rows, and neither would be the balance.
+ */
+export function postedFromImported(
+  journals: readonly Journal[],
+  /** Which ledger account a bank named in the report is, or null when none. */
+  bankAccountFor: (name: string) => string | null,
+): PostedJournal[] {
+  return journals.map(
+    (journal): PostedJournal => ({
+      transactionId: journal.id,
+      date: journal.date,
+      narration: journal.narration,
+      // Somebody else's postings, taken as they stand -- the same footing as a
+      // journal written by hand.
+      source: "manual",
+      taxBasis: "both",
+      lines: journal.lines.map((line): PostedLine => {
+        const bank = line.accountCode === "" ? bankAccountFor(line.accountName) : null;
+        return {
+          accountCode: bank ?? line.accountCode,
+          accountName: line.accountName,
+          amount: line.amount,
+          taxType: "NONE",
+          description: line.description,
+        };
+      }),
+    }),
+  );
 }

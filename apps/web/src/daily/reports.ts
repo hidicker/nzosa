@@ -5,6 +5,7 @@ import {
   bankLabel,
   banks,
   entityBankAccounts,
+  ledgerAccountFor,
   postedJournals,
   record,
   reportEngine,
@@ -23,6 +24,7 @@ import {
   accrualProfitAndLoss,
   checkManualJournal,
   computeBalanceSheet,
+  postedFromImported,
   depreciationSchedule,
   emptyEntityModel,
   financialYearOf,
@@ -939,16 +941,37 @@ function renderIr10(body: HTMLElement, year: number): void {
 function renderBalanceSheet(body: HTMLElement, year: number): void {
   const asAt = `${year}-03-31`;
   const opening = state.ledger.openingBalances;
+  // On the imported basis, the other system's own answer: its journals over
+  // the same opening balances. It used to be ours on every basis, under a
+  // heading that said it was read from the file.
+  const basis = $<HTMLSelectElement>("report-basis").value;
+  const imported = state.ledger.journals ?? [];
+  const fromImport = basis === "accrual" && imported.length > 0;
+  const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
+  const journals = fromImport
+    ? postedFromImported(imported, (name) =>
+        ledgerAccountFor(name, chartByName.get(name.trim().toLowerCase())),
+      )
+    : postedJournals();
   const sheet = computeBalanceSheet({
     asAt,
     ...(opening ? { openingBalances: opening } : {}),
-    journals: postedJournals(),
+    journals,
     chart: state.chart,
   });
 
   const heading = document.createElement("h3");
   heading.textContent = `Balance sheet as at 31 March ${year}`;
   body.append(heading);
+
+  if (basis === "accrual" && !fromImport) {
+    body.append(
+      note(
+        "No journal report is loaded, so this is built from your postings rather than read " +
+          "from the other system. Load one on the Coding reconciliation page to compare.",
+      ),
+    );
+  }
 
   const money = (cents: Cents): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
@@ -1512,6 +1535,13 @@ function reportsHint(basis: string, kind: string): string {
       "Every posting behind the accrual figures, and the proof that they " +
       "balance. The tax boxes come from the tag on each line, not from the " +
       "balance of the GST account."
+    );
+  }
+  if (kind === "balancesheet" && basis === "cash") {
+    return (
+      "A balance sheet has no cash basis: it is what the business owns and owes " +
+      "on the day. So on this basis it is built from your postings, as it is on " +
+      "the postings basis."
     );
   }
   if (basis === "accrual") {

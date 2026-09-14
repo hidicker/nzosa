@@ -2,6 +2,7 @@ import assert from "node:assert/strict";
 import test from "node:test";
 import {
   computeBalanceSheet,
+  postedFromImported,
   expandSplits,
   postInvoice,
   postTransaction,
@@ -256,4 +257,34 @@ test("one payment settling two invoices leaves receivables and the sheet flat", 
 
   const bank = sheet.currentAssets.lines.find((l) => l.code === payment.account);
   assert.equal(bank.closing, 80000, "the bank holds exactly what arrived");
+});
+
+test("the imported basis reads the other system's journals, its bank keyed as the ledger keys it", () => {
+  // The report names the bank; the opening balances number it. Unlinked, the
+  // two sat on separate rows and neither was the balance.
+  const opening = { asAt: "2025-04-01", accounts: { "02-1234-0567890-001": 10000, "960": -10000 } };
+  const line = (accountCode, accountName, amount, n) => ({ accountCode, accountName, description: "", amount, line: n });
+  const imported = [
+    { id: "7", date: "2025-06-01", narration: "Sale", postedDate: null, postedBy: "", lines: [
+      line("", "BNZ 01 - Sample Account", 11500, 1),
+      line("200", "Sales", -10000, 2),
+      line("820", "GST", -1500, 3),
+    ] },
+    { id: "8", date: "2025-06-02", narration: "Card purchase", postedDate: null, postedBy: "", lines: [
+      line("", "Some Other Card", -2300, 1),
+      line("429", "Office Expenses", 2000, 2),
+      line("820", "GST", 300, 3),
+    ] },
+  ];
+  const journals = postedFromImported(imported, (name) =>
+    name === "BNZ 01 - Sample Account" ? "02-1234-0567890-001" : null);
+  const sheet = computeBalanceSheet({ asAt: "2026-03-31", openingBalances: opening, journals, chart: CHART });
+
+  assert.equal(sheet.imbalance, 0);
+  const lines = Object.values(sheet).flatMap((v) => (v && Array.isArray(v.lines) ? v.lines : []));
+  const bank = lines.filter((l) => l.code === "02-1234-0567890-001");
+  assert.equal(bank.length, 1, "the opening balance and the movement on one row");
+  assert.equal(bank[0].closing, 21500);
+  assert.ok(lines.some((l) => l.code === "Some Other Card"), "a bank nobody linked keeps its own name");
+  assert.equal(Math.abs(sheet.profitForPeriod), 8000, "the file's profit, not a figure from elsewhere");
 });

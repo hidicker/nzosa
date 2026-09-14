@@ -11,7 +11,7 @@ import {
   saveManualJournals,
 } from "../books.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
-import { knownCodes } from "../reconcile.js";
+import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
@@ -57,7 +57,6 @@ import type {
   Cents,
   DateRange,
   Entity,
-  IsoDate,
   Journal,
   ManualJournal,
   OwnerSummary,
@@ -345,7 +344,15 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "Write a journal";
-  add.addEventListener("click", () => void writeManualJournal(to));
+  add.disabled = journalDraft !== null;
+  add.addEventListener("click", () => {
+    journalDraft = {
+      date: to,
+      narration: "",
+      lines: [blankJournalLine(), blankJournalLine()],
+    };
+    redraw("reports");
+  });
   actions.append(add);
 
   // Only offered when there is a report to read them out of, and only for the
@@ -361,6 +368,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     actions.append(take);
   }
   body.append(actions);
+  if (journalDraft !== null) body.append(journalEditor(journalDraft));
 
   if (held.length === 0) {
     body.append(
@@ -424,40 +432,290 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   }
 }
 
-/** Write one by hand. Two lines, which is what a correction almost always is. */
-async function writeManualJournal(defaultDate: IsoDate): Promise<void> {
-  const date = window.prompt("Date of the journal", defaultDate);
-  if (date === null || !/^\d{4}-\d{2}-\d{2}$/.test(date.trim())) return;
-  const narration = window.prompt(
-    "Why does this journal exist?\n\n" +
-      "In your own words. A year from now the figures will be obvious and the reason will not.",
-    "",
-  );
-  if (narration === null || narration.trim() === "") return;
+interface JournalDraftLine {
+  code: string;
+  debit: string;
+  credit: string;
+  description: string;
+}
 
-  const codes = knownCodes(state.rules, state.ledger.overrides ?? {});
-  const debit = window.prompt(`Account to debit\n\n${codes.slice(0, 12).join("\n")}`, "");
-  if (debit === null || debit.trim() === "") return;
-  const credit = window.prompt("Account to credit", "");
-  if (credit === null || credit.trim() === "") return;
-  const amount = window.prompt("Amount", "0.00");
-  if (amount === null) return;
-  const cents = parseAmount(amount.trim());
-  if (cents === null || cents === 0) {
-    alert(`"${amount}" is not an amount.`);
-    return;
+interface JournalDraft {
+  date: string;
+  narration: string;
+  lines: JournalDraftLine[];
+}
+
+/**
+ * The journal being written on the page, or null when none is.
+ *
+ * Kept outside the page so a redraw for some other reason -- a save elsewhere,
+ * a change of year -- does not throw away what has been typed.
+ */
+let journalDraft: JournalDraft | null = null;
+
+function blankJournalLine(): JournalDraftLine {
+  return { code: "", debit: "", credit: "", description: "" };
+}
+
+/**
+ * Write a journal of as many lines as it needs.
+ *
+ * It used to be two: a debit, a credit and one amount, asked one question at a
+ * time. That is what a correction usually is, but not always -- clearing three
+ * supplier bills takes Accounts Payable, the expense, and the GST on it, and
+ * split into two-line journals the entry no longer reads as the one thing it
+ * was.
+ *
+ * The rules are the ones a journal is posted under, checked while it is typed
+ * rather than after: it must balance to the cent, have at least two lines and a
+ * reason, and every line needs an account from the chart and an amount on one
+ * side only. Saving stays off until all of that holds, and what is still wrong
+ * is said underneath -- so an unbalanced journal is never saved at all, rather
+ * than saved and then left out of the reports.
+ */
+function journalEditor(draft: JournalDraft): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "split-editor journal-editor";
+
+  const title = document.createElement("h4");
+  title.textContent = "Write a journal";
+  wrap.append(title);
+
+  const head = document.createElement("div");
+  head.className = "journal-editor-head";
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = draft.date;
+  date.title = "Date of the journal";
+  date.addEventListener("input", () => {
+    draft.date = date.value;
+    refresh();
+  });
+  const narration = document.createElement("input");
+  narration.type = "text";
+  narration.placeholder =
+    "Why this journal exists, in your own words -- a year from now the figures will be obvious and the reason will not";
+  narration.value = draft.narration;
+  narration.addEventListener("input", () => {
+    draft.narration = narration.value;
+    refresh();
+  });
+  head.append(date, narration);
+  wrap.append(head);
+
+  const columns = document.createElement("div");
+  columns.className = "journal-row journal-columns";
+  for (const label of ["Account", "Debit", "Credit", "Description (optional)", ""]) {
+    const cell = document.createElement("span");
+    cell.textContent = label;
+    columns.append(cell);
+  }
+  wrap.append(columns);
+
+  const rows = document.createElement("div");
+  rows.className = "split-rows";
+  wrap.append(rows);
+
+  const codes = [...new Set(accountsForEditing().map((a) => a.label))];
+  const knownAccount = new Set(codes);
+
+  const status = document.createElement("p");
+  status.className = "split-balance";
+
+  const addLine = document.createElement("button");
+  addLine.type = "button";
+  addLine.textContent = "Add line";
+  addLine.addEventListener("click", () => {
+    readRows();
+    draft.lines.push(blankJournalLine());
+    draw();
+  });
+
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save journal";
+  save.addEventListener("click", () => {
+    readRows();
+    const { journal, problems } = assemble();
+    if (problems.length > 0) return;
+    journalDraft = null;
+    void saveManualJournals(
+      [...(state.ledger.manualJournals ?? []), journal],
+      `Journal: ${journal.narration}`,
+    );
+  });
+
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    journalDraft = null;
+    redraw("reports");
+  });
+
+  const buttons = document.createElement("div");
+  buttons.className = "page-actions";
+  buttons.append(addLine, save, cancel);
+  wrap.append(status, buttons);
+
+  /**
+   * Read-backs for the account pickers, which commit on a mousedown they have
+   * already handled and fire nothing -- the same arrangement as the split
+   * editor.
+   */
+  let readers: Array<() => void> = [];
+  function readRows(): void {
+    for (const read of readers) read();
   }
 
-  const journal: ManualJournal = {
-    id: `m${Date.now().toString(36)}`,
-    date: date.trim(),
-    narration: narration.trim(),
-    lines: [
-      { code: debit.trim(), amount: Math.abs(cents) },
-      { code: credit.trim(), amount: -Math.abs(cents) },
-    ],
-  };
-  await saveManualJournals([...(state.ledger.manualJournals ?? []), journal], `Journal: ${journal.narration}`);
+  const money = (cents: Cents): string => formatAmount(cents);
+
+  /** The journal as it would be saved, and everything still stopping that. */
+  function assemble(): { journal: ManualJournal; problems: string[] } {
+    const problems: string[] = [];
+    if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.date)) problems.push("choose a date");
+    if (draft.narration.trim() === "") problems.push("say why the journal exists");
+
+    const lines: ManualJournal["lines"] = [];
+    draft.lines.forEach((line, index) => {
+      const n = index + 1;
+      const code = line.code.trim();
+      const hasDebit = line.debit.trim() !== "";
+      const hasCredit = line.credit.trim() !== "";
+      if (code === "" && !hasDebit && !hasCredit) return;
+
+      const debit = hasDebit ? parseAmount(line.debit.trim()) : 0;
+      const credit = hasCredit ? parseAmount(line.credit.trim()) : 0;
+      if (debit === null || credit === null) {
+        problems.push(`line ${n}: that is not an amount`);
+        return;
+      }
+      if (debit < 0 || credit < 0) {
+        problems.push(`line ${n}: enter amounts without a minus sign, in the debit or the credit column`);
+        return;
+      }
+      if (debit !== 0 && credit !== 0) {
+        problems.push(`line ${n}: a line is a debit or a credit, not both`);
+        return;
+      }
+      if (debit === 0 && credit === 0) {
+        problems.push(`line ${n}: needs an amount`);
+        return;
+      }
+      if (code === "") {
+        problems.push(`line ${n}: needs an account`);
+        return;
+      }
+      if (!knownAccount.has(code)) {
+        problems.push(`line ${n}: "${code}" is not an account in the chart -- pick one from the list`);
+        return;
+      }
+      lines.push({
+        code,
+        amount: debit - credit,
+        ...(line.description.trim() !== "" ? { description: line.description.trim() } : {}),
+      });
+    });
+
+    const journal: ManualJournal = {
+      id: `m${Date.now().toString(36)}`,
+      date: draft.date,
+      narration: draft.narration.trim(),
+      lines,
+    };
+    // The rules the journal is posted under, so this form cannot accept one the
+    // ledger would then refuse. Asked once the line-by-line checks have nothing
+    // to say: before that they only repeat them in other words.
+    if (problems.length === 0) {
+      for (const problem of checkManualJournal(journal)) problems.push(problem.message);
+    }
+    return { journal, problems };
+  }
+
+  function refresh(): void {
+    const { problems } = assemble();
+    // From what is typed, not from the lines that are already complete: amounts
+    // usually go in before the accounts, and totals that ignored them read
+    // "balanced" over a journal that was nothing of the kind.
+    const typed = (text: string): Cents => Math.abs(parseAmount(text.trim()) ?? 0);
+    const debits = draft.lines.reduce((sum, l) => sum + typed(l.debit), 0);
+    const credits = draft.lines.reduce((sum, l) => sum + typed(l.credit), 0);
+    const difference = debits - credits;
+    const totals =
+      `Debits ${money(debits)} · Credits ${money(credits)}` +
+      (difference !== 0
+        ? ` · out by ${money(Math.abs(difference))}`
+        : debits === 0
+          ? ""
+          : " · balanced");
+    status.textContent = problems.length === 0 ? totals : `${totals}. Still to do: ${problems.join("; ")}.`;
+    status.className = problems.length === 0 ? "split-balance ok" : "split-balance off";
+    save.disabled = problems.length > 0;
+  }
+
+  function draw(): void {
+    rows.textContent = "";
+    readers = [];
+    draft.lines.forEach((line, index) => {
+      const row = document.createElement("div");
+      row.className = "journal-row";
+
+      const account = combobox(codes, line.code === "" ? null : line.code, "Search accounts…", () => {
+        line.code = account.value;
+        refresh();
+      });
+      readers.push(() => {
+        line.code = account.value;
+      });
+
+      const amountInput = (value: string, placeholder: string, set: (v: string) => void) => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.className = "split-amount";
+        input.placeholder = placeholder;
+        input.value = value;
+        input.addEventListener("input", () => {
+          set(input.value);
+          refresh();
+        });
+        return input;
+      };
+      const debit = amountInput(line.debit, "0.00", (v) => {
+        line.debit = v;
+      });
+      const credit = amountInput(line.credit, "0.00", (v) => {
+        line.credit = v;
+      });
+
+      const description = document.createElement("input");
+      description.type = "text";
+      description.value = line.description;
+      description.addEventListener("input", () => {
+        line.description = description.value;
+      });
+
+      const drop = document.createElement("button");
+      drop.type = "button";
+      drop.className = "link-button";
+      drop.textContent = "✕";
+      drop.title = "Remove this line";
+      drop.disabled = draft.lines.length <= 2;
+      drop.addEventListener("click", () => {
+        readRows();
+        draft.lines.splice(index, 1);
+        draw();
+      });
+
+      row.append(account.element, debit, credit, description, drop);
+      rows.append(row);
+    });
+    refresh();
+  }
+
+  draw();
+  return wrap;
 }
 
 async function removeManualJournal(journal: ManualJournal, year: number): Promise<void> {

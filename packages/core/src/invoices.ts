@@ -470,6 +470,28 @@ export function isCreditNote(invoice: Invoice): boolean {
   return invoice.total < 0;
 }
 
+/**
+ * Statuses under which an invoice is not in the books.
+ *
+ * Xero posts an invoice when it is approved, and not before: a draft, or one
+ * submitted and waiting for approval, has touched no account. A voided or
+ * deleted one has been taken back out. Posting any of them records a sale or a
+ * bill the other system never recorded -- on real books a draft for 25.00 was
+ * the whole difference in Sales between the two.
+ */
+const NOT_POSTED = new Set(["draft", "submitted", "awaiting approval", "voided", "deleted"]);
+
+/**
+ * Whether an invoice belongs in the ledger.
+ *
+ * A blank status counts as posted. An invoice keyed in here, or a file that
+ * carries no status column, has no workflow to be part-way through, and leaving
+ * it out would drop a sale that happened.
+ */
+export function isPosted(invoice: Invoice): boolean {
+  return !NOT_POSTED.has(invoice.status.trim().toLowerCase());
+}
+
 export function invoiceBalances(
   invoices: readonly Invoice[],
   assignments: Iterable<InvoiceAssignment>,

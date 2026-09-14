@@ -120,3 +120,29 @@ test("an unbalanced judgement is refused, not posted with the difference hidden"
   assert.ok(!journals.some((j) => j.source === "manual"), "refused");
   assert.equal(trialBalance(journals).imbalance, 0, "and the ledger still balances");
 });
+
+test("only an approved invoice is posted: not a draft, a voided or a deleted one", () => {
+  // Xero posts an invoice when it is approved. A 25.00 draft posted here was
+  // the whole of a Sales difference against it.
+  const t = txn({ id: "a", amount: -100 });
+  const invoice = (number, status) => ({ ...INVOICE, number, status });
+  const journals = postLedger(base({
+    transactions: [t], byId: new Map([["a", t]]), codeOf: () => null,
+    invoices: [
+      invoice("INV-0001", "Paid"),
+      invoice("INV-0002", "Awaiting Payment"),
+      invoice("INV-0003", "Draft"),
+      invoice("INV-0004", " VOIDED "),
+      invoice("INV-0005", "Deleted"),
+      invoice("INV-0006", "Awaiting Approval"),
+      invoice("INV-0007", ""),
+    ],
+  }));
+  const posted = journals.map((j) => j.narration ?? "");
+  const text = JSON.stringify(posted);
+  for (const number of ["INV-0001", "INV-0002", "INV-0007"]) assert.ok(text.includes(number), `${number} posted`);
+  for (const number of ["INV-0003", "INV-0004", "INV-0005", "INV-0006"]) {
+    assert.ok(!text.includes(number), `${number} not posted`);
+  }
+  assert.equal(trialBalance(journals).imbalance, 0);
+});

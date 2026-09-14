@@ -279,6 +279,7 @@ export {
   allocateAcrossLines,
   invoiceBalances,
   isCreditNote,
+  isPosted,
 } from "./invoices.js";
 export type {
   Invoice,

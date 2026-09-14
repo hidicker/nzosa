@@ -1,6 +1,7 @@
 import type { Account } from "./chart.js";
 import type { GstClassification } from "./gst.js";
 import type { Invoice } from "./invoices.js";
+import { isPosted } from "./invoices.js";
 import type { ManualJournal } from "./manual-journals.js";
 import { postManualJournal } from "./manual-journals.js";
 import {
@@ -32,6 +33,10 @@ import type { Transaction } from "./types.js";
  * clearing account; posted as a pair there is no account in the middle at all.
  * So the pair is emitted once, from the leg the money left, and the other leg
  * is skipped.
+ *
+ * **Only an approved invoice is posted.** A draft, or a voided or deleted
+ * invoice, is in the export but not in the books, and posting it records a sale
+ * nobody made.
  *
  * **Judgements come last**, because they correct what everything above worked
  * out. An unbalanced one is refused rather than posted with the difference
@@ -117,7 +122,7 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
   return [
     ...bank,
     ...transferJournals,
-    ...invoices.map((invoice) => postInvoice(invoice, posting)),
+    ...invoices.filter(isPosted).map((invoice) => postInvoice(invoice, posting)),
     ...(options.assetJournals ?? []),
     ...manualJournals
       .map((journal) => postManualJournal(journal, posting))

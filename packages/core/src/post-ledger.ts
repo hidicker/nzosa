@@ -79,6 +79,36 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
     nameBankAccount: (account: string) => bankLabels.get(account) ?? account,
   };
 
+  // A manual journal can name a bank account: a correction to what a card or
+  // account holds, such as a refund the bank data never showed. It posts to
+  // the ledger's own account, keyed as every bank line on that account is, so
+  // the balance sheet reads one account -- not a second row under the chart's
+  // name for it, beside the real one.
+  //
+  // Found before the label is split, because a bank account's number reads as
+  // an account code to the splitter: "02-1234-0567890-001" would become code
+  // 001. And only for journals: a bank line coded to another bank account is a
+  // transfer question, which is answered where transfers are.
+  const tidy = (text: string): string => text.trim().toLowerCase().replace(/\s+/g, " ");
+  const bankIdFor = (label: string): string | null => {
+    const wanted = label.trim();
+    if (bankLabels.has(wanted)) return wanted;
+    for (const [id, name] of bankLabels) if (tidy(name) === tidy(wanted)) return id;
+    const account = chart.find(
+      (a) => /bank/i.test(a.type) && tidy(a.name) === tidy(wanted),
+    );
+    const linked = account?.ledgerAccount?.trim() ?? "";
+    return linked !== "" && linked.toLowerCase() !== "none" ? linked : null;
+  };
+  const journalPosting: PostingOptions = {
+    ...posting,
+    resolveAccount: (code: string) => {
+      const bank = bankIdFor(code);
+      if (bank !== null) return { code: bank, name: bankLabels.get(bank) ?? bank };
+      return posting.resolveAccount?.(code) ?? { code, name: code };
+    },
+  };
+
   const byNumber = new Map(invoices.map((i) => [i.number, i]));
 
   const transferJournals: PostedJournal[] = [];
@@ -125,7 +155,7 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
     ...invoices.filter(isPosted).map((invoice) => postInvoice(invoice, posting)),
     ...(options.assetJournals ?? []),
     ...manualJournals
-      .map((journal) => postManualJournal(journal, posting))
+      .map((journal) => postManualJournal(journal, journalPosting))
       .filter((journal): journal is PostedJournal => journal !== null),
   ];
 }

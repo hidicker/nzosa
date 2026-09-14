@@ -146,3 +146,49 @@ test("only an approved invoice is posted: not a draft, a voided or a deleted one
   }
   assert.equal(trialBalance(journals).imbalance, 0);
 });
+
+test("a manual journal can post to a bank account, on the ledger's own key for it", () => {
+  // A refund the bank data never showed is a correction to the card itself.
+  // Named by the chart, it used to post to a second row under that name,
+  // beside the card's real account.
+  const chart = [
+    ...CHART,
+    { code: "", name: "BNZ Visa - Business Card", type: "Bank", taxCode: "No GST", description: "",
+      ledgerAccount: "card-01" },
+    { code: "485", name: "Subscriptions", type: "Overhead", taxCode: "", description: "" },
+    { code: "820", name: "GST", type: "GST", taxCode: "", description: "" },
+  ];
+  const t = txn({ id: "c", amount: -1000, account: "card-01" });
+  const journals = postLedger(base({
+    chart, transactions: [t], byId: new Map([["c", t]]), bankLabels: new Map([["card-01", "card-01"]]),
+    manualJournals: [{
+      id: "g", date: "2025-04-01", narration: "Refund missing from the bank",
+      lines: [
+        { code: "BNZ Visa - Business Card", amount: 3182 },
+        { code: "Subscriptions - 485", amount: -2767 },
+        { code: "GST - 820", amount: -415 },
+      ],
+    }],
+  }));
+  const manual = journals.find((j) => j.source === "manual");
+  assert.equal(manual.lines.find((l) => l.amount === 3182).accountCode, "card-01");
+  const onCard = journals.flatMap((j) => j.lines).filter((l) => l.accountCode === "card-01");
+  assert.equal(onCard.length, 2, "the card's own line and the journal's, on one account");
+  assert.equal(trialBalance(journals).imbalance, 0);
+});
+
+test("a bank account's number is not read as an account code", () => {
+  // "02-1234-0567890-001" ends in three digits, which the label splitter takes
+  // for code 001.
+  const t = txn({ id: "b", amount: 500, account: "02-1234-0567890-001" });
+  const journals = postLedger(base({
+    transactions: [t], byId: new Map([["b", t]]),
+    bankLabels: new Map([["02-1234-0567890-001", "02-1234-0567890-001"]]),
+    manualJournals: [{
+      id: "n", date: "2025-06-02", narration: "Bank correction",
+      lines: [{ code: "02-1234-0567890-001", amount: 100 }, { code: "200 Sales", amount: -100 }],
+    }],
+  }));
+  const manual = journals.find((j) => j.source === "manual");
+  assert.equal(manual.lines[0].accountCode, "02-1234-0567890-001");
+});

@@ -518,7 +518,16 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   rows.className = "split-rows";
   wrap.append(rows);
 
-  const codes = [...new Set(accountsForEditing().map((a) => a.label))];
+  // The chart's accounts, and any bank account the ledger holds that no chart
+  // account is linked to. A linked one is offered under its chart name, which
+  // posts to the same account.
+  const linkedBanks = new Set(
+    state.chart.map((a) => (a.ledgerAccount ?? "").trim()).filter((id) => id !== ""),
+  );
+  const unlinkedBanks = [...banks().accounts]
+    .filter((id) => !linkedBanks.has(id))
+    .map((id) => bankLabel(id));
+  const codes = [...new Set([...accountsForEditing().map((a) => a.label), ...unlinkedBanks])];
   const knownAccount = new Set(codes);
 
   const status = document.createElement("p");

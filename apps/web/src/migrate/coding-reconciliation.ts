@@ -1,5 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import {
+  unregisteredCode,
   accountDecided,
   codingRefusedForTransfer,
   accountsFor,
@@ -406,6 +407,7 @@ export function renderCheck(): void {
     state.rules,
     state.ledger.overrides ?? {},
     accountsFor(state.checkAccounts),
+    unregisteredCode(),
   );
   state.suggestions = new Map(suggestions.map((one) => [one.transaction.id, one]));
 
@@ -415,6 +417,7 @@ export function renderCheck(): void {
     state.rules,
     {},
     accountsFor(state.checkAccounts),
+    unregisteredCode(),
   );
   const proposedBy = new Map(proposals.map((one) => [one.transaction.id, one.code]));
 
@@ -451,6 +454,7 @@ export function renderCheck(): void {
   const result = compareCodings(coded, state.reference, {
     chart: state.chart,
     accountMatches: sameAccount,
+    aliases: (state.rules as { aliases?: Record<string, string> } | undefined)?.aliases ?? {},
     gstRateOf: ourGstRate,
   });
 
@@ -1730,6 +1734,7 @@ function codedExamples(): CodedExample[] {
   const result = compareCodings(coded, state.reference, {
     chart: state.chart,
     accountMatches: sameAccount,
+    aliases: (state.rules as { aliases?: Record<string, string> } | undefined)?.aliases ?? {},
   });
   const theirs = [...result.agreed, ...result.differed]
     .filter((r) => r.theirs !== null)

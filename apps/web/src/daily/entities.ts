@@ -17,6 +17,7 @@ import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
 import { escapeHtml, note } from "../ui.js";
 import {
+  mergeAccount,
   DEFAULT_ENTITY_NAME,
   accountEntityKey,
   accountLabel,
@@ -964,12 +965,6 @@ async function renameChartAccount(
   label: string,
   to: { code: string; name: string },
 ): Promise<void> {
-  const why = renameProblem(state.chart, account, to);
-  if (why !== null) {
-    alert(why);
-    return;
-  }
-
   const code = to.code.trim();
   const name = to.name.trim();
   if (code === account.code && name === account.name) return;
@@ -978,8 +973,27 @@ async function renameChartAccount(
   // same string the coding picker will offer.
   const housePrefixed = accountsForEditing().some((r) => /^NB\s+/i.test(r.label));
   const newLabel = accountLabel(code, name, housePrefixed);
-  if (newLabel !== label && accountsForEditing().some((r) => r.label === newLabel)) {
-    alert(`"${newLabel}" already exists.`);
+
+  // Given the name or the code of an account that is already there, the two
+  // are one account -- an imported category and the chart's name for the same
+  // thing. Refusing left the category as a second account, or to be recoded
+  // line by line.
+  const existing = accountsForEditing().find(
+    (r) => r.label !== label && (r.label === newLabel || (code !== "" && r.account.code.trim() === code)),
+  );
+  if (existing !== undefined) {
+    const ok = confirm(
+      `"${existing.label}" already exists. Merge "${label}" into it?\n\n` +
+        "Every coding, split and rule moves across, and the account keeps its own GST " +
+        `treatment and entity. A file that still says "${label}" will read as ${existing.label}.`,
+    );
+    if (ok) await mergeChartAccount(account, label, existing.account, existing.label);
+    return;
+  }
+
+  const why = renameProblem(state.chart, account, to);
+  if (why !== null) {
+    alert(why);
     return;
   }
 
@@ -1027,6 +1041,60 @@ async function renameChartAccount(
       (carried.length > 0 ? `, carrying ${carried.join(", ")}` : ""),
     account,
     after.chart.find((a) => a.code === code && a.name === name) ?? null,
+    `${account.code}|${account.name}`,
+  );
+
+  reclassify();
+  redraw("entities");
+}
+
+/** Fold an account into one that already exists, carrying what points at it. */
+async function mergeChartAccount(
+  account: Account,
+  label: string,
+  into: Account,
+  intoLabel: string,
+): Promise<void> {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const after = mergeAccount(
+    {
+      chart: state.chart,
+      overrides: state.ledger.overrides ?? {},
+      splits: state.ledger.splits ?? {},
+      rules: state.rules,
+      accountEntities: model.accounts,
+    },
+    account,
+    into,
+    label,
+    intoLabel,
+  );
+
+  state.chart = after.chart;
+  state.ledger = {
+    ...state.ledger,
+    chart: after.chart,
+    overrides: after.overrides,
+    splits: after.splits,
+    entities: { ...model, accounts: after.accountEntities },
+  };
+  // Saved whole, as a rename is: the codings and the chart move together.
+  state.persistent = await save(state.ledger);
+  state.rules = after.rules;
+  await persistRules();
+
+  const { codings, splitParts, rules } = after.moved;
+  const carried = [
+    codings > 0 ? `${codings} coding${codings === 1 ? "" : "s"}` : "",
+    splitParts > 0 ? `${splitParts} split part${splitParts === 1 ? "" : "s"}` : "",
+    rules > 0 ? `${rules} rule${rules === 1 ? "" : "s"}` : "",
+  ].filter((part) => part !== "");
+
+  await record(
+    "chart",
+    `${label} merged into ${intoLabel}` + (carried.length > 0 ? `, carrying ${carried.join(", ")}` : ""),
+    account,
+    into,
     `${account.code}|${account.name}`,
   );
 

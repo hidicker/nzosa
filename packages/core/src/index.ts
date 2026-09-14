@@ -92,7 +92,7 @@ export { identifyExport } from "./identify-export.js";
 export type { ExportKind, Identified } from "./identify-export.js";
 export { invoiceDocument } from "./invoice-document.js";
 export type { InvoiceSupplier, InvoiceDocumentOptions } from "./invoice-document.js";
-export { renameAccount, renameProblem } from "./rename-account.js";
+export { mergeAccount, renameAccount, renameProblem } from "./rename-account.js";
 export type { AccountReferences, RenameResult } from "./rename-account.js";
 export type { RuleFile, ImpliedTreatment } from "./chart-codes.js";
 

@@ -741,6 +741,14 @@ export interface CodingCheckOptions {
   accountMatches?: (ours: Transaction, theirs: ReferenceLine) => boolean;
   /** The GST rate our classification implies, for comparison. */
   gstRateOf?: (transaction: Transaction) => string | null;
+  /**
+   * Their labels that were merged into one of our accounts, to that account.
+   *
+   * The file keeps saying the old word on every line; read through this, a
+   * merged category agrees with the coding it became instead of differing on
+   * every line it was ever used.
+   */
+  aliases?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -1013,7 +1021,8 @@ export function compareCodings(
     const payee = entry.transaction.otherParty || "(no payee)";
     const score = tally.get(payee) ?? { wrong: 0, right: 0 };
 
-    if (accountKey(entry.code, chart) === accountKey(best.code, chart)) {
+    const theirs = options.aliases?.[best.code] ?? best.code;
+    if (entry.code === theirs || accountKey(entry.code, chart) === accountKey(theirs, chart)) {
       agreed.push(row);
       score.right += 1;
     } else {

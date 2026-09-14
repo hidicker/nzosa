@@ -1,3 +1,4 @@
+import type { RuleFile } from "./chart-codes.js";
 import type { Account } from "./chart.js";
 import { knownCodes, labelForChartAccount } from "./chart-codes.js";
 import { matchAccountName } from "./coding-names.js";
@@ -99,6 +100,10 @@ export function mapToOurVocabulary(
   code: string,
   options: { chart: readonly Account[]; rules?: RuleSet; overrides?: Overrides },
 ): string | null {
+  // A label that was merged into an account is that account, however the
+  // file that used it still spells it.
+  const alias = (options.rules as RuleFile | undefined)?.aliases?.[code];
+  if (alias !== undefined) return alias;
   const known = knownCodes(options.rules, options.overrides ?? {}, options.chart);
   if (known.includes(code)) return code;
   return matchAccountName(code, known);

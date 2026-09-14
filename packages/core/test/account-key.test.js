@@ -61,3 +61,22 @@ test("a word-coded account no longer reads as a disagreement", () => {
   assert.equal(result.differed.length, 0, "they are the same account");
   assert.equal(result.agreed.length, 1);
 });
+
+test("a category merged into an account agrees with the coding it became", () => {
+  const transaction = {
+    id: "rent", date: "2025-06-01", amount: 56000, currency: "NZD", account: "BNK",
+    serial: "", trn: "", particulars: "", code: "", reference: "", otherParty: "Tenant",
+    origin: "", type: "", batch: "", otherPartyAccount: "", occurrence: 1, extras: {},
+  };
+  const coded = [{ transaction, code: "Rent - Residential - Totara Place" }];
+  const reference = [{ date: "2025-06-01", amount: 56000, code: "Totara Rent", label: "Totara Rent" }];
+
+  const without = compareCodings(coded, reference);
+  assert.equal(without.differed.length, 1, "different words are a difference until somebody says otherwise");
+
+  const withAlias = compareCodings(coded, reference, {
+    aliases: { "Totara Rent": "Rent - Residential - Totara Place" },
+  });
+  assert.equal(withAlias.agreed.length, 1);
+  assert.equal(withAlias.differed.length, 0);
+});

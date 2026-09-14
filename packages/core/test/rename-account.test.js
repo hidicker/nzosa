@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { renameAccount, renameProblem } from "../dist/index.js";
+import { mapToOurVocabulary, mergeAccount, renameAccount, renameProblem } from "../dist/index.js";
 
 const account = (over) => ({ code: "", name: "", type: "", taxCode: "", description: "", ...over });
 
@@ -121,4 +121,47 @@ test("a code is letters, numbers and hyphens", () => {
   const from = { code: "400", name: "Advertising" };
   assert.equal(renameProblem(CHART, from, { code: "400-A", name: "Marketing" }), null);
   assert.match(renameProblem(CHART, from, { code: "4 0 0", name: "Marketing" }), /letters, numbers/);
+});
+
+test("merging a category into an existing account carries its codings and keeps the account's own settings", () => {
+  const before = {
+    chart: CHART,
+    overrides: { a: { confirmed: true, code: "Ads" }, b: { confirmed: true, code: "Advertising - 400" } },
+    splits: {
+      c: [
+        { amount: -5000, code: "Ads", note: "" },
+        { amount: -1500, code: "Subscriptions - 485", note: "" },
+      ],
+    },
+    rules: {
+      rules: [{ priority: 100, keyword: "GOOGLE", code: "Ads" }],
+      codeTreatments: { Ads: "out-of-scope", "Advertising - 400": "standard" },
+      aliases: { "Google Ads": "Ads" },
+    },
+    accountEntities: { "400": "e1", "name:Ads": "e2" },
+  };
+  const after = mergeAccount(
+    before,
+    { code: "", name: "Ads" },
+    { code: "400", name: "Advertising" },
+    "Ads",
+    "Advertising - 400",
+  );
+
+  assert.equal(after.overrides.a.code, "Advertising - 400");
+  assert.equal(after.splits.c[0].code, "Advertising - 400");
+  assert.equal(after.rules.rules[0].code, "Advertising - 400");
+  assert.equal(after.rules.codeTreatments["Advertising - 400"], "standard", "the account's own treatment stands");
+  assert.equal("Ads" in after.rules.codeTreatments, false);
+  assert.equal(after.accountEntities["400"], "e1", "and its own entity");
+  assert.equal("name:Ads" in after.accountEntities, false);
+  assert.equal(after.rules.aliases.Ads, "Advertising - 400");
+  assert.equal(after.rules.aliases["Google Ads"], "Advertising - 400", "an earlier alias follows");
+  assert.equal(after.chart.length, CHART.length, "the account that stays is not duplicated");
+  assert.equal(after.moved.codings, 1);
+});
+
+test("a label that was merged reads as the account it became", () => {
+  const rules = { aliases: { Ads: "Advertising - 400" } };
+  assert.equal(mapToOurVocabulary("Ads", { chart: CHART, rules, overrides: {} }), "Advertising - 400");
 });

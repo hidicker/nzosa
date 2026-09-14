@@ -33,6 +33,14 @@ import { bareAccountName, canonicalCodeFor } from "./coding-names.js";
 export interface RuleFile extends RuleSet {
   gstRules?: GstRulesOptions["rules"];
   codeTreatments?: GstRulesOptions["codeTreatments"];
+  /**
+   * Labels another system used, each to the account it was merged into.
+   *
+   * Not accounts: nothing is coded to them any more. They are how a file that
+   * still says `Rent - Totara` on every line is read as the account that
+   * category became, rather than as a disagreement on every line.
+   */
+  aliases?: Record<string, string>;
 }
 
 /**

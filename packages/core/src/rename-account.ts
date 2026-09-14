@@ -138,6 +138,76 @@ export function renameAccount(
 }
 
 /**
+ * Fold one account into another that already exists.
+ *
+ * Coding arrives in somebody else's words. A spreadsheet's `Rent - Totara` and
+ * the chart's `Rent - Residential - Totara Place` are the same account, and a
+ * rename to the chart's name was refused because the name was taken -- which
+ * left the category as a second account, or to be recoded line by line.
+ *
+ * A merge is the rename whose destination is already there. Every coding,
+ * split part and rule moves to it; what the destination says about itself --
+ * its GST treatment and its entity -- stands, because it was set deliberately
+ * on the account that is staying. The source's chart row, if it has one, goes.
+ *
+ * The old label is kept as an alias. The file that brought it still says it on
+ * every line, and without the alias each of those lines reads as disagreeing
+ * with a coding that is in fact the same account.
+ */
+export function mergeAccount(
+  before: AccountReferences,
+  from: Pick<Account, "code" | "name">,
+  into: Pick<Account, "code" | "name">,
+  oldLabel: string,
+  intoLabel: string,
+): RenameResult {
+  const chart = before.chart.filter(
+    (account) => !(account.code === from.code && account.name === from.name),
+  );
+  const file = before.rules as RuleFile | undefined;
+  const intoTreatment = file?.codeTreatments?.[intoLabel];
+  const fromKey = accountEntityKey(from);
+  const intoKey = accountEntityKey(into);
+  const intoEntity = before.accountEntities[intoKey];
+
+  const moved = renameAccount({ ...before, chart }, from, into, oldLabel, intoLabel);
+
+  let rules = moved.rules as RuleFile | undefined;
+  if (rules !== undefined && intoTreatment !== undefined) {
+    rules = {
+      ...rules,
+      codeTreatments: { ...(rules.codeTreatments ?? {}), [intoLabel]: intoTreatment },
+    };
+  }
+
+  const accountEntities: Record<string, string> = { ...moved.accountEntities };
+  if (fromKey !== intoKey) delete accountEntities[fromKey];
+  if (intoEntity !== undefined) accountEntities[intoKey] = intoEntity;
+
+  // An alias already pointing at the source follows it, so a chain of merges
+  // still reads the first file's words.
+  const aliases: Record<string, string> = {};
+  for (const [alias, target] of Object.entries(rules?.aliases ?? {})) {
+    aliases[alias] = target === oldLabel ? intoLabel : target;
+  }
+  aliases[oldLabel] = intoLabel;
+  rules = { ...(rules ?? {}), aliases };
+
+  return {
+    chart,
+    overrides: moved.overrides,
+    splits: moved.splits,
+    rules,
+    accountEntities,
+    moved: {
+      ...moved.moved,
+      treatment: moved.moved.treatment && intoTreatment === undefined,
+      entity: intoEntity === undefined && before.accountEntities[fromKey] !== undefined,
+    },
+  };
+}
+
+/**
  * Why this rename cannot go ahead, or null when it can.
  *
  * Checked before anything is written rather than reported afterwards: half a

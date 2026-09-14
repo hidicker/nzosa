@@ -250,6 +250,14 @@ interface SetupStep {
    * is shown and explained but left out of the count.
    */
   optional?: boolean;
+  /**
+   * Started but not finished.
+   *
+   * A step that ticks on the first file of seven says the set-up is done when
+   * six things are still missing, and every step after it then reads as
+   * optional. Half a tick is the honest mark for half the work.
+   */
+  partial?: boolean;
   /** Interactive content of its own: a file list, a drop zone. */
   extra?: HTMLElement;
 }
@@ -447,7 +455,18 @@ function migrationStepContent(source: string): HTMLElement {
   return wrap;
 }
 
-function setupSteps(): SetupStep[] {
+/**
+ * The steps, and whether each is done.
+ *
+ * `withContent` exists because building a step's `extra` is not free of
+ * consequence: the migration step's content takes the live drop zone out of
+ * the page and puts it inside itself. Asking this function merely how much is
+ * left to do -- which the sidebar does on every navigation -- therefore
+ * removed the drop zone from a page nobody was even looking at. Anything that
+ * wants the answer rather than the elements asks for it without them.
+ */
+function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
+  const withContent = options.withContent !== false;
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
   const xero = source === "xero";
@@ -487,11 +506,26 @@ function setupSteps(): SetupStep[] {
       what: xero
         ? "Migration from Xero - the more provided the more of the following set-up will be complete"
         : "Migration from spreadsheet - the more provided the more of the following set-up will be complete",
-      done: loadedCount > 0,
+      // Ticked only when every file is in. It used to tick on the first of
+      // them, which told somebody with one of seven that the migration was
+      // done and left the six that carry opening balances, invoices, assets
+      // and past returns looking like extras nobody needed.
+      done: loadedCount === files.length,
+      partial: loadedCount > 0 && loadedCount < files.length,
       optional: true,
-      detail: loadedCount > 0 ? `${loadedCount} of ${files.length} loaded` : "",
+      detail:
+        loadedCount === 0
+          ? ""
+          : loadedCount === files.length
+            ? `all ${files.length} loaded`
+            : `${loadedCount} of ${files.length} loaded — ` +
+              files
+                .filter((f) => !f.have)
+                .map((f) => f.what)
+                .join(", ") +
+              " still to come",
       unlocks: "Teaches rules, carries opening balances, invoices, assets, and past returns",
-      extra: migrationStepContent(source),
+      ...(withContent ? { extra: migrationStepContent(source) } : {}),
     });
   }
 
@@ -514,7 +548,7 @@ function setupSteps(): SetupStep[] {
       // It was sitting above the list saying the same words as the first step
       // of the list, and the step had nothing to click -- so the one step you
       // could not act on was the one you had to do first.
-      extra: setupNameField(),
+      ...(withContent ? { extra: setupNameField() } : {}),
     },
     {
       what: "Chart of accounts",
@@ -914,8 +948,19 @@ export function renderSetupBody(): void {
     mark.className = "setup-mark";
     // An optional step nobody has done is not an empty box waiting to be
     // ticked, so it does not get one.
-    mark.textContent = step.done ? "✓" : step.optional === true ? "–" : "";
-    if (step.optional === true && !step.done) mark.title = "Optional";
+    mark.textContent = step.done
+      ? "✓"
+      : step.partial === true
+        ? "◐"
+        : step.optional === true
+          ? "–"
+          : "";
+    if (step.partial === true && !step.done) {
+      mark.classList.add("partial");
+      mark.title = "Started, not finished";
+    } else if (step.optional === true && !step.done) {
+      mark.title = "Optional";
+    }
 
     const text = document.createElement("div");
     const title = document.createElement("div");
@@ -1230,4 +1275,31 @@ export async function seedBrowser(): Promise<void> {
 /** Choosing which system the books are coming from. */
 export function wireSetup(): void {
   $<HTMLSelectElement>("setup-source").addEventListener("change", () => redraw("setup"));
+}
+
+/**
+ * Mark the sidebar while there is set-up left to do.
+ *
+ * Set-up is the one page whose job is to be finished with, and nothing said
+ * whether it had been. Somebody who left it half done -- a chart loaded, the
+ * banks not yet linked -- had no reason to go back, and the reports quietly
+ * carried on being wrong in the way the unfinished step was there to prevent.
+ *
+ * The required steps only. An optional one never done is not work outstanding,
+ * and colouring the menu for ever because nobody loaded a past GST return
+ * would teach people to ignore the colour.
+ */
+export function markSetupProgress(): void {
+  const button = document.querySelector<HTMLButtonElement>(
+    '.sidebar-nav button[data-page="setup"]',
+  );
+  if (!button) return;
+
+  const needed = setupSteps({ withContent: false }).filter((step) => step.optional !== true);
+  const left = needed.filter((step) => !step.done).length;
+  button.classList.toggle("needs-doing", left > 0);
+  button.title =
+    left > 0
+      ? `${left} set-up step${left === 1 ? "" : "s"} still to do`
+      : "Set-up is complete";
 }

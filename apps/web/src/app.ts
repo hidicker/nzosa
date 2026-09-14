@@ -38,6 +38,7 @@ export type PageName =
   | "rules"
   | "setup"
   | "setupBody"
+  | "setupProgress"
   | "variance";
 
 export type Pages = Record<PageName, () => void>;
@@ -108,6 +109,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
 
   redraw("entityFilter");
   redraw("openBooks");
+  redraw("setupProgress");
   if (page === "reconcile") redraw("reconcile");
   if (page === "check") redraw("check");
   if (page === "rules") redraw("rules");

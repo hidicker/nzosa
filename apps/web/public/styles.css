@@ -2420,3 +2420,22 @@ tr.report-behind > td { padding: 0 0 0.75rem 1.5rem; background: var(--surface-s
 tr.report-behind table { margin: 0; width: 100%; }
 tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .report-name .link-button { text-align: left; }
+
+/* Set-up still has required steps outstanding. Orange rather than red: this
+   is work to finish, not something broken. */
+.sidebar-nav button[data-page="setup"].needs-doing {
+  color: var(--warn, #b45309);
+  font-weight: 600;
+}
+.sidebar-nav button[data-page="setup"].needs-doing::after {
+  content: "•";
+  margin-left: 0.35rem;
+  color: var(--warn, #b45309);
+}
+.sidebar-nav button[data-page="setup"].needs-doing.active {
+  color: inherit;
+}
+
+/* A step begun but not finished. Half a tick, in the same orange. */
+.setup-mark.partial { color: var(--warn, #b45309); }
+

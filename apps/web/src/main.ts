@@ -63,6 +63,7 @@ import {
   renderEntities,
 } from "./daily/entities.js";
 import {
+  markSetupProgress,
   renderSetup,
   renderSetupBody,
   seedBrowser,
@@ -127,6 +128,7 @@ async function init(): Promise<void> {
     rules: renderRules,
     setup: renderSetup,
     setupBody: renderSetupBody,
+    setupProgress: markSetupProgress,
     variance: renderVariance,
   });
   setLoadingStatus("Opening books…");

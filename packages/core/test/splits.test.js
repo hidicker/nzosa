@@ -65,11 +65,13 @@ test("a split needs at least two parts", () => {
   assert.match(validateSplits([COFFEE], one)[0].message, /at least two parts/);
 });
 
-test("every part needs a note", () => {
+test("a balanced split with a blank note is still a split, not refused", () => {
+  // Refusing it dropped the whole line out of the postings while the page
+  // still showed it split: three real entertainment splits posted nowhere.
   const silent = {
     a: [{ amount: -1500, note: "explained" }, { amount: -2500, note: "  " }],
   };
-  assert.match(validateSplits([COFFEE], silent)[0].message, /part 2 has no note/);
+  assert.deepEqual(validateSplits([COFFEE], silent), []);
 });
 
 test("a split naming a transaction that is not there is reported", () => {

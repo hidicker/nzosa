@@ -38,7 +38,16 @@ export interface SplitPart {
   treatment?: GstTreatment;
   /** Which side of the GST return. Defaults to the direction of the part. */
   side?: GstSide;
-  /** What this part is. Required: an unexplained split cannot be checked. */
+  /**
+   * What this part is.
+   *
+   * Worth saying, and never a reason to refuse the split. It used to be: a
+   * balanced split saved with a blank note was dropped on the way into the
+   * postings, so the whole line posted to no account at all while the page
+   * still showed it split and confirmed. On real books three were, and their
+   * entertainment was missing from the profit and loss. The amounts balancing
+   * is what keeps the ledger honest; the words are for the reader.
+   */
   note: string;
 }
 
@@ -89,11 +98,6 @@ export function validateSplits(
           `${formatAmount(transaction.amount, transaction.currency)} ` +
           `(out by ${formatAmount(total - transaction.amount, transaction.currency)})`,
       });
-    }
-
-    const unexplained = parts.findIndex((part) => part.note.trim() === "");
-    if (unexplained !== -1) {
-      problems.push({ id, message: `part ${unexplained + 1} has no note` });
     }
   }
 
@@ -157,7 +161,10 @@ export function expandSplits(
           ...(part.code !== undefined ? { code: part.code } : {}),
           ...(part.treatment !== undefined ? { treatment: part.treatment } : {}),
           ...(part.side !== undefined ? { side: part.side } : {}),
-          note: `Split part ${index + 1} of ${parts.length}: ${part.note}`,
+          note:
+            (part.note ?? "").trim() === ""
+              ? `Split part ${index + 1} of ${parts.length}`
+              : `Split part ${index + 1} of ${parts.length}: ${part.note.trim()}`,
         };
       }
     });

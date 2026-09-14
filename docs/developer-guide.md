@@ -393,6 +393,14 @@ caller saves it as one change. `renameProblem` refuses a rename before anything
 is written: no name, no code, a code that is not letters/numbers/hyphens, or a
 code another account already holds.
 
+**Merging: `mergeAccount`.** Renaming to the code or name of an account that
+already exists is a merge, offered with a confirmation. Codings, split parts
+and rules move to the destination as a rename moves them; the destination's GST
+treatment and entity stand; the source's chart row goes; and the old label is
+recorded in the rule file's `aliases`. `mapToOurVocabulary` and
+`compareCodings` read the aliases, so an imported file that still uses the old
+category agrees with the account it became.
+
 **Codes are required**, on adding and on editing, because the code is the only
 stable identity an account has: `accountEntityKey` is the code where there is
 one and `name:<name>` where there is not, so a codeless account loses its entity
@@ -632,6 +640,19 @@ have no type until one is set, and get promoted into the chart when it is.
 - **The reports list** is built from the `optgroup`s of `#report-kind`, so the
   list and the picker cannot disagree. Favourites are per browser, in
   `localStorage`.
+- **Rental schedules and the IR3** (`rental-schedules.ts`). `rentalSchedule`
+  turns an entity's profit and loss into a schedule with IR3 expense headings
+  (`rentalHeadingFor`, by account name); `ownerRentalSchedule` takes an owner's
+  share line by line; `residentialPortfolio` applies ring-fencing across an
+  owner's residential properties; `ir3Return` combines those with `taxExtras`
+  and `ir3Details` into the 2026 IR3 boxes, with the tax tables held per year
+  and a note for a year it has none for. In the app, `entityReporter()` builds
+  each entity's profit and loss on the page's basis.
+- **GST and entities.** `gstResolver({ unregistered })` treats a line coded to
+  an account of an entity not registered for GST as out of scope, straight after
+  recorded transfers and ahead of overrides, rules, code treatments and the
+  chart. The app passes `unregisteredCode()`; the CLI builds the same set from
+  the ledger's entities.
 - **GST reconciliation** (`variance.ts`) pairs detail lines by amount within
   three weeks, then tries a remaining bank line against two or three filed
   lines within a week that sum to it. Explanations are `varianceNotes`.

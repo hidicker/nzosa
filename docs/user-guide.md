@@ -102,6 +102,10 @@ At the top of Setup. Your company, trust, or your own name. It is the one thing 
 
 If one set of books holds several things — a company and two rental properties, say — add the others on **Entities & accounts**. Most people need only the one.
 
+A rental property is an entity of its own. Give it its kind (residential or commercial), whether it is registered for GST, and its owners with their shares — "Ana Whitcombe 50%; Tom Whitcombe 50%" — then assign its income and expense accounts to it. An entity that is not registered for GST charges and claims none, so anything coded to its accounts stays off every GST return whatever the account's tax code says. Household spending can be an entity too, which keeps it out of every figure rather than mixed into one.
+
+If your coded history uses its own categories — "Totara Rent", say — rename the category on **Entities & accounts** to the account it really is, by its code or its name. The two are merged: every line coded to the category moves to the account, the account keeps its own GST treatment and entity, and the imported file's lines count as agreeing with it.
+
 ### 2. Fetch your files, all at once
 
 Setup lists exactly what to export and where each one lives. If you use an accounting system already, they all come from the same place and the whole set takes a few minutes — so fetch them in one visit rather than one at a time.
@@ -209,6 +213,8 @@ What your accountant will want, and what this produces. **Reports** opens on a l
 - **Profit and loss**, set out under trading income, cost of sales, gross profit, other income and operating expenses. Click any line to see what is in it.
 - **Balance sheet.** For a company, the shareholder current accounts are one current liability, the way signed statements set them out.
 - **IR10**, set out exactly as the form is filed: every box from 1 to 60, in whole dollars, including the tax adjustments and the disclosure boxes.
+- **Rental schedules**: each property's income and expenses in whole dollars with last year beside them, and all the rentals together as one statement of profit or loss.
+- **IR3 individual return**, for each owner: their share of every rental on the residential and rental schedules, the income that never reaches your bank accounts (salary and PAYE, interest and RWT, dividends, PIE income, entered on the same page), and the tax — residual income tax, the refund or tax to pay once you enter the provisional tax paid, and next year's provisional tax.
 - The **fixed asset** schedule with depreciation. When an asset is sold, what it fetched is read from your previous system's disposal journal if there is one; otherwise you enter it.
 - **Shareholder current account** movements.
 

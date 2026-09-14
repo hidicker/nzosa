@@ -653,6 +653,9 @@ export function recomputeVariance(): void {
     overrides: state.ledger.overrides ?? {},
     rules: state.rules,
     notes: state.ledger.varianceNotes ?? [],
+    // A pairing the ledger posts as a transfer is out of scope on the return
+    // too, rather than left to what the bank line happens to say.
+    transfers: state.ledger.transfers ?? {},
     // The same fallback the profit and loss uses, so an account treated by the
     // chart is treated the same way in both.
     chartTreatment: (code: string) => chartTreatmentOf(code),

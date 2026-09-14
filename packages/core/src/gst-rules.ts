@@ -120,6 +120,19 @@ export interface GstRulesOptions {
    * have its own opinion about what a transaction is.
    */
   codeOf?: (transaction: Transaction) => string | null;
+  /**
+   * Transfers recorded between your own accounts, each leg keyed to its partner.
+   *
+   * A pairing somebody made -- or accepted -- is a better answer than any
+   * keyword. Without it the return had only the words on the bank line to go
+   * by, and a card repayment reads like anything: "INTERNET XFR" is excluded
+   * only when the other end is known to be yours, and "DD PAYMENT - THANK Y"
+   * matched nothing at all. On real books 29 legs of card repayments fell
+   * through to "assumed standard-rated", claiming 751.33 of GST that did not
+   * exist and inflating Boxes 5 and 11 by every direct debit -- while the
+   * ledger, which reads the pairing, posted them as the transfers they were.
+   */
+  transfers?: Readonly<Record<string, string>>;
 }
 
 /**
@@ -225,7 +238,19 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
     .sort((a, b) => (b.rule.priority ?? 0) - (a.rule.priority ?? 0) || a.index - b.index)
     .map((entry) => entry.rule);
 
+  const transfers = options.transfers ?? {};
+
   return (transaction: Transaction): GstClassification => {
+    // First, as it is in the postings: a leg of a recorded transfer is not a
+    // supply, whatever else has been said about it.
+    if (transfers[transaction.id] !== undefined) {
+      return {
+        treatment: "out-of-scope",
+        side: "none",
+        reason: "Recorded as a transfer between your own accounts: not a supply",
+      };
+    }
+
     const manual = gstOverride(transaction, options.overrides);
     if (manual) return manual;
 

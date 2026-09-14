@@ -141,6 +141,9 @@ export function computeGstReturns(
     codeOf: (t) => categorise(t, codingRules).code,
     // Manual answers and split-part coding beat the rule file and the defaults.
     overrides: expanded.overrides,
+    // The app's return and this one read the same pairings, or they disagree
+    // about every card repayment.
+    ...(ledger.transfers ? { transfers: ledger.transfers } : {}),
   });
 
   const { from, to } = options.range;

@@ -46,6 +46,14 @@ export interface VarianceInput {
    * and the difference looked like a disagreement with what was filed.
    */
   chartTreatment?: (code: string) => unknown | null;
+  /**
+   * The transfers recorded between your own accounts.
+   *
+   * The ledger posts a paired transfer as a transfer; the return has to treat
+   * it the same way, or a card repayment the books show as a transfer is
+   * claimed on the return as a purchase.
+   */
+  transfers?: Readonly<Record<string, string>>;
 }
 
 export interface VarianceRow {
@@ -122,6 +130,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     ...(input.chartTreatment ? { chartTreatment: input.chartTreatment as never } : {}),
     codeOf: (t) => categorise(t, codingRules).code,
     overrides: expanded.overrides,
+    ...(input.transfers ? { transfers: input.transfers } : {}),
   });
 
   return gstPeriods({ from, to }, { months: 2, anchorMonth: 3 }).map((period) =>

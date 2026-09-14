@@ -58,6 +58,13 @@ export interface Ledger {
    */
   splits?: Splits;
   /**
+   * Transfers between your own accounts, each leg keyed to its partner.
+   *
+   * The app records these when two lines are paired. A return needs them: a
+   * paired card repayment is not a supply, however its bank line reads.
+   */
+  transfers?: Record<string, string>;
+  /**
    * Invoices, kept beside the transactions rather than turned into them.
    *
    * One invoice can be settled by several receipts and one receipt can carry
@@ -246,6 +253,7 @@ export function loadLedger(path: string): Ledger {
     ...(ledger.balances ? { balances: ledger.balances } : {}),
     ...(ledger.overrides ? { overrides: ledger.overrides } : {}),
     ...(ledger.splits ? { splits: ledger.splits } : {}),
+    ...(ledger.transfers ? { transfers: ledger.transfers } : {}),
     ...(ledger.invoices ? { invoices: ledger.invoices } : {}),
     ...(ledger.allocations ? { allocations: ledger.allocations } : {}),
     ...(ledger.journals ? { journals: ledger.journals } : {}),

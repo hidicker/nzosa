@@ -474,3 +474,31 @@ test("a zero-rated sale still passes through Box 5 and out again at Box 6", () =
   assert.equal(result.boxes.box7, 0);
   assert.equal(result.boxes.box8, 0);
 });
+
+test("a transfer recorded between your own accounts is out of scope, however the bank line reads", () => {
+  // Card repayments paired as transfers in the ledger fell through to
+  // "assumed standard-rated" here: the bank side of an internet transfer
+  // claimed GST on the whole repayment, and a direct debit counted both sides.
+  const bankLeg = txn("2025-11-17", -150000, {
+    id: "bank-leg", account: "bank-01", otherParty: "Sample Company INTERNET XFR",
+  });
+  const cardLeg = txn("2025-11-17", 150000, {
+    id: "card-leg", account: "card-01", otherParty: "CARD REPAYMENT RECEIVED",
+  });
+
+  const unpaired = gstResolver({});
+  assert.equal(unpaired(bankLeg).assumed, true, "without the pairing it is only a guess");
+
+  const resolve = gstResolver({ transfers: { "bank-leg": "card-leg", "card-leg": "bank-leg" } });
+  for (const leg of [bankLeg, cardLeg]) {
+    const classification = resolve(leg);
+    assert.equal(classification.treatment, "out-of-scope");
+    assert.equal(classification.side, "none");
+    assert.notEqual(classification.assumed, true);
+  }
+
+  const period = { from: "2025-10-01", to: "2025-11-30" };
+  const result = gstReturn([bankLeg, cardLeg], period, { resolve, basis: "payments" });
+  assert.equal(result.boxes.box5, 0, "nothing in sales");
+  assert.equal(result.boxes.box11, 0, "nothing in purchases");
+});

@@ -214,6 +214,41 @@ export function transfersAlsoCoded(): Transaction[] {
 }
 
 /**
+ * Bank lines coded to Accounts Receivable or Payable that settle no invoice.
+ *
+ * Coded that way a payment clears the balance, but no invoice is marked paid:
+ * the invoice still shows as owing, and receivables are overstated by exactly
+ * the payment until somebody notices. Matching it to its invoice is the fix,
+ * so each one is listed where that can be done.
+ *
+ * Payables only once there are bills to match against. Without them a payment
+ * of an old bill coded to payables is the right answer, not a loose end.
+ */
+export function clearingWithoutInvoice(): Transaction[] {
+  const overrides = state.ledger.overrides ?? {};
+  const splits = state.ledger.splits ?? {};
+  const transfers = state.ledger.transfers ?? {};
+  const assigned = invoiceAssignments();
+  const bills = (state.ledger.invoices ?? []).some((i) => i.kind === "purchase");
+  const receivable = /\b610\b|accounts\s+receivable/i;
+  const payable = /\b800\b|accounts\s+payable/i;
+  const flagged = (code: string | undefined): boolean =>
+    code !== undefined && (receivable.test(code) || (bills && payable.test(code)));
+
+  return state.ledger.transactions.filter((t) => {
+    if (transfers[t.id] !== undefined || assigned.has(t.id)) return false;
+    const parts = splits[t.id];
+    if (parts !== undefined) {
+      return parts.some(
+        (part, index) => flagged(part.code) && !assigned.has(`${t.id}:${index + 1}`),
+      );
+    }
+    const override = overrides[t.id];
+    return override?.confirmed === true && flagged(override.code);
+  });
+}
+
+/**
  * Refuse to code a line that is one leg of a recorded transfer, and say why.
  *
  * True when refused. Every route that confirms a coding asks this first, so

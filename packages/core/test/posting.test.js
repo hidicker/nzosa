@@ -452,4 +452,59 @@ test("a split of two fully deductible parts is unaffected", () => {
   assert.equal(summary.box12, 3000);
 });
 
+test("a receipt coded to Accounts Receivable clears it whole, with no GST line of its own", () => {
+  // Three real payments coded this way put 3/23 of themselves into GST, which
+  // their invoices had already booked, and left the invoices owing.
+  const journal = postTransaction(bank(115000), [
+    { amount: 115000, code: "610", classification: standard("sales") },
+  ]);
+  assert.equal(journalImbalance(journal), 0);
+  const by = Object.fromEntries(journal.lines.map((l) => [l.accountCode, l]));
+  assert.equal(by["610"].amount, -115000, "the whole payment clears the receivable");
+  assert.equal(by["820"], undefined, "no GST line: the invoice booked it");
+  assert.equal(by["610"].taxType, "OUTPUT2", "the tag stays, for a payments-basis return");
+  assert.equal(journal.taxBasis, "payments");
+});
 
+test("a bill payment coded to Accounts Payable by name clears it the same way", () => {
+  const journal = postTransaction(bank(-10000), [
+    { amount: -10000, code: "Accounts Payable - 800", classification: standard("purchases") },
+  ]);
+  assert.equal(journalImbalance(journal), 0);
+  assert.equal(journal.lines.filter((l) => l.accountCode === "820").length, 0);
+  assert.equal(journal.lines.find((l) => l.accountCode !== "bank-01").amount, 10000);
+});
+
+test("a sale coded to receivables on its receipt is counted once on each basis", () => {
+  const raised = postInvoice(invoice);
+  const paid = postTransaction(bank(115000), [
+    { amount: 115000, code: "610", classification: standard("sales") },
+  ]);
+  const onInvoice = taxSummary([raised, paid], { basis: "invoice" });
+  const onPayments = taxSummary([raised, paid], { basis: "payments" });
+  assert.equal(onInvoice.box5, 115000, "invoice basis: the invoice, not the receipt as well");
+  assert.equal(onInvoice.box8, 15000);
+  assert.equal(onPayments.box5, 115000, "payments basis: counted when it arrived");
+  assert.equal(onPayments.box8, 15000);
+
+  const tb = trialBalance([raised, paid]);
+  assert.equal(tb.imbalance, 0);
+  // Summed by code: with no chart to name them, the clearing line and the
+  // invoice's line carry different names for the same account.
+  const row = (code) =>
+    tb.rows.filter((r) => r.accountCode === code).reduce((sum, r) => sum + r.balance, 0);
+  assert.equal(row("610"), 0, "the invoice raised it and the receipt cleared it");
+  assert.equal(row("820"), -15000, "GST once, from the invoice");
+});
+
+test("a split that clears a receivable and codes a supply tags only the supply", () => {
+  const journal = postTransaction(bank(115000), [
+    { amount: 100000, code: "610", classification: standard("sales") },
+    { amount: 15000, code: "200", classification: standard("sales") },
+  ]);
+  assert.equal(journalImbalance(journal), 0);
+  const receivable = journal.lines.find((l) => l.accountCode === "610");
+  assert.equal(receivable.amount, -100000);
+  assert.equal(receivable.taxType, "NONE", "no tag, so the invoice basis cannot count it again");
+  assert.equal(journal.taxBasis, "both");
+});

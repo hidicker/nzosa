@@ -246,7 +246,28 @@ export function postTransaction(
     };
   }
 
-  for (const part of parts) {
+  // Receivables and payables are balances, not supplies. A bank line coded
+  // straight to one is a payment against an invoice or a bill, whose GST was
+  // booked when the document was raised -- so it clears the balance whole, the
+  // way a payment matched to its invoice does, and posts no tax line of its
+  // own. Splitting 3/23 of it into GST booked that tax a second time: three
+  // customer payments did, and the GST account on real books was 890.47 over
+  // while their invoices still showed as owing.
+  const receivableCode = options.receivableCode ?? "610";
+  const payableCode = options.payableCode ?? "800";
+  const clears = (account: { code: string; name: string } | null): boolean =>
+    account !== null &&
+    (account.code === receivableCode ||
+      account.code === payableCode ||
+      /\baccounts\s+(receivable|payable)\b/i.test(`${account.code} ${account.name}`));
+  const clearing = parts.map((part) => part.code !== null && clears(resolve(part.code)));
+  // The tag on a clearing line is the payment's tax falling due, which is the
+  // payments basis only: on the invoice basis the document already supplied
+  // it. A journal that clears and also codes a supply cannot say both, so its
+  // clearing lines carry no tag rather than count twice on the invoice basis.
+  const allClearing = parts.length > 0 && clearing.every(Boolean);
+
+  for (const [index, part] of parts.entries()) {
     const tax = gstWithin(part.amount, part.classification);
     const taxType = taxTypeFor(part.classification);
     const account = part.code === null ? null : resolve(part.code);
@@ -261,6 +282,19 @@ export function postTransaction(
         taxType,
         taxBase: part.amount,
         description: part.description ?? "GST paid at the border",
+      });
+      continue;
+    }
+
+    if (clearing[index] === true && account !== null) {
+      lines.push({
+        accountCode: account.code,
+        accountName: account.name,
+        amount: -part.amount,
+        ...(allClearing
+          ? { taxType, taxBase: part.amount }
+          : { taxType: "NONE" as TaxType }),
+        description: part.description ?? "",
       });
       continue;
     }
@@ -294,8 +328,9 @@ export function postTransaction(
     narration: transaction.otherParty || transaction.particulars || "",
     lines,
     source: "bank",
-    // Nothing was invoiced, so the tax point is this date on either basis.
-    taxBasis: "both",
+    // Nothing was invoiced, so the tax point is this date on either basis --
+    // unless all it did was clear a balance, whose tax falls due when paid.
+    taxBasis: allClearing ? "payments" : "both",
   };
 }
 

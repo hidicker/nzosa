@@ -13,6 +13,7 @@ import {
   accountDecided,
   codingRefusedForTransfer,
   transfersAlsoCoded,
+  clearingWithoutInvoice,
 } from "../books.js";
 import { compareCodings, inferAccountMapping } from "../check-ui.js";
 import { combobox } from "../combobox.js";
@@ -172,6 +173,21 @@ export function renderReconcile(): void {
           "coded to an account as well. Only the transfer posts, so the account is short: " +
           clashes.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
           '. Set the filter to All, find each one, and press "not a transfer" on any that is not.',
+      ),
+    );
+  }
+
+  // A payment coded to receivables with no invoice matched leaves that invoice
+  // owing for ever. Said at the top for the same reason as the transfers.
+  const unsettled = clearingWithoutInvoice();
+  if (unsettled.length > 0) {
+    body.append(
+      note(
+        `${unsettled.length} line${unsettled.length === 1 ? " is" : "s are"} coded to Accounts ` +
+          "Receivable or Payable without being matched to an invoice, so no invoice is marked " +
+          "paid: " +
+          unsettled.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
+          '. Set the filter to All, find each one, and match it under "Settles which invoice?".',
       ),
     );
   }
@@ -1218,7 +1234,11 @@ function invoiceLineFor(
   const paying = Math.abs(transaction.amount);
 
   const describe = (invoice: Invoice): string => {
-    const owing = balances.get(invoice.number)?.remaining ?? invoice.total;
+    const owing = Math.max(
+      (balances.get(invoice.number)?.remaining ?? invoice.total) +
+        shareOf(transaction, invoice.number),
+      0,
+    );
     const after = owing - paying;
     const what =
       after === 0
@@ -1237,7 +1257,11 @@ function invoiceLineFor(
     .filter(
       (invoice) =>
         invoice.kind === kind &&
-        (balances.get(invoice.number)?.remaining ?? invoice.total) > 0 &&
+        // Owing before this payment, so a line already matched can be matched
+        // again to the invoice it paid -- including one it overpaid.
+        (balances.get(invoice.number)?.remaining ?? invoice.total) +
+          shareOf(transaction, invoice.number) >
+          0 &&
         !candidates.some((c) => c.number === invoice.number),
     )
     .sort((a, b) => b.issued.localeCompare(a.issued))
@@ -1280,8 +1304,10 @@ function invoiceLineFor(
       (i) => i.number === number,
     );
     if (invoice === undefined) return 0;
-    return Math.abs(
-      invoiceBalanceMap().get(number)?.remaining ?? invoice.total,
+    return Math.max(
+      (invoiceBalanceMap().get(number)?.remaining ?? invoice.total) +
+        shareOf(transaction, number),
+      0,
     );
   };
 
@@ -1333,7 +1359,9 @@ function invoiceLineFor(
 
     match.textContent =
       gathered.length === 0
-        ? "Match"
+        ? all.length === 1 && left > 0
+          ? `Match, splitting off ${formatAmount(left)}`
+          : "Match"
         : `Settle ${gathered.length + 1} invoices`;
     add.hidden = gathered.length === 0 && numberOf(picker.value) === "";
   };
@@ -1352,7 +1380,16 @@ function invoiceLineFor(
     const all = number === "" ? [...gathered] : [...gathered, number];
     if (all.length === 0) return;
     if (all.length === 1) {
-      void matchToInvoice(transaction, all[0] as string);
+      const only = all[0] as string;
+      // More than the invoice still owes: the rest is split off as a part of
+      // its own, as it is with several invoices, rather than left inside this
+      // one as an overpayment that misstates it.
+      const owed = owingOn(only);
+      if (owed > 0 && Math.abs(transaction.amount) > owed) {
+        void matchToInvoices(transaction, all);
+        return;
+      }
+      void matchToInvoice(transaction, only);
       return;
     }
     void matchToInvoices(transaction, all);
@@ -1529,6 +1566,14 @@ async function matchToInvoice(
  * no invoice on it: an overpayment is real and hiding it inside the last
  * invoice would misstate both that invoice and the account it posts to.
  *
+ * One invoice is enough when the payment is more than it owes. Xero splits such
+ * a receipt into the payment and an adjustment; left whole, the invoice reads
+ * as overpaid and the extra is hidden inside it.
+ *
+ * What each invoice owes is counted before this payment. Re-matching a line
+ * already tied to an invoice otherwise set the payment against itself, and an
+ * invoice it had overpaid by 0.72 offered 0.72 to settle.
+ *
  * No arithmetic is guessed at. Sums of open invoices collide constantly -- on
  * one real ledger 1,295 combinations of two or three matched some receipt
  * exactly -- so which invoices a payment settles is a question only the person
@@ -1542,7 +1587,7 @@ async function matchToInvoices(
   const chosen = numbers
     .map((number) => invoices.find((i) => i.number === number))
     .filter((i): i is Invoice => i !== undefined);
-  if (chosen.length < 2) return;
+  if (chosen.length === 0) return;
 
   const balances = invoiceBalanceMap();
   const sign = transaction.amount < 0 ? -1 : 1;
@@ -1552,8 +1597,12 @@ async function matchToInvoices(
   const assigned: string[] = [];
   for (const invoice of chosen) {
     if (left <= 0) break;
-    const owing = balances.get(invoice.number)?.remaining ?? invoice.total;
-    const take = Math.min(Math.abs(owing), left);
+    const owing = Math.max(
+      (balances.get(invoice.number)?.remaining ?? invoice.total) +
+        shareOf(transaction, invoice.number),
+      0,
+    );
+    const take = Math.min(owing, left);
     if (take <= 0) continue;
     parts.push({
       amount: sign * take,
@@ -1604,6 +1653,27 @@ async function matchToInvoices(
   );
   reclassify();
   redraw("reconcile");
+}
+
+/**
+ * How much of an invoice this bank line already pays, directly or through its
+ * split parts.
+ *
+ * The balances count every payment matched to an invoice, this one included.
+ * Asking what an invoice owes *before* this payment means adding its own share
+ * back, or re-matching a line reads the invoice as already paid by it.
+ */
+function shareOf(transaction: Transaction, number: string): number {
+  const assigned = invoiceAssignments();
+  if (assigned.get(transaction.id) === number) return Math.abs(transaction.amount);
+  const parts = (state.ledger.splits ?? {})[transaction.id] ?? [];
+  return parts.reduce(
+    (sum, part, index) =>
+      assigned.get(splitPartId(transaction.id, index)) === number
+        ? sum + Math.abs(part.amount)
+        : sum,
+    0,
+  );
 }
 
 /** The single account an invoice codes to, when it has only one. */

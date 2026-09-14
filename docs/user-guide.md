@@ -164,21 +164,39 @@ Three things to know:
 
 **It flags what it is unsure about rather than guessing.** A line it cannot place stays visible until you deal with it. An empty Reconcile page means the books are done, not that it gave up.
 
+**Every confirmed line has an account.** A line cannot be confirmed with nothing on it: pick an account, split it, or match it to an invoice. Confirming a line with no account used to take it off the list and post it nowhere.
+
 ### The three that catch people out
 
 **Transfers.** Moving money between your own accounts is not income and not an expense. The software looks for the matching leg and offers it as a transfer for you to confirm. Check the pairing before confirming — two unrelated payments of the same round amount a day apart look identical to a computer, and confirming a false transfer hides two real transactions at once.
 
-**Customer payments.** If you raise invoices, a receipt should settle the invoice, not count as a fresh sale. Coding it as a sale counts the same income twice and leaves the invoice looking unpaid for ever. Where one payment covers several invoices, split it — there is a button for exactly that.
+A line is either a transfer or coded to an account, never both. **Accept all** confirms the other suggestions on screen and leaves any line that could be a transfer unconfirmed, for you to look at on its own. A line that already has an account is never matched as a transfer for you; if it really is one, linking it asks before removing the coding. Any line left in both states from before this rule is listed at the top of **Reconcile**.
 
-**Entertainment.** Most business entertainment is only half deductible in New Zealand. The **Split 50/50** button does the halving and the GST correctly. Use it rather than coding the whole amount.
+**Customer payments.** If you raise invoices, a receipt should settle the invoice, not count as a fresh sale. Coding it as a sale counts the same income twice and leaves the invoice looking unpaid for ever. Match it under **Settles which invoice?** on the line.
+
+- One payment for several invoices: pick each one, with **and another invoice** between them. The payment is divided, a part for each invoice.
+- A payment that is more than the invoice still owes: the button reads **Match, splitting off** the extra. The invoice is settled, and the extra becomes a part of its own for you to code — a rounding, a fee reimbursed, an overpayment.
+- A receipt coded straight to Accounts Receivable without being matched leaves its invoice owing. **Reconcile** lists any such line at the top.
+
+**Entertainment.** Most business entertainment is only half deductible in New Zealand. The **Split 50/50** button does the halving, the GST and the notes correctly. Use it rather than coding the whole amount.
 
 ---
 
 ## GST
 
-**GST reconciliation** builds your return from the ledger for whatever period you are on.
+**GST reconciliation** builds your returns from your coding, period by period, on the payments basis.
 
-If you load the returns you have already filed, it compares each one against what the books now say and shows the difference. Differences are normal and not automatically errors — but each one should have an explanation, and there is somewhere to record it.
+Load the returns you have already filed — the workbook your accounting system exports, with its page of transactions — and each period is shown against what the books now say, as Box 8 less Box 12. Click a period to see the lines behind the difference: those in the filed return and not in yours, and those in yours and not in the return. A payment the other system recorded against two or three invoices is paired with the one bank line it arrived as.
+
+Differences are normal and not automatically errors. The usual ones:
+
+- **Timing.** A card charge carries the card's date here and the other system's date there, and near a month end it lands in the next period. It evens out.
+- **Entries the other system reversed after filing.** A filed return can hold a receipt that was later taken out and put into a later period.
+- **Something miscoded.** The one worth finding.
+
+Each difference should have an explanation, and each period has somewhere to write it: an amount — yours less the filed figure — and a reason. **Left** then shows only what nobody has explained yet.
+
+Two things the return gets right without being told. A transfer between your own accounts is never on a return, however its bank line reads. And a refund goes back into the box its account belongs to: a refund from a supplier reduces purchases, a refund to a customer reduces sales.
 
 Check the return before you file it. It is your return.
 
@@ -186,16 +204,21 @@ Check the return before you file it. It is your return.
 
 ## Year end
 
-What your accountant will want, and what this produces:
+What your accountant will want, and what this produces. **Reports** opens on a list of every report, grouped the way an accounting package groups them — financial statements, taxes and balances, transactions — with the ones you star kept at the top.
 
-- **Profit and loss** and **balance sheet**, on **Reports**
-- **IR10** figures
-- The **fixed asset** schedule with depreciation
-- **Shareholder current account** movements
+- **Profit and loss**, set out under trading income, cost of sales, gross profit, other income and operating expenses. Click any line to see what is in it.
+- **Balance sheet.** For a company, the shareholder current accounts are one current liability, the way signed statements set them out.
+- **IR10**, set out exactly as the form is filed: every box from 1 to 60, in whole dollars, including the tax adjustments and the disclosure boxes.
+- The **fixed asset** schedule with depreciation. When an asset is sold, what it fetched is read from your previous system's disposal journal if there is one; otherwise you enter it.
+- **Shareholder current account** movements.
+
+Choose **Accrual (imported file)** as the basis and the profit and loss, balance sheet and IR10 become your previous system's own figures, read from its journal report — so the two can be laid side by side.
+
+Draft invoices are not posted, and neither are voided or deleted ones: until an invoice is approved it is not in the books.
 
 Two things the software cannot know, and will not pretend to:
 
-1. **Judgement journals.** Provisions, reclassifications, and year-end adjustments your accountant makes in their working papers. Once made, they can be entered as manual journals — every one needs a reason typed against it, because a journal nobody can explain is one nobody can defend.
+1. **Judgement journals.** Provisions, reclassifications, and year-end adjustments your accountant makes in their working papers. Once made, they are entered on **Reports → Manual journals**: as many lines as the entry needs, to any account including a bank account, and it will not save until it balances. Every one needs a reason typed against it, because a journal nobody can explain is one nobody can defend.
 2. **Anything that never touched a bank account.** Non-cash adjustments, and anything that happened before the books start.
 
 Expect your accountant to make adjustments. That is what they are for. The point of this software is that they start from a complete, balanced, explainable ledger rather than from a shoebox.
@@ -207,6 +230,8 @@ Expect your accountant to make adjustments. That is what they are for. The point
 **A number you cannot account for.** Every figure decomposes. Click through from the report to the account to the transactions behind it.
 
 **Check nothing is missing.** **Bank import → Import bank balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
+
+**Comparing with your previous system.** **Coding reconciliation** lines up the coding of every bank line against the one your previous system gave it, and lists the ones that disagree with a button to take either answer. A payment matched to an invoice shows as **settles INV-…**: taking the other system's coding for it takes it off the invoice too, and keeping yours keeps the match.
 
 **Undo it.** **History** records every change, most recent first, with a way to put it back.
 

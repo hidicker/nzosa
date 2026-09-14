@@ -432,6 +432,20 @@ Two cases worth knowing:
 - **Imports**: the line *is* the tax, so there is no supply line beside it.
 - **Half-deductible**: a return claims a share of the *gross* and takes 3/23 of
   that, not a share of the tax. The two differ by a cent often enough to matter.
+- **Receivables and payables**: a bank line or split part coded straight to
+  Accounts Receivable or Payable posts one clearing line for the whole amount,
+  carrying the tax tag, and no GST line -- the document booked the tax. A
+  journal made only of clearing parts is `taxBasis: "payments"`; mixed with a
+  supply, its clearing lines carry `NONE` so the invoice basis cannot count
+  them twice.
+
+`postLedger` posts only approved invoices: `isPosted` refuses a draft, one
+submitted or awaiting approval, and a voided or deleted one; a blank status
+counts as posted. Manual journals resolve a bank account -- by ledger id, bank
+label, or the chart account linked to it -- to the ledger's own key *before*
+the label is split, because an account number reads as code 001 to
+`splitAccountLabel`. Bank line codings do not get that resolution: a bank line
+coded to another bank account is a transfer question.
 
 ## 7. The event log: `events.ts`
 
@@ -446,15 +460,25 @@ applying `before` back over the target.
 - `who` is **attribution, not authentication**, and the UI says so. Do not let
   that wording soften.
 - Capped at 5,000, oldest falling off.
+- `varianceNote` carries the whole list of GST return explanations; reversal
+  puts the previous list back.
 
 ## 8. GST engine
 
 `gstResolver` composes, in precedence order:
 
-1. Override on the transaction
-2. Code treatment (`codeTreatments`, keyed by account name)
+1. A recorded transfer (`transfers`) -- out of scope, before anything else, as
+   the postings treat it. Without the pairings a card repayment reads as
+   whatever its bank line says; 29 real legs were once assumed standard-rated.
+2. Override on the transaction. Its side then follows the account's, from
+   `codeTreatments` or `chartTreatment`, where the account says which side it
+   is on -- a refund is not a sale because money came in.
 3. GST rules (keyword and account patterns)
-4. Direction of the amount
+4. Code treatment (`codeTreatments`, keyed by account name), then the chart's
+5. Direction of the amount, marked `assumed`
+
+Every caller that builds a return passes `transfers`: the GST reconciliation in
+the app and `computeGstReturns` on the command line.
 
 `GstTreatment` is `standard | zero-rated | exempt | out-of-scope`; `GstSide` is
 `sales | purchases | imports | none`.
@@ -540,6 +564,30 @@ lines to 437 / 985: one journal of two lines replacing two of two.
 Candidates come from `transferCandidates` in `reconcile.ts` — never applied
 automatically, for the same reason no rule confirms a coding.
 
+### A payment across invoices, or more than one invoice owes
+
+`matchToInvoices` in `daily/reconcile-page.ts` divides a payment into a part
+per invoice, each part keyed `id:n` in `invoiceMatches`. One invoice is enough
+when the payment is more than it owes: the rest becomes an uncoded part of its
+own. What an invoice owes is counted *before* the payment being matched --
+`shareOf` adds the line's own share back -- or re-matching a line reads the
+invoice as already paid by it, and an overpaid invoice, whose remaining is
+negative, offers its overpayment to settle.
+
+### A line is a transfer or coded, never both
+
+Posted, a transfer wins and any account on the same line silently gets nothing.
+So `accountDecided()` in `books.ts` says whether a line has an account by any
+route; Accept all holds back any line with a transfer candidate; a line with an
+account is nobody's candidate; `linkTransfer` asks before removing a plain
+coding and refuses a split or an invoice match; every confirming path calls
+`codingRefusedForTransfer`; and `transfersAlsoCoded()` and
+`clearingWithoutInvoice()` list what is left over at the top of Reconcile.
+
+In the coding comparison a line settling an invoice is compared as the clearing
+account, and accepting another system's coding for it records a refusal
+(`invoiceMatches[id] = ""`) so the matcher does not claim it again.
+
 ## 10. Reporting
 
 `profitAndLoss` (cash) and `accrualProfitAndLoss` (ledger) return the same
@@ -556,6 +604,33 @@ automatically, for the same reason no rule confirms a coding.
 An account's **type** (Revenue, Direct Costs, Overhead…)
 decides income vs expense vs neither. Accounts that exist only as a coding rule
 have no type until one is set, and get promoted into the chart when it is.
+
+### The layouts
+
+- **Profit and loss** is partitioned by `groupProfitAndLoss` under trading
+  income, cost of sales, gross profit, other income and operating expenses,
+  from the account type. A partition, so its net profit is the report's.
+- Lines **not in the profit figure** carry a description from
+  `balanceSheetRole(type, name)`.
+- **Balance sheet and IR10** take their journals from `positionJournals()` in
+  `daily/reports.ts`: on the imported basis `postedFromImported` turns the
+  journal report into posted journals, bank lines re-keyed through the chart's
+  links; otherwise the postings. `computeBalanceSheet({
+  shareholderCurrentAccounts, profitInRetainedEarnings })` sets a company's
+  books out as signed statements do, and `isShareholderCurrentAccount` is the
+  one test it and the IR10 share.
+- **IR10** (`ir10.ts`) follows the current form, boxes 1 to 60 in
+  `IR10_LAYOUT`. Each box is its accounts' exact sum rounded to the dollar;
+  boxes 11 and 25 are rounded from exact totals, with 10 and 24 taking the
+  rounding; 6, 27, 29, 43, 48, 50 and 51 are arithmetic on rounded boxes. This
+  reproduces a filed return box for box; round any other way and it stops
+  agreeing.
+- **The reports list** is built from the `optgroup`s of `#report-kind`, so the
+  list and the picker cannot disagree. Favourites are per browser, in
+  `localStorage`.
+- **GST reconciliation** (`variance.ts`) pairs detail lines by amount within
+  three weeks, then tries a remaining bank line against two or three filed
+  lines within a week that sum to it. Explanations are `varianceNotes`.
 
 ## 11. Files it reads
 

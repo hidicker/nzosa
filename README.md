@@ -45,7 +45,7 @@ Started either of those ways, your books are files in a folder you can back up a
 
 ## Status
 
-In use on real books. Import, coding, GST, invoices, fixed assets, reporting and return preparation are built and tested.
+In use on real books. Import, coding, GST, invoices, fixed assets, reporting and return preparation are built and tested. A full year has been reconciled against a practitioner's signed accounts: the profit and loss, balance sheet and IR10 agree with the filed figures to the dollar, and every GST return difference is explained.
 
 Every figure is meant to be checkable, and the guides say how to check it. Do that before relying on it.
 

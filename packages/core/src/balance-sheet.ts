@@ -32,6 +32,57 @@ export interface OpeningBalances {
   byDate?: Record<IsoDate, Record<string, Cents>>;
 }
 
+/**
+ * Re-key opening balances whose account has since been identified.
+ *
+ * A trial balance names its bank rows the way the other system does -- "BNZ 01
+ * -  Arrow Rock Trading Account" -- and this ledger numbers them. If it is
+ * loaded before anybody has said which is which, those rows are stored under
+ * the name, and they sit apart from the account they belong to for ever:
+ * reports show both, and neither is right.
+ *
+ * Saying which is which is a thing people do later, on the chart of accounts,
+ * and doing it should settle the figures already loaded rather than leaving a
+ * re-import as the only way. So this is applied when a link is made.
+ *
+ * Amounts are added where a key now resolves to one already present, because
+ * two rows becoming the same account is exactly what has just been said. A key
+ * that resolves to nothing, or to itself, is left alone.
+ */
+export function relabelOpeningBalances(
+  balances: OpeningBalances,
+  resolve: (key: string) => string | undefined,
+): { balances: OpeningBalances; moved: string[] } {
+  const moved: string[] = [];
+
+  const relabel = (accounts: Record<string, Cents>): Record<string, Cents> => {
+    const out: Record<string, Cents> = {};
+    for (const [key, amount] of Object.entries(accounts)) {
+      const to = resolve(key);
+      const target = to === undefined || to === "" ? key : to;
+      if (target !== key && !moved.includes(key)) moved.push(key);
+      out[target] = (out[target] ?? 0) + amount;
+    }
+    return out;
+  };
+
+  const byDate = balances.byDate;
+  return {
+    balances: {
+      ...balances,
+      accounts: relabel(balances.accounts),
+      ...(byDate
+        ? {
+            byDate: Object.fromEntries(
+              Object.entries(byDate).map(([date, accounts]) => [date, relabel(accounts)]),
+            ),
+          }
+        : {}),
+    },
+    moved,
+  };
+}
+
 export interface BalanceSheetLine {
   code: string;
   name: string;

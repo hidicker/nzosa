@@ -28,6 +28,7 @@ import {
   ownersTotal,
   parseOwners,
   rateForTreatment,
+  relabelOpeningBalances,
   renameAccount,
   renameProblem,
   reportsNetOfGst,
@@ -799,7 +800,21 @@ async function setLedgerAccount(account: Account, to: string): Promise<void> {
 
   state.chart = chart;
   state.ledger = { ...state.ledger, chart };
-  state.persistent = await savePart(state.ledger, "chart");
+
+  // Opening balances loaded before this link was made hold the bank row under
+  // the name the other system gave it. Saying which account it is should
+  // settle those too, rather than leaving a re-import as the only way to move
+  // them onto the account they belong to.
+  const held = state.ledger.openingBalances;
+  if (held !== undefined && to !== "" && to !== NOT_IN_LEDGER) {
+    const name = account.name.trim().toLowerCase();
+    const { balances, moved } = relabelOpeningBalances(held, (key) =>
+      key.trim().toLowerCase() === name ? to : undefined,
+    );
+    if (moved.length > 0) state.ledger = { ...state.ledger, openingBalances: balances };
+  }
+
+  state.persistent = await savePart(state.ledger);
   await record(
     "chart",
     to === ""

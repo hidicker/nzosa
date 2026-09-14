@@ -154,6 +154,24 @@ export async function loadWhatever(files: File[]): Promise<void> {
     say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} imported.`);
   }
 
+  // Order matters, and a file picker hands them over in whatever order it
+  // likes. A trial balance read before the chart of accounts recognises none
+  // of its codes -- every account is reported as unknown and the opening
+  // balances land under names nothing else uses -- and it reads the bank rows
+  // through the chart's links, so the chart has to be in first. The same is
+  // true in smaller ways of the rest: they all resolve account names.
+  const ORDER: Record<string, number> = {
+    chart: 0,
+    "account-transactions": 0,
+    "journal-report": 1,
+    "general-ledger-detail": 1,
+    invoices: 2,
+    allocations: 2,
+    "fixed-assets": 2,
+    "trial-balance": 3,
+  };
+  rest.sort((a, b) => (ORDER[a.identified.kind] ?? 2) - (ORDER[b.identified.kind] ?? 2));
+
   for (const { file, identified } of rest) {
     try {
       switch (identified.kind) {

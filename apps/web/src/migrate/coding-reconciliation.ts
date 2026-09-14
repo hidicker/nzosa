@@ -418,7 +418,34 @@ export function renderCheck(): void {
   );
   const proposedBy = new Map(proposals.map((one) => [one.transaction.id, one.code]));
 
-  const coded = suggestions.map((one) => ({ transaction: one.transaction, code: one.code }));
+  // A payment matched to an invoice posts to receivables or payables, whatever
+  // code it carries. Matching codes it from the invoice -- Sales, say -- but
+  // the invoice booked the sale, and the payment only clears the debtor. The
+  // other system reports the same payment against Accounts Receivable, so
+  // compared by its own code it read as a disagreement that could not be
+  // settled: accepting the other coding changed nothing that posts.
+  const assignedTo = invoiceAssignments();
+  const invoiceKind = new Map((state.ledger.invoices ?? []).map((i) => [i.number, i.kind]));
+  const clearingLabel = (kind: string | undefined): string => {
+    const receivable = kind !== "purchase";
+    const wanted = receivable ? "accounts receivable" : "accounts payable";
+    const account = state.chart.find((a) => a.type.trim().toLowerCase() === wanted);
+    return account !== undefined
+      ? `${account.code} ${account.name}`.trim()
+      : receivable
+        ? "610 Accounts Receivable"
+        : "800 Accounts Payable";
+  };
+  const coded = suggestions.map((one) => {
+    const settles = assignedTo.get(one.transaction.id);
+    return {
+      transaction: one.transaction,
+      code:
+        settles !== undefined && settles !== ""
+          ? clearingLabel(invoiceKind.get(settles))
+          : one.code,
+    };
+  });
   state.accountMap = inferAccountMapping(coded, state.reference);
 
   const result = compareCodings(coded, state.reference, {
@@ -756,8 +783,14 @@ function section(
   const rowOptions = sortedRows.map((row) => {
     const override = (state.ledger.overrides ?? {})[row.transaction.id];
     const proposed = proposedBy.get(row.transaction.id) ?? "";
-    const coded =
-      override?.code === undefined
+    // A payment matched to an invoice is compared as a payment of it, so that is
+    // what it says. Showing the code matching gave it -- "200 Sales" -- read as
+    // agreeing with the other system on a row reporting that it did not.
+    const settles = invoiceAssignments().get(row.transaction.id);
+    const settlesInvoice = settles !== undefined && settles !== "";
+    const coded = settlesInvoice
+      ? `settles ${settles}`
+      : override?.code === undefined
         ? ""
         : override.confirmed === true
           ? override.code
@@ -781,6 +814,7 @@ function section(
       canUseRules,
       canUseXero,
       canUseSplit,
+      settlesInvoice,
     };
   });
 
@@ -993,7 +1027,10 @@ function section(
   });
 
   for (const opt of rowOptions) {
-    const { row, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit } = opt;
+    const {
+      row, override, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit,
+      settlesInvoice,
+    } = opt;
     const tr = document.createElement("tr");
 
     const tdCheck = document.createElement("td");
@@ -1095,7 +1132,10 @@ function section(
       keep.className = "use-button";
       keep.textContent = "keep mine";
       keep.title = `${coded} — records that this was checked and stands`;
-      keep.addEventListener("click", () => void keepOurCoding(row.transaction, coded));
+      // Keeping a match keeps the coding the line already has; the words
+      // "settles INV-0135" are a description, not an account to write back.
+      const keeping = settlesInvoice ? (override?.code ?? "") : coded;
+      keep.addEventListener("click", () => void keepOurCoding(row.transaction, keeping));
       actions.append(keep);
     }
     tr.append(actions);
@@ -1157,6 +1197,33 @@ function useButton(
 }
 
 /**
+ * Take a payment off the invoice it was matched to, when the coding accepted
+ * for it says it was something else.
+ *
+ * A matched payment posts to receivables whatever its code, so accepting the
+ * other system's "200 Sales" for it changed a code nothing reads: the match
+ * stayed, the row came straight back, and there was no button that could
+ * settle it. A Stripe payout of 500.57 had been matched to an invoice another
+ * payment had already paid. So taking an account for it that is not
+ * receivables or payables takes it off the invoice too -- recorded as a
+ * refusal, or the matcher finds the same invoice again on the next draw.
+ *
+ * Returns the invoice it came off, or null when it settled none or the account
+ * taken agrees with the match. Writes into `matches`; saving is the caller's.
+ */
+function unmatchForCoding(
+  transaction: Transaction,
+  chosen: string,
+  matches: Record<string, string>,
+): string | null {
+  const settles = invoiceAssignments().get(transaction.id);
+  if (settles === undefined || settles === "") return null;
+  if (/\b(610|800)\b|accounts\s+(receivable|payable)/i.test(chosen)) return null;
+  matches[transaction.id] = "";
+  return settles;
+}
+
+/**
  * Accept multiple offered codings in one batch.
  */
 async function acceptCodesBulk(
@@ -1170,6 +1237,8 @@ async function acceptCodesBulk(
   if (items.length === 0) return;
 
   const overrides = { ...(state.ledger.overrides ?? {}) };
+  const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}) };
+  const unmatched: { transaction: Transaction; number: string }[] = [];
   const batchEvents: CodingBatchEntry[] = [];
   const unmapped = new Set<string>();
   let applied = 0;
@@ -1212,6 +1281,8 @@ async function acceptCodesBulk(
       id: item.transaction.id,
       before: wasCoded ?? null,
     });
+    const off = unmatchForCoding(item.transaction, chosen, invoiceMatches);
+    if (off !== null) unmatched.push({ transaction: item.transaction, number: off });
     applied++;
   }
 
@@ -1229,8 +1300,15 @@ async function acceptCodesBulk(
     return;
   }
 
-  state.ledger = { ...state.ledger, overrides };
-  state.persistent = await savePart(state.ledger);
+  state.ledger = {
+    ...state.ledger,
+    overrides,
+    ...(unmatched.length > 0 ? { invoiceMatches } : {}),
+  };
+  state.persistent =
+    unmatched.length > 0
+      ? await savePart(state.ledger, "invoiceMatches")
+      : await savePart(state.ledger);
 
   if (applied === 1 && batchEvents[0]) {
     const single = items[0]!;
@@ -1251,6 +1329,17 @@ async function acceptCodesBulk(
       null,
     );
   }
+  // Each its own entry, so the change log can put any one match back.
+  for (const { transaction, number } of unmatched) {
+    await record(
+      "invoiceMatch",
+      `Not an invoice payment (was ${number}), from the imported coding`,
+      number,
+      "",
+      transaction.id,
+    );
+  }
+  reclassify();
 
   redraw("check");
 }
@@ -1401,8 +1490,11 @@ async function acceptCode(
         : `Accepted the ${kindName} coding and its rate (${rate}) on the Coding reconciliation page.`,
     at: new Date().toISOString().slice(0, 10),
   };
-  state.ledger = { ...state.ledger, overrides };
-  state.persistent = await savePart(state.ledger);
+  const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}) };
+  const off = unmatchForCoding(transaction, chosen, invoiceMatches);
+  state.ledger = { ...state.ledger, overrides, ...(off !== null ? { invoiceMatches } : {}) };
+  state.persistent =
+    off !== null ? await savePart(state.ledger, "invoiceMatches") : await savePart(state.ledger);
   await record(
     "coding",
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} → ${chosen} (accepted the ${kindName} coding)`,
@@ -1410,6 +1502,16 @@ async function acceptCode(
     overrides[transaction.id],
     transaction.id,
   );
+  if (off !== null) {
+    await record(
+      "invoiceMatch",
+      `Not an invoice payment (was ${off}), from the imported coding`,
+      off,
+      "",
+      transaction.id,
+    );
+    reclassify();
+  }
   redraw("check");
 }
 

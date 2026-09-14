@@ -539,3 +539,34 @@ test("a line with no account side keeps the side it was given", () => {
   });
   assert.equal(resolve(spend).side, "purchases");
 });
+
+
+test("a line coded to an entity not registered for GST carries none, whatever else says so", () => {
+  const rates = txn("2025-06-03", -58360, { id: "rates" });
+  const repairs = txn("2025-06-04", -11500, { id: "repairs" });
+  const codes = { rates: "Totara Place Rates", repairs: "Shop Repairs" };
+  const resolve = gstResolver({
+    codeOf: (t) => codes[t.id] ?? null,
+    // The chart marks both 15%, and an answer saved before the rates account
+    // was given to the rental said standard as well.
+    chartTreatment: () => ({ treatment: "standard", side: "purchases" }),
+    overrides: { rates: { treatment: "standard", side: "purchases", note: "saved earlier" } },
+    unregistered: (code) => code === "Totara Place Rates",
+  });
+  assert.equal(resolve(rates).treatment, "out-of-scope");
+  assert.equal(resolve(rates).side, "none");
+  assert.equal(resolve(repairs).treatment, "standard", "the registered entity's account is unchanged");
+
+  const result = gstReturn([rates, repairs], { from: "2025-06-01", to: "2025-07-31" }, { resolve, basis: "payments" });
+  assert.equal(result.boxes.box12, 1500, "only the registered entity's purchase is claimed");
+});
+
+test("a transfer stays a transfer on an unregistered entity's account", () => {
+  const leg = txn("2025-06-03", -10000, { id: "leg" });
+  const resolve = gstResolver({
+    codeOf: () => "Totara Place Rates",
+    unregistered: () => true,
+    transfers: { leg: "other" },
+  });
+  assert.match(resolve(leg).reason, /transfer/);
+});

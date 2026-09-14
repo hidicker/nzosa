@@ -55,6 +55,8 @@ export function suggest(
   rules: RuleSet | undefined,
   overrides: Overrides,
   accounts: readonly string[],
+  /** Whether a code belongs to an entity not registered for GST. */
+  unregistered?: (code: string) => boolean,
 ): Suggestion[] {
   const ruleFile = rules as RuleFile | undefined;
   const selected =
@@ -68,6 +70,7 @@ export function suggest(
     ...(ruleFile?.codeTreatments ? { codeTreatments: ruleFile.codeTreatments } : {}),
     codeOf: (t) => categorise(t, codingRules).code,
     overrides,
+    ...(unregistered ? { unregistered } : {}),
   });
 
   return selected

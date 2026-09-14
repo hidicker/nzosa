@@ -133,6 +133,18 @@ export interface GstRulesOptions {
    * ledger, which reads the pairing, posted them as the transfers they were.
    */
   transfers?: Readonly<Record<string, string>>;
+  /**
+   * Whether a code is an account of an entity that is not registered for GST.
+   *
+   * One ledger can hold a registered commercial rental beside a residential
+   * rental and a household, and only the first charges or claims GST. A line
+   * coded to the others is outside every return whatever its chart tax code or
+   * a rule says -- a household's power bill carries GST, but nobody in the
+   * household can claim it. Left to the defaults, every such line was assumed
+   * standard-rated: the reconcile page offered 15% on the rates and the
+   * groceries, and a return built from the ledger claimed GST on them.
+   */
+  unregistered?: (code: string) => boolean;
 }
 
 /**
@@ -279,6 +291,19 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
         treatment: "out-of-scope",
         side: "none",
         reason: "Recorded as a transfer between your own accounts: not a supply",
+      };
+    }
+
+    // Then who the line belongs to. An entity that is not registered has no
+    // GST to account for, so nothing said about the line's tax can give it
+    // some -- not a rule, not the chart, and not an answer saved before the
+    // account was given to the entity.
+    const owner = options.codeOf?.(transaction) ?? null;
+    if (owner !== null && options.unregistered?.(owner) === true) {
+      return {
+        treatment: "out-of-scope",
+        side: "none",
+        reason: `Coded to ${owner}, an account of an entity not registered for GST`,
       };
     }
 

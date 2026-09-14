@@ -54,6 +54,8 @@ export interface VarianceInput {
    * claimed on the return as a purchase.
    */
   transfers?: Readonly<Record<string, string>>;
+  /** Whether a code belongs to an entity not registered for GST. */
+  unregistered?: (code: string) => boolean;
 }
 
 export interface VarianceRow {
@@ -131,6 +133,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     codeOf: (t) => categorise(t, codingRules).code,
     overrides: expanded.overrides,
     ...(input.transfers ? { transfers: input.transfers } : {}),
+    ...(input.unregistered ? { unregistered: input.unregistered } : {}),
   });
 
   return gstPeriods({ from, to }, { months: 2, anchorMonth: 3 }).map((period) =>

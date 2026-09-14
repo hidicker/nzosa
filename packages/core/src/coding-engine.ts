@@ -38,6 +38,8 @@ export interface CodingEngineOptions {
   };
   /** What the chart says about an account code, or null where it says nothing. */
   chartTreatment?: (code: string) => CodeTreatment | string | null;
+  /** Whether a code belongs to an entity not registered for GST. */
+  unregistered?: (code: string) => boolean;
 }
 
 export interface CodingEngine {
@@ -71,6 +73,7 @@ export function codingEngine(options: CodingEngineOptions): CodingEngine | null 
       : {}),
     codeOf,
     overrides: expanded.overrides,
+    ...(options.unregistered ? { unregistered: options.unregistered } : {}),
   });
 
   return { transactions: expanded.transactions, overrides: expanded.overrides, codeOf, classify };

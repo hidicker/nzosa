@@ -8,6 +8,10 @@ import {
   gstResolver,
   gstReturn,
   validateSplits,
+  accountEntityKey,
+  knownCodes,
+  labelForChartAccount,
+  type EntityModel,
 } from "@nzosa/core";
 import type {
   ExpandedSplits,
@@ -122,6 +126,23 @@ export function computeGstReturns(
   const chartTreatment = (code: string): ImpliedTreatment | null =>
     fromChart.get(code) ?? null;
 
+  // The accounts of any entity not registered for GST, named the way the
+  // coding names them. Their lines are on no return, as the app treats them.
+  const entities = (ledger as { entities?: EntityModel }).entities;
+  const unregisteredIds = new Set(
+    (entities?.entities ?? []).filter((e) => e.gstRegistered === false).map((e) => e.id),
+  );
+  const unregisteredCodes = new Set<string>();
+  if (entities !== undefined && unregisteredIds.size > 0) {
+    const known = knownCodes(ruleFile as RuleSet | undefined, expanded.overrides, ledger.chart ?? []);
+    for (const account of ledger.chart ?? []) {
+      const id = entities.accounts[accountEntityKey(account)];
+      if (id !== undefined && unregisteredIds.has(id)) {
+        unregisteredCodes.add(labelForChartAccount(account, known));
+      }
+    }
+  }
+
   const resolve = gstResolver({
     ownAccounts: new Set(
       options.accounts.length > 0
@@ -144,6 +165,7 @@ export function computeGstReturns(
     // The app's return and this one read the same pairings, or they disagree
     // about every card repayment.
     ...(ledger.transfers ? { transfers: ledger.transfers } : {}),
+    ...(unregisteredCodes.size > 0 ? { unregistered: (code: string) => unregisteredCodes.has(code) } : {}),
   });
 
   const { from, to } = options.range;

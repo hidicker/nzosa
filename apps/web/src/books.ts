@@ -23,6 +23,7 @@ import {
   sheetToCsv,
   dedupe,
   defaultEntityModel,
+  accountEntityKey,
   emptyEntityModel,
   formatAmount,
   labelForChartAccount,
@@ -296,6 +297,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     state.rules,
     state.ledger.overrides ?? {},
     accountsFor(state.reconcileAccounts),
+    unregisteredCode(),
   );
   // Collapsed, because the search is matched against what the row shows and
    // the row shows collapsed whitespace. A bank pads its fields -- the payee is
@@ -659,6 +661,8 @@ export function recomputeVariance(): void {
     // The same fallback the profit and loss uses, so an account treated by the
     // chart is treated the same way in both.
     chartTreatment: (code: string) => chartTreatmentOf(code),
+    // A line of an entity not registered for GST is on no return.
+    unregistered: unregisteredCode(),
     // Narrowed by the chosen entity, as every other page's selection is.
     // Choosing an entity narrowed the account chips here and left the figures
     // alone, so a page headed by one company's name compared everybody's bank
@@ -730,6 +734,28 @@ export function cachedChartTreatments(): Map<string, unknown> {
   return map;
 }
 
+/**
+ * Which codes are accounts of an entity not registered for GST.
+ *
+ * Asked once for a whole page rather than per line: the answer comes from the
+ * entities and the chart, which do not change while a page is drawn. A code
+ * with no entity is not in the set, so books that have never been divided
+ * into entities are treated exactly as before.
+ */
+export function unregisteredCode(): (code: string) => boolean {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const unregistered = new Set(
+    model.entities.filter((e) => e.gstRegistered === false).map((e) => e.id),
+  );
+  if (unregistered.size === 0) return () => false;
+  const codes = new Set<string>();
+  for (const { account, label } of accountsForEditing()) {
+    const id = model.accounts[accountEntityKey(account)];
+    if (id !== undefined && unregistered.has(id)) codes.add(label);
+  }
+  return (code) => codes.has(code);
+}
+
 export function chartTreatmentOf(label: string): unknown | null {
   return cachedChartTreatments().get(label) ?? null;
 }
@@ -751,6 +777,7 @@ export function reportEngine(): CodingEngine | null {
     overrides: state.ledger.overrides ?? {},
     ...(state.rules ? { rules: state.rules as RuleFileShape } : {}),
     chartTreatment: (code: string) => chartTreatmentOf(code) as never,
+    unregistered: unregisteredCode(),
   });
 }
 

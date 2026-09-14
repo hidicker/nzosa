@@ -1,5 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import {
+  unregisteredCode,
   accountsFor,
   bankLabel,
   codingProgress,
@@ -1891,6 +1892,7 @@ function codingReconciliationOutstanding(): { total: number } | null {
     state.rules,
     state.ledger.overrides ?? {},
     accountsFor(state.checkAccounts),
+    unregisteredCode(),
   );
   const suggestionMap = new Map(
     suggestions.map((one) => [one.transaction.id, one]),

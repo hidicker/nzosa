@@ -849,11 +849,46 @@ function renderShareholders(body: HTMLElement, year: number): void {
  * here. That is said on the page, because a form that looks finished is exactly
  * the sort of thing somebody files.
  */
+/**
+ * The journals a position-on-the-day report is built from, for the basis chosen.
+ *
+ * On the imported basis, the other system's own answer: its journals over the
+ * same opening balances, with its bank lines keyed as this ledger keys them.
+ * Anywhere else, and on that basis with no journal report loaded, this
+ * ledger's postings. The balance sheet and the IR10 both used to build from the
+ * postings on every basis, under a heading that said the imported one was read
+ * from the file -- and the balance sheet was fixed while the IR10 was not. One
+ * function for both is what stops that happening again.
+ */
+function positionJournals(): {
+  journals: PostedJournal[];
+  basis: string;
+  fromImport: boolean;
+} {
+  const basis = $<HTMLSelectElement>("report-basis").value;
+  const imported = state.ledger.journals ?? [];
+  const fromImport = basis === "accrual" && imported.length > 0;
+  if (!fromImport) return { journals: postedJournals(), basis, fromImport };
+  const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
+  return {
+    journals: postedFromImported(imported, (name) =>
+      ledgerAccountFor(name, chartByName.get(name.trim().toLowerCase())),
+    ),
+    basis,
+    fromImport,
+  };
+}
+
+const NO_JOURNAL_REPORT =
+  "No journal report is loaded, so this is built from your postings rather than read " +
+  "from the other system. Load one on the Coding reconciliation page to compare.";
+
 function renderIr10(body: HTMLElement, year: number): void {
+  const { journals, basis, fromImport } = positionJournals();
   const summary = ir10Summary({
     yearEnding: `${year}-03-31`,
     yearStarting: `${year - 1}-04-01`,
-    journals: postedJournals(),
+    journals,
     ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
     chart: state.chart,
   });
@@ -861,6 +896,7 @@ function renderIr10(body: HTMLElement, year: number): void {
   const heading = document.createElement("h3");
   heading.textContent = `IR10 financial statements summary, year ended 31 March ${year}`;
   body.append(heading);
+  if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
   if (state.ledger.openingBalances === undefined) {
     const warn = document.createElement("p");
@@ -950,18 +986,7 @@ function renderIr10(body: HTMLElement, year: number): void {
 function renderBalanceSheet(body: HTMLElement, year: number): void {
   const asAt = `${year}-03-31`;
   const opening = state.ledger.openingBalances;
-  // On the imported basis, the other system's own answer: its journals over
-  // the same opening balances. It used to be ours on every basis, under a
-  // heading that said it was read from the file.
-  const basis = $<HTMLSelectElement>("report-basis").value;
-  const imported = state.ledger.journals ?? [];
-  const fromImport = basis === "accrual" && imported.length > 0;
-  const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
-  const journals = fromImport
-    ? postedFromImported(imported, (name) =>
-        ledgerAccountFor(name, chartByName.get(name.trim().toLowerCase())),
-      )
-    : postedJournals();
+  const { journals, basis, fromImport } = positionJournals();
   const sheet = computeBalanceSheet({
     asAt,
     ...(opening ? { openingBalances: opening } : {}),
@@ -973,14 +998,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   heading.textContent = `Balance sheet as at 31 March ${year}`;
   body.append(heading);
 
-  if (basis === "accrual" && !fromImport) {
-    body.append(
-      note(
-        "No journal report is loaded, so this is built from your postings rather than read " +
-          "from the other system. Load one on the Coding reconciliation page to compare.",
-      ),
-    );
-  }
+  if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
   const money = (cents: Cents): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });

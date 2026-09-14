@@ -338,17 +338,26 @@
               <option value="gross">Including GST</option>
             </select>
             <select id="report-kind">
-              <option value="pl">Profit and loss</option>
-              <option value="charts">Charts</option>
-              <option value="owner">Income by owner</option>
-              <option value="depreciation">Depreciation schedule</option>
-              <option value="balancesheet">Balance sheet</option>
-              <option value="ir10">IR10 summary (Inland Revenue)</option>
-              <option value="shareholders">Shareholder current account</option>
-              <option value="manual">Manual journals</option>
-              <option value="journal">Journal &amp; trial balance</option>
-              <option value="general">General ledger (every line)</option>
-              <option value="extract">Account transactions (extract)</option>
+              <option value="home">All reports</option>
+              <optgroup label="Financial statements">
+                <option value="pl">Profit and loss</option>
+                <option value="balancesheet">Balance sheet</option>
+                <option value="depreciation">Depreciation schedule</option>
+                <option value="shareholders">Shareholder current accounts</option>
+              </optgroup>
+              <optgroup label="Taxes and balances">
+                <option value="ir10">IR10 financial statement</option>
+                <option value="journal">Journal report and trial balance</option>
+                <option value="general">General ledger detail</option>
+                <option value="manual">Manual journals</option>
+              </optgroup>
+              <optgroup label="Transactions">
+                <option value="extract">Account transactions</option>
+                <option value="owner">Income by owner</option>
+              </optgroup>
+              <optgroup label="Analytics">
+                <option value="charts">Charts</option>
+              </optgroup>
             </select>
             <select id="report-owner"></select>
             <select id="report-year"></select>

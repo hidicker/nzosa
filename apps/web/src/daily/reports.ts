@@ -1,7 +1,8 @@
-import { redraw } from "../app.js";
+import { redraw, showPage } from "../app.js";
 import {
   accountsFor,
   accountsForEditing,
+  assetProceedsInUse,
   bankLabel,
   banks,
   entityBankAccounts,
@@ -18,6 +19,7 @@ import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
 import { unresolvedNote } from "../widgets.js";
 import {
+  IR10_LAYOUT,
   TAX_EXTRA_CATEGORIES,
   accountTransactionRows,
   balanceSheetRole,
@@ -38,7 +40,6 @@ import {
   generalLedgerTotals,
   groupProfitAndLoss,
   gstWithin,
-  ir10IsCalculated,
   ir10Summary,
   manualJournalsIn,
   overdrawnWarning,
@@ -885,90 +886,92 @@ const NO_JOURNAL_REPORT =
 
 function renderIr10(body: HTMLElement, year: number): void {
   const { journals, basis, fromImport } = positionJournals();
+  const entity = reportingEntity();
+  // A company owes its shareholders what they lend it through their current
+  // accounts; for anyone else the same accounts are the owner's equity. The
+  // entity records what kind of income it earns, not whether it is a company,
+  // so its name decides.
+  const company = entity === undefined || /\b(limited|ltd)\b/i.test(entity.name);
   const summary = ir10Summary({
     yearEnding: `${year}-03-31`,
     yearStarting: `${year - 1}-04-01`,
     journals,
     ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
     chart: state.chart,
+    assets: state.ledger.assets ?? [],
+    proceeds: assetProceedsInUse(),
+    currentAccountsAsLiabilities: company,
   });
 
+  // Set out as the form is printed: every box, in order, whole dollars, the
+  // totals in bold and a rule under each block -- so it can be laid beside a
+  // filed return and read down the two together.
   const heading = document.createElement("h3");
-  heading.textContent = `IR10 financial statements summary, year ended 31 March ${year}`;
+  heading.textContent = "Financial Statement - IR10";
   body.append(heading);
+  body.append(
+    note(`1 April ${year - 1} to 31 March ${year}${entity !== undefined ? ` · ${entity.name}` : ""}`),
+  );
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
   if (state.ledger.openingBalances === undefined) {
     const warn = document.createElement("p");
     warn.className = "journal-out";
     warn.textContent =
-      "No opening balances, so every balance sheet box below is only the movement since the " +
-      "first transaction. The income and expense boxes are unaffected.";
+      "No opening balances, so boxes 30 to 51 are only the movement since the first " +
+      "transaction. The income and expense boxes are unaffected.";
     body.append(warn);
   }
 
-  const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
-
-  const table = document.createElement("table");
-  table.className = "report-table balance-sheet";
-  const head = document.createElement("thead");
-  head.innerHTML = "<tr><th>Box</th><th>What the form calls it</th><th>Amount</th></tr>";
-  const tbody = document.createElement("tbody");
-
-  const section = (title: string, boxes: readonly number[]): void => {
-    const shown = boxes.filter((b) => summary.boxes[b] !== undefined);
-    if (shown.length === 0) return;
-    const header = document.createElement("tr");
-    header.className = "bs-section";
-    const cell = document.createElement("td");
-    cell.colSpan = 3;
-    cell.textContent = title;
-    header.append(cell);
-    tbody.append(header);
-
-    for (const number of shown) {
-      const box = summary.boxes[number];
-      if (box === undefined) continue;
-      const row = document.createElement("tr");
-      // A box the form works out is marked, because somebody checking against
-      // a set of accounts should know which figures came from an account and
-      // which are the form's own arithmetic.
-      if (ir10IsCalculated(number)) row.className = "bs-total";
-      row.append(nameCell(String(number)));
-      row.append(nameCell(box.title));
-      row.append(amountCell(money(box.amount)));
-      tbody.append(row);
-    }
+  const dollars = (cents: Cents): string => {
+    const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", {
+      minimumFractionDigits: 2,
+      maximumFractionDigits: 2,
+    });
+    return cents < 0 ? `(${text})` : text;
   };
 
-  section("Income", [2, 3, 4, 5, 6, 7, 10, 11]);
-  section("Expenses", [13, 14, 15, 16, 18, 19, 22, 23, 24, 25]);
-  section("Profit", [26]);
-  section("Assets", [27, 28, 29, 31]);
-  section("Liabilities and equity", [34, 35, 37, 38]);
-
-  table.append(head, tbody);
+  const table = document.createElement("table");
+  table.className = "report-table ir10-form";
+  const tbody = document.createElement("tbody");
+  for (const line of IR10_LAYOUT) {
+    const box = summary.boxes[line.box];
+    if (box === undefined) continue;
+    const row = document.createElement("tr");
+    if (line.total === true) row.classList.add("ir10-total");
+    if (line.ruleAfter === true) row.classList.add("ir10-rule");
+    const number = document.createElement("td");
+    number.className = "ir10-box";
+    number.textContent = String(line.box);
+    const title = document.createElement("td");
+    title.textContent = line.title;
+    const amount = document.createElement("td");
+    amount.className = "report-amount";
+    amount.textContent = box.text ?? dollars(box.amount);
+    row.append(number, title, amount);
+    tbody.append(row);
+  }
+  table.append(tbody);
   body.append(table);
 
-  // The one arithmetic check the form itself makes possible, said out loud.
-  const assets = summary.totalAssets;
-  const claimed = summary.totalLiabilities + summary.totalEquity;
   const check = document.createElement("p");
-  check.className = assets === claimed ? "journal-balanced" : "journal-out";
+  check.className = summary.imbalance === 0 ? "journal-balanced" : "journal-out";
   check.textContent =
-    assets === claimed
-      ? `Assets ${money(assets)} equal liabilities and equity.`
-      : `Assets ${money(assets)} against liabilities and equity of ${money(claimed)} — ` +
-        `a difference of ${money(assets - claimed)}. Something is out.`;
+    summary.imbalance === 0
+      ? "The books behind this balance, so owners equity (box 51) is what is left once the liabilities are met."
+      : `The books behind this are out by ${formatAmount(summary.imbalance)} before rounding, ` +
+        "and owners equity (box 51) is carrying that difference.";
   body.append(check);
 
   body.append(
     note(
-      "This is a summary of the accounts, not a tax return. The IR4 adds the adjustments that " +
-        "turn profit before tax into taxable income: non-deductible entertainment added back, " +
-        "tax depreciation in place of accounting depreciation, losses brought forward, and " +
-        "imputation credits. None of those is done here.",
+      "Whole dollars, as filed. Total income and total expenses are rounded from their exact " +
+        "figures and other income and other expenses take the rounding, so every total adds up. " +
+        (company
+          ? "Shareholder current accounts are a current liability (box 47), as a company owes them. "
+          : "Owner current accounts are counted in owners equity. ") +
+        "Box 28 adds back non-deductible expenses, and box 52 takes tax depreciation to equal " +
+        "accounting depreciation. Losses brought forward and the tax on the result are on the IR4.",
     ),
   );
 }
@@ -1549,6 +1552,145 @@ async function removeExtra(extra: TaxExtra): Promise<void> {
  * basis was chosen -- so on both accrual reports it described something else.
  * Three sources, three different things worth knowing about them.
  */
+const FAVOURITES_KEY = "nzosa:report-favourites";
+const DEFAULT_FAVOURITES = ["pl", "balancesheet", "ir10"];
+
+/** What each report is for, in a line, for the list of reports. */
+const REPORT_DESCRIPTIONS: Record<string, string> = {
+  pl: "Income and expenses for the year, set out as an accountant reads them.",
+  balancesheet: "What the business owns and owes at year end.",
+  depreciation: "Each asset's depreciation for the year, and its book value.",
+  shareholders: "What each shareholder has put in and taken out.",
+  ir10: "Inland Revenue's financial statement, box by box, as it is filed.",
+  journal: "Every posting for the year, and the trial balance they prove.",
+  general: "Every line in the ledger, account by account.",
+  manual: "Year-end and correcting journals written by hand.",
+  extract: "The transactions behind an account, ready to export.",
+  owner: "Income and expenses by owner, for property held jointly.",
+  charts: "The year's income and spending, month by month.",
+};
+
+/** The reports this viewer has starred, kept in the browser rather than the books. */
+function readFavourites(): string[] {
+  try {
+    const held = localStorage.getItem(FAVOURITES_KEY);
+    const parsed: unknown = held === null ? DEFAULT_FAVOURITES : JSON.parse(held);
+    return Array.isArray(parsed)
+      ? parsed.filter((value): value is string => typeof value === "string")
+      : [...DEFAULT_FAVOURITES];
+  } catch {
+    return [...DEFAULT_FAVOURITES];
+  }
+}
+
+function writeFavourites(list: readonly string[]): void {
+  try {
+    localStorage.setItem(FAVOURITES_KEY, JSON.stringify(list));
+  } catch {
+    // Nothing to do: without storage the stars simply are not remembered.
+  }
+}
+
+interface ReportEntry {
+  value: string;
+  name: string;
+}
+
+/**
+ * Every report, grouped the way an accounting package groups them, with the
+ * ones used most at the top.
+ *
+ * One long list stopped being findable once it passed a handful of reports.
+ * The groups are read from the report picker itself, so the list and the
+ * picker cannot disagree about what exists or what it is called.
+ */
+function renderReportsHome(body: HTMLElement): void {
+  const select = $<HTMLSelectElement>("report-kind");
+  const groups = [...select.querySelectorAll("optgroup")].map((group) => ({
+    label: group.label,
+    reports: [...group.querySelectorAll("option")].map(
+      (option): ReportEntry => ({ value: option.value, name: option.textContent ?? option.value }),
+    ),
+  }));
+  const all = groups.flatMap((group) => group.reports);
+  const favourites = readFavourites().filter((value) => all.some((r) => r.value === value));
+
+  const open = (value: string): void => {
+    select.value = value;
+    select.dispatchEvent(new Event("change", { bubbles: true }));
+  };
+
+  const item = (report: ReportEntry): HTMLElement => {
+    const row = document.createElement("div");
+    row.className = "reports-home-item";
+    const starred = favourites.includes(report.value);
+    const star = document.createElement("button");
+    star.type = "button";
+    star.className = "link-button reports-star";
+    star.textContent = starred ? "★" : "☆";
+    star.title = starred ? "Remove from favourites" : "Add to favourites";
+    star.setAttribute("aria-pressed", String(starred));
+    star.addEventListener("click", () => {
+      writeFavourites(
+        starred ? favourites.filter((value) => value !== report.value) : [...favourites, report.value],
+      );
+      redraw("reports");
+    });
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "link-button reports-open";
+    link.textContent = report.name;
+    link.addEventListener("click", () => open(report.value));
+    const about = document.createElement("span");
+    about.className = "reports-about";
+    about.textContent = REPORT_DESCRIPTIONS[report.value] ?? "";
+    row.append(star, link, about);
+    return row;
+  };
+
+  const section = (title: string, rows: readonly HTMLElement[]): void => {
+    if (rows.length === 0) return;
+    const group = document.createElement("div");
+    group.className = "reports-home-group";
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    const list = document.createElement("div");
+    list.className = "reports-home-list";
+    list.append(...rows);
+    group.append(heading, list);
+    body.append(group);
+  };
+
+  section(
+    "Favourites",
+    favourites
+      .map((value) => all.find((report) => report.value === value))
+      .filter((report): report is ReportEntry => report !== undefined)
+      .map(item),
+  );
+
+  for (const group of groups) {
+    const rows = group.reports.map(item);
+    // GST returns have a page of their own; they belong in this list all the same.
+    if (group.label === "Taxes and balances") {
+      const row = document.createElement("div");
+      row.className = "reports-home-item";
+      const spacer = document.createElement("span");
+      const link = document.createElement("button");
+      link.type = "button";
+      link.className = "link-button reports-open";
+      link.textContent = "GST returns";
+      link.addEventListener("click", () => showPage("gst"));
+      const about = document.createElement("span");
+      about.className = "reports-about";
+      about.textContent = "Each filed GST return beside what the books say now.";
+      row.append(spacer, link, about);
+      rows.push(row);
+    }
+    section(group.label, rows);
+  }
+}
+
 function reportsHint(basis: string, kind: string): string {
   if (kind === "depreciation") {
     return (
@@ -1611,6 +1753,18 @@ function reportingEntity(): Entity | undefined {
 export function renderReportsPage(): void {
   const body = $("reports-body");
   body.textContent = "";
+
+  // The list of every report, before any one is chosen. The controls belong to
+  // a report, so they wait for one.
+  const kindSelect = $<HTMLSelectElement>("report-kind");
+  const home = kindSelect.value === "home";
+  kindSelect.parentElement?.classList.toggle("reports-home", home);
+  if (home) {
+    $("reports-hint").textContent =
+      "Choose a report. Star the ones you use most and they stay at the top.";
+    renderReportsHome(body);
+    return;
+  }
 
   const basisNow = $<HTMLSelectElement>("report-basis").value;
   const kindNow = $<HTMLSelectElement>("report-kind").value;

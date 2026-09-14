@@ -2457,3 +2457,18 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 /* A step begun but not finished. Half a tick, in the same orange. */
 .setup-mark.partial { color: var(--warn, #b45309); }
 
+/* The IR10, set out as the form is printed. */
+.ir10-form td.ir10-box { width: 3rem; opacity: 0.75; }
+.ir10-form tr.ir10-total td { font-weight: 700; }
+.ir10-form tr.ir10-rule td { border-bottom: 1px solid rgba(128,128,128,0.6); }
+
+/* The list of reports: grouped, starred favourites first. */
+.page-actions.reports-home > :not(#report-kind) { display: none !important; }
+.reports-home-group { margin: 1rem 0 1.4rem; max-width: 62rem; }
+.reports-home-group h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.reports-home-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.35rem 1rem; }
+.reports-home-item { display: grid; grid-template-columns: 1.6rem 1fr; align-items: baseline;
+  padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; }
+.reports-home-item .reports-open { justify-self: start; text-align: left; }
+.reports-home-item .reports-about { grid-column: 2; font-size: 0.78rem; opacity: 0.7; }
+.reports-star { font-size: 1rem; line-height: 1; }

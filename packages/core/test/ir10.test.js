@@ -1,235 +1,219 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { ir10BoxForAccount, ir10Summary } from "../dist/index.js";
+import { IR10_LAYOUT, ir10BoxForAccount, ir10Summary } from "../dist/index.js";
 
 /**
- * The chart these were written against types Sales, Interest Income and
- * Capital Gain on Disposal all as "Revenue". That is ordinary, and it is why
- * the resolver must read the code before the type.
+ * A sample chart. It types Sales, Interest Income and a capital gain all as
+ * "Revenue", which is ordinary, and is why the resolver reads the code first.
  */
 const CHART = [
-  ["200", "Revenue", 2, "Sales"],
-  ["260", "Revenue", 10, "Other Revenue"],
-  ["270", "Revenue", 7, "Interest Income"],
-  ["300", "Other Income", 10, "Depreciation Recovered"],
-  ["301", "Revenue", 10, "Capital Gain (Loss) on Disposal"],
-  ["310", "Direct Costs", 4, "Cost of Goods Sold"],
-  ["630", "Inventory", 5, "Inventory"],
-  ["412", "Overhead", 16, "Consulting & Accounting"],
-  ["413", "Expense", 23, "Subcontractors (GST Registered)"],
-  ["414", "Expense", 23, "Subcontractors (Not GST Registered)"],
-  ["416", "Overhead", 13, "Depreciation"],
-  ["433", "Overhead", 14, "Insurance"],
-  ["437", "Overhead", 15, "Interest Expense"],
-  ["441", "Overhead", 16, "Legal expenses"],
-  ["469", "Overhead", 18, "Rent"],
-  ["473", "Overhead", 19, "Repairs and Maintenance"],
-  ["477", "Overhead", 22, "Salaries"],
-  ["478", "Overhead", 22, "KiwiSaver Employer Contributions"],
-  ["400", "Overhead", 24, "Advertising"],
-  ["446", "Expense", 24, "Low Value Assets <1K"],
-  ["470", "Expense", 24, "Loss on sale of Fixed Assets"],
-  ["506", "Expense", 24, "Stripe Fees"],
-  ["507", "Expense", 24, "PayPal fees"],
-  ["610", "Accounts Receivable", 27, "Accounts Receivable"],
-  ["611", "Current Asset", 27, "less Provision for Doubtful Debts"],
-  ["620", "Current Asset", 29, "Prepayments"],
-  ["625", "Current Asset", 29, "Withholding tax paid"],
-  ["730", "Fixed Asset", 31, "Paragliding Equipment"],
-  ["800", "Accounts Payable", 34, "Accounts Payable"],
-  ["900", "Non-current Liability", 35, "Loan"],
-  ["910", "Non-current Liability", 37, "Loan from Director"],
-  ["960", "Retained Earnings", 38, "Retained Earnings"],
-  ["980", "Equity", 37, "Owner Drawings"],
-  ["860", "Rounding", 38, "Rounding"],
-  ["840", "Historical", 38, "Historical Adjustment"],
-];
-
-test("every account in a real chart lands in the box the IR10 expects", () => {
-  const wrong = [];
-  for (const [code, type, want, name] of CHART) {
-    const got = ir10BoxForAccount(code, type);
-    if (got !== want) wrong.push(`${code} ${name} (${type}): box ${got}, expected ${want}`);
-  }
-  assert.deepEqual(wrong, [], `mappings disagree:\n  ${wrong.join("\n  ")}`);
-});
-
-test("a specific code beats the account's type, or three revenues become sales", () => {
-  // The bug this replaces: a type-first test returned box 2 for all three,
-  // reporting interest received and a non-assessable capital gain as sales.
-  assert.equal(ir10BoxForAccount("270", "Revenue"), 7, "interest received is box 7");
-  assert.equal(ir10BoxForAccount("260", "Revenue"), 10, "other income is box 10");
-  assert.equal(ir10BoxForAccount("301", "Revenue"), 10, "a capital gain is box 10, not sales");
-  assert.equal(ir10BoxForAccount("200", "Revenue"), 2, "sales is still sales");
-});
-
-test("GST follows the side it is actually on", () => {
-  // A refund owed by Inland Revenue is an asset; a return owed to them is a
-  // liability. The same account carries both across one year.
-  assert.equal(ir10BoxForAccount("820", "GST", 325500), 29, "a refund owed is an asset");
-  assert.equal(ir10BoxForAccount("820", "GST", -120000), 34, "a return owed is a liability");
-  assert.equal(ir10BoxForAccount("820", "GST", 0), 34, "nothing owed either way sits with liabilities");
-});
-
-test("income tax is not an IR10 expense", () => {
-  // The form works to profit before tax, so the provision belongs in no box.
-  assert.equal(ir10BoxForAccount("505", "Expense"), null);
-});
-
-test("an account this has never seen is placed by type, then by number", () => {
-  assert.equal(ir10BoxForAccount("742", "Fixed Asset"), 31);
-  assert.equal(ir10BoxForAccount("742", ""), 31, "the 700s are fixed assets");
-  assert.equal(ir10BoxForAccount("455", ""), 24, "an unknown 400 is another expense");
-  assert.equal(ir10BoxForAccount("Donation", "Expense"), 24, "a chart may use words for codes");
-  assert.equal(ir10BoxForAccount("", ""), null, "nothing at all maps to nothing");
-});
-
-test("a bank account with no chart code is cash at bank", () => {
-  assert.equal(ir10BoxForAccount("02-1100-0022001-001", "Bank"), 28);
-});
-
-// --- filling the form in ---
-
-const SUMMARY_CHART = [
   { code: "200", name: "Sales", type: "Revenue" },
   { code: "270", name: "Interest Income", type: "Revenue" },
   { code: "300", name: "Depreciation Recovered", type: "Other Income" },
-  { code: "301", name: "Capital Gain (Loss) on Disposal", type: "Revenue" },
+  { code: "301", name: "Capital Gain (Loss) on Disposal of Assets", type: "Revenue" },
   { code: "310", name: "Cost of Goods Sold", type: "Direct Costs" },
   { code: "400", name: "Advertising", type: "Overhead" },
+  { code: "413", name: "Subcontractors", type: "Expense" },
   { code: "416", name: "Depreciation", type: "Overhead" },
-  { code: "477", name: "Salaries", type: "Overhead" },
+  { code: "424", name: "Entertainment - Non deductible", type: "Overhead" },
+  { code: "433", name: "Insurance", type: "Overhead" },
+  { code: "470", name: "Loss on sale of Fixed Assets", type: "Expense" },
   { code: "610", name: "Accounts Receivable", type: "Accounts Receivable" },
-  { code: "630", name: "Inventory", type: "Inventory" },
-  { code: "730", name: "Equipment", type: "Fixed Asset" },
+  { code: "730", name: "Roasting Equipment", type: "Fixed Asset" },
+  { code: "731", name: "Less Accumulated Depreciation on Roasting Equipment", type: "Fixed Asset" },
+  { code: "740", name: "Motor Vehicle", type: "Fixed Asset" },
+  { code: "741", name: "Less Accumulated Depreciation - Vehicles", type: "Fixed Asset" },
   { code: "800", name: "Accounts Payable", type: "Accounts Payable" },
-  { code: "910", name: "Loan from Director", type: "Current Liability" },
+  { code: "820", name: "GST", type: "GST" },
+  { code: "910", name: "Loan from Director", type: "Non-current Liability" },
   { code: "960", name: "Retained Earnings", type: "Retained Earnings" },
+  { code: "970", name: "Owner Funds Introduced", type: "Equity" },
+  { code: "980", name: "Owner Drawings", type: "Equity" },
 ];
 
 const jn = (date, lines) => ({
-  transactionId: date, date, narration: "", lines, source: "bank", taxBasis: "payments",
+  transactionId: date, date, narration: "", lines, source: "manual", taxBasis: "both",
 });
-const ln = (code, name, amount) => ({
-  accountCode: code, accountName: name, amount, taxType: "NONE", description: "",
+const ln = (code, amount) => ({
+  accountCode: code, accountName: code, amount, taxType: "NONE", description: "",
+});
+const YEAR = { yearEnding: "2026-03-31", yearStarting: "2025-04-01", chart: CHART };
+const box = (summary, n) => summary.boxes[n].amount;
+
+test("the form has every box, in order, with its totals marked", () => {
+  assert.deepEqual(IR10_LAYOUT.map((l) => l.box), Array.from({ length: 60 }, (_, i) => i + 1));
+  assert.deepEqual(IR10_LAYOUT.filter((l) => l.total).map((l) => l.box), [6, 11, 25, 29, 43, 50]);
+  const s = ir10Summary({ ...YEAR, journals: [] });
+  assert.equal(Object.keys(s.boxes).length, 60);
+  assert.equal(s.boxes[1].text, "No");
 });
 
-const YEAR = { yearEnding: "2026-03-31", yearStarting: "2025-04-01", chart: SUMMARY_CHART };
+test("each account lands in the box the form expects", () => {
+  for (const [code, type, name, expected] of [
+    ["200", "Revenue", "Sales", 2],
+    ["270", "Revenue", "Interest Income", 7],
+    ["300", "Other Income", "Depreciation Recovered", 10],
+    ["301", "Revenue", "Capital Gain (Loss) on Disposal", 53],
+    ["310", "Direct Costs", "Cost of Goods Sold", 4],
+    ["412", "Overhead", "Consulting & Accounting", 16],
+    ["413", "Expense", "Subcontractors", 23],
+    ["416", "Overhead", "Depreciation", 13],
+    ["433", "Overhead", "Insurance", 14],
+    ["437", "Overhead", "Interest Expense", 15],
+    ["469", "Overhead", "Rent", 18],
+    ["473", "Overhead", "Repairs and Maintenance", 19],
+    ["477", "Overhead", "Salaries", 22],
+    ["400", "Overhead", "Advertising", 24],
+    ["401", "Overhead", "ACC Levy Expenses", 24],
+    ["610", "Accounts Receivable", "Accounts Receivable", 30],
+    ["BNK", "Bank", "Business Account", 31],
+    ["620", "Current Asset", "Prepayments", 32],
+    ["740", "Fixed Asset", "Motor Vehicle", 33],
+    ["741", "Fixed Asset", "Less Accumulated Depreciation - Vehicles", 33],
+    ["730", "Fixed Asset", "Roasting Equipment", 34],
+    ["800", "Accounts Payable", "Accounts Payable", 45],
+    ["900", "Non-current Liability", "Loan", 49],
+    ["910", "Non-current Liability", "Loan from Director", 47],
+    ["980", "Equity", "Owner Drawings", 47],
+    ["960", "Retained Earnings", "Retained Earnings", 51],
+  ]) {
+    assert.equal(ir10BoxForAccount(code, type, 0, name), expected, `${code} ${name}`);
+  }
+  assert.equal(ir10BoxForAccount("505", "Expense", 0, "Income Tax Expense"), null, "income tax is in no box");
+});
 
-test("income goes to the box it belongs in, not all to sales", () => {
+test("a capital gain is an untaxed realised gain, not income", () => {
   const s = ir10Summary({
     ...YEAR,
     journals: [
-      jn("2025-06-01", [ln("BNZ", "BNZ", 200000), ln("200", "Sales", -200000)]),
-      jn("2025-07-01", [ln("BNZ", "BNZ", 5000), ln("270", "Interest Income", -5000)]),
-      jn("2025-08-01", [ln("BNZ", "BNZ", 30000), ln("301", "Capital Gain", -30000)]),
-      jn("2025-08-02", [ln("BNZ", "BNZ", 12000), ln("300", "Depreciation Recovered", -12000)]),
+      jn("2025-06-01", [ln("BNK", 500000), ln("200", -500000)]),
+      jn("2025-08-01", [ln("BNK", 30000), ln("301", -30000)]),
     ],
   });
-  assert.equal(s.boxes[2].amount, 200000, "sales");
-  assert.equal(s.boxes[7].amount, 5000, "interest received, box 7");
-  assert.equal(s.boxes[10].amount, 42000, "capital gain and depreciation recovered, box 10");
-  assert.equal(s.totalIncome, 247000);
+  assert.equal(box(s, 10), 0, "not other income");
+  assert.equal(box(s, 11), 500000, "not in total income");
+  assert.equal(box(s, 53), 30000, "box 53");
 });
 
-test("a year of trading, and a position on a day, are not the same figure", () => {
-  // Debtors is a balance carried in; sales is a year's movement. Reading one as
-  // the other is how a return reports a year of sales as a debtor balance.
-  const s = ir10Summary({
-    ...YEAR,
-    openingBalances: { asAt: "2025-04-01", accounts: { "610": 100000, "960": -100000 } },
-    journals: [jn("2025-06-01", [ln("610", "Accounts Receivable", 50000), ln("200", "Sales", -50000)])],
-  });
-  assert.equal(s.boxes[2].amount, 50000, "the year's sales");
-  assert.equal(s.boxes[27].amount, 150000, "debtors carried in, plus the year's");
-});
-
-test("the form's own arithmetic is done, not copied", () => {
+test("totals are rounded from the exact figures, and the other boxes take the rounding", () => {
+  // Rounded one box at a time these add up to a dollar either way of their
+  // totals; a signed return rounds the totals and lets the "other" boxes take
+  // the difference, so every total adds up.
   const s = ir10Summary({
     ...YEAR,
     journals: [
-      jn("2025-06-01", [ln("BNZ", "BNZ", 500000), ln("200", "Sales", -500000)]),
-      jn("2025-06-02", [ln("BNZ", "BNZ", -150000), ln("310", "Cost of Goods Sold", 150000)]),
-      jn("2025-06-03", [ln("BNZ", "BNZ", -80000), ln("477", "Salaries", 80000)]),
-      jn("2025-06-04", [ln("BNZ", "BNZ", -20000), ln("400", "Advertising", 20000)]),
+      jn("2025-06-01", [ln("BNK", 8496961), ln("200", -8496961)]),
+      jn("2025-06-02", [ln("BNK", -3623210), ln("310", 3623210)]),
+      jn("2025-06-03", [ln("BNK", 33986), ln("300", -33986)]),
+      jn("2025-06-04", [ln("BNK", -1987726), ln("416", 1987726)]),
+      jn("2025-06-05", [ln("BNK", -58031), ln("433", 58031)]),
+      jn("2025-06-06", [ln("BNK", -329000), ln("413", 329000)]),
+      jn("2025-06-07", [ln("BNK", -1566394), ln("400", 1566394)]),
     ],
   });
-  assert.equal(s.boxes[4].amount, 150000, "purchases");
-  assert.equal(s.grossProfit, 350000, "sales less purchases");
-  assert.equal(s.boxes[22].amount, 80000, "salaries, box 22");
-  assert.equal(s.boxes[24].amount, 20000, "advertising, other expenses");
-  assert.equal(s.totalExpenses, 100000);
-  assert.equal(s.netProfitBeforeTax, 250000);
-  assert.equal(s.boxes[26].amount, s.netProfitBeforeTax);
+  assert.equal(box(s, 2), 8497000);
+  assert.equal(box(s, 4), 3623200);
+  assert.equal(box(s, 6), 4873800, "sales less purchases");
+  assert.equal(box(s, 11), 4907700, "total income rounded from 49,077.37");
+  assert.equal(box(s, 10), 33900, "other income takes the rounding: 339, not 340");
+  assert.equal(box(s, 25), 3941200, "total expenses rounded from 39,411.51");
+  assert.equal(box(s, 24), 1566500, "other expenses take the rounding");
+  assert.equal(box(s, 27), 966500, "total income less total expenses");
 });
 
-test("stock is one account read at two dates", () => {
-  // No mapping from a code alone can tell opening stock from closing stock:
-  // it is the same account at the start and the end of the year.
+test("non-deductible expenses are added back as tax adjustments", () => {
   const s = ir10Summary({
     ...YEAR,
-    openingBalances: { asAt: "2025-04-01", accounts: { "630": 40000, "960": -40000 } },
-    journals: [jn("2025-09-01", [ln("630", "Inventory", 10000), ln("310", "Cost of Goods Sold", -10000)])],
+    journals: [
+      jn("2025-06-01", [ln("BNK", 100000), ln("200", -100000)]),
+      jn("2025-06-02", [ln("BNK", -16997), ln("424", 16997)]),
+    ],
   });
-  assert.equal(s.boxes[3].amount, 40000, "opening stock");
-  assert.equal(s.boxes[5].amount, 50000, "closing stock");
-  // Gross profit = sales - opening + closing - purchases.
-  assert.equal(s.grossProfit, 0 - 40000 + 50000 - -10000);
+  assert.equal(box(s, 24), 17000, "an expense in the accounts");
+  assert.equal(box(s, 28), 17000, "added back for tax");
+  assert.equal(box(s, 29), box(s, 27) + box(s, 28));
+  assert.equal(box(s, 52), box(s, 13), "tax depreciation taken to equal the accounting figure");
 });
 
-test("liabilities and equity come out positive, as the form asks", () => {
+test("a shareholder's current account is a liability for a company, and equity otherwise", () => {
+  const openingBalances = {
+    asAt: "2025-04-01",
+    accounts: { BNK: 1000000, "910": -600000, "960": -400000 },
+  };
+  const journals = [jn("2025-06-01", [ln("980", 200000), ln("BNK", -200000)])];
+
+  const company = ir10Summary({ ...YEAR, openingBalances, journals });
+  assert.equal(box(company, 43), 800000, "assets");
+  assert.equal(box(company, 47), 400000, "the current account, net of drawings");
+  assert.equal(box(company, 50), 400000);
+  assert.equal(box(company, 51), 400000, "owners equity is what is left");
+  assert.equal(box(company, 57), 200000, "drawings");
+  assert.equal(box(company, 58), 400000, "current account at year end");
+  assert.equal(company.imbalance, 0);
+
+  const owner = ir10Summary({ ...YEAR, openingBalances, journals, currentAccountsAsLiabilities: false });
+  assert.equal(box(owner, 47), 0);
+  assert.equal(box(owner, 51), 800000, "the current account is the owner's equity");
+  assert.equal(box(owner, 58), 400000, "and still reported");
+});
+
+test("fixed assets go to the box for their class, with their depreciation", () => {
   const s = ir10Summary({
     ...YEAR,
     openingBalances: {
       asAt: "2025-04-01",
-      accounts: { "730": 500000, "800": -60000, "910": -200000, "960": -240000 },
+      accounts: { "730": 500000, "731": -200000, "740": 300000, "741": -100000, "960": -500000 },
     },
     journals: [],
   });
-  assert.equal(s.boxes[31].amount, 500000, "fixed assets");
-  assert.equal(s.boxes[34].amount, 60000, "creditors, positive");
-  assert.equal(s.boxes[37].amount, 200000, "shareholder account, positive");
-  assert.equal(s.boxes[38].amount, 240000, "retained earnings, positive");
+  assert.equal(box(s, 33), 200000, "vehicles at book value");
+  assert.equal(box(s, 34), 300000, "plant and machinery at book value");
+  assert.equal(box(s, 43), 500000);
 });
 
-test("retained earnings at balance date includes the year just traded", () => {
-  // Nothing has closed the year off, so the ledger still holds the opening
-  // figure with the result sitting in the revenue and expense accounts. Left
-  // like that, assets exceed liabilities and equity by exactly the profit.
+test("GST sits on the side it is on", () => {
+  const owed = ir10Summary({
+    ...YEAR, journals: [], openingBalances: { asAt: "2025-04-01", accounts: { "820": -50000, BNK: 50000 } },
+  });
+  assert.equal(box(owed, 47), 50000);
+  const refund = ir10Summary({
+    ...YEAR, journals: [], openingBalances: { asAt: "2025-04-01", accounts: { "820": 50000, "960": -50000 } },
+  });
+  assert.equal(box(refund, 32), 50000);
+});
+
+test("additions and disposals come from the asset register", () => {
+  const s = ir10Summary({
+    ...YEAR,
+    journals: [jn("2025-09-02", [ln("BNK", -4392), ln("470", 4392)])],
+    assets: [
+      { number: "FA-1", purchased: "2025-06-01", cost: 162037, disposed: null },
+      { number: "FA-2", purchased: "2024-01-01", cost: 100000, disposed: "2025-09-01" },
+      { number: "FA-3", purchased: "2023-01-01", cost: 90000, disposed: "2024-09-01" },
+    ],
+    proceeds: { "FA-2": 139956, "FA-3": 50000 },
+  });
+  assert.equal(box(s, 54), 162000, "bought in the year, at cost");
+  assert.equal(box(s, 55), 140000, "sold in the year, at what it fetched");
+  assert.equal(box(s, 59), 4400, "a loss on disposal, disclosed");
+  assert.equal(box(s, 24), 4400, "and an expense");
+});
+
+test("a year of trading and a position on a day are not the same figure", () => {
   const s = ir10Summary({
     ...YEAR,
     openingBalances: { asAt: "2025-04-01", accounts: { "610": 100000, "960": -100000 } },
-    journals: [jn("2025-06-01", [ln("BNZ", "BNZ", 60000), ln("200", "Sales", -60000)])],
+    journals: [jn("2025-06-01", [ln("610", 50000), ln("200", -50000)])],
   });
-  assert.equal(s.netProfitBeforeTax, 60000);
-  assert.equal(s.boxes[38].amount, 100000 + 60000, "opening, plus the year");
-  assert.equal(
-    s.totalAssets,
-    s.totalLiabilities + s.totalEquity,
-    "and the form's own check then holds",
-  );
+  assert.equal(box(s, 2), 50000, "the year's sales");
+  assert.equal(box(s, 30), 150000, "debtors carried in, plus the year's");
 });
 
 test("a journal before the year is a balance, not this year's trading", () => {
   const s = ir10Summary({
     ...YEAR,
-    openingBalances: { asAt: "2024-04-01", accounts: {} },
-    journals: [
-      jn("2024-06-01", [ln("BNZ", "BNZ", 900000), ln("200", "Sales", -900000)]),
-      jn("2025-06-01", [ln("BNZ", "BNZ", 100000), ln("200", "Sales", -100000)]),
-    ],
+    journals: [jn("2025-01-15", [ln("BNK", 70000), ln("200", -70000)])],
   });
-  assert.equal(s.boxes[2].amount, 100000, "only this year's sales");
-  assert.equal(s.boxes[28].amount, 1000000, "but all the cash");
-});
-
-test("income tax paid is in no box at all", () => {
-  const chart = [...SUMMARY_CHART, { code: "505", name: "Income Tax Expense", type: "Expense" }];
-  const s = ir10Summary({
-    ...YEAR,
-    chart,
-    journals: [jn("2025-06-01", [ln("BNZ", "BNZ", -70000), ln("505", "Income Tax Expense", 70000)])],
-  });
-  assert.equal(s.boxes[505], undefined);
-  assert.equal(s.totalExpenses, 0, "the form works to profit before tax");
+  assert.equal(box(s, 2), 0);
+  assert.equal(box(s, 31), 70000);
 });

@@ -336,3 +336,23 @@ test("without the option each account stays where its type puts it", () => {
   assert.ok(sheet.equity.lines.find((l) => l.name === "Profit for the period"));
   assert.equal(sheet.imbalance, 0);
 });
+
+test("an account typed Depreciation is an expense, and the sheet still balances", () => {
+  // Xero has a Depreciation account type. Read as no section at all, the charge
+  // dropped out of profit while the accumulated depreciation stayed on the
+  // sheet, and it read out of balance by exactly the charge.
+  const chart = [
+    ...CHART,
+    { code: "416", name: "Depreciation", type: "Depreciation" },
+  ];
+  const sheet = computeBalanceSheet({
+    asAt: "2026-03-31",
+    journals: [
+      journal("2025-06-01", [bankLine("02-1100-0022001-001", -500000), line("730", "Paragliding Equipment", 500000)]),
+      journal("2026-03-31", [line("416", "Depreciation", 120000), line("731", "Less Accumulated Depreciation on Paragliding", -120000)]),
+    ],
+    chart,
+  });
+  assert.equal(sheet.imbalance, 0);
+  assert.equal(sheet.profitForPeriod, -120000, "the charge is in the result");
+});

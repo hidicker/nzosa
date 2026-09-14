@@ -171,11 +171,17 @@ function sectionFor(type: string, balance: Cents): Section {
     case "retained earnings":
     case "historical":
       return "equity";
+    // Every type a profit and loss can hold. "Depreciation" and "Sales" are
+    // both types Xero writes; left out, a year's depreciation went to no
+    // section while its accumulated depreciation stayed on the sheet, and the
+    // demo books read out of balance by exactly that charge.
     case "revenue":
+    case "sales":
     case "other income":
     case "direct costs":
     case "expense":
     case "overhead":
+    case "depreciation":
       return "profit-and-loss";
     // GST is owed in one direction or the other and crosses between them within
     // a year, so it is placed by where it actually sits on the day.

@@ -59,6 +59,7 @@ import type {
   Journal,
   ManualJournal,
   OwnerSummary,
+  PostedJournal,
   ProfitAndLoss,
   ReportLine,
   ReportSection,
@@ -1972,12 +1973,37 @@ function behindRow(
     "<th>Gross</th><th>GST</th><th>Net</th></tr>";
   const tbody = document.createElement("tbody");
 
+  // On an accrual basis most of a sales figure comes from invoices, which post
+  // as journals and have no bank line at all. Listing only what could be found
+  // in the statements showed a handful of receipts under a figure built mostly
+  // from invoices, and said the rest was "from a journal" without saying which
+  // -- so the answer to "where does this come from" was still missing exactly
+  // the part being asked about.
+  const journals = new Map<string, Journal>();
+  for (const journal of state.ledger.journals ?? []) journals.set(String(journal.id), journal);
+  const posted = new Map<string, PostedJournal>();
+  for (const journal of postedJournals()) posted.set(journal.transactionId, journal);
+  const labelOf = reportLabeller();
+
+  // One row per entry, not per posting. A report line records the id it
+  // counted once for each line of a journal that reaches this account, so an
+  // invoice with two sales lines names itself twice -- and a row built per id
+  // that sums the whole journal each time shows the invoice twice at its full
+  // value. The figure was right; the list was not.
+  const entries = [...new Set(line.transactionIds)];
+
   let shown = 0;
   let unnamed = 0;
-  for (const id of line.transactionIds) {
+  for (const id of entries) {
     const transaction = byId.get(id);
     if (transaction === undefined) {
-      unnamed += 1;
+      const fromJournal = journalRow(id, line.code, journals, posted, labelOf, money);
+      if (fromJournal === null) {
+        unnamed += 1;
+        continue;
+      }
+      shown += 1;
+      tbody.append(fromJournal);
       continue;
     }
     shown += 1;
@@ -2012,13 +2038,53 @@ function behindRow(
   if (unnamed > 0) {
     cell.append(
       note(
-        `${shown} bank line${shown === 1 ? "" : "s"}, and ${unnamed} ` +
-          `entr${unnamed === 1 ? "y" : "ies"} from a journal rather than a bank line — ` +
-          "year-end adjustments, depreciation and the like, which have no statement behind them.",
+        `${unnamed} entr${unnamed === 1 ? "y" : "ies"} could not be named — neither a bank ` +
+          "line nor a journal this ledger still holds. Loading the journal report again " +
+          "usually settles it.",
       ),
     );
   }
   cell.append(table);
   row.append(cell);
+  return row;
+}
+
+/**
+ * One row for a figure that came from a journal rather than a statement.
+ *
+ * An invoice, a year-end adjustment, depreciation: real entries with real
+ * amounts and no bank line behind them. The amount shown is this journal's
+ * contribution to *this* report line rather than its total, because a journal
+ * touches several accounts and only one of them is the figure that was opened.
+ */
+function journalRow(
+  id: string,
+  code: string,
+  journals: Map<string, Journal>,
+  posted: Map<string, PostedJournal>,
+  labelOf: (line: { accountCode: string; accountName: string }) => string,
+  money: (cents: number) => string,
+): HTMLTableRowElement | null {
+  const imported = journals.get(id);
+  const ours = posted.get(id);
+  const source = imported ?? ours;
+  if (source === undefined) return null;
+
+  // A ledger credits income and debits expenses; the report reads the other
+  // way round, which is the same flip `accrualProfitAndLoss` makes.
+  let net = 0;
+  for (const entry of source.lines) {
+    if (labelOf(entry) !== code) continue;
+    net += -entry.amount;
+  }
+
+  const row = document.createElement("tr");
+  row.append(nameCell(source.date));
+  row.append(nameCell(imported ? `journal ${id}` : "posted"));
+  row.append(nameCell(source.narration || ""));
+  row.append(nameCell(""));
+  row.append(amountCell(""));
+  row.append(amountCell(""));
+  row.append(amountCell(money(net)));
   return row;
 }

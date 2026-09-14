@@ -188,7 +188,11 @@ export async function loadStartupFiles(folder = "data", replace = false): Promis
     if (!replace && entry.have()) continue;
     try {
       setLoadingStatus(`Loading ${entry.what}…`);
-      const response = await fetch(`${folder}/${entry.file}`);
+      // Asked of the server every time rather than taken from the browser's
+      // cache: the demo's files are replaced when the demo is, and a cached
+      // copy seeded a returning visitor with the books from before -- half a
+      // year's data missing and nothing to say so.
+      const response = await fetch(`${folder}/${entry.file}`, { cache: "no-cache" });
       if (!response.ok) continue;
       // Xero writes Windows-1252; a plain UTF-8 read mangles anything accented.
       const bytes = new Uint8Array(await response.arrayBuffer());
@@ -1267,8 +1271,8 @@ export async function seedBrowser(): Promise<void> {
   markDemoSeeded();
   reclassify();
   state.startupMessage =
-    "These are demo books — an invented coffee roastery and a rental, part way " +
-    "through a year. Nothing here is real, and you can change anything. To keep " +
+    "These are demo books — an invented coffee roastery and two rentals owned by " +
+    "a couple, part way through a year. Nothing here is real, and you can change anything. To keep " +
     "books of your own, run NZOSA on your own computer: see the guide for owners.";
 }
 

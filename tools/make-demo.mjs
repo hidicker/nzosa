@@ -25,7 +25,14 @@ mkdirSync(out, { recursive: true });
 
 const TRADING = "02-1234-0056789-000";
 const RENTAL = "02-1234-0056789-001";
+const COMMERCIAL = "02-1234-0056789-002";
 const CARD = "kea-card-4021";
+
+/** The twelve months of the demo's financial year. */
+const MONTHS = [
+  "2025-04", "2025-05", "2025-06", "2025-07", "2025-08", "2025-09",
+  "2025-10", "2025-11", "2025-12", "2026-01", "2026-02", "2026-03",
+];
 
 /** `d/m/yyyy` as the banks write it. */
 const nz = (iso) => {
@@ -114,6 +121,22 @@ const rental = [
   ["2026-02-13", 2600.0, "Rent", "17 Rimu Lane", "Beattie tenancy", "02-1199"],
   ["2026-03-13", 2600.0, "Rent", "17 Rimu Lane", "Beattie tenancy", "02-1199"],
   ["2026-03-20", -517.5, "Gutter clean", "", "Topline Roofing", "02-2277"],
+  // The mortgage on the house: interest charged each month, a deduction on the
+  // residential schedule.
+  ...MONTHS.map((month) => [`${month}-28`, -612.4, "Interest", "", "Kiwi Home Loans", "02-7788"]),
+];
+
+// ---------------------------------------------------------------------------
+// A commercial rental, owned by the same two people and registered for GST:
+// rent with GST on it, an insurance premium the tenant pays back, a repair and
+// a letting fee.
+// ---------------------------------------------------------------------------
+const commercial = [
+  ...MONTHS.map((month) => [`${month}-05`, 3450.0, "Rent", "4 Matai St", "Harakeke Florist Ltd", "02-4411"]),
+  ["2025-08-18", -2760.0, "Commercial insurance", "", "Tasman Insurance", "02-4488"],
+  ["2025-09-12", 2760.0, "Insurance recovery", "4 Matai St", "Harakeke Florist Ltd", "02-4411"],
+  ["2025-11-20", -632.5, "Roller door repair", "", "Southern Doors Ltd", "02-3355"],
+  ["2026-02-10", -414.0, "Lease renewal fee", "", "Kowhai Property Management", "02-6611"],
 ];
 
 // ---------------------------------------------------------------------------
@@ -183,6 +206,7 @@ function cardCsv(rows) {
 const files = {
   "bank-trading.csv": accountCsv("Kea Coffee Roasters Trading", TRADING, trading),
   "bank-rental.csv": accountCsv("17 Rimu Lane Rental", RENTAL, rental),
+  "bank-commercial.csv": accountCsv("4 Matai Street Commercial", COMMERCIAL, commercial),
   "bank-card.csv": cardCsv(card),
 };
 for (const [name, text] of Object.entries(files)) {
@@ -205,7 +229,7 @@ for (const [name, text] of Object.entries(files)) {
 }
 
 console.log(`bank lines:      ${imported.length}`);
-for (const account of [TRADING, RENTAL, CARD]) {
+for (const account of [TRADING, RENTAL, COMMERCIAL, CARD]) {
   console.log(`  ${account.padEnd(22)} ${imported.filter((t) => t.account === account).length}`);
 }
 // An intermediate for stage two, not part of the published demo folder.

@@ -1,0 +1,18 @@
+4 Matai Street Commercial - 02-1234-0056789-002
+Date,Amount,CCY,Serial,Trn,Particulars,Code,Reference,Other Party,Origin,Type,Batch,Other Party Account
+"05/04/2025","3450.00","NZD","","000","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/05/2025","3450.00","NZD","","001","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/06/2025","3450.00","NZD","","002","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/07/2025","3450.00","NZD","","003","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/08/2025","3450.00","NZD","","004","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"18/08/2025","-2760.00","NZD","","005","Commercial insurance","","","Tasman Insurance","02-1234","BP","0000","02-4488"
+"05/09/2025","3450.00","NZD","","006","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"12/09/2025","2760.00","NZD","","007","Insurance recovery","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/10/2025","3450.00","NZD","","008","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/11/2025","3450.00","NZD","","009","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"20/11/2025","-632.50","NZD","","010","Roller door repair","","","Southern Doors Ltd","02-1234","BP","0000","02-3355"
+"05/12/2025","3450.00","NZD","","011","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/01/2026","3450.00","NZD","","012","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"05/02/2026","3450.00","NZD","","013","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"
+"10/02/2026","-414.00","NZD","","014","Lease renewal fee","","","Kowhai Property Management","02-1234","BP","0000","02-6611"
+"05/03/2026","3450.00","NZD","","015","Rent","","4 Matai St","Harakeke Florist Ltd","02-1234","DC","0000","02-4411"

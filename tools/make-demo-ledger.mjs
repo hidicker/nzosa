@@ -26,6 +26,7 @@ const transactions = JSON.parse(readFileSync(join(root, "tools/.demo-transaction
 
 const TRADING = "02-1234-0056789-000";
 const RENTAL = "02-1234-0056789-001";
+const COMMERCIAL = "02-1234-0056789-002";
 const CARD = "kea-card-4021";
 
 /** The one bank line matching a description, so a decision can be pinned to it. */
@@ -44,6 +45,7 @@ const on = (date, account) => (t) => t.date === date && t.account === account;
 const chartRows = [
   ["200", "Sales", "Revenue", "15% GST on Income", "Coffee sold wholesale", "Kea Coffee Roasters Limited", "standard"],
   ["210", "Rent received", "Revenue", "GST Exempt", "Residential rent", "17 Rimu Lane", "exempt"],
+  ["220", "Rent received - Matai Street", "Revenue", "15% GST on Income", "Commercial rent", "4 Matai Street", "standard"],
   ["300", "Cost of goods sold", "Direct Costs", "15% GST on Expenses", "Green beans", "Kea Coffee Roasters Limited", "standard"],
   ["310", "Packaging", "Direct Costs", "15% GST on Expenses", "", "Kea Coffee Roasters Limited", "standard"],
   ["425", "Freight and courier", "Overhead", "15% GST on Expenses", "", "Kea Coffee Roasters Limited", "standard"],
@@ -61,7 +63,11 @@ const chartRows = [
   ["481", "Travel", "Overhead", "15% GST on Expenses", "", "Kea Coffee Roasters Limited", "standard"],
   ["600", "Property repairs", "Overhead", "15% GST on Expenses", "Rental repairs", "17 Rimu Lane", "exempt"],
   ["604", "Rates", "Overhead", "15% GST on Expenses", "", "17 Rimu Lane", "exempt"],
+  ["606", "Interest - 17 Rimu Lane", "Overhead", "No GST", "Mortgage interest", "17 Rimu Lane", "exempt"],
   ["608", "Property insurance", "Overhead", "15% GST on Expenses", "", "17 Rimu Lane", "exempt"],
+  ["612", "Insurance - Matai Street", "Overhead", "15% GST on Expenses", "", "4 Matai Street", "standard"],
+  ["614", "Repairs - Matai Street", "Overhead", "15% GST on Expenses", "", "4 Matai Street", "standard"],
+  ["616", "Property management - Matai Street", "Overhead", "15% GST on Expenses", "Letting and lease fees", "4 Matai Street", "standard"],
   ["630", "Drawings", "Current Liability", "No GST", "Money taken out", "Kea Coffee Roasters Limited", "out-of-scope"],
   ["710", "Plant and equipment", "Fixed Asset", "15% GST on Expenses", "", "Kea Coffee Roasters Limited", "standard"],
   ["711", "Less accumulated depreciation on Plant and equipment", "Fixed Asset", "No GST", "", "Kea Coffee Roasters Limited", "out-of-scope"],
@@ -69,13 +75,19 @@ const chartRows = [
   ["500", "Depreciation", "Depreciation", "No GST", "", "Kea Coffee Roasters Limited", "out-of-scope"],
 ];
 
+/** The two rentals, and who owns them. The company owns its own profit. */
+const ENTITY_META = {
+  "17 Rimu Lane": { id: "17-rimu-lane", owners: "Ana Whitcombe 50%; Tom Whitcombe 50%", kind: "residential" },
+  "4 Matai Street": { id: "4-matai-street", owners: "Ana Whitcombe 50%; Tom Whitcombe 50%", kind: "commercial" },
+};
+
 const q = (v) => `"${String(v).replaceAll('"', '""')}"`;
 const chartCsv = [
   "*Code,*Name,*Type,*Tax Code,Description,Dashboard,Expense Claims,Enable Payments,Entity,GST Treatment,Entity Owners,Entity Kind",
   ...chartRows.map(([code, name, type, tax, desc, entity, treatment]) =>
     [code, name, type, tax, desc, "", "", "", entity, treatment,
-     entity === "17 Rimu Lane" ? "Ana Whitcombe 50%; Tom Whitcombe 50%" : "",
-     entity === "17 Rimu Lane" ? "residential" : "business",
+     ENTITY_META[entity]?.owners ?? "",
+     ENTITY_META[entity]?.kind ?? "business",
     ].map(q).join(","),
   ),
 ].join("\n") + "\n";
@@ -178,6 +190,20 @@ for (const t of transactions) {
       side: "none",
     });
   }
+  if (t.account === RENTAL && t.otherParty === "Kiwi Home Loans") {
+    confirm(t, "Interest - 17 Rimu Lane - 606", "Mortgage interest on the rental", {
+      treatment: "exempt",
+      side: "none",
+    });
+  }
+  // The commercial tenant pays rent with GST on it, and repays the insurance;
+  // both are income of a registered rental.
+  if (t.account === COMMERCIAL && t.otherParty === "Harakeke Florist Ltd") {
+    confirm(t, "Rent received - Matai Street - 220", t.particulars === "Rent" ? "Commercial rent" : "Insurance repaid by the tenant");
+  }
+  if (t.account === COMMERCIAL && t.otherParty === "Tasman Insurance") {
+    confirm(t, "Insurance - Matai Street - 612", "Commercial property policy");
+  }
   if (t.account === CARD && t.otherParty.startsWith("Xero Subscription")) {
     confirm(t, "Subscriptions - 469", "Accounting software");
   }
@@ -265,6 +291,7 @@ const entities = {
       name: "Kea Coffee Roasters Limited",
       note: "The trading company",
       kind: "business",
+      gstRegistered: true,
       owners: [],
     },
     {
@@ -272,24 +299,56 @@ const entities = {
       name: "17 Rimu Lane",
       note: "Residential rental, jointly owned",
       kind: "residential",
+      // Residential rent is an exempt supply, so the rental registers for nothing.
+      gstRegistered: false,
       owners: [
-        { name: "Ana Whitcombe", share: 50 },
-        { name: "Tom Whitcombe", share: 50 },
+        { name: "Ana Whitcombe", percent: 50 },
+        { name: "Tom Whitcombe", percent: 50 },
+      ],
+    },
+    {
+      id: "4-matai-street",
+      name: "4 Matai Street",
+      note: "Commercial rental, jointly owned",
+      kind: "commercial",
+      gstRegistered: true,
+      owners: [
+        { name: "Ana Whitcombe", percent: 50 },
+        { name: "Tom Whitcombe", percent: 50 },
       ],
     },
   ],
   accounts: Object.fromEntries(
     chartRows.map(([code, , , , , entity]) => [
       code,
-      entity === "17 Rimu Lane" ? "17-rimu-lane" : "kea-coffee-roasters-limited",
+      ENTITY_META[entity]?.id ?? "kea-coffee-roasters-limited",
     ]),
   ),
   banks: {
     [TRADING]: ["kea-coffee-roasters-limited"],
     [CARD]: ["kea-coffee-roasters-limited"],
     [RENTAL]: ["17-rimu-lane"],
+    [COMMERCIAL]: ["4-matai-street"],
   },
 };
+
+// ---------------------------------------------------------------------------
+// The two owners' returns: what never reaches these bank accounts. Salary,
+// interest, dividends and KiwiSaver, from the income summary and certificates,
+// and the provisional tax each paid during the year.
+// ---------------------------------------------------------------------------
+const taxExtras = [
+  { owner: "Ana Whitcombe", year: 2026, category: "salary", payer: "Nelson Tasman Health", gross: cents(72480), credits: cents(15174.92) },
+  { owner: "Ana Whitcombe", year: 2026, category: "interest", payer: "Kiwi Savings Bank", gross: cents(186.4), credits: cents(61.52) },
+  { owner: "Ana Whitcombe", year: 2026, category: "pie", payer: "Kiwi KiwiSaver Scheme", gross: cents(2145), credits: cents(600.6) },
+  { owner: "Tom Whitcombe", year: 2026, category: "interest", payer: "Kiwi Savings Bank", gross: cents(186.4), credits: cents(32.62) },
+  { owner: "Tom Whitcombe", year: 2026, category: "dividends", payer: "Southern Shares Nominees", gross: cents(583.33), credits: 0, imputation: cents(163.33) },
+  { owner: "Tom Whitcombe", year: 2026, category: "pie", payer: "Kiwi KiwiSaver Scheme", gross: cents(1850), credits: cents(518) },
+];
+const ir3Details = [
+  { owner: "Ana Whitcombe", year: 2026, provisionalTaxPaid: cents(9000) },
+  { owner: "Tom Whitcombe", year: 2026, provisionalTaxPaid: cents(3500), ietcEligible: true },
+];
 
 const ledger = {
   version: 1,
@@ -303,6 +362,8 @@ const ledger = {
   chart: chart.accounts,
   assets: assets.assets,
   invoices: invoices.invoices,
+  taxExtras,
+  ir3Details,
 };
 writeFileSync(join(out, "ledger.json"), JSON.stringify(ledger, null, 2));
 

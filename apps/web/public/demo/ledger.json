@@ -1381,21 +1381,21 @@
       }
     },
     {
-      "id": "45651e24c89194fd",
+      "id": "48c222ba64e07980",
       "occurrence": 1,
-      "date": "2025-05-02",
-      "amount": 260000,
+      "date": "2025-04-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "002",
-      "particulars": "Rent",
+      "particulars": "Interest",
       "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-1199",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1407,9 +1407,9 @@
       }
     },
     {
-      "id": "ebaffbafdf5e5875",
+      "id": "4de19f94850aa3b4",
       "occurrence": 1,
-      "date": "2025-05-30",
+      "date": "2025-05-02",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1433,13 +1433,39 @@
       }
     },
     {
-      "id": "112f2810a4b8d2bd",
+      "id": "150969381decfc8f",
       "occurrence": 1,
-      "date": "2025-06-27",
-      "amount": 260000,
+      "date": "2025-05-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "004",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 7
+      }
+    },
+    {
+      "id": "e31b29790990f807",
+      "occurrence": 1,
+      "date": "2025-05-30",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "005",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -1455,39 +1481,13 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 7
-      }
-    },
-    {
-      "id": "3b37a6a38592acd5",
-      "occurrence": 1,
-      "date": "2025-07-14",
-      "amount": -148000,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "005",
-      "particulars": "House insurance",
-      "code": "",
-      "reference": "",
-      "otherParty": "Tasman Insurance",
-      "origin": "02-1234",
-      "type": "BP",
-      "batch": "0000",
-      "otherPartyAccount": "02-4488",
-      "account": "02-1234-0056789-001",
-      "extras": {
-        "accountLabel": "17 Rimu Lane Rental"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-rental.csv",
         "line": 8
       }
     },
     {
-      "id": "f9c6c79665ba0be4",
+      "id": "7407eb9f27535043",
       "occurrence": 1,
-      "date": "2025-07-25",
+      "date": "2025-06-27",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1511,21 +1511,21 @@
       }
     },
     {
-      "id": "b09659da291b056f",
+      "id": "a9e5a9f743ce8577",
       "occurrence": 1,
-      "date": "2025-08-22",
-      "amount": 260000,
+      "date": "2025-06-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "007",
-      "particulars": "Rent",
+      "particulars": "Interest",
       "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-1199",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1537,21 +1537,21 @@
       }
     },
     {
-      "id": "2e42caf18e548e93",
+      "id": "0c80e717fec8e5e4",
       "occurrence": 1,
-      "date": "2025-09-19",
-      "amount": 260000,
+      "date": "2025-07-14",
+      "amount": -148000,
       "currency": "NZD",
       "serial": "",
       "trn": "008",
-      "particulars": "Rent",
+      "particulars": "House insurance",
       "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
+      "reference": "",
+      "otherParty": "Tasman Insurance",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-1199",
+      "otherPartyAccount": "02-4488",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1563,9 +1563,9 @@
       }
     },
     {
-      "id": "392056e960e4418a",
+      "id": "06766a378c1ed9e7",
       "occurrence": 1,
-      "date": "2025-10-17",
+      "date": "2025-07-25",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1589,21 +1589,21 @@
       }
     },
     {
-      "id": "bd1d469103696582",
+      "id": "3dca5d5f188ba566",
       "occurrence": 1,
-      "date": "2025-10-24",
-      "amount": -124000,
+      "date": "2025-07-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "010",
-      "particulars": "Rates",
+      "particulars": "Interest",
       "code": "",
       "reference": "",
-      "otherParty": "Nelson City Council",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
       "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-5511",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1615,9 +1615,9 @@
       }
     },
     {
-      "id": "01e80ef761babfad",
+      "id": "aff6b07390223ba6",
       "occurrence": 1,
-      "date": "2025-11-14",
+      "date": "2025-08-22",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1641,21 +1641,21 @@
       }
     },
     {
-      "id": "e46851baa5125571",
+      "id": "32042f61614768c3",
       "occurrence": 1,
-      "date": "2025-11-28",
-      "amount": -86250,
+      "date": "2025-08-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "012",
-      "particulars": "Plumbing repair",
+      "particulars": "Interest",
       "code": "",
       "reference": "",
-      "otherParty": "Kahu Plumbing",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
       "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-6644",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1667,9 +1667,9 @@
       }
     },
     {
-      "id": "d7b525b0e29b6886",
+      "id": "805b60b44d3351f7",
       "occurrence": 1,
-      "date": "2025-12-12",
+      "date": "2025-09-19",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1693,21 +1693,21 @@
       }
     },
     {
-      "id": "2aa12adc7b446760",
+      "id": "2b279b2857c881e8",
       "occurrence": 1,
-      "date": "2026-01-16",
-      "amount": 260000,
+      "date": "2025-09-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "014",
-      "particulars": "Rent",
+      "particulars": "Interest",
       "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-1199",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1719,9 +1719,9 @@
       }
     },
     {
-      "id": "0594aacee7b52fe1",
+      "id": "5f9128ca7f8bc52d",
       "occurrence": 1,
-      "date": "2026-02-13",
+      "date": "2025-10-17",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
@@ -1745,13 +1745,65 @@
       }
     },
     {
-      "id": "f868c8be23760b9b",
+      "id": "1d14f0f6d1b7bfa4",
       "occurrence": 1,
-      "date": "2026-03-13",
-      "amount": 260000,
+      "date": "2025-10-24",
+      "amount": -124000,
       "currency": "NZD",
       "serial": "",
       "trn": "016",
+      "particulars": "Rates",
+      "code": "",
+      "reference": "",
+      "otherParty": "Nelson City Council",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5511",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 19
+      }
+    },
+    {
+      "id": "25159f76177cb359",
+      "occurrence": 1,
+      "date": "2025-10-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "017",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 20
+      }
+    },
+    {
+      "id": "90b87f7704b07eec",
+      "occurrence": 1,
+      "date": "2025-11-14",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "018",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -1767,17 +1819,251 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 19
+        "line": 21
       }
     },
     {
-      "id": "3f655df9b516edd0",
+      "id": "004ab50478206608",
+      "occurrence": 1,
+      "date": "2025-11-28",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "019",
+      "particulars": "Plumbing repair",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kahu Plumbing",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-6644",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 22
+      }
+    },
+    {
+      "id": "dca495e99ed1644e",
+      "occurrence": 1,
+      "date": "2025-11-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "020",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 23
+      }
+    },
+    {
+      "id": "4ca5353baab08f39",
+      "occurrence": 1,
+      "date": "2025-12-12",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "021",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 24
+      }
+    },
+    {
+      "id": "f938be730e9913cb",
+      "occurrence": 1,
+      "date": "2025-12-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "022",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 25
+      }
+    },
+    {
+      "id": "79782ba9cf88c86a",
+      "occurrence": 1,
+      "date": "2026-01-16",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "023",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 26
+      }
+    },
+    {
+      "id": "468564a2a7b62ac0",
+      "occurrence": 1,
+      "date": "2026-01-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "024",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 27
+      }
+    },
+    {
+      "id": "d7b9273a2e5fcab0",
+      "occurrence": 1,
+      "date": "2026-02-13",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "025",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 28
+      }
+    },
+    {
+      "id": "fd6abb5714755aa5",
+      "occurrence": 1,
+      "date": "2026-02-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "026",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 29
+      }
+    },
+    {
+      "id": "7de8741cb4c8df23",
+      "occurrence": 1,
+      "date": "2026-03-13",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "027",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 30
+      }
+    },
+    {
+      "id": "d87842b86925a3b2",
       "occurrence": 1,
       "date": "2026-03-20",
       "amount": -51750,
       "currency": "NZD",
       "serial": "",
-      "trn": "017",
+      "trn": "028",
       "particulars": "Gutter clean",
       "code": "",
       "reference": "",
@@ -1793,7 +2079,449 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 20
+        "line": 31
+      }
+    },
+    {
+      "id": "c0943948c9eaf1e7",
+      "occurrence": 1,
+      "date": "2026-03-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "029",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 32
+      }
+    },
+    {
+      "id": "d215874ce7074125",
+      "occurrence": 1,
+      "date": "2025-04-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "000",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 3
+      }
+    },
+    {
+      "id": "5914b648c0358d69",
+      "occurrence": 1,
+      "date": "2025-05-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "001",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 4
+      }
+    },
+    {
+      "id": "679e8822a74f290d",
+      "occurrence": 1,
+      "date": "2025-06-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "002",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 5
+      }
+    },
+    {
+      "id": "9d37e4d5cb1595b9",
+      "occurrence": 1,
+      "date": "2025-07-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "003",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 6
+      }
+    },
+    {
+      "id": "016fa3d71d135bed",
+      "occurrence": 1,
+      "date": "2025-08-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "004",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 7
+      }
+    },
+    {
+      "id": "e18d32cf806e491f",
+      "occurrence": 1,
+      "date": "2025-08-18",
+      "amount": -276000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "005",
+      "particulars": "Commercial insurance",
+      "code": "",
+      "reference": "",
+      "otherParty": "Tasman Insurance",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-4488",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 8
+      }
+    },
+    {
+      "id": "1dca72add3c6d13c",
+      "occurrence": 1,
+      "date": "2025-09-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "006",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 9
+      }
+    },
+    {
+      "id": "8a7da1dff58d3ee0",
+      "occurrence": 1,
+      "date": "2025-09-12",
+      "amount": 276000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "007",
+      "particulars": "Insurance recovery",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 10
+      }
+    },
+    {
+      "id": "de0da6ff85ab1a98",
+      "occurrence": 1,
+      "date": "2025-10-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "008",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 11
+      }
+    },
+    {
+      "id": "183924143c56d80c",
+      "occurrence": 1,
+      "date": "2025-11-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "009",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 12
+      }
+    },
+    {
+      "id": "deca3f5e434f6acb",
+      "occurrence": 1,
+      "date": "2025-11-20",
+      "amount": -63250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "010",
+      "particulars": "Roller door repair",
+      "code": "",
+      "reference": "",
+      "otherParty": "Southern Doors Ltd",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-3355",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 13
+      }
+    },
+    {
+      "id": "4ded74e51f850e6c",
+      "occurrence": 1,
+      "date": "2025-12-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "011",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 14
+      }
+    },
+    {
+      "id": "23cbf0a416d0c996",
+      "occurrence": 1,
+      "date": "2026-01-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "012",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 15
+      }
+    },
+    {
+      "id": "47854a2918b3a70c",
+      "occurrence": 1,
+      "date": "2026-02-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "013",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 16
+      }
+    },
+    {
+      "id": "c1fa3ebc159455e1",
+      "occurrence": 1,
+      "date": "2026-02-10",
+      "amount": -41400,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "014",
+      "particulars": "Lease renewal fee",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kowhai Property Management",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-6611",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 17
+      }
+    },
+    {
+      "id": "cbd4516a8219122d",
+      "occurrence": 1,
+      "date": "2026-03-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "015",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 18
       }
     },
     {
@@ -2502,7 +3230,15 @@
       "note": "Council rates on the rental",
       "at": "2025-04-18"
     },
-    "45651e24c89194fd": {
+    "48c222ba64e07980": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-04-28"
+    },
+    "4de19f94850aa3b4": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2510,7 +3246,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-05-02"
     },
-    "ebaffbafdf5e5875": {
+    "150969381decfc8f": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-05-28"
+    },
+    "e31b29790990f807": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2518,7 +3262,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-05-30"
     },
-    "112f2810a4b8d2bd": {
+    "7407eb9f27535043": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2526,7 +3270,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-06-27"
     },
-    "f9c6c79665ba0be4": {
+    "a9e5a9f743ce8577": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-06-28"
+    },
+    "06766a378c1ed9e7": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2534,7 +3286,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-07-25"
     },
-    "b09659da291b056f": {
+    "3dca5d5f188ba566": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-07-28"
+    },
+    "aff6b07390223ba6": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2542,7 +3302,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-08-22"
     },
-    "2e42caf18e548e93": {
+    "32042f61614768c3": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-08-28"
+    },
+    "805b60b44d3351f7": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2550,7 +3318,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-09-19"
     },
-    "392056e960e4418a": {
+    "2b279b2857c881e8": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-09-28"
+    },
+    "5f9128ca7f8bc52d": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2558,7 +3334,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-10-17"
     },
-    "bd1d469103696582": {
+    "1d14f0f6d1b7bfa4": {
       "confirmed": true,
       "code": "Rates - 604",
       "treatment": "exempt",
@@ -2566,7 +3342,15 @@
       "note": "Council rates on the rental",
       "at": "2025-10-24"
     },
-    "01e80ef761babfad": {
+    "25159f76177cb359": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-10-28"
+    },
+    "90b87f7704b07eec": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2574,7 +3358,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-11-14"
     },
-    "d7b525b0e29b6886": {
+    "dca495e99ed1644e": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-11-28"
+    },
+    "4ca5353baab08f39": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2582,7 +3374,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-12-12"
     },
-    "2aa12adc7b446760": {
+    "f938be730e9913cb": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2025-12-28"
+    },
+    "79782ba9cf88c86a": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2590,7 +3390,15 @@
       "note": "Residential rent, exempt from GST",
       "at": "2026-01-16"
     },
-    "0594aacee7b52fe1": {
+    "468564a2a7b62ac0": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2026-01-28"
+    },
+    "d7b9273a2e5fcab0": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -2598,13 +3406,141 @@
       "note": "Residential rent, exempt from GST",
       "at": "2026-02-13"
     },
-    "f868c8be23760b9b": {
+    "fd6abb5714755aa5": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2026-02-28"
+    },
+    "7de8741cb4c8df23": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
       "side": "none",
       "note": "Residential rent, exempt from GST",
       "at": "2026-03-13"
+    },
+    "c0943948c9eaf1e7": {
+      "confirmed": true,
+      "code": "Interest - 17 Rimu Lane - 606",
+      "treatment": "exempt",
+      "side": "none",
+      "note": "Mortgage interest on the rental",
+      "at": "2026-03-28"
+    },
+    "d215874ce7074125": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-04-05"
+    },
+    "5914b648c0358d69": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-05-05"
+    },
+    "679e8822a74f290d": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-06-05"
+    },
+    "9d37e4d5cb1595b9": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-07-05"
+    },
+    "016fa3d71d135bed": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-08-05"
+    },
+    "e18d32cf806e491f": {
+      "confirmed": true,
+      "code": "Insurance - Matai Street - 612",
+      "treatment": "standard",
+      "side": "purchases",
+      "note": "Commercial property policy",
+      "at": "2025-08-18"
+    },
+    "1dca72add3c6d13c": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-09-05"
+    },
+    "8a7da1dff58d3ee0": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Insurance repaid by the tenant",
+      "at": "2025-09-12"
+    },
+    "de0da6ff85ab1a98": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-10-05"
+    },
+    "183924143c56d80c": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-11-05"
+    },
+    "4ded74e51f850e6c": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2025-12-05"
+    },
+    "23cbf0a416d0c996": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2026-01-05"
+    },
+    "47854a2918b3a70c": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2026-02-05"
+    },
+    "cbd4516a8219122d": {
+      "confirmed": true,
+      "code": "Rent received - Matai Street - 220",
+      "treatment": "standard",
+      "side": "sales",
+      "note": "Commercial rent",
+      "at": "2026-03-05"
     },
     "d6ec29355c67f9d9": {
       "confirmed": true,
@@ -2729,6 +3665,7 @@
         "name": "Kea Coffee Roasters Limited",
         "note": "The trading company",
         "kind": "business",
+        "gstRegistered": true,
         "owners": []
       },
       {
@@ -2736,14 +3673,32 @@
         "name": "17 Rimu Lane",
         "note": "Residential rental, jointly owned",
         "kind": "residential",
+        "gstRegistered": false,
         "owners": [
           {
             "name": "Ana Whitcombe",
-            "share": 50
+            "percent": 50
           },
           {
             "name": "Tom Whitcombe",
-            "share": 50
+            "percent": 50
+          }
+        ]
+      },
+      {
+        "id": "4-matai-street",
+        "name": "4 Matai Street",
+        "note": "Commercial rental, jointly owned",
+        "kind": "commercial",
+        "gstRegistered": true,
+        "owners": [
+          {
+            "name": "Ana Whitcombe",
+            "percent": 50
+          },
+          {
+            "name": "Tom Whitcombe",
+            "percent": 50
           }
         ]
       }
@@ -2751,6 +3706,7 @@
     "accounts": {
       "200": "kea-coffee-roasters-limited",
       "210": "17-rimu-lane",
+      "220": "4-matai-street",
       "300": "kea-coffee-roasters-limited",
       "310": "kea-coffee-roasters-limited",
       "425": "kea-coffee-roasters-limited",
@@ -2769,7 +3725,11 @@
       "500": "kea-coffee-roasters-limited",
       "600": "17-rimu-lane",
       "604": "17-rimu-lane",
+      "606": "17-rimu-lane",
       "608": "17-rimu-lane",
+      "612": "4-matai-street",
+      "614": "4-matai-street",
+      "616": "4-matai-street",
       "630": "kea-coffee-roasters-limited",
       "710": "kea-coffee-roasters-limited",
       "711": "kea-coffee-roasters-limited",
@@ -2784,6 +3744,9 @@
       ],
       "02-1234-0056789-001": [
         "17-rimu-lane"
+      ],
+      "02-1234-0056789-002": [
+        "4-matai-street"
       ]
     }
   },
@@ -2808,6 +3771,17 @@
       "gstTreatment": "exempt",
       "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
       "entityKind": "residential"
+    },
+    {
+      "code": "220",
+      "name": "Rent received - Matai Street",
+      "type": "Revenue",
+      "taxCode": "15% GST on Income",
+      "description": "Commercial rent",
+      "entity": "4 Matai Street",
+      "gstTreatment": "standard",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "commercial"
     },
     {
       "code": "300",
@@ -2982,6 +3956,17 @@
       "entityKind": "residential"
     },
     {
+      "code": "606",
+      "name": "Interest - 17 Rimu Lane",
+      "type": "Overhead",
+      "taxCode": "No GST",
+      "description": "Mortgage interest",
+      "entity": "17 Rimu Lane",
+      "gstTreatment": "exempt",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "residential"
+    },
+    {
       "code": "608",
       "name": "Property insurance",
       "type": "Overhead",
@@ -2991,6 +3976,39 @@
       "gstTreatment": "exempt",
       "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
       "entityKind": "residential"
+    },
+    {
+      "code": "612",
+      "name": "Insurance - Matai Street",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "4 Matai Street",
+      "gstTreatment": "standard",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "commercial"
+    },
+    {
+      "code": "614",
+      "name": "Repairs - Matai Street",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "",
+      "entity": "4 Matai Street",
+      "gstTreatment": "standard",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "commercial"
+    },
+    {
+      "code": "616",
+      "name": "Property management - Matai Street",
+      "type": "Overhead",
+      "taxCode": "15% GST on Expenses",
+      "description": "Letting and lease fees",
+      "entity": "4 Matai Street",
+      "gstTreatment": "standard",
+      "entityOwners": "Ana Whitcombe 50%; Tom Whitcombe 50%",
+      "entityKind": "commercial"
     },
     {
       "code": "630",
@@ -3472,6 +4490,70 @@
           "quantity": 1
         }
       ]
+    }
+  ],
+  "taxExtras": [
+    {
+      "owner": "Ana Whitcombe",
+      "year": 2026,
+      "category": "salary",
+      "payer": "Nelson Tasman Health",
+      "gross": 7248000,
+      "credits": 1517492
+    },
+    {
+      "owner": "Ana Whitcombe",
+      "year": 2026,
+      "category": "interest",
+      "payer": "Kiwi Savings Bank",
+      "gross": 18640,
+      "credits": 6152
+    },
+    {
+      "owner": "Ana Whitcombe",
+      "year": 2026,
+      "category": "pie",
+      "payer": "Kiwi KiwiSaver Scheme",
+      "gross": 214500,
+      "credits": 60060
+    },
+    {
+      "owner": "Tom Whitcombe",
+      "year": 2026,
+      "category": "interest",
+      "payer": "Kiwi Savings Bank",
+      "gross": 18640,
+      "credits": 3262
+    },
+    {
+      "owner": "Tom Whitcombe",
+      "year": 2026,
+      "category": "dividends",
+      "payer": "Southern Shares Nominees",
+      "gross": 58333,
+      "credits": 0,
+      "imputation": 16333
+    },
+    {
+      "owner": "Tom Whitcombe",
+      "year": 2026,
+      "category": "pie",
+      "payer": "Kiwi KiwiSaver Scheme",
+      "gross": 185000,
+      "credits": 51800
+    }
+  ],
+  "ir3Details": [
+    {
+      "owner": "Ana Whitcombe",
+      "year": 2026,
+      "provisionalTaxPaid": 900000
+    },
+    {
+      "owner": "Tom Whitcombe",
+      "year": 2026,
+      "provisionalTaxPaid": 350000,
+      "ietcEligible": true
     }
   ]
 }

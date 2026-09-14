@@ -247,7 +247,7 @@ Expect your accountant to make adjustments. That is what they are for. The point
 
 ## Trying it first
 
-There is a complete invented set of books — a coffee roastery and a rental, part way through a year, with codings, splits, invoices and a transfer already in it. Worth ten minutes before you load a real year.
+There is a complete invented set of books — a coffee roastery and two rentals — one residential, one commercial and registered for GST — owned by a couple whose tax returns are in it too, part way through a year, with codings, splits, invoices and a transfer already in it. Worth ten minutes before you load a real year.
 
 Online, it loads by itself: anything you see there is invented, and you can change it freely. On your own machine it opens in books of its own, from **Setup → Demo data**, so nothing of yours is touched.
 

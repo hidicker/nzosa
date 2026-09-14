@@ -38,9 +38,15 @@ const rules = {
     { priority: 70, keyword: "NELSON CITY COUNCIL", code: "Rates - 604", note: "Rental rates" },
     { priority: 70, keyword: "KAHU PLUMBING", code: "Property repairs - 600", note: "Rental plumbing" },
     { priority: 70, keyword: "TOPLINE ROOFING", code: "Property repairs - 600", note: "Rental gutters" },
+    { priority: 70, keyword: "KIWI HOME LOANS", code: "Interest - 17 Rimu Lane - 606", note: "Rental mortgage interest" },
+    // The commercial rental is registered for GST, so its rent and costs carry it.
+    { priority: 70, keyword: "HARAKEKE FLORIST", code: "Rent received - Matai Street - 220", note: "Commercial rent" },
+    { priority: 70, keyword: "SOUTHERN DOORS", code: "Repairs - Matai Street - 614", note: "Commercial repairs" },
+    { priority: 70, keyword: "KOWHAI PROPERTY", code: "Property management - Matai Street - 616", note: "Letting fees" },
     // Insurance goes to two different places depending on which book it is in,
     // so the account is part of the condition rather than the keyword.
     { priority: 80, keyword: "TASMAN INSURANCE", account: "02-1234-0056789-001", code: "Property insurance - 608", note: "Rental policy" },
+    { priority: 80, keyword: "TASMAN INSURANCE", account: "02-1234-0056789-002", code: "Insurance - Matai Street - 612", note: "Commercial property policy" },
     { priority: 60, keyword: "TASMAN INSURANCE", code: "Insurance - 433", note: "Business policy" },
   ],
   defaults: [],
@@ -49,6 +55,7 @@ const rules = {
     "Rates - 604": "exempt",
     "Property repairs - 600": "exempt",
     "Property insurance - 608": "exempt",
+    "Interest - 17 Rimu Lane - 606": "exempt",
     "Drawings - 630": "out-of-scope",
   },
 };

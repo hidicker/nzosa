@@ -44,6 +44,15 @@ Options -Indexes
   Header set X-Content-Type-Options "nosniff"
   Header set Referrer-Policy "strict-origin-when-cross-origin"
 </IfModule>
+
+# Revalidate on every visit. The page, the app and the demo data are replaced
+# together when the demo is uploaded; a browser holding an old copy of any one
+# of them shows a mix of two versions.
+<IfModule mod_headers.c>
+  <FilesMatch "\\.(html|js|css|json|csv)$">
+    Header set Cache-Control "no-cache"
+  </FilesMatch>
+</IfModule>
 `;
 writeFileSync(join(demoDir, ".htaccess"), htaccessContent, "utf-8");
 

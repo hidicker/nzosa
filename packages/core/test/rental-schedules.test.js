@@ -137,3 +137,12 @@ test("an individual's return combines rental shares with income from outside the
   assert.deepEqual(result.instalments, [185_400, 185_400, 185_500]);
   assert.ok(result.notes.some((n) => /independent earner/.test(n)), "the assumption is said");
 });
+
+test("an owner without a usable percentage has no share, rather than NaN", () => {
+  const schedule = rentalSchedule(
+    { ...TOTARA, owners: [{ name: "Ana", share: 50 }] },
+    report([["R", 1_000_000]], []),
+    nameOf,
+  );
+  assert.equal(ownerRentalSchedule(schedule, "Ana"), null);
+});

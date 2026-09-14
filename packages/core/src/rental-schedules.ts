@@ -136,7 +136,9 @@ export function ownerRentalSchedule(
   owner: string,
 ): OwnerRentalSchedule | null {
   const share = (schedule.entity.owners ?? []).find((o) => o.name === owner);
-  if (share === undefined || share.percent <= 0) return null;
+  // A share with no usable percentage -- an owner saved before shares were
+  // percentages -- is no share at all, rather than NaN on every line of a return.
+  if (share === undefined || !Number.isFinite(share.percent) || share.percent <= 0) return null;
   const part = (amount: Cents): Cents => Math.round((amount * share.percent) / 100);
 
   let rents = 0;

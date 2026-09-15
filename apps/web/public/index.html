@@ -368,8 +368,6 @@
             <select id="report-year"></select>
             <button id="journals-pick" type="button">Load ledger&hellip;</button>
             <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
-            <button id="assets-pick" type="button">Load assets&hellip;</button>
-            <input id="assets-input" type="file" accept=".csv,text/csv" hidden />
             <button id="report-download" type="button">Download CSV</button>
           </div>
         </div>
@@ -388,13 +386,15 @@
           computed from what is loaded here.
         </p>
         <div id="assets-drop" class="dropzone dropzone-slim">
-          <p class="dropzone-title">Drop your fixed asset register here</p>
+          <p class="dropzone-title">Load a register from a file</p>
           <p class="dropzone-sub">
-            Xero: <strong>Accounting &rarr; Fixed assets</strong>, then
-            <strong>Export</strong>. A <code>.csv</code> or <code>.xlsx</code>.
+            The template below filled in on a sheet, a register exported from here, or from Xero:
+            <strong>Accounting &rarr; Fixed assets</strong>, then <strong>Export</strong>. A
+            <code>.csv</code>. It replaces the register held.
             <br />Read and parsed in this tab. Nothing is uploaded.
           </p>
-          <button id="assets-pick2" type="button" class="primary">Choose file</button>
+          <button id="assets-pick2" type="button">Choose file</button>
+          <input id="assets-input" type="file" accept=".csv,text/csv" hidden />
         </div>
         <div id="assets-body"></div>
       </section>

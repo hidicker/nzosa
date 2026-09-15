@@ -1,5 +1,7 @@
+import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import {
+  accountsForEditing,
   unregisteredCode,
   accountsFor,
   bankLabel,
@@ -1796,6 +1798,38 @@ async function confirmLine(
   // stated, not merely a line being coded.
   if ((one.code ?? "") === "" && code !== "")
     await ruleFromDecision(one.transaction, code);
+
+  // A purchase coded to a fixed asset account is an asset, and only the
+  // register depreciates it. Offered here, where the date and the cost are in
+  // front of the person, rather than left to be remembered on another page.
+  const account = accountsForEditing().find((row) => row.label === code)?.account;
+  if (
+    account !== undefined &&
+    account.type.trim().toLowerCase() === "fixed asset" &&
+    !/accumulated/i.test(account.name) &&
+    one.transaction.amount < 0
+  ) {
+    const gross = -one.transaction.amount;
+    const cost = rate === "15" ? gross - Math.round((gross * 3) / 23) : gross;
+    const held = (state.ledger.assets ?? []).some(
+      (asset) => asset.purchased === one.transaction.date && asset.cost === cost,
+    );
+    if (
+      !held &&
+      confirm(
+        `Coded to ${account.name}. Add this purchase to the fixed asset register, at ` +
+          `${formatAmount(cost)}${rate === "15" ? " excluding GST" : ""}, so it is depreciated?`,
+      )
+    ) {
+      offerAsset({
+        name: description.trim() || one.transaction.otherParty || "",
+        type: account.name,
+        purchased: one.transaction.date,
+        cost,
+      });
+      return;
+    }
+  }
 
   redraw("reconcile");
 }

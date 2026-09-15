@@ -284,7 +284,7 @@ export function formatDepreciationSchedule(schedule: DepreciationSchedule, title
   const rows: string[][] = [
     [title],
     [`For the period ${schedule.period.from} to ${schedule.period.to}`],
-    ["Straight line, full month averaging. Assets disposed of in the period take no depreciation."],
+    ["Each asset on its own method, straight line or diminishing value, with full month averaging. Assets disposed of in the period take no depreciation."],
     [],
     ["Type", "Asset", "Number", "Purchased", "Cost", "Rate %", "Opening", "Depreciation",
      "Accum dep", "Closing", "Disposed"],

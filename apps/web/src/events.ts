@@ -94,6 +94,8 @@ export type EventKind =
   | "ir3Details"
   /** Property manager statements, whole. */
   | "agentStatements"
+  /** The fixed asset register, whole. */
+  | "assets"
   /** The explanations of GST return differences, whole. */
   | "varianceNote";
 
@@ -375,6 +377,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
         ...ledger,
         agentStatements: (event.before ?? []) as NonNullable<StoredLedger["agentStatements"]>,
       };
+    case "assets":
+      return { ...ledger, assets: (event.before ?? []) as NonNullable<StoredLedger["assets"]> };
     // Rules live outside the ledger, so the caller applies these itself.
     case "rule":
     case "codeTreatment":
@@ -427,5 +431,6 @@ export const KIND_LABELS: Record<EventKind, string> = {
   taxExtras: "Other income",
   ir3Details: "IR3 details",
   agentStatements: "Property manager statement",
+  assets: "Fixed assets",
   varianceNote: "GST explanation",
 };

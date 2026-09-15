@@ -342,3 +342,4 @@ export * from "./manual-journals.js";
 export * from "./ir3.js";
 export * from "./rental-schedules.js";
 export * from "./agent-statements.js";
+export * from "./asset-register.js";

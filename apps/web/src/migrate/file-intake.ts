@@ -1,5 +1,5 @@
 import { redraw, showPage } from "../app.js";
-import { asCsvText, reclassify, recomputeVariance, saveManualJournals } from "../books.js";
+import { asCsvText, reclassify, recomputeVariance, saveManualJournals, record } from "../books.js";
 import { checkBankBalances, handleFiles, render } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
@@ -341,14 +341,26 @@ export async function loadAssets(file: File): Promise<void> {
     );
     return;
   }
+  const before = state.ledger.assets ?? [];
+  if (
+    before.length > 0 &&
+    !confirm(
+      `Replace the ${before.length} asset${before.length === 1 ? "" : "s"} held with the ` +
+        `${parsed.assets.length} in ${file.name}? It can be undone from History.`,
+    )
+  ) {
+    return;
+  }
   state.ledger = { ...state.ledger, assets: parsed.assets };
   state.persistent = await savePart(state.ledger, "assets");
+  await record("assets", `Fixed asset register loaded from ${file.name}`, before, parsed.assets);
   if (parsed.problems.length > 0) {
     alert(
       `${parsed.assets.length} assets loaded. ${parsed.problems.length} could not be read:\n` +
         parsed.problems.slice(0, 5).map((p) => p.message).join("\n"),
     );
   }
+  redraw("assets");
   redraw("reports");
 }
 

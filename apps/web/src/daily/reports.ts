@@ -1271,9 +1271,9 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   if (assets.length === 0) {
     body.append(
       note(
-        "No asset register loaded. Depreciation is the one figure bank data cannot produce — " +
-          "it depends on each asset's cost, method and rate. Load a Xero fixed asset export " +
-          "with the button above.",
+        "No fixed assets yet. Depreciation is the one figure bank data cannot produce — " +
+          "it depends on each asset's cost, method and rate. Add them, or load a register, " +
+          "on the Fixed assets page.",
       ),
     );
     return;
@@ -1289,7 +1289,8 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Straight line, full month averaging. An asset disposed of during the year takes no " +
+      "Each asset on its own method, straight line or diminishing value, with full month " +
+        "averaging. An asset disposed of during the year takes no " +
         "depreciation that year: its book value goes to the disposal instead, so the same " +
         "value is not counted twice.",
     ),
@@ -2874,7 +2875,6 @@ export function renderReportsPage(): void {
     ownerSelect.append(option);
   }
   ownerSelect.hidden = kind !== "owner" && kind !== "ir3";
-  $("assets-pick").hidden = kind !== "depreciation";
 
   const chosenYearNow = Number($<HTMLSelectElement>("report-year").value) || years[0];
 

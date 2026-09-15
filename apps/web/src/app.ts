@@ -1,3 +1,4 @@
+import { markSidebar } from "./menu.js";
 import { $, state } from "./state.js";
 
 /**
@@ -87,22 +88,12 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   for (const section of document.querySelectorAll<HTMLElement>("section.page")) {
     section.hidden = section.id !== `page-${page}`;
   }
-  for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
-    button.classList.toggle("active", button.dataset["page"] === page);
-  }
   const sidebarSublinks = document.getElementById("sidebar-import-sublinks");
   if (sidebarSublinks) {
     const isImport = page === "import";
     sidebarSublinks.classList.toggle("open", isImport);
     sidebarSublinks.hidden = !isImport;
   }
-  // The page name lives in the topbar now rather than inside each section, so
-  // it is read off the sidebar rather than repeated in a second list that
-  // could drift from it.
-  const chosen = document.querySelector<HTMLButtonElement>(
-    `.sidebar-nav button[data-page="${page}"]`,
-  );
-  $("page-title").textContent = chosen?.querySelector("span")?.textContent ?? "";
 
   const status = $("startup-status");
   status.textContent = state.startupMessage;
@@ -111,6 +102,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   redraw("entityFilter");
   redraw("openBooks");
   redraw("setupProgress");
+  markSidebar(page);
   if (page === "reconcile") redraw("reconcile");
   if (page === "check") redraw("check");
   if (page === "rules") redraw("rules");

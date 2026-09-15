@@ -530,19 +530,26 @@ function xeroGuide(): HTMLElement {
       "Xero's copy of it.",
   );
 
-  add("h4", "4. Load in this order");
-  items("ol", [
-    "Bank transactions, on Bank import. Everything else hangs off these.",
-    "Chart of accounts, on Setup, then link each bank account in the chart to the account " +
-      "the bank import found, on Entities & accounts.",
-    "Opening balances, from the trial balance, on Opening balances.",
-    "Account transactions, on Coding reconciliation. Xero's coding is compared line by line " +
-      "with NZOSA's, and becomes the rules.",
-    "Invoices and payment allocations, on Invoices.",
-    "Fixed assets, on Fixed assets.",
-    "The journal report, on Reports, for the accountant's journals.",
-    "Filed GST returns, on GST reconciliation.",
+  add("h4", "4. Load the files");
+  add(
+    "p",
+    "Drop them on Setup all at once, with your bank's exports. Each file is recognised and " +
+      "sorted before it is read (bank statements first, then the chart and account " +
+      "transactions, then journals, invoices and assets, and the trial balance last), so the " +
+      "order you pick them in does not matter.",
+  );
+  add("p", "Loading them one at a time on their own pages works too. Two orders matter there:");
+  items("ul", [
+    "The chart of accounts before the trial balance. A trial balance read first recognises " +
+      "none of its account codes, and the opening balances land under names nothing else uses.",
+    "Bank transactions and the chart before linking bank accounts on Entities & accounts, " +
+      "because the link joins the two.",
   ]);
+  add(
+    "p",
+    "Afterwards, link each bank account in the chart to the account the bank import found, " +
+      "on Entities & accounts. Setup lists it as a step of its own.",
+  );
 
   add("h4", "5. Check the conversion");
   add(

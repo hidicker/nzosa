@@ -76,6 +76,7 @@ import {
   renderCheck,
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
+import { reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
 import {
   dedupeReference,
@@ -219,6 +220,7 @@ async function init(): Promise<void> {
 function wireUp(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
     button.addEventListener("click", () => {
+      if (button.dataset["page"] === "reports") reportsFromMenu();
       showPage(button.dataset["page"] ?? "reconcile");
     });
   }
@@ -245,6 +247,7 @@ function wireUp(): void {
   // nothing else about them -- not which elements they touch, nor what
   // those do.
   wireChrome();
+  wireMenu();
   wireBankImport();
   wireFileIntake();
   wireReconcile();

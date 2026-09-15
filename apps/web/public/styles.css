@@ -2298,6 +2298,119 @@ button.working {
   display: none !important;
 }
 
+/* Menu groups, which fold, and the search above them. */
+.sidebar-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-group.collapsed .sidebar-group-items {
+  display: none;
+}
+.sidebar-nav button.sidebar-heading {
+  margin: 12px 0 2px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-navy-dim);
+  justify-content: space-between;
+}
+.menu-search + .sidebar-group button.sidebar-heading {
+  margin-top: 4px;
+}
+.sidebar-nav button.sidebar-heading::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin: 0 4px 3px 0;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.12s;
+}
+.sidebar-group.collapsed button.sidebar-heading::after {
+  transform: rotate(-45deg);
+  margin-bottom: 0;
+}
+.sidebar-nav button.sidebar-heading:hover {
+  background: none;
+  color: #fff;
+}
+.sidebar-nav button span {
+  line-height: 1.25;
+}
+.menu-search {
+  margin: 0 0 2px;
+}
+.menu-search input {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--navy-2);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #fff;
+}
+.menu-search input::placeholder {
+  color: var(--on-navy-dim);
+}
+.menu-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--navy-2);
+}
+.menu-search-results[hidden] {
+  display: none;
+}
+.sidebar-nav .menu-search-results button {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.sidebar-nav .menu-search-results button small {
+  font-size: 10.5px;
+  color: var(--on-navy-dim);
+}
+.sidebar-nav .menu-search-results button.selected {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.menu-search-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--on-navy-dim);
+}
+/* Narrowed to icons: no room for the search, and a folded group would hide
+   icons with no heading left to unfold it from. */
+.shell.narrow .menu-search {
+  display: none;
+}
+.shell.narrow .sidebar-group.collapsed .sidebar-group-items {
+  display: flex;
+}
+@media (max-width: 820px) {
+  .menu-search,
+  .sidebar-nav button.sidebar-heading {
+    display: none;
+  }
+  .sidebar-group,
+  .sidebar-group-items,
+  .sidebar-group.collapsed .sidebar-group-items {
+    display: contents;
+  }
+}
+
 /* Feed inner sub-heading */
 .feed-subheading {
   font-size: 0.85rem;

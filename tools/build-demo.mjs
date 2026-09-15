@@ -1,4 +1,4 @@
-import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync } from "node:fs";
+import { cpSync, existsSync, mkdirSync, readFileSync, rmSync, writeFileSync, readdirSync } from "node:fs";
 import { dirname, join, resolve } from "node:path";
 import { fileURLToPath } from "node:url";
 import { execSync, spawnSync } from "node:child_process";
@@ -86,8 +86,24 @@ const zipPath = join(demoDir, "online-demo.zip");
 console.log("Creating online-demo.zip...");
 try {
   if (process.platform === "win32") {
-    const psCmd = `Compress-Archive -Path '${demoDir}\\*' -DestinationPath '${zipPath}' -Force`;
-    spawnSync("powershell", ["-NoProfile", "-Command", psCmd], { stdio: "inherit" });
+    // Windows' own tar, not PowerShell's Compress-Archive: that stores paths
+    // with backslashes, and a Linux host unpacks `demo\ledger.json` as a file
+    // of that name beside index.html -- so the upload looked complete and the
+    // site went on serving the demo data from the upload before.
+    const entries = readdirSync(demoDir).filter((name) => name !== "online-demo.zip");
+    // Named by its full path: run from Git Bash, "tar.exe" is Git's GNU tar,
+    // which cannot write a zip and made a plain tar file with a .zip name.
+    const windowsTar = join(process.env.SystemRoot ?? "C:\\Windows", "System32", "tar.exe");
+    const made = spawnSync(
+      windowsTar,
+      ["-a", "-c", "-f", "online-demo.zip", "--options", "compression=deflate", ...entries],
+      { cwd: demoDir, stdio: "inherit" },
+    );
+    // spawnSync reports a failure rather than throwing it, so a missing tar or
+    // a refused option would otherwise leave no zip and say nothing.
+    if (made.error || made.status !== 0) {
+      console.warn(`tar did not make the zip: ${made.error?.message ?? `exit ${made.status}`}`);
+    }
   } else {
     spawnSync("zip", ["-r", "online-demo.zip", "."], { cwd: demoDir, stdio: "inherit" });
   }

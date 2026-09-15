@@ -329,7 +329,7 @@ function hasLoadedChart(): boolean {
   return !isDefaultStarterChart(state.chart);
 }
 
-interface SourceFile {
+export interface SourceFile {
   what: string;
   where: string;
   why: string;
@@ -337,7 +337,7 @@ interface SourceFile {
   page?: string;
 }
 
-function xeroMigrationFiles(): SourceFile[] {
+export function xeroMigrationFiles(): SourceFile[] {
   const led = state.ledger;
   return [
     {
@@ -773,7 +773,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
  * first instruction to give anybody -- and until it was done the chart step
  * sat unticked with a correctly imported chart sitting behind it.
  */
-function setupNameField(): HTMLElement {
+export function setupNameField(): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "setup-name";
   const model = state.ledger.entities ?? emptyEntityModel();

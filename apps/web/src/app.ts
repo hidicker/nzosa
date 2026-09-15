@@ -31,6 +31,7 @@ export type PageName =
   | "importRows"
   | "invoiceEditor"
   | "invoices"
+  | "migration"
   | "openBooks"
   | "openingBalances"
   | "reconcile"
@@ -123,6 +124,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "books") redraw("books");
   if (page === "assets") redraw("assets");
   if (page === "setup") redraw("setup");
+  if (page === "migration") redraw("migration");
   if (page === "import") redraw("feed");
   if (page === "opening") redraw("openingBalances");
   if (page === "gst") redraw("variance");

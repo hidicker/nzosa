@@ -124,7 +124,7 @@ async function renderArchives(body: HTMLElement, whose = ""): Promise<void> {
  * plausible wrong figures, and a reload cannot produce it.
  */
 
-async function chooseLedger(value: string): Promise<void> {
+export async function chooseLedger(value: string): Promise<void> {
   let id = value;
   let label: string | undefined;
   if (id === "\u0000new") {

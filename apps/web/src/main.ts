@@ -70,6 +70,7 @@ import {
   seedStarterChart,
   wireSetup,
 } from "./migrate/setup-wizard.js";
+import { renderMigration, wireMigration } from "./migrate/migration-page.js";
 import {
   applyChartColumns,
   renderCheck,
@@ -121,6 +122,7 @@ async function init(): Promise<void> {
     importRows: renderTable,
     invoiceEditor: renderInvoiceEditor,
     invoices: renderInvoices,
+    migration: renderMigration,
     openBooks: renderOpenBooks,
     openingBalances: renderOpeningBalances,
     reconcile: renderReconcile,
@@ -251,6 +253,7 @@ function wireUp(): void {
   wireGstReconcile();
   wireHistory();
   wireSetup();
+  wireMigration();
   wireInvoices();
   wireReports();
   wireAssets();

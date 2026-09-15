@@ -73,7 +73,7 @@ const ACCOUNT_TYPES: readonly (readonly [string, string])[] = [
  */
 
 /** The form for starting another entity, under the ones that already exist. */
-function addEntityForm(): HTMLElement {
+export function addEntityForm(): HTMLElement {
   const row = document.createElement("div");
   row.className = "entity-add-row";
 

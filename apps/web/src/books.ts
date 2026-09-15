@@ -442,6 +442,7 @@ export async function saveEntities(model: EntityModel, what = "Entities changed"
   state.persistent = await savePart(state.ledger, "entities");
   await record("entities", what, before ?? null, model);
   redraw("entities");
+  redraw("migration");
 }
 
 /**

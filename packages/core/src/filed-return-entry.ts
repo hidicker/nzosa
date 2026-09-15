@@ -103,7 +103,9 @@ export function filedReturnFromOurs(result: GstReturnResult, status = "Filed fro
       box12: b.box12,
       box13: b.box13,
       box14: b.box14,
-      box15: b.box15,
+      // The computed return carries Box 15 as a size and says which way it
+      // goes; a filed return signs it, negative for a refund.
+      box15: b.outcome === "refund" ? -b.box15 : b.box15,
     },
   });
 }

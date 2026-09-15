@@ -1,4 +1,4 @@
-import { recomputeVariance, record, varianceInput } from "../books.js";
+import { recomputeVariance, record, recordFiledReturn, varianceInput } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { computeOurReturns, detailFor } from "../variance.js";
@@ -378,7 +378,9 @@ function filedReturnTools(): HTMLElement {
         result.period.due,
         formatAmount(result.boxes.box5),
         formatAmount(result.boxes.box11),
-        result.boxes.box15 < 0 ? `${formatAmount(-result.boxes.box15)} refund` : `${formatAmount(result.boxes.box15)} to pay`,
+        result.boxes.outcome === "refund"
+          ? `${formatAmount(result.boxes.box15)} refund`
+          : `${formatAmount(result.boxes.box15)} to pay`,
       ]) {
         const td = document.createElement("td");
         td.textContent = text;
@@ -414,19 +416,14 @@ function blankFiledDraft(periodEnd: string): FiledDraft {
 }
 
 async function keepFiled(one: FiledReturn): Promise<void> {
-  const byPeriod = new Map(state.filed.map((f) => [f.periodEnd, f]));
-  byPeriod.set(one.periodEnd, one);
-  state.filed = [...byPeriod.values()].sort((a, b) => a.periodEnd.localeCompare(b.periodEnd));
-  state.ledger = { ...state.ledger, filedReturns: state.filed };
-  state.persistent = await save(state.ledger);
-  recomputeVariance();
+  await recordFiledReturn(one);
   renderVariance();
 }
 
 async function markFiled(result: GstReturnResult): Promise<void> {
   const owed =
-    result.boxes.box15 < 0
-      ? `a refund of ${formatAmount(-result.boxes.box15)}`
+    result.boxes.outcome === "refund"
+      ? `a refund of ${formatAmount(result.boxes.box15)}`
       : `${formatAmount(result.boxes.box15)} to pay`;
   if (
     !confirm(

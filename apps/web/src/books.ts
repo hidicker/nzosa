@@ -8,7 +8,7 @@ import { buildRows } from "./variance.js";
 import type { VarianceInput } from "./variance.js";
 import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
-import { clearStore, emptyLedger, saveEvents, savePart, saveRules } from "./store.js";
+import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
 import {
   agentStatementJournal,
   agentStatementProblems,
@@ -36,6 +36,7 @@ import {
   sameEntityBanks as coreSameEntityBanks,
 } from "@nzosa/core";
 import type {
+  FiledReturn,
   Account,
   Cents,
   ManualJournal,
@@ -684,6 +685,22 @@ export function varianceInput(): VarianceInput {
     // the household as a disagreement.
     accounts: accountsFor(state.varianceAccounts),
   };
+}
+
+/**
+ * Keep a filed return with the books, replacing any held for the same period.
+ *
+ * One place, used by the reconciliation and by the GST return report, so a
+ * return marked as filed from either is kept the same way and compared the same
+ * way afterwards.
+ */
+export async function recordFiledReturn(one: FiledReturn): Promise<void> {
+  const byPeriod = new Map(state.filed.map((f) => [f.periodEnd, f]));
+  byPeriod.set(one.periodEnd, one);
+  state.filed = [...byPeriod.values()].sort((a, b) => a.periodEnd.localeCompare(b.periodEnd));
+  state.ledger = { ...state.ledger, filedReturns: state.filed };
+  state.persistent = await save(state.ledger);
+  recomputeVariance();
 }
 
 export function invoiceBalanceMap(): Map<string, InvoiceBalance> {

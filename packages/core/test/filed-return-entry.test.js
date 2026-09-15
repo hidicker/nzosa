@@ -42,7 +42,7 @@ test("the books' own return can be recorded as the one filed", () => {
     sharePercent: 100,
     boxes: {
       box5: 575_000, box6: 0, box7: 575_000, box8: 75_000, box9: 0, box10: 75_000,
-      box11: 230_000, box12: 30_000, box13: 0, box14: 30_000, box15: 45_000,
+      box11: 230_000, box12: 30_000, box13: 0, box14: 30_000, box15: 45_000, outcome: "pay",
     },
     lines: [], excluded: [], lateClaims: [], missingTaxPoint: [],
   };
@@ -53,4 +53,12 @@ test("the books' own return can be recorded as the one filed", () => {
   assert.equal(filed.status, "Filed from these books");
   assert.equal(filed.boxes.box15, 45_000);
   assert.equal(filed.core, 45_000);
+
+  // A refund is carried as a size with its direction beside it; filed, it is negative.
+  const refund = filedReturnFromOurs({
+    ...ours,
+    boxes: { ...ours.boxes, box8: 30_000, box10: 30_000, box12: 75_000, box14: 75_000, box15: 45_000, outcome: "refund" },
+  });
+  assert.equal(refund.boxes.box15, -45_000);
+  assert.equal(refund.core, -45_000);
 });

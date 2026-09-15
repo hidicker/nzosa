@@ -344,3 +344,4 @@ export * from "./rental-schedules.js";
 export * from "./agent-statements.js";
 export * from "./asset-register.js";
 export * from "./filed-return-entry.js";
+export * from "./gst-return-report.js";

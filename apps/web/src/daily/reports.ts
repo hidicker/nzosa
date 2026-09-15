@@ -1,5 +1,8 @@
+import { computeOurReturns } from "../variance.js";
 import { redraw, showPage } from "../app.js";
 import {
+  recordFiledReturn,
+  varianceInput,
   accountsFor,
   accountsForEditing,
   assetProceedsInUse,
@@ -19,6 +22,11 @@ import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
 import { unresolvedNote } from "../widgets.js";
 import {
+  filedReturnFromOurs,
+  formatGstReturn,
+  gstOutcomeLabel,
+  gstReturnBoxRows,
+  gstTransactionGroups,
   agentStatementProblems,
   agentStatementTotals,
   ir3Return,
@@ -63,6 +71,7 @@ import {
   trialBalance,
 } from "@nzosa/core";
 import type {
+  GstReturnResult,
   AgentStatement,
   AgentStatementLine,
   CodingEngine,
@@ -1832,6 +1841,341 @@ async function removeAgentStatement(statement: AgentStatement): Promise<void> {
   redraw("reports");
 }
 
+/** Which GST return period is open, and which half of it is showing. */
+let gstPeriodChoice = "";
+let gstReturnTab: "return" | "transactions" = "return";
+/** When a box was clicked, which lines the Transactions tab narrows to. */
+let gstBoxFocus: "sales" | "purchases" | "late" | null = null;
+
+/** Every two-monthly return a financial year holds, from the coding. */
+function gstReturnsFor(year: number): GstReturnResult[] {
+  try {
+    return computeOurReturns(varianceInput(), `${year - 1}-04-01`, `${year}-03-31`).filter(
+      (r) => r.period.to >= `${year - 1}-04-01` && r.period.to <= `${year}-03-31`,
+    );
+  } catch {
+    return [];
+  }
+}
+
+/** The return the page is set to, or the latest one that has ended. */
+function chosenGstReturn(year: number): GstReturnResult | undefined {
+  const returns = gstReturnsFor(year);
+  const chosen = returns.find((r) => r.period.to === gstPeriodChoice);
+  if (chosen !== undefined) return chosen;
+  const today = new Date().toISOString().slice(0, 10);
+  return [...returns].reverse().find((r) => r.period.to < today) ?? returns[returns.length - 1];
+}
+
+/**
+ * A GST return, laid out as the form is and as Xero shows one.
+ *
+ * Nothing here is stored: the return is worked out from the coding each time,
+ * by the same calculation the reconciliation compares with a filed return. What
+ * can be stored is the decision that it was filed, which keeps the return as it
+ * stands that day.
+ */
+function renderGstReturn(body: HTMLElement, year: number): void {
+  const returns = gstReturnsFor(year);
+  if (returns.length === 0) {
+    body.append(note("No GST periods in this year hold any transactions."));
+    return;
+  }
+  const result = chosenGstReturn(year) ?? returns[returns.length - 1];
+  if (result === undefined) return;
+  gstPeriodChoice = result.period.to;
+  const today = new Date().toISOString().slice(0, 10);
+  const entity = reportingEntity();
+  const filed = state.filed.find((f) => f.periodEnd === result.period.to);
+  const money = (cents: Cents): string =>
+    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+
+  // --- period and tabs ---
+  const controls = document.createElement("div");
+  controls.className = "page-actions";
+  const period = document.createElement("select");
+  for (const one of [...returns].reverse()) {
+    const option = document.createElement("option");
+    option.value = one.period.to;
+    option.textContent = `${one.period.from} to ${one.period.to}`;
+    option.selected = one.period.to === result.period.to;
+    period.append(option);
+  }
+  period.addEventListener("change", () => {
+    gstPeriodChoice = period.value;
+    gstBoxFocus = null;
+    redraw("reports");
+  });
+  controls.append(period);
+  for (const [tab, caption] of [["return", "GST return"], ["transactions", "Transactions"]] as const) {
+    const button = document.createElement("button");
+    button.type = "button";
+    button.textContent = caption;
+    button.className = gstReturnTab === tab ? "primary" : "";
+    button.addEventListener("click", () => {
+      gstReturnTab = tab;
+      if (tab === "return") gstBoxFocus = null;
+      redraw("reports");
+    });
+    controls.append(button);
+  }
+  body.append(controls);
+
+  // --- the heading: whose, which period, when, and which way the money goes ---
+  const status = document.createElement("p");
+  status.className = "gst-return-status";
+  status.textContent =
+    filed !== undefined
+      ? /^filed$/i.test(filed.status.trim())
+        ? "Filed"
+        : `Filed (${filed.status})`
+      : result.period.from <= today && today <= result.period.to
+        ? "Current period"
+        : result.period.to < today
+          ? "Not recorded as filed"
+          : "Future period";
+  body.append(status);
+
+  const heading = document.createElement("div");
+  heading.className = "gst-return-head";
+  const who = document.createElement("div");
+  const name = document.createElement("h3");
+  name.textContent = `${entity?.name ?? "GST return"} · ${result.period.from} to ${result.period.to}`;
+  const sub = document.createElement("p");
+  sub.className = "gst-return-sub";
+  sub.textContent =
+    (entity?.gstNumber ? `GST number ${entity.gstNumber} · ` : "") + `File by ${result.period.due}`;
+  who.append(name, sub);
+  const owed = document.createElement("div");
+  owed.className = "gst-return-owed";
+  const figure = document.createElement("strong");
+  figure.textContent = money(result.boxes.box15);
+  const said = document.createElement("span");
+  said.textContent = gstOutcomeLabel(result);
+  owed.append(figure, said);
+  heading.append(who, owed);
+  body.append(heading);
+
+  // --- anything the figures are guessing at ---
+  const assumed = result.lines.filter((line) => line.classification.assumed === true);
+  if (assumed.length > 0) {
+    const warn = document.createElement("p");
+    warn.className = "journal-out";
+    const tax = assumed.reduce((sum, line) => sum + Math.abs(gstWithin(line.amount, line.classification)), 0);
+    warn.textContent =
+      `${assumed.length} line${assumed.length === 1 ? " has" : "s have"} no coding and no GST treatment, ` +
+      `so ${assumed.length === 1 ? "it was" : "they were"} assumed standard-rated: ${money(tax)} of GST ` +
+      "on an assumption. Code them before filing.";
+    body.append(warn);
+  }
+  if (result.missingTaxPoint.length > 0) {
+    body.append(
+      note(
+        `${result.missingTaxPoint.length} transaction${result.missingTaxPoint.length === 1 ? " has" : "s have"} ` +
+          "no tax point, so they were placed by payment date.",
+      ),
+    );
+  }
+
+  if (gstReturnTab === "transactions") {
+    renderGstTransactions(body, result, money);
+  } else {
+    renderGstBoxes(body, result, money);
+  }
+
+  // --- filing ---
+  if (filed === undefined && result.period.to < today) {
+    const actions = document.createElement("div");
+    actions.className = "page-actions";
+    const mark = document.createElement("button");
+    mark.type = "button";
+    mark.className = "primary";
+    mark.textContent = "Mark as filed";
+    mark.title = "Keep this return as it stands today, to compare the books against later.";
+    mark.addEventListener("click", () => {
+      const owedText =
+        result.boxes.outcome === "refund"
+          ? `a refund of ${money(result.boxes.box15)}`
+          : `${money(result.boxes.box15)} to pay`;
+      if (
+        !confirm(
+          `Record the return for ${result.period.from} to ${result.period.to} as filed, with ${owedText}? ` +
+            "It is kept as these books show it now, and the GST reconciliation compares against it.",
+        )
+      ) {
+        return;
+      }
+      void recordFiledReturn(filedReturnFromOurs(result)).then(() => redraw("reports"));
+    });
+    actions.append(mark);
+    body.append(actions);
+  } else if (filed !== undefined) {
+    const difference = result.boxes.box8 - result.boxes.box12 - filed.core;
+    body.append(
+      note(
+        difference === 0
+          ? "Filed, and the books still agree with the return as filed."
+          : `Filed. The books now differ from it by ${money(difference)} (Box 8 less Box 12); ` +
+              "the GST reconciliation shows the lines behind that.",
+      ),
+    );
+  }
+}
+
+function renderGstBoxes(body: HTMLElement, result: GstReturnResult, money: (cents: Cents) => string): void {
+  const details = document.createElement("table");
+  details.className = "report-table gst-return-details";
+  const detailBody = document.createElement("tbody");
+  const late = result.lateClaims.reduce((sum, line) => sum + Math.abs(line.amount), 0);
+  for (const [label, value] of [
+    ["Tax basis", `${result.basis.charAt(0).toUpperCase()}${result.basis.slice(1)} basis`],
+    ["Late claims included", result.lateClaims.length === 0 ? "None" : `${result.lateClaims.length}, ${money(late)}`],
+  ] as const) {
+    const tr = document.createElement("tr");
+    tr.append(nameCell(label), amountCell(value));
+    detailBody.append(tr);
+  }
+  details.append(detailBody);
+  body.append(details);
+
+  const focusFor: Record<string, "sales" | "purchases" | "late"> = {
+    "Box 5": "sales",
+    "Box 6": "sales",
+    "Box 8": "sales",
+    "Box 9": "late",
+    "Box 11": "purchases",
+    "Box 12": "purchases",
+    "Box 13": "late",
+  };
+  for (const [section, title] of [["sales", "Sales and Income"], ["purchases", "Purchases and Expenses"]] as const) {
+    const heading = document.createElement("h4");
+    heading.textContent = title;
+    body.append(heading);
+    const table = document.createElement("table");
+    table.className = "report-table ir10-form gst-return-form";
+    const tbody = document.createElement("tbody");
+    for (const row of gstReturnBoxRows(result).filter((r) => r.section === section)) {
+      const tr = document.createElement("tr");
+      if (row.box === "Box 10" || row.box === "Box 14" || row.box === "Box 15") tr.classList.add("ir10-total");
+      const number = document.createElement("td");
+      number.className = "ir10-box";
+      number.textContent = row.box;
+      const label = document.createElement("td");
+      const focus = focusFor[row.box];
+      if (focus !== undefined && (focus !== "late" || result.lateClaims.length > 0)) {
+        const link = document.createElement("button");
+        link.type = "button";
+        link.className = "link-button";
+        link.textContent = row.label;
+        link.title = "Show the transactions behind this box";
+        link.addEventListener("click", () => {
+          gstReturnTab = "transactions";
+          gstBoxFocus = focus;
+          redraw("reports");
+        });
+        label.append(link);
+      } else {
+        label.textContent = row.label;
+      }
+      const amount = document.createElement("td");
+      amount.className = "report-amount";
+      amount.textContent = money(row.amount);
+      tr.append(number, label, amount);
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    body.append(table);
+  }
+
+  // Box 8 and Box 12 add up the GST on each line, rounded to the cent, as the
+  // accounting systems do; Box 7 and Box 11 are then worked back from them. So
+  // they can sit a few cents from Box 5 less Box 6, or from the lines' total.
+  // Said only when it shows, because a figure that does not add up with no
+  // reason given reads as an error.
+  const b = result.boxes;
+  const purchasesGross = result.lines
+    .filter((l) => l.classification.side === "purchases")
+    .reduce((sum, l) => sum - l.amount, 0);
+  if (b.box7 !== b.box5 - b.box6 || (b.box11 !== purchasesGross && Math.abs(b.box11 - purchasesGross) < 100)) {
+    body.append(
+      note(
+        "Box 8 and Box 12 add up the GST on each line, rounded to the cent, as Xero does. Box 7 and " +
+          "Box 11 are worked back from them, so they can differ by a few cents from Box 5 less Box 6, " +
+          "or from the total of the transactions behind them.",
+      ),
+    );
+  }
+}
+
+function renderGstTransactions(body: HTMLElement, result: GstReturnResult, money: (cents: Cents) => string): void {
+  if (gstBoxFocus !== null) {
+    const clear = document.createElement("button");
+    clear.type = "button";
+    clear.className = "link-button";
+    clear.textContent =
+      gstBoxFocus === "sales" ? "Showing sales and income · show all" :
+        gstBoxFocus === "purchases" ? "Showing purchases and expenses · show all" : "Showing late claims · show all";
+    clear.addEventListener("click", () => {
+      gstBoxFocus = null;
+      redraw("reports");
+    });
+    body.append(clear);
+  }
+  const sections: { heading: string; lines: GstReturnResult["lines"] }[] = [];
+  const onSide = (side: string) => result.lines.filter((l) => l.classification.side === side || (side === "purchases" && l.classification.side === "imports"));
+  if (gstBoxFocus === null) sections.push({ heading: "", lines: result.lines });
+  if (gstBoxFocus === "sales") sections.push({ heading: "", lines: onSide("sales") });
+  if (gstBoxFocus === "purchases") sections.push({ heading: "", lines: onSide("purchases") });
+  if ((gstBoxFocus === null || gstBoxFocus === "late") && result.lateClaims.length > 0) {
+    sections.push({ heading: "Late claims", lines: result.lateClaims });
+  }
+
+  let shown = 0;
+  for (const section of sections) {
+    for (const group of gstTransactionGroups(section.lines)) {
+      shown += group.rows.length;
+      const heading = document.createElement("h4");
+      heading.textContent = section.heading === "" ? group.group : `${section.heading}: ${group.group}`;
+      body.append(heading);
+      const table = document.createElement("table");
+      table.className = "report-table";
+      table.innerHTML =
+        "<thead><tr><th>Date</th><th>Contact</th><th>Description</th><th>Gross</th><th>GST</th><th>Net</th></tr></thead>";
+      const tbody = document.createElement("tbody");
+      for (const row of group.rows) {
+        const tr = document.createElement("tr");
+        tr.append(nameCell(row.date), nameCell(row.contact), nameCell(row.description));
+        tr.append(amountCell(money(row.gross)), amountCell(money(row.gst)), amountCell(money(row.net)));
+        tbody.append(tr);
+      }
+      const total = document.createElement("tr");
+      total.className = "report-total";
+      total.append(nameCell("Total"), nameCell(""), nameCell(""));
+      total.append(amountCell(money(group.gross)), amountCell(money(group.gst)), amountCell(money(group.net)));
+      tbody.append(total);
+      table.append(tbody);
+      body.append(table);
+    }
+  }
+  if (shown === 0) body.append(note("No transactions in this part of the return."));
+  if (shown > 0) {
+    body.append(
+      note(
+        "Totals here are the lines added up. The return's Box 7 and Box 11 are worked back from the " +
+          "GST on each line, rounded to the cent, so they can differ from these totals by a few cents.",
+      ),
+    );
+  }
+  if (gstBoxFocus === null && result.excluded.length > 0) {
+    body.append(
+      note(
+        `${result.excluded.length} transaction${result.excluded.length === 1 ? " was" : "s were"} left out ` +
+          "of the return: transfers, drawings and anything with no GST to account for.",
+      ),
+    );
+  }
+}
+
 /** A financial year as a date range, labelled by the year it ends in. */
 function yearPeriod(year: number): DateRange {
   return { from: `${year - 1}-04-01`, to: `${year}-03-31` };
@@ -2569,6 +2913,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   depreciation: "Each asset's depreciation for the year, and its book value.",
   shareholders: "What each shareholder has put in and taken out.",
   ir10: "Inland Revenue's financial statement, box by box, as it is filed.",
+  gstreturn: "A GST return for any period, box by box, with the transactions behind every box.",
   rentals: "Each rental property's income and expenses, and all of them together.",
   ir3: "One owner's individual return: their rental schedules, other income and the tax.",
   agents: "What each property manager collected and paid out, posted and checked against the bank.",
@@ -2702,6 +3047,12 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "gstreturn") {
+    return (
+      "Built from your coding on the payments basis, the same way the GST reconciliation " +
+      "compares with a filed return. Choose a period; click a box for the lines behind it."
+    );
+  }
   if (kind === "rentals") {
     return (
       "Each property's own schedule, from the accounts given to it on Entities & accounts, " +
@@ -2881,6 +3232,12 @@ export function renderReportsPage(): void {
   if (kind === "balancesheet") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderBalanceSheet(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "gstreturn") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderGstReturn(body, chosenYearNow);
     return;
   }
 
@@ -3467,6 +3824,18 @@ export function downloadReport(): void {
         `Depreciation schedule, FY${year}`,
       ),
       `depreciation-schedule-fy${year}.csv`,
+      "text/csv",
+    );
+    return;
+  }
+
+  if ($<HTMLSelectElement>("report-kind").value === "gstreturn") {
+    if (year === undefined) return;
+    const chosen = chosenGstReturn(year);
+    if (chosen === undefined) return;
+    download(
+      formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`),
+      `gst-return-${chosen.period.to}.csv`,
       "text/csv",
     );
     return;

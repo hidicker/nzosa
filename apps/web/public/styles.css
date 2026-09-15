@@ -2487,4 +2487,16 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 @media (max-width: 640px) { .agent-row { grid-template-columns: 1fr 1fr; } }
 .filed-tools { margin: 0 0 1.2rem; }
 .filed-tools table { margin-bottom: 0.6rem; }
+/* The GST return report. */
+.gst-return-status { display: inline-block; margin: 0.4rem 0 0.2rem; padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem; }
+.gst-return-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  flex-wrap: wrap; margin: 0.4rem 0 0.8rem; }
+.gst-return-head h3 { margin: 0; }
+.gst-return-sub { margin: 0.2rem 0 0; font-size: 0.8rem; opacity: 0.75; }
+.gst-return-owed { text-align: right; }
+.gst-return-owed strong { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.gst-return-owed span { font-size: 0.8rem; opacity: 0.75; }
+.gst-return-details { max-width: 32rem; margin-bottom: 0.6rem; }
+.gst-return-form { max-width: 42rem; }
 .reports-star { font-size: 1rem; line-height: 1; }

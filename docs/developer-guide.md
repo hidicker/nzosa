@@ -648,6 +648,17 @@ have no type until one is set, and get promoted into the chart when it is.
   and `ir3Details` into the 2026 IR3 boxes, with the tax tables held per year
   and a note for a year it has none for. In the app, `entityReporter()` builds
   each entity's profit and loss on the page's basis.
+- **Property manager statements** (`agent-statements.ts`). An `AgentStatement`
+  is a period's collections, deductions, payment to the owner and the balances
+  held. `agentStatementProblems` refuses one that does not reconcile;
+  `agentStatementJournal` turns one that does into a `ManualJournal` (income
+  credited, expenses debited, the net to `heldCode`). In the app
+  `agentStatementJournals()` derives them into `postedJournals()` beside the
+  manual journals, so an edited statement cannot leave its old journal behind,
+  and the report checks `heldCode`'s posted balance at the period end against
+  `heldAtEnd`, naming receipts banked within 14 days as the timing difference.
+  Statements are saved with the decisions (`agentStatements`) and undone as an
+  `agentStatements` event.
 - **GST and entities.** `gstResolver({ unregistered })` treats a line coded to
   an account of an entity not registered for GST as out of scope, straight after
   recorded transfers and ahead of overrides, rules, code treatments and the

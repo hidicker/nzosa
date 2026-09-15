@@ -23,10 +23,12 @@ import {
   importers,
   judgeDuplicates,
   matchLedgerAccount,
+  parseAmount,
   parseDailyBalances,
 } from "@nzosa/core";
 import type {
   Account,
+  IsoDate,
   AkahuAccount,
   AkahuTransaction,
   DuplicateJudgement,
@@ -779,7 +781,135 @@ export async function checkBankBalances(file: File): Promise<void> {
 export function render(): void {
   renderStatus();
   renderReports();
+  renderBalanceEntry();
   redraw("importRows");
+}
+
+/** Statement balances being typed in, kept while the page redraws around them. */
+let balanceDraft: { account: string; rows: { date: string; closing: string }[] } | null = null;
+
+/**
+ * Statement balances typed in, for anyone without a balances export.
+ *
+ * The same check the file gets. One balance only says where an account stood;
+ * two, a start and an end, say whether anything between them is missing or
+ * held twice, and more narrow down where.
+ */
+function renderBalanceEntry(): void {
+  const box = $("balances-entry");
+  box.textContent = "";
+  const accounts = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
+  if (accounts.length === 0) return;
+  if (balanceDraft === null || !accounts.includes(balanceDraft.account)) {
+    balanceDraft = { account: accounts[0] as string, rows: [{ date: "", closing: "" }, { date: "", closing: "" }] };
+  }
+  const draft = balanceDraft;
+  const labelOf = (id: string): string => {
+    const label = String(state.ledger.transactions.find((t) => t.account === id)?.extras?.["accountLabel"] ?? "");
+    return label === "" || label === id ? id : `${id} ${label}`;
+  };
+
+  const details = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = "Enter statement balances by hand";
+  details.append(summary);
+  details.open = draft.rows.some((r) => r.date !== "" || r.closing !== "");
+
+  const fields = document.createElement("div");
+  fields.className = "agent-fields";
+  const accountLabel = document.createElement("label");
+  const select = document.createElement("select");
+  for (const id of accounts) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = labelOf(id);
+    option.selected = id === draft.account;
+    select.append(option);
+  }
+  select.addEventListener("change", () => {
+    draft.account = select.value;
+  });
+  accountLabel.append("Account", select);
+  fields.append(accountLabel);
+  details.append(fields);
+
+  const rows = document.createElement("div");
+  const draw = (): void => {
+    rows.textContent = "";
+    draft.rows.forEach((row, index) => {
+      const line = document.createElement("div");
+      line.className = "agent-row";
+      const date = document.createElement("input");
+      date.type = "date";
+      date.value = row.date;
+      date.addEventListener("input", () => {
+        row.date = date.value;
+      });
+      const closing = document.createElement("input");
+      closing.type = "text";
+      closing.inputMode = "decimal";
+      closing.className = "split-amount";
+      closing.placeholder = "Closing balance";
+      closing.value = row.closing;
+      closing.addEventListener("input", () => {
+        row.closing = closing.value;
+      });
+      const drop = document.createElement("button");
+      drop.type = "button";
+      drop.textContent = "✕";
+      drop.title = "Remove this balance";
+      drop.addEventListener("click", () => {
+        draft.rows.splice(index, 1);
+        draw();
+      });
+      line.append(date, closing, drop);
+      rows.append(line);
+    });
+  };
+  draw();
+  details.append(rows);
+
+  const actions = document.createElement("div");
+  actions.className = "page-actions";
+  const add = document.createElement("button");
+  add.type = "button";
+  add.textContent = "Add a balance";
+  add.addEventListener("click", () => {
+    draft.rows.push({ date: "", closing: "" });
+    draw();
+  });
+  const check = document.createElement("button");
+  check.type = "button";
+  check.className = "primary";
+  check.textContent = "Check against the transactions";
+  const said = document.createElement("p");
+  said.className = "variance-note";
+  check.addEventListener("click", () => {
+    const days = [];
+    for (const row of draft.rows) {
+      if (row.date === "" && row.closing.trim() === "") continue;
+      const closing = parseAmount(row.closing.trim());
+      if (!/^\d{4}-\d{2}-\d{2}$/.test(row.date) || closing === null) {
+        said.textContent = "Each balance needs a date and an amount.";
+        return;
+      }
+      days.push({ date: row.date as IsoDate, closing });
+    }
+    if (days.length === 0) {
+      said.textContent = "Enter at least one balance: the closing balance on a statement, and its date.";
+      return;
+    }
+    said.textContent = "";
+    days.sort((a, b) => a.date.localeCompare(b.date));
+    const sections = [{ account: draft.account, label: labelOf(draft.account), days }];
+    const checks = checkDailyBalances(sections, state.ledger.transactions);
+    state.balanceChecks = checks;
+    renderBalanceChecks($("balances-body"), "the balances entered", checks, []);
+    redraw("importRows");
+  });
+  actions.append(add, check);
+  details.append(actions, said);
+  box.append(details);
 }
 
 function renderStatus(): void {

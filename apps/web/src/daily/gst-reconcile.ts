@@ -1,11 +1,18 @@
-import { recomputeVariance, record } from "../books.js";
+import { recomputeVariance, record, varianceInput } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { detailFor } from "../variance.js";
+import { computeOurReturns, detailFor } from "../variance.js";
 import type { VarianceRow } from "../variance.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
-import { formatAmount, gstWithin, parseAmount } from "@nzosa/core";
-import type { VarianceNote } from "@nzosa/core";
+import {
+  filedReturnFromBoxes,
+  filedReturnFromOurs,
+  formatAmount,
+  gstBoxesFrom,
+  gstWithin,
+  parseAmount,
+} from "@nzosa/core";
+import type { FiledReturn, GstReturnResult, VarianceNote } from "@nzosa/core";
 import { loadFiledReturns } from "../migrate/file-intake.js";
 
 /**
@@ -51,6 +58,10 @@ export function renderVariance(): void {
     }
     body.append(list);
   }
+
+  // Returns are recorded here as well as loaded: the books' own return marked
+  // as filed, or one filed some other way typed in from myIR.
+  body.append(filedReturnTools());
 
   if (state.varianceRows.length === 0) return;
 
@@ -285,4 +296,288 @@ export function wireGstReconcile(): void {
     if (files.length > 0) void loadFiledReturns(files);
     (e.target as HTMLInputElement).value = "";
   });
+}
+
+/** A filed return being typed in: boxes as typed, until it is saved. */
+interface FiledDraft {
+  periodEnd: string;
+  basis: string;
+  box5: string;
+  box6: string;
+  box9: string;
+  box11: string;
+  box13: string;
+  box8: string;
+  box12: string;
+}
+
+let filedDraft: FiledDraft | null = null;
+
+/**
+ * The periods these books cover that no filed return is held for, and the ways
+ * to record one.
+ *
+ * Without a workbook to load there used to be nothing on this page at all, so a
+ * person filing from these books had no comparison to keep. Each ended period
+ * is listed with the return the books produce for it.
+ */
+function filedReturnTools(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "filed-tools";
+  const dates = state.ledger.transactions.map((t) => t.date).sort();
+  const first = dates[0];
+  const last = dates[dates.length - 1];
+  if (first === undefined || last === undefined) return wrap;
+
+  const today = new Date().toISOString().slice(0, 10);
+  let ours: GstReturnResult[] = [];
+  try {
+    ours = computeOurReturns(varianceInput(), first, last);
+  } catch {
+    ours = [];
+  }
+  const ended = ours.filter((r) => r.period.to < today);
+  const held = new Set(state.filed.map((f) => f.periodEnd));
+  const unfiled = ended.filter((r) => !held.has(r.period.to)).slice(-12).reverse();
+
+  const actions = document.createElement("div");
+  actions.className = "page-actions";
+  const record = document.createElement("button");
+  record.type = "button";
+  record.textContent = "Record a filed return";
+  record.disabled = filedDraft !== null;
+  record.addEventListener("click", () => {
+    filedDraft = blankFiledDraft(unfiled[0]?.period.to ?? ended[ended.length - 1]?.period.to ?? "");
+    renderVariance();
+  });
+  actions.append(record);
+  wrap.append(actions);
+  if (filedDraft !== null) wrap.append(filedEditor(filedDraft, [...ended].reverse()));
+
+  if (unfiled.length > 0) {
+    const heading = document.createElement("h3");
+    heading.textContent = "Periods with no filed return recorded";
+    wrap.append(heading);
+    const hint = document.createElement("p");
+    hint.className = "variance-note";
+    hint.textContent =
+      "The return these books produce for each period. If that is what you filed, mark it as filed: " +
+      "it is kept as it stands today, and anything changed later shows against it. If you filed " +
+      "different figures, record the return as filed instead.";
+    wrap.append(hint);
+
+    const table = document.createElement("table");
+    table.innerHTML =
+      "<thead><tr><th>Period</th><th>Due</th><th>Box 5 sales</th><th>Box 11 purchases</th>" +
+      "<th>Box 15</th><th></th></tr></thead>";
+    const tbody = document.createElement("tbody");
+    for (const result of unfiled) {
+      const tr = document.createElement("tr");
+      for (const text of [
+        `${result.period.from} to ${result.period.to}`,
+        result.period.due,
+        formatAmount(result.boxes.box5),
+        formatAmount(result.boxes.box11),
+        result.boxes.box15 < 0 ? `${formatAmount(-result.boxes.box15)} refund` : `${formatAmount(result.boxes.box15)} to pay`,
+      ]) {
+        const td = document.createElement("td");
+        td.textContent = text;
+        tr.append(td);
+      }
+      const cell = document.createElement("td");
+      const mark = document.createElement("button");
+      mark.type = "button";
+      mark.className = "link-button";
+      mark.textContent = "mark as filed";
+      mark.addEventListener("click", () => void markFiled(result));
+      const other = document.createElement("button");
+      other.type = "button";
+      other.className = "link-button";
+      other.textContent = "record as filed";
+      other.disabled = filedDraft !== null;
+      other.addEventListener("click", () => {
+        filedDraft = blankFiledDraft(result.period.to);
+        renderVariance();
+      });
+      cell.append(mark, " · ", other);
+      tr.append(cell);
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    wrap.append(table);
+  }
+  return wrap;
+}
+
+function blankFiledDraft(periodEnd: string): FiledDraft {
+  return { periodEnd, basis: "Payments basis", box5: "", box6: "", box9: "", box11: "", box13: "", box8: "", box12: "" };
+}
+
+async function keepFiled(one: FiledReturn): Promise<void> {
+  const byPeriod = new Map(state.filed.map((f) => [f.periodEnd, f]));
+  byPeriod.set(one.periodEnd, one);
+  state.filed = [...byPeriod.values()].sort((a, b) => a.periodEnd.localeCompare(b.periodEnd));
+  state.ledger = { ...state.ledger, filedReturns: state.filed };
+  state.persistent = await save(state.ledger);
+  recomputeVariance();
+  renderVariance();
+}
+
+async function markFiled(result: GstReturnResult): Promise<void> {
+  const owed =
+    result.boxes.box15 < 0
+      ? `a refund of ${formatAmount(-result.boxes.box15)}`
+      : `${formatAmount(result.boxes.box15)} to pay`;
+  if (
+    !confirm(
+      `Record the return for ${result.period.from} to ${result.period.to} as filed, with ${owed}? ` +
+        "It is kept as these books show it now.",
+    )
+  ) {
+    return;
+  }
+  await keepFiled(filedReturnFromOurs(result));
+}
+
+/** The boxes as typed, and whatever is stopping them being saved. */
+function boxesFromDraft(draft: FiledDraft): { boxes: ReturnType<typeof gstBoxesFrom>; problems: string[] } {
+  const problems: string[] = [];
+  const amount = (text: string, what: string): number => {
+    if (text.trim() === "") return 0;
+    const parsed = parseAmount(text.trim());
+    if (parsed === null) {
+      problems.push(`${what}: that is not an amount`);
+      return 0;
+    }
+    return parsed;
+  };
+  const optional = (text: string, what: string): number | undefined =>
+    text.trim() === "" ? undefined : amount(text, what);
+  const box8 = optional(draft.box8, "Box 8");
+  const box12 = optional(draft.box12, "Box 12");
+  const boxes = gstBoxesFrom({
+    box5: amount(draft.box5, "Box 5"),
+    box6: amount(draft.box6, "Box 6"),
+    box9: amount(draft.box9, "Box 9"),
+    box11: amount(draft.box11, "Box 11"),
+    box13: amount(draft.box13, "Box 13"),
+    ...(box8 !== undefined ? { box8 } : {}),
+    ...(box12 !== undefined ? { box12 } : {}),
+  });
+  if (draft.periodEnd === "") problems.push("choose the period");
+  if (draft.box5.trim() === "" && draft.box11.trim() === "") problems.push("enter Box 5, Box 11, or both");
+  return { boxes, problems };
+}
+
+function filedEditor(draft: FiledDraft, periods: readonly GstReturnResult[]): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "split-editor journal-editor";
+  const title = document.createElement("h4");
+  title.textContent = "Record a filed return";
+  wrap.append(title);
+
+  const fields = document.createElement("div");
+  fields.className = "agent-fields";
+  const field = (label: string, control: HTMLElement): void => {
+    const wrapper = document.createElement("label");
+    wrapper.append(label, control);
+    fields.append(wrapper);
+  };
+  const preview = document.createElement("p");
+  preview.className = "split-balance";
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save return";
+
+  const period = document.createElement("select");
+  const ends = periods.map((r) => r.period.to);
+  if (draft.periodEnd !== "" && !ends.includes(draft.periodEnd)) ends.unshift(draft.periodEnd);
+  for (const end of ends) {
+    const option = document.createElement("option");
+    const known = periods.find((r) => r.period.to === end);
+    option.value = end;
+    option.textContent = known ? `${known.period.from} to ${known.period.to}` : `Ending ${end}`;
+    option.selected = end === draft.periodEnd;
+    period.append(option);
+  }
+  period.addEventListener("change", () => {
+    draft.periodEnd = period.value;
+    refresh();
+  });
+  field("Period", period);
+
+  const basis = document.createElement("select");
+  for (const value of ["Payments basis", "Invoice basis", "Hybrid basis"]) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = value;
+    option.selected = value === draft.basis;
+    basis.append(option);
+  }
+  basis.addEventListener("change", () => {
+    draft.basis = basis.value;
+  });
+  field("Basis", basis);
+
+  const box = (label: string, key: keyof FiledDraft, placeholder = "0.00"): void => {
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.className = "split-amount";
+    input.placeholder = placeholder;
+    input.value = draft[key];
+    input.addEventListener("input", () => {
+      draft[key] = input.value;
+      refresh();
+    });
+    field(label, input);
+  };
+  box("Box 5 — total sales and income", "box5");
+  box("Box 6 — zero-rated supplies", "box6");
+  box("Box 9 — adjustments", "box9");
+  box("Box 11 — total purchases and expenses", "box11");
+  box("Box 13 — credit adjustments", "box13");
+  box("Box 8 as filed (optional)", "box8", "worked out");
+  box("Box 12 as filed (optional)", "box12", "worked out");
+  wrap.append(fields, preview);
+
+  save.addEventListener("click", () => {
+    const { boxes, problems } = boxesFromDraft(draft);
+    if (problems.length > 0) return;
+    const found = periods.find((r) => r.period.to === draft.periodEnd);
+    const one = filedReturnFromBoxes({
+      periodStart: found?.period.from ?? null,
+      periodEnd: draft.periodEnd,
+      basis: draft.basis,
+      status: "Filed",
+      boxes,
+    });
+    filedDraft = null;
+    void keepFiled(one);
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    filedDraft = null;
+    renderVariance();
+  });
+  const buttons = document.createElement("div");
+  buttons.className = "page-actions";
+  buttons.append(save, cancel);
+  wrap.append(buttons);
+
+  function refresh(): void {
+    const { boxes, problems } = boxesFromDraft(draft);
+    const said =
+      `Box 7 ${formatAmount(boxes.box7)} · Box 8 ${formatAmount(boxes.box8)} · Box 10 ${formatAmount(boxes.box10)} · ` +
+      `Box 12 ${formatAmount(boxes.box12)} · Box 14 ${formatAmount(boxes.box14)} · Box 15 ` +
+      (boxes.box15 < 0 ? `${formatAmount(-boxes.box15)} refund` : `${formatAmount(boxes.box15)} to pay`);
+    preview.textContent = problems.length === 0 ? said : `${said}. Still to do: ${problems.join("; ")}.`;
+    preview.className = problems.length === 0 ? "split-balance ok" : "split-balance off";
+    save.disabled = problems.length > 0;
+  }
+  refresh();
+  return wrap;
 }

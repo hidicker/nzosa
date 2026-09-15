@@ -222,6 +222,11 @@
             it found and can point at the right three columns yourself. Nothing needs renaming
             first.
           </p>
+          <p>
+            Keeping your coding on a sheet from scratch?
+            <button id="check-template" type="button" class="link-button">Download a template</button>
+            with those columns and two example lines.
+          </p>
         </details>
         <!-- The file button belongs where the file goes, and looking like the
              one on the Import page, rather than tucked in the header beside a
@@ -433,6 +438,7 @@
           <h2>Opening balances</h2>
           <div class="page-actions">
             <select id="opening-year"></select>
+            <button id="opening-enter" type="button" class="primary">Enter opening balances</button>
             <button id="opening-pick" type="button">Load trial balance&hellip;</button>
             <input id="opening-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
           </div>
@@ -481,8 +487,11 @@
             An import can be missing a transaction, or hold the same one twice, and no
             total will show it &mdash; the total is made of exactly the rows that are
             there. The bank's daily balance is the outside witness. Export it from
-            internet banking for the same period as the transactions.
+            internet banking for the same period as the transactions, or type a few statement
+            balances in below: a start and an end for an account are enough to show whether
+            anything between them is missing.
           </p>
+          <div id="balances-entry"></div>
           <div id="balances-body"></div>
         </section>
 
@@ -607,8 +616,9 @@
           </div>
         </div>
         <p class="variance-hint" id="variance-hint">
-          Load the GST return workbooks your accounting system exports. They are read in this
-          page and compared against returns recomputed from the ledger above.
+          Each GST return you filed, beside what the books now say for the same period. Load the
+          return workbooks your accounting system exports, mark the books' own return as filed,
+          or record one filed some other way.
         </p>
         <div id="variance-body"></div>
       </section>

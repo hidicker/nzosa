@@ -27,7 +27,7 @@ import type { Suggestion } from "../reconcile.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { amountCell, nameCell, note } from "../ui.js";
+import { amountCell, download, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
   accountTreatment,
@@ -1883,11 +1883,23 @@ async function acceptProposals(proposals: readonly RuleProposal[]): Promise<void
   showPage(state.page);
 }
 
+/**
+ * A coding history to fill in on a sheet: the three columns this page reads,
+ * and two invented lines showing how. Money in is positive, money out negative.
+ */
+const CODING_TEMPLATE =
+  "Date,Amount,Account,Description\r\n" +
+  "15/04/2025,-120.50,Motor Vehicle Expenses,Fuel (example -- replace with your own)\r\n" +
+  "30/04/2025,2300.00,Sales,Invoice 1001 (example)\r\n";
+
 /** Loading what the other system coded, clearing it, and accepting in bulk. */
 export function wireCodingReconciliation(): void {
 
   $("accept-all").addEventListener("click", () => void acceptAllShown());
   $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
+  $("check-template").addEventListener("click", () =>
+    download(CODING_TEMPLATE, "coding-history-template.csv", "text/csv"),
+  );
   $("check-clear").addEventListener("click", () => clearCheck());
   $<HTMLInputElement>("check-input").addEventListener("change", (e) => {
     const files = [...((e.target as HTMLInputElement).files ?? [])];

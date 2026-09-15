@@ -5,6 +5,7 @@ import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { describeRules } from "./rules-ui.js";
 import { buildRows } from "./variance.js";
+import type { VarianceInput } from "./variance.js";
 import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { clearStore, emptyLedger, saveEvents, savePart, saveRules } from "./store.js";
@@ -651,7 +652,18 @@ export function recomputeVariance(): void {
     state.varianceRows = [];
     return;
   }
-  state.varianceRows = buildRows(state.filed, {
+  state.varianceRows = buildRows(state.filed, varianceInput());
+}
+
+/**
+ * What a GST return is recomputed from.
+ *
+ * One definition, used for the comparison with filed returns and for the
+ * returns listed to be marked as filed, so the figure recorded as filed is the
+ * figure the comparison would have produced.
+ */
+export function varianceInput(): VarianceInput {
+  return {
     transactions: state.ledger.transactions,
     splits: state.ledger.splits ?? {},
     overrides: state.ledger.overrides ?? {},
@@ -671,7 +683,7 @@ export function recomputeVariance(): void {
     // accounts against that company's filed returns and reported the rest of
     // the household as a disagreement.
     accounts: accountsFor(state.varianceAccounts),
-  });
+  };
 }
 
 export function invoiceBalanceMap(): Map<string, InvoiceBalance> {

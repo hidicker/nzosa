@@ -1,5 +1,6 @@
 import { redraw } from "../app.js";
-import { ledgerAccountFor, postedJournals, record } from "../books.js";
+import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record } from "../books.js";
+import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
@@ -46,6 +47,7 @@ function balancesByFinancialYear(): FinancialYearBalances[] {
 export function renderOpeningBalances(): void {
   const body = $("opening-body");
   body.textContent = "";
+  if (openingDraft !== null) body.append(openingEditor(openingDraft));
 
   const yearSelect = $<HTMLSelectElement>("opening-year");
   const held = state.ledger.openingBalances;
@@ -695,6 +697,10 @@ export function renderBalanceChecks(
 
 /** Loading an opening position, and choosing which year is being edited. */
 export function wireOpeningBalances(): void {
+  $("opening-enter").addEventListener("click", () => {
+    openingDraft = draftFromHeld();
+    redraw("openingBalances");
+  });
 
   $("opening-pick").addEventListener("click", () => $<HTMLInputElement>("opening-input").click());
   $<HTMLInputElement>("opening-input").addEventListener("change", (e) => {
@@ -706,4 +712,281 @@ export function wireOpeningBalances(): void {
     state.openingYear = (e.target as HTMLSelectElement).value;
     redraw("openingBalances");
   });
+}
+
+/** Opening balances being entered: amounts as typed, until they balance and are saved. */
+interface OpeningDraftLine {
+  key: string;
+  label: string;
+  debit: string;
+  credit: string;
+}
+
+interface OpeningDraft {
+  asAt: string;
+  lines: OpeningDraftLine[];
+}
+
+let openingDraft: OpeningDraft | null = null;
+
+/** What an opening balance can be stated against: each bank account, and the chart. */
+function openingAccountOptions(): { key: string; label: string }[] {
+  const bankIds = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
+  const banks = bankIds.map((id) => {
+    const name = bankLabel(id);
+    return { key: id, label: name === id ? id : `${id} ${name}` };
+  });
+  const chart = accountsForEditing()
+    .map((row) => row.account)
+    .filter((a) => a.code.trim() !== "" && a.type.trim().toLowerCase() !== "bank")
+    .map((a) => ({ key: a.code.trim(), label: `${a.code.trim()} ${a.name}` }));
+  return [...banks, ...chart];
+}
+
+function blankOpeningLine(): OpeningDraftLine {
+  return { key: "", label: "", debit: "", credit: "" };
+}
+
+/**
+ * The form, started from what is held.
+ *
+ * With nothing held, the date offered is the first of April on or before the
+ * first transaction: the start of the first financial year the books reach,
+ * which is the position a set of books opens from.
+ */
+function draftFromHeld(): OpeningDraft {
+  const held = state.ledger.openingBalances;
+  const options = openingAccountOptions();
+  const labelOf = (key: string): string => options.find((o) => o.key === key)?.label ?? key;
+  const first = state.ledger.transactions.map((t) => t.date).sort()[0];
+  const startYear =
+    first === undefined
+      ? new Date().getFullYear()
+      : Number(first.slice(5, 7)) >= 4
+        ? Number(first.slice(0, 4))
+        : Number(first.slice(0, 4)) - 1;
+  const lines = Object.entries(held?.accounts ?? {}).map(([key, cents]) => ({
+    key,
+    label: labelOf(key),
+    debit: cents > 0 ? (cents / 100).toFixed(2) : "",
+    credit: cents < 0 ? (-cents / 100).toFixed(2) : "",
+  }));
+  return {
+    asAt: held?.asAt ?? `${startYear}-04-01`,
+    lines: lines.length > 0 ? lines : [blankOpeningLine(), blankOpeningLine()],
+  };
+}
+
+/** The balances a draft would save, their total, and what is still stopping them. */
+function readOpeningDraft(draft: OpeningDraft): { accounts: Record<string, Cents>; total: Cents; problems: string[] } {
+  const problems: string[] = [];
+  const accounts: Record<string, Cents> = {};
+  draft.lines.forEach((line, index) => {
+    const n = index + 1;
+    if (line.key === "" && line.debit.trim() === "" && line.credit.trim() === "") return;
+    const debit = line.debit.trim() === "" ? 0 : parseAmount(line.debit.trim());
+    const credit = line.credit.trim() === "" ? 0 : parseAmount(line.credit.trim());
+    if (debit === null || credit === null) {
+      problems.push(`line ${n}: that is not an amount`);
+      return;
+    }
+    if (line.key === "") {
+      problems.push(`line ${n}: choose the account`);
+      return;
+    }
+    if (debit !== 0 && credit !== 0) {
+      problems.push(`line ${n}: a debit or a credit, not both`);
+      return;
+    }
+    if (accounts[line.key] !== undefined) {
+      problems.push(`line ${n}: ${line.label || line.key} is listed twice`);
+      return;
+    }
+    const cents = Math.abs(debit) - Math.abs(credit);
+    if (cents !== 0) accounts[line.key] = cents;
+  });
+  const total = Object.values(accounts).reduce((sum, c) => sum + c, 0);
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) problems.push("choose the date the balances are at");
+  if (Object.keys(accounts).length === 0) problems.push("enter at least one balance");
+  if (total !== 0) problems.push(`debits and credits are ${formatAmount(Math.abs(total))} apart`);
+  return { accounts, total, problems };
+}
+
+function openingEditor(draft: OpeningDraft): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "split-editor journal-editor";
+  const title = document.createElement("h4");
+  title.textContent = "Enter opening balances";
+  wrap.append(title);
+  wrap.append(
+    note(
+      "The position at the start of the books: every account's balance on that day, a debit for " +
+        "what is owned and a credit for what is owed or held as equity. They must balance, and " +
+        "the balancing line usually goes to retained earnings or owner's equity.",
+    ),
+  );
+
+  const options = openingAccountOptions();
+  const labels = options.map((o) => o.label);
+  const keyOf = (label: string): string => options.find((o) => o.label === label)?.key ?? "";
+  const status = document.createElement("p");
+  status.className = "split-balance";
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save opening balances";
+
+  const head = document.createElement("div");
+  head.className = "agent-fields";
+  const dateLabel = document.createElement("label");
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = draft.asAt;
+  date.addEventListener("input", () => {
+    draft.asAt = date.value;
+    refresh();
+  });
+  dateLabel.append("Balances at the start of", date);
+  head.append(dateLabel);
+  wrap.append(head);
+
+  const rows = document.createElement("div");
+  const draw = (): void => {
+    rows.textContent = "";
+    draft.lines.forEach((line, index) => {
+      const row = document.createElement("div");
+      row.className = "agent-row";
+      const account = combobox(labels, line.label === "" ? null : line.label, "Search accounts…", () => {
+        line.label = account.value;
+        line.key = keyOf(account.value);
+        refresh();
+      });
+      const amount = (value: string, placeholder: string, set: (v: string) => void): HTMLInputElement => {
+        const input = document.createElement("input");
+        input.type = "text";
+        input.inputMode = "decimal";
+        input.className = "split-amount";
+        input.placeholder = placeholder;
+        input.value = value;
+        input.addEventListener("input", () => {
+          set(input.value);
+          refresh();
+        });
+        return input;
+      };
+      const drop = document.createElement("button");
+      drop.type = "button";
+      drop.textContent = "✕";
+      drop.title = "Remove this line";
+      drop.addEventListener("click", () => {
+        draft.lines.splice(index, 1);
+        draw();
+        refresh();
+      });
+      row.append(
+        account.element,
+        amount(line.debit, "Debit", (v) => { line.debit = v; }),
+        amount(line.credit, "Credit", (v) => { line.credit = v; }),
+        drop,
+      );
+      rows.append(row);
+    });
+  };
+  draw();
+  wrap.append(rows);
+
+  const more = document.createElement("button");
+  more.type = "button";
+  more.textContent = "Add a line";
+  more.addEventListener("click", () => {
+    draft.lines.push(blankOpeningLine());
+    draw();
+    refresh();
+  });
+
+  // The difference to one account, as a balancing line.
+  const balanceTo = combobox(labels, null, "Balance the difference to…", () => undefined);
+  const balance = document.createElement("button");
+  balance.type = "button";
+  balance.textContent = "Add balancing line";
+  balance.addEventListener("click", () => {
+    const { total } = readOpeningDraft(draft);
+    const key = keyOf(balanceTo.value);
+    if (total === 0 || key === "") return;
+    const existing = draft.lines.find((l) => l.key === key);
+    const line = existing ?? { key, label: balanceTo.value, debit: "", credit: "" };
+    const current = (parseAmount(line.debit.trim() || "0") ?? 0) - (parseAmount(line.credit.trim() || "0") ?? 0);
+    const wanted = current - total;
+    line.debit = wanted > 0 ? (wanted / 100).toFixed(2) : "";
+    line.credit = wanted < 0 ? (-wanted / 100).toFixed(2) : "";
+    if (existing === undefined) draft.lines.push(line);
+    draw();
+    refresh();
+  });
+  const balancing = document.createElement("div");
+  balancing.className = "page-actions";
+  balancing.append(more, balanceTo.element, balance);
+  wrap.append(balancing);
+
+  const later = document.createElement("p");
+  later.className = "variance-note";
+  wrap.append(later, status);
+
+  save.addEventListener("click", () => void saveOpeningDraft(draft));
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    openingDraft = null;
+    redraw("openingBalances");
+  });
+  const buttons = document.createElement("div");
+  buttons.className = "page-actions";
+  buttons.append(save, cancel);
+  wrap.append(buttons);
+
+  function refresh(): void {
+    const { accounts, problems } = readOpeningDraft(draft);
+    const debits = Object.values(accounts).reduce((s, c) => s + (c > 0 ? c : 0), 0);
+    const credits = Object.values(accounts).reduce((s, c) => s + (c < 0 ? -c : 0), 0);
+    const said = `Debits ${formatAmount(debits)} · Credits ${formatAmount(credits)}`;
+    status.textContent = problems.length === 0 ? `${said} · balanced` : `${said}. Still to do: ${problems.join("; ")}.`;
+    status.className = problems.length === 0 ? "split-balance ok" : "split-balance off";
+    save.disabled = problems.length > 0;
+    // A date after the first transaction leaves that transaction out of every
+    // balance, because the balances are taken to include it already.
+    const first = state.ledger.transactions.map((t) => t.date).sort()[0];
+    later.textContent =
+      first !== undefined && draft.asAt > first
+        ? `The books have transactions from ${first}, before this date. They are taken to be ` +
+          "inside these balances already and left out of the balance sheet, so the date is " +
+          "normally the first of April on or before the first transaction."
+        : "";
+    later.hidden = later.textContent === "";
+  }
+  refresh();
+  return wrap;
+}
+
+async function saveOpeningDraft(draft: OpeningDraft): Promise<void> {
+  const { accounts, problems } = readOpeningDraft(draft);
+  if (problems.length > 0) return;
+  const held = state.ledger.openingBalances;
+  const openingBalances: OpeningBalances = {
+    asAt: draft.asAt as IsoDate,
+    source: "Entered by hand",
+    accounts,
+    ...(held?.byDate ? { byDate: held.byDate } : {}),
+  };
+  state.ledger = { ...state.ledger, openingBalances };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "openingBalance",
+    `Opening balances entered as at ${draft.asAt}, ${Object.keys(accounts).length} accounts`,
+    held ?? null,
+    openingBalances,
+    "opening",
+  );
+  openingDraft = null;
+  redraw("openingBalances");
 }

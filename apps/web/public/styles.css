@@ -2481,4 +2481,6 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .agent-section { margin: 0.7rem 0 0.2rem; font-weight: 600; font-size: 0.85rem; }
 .agent-row { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 2fr) 8rem auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
 @media (max-width: 640px) { .agent-row { grid-template-columns: 1fr 1fr; } }
+.filed-tools { margin: 0 0 1.2rem; }
+.filed-tools table { margin-bottom: 0.6rem; }
 .reports-star { font-size: 1rem; line-height: 1; }

@@ -2475,4 +2475,10 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .reports-back { display: inline-block; margin: 0 0 0.8rem; padding: 0.2rem 0; border: 0;
   background: none; color: inherit; font-size: 0.85rem; opacity: 0.75; cursor: pointer; }
 .reports-back:hover, .reports-back:focus-visible { opacity: 1; text-decoration: underline; }
+/* A property manager's statement being entered. */
+.agent-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.5rem 0.8rem; margin: 0.4rem 0 0.8rem; }
+.agent-fields label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; }
+.agent-section { margin: 0.7rem 0 0.2rem; font-weight: 600; font-size: 0.85rem; }
+.agent-row { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 2fr) 8rem auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
+@media (max-width: 640px) { .agent-row { grid-template-columns: 1fr 1fr; } }
 .reports-star { font-size: 1rem; line-height: 1; }

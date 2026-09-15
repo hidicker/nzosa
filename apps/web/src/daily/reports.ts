@@ -19,6 +19,8 @@ import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
 import { unresolvedNote } from "../widgets.js";
 import {
+  agentStatementProblems,
+  agentStatementTotals,
   ir3Return,
   isRental,
   ownerRentalSchedule,
@@ -61,6 +63,10 @@ import {
   trialBalance,
 } from "@nzosa/core";
 import type {
+  AgentStatement,
+  AgentStatementLine,
+  CodingEngine,
+  EntityModel,
   Ir3Details,
   OwnerRentalSchedule,
   RentalLine,
@@ -1356,6 +1362,475 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   }
 }
 
+/** A statement being entered or edited: amounts as typed, until it is saved. */
+interface AgentDraftLine {
+  code: string;
+  description: string;
+  amount: string;
+}
+
+interface AgentDraft {
+  id: string;
+  entity: string;
+  agent: string;
+  from: string;
+  to: string;
+  heldCode: string;
+  heldAtStart: string;
+  income: AgentDraftLine[];
+  expenses: AgentDraftLine[];
+  paidToOwner: string;
+  heldAtEnd: string;
+}
+
+let agentDraft: AgentDraft | null = null;
+
+function draftFromStatement(statement: AgentStatement): AgentDraft {
+  const text = (cents: Cents): string => (cents / 100).toFixed(2);
+  const lines = (list: readonly AgentStatementLine[]): AgentDraftLine[] =>
+    list.map((line) => ({ code: line.code, description: line.description, amount: text(line.amount) }));
+  return {
+    id: statement.id,
+    entity: statement.entity,
+    agent: statement.agent,
+    from: statement.from,
+    to: statement.to,
+    heldCode: statement.heldCode,
+    heldAtStart: text(statement.heldAtStart),
+    income: lines(statement.income),
+    expenses: lines(statement.expenses),
+    paidToOwner: text(statement.paidToOwner),
+    heldAtEnd: text(statement.heldAtEnd),
+  };
+}
+
+/** The statement a draft would save, and everything still stopping it. */
+function statementFromDraft(draft: AgentDraft): { statement: AgentStatement; problems: string[] } {
+  const problems: string[] = [];
+  const amount = (typed: string, what: string): Cents => {
+    if (typed.trim() === "") return 0;
+    const parsed = parseAmount(typed.trim());
+    if (parsed === null) {
+      problems.push(`${what}: that is not an amount`);
+      return 0;
+    }
+    return parsed;
+  };
+  const lines = (list: readonly AgentDraftLine[], kind: string): AgentStatementLine[] =>
+    list
+      .filter((l) => l.code.trim() !== "" || l.description.trim() !== "" || l.amount.trim() !== "")
+      .map((l, index) => ({
+        code: l.code.trim(),
+        description: l.description.trim(),
+        amount: amount(l.amount, `${kind} line ${index + 1}`),
+      }));
+  const statement: AgentStatement = {
+    id: draft.id,
+    entity: draft.entity,
+    agent: draft.agent.trim(),
+    from: draft.from,
+    to: draft.to,
+    heldCode: draft.heldCode.trim(),
+    heldAtStart: amount(draft.heldAtStart, "held at the start"),
+    income: lines(draft.income, "collected"),
+    expenses: lines(draft.expenses, "paid out"),
+    paidToOwner: amount(draft.paidToOwner, "paid to you"),
+    heldAtEnd: amount(draft.heldAtEnd, "held at the end"),
+  };
+  const known = new Set(accountsForEditing().map((a) => a.label));
+  for (const code of [statement.heldCode, ...statement.income.map((l) => l.code), ...statement.expenses.map((l) => l.code)]) {
+    if (code !== "" && !known.has(code)) problems.push(`"${code}" is not an account -- pick one from the list`);
+  }
+  return { statement, problems: [...problems, ...agentStatementProblems(statement)] };
+}
+
+/**
+ * What the books hold in an account at the end of a day.
+ *
+ * Its opening balance, where one was entered, and everything posted to it from
+ * then on -- the same figure the balance sheet would show for it that day.
+ */
+function bookBalanceOn(code: string, date: string, journals: readonly PostedJournal[]): Cents {
+  const { code: digits, name } = splitAccountLabel(code);
+  const wanted = name.trim().toLowerCase();
+  const opening = state.ledger.openingBalances;
+  let balance = opening !== undefined && opening.asAt <= date ? (opening.accounts[digits] ?? 0) : 0;
+  for (const journal of journals) {
+    if (journal.date > date) continue;
+    if (opening !== undefined && journal.date < opening.asAt) continue;
+    for (const line of journal.lines) {
+      const same =
+        (digits !== "" && line.accountCode === digits) || line.accountName.trim().toLowerCase() === wanted;
+      if (same) balance += line.amount;
+    }
+  }
+  return balance;
+}
+
+/**
+ * Property manager statements: entered, posted, and checked against the bank.
+ *
+ * The check is the point. The statement says what the manager is holding; the
+ * property manager account says what the books think they are holding, once
+ * the statement's journal and the payments from the bank are both in it. A
+ * payment made on the last day and banked a few days later is the one ordinary
+ * difference, and it is named as that rather than left looking like an error.
+ */
+function renderAgentStatements(body: HTMLElement, year: number): void {
+  const from = `${year - 1}-04-01`;
+  const to = `${year}-03-31`;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const rentals = model.entities.filter(isRental);
+  const inYear = (state.ledger.agentStatements ?? [])
+    .filter((s) => s.to >= from && s.to <= to)
+    .sort((a, b) => a.to.localeCompare(b.to) || a.agent.localeCompare(b.agent));
+
+  const heading = document.createElement("h3");
+  heading.textContent = `Property manager statements, year ended 31 March ${year}`;
+  body.append(heading);
+  body.append(
+    note(
+      "Code the manager's payments to you to a property manager account -- a current asset " +
+        "belonging to the property -- then enter each statement here. It posts the rent the " +
+        "manager collected and what they paid out of it, and leaves the account holding what the " +
+        "manager holds, so the two can be checked against each other.",
+    ),
+  );
+
+  if (rentals.length === 0) {
+    body.append(
+      note("No rental properties yet. On Entities & accounts, give each property an entity of its own."),
+    );
+    return;
+  }
+
+  const actions = document.createElement("div");
+  actions.className = "page-actions";
+  const add = document.createElement("button");
+  add.type = "button";
+  add.textContent = "Enter a statement";
+  add.disabled = agentDraft !== null;
+  add.addEventListener("click", () => {
+    agentDraft = {
+      id: `a${Date.now().toString(36)}`,
+      entity: rentals.length === 1 ? (rentals[0]?.id ?? "") : "",
+      agent: "",
+      from,
+      to,
+      heldCode: "",
+      heldAtStart: "",
+      income: [{ code: "", description: "Rent", amount: "" }],
+      expenses: [{ code: "", description: "Management fees", amount: "" }],
+      paidToOwner: "",
+      heldAtEnd: "",
+    };
+    redraw("reports");
+  });
+  actions.append(add);
+  body.append(actions);
+  if (agentDraft !== null) body.append(agentEditor(agentDraft, rentals));
+
+  if (inYear.length === 0) {
+    body.append(note("None entered for this year."));
+    return;
+  }
+  const journals = postedJournals();
+  const engine = reportEngine();
+  for (const statement of inYear) body.append(agentCard(statement, model, journals, engine));
+}
+
+function agentCard(
+  statement: AgentStatement,
+  model: EntityModel,
+  journals: readonly PostedJournal[],
+  engine: CodingEngine | null,
+): HTMLElement {
+  const card = document.createElement("div");
+  const problems = agentStatementProblems(statement);
+  card.className = problems.length > 0 ? "journal-card journal-broken" : "journal-card";
+
+  const property = model.entities.find((e) => e.id === statement.entity)?.name ?? statement.entity;
+  const title = document.createElement("p");
+  title.className = "journal-narration";
+  title.textContent = `${statement.agent} — ${property}, ${statement.from} to ${statement.to}`;
+  card.append(title);
+
+  if (problems.length > 0) {
+    const bad = document.createElement("p");
+    bad.className = "journal-out";
+    bad.textContent = `Not posted: ${problems.join("; ")}.`;
+    card.append(bad);
+  }
+
+  const totals = agentStatementTotals(statement);
+  const table = document.createElement("table");
+  table.className = "report-table opening-table";
+  const tbody = document.createElement("tbody");
+  const row = (label: string, amount: Cents, className = ""): void => {
+    const tr = document.createElement("tr");
+    if (className !== "") tr.className = className;
+    tr.append(nameCell(label), amountCell(centsSaid(amount)));
+    tbody.append(tr);
+  };
+  row("Held for you at the start", statement.heldAtStart);
+  for (const line of statement.income) row(`${line.description} — ${scheduleName(line.code)}`, line.amount);
+  row("Collected", totals.income, "report-total");
+  for (const line of statement.expenses) row(`${line.description} — ${scheduleName(line.code)}`, line.amount);
+  row("Paid out", totals.expenses, "report-total");
+  row("Paid to you", statement.paidToOwner);
+  row("Held for you at the end", statement.heldAtEnd, "bs-grand");
+  table.append(tbody);
+  card.append(table);
+
+  if (problems.length === 0) {
+    const books = bookBalanceOn(statement.heldCode, statement.to, journals);
+    const lateReceipts =
+      engine === null
+        ? 0
+        : engine.transactions
+            .filter(
+              (t) =>
+                t.date > statement.to &&
+                (Date.parse(t.date) - Date.parse(statement.to)) / 86_400_000 <= 14 &&
+                engine.codeOf(t) === statement.heldCode,
+            )
+            .reduce((sum, t) => sum + t.amount, 0);
+    const account = scheduleName(statement.heldCode);
+    const difference = books - statement.heldAtEnd;
+    const check = document.createElement("p");
+    if (difference === 0) {
+      check.className = "journal-balanced";
+      check.textContent = `${account} holds ${centsSaid(books)} at ${statement.to}, as the statement says.`;
+    } else if (difference === lateReceipts) {
+      check.className = "journal-balanced";
+      check.textContent =
+        `${account} holds ${centsSaid(books)} at ${statement.to} and the statement says ` +
+        `${centsSaid(statement.heldAtEnd)}. The ${centsSaid(difference)} between them reached your ` +
+        "bank within two weeks of the period ending: paid out at the end of the period, banked after it.";
+    } else {
+      check.className = "journal-out";
+      check.textContent =
+        `${account} holds ${centsSaid(books)} at ${statement.to}, but the statement says ` +
+        `${centsSaid(statement.heldAtEnd)} -- ${centsSaid(difference)} apart. Check that every payment ` +
+        "from this manager is coded to this account, that the account's opening balance is what the " +
+        "manager held when the books start, and that the earlier statements are entered.";
+    }
+    card.append(check);
+  }
+
+  const buttons = document.createElement("div");
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.className = "link-button";
+  edit.textContent = "edit";
+  edit.disabled = agentDraft !== null;
+  edit.addEventListener("click", () => {
+    agentDraft = draftFromStatement(statement);
+    redraw("reports");
+  });
+  const remove = document.createElement("button");
+  remove.type = "button";
+  remove.className = "link-button";
+  remove.textContent = "remove";
+  remove.addEventListener("click", () => void removeAgentStatement(statement));
+  buttons.append(edit, remove);
+  card.append(buttons);
+  return card;
+}
+
+/** The form for one statement, checked as it is typed. */
+function agentEditor(draft: AgentDraft, rentals: readonly Entity[]): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "split-editor journal-editor";
+  const title = document.createElement("h4");
+  title.textContent = "A property manager's statement";
+  wrap.append(title);
+
+  const codes = accountsForEditing().map((a) => a.label);
+  const status = document.createElement("p");
+  status.className = "split-balance";
+  const gstNote = note(
+    "This rental is registered for GST, and the form posts amounts as entered with no GST split " +
+      "out. Enter them excluding GST, and put the GST on the manager's fees through a manual journal.",
+  );
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save statement";
+
+  const input = (value: string, placeholder: string, set: (v: string) => void, type = "text"): HTMLInputElement => {
+    const element = document.createElement("input");
+    element.type = type;
+    element.value = value;
+    element.placeholder = placeholder;
+    element.addEventListener("input", () => {
+      set(element.value);
+      refresh();
+    });
+    return element;
+  };
+  const money = (value: string, set: (v: string) => void): HTMLInputElement => {
+    const element = input(value, "0.00", set);
+    element.inputMode = "decimal";
+    element.className = "split-amount";
+    return element;
+  };
+  const fieldsIn = (container: HTMLElement) => (label: string, control: HTMLElement): void => {
+    const wrapper = document.createElement("label");
+    wrapper.append(label, control);
+    container.append(wrapper);
+  };
+
+  const opening = document.createElement("div");
+  opening.className = "agent-fields";
+  const field = fieldsIn(opening);
+  const property = document.createElement("select");
+  if (draft.entity === "") {
+    const blank = document.createElement("option");
+    blank.value = "";
+    blank.textContent = "-- choose the property --";
+    property.append(blank);
+  }
+  for (const entity of rentals) {
+    const option = document.createElement("option");
+    option.value = entity.id;
+    option.textContent = entity.name;
+    option.selected = entity.id === draft.entity;
+    property.append(option);
+  }
+  property.addEventListener("change", () => {
+    draft.entity = property.value;
+    refresh();
+  });
+  field("Property", property);
+  field("Property manager", input(draft.agent, "e.g. Kowhai Property Management", (v) => { draft.agent = v; }));
+  field("From", input(draft.from, "", (v) => { draft.from = v; }, "date"));
+  field("To", input(draft.to, "", (v) => { draft.to = v; }, "date"));
+  const heldPicker = combobox(codes, draft.heldCode === "" ? null : draft.heldCode, "Search accounts…", () => {
+    draft.heldCode = heldPicker.value;
+    refresh();
+  });
+  field("Their payments to you are coded to", heldPicker.element);
+  field("Held for you at the start", money(draft.heldAtStart, (v) => { draft.heldAtStart = v; }));
+  wrap.append(opening);
+
+  const section = (heading: string, lines: AgentDraftLine[], placeholder: string): void => {
+    const label = document.createElement("p");
+    label.className = "agent-section";
+    label.textContent = heading;
+    const rows = document.createElement("div");
+    const draw = (): void => {
+      rows.textContent = "";
+      lines.forEach((line, index) => {
+        const row = document.createElement("div");
+        row.className = "agent-row";
+        const account = combobox(codes, line.code === "" ? null : line.code, "Search accounts…", () => {
+          line.code = account.value;
+          refresh();
+        });
+        const drop = document.createElement("button");
+        drop.type = "button";
+        drop.textContent = "✕";
+        drop.title = "Remove this line";
+        drop.addEventListener("click", () => {
+          lines.splice(index, 1);
+          draw();
+          refresh();
+        });
+        row.append(
+          input(line.description, placeholder, (v) => { line.description = v; }),
+          account.element,
+          money(line.amount, (v) => { line.amount = v; }),
+          drop,
+        );
+        rows.append(row);
+      });
+    };
+    const more = document.createElement("button");
+    more.type = "button";
+    more.textContent = "Add a line";
+    more.addEventListener("click", () => {
+      lines.push({ code: "", description: "", amount: "" });
+      draw();
+    });
+    draw();
+    wrap.append(label, rows, more);
+  };
+  section("Collected from the tenant", draft.income, "e.g. Rent");
+  section("Paid out of it", draft.expenses, "e.g. Management fees");
+
+  const closing = document.createElement("div");
+  closing.className = "agent-fields";
+  const closingField = fieldsIn(closing);
+  closingField("Paid to you", money(draft.paidToOwner, (v) => { draft.paidToOwner = v; }));
+  closingField("Held for you at the end", money(draft.heldAtEnd, (v) => { draft.heldAtEnd = v; }));
+  wrap.append(closing, gstNote);
+
+  save.addEventListener("click", () => {
+    const { statement, problems } = statementFromDraft(draft);
+    if (problems.length > 0) return;
+    agentDraft = null;
+    void saveAgentStatement(statement);
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    agentDraft = null;
+    redraw("reports");
+  });
+  const buttons = document.createElement("div");
+  buttons.className = "page-actions";
+  buttons.append(save, cancel);
+  wrap.append(status, buttons);
+
+  function refresh(): void {
+    const { statement, problems } = statementFromDraft(draft);
+    const totals = agentStatementTotals(statement);
+    const said =
+      `Collected ${centsSaid(totals.income)} · paid out ${centsSaid(totals.expenses)} · ` +
+      `held at the end should be ${centsSaid(totals.expectedHeldAtEnd)}`;
+    status.textContent = problems.length === 0 ? `${said} · adds up` : `${said}. Still to do: ${problems.join("; ")}.`;
+    status.className = problems.length === 0 ? "split-balance ok" : "split-balance off";
+    save.disabled = problems.length > 0;
+    const entity = rentals.find((e) => e.id === draft.entity);
+    gstNote.hidden = entity === undefined || entity.gstRegistered === false;
+  }
+  refresh();
+  return wrap;
+}
+
+async function saveAgentStatement(statement: AgentStatement): Promise<void> {
+  const before = state.ledger.agentStatements ?? [];
+  const agentStatements = [...before.filter((s) => s.id !== statement.id), statement];
+  state.ledger = { ...state.ledger, agentStatements };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "agentStatements",
+    `${statement.agent}: statement for ${statement.from} to ${statement.to}`,
+    before,
+    agentStatements,
+  );
+  redraw("reports");
+}
+
+async function removeAgentStatement(statement: AgentStatement): Promise<void> {
+  if (!confirm(`Remove the ${statement.agent} statement for ${statement.from} to ${statement.to}? Its journal goes with it.`)) {
+    return;
+  }
+  const before = state.ledger.agentStatements ?? [];
+  const agentStatements = before.filter((s) => s.id !== statement.id);
+  state.ledger = { ...state.ledger, agentStatements };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "agentStatements",
+    `${statement.agent}: statement for ${statement.from} to ${statement.to} removed`,
+    before,
+    agentStatements,
+  );
+  redraw("reports");
+}
+
 /** A financial year as a date range, labelled by the year it ends in. */
 function yearPeriod(year: number): DateRange {
   return { from: `${year - 1}-04-01`, to: `${year}-03-31` };
@@ -2095,6 +2570,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   ir10: "Inland Revenue's financial statement, box by box, as it is filed.",
   rentals: "Each rental property's income and expenses, and all of them together.",
   ir3: "One owner's individual return: their rental schedules, other income and the tax.",
+  agents: "What each property manager collected and paid out, posted and checked against the bank.",
   journal: "Every posting for the year, and the trial balance they prove.",
   general: "Every line in the ledger, account by account.",
   manual: "Year-end and correcting journals written by hand.",
@@ -2230,6 +2706,12 @@ function reportsHint(basis: string, kind: string): string {
       "Each property's own schedule, from the accounts given to it on Entities & accounts, " +
       "with last year beside it. A rental registered for GST is shown net of GST; one that " +
       "is not includes it, because it cannot claim it back."
+    );
+  }
+  if (kind === "agents") {
+    return (
+      "A property manager passes on the rent less what they paid out of it, so the bank shows " +
+      "neither the rent nor the fees. Each statement entered here posts both."
     );
   }
   if (kind === "ir3") {
@@ -2453,6 +2935,12 @@ export function renderReportsPage(): void {
   if (kind === "rentals") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderRentalSchedules(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "agents") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderAgentStatements(body, chosenYearNow);
     return;
   }
 

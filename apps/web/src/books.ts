@@ -9,6 +9,8 @@ import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { clearStore, emptyLedger, saveEvents, savePart, saveRules } from "./store.js";
 import {
+  agentStatementJournal,
+  agentStatementProblems,
   DEFAULT_ENTITY_NAME,
   chartTreatments,
   codingCounts,
@@ -866,6 +868,18 @@ function depreciationJournals(): PostedJournal[] {
  * because a part written without a side has one resolved for it from the
  * direction of the money — posting the raw part would silently drop its GST.
  */
+/**
+ * The journals property manager statements imply, for the ones that add up.
+ *
+ * One that does not is left out rather than posted with its gap, the same rule
+ * a manual journal is held to; the statements page says why.
+ */
+export function agentStatementJournals(): ManualJournal[] {
+  return (state.ledger.agentStatements ?? [])
+    .filter((statement) => agentStatementProblems(statement).length === 0)
+    .map((statement) => agentStatementJournal(statement));
+}
+
 export function postedJournals(): PostedJournal[] {
   // Composition is in core, where the three rules that go expensively wrong --
   // a settled invoice not counting as a fresh sale, a transfer posting once
@@ -899,7 +913,9 @@ export function postedJournals(): PostedJournal[] {
     invoices: state.ledger.invoices ?? [],
     settled: invoiceAssignments(),
     transfers: state.ledger.transfers ?? {},
-    manualJournals: state.ledger.manualJournals ?? [],
+    // A property manager's statement posts as a journal of its own, derived
+    // each time so an edited statement cannot leave its old journal behind.
+    manualJournals: [...(state.ledger.manualJournals ?? []), ...agentStatementJournals()],
     assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
   });
 }

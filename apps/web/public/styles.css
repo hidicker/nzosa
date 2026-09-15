@@ -1442,6 +1442,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .extra-add input, .extra-add select { font-size: 0.85rem; }
 .extra-add input { max-width: 12rem; }
 .depreciation-table td.report-name { max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
+.depreciation-table { max-width: 64rem; }
+.depreciation-table td.report-name:first-child { min-width: 24rem; max-width: 34rem; }
+.depreciation-table td:nth-child(2) { white-space: nowrap; overflow-wrap: normal; }
 .report-table td button.danger { font-size: 0.7rem; padding: 0.1rem 0.4rem; }
 
 #invoices-body .owner-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
@@ -2499,4 +2502,5 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .gst-return-owed span { font-size: 0.8rem; opacity: 0.75; }
 .gst-return-details { max-width: 32rem; margin-bottom: 0.6rem; }
 .gst-return-form { max-width: 42rem; }
+.gst-return-form td.ir10-box { width: 4rem; white-space: nowrap; }
 .reports-star { font-size: 1rem; line-height: 1; }

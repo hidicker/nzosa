@@ -2471,4 +2471,8 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; }
 .reports-home-item .reports-open { justify-self: start; text-align: left; }
 .reports-home-item .reports-about { grid-column: 2; font-size: 0.78rem; opacity: 0.7; }
+/* Back to the list from an open report. */
+.reports-back { display: inline-block; margin: 0 0 0.8rem; padding: 0.2rem 0; border: 0;
+  background: none; color: inherit; font-size: 0.85rem; opacity: 0.75; cursor: pointer; }
+.reports-back:hover, .reports-back:focus-visible { opacity: 1; text-decoration: underline; }
 .reports-star { font-size: 1rem; line-height: 1; }

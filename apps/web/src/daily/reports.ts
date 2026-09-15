@@ -2313,6 +2313,20 @@ export function renderReportsPage(): void {
     return;
   }
 
+  // The way back to the list, where it can be seen. It was the first entry of
+  // the report picker and nowhere else, and choosing Reports in the menu keeps
+  // the report that was open -- so once a report was chosen, the list of them
+  // looked as though it had gone.
+  const back = document.createElement("button");
+  back.type = "button";
+  back.className = "reports-back";
+  back.textContent = "← All reports";
+  back.addEventListener("click", () => {
+    kindSelect.value = "home";
+    redraw("reports");
+  });
+  body.append(back);
+
   const basisNow = $<HTMLSelectElement>("report-basis").value;
   const kindNow = $<HTMLSelectElement>("report-kind").value;
 

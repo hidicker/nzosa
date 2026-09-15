@@ -2478,6 +2478,10 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 /* A property manager's statement being entered. */
 .agent-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.5rem 0.8rem; margin: 0.4rem 0 0.8rem; }
 .agent-fields label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; }
+/* An account picker stacked under its label. Its usual flex basis sizes it
+   across a row; in a column it became 15rem tall, so its list opened that far
+   below the box and the field grew a gap to match. */
+.agent-fields label .combo { flex: 0 0 auto; min-width: 0; max-width: none; width: 100%; }
 .agent-section { margin: 0.7rem 0 0.2rem; font-weight: 600; font-size: 0.85rem; }
 .agent-row { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 2fr) 8rem auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
 @media (max-width: 640px) { .agent-row { grid-template-columns: 1fr 1fr; } }

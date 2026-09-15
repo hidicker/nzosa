@@ -703,7 +703,7 @@ number obviously wrong.
 | Account Transactions CSV or `.xlsx` | `xero.ts`, and `coding-check.ts` for the coding comparison |
 | Journal Report CSV or `.xlsx` | `journals.ts` |
 | Chart of accounts CSV | `chart.ts` |
-| Fixed assets CSV | `assets.ts` |
+| Fixed assets CSV | `assets.ts` reads it; `asset-register.ts` writes the same shape (export and template) |
 | Invoices, allocations CSV or `.xlsx` | `invoices.ts` |
 | Filed GST returns `.xlsx` | `filed-returns.ts` |
 | Daily balances CSV | `bank-balances.ts` |

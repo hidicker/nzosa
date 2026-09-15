@@ -705,7 +705,7 @@ number obviously wrong.
 | Chart of accounts CSV | `chart.ts` |
 | Fixed assets CSV | `assets.ts` reads it; `asset-register.ts` writes the same shape (export and template) |
 | Invoices, allocations CSV or `.xlsx` | `invoices.ts` |
-| Filed GST returns `.xlsx` | `filed-returns.ts` |
+| Filed GST returns `.xlsx` | `filed-returns.ts` reads them; `filed-return-entry.ts` records one typed in, or the books' own return, as filed |
 | Daily balances CSV | `bank-balances.ts` |
 
 **Account Transactions comes in two layouts.** Run for one account it is

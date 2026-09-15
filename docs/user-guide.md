@@ -130,11 +130,11 @@ This matters more than it sounds. Money moving between two of your own accounts 
 
 ### 4. Opening balances
 
-On its own page. Load the trial balance from your previous year end. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.
+On its own page. Load the trial balance from your previous year end, or choose **Enter opening balances** and type them in: each account's balance on the day the books start, as a debit or a credit, with a balancing line to retained earnings or owner's equity. It saves only once debits equal credits. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.
 
 ### 5. Let it learn your coding
 
-On **Coding reconciliation**, load the coded history you exported. The software lines up every coding it proposes against what you actually did, and writes rules from the agreement.
+On **Coding reconciliation**, load the coded history you exported. The software lines up every coding it proposes against what you actually did, and writes rules from the agreement. Kept your coding on a spreadsheet instead? **Download a template** gives the three columns it needs — date (day first), amount (money out negative) and the account — with two example lines.
 
 You never type keyword rules. Your own past decisions are the rules.
 
@@ -192,6 +192,8 @@ A line is either a transfer or coded to an account, never both. **Accept all** c
 
 Load the returns you have already filed — the workbook your accounting system exports, with its page of transactions — and each period is shown against what the books now say, as Box 8 less Box 12. Click a period to see the lines behind the difference: those in the filed return and not in yours, and those in yours and not in the return. A payment the other system recorded against two or three invoices is paired with the one bank line it arrived as.
 
+No workbook to load? Every period the books cover that has no filed return is listed with the return the books produce for it. If that is what you filed, **mark as filed** keeps it as it stands today, and anything you change later shows against it. If you filed different figures, **Record a filed return** takes boxes 5, 6, 9, 11 and 13 as filed (and boxes 8 and 12 if you want the filed rounding) and works out the rest.
+
 Differences are normal and not automatically errors. The usual ones:
 
 - **Timing.** A card charge carries the card's date here and the other system's date there, and near a month end it lands in the next period. It evens out.
@@ -236,7 +238,7 @@ Expect your accountant to make adjustments. That is what they are for. The point
 
 **A number you cannot account for.** Every figure decomposes. Click through from the report to the account to the transactions behind it.
 
-**Check nothing is missing.** **Bank import → Import bank balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report.
+**Check nothing is missing.** **Bank import → Import bank balances** compares the running balance of what you imported against the bank's own daily figures. If a transaction is missing or counted twice, it names the exact day and the exact amount. This is the single most valuable check in the app, and it needs no coding at all — do it before you trust any report. No balances export? Open **Enter statement balances by hand**, choose the account and type the closing balance from two statements, a start and an end: it runs the same check.
 
 **Comparing with your previous system.** **Coding reconciliation** lines up the coding of every bank line against the one your previous system gave it, and lists the ones that disagree with a button to take either answer. A payment matched to an invoice shows as **settles INV-…**: taking the other system's coding for it takes it off the invoice too, and keeping yours keeps the match.
 

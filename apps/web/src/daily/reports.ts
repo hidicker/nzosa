@@ -3024,25 +3024,83 @@ function renderReportsHome(body: HTMLElement): void {
       .map(item),
   );
 
+  // Reports that are pages of their own, because they are also where the work
+  // is done. They belong in this list all the same: this is where somebody looks
+  // for a report, and a report that can only be found from the menu is one they
+  // do not know exists.
+  const elsewhere: readonly { group: string; name: string; page: string; about: string }[] = [
+    {
+      group: "Financial statements",
+      name: "Fixed asset register",
+      page: "assets",
+      about: "Every asset with this year's depreciation and book value, and what was disposed of.",
+    },
+    {
+      group: "Taxes and balances",
+      name: "GST reconciliation",
+      page: "gst",
+      about: "Each filed GST return beside what the books say now, with the lines behind any difference.",
+    },
+    {
+      group: "Taxes and balances",
+      name: "Opening balances by year",
+      page: "opening",
+      about: "What every account stood at at each year end, and the position the books open from.",
+    },
+    {
+      group: "Transactions",
+      name: "Invoices",
+      page: "invoices",
+      about: "Invoices raised, what has been paid and what is still owed.",
+    },
+    {
+      group: "Transactions",
+      name: "Bank balance check",
+      page: "import",
+      about: "The bank's own balances against the transactions, proving nothing is missing. On Bank import.",
+    },
+    {
+      group: "Checks and history",
+      name: "Coding reconciliation",
+      page: "check",
+      about: "Your coding beside your previous system's, line by line.",
+    },
+    {
+      group: "Checks and history",
+      name: "History",
+      page: "history",
+      about: "Every change to the books, who made it and when, with undo.",
+    },
+  ];
+  const pageItem = (entry: (typeof elsewhere)[number]): HTMLElement => {
+    const row = document.createElement("div");
+    row.className = "reports-home-item";
+    const spacer = document.createElement("span");
+    const link = document.createElement("button");
+    link.type = "button";
+    link.className = "link-button reports-open";
+    link.textContent = entry.name;
+    link.title = "Opens its own page";
+    link.addEventListener("click", () => showPage(entry.page));
+    const about = document.createElement("span");
+    about.className = "reports-about";
+    about.textContent = entry.about;
+    row.append(spacer, link, about);
+    return row;
+  };
+
+  const placed = new Set<string>();
   for (const group of groups) {
     const rows = group.reports.map(item);
-    // GST returns have a page of their own; they belong in this list all the same.
-    if (group.label === "Taxes and balances") {
-      const row = document.createElement("div");
-      row.className = "reports-home-item";
-      const spacer = document.createElement("span");
-      const link = document.createElement("button");
-      link.type = "button";
-      link.className = "link-button reports-open";
-      link.textContent = "GST returns";
-      link.addEventListener("click", () => showPage("gst"));
-      const about = document.createElement("span");
-      about.className = "reports-about";
-      about.textContent = "Each filed GST return beside what the books say now.";
-      row.append(spacer, link, about);
-      rows.push(row);
+    for (const entry of elsewhere.filter((e) => e.group === group.label)) {
+      rows.push(pageItem(entry));
+      placed.add(entry.name);
     }
     section(group.label, rows);
+  }
+  // Groups the report picker has no reports in, listed after the rest.
+  for (const label of [...new Set(elsewhere.filter((e) => !placed.has(e.name)).map((e) => e.group))]) {
+    section(label, elsewhere.filter((e) => e.group === label && !placed.has(e.name)).map(pageItem));
   }
 }
 

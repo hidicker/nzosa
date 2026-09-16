@@ -147,7 +147,12 @@ export async function signUp(
   email: string,
   password: string,
 ): Promise<{ ok: true; confirm: boolean } | { ok: false; why: string }> {
-  const reply = await auth("signup", { email, password });
+  // Where the link in the confirmation email comes back to. Without it the
+  // link lands on whatever the project calls its site address, which need not
+  // be the page somebody actually signed up from -- and the tokens it carries
+  // are then handed to a page that knows nothing about them.
+  const back = encodeURIComponent(location.href.split("#")[0] ?? location.href);
+  const reply = await auth(`signup?redirect_to=${back}`, { email, password });
   const next = sessionFrom(reply);
   if (next !== null) {
     remember(next);

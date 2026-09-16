@@ -217,18 +217,27 @@ export function sessionFromUrl(): boolean {
 }
 
 export async function signOut(): Promise<void> {
-  const held = currentSession();
-  if (held !== null) {
+  // A fresh token first. Access tokens last an hour, and a logout sent with an
+  // expired one is refused -- which used to be swallowed, so the page forgot
+  // the session while every session on the server stayed alive, refresh tokens
+  // and all. That is the opposite of what somebody pressing Sign out wants.
+  //
+  // The server's logout is global: it ends every session this account has, on
+  // every computer, which is also the right answer for a token that has leaked.
+  const token = await freshToken();
+  if (token !== null) {
     try {
       await fetch(`${CLOUD.url}/auth/v1/logout`, {
         method: "POST",
         headers: {
           apikey: CLOUD.publishableKey,
-          authorization: `Bearer ${held.accessToken}`,
+          authorization: `Bearer ${token}`,
         },
       });
     } catch {
-      // Signing out locally is what matters; the token expires on its own.
+      // No connection. Forgotten here regardless; the server's sessions end
+      // with their refresh tokens, and the next sign-out that reaches it ends
+      // them all.
     }
   }
   remember(null);

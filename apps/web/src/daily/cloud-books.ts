@@ -8,6 +8,7 @@ import {
   signUp,
 } from "../cloud.js";
 import { backupTools } from "../backup.js";
+import { renderMembers } from "./cloud-members.js";
 import { openCloudBook, openCloudBookId } from "../store.js";
 import { note } from "../ui.js";
 
@@ -231,7 +232,10 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   body.append(add);
 
   const openNow = books.find((book) => book.id === open);
-  if (openNow !== undefined) backupTools(body, openNow.name, true);
+  if (openNow !== undefined) {
+    renderMembers(body, openNow);
+    backupTools(body, openNow.name, true);
+  }
 }
 
 /**

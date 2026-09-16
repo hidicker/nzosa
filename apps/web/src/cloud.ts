@@ -378,6 +378,23 @@ export async function savePart(
   return { kind: "failed", why: error.message ?? `Save failed (${response.status}).` };
 }
 
+/**
+ * Call one of the database's own functions.
+ *
+ * Looking somebody up by email, or adding them to a set of books, cannot be
+ * given to a client directly: nobody should be able to ask this system whether
+ * an address has an account. Those are functions that check the caller's
+ * standing before doing anything, and this is how they are reached.
+ */
+export async function rpc<T>(name: string, args: Record<string, unknown>): Promise<T | null> {
+  const response = await rest(`rpc/${name}`, {
+    method: "POST",
+    body: JSON.stringify(args),
+  });
+  if (response === null || !response.ok) return null;
+  return (await response.json().catch(() => null)) as T | null;
+}
+
 /** Whether a set of books has a bank feed connected. The tokens stay server-side. */
 export async function feedStatus(
   bookId: string,

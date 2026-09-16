@@ -357,6 +357,16 @@ let folderName = "";
 const CLOUD_BOOK_KEY = "nzosa:cloud-book";
 let cloudBook: { id: string; name: string } | null = null;
 
+/**
+ * Every part the server handed over when these books were opened.
+ *
+ * Kept whole so the rules, the rule sets they replaced and the history can be
+ * read from it. They are parts like any other on the server, but the app asks
+ * for them separately, and asking again for what was just sent would be a
+ * second request that could disagree with the first.
+ */
+let cloudParts: Record<string, { version: number; data: unknown }> = {};
+
 function rememberedCloudBook(): { id: string; name: string } | null {
   try {
     const raw = localStorage.getItem(CLOUD_BOOK_KEY);
@@ -656,6 +666,17 @@ async function loadFromCloud(): Promise<StoredLedger | null> {
   if (parts === null) return null;
 
   const ledger = ledgerFromParts(parts);
+  // A part the server does not hold is an empty part, not an unread one. The
+  // folder says so outright -- it answers every part, with version 0 for those
+  // that do not exist yet -- but a set of books just made on the server holds
+  // no parts at all. Without this, every save to new books skipped every part
+  // and reported success: transactions arrived, were shown, and were written
+  // nowhere, with nothing on screen to say so.
+  //
+  // Only after a read that succeeded. A read that failed never gets here, so
+  // this cannot turn "could not load" into "empty, go ahead and overwrite".
+  for (const part of FOLDER_PARTS) loadedParts.add(part);
+  cloudParts = parts;
   backend = "cloud";
   cloudBook = book;
   folderName = book.name;
@@ -704,6 +725,44 @@ async function writeCloud(
     );
   }
   return ok;
+}
+
+/**
+ * Write one of the parts the app saves on its own -- the rules, the rule sets
+ * they replaced, the history -- to hosted books.
+ *
+ * Under the same rules as every other part: an unchanged part is not sent, a
+ * write says which version it replaces, and a refusal is said out loud.
+ */
+async function putCloudPart(part: string, data: unknown): Promise<boolean> {
+  const book = cloudBook;
+  if (book === null) return false;
+  if (data === undefined) return true;
+  if (lastWritten.get(part) === data) return true;
+
+  const outcome = await saveCloudPart(book.id, part, data, versions.get(part) ?? 0);
+  if (outcome.kind === "saved") {
+    versions.set(part, outcome.version);
+    lastWritten.set(part, data);
+    return true;
+  }
+  tellAboutTrouble(
+    outcome.kind === "conflict"
+      ? {
+          kind: "conflict",
+          why:
+            "These books changed somewhere else, so your last change was not saved. " +
+            "Reload to get the latest, then make it again.",
+        }
+      : { kind: outcome.kind, why: outcome.why },
+  );
+  return false;
+}
+
+/** A part as the server sent it when these books were opened. */
+function cloudPart<T>(part: string): T | null {
+  const held = cloudParts[part];
+  return held === undefined ? null : (held.data as T);
 }
 
 /** The ledgers side by side in the same place, for the picker. */
@@ -1086,6 +1145,11 @@ async function folderPart<T>(part: string): Promise<T | null> {
 }
 
 export async function loadRules(): Promise<StoredRules | null> {
+  if (backend === "cloud") {
+    const held = cloudPart<Record<string, unknown>>("rules");
+    if (held === null || Object.keys(held).length === 0) return null;
+    return held as unknown as StoredRules;
+  }
   if (backend === "folder") {
     const held = await folderPart<Record<string, unknown> | null>("rules");
     if (held === null || Object.keys(held).length === 0) return null;
@@ -1112,11 +1176,16 @@ export async function loadRules(): Promise<StoredRules | null> {
 }
 
 export async function saveRules(stored: StoredRules | null): Promise<boolean> {
+  if (backend === "cloud") return putCloudPart("rules", stored ?? {});
   if (backend === "folder") return putPart("rules", stored ?? {});
   return put(RULES_KEY, stored);
 }
 
 export async function loadRulesArchive(): Promise<RulesArchive> {
+  if (backend === "cloud") {
+    const held = cloudPart<RulesArchive>("rulesarchive");
+    return held && Array.isArray(held.entries) ? held : { version: 1, entries: [] };
+  }
   if (backend === "folder") {
     const held = await folderPart<RulesArchive>("rulesarchive");
     return held && Array.isArray(held.entries) ? held : { version: 1, entries: [] };
@@ -1136,6 +1205,7 @@ export async function loadRulesArchive(): Promise<RulesArchive> {
 }
 
 export async function saveRulesArchive(archive: RulesArchive): Promise<boolean> {
+  if (backend === "cloud") return putCloudPart("rulesarchive", archive);
   if (backend === "folder") return putPart("rulesarchive", archive);
   return put(ARCHIVE_KEY, archive);
 }
@@ -1178,6 +1248,10 @@ export async function clear(): Promise<void> {
  * belongs to this browser rather than to the books.
  */
 export async function loadEvents(): Promise<LedgerEvent[]> {
+  if (backend === "cloud") {
+    const held = cloudPart<LedgerEvent[]>("events");
+    return Array.isArray(held) ? held : [];
+  }
   if (backend === "folder") {
     const held = await folderPart<LedgerEvent[]>("events");
     return Array.isArray(held) ? held : [];
@@ -1197,6 +1271,7 @@ export async function loadEvents(): Promise<LedgerEvent[]> {
 }
 
 export async function saveEvents(events: readonly LedgerEvent[]): Promise<boolean> {
+  if (backend === "cloud") return putCloudPart("events", events);
   if (backend === "folder") return putPart("events", events);
   return put(EVENTS_KEY, events);
 }

@@ -79,7 +79,11 @@ export function cycleTheme(): void {
 export function wireChrome(): void {
   const demoBanner = document.getElementById("demo-banner");
   if (demoBanner) {
-    demoBanner.hidden = writesToFolder();
+    // Shown only where the page itself says it is the demo: the demo build
+    // takes the hidden attribute off, and nothing else does. The app used to
+    // show it on any copy with no folder behind it, which put "this is a demo"
+    // across the top of books people keep for real on the hosted site.
+    if (writesToFolder()) demoBanner.hidden = true;
     $("demo-banner-close")?.addEventListener("click", () => {
       demoBanner.hidden = true;
     });
@@ -87,7 +91,9 @@ export function wireChrome(): void {
 
   const demoNotice = document.getElementById("demo-import-privacy-notice");
   if (demoNotice) {
-    demoNotice.hidden = writesToFolder();
+    // The same rule: a warning not to import private data belongs on the demo,
+    // and is wrong on hosted books, where importing your own data is the point.
+    if (writesToFolder()) demoNotice.hidden = true;
   }
   $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
   try {

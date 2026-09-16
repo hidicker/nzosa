@@ -26,7 +26,11 @@ const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 
 const CORS: Record<string, string> = {
   "access-control-allow-origin": "*",
-  "access-control-allow-headers": "authorization, content-type",
+  // Every header the page actually sends. A browser asks first, before the real
+  // request, and one missing name here -- apikey was -- means it never sends the
+  // request at all: the page just says it could not ask, and nothing reaches
+  // this function to log why.
+  "access-control-allow-headers": "authorization, apikey, content-type, x-client-info",
   "access-control-allow-methods": "POST, OPTIONS",
 };
 

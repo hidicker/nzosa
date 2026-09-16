@@ -3,8 +3,19 @@ import { accountsForEditing, ensureDefaultEntity, reclassify, } from "../books.j
 import { balanceMovementSection, renderBalanceChecks } from "../daily/opening-balances.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
-import { save, writesToFolder } from "../store.js";
+import { save } from "../store.js";
 import { download, escapeHtml, nameCell, note } from "../ui.js";
+import {
+  feedAccounts,
+  feedAutoFetch,
+  feedConnect,
+  feedDisconnect,
+  feedIsHosted,
+  feedMapping,
+  feedPossible,
+  feedStatus,
+  feedTransactions,
+} from "../feed-route.js";
 import {
   accountEntityKey,
   accountsAtExportLimit,
@@ -30,7 +41,6 @@ import type {
   Account,
   IsoDate,
   AkahuAccount,
-  AkahuTransaction,
   DuplicateJudgement,
   ImportProblem,
   Transaction,
@@ -87,30 +97,20 @@ function feedStartDate(mapping: Record<string, string>): string | undefined {
  * an unmapped feed has nowhere to put anything.
  */
 export async function autoFetchFromFeed(): Promise<void> {
-  if (!writesToFolder()) return;
+  if (!feedPossible()) return;
 
   try {
-    const status = (await fetch("/api/feed").then((r) => r.json())) as {
-      configured: boolean;
-      autoFetch: boolean;
-      accounts: Record<string, string>;
-    };
-    if (!status.configured || !status.autoFetch) return;
+    const status = await feedStatus();
+    if (status === null || !status.configured || !status.autoFetch) return;
 
     const mapping = status.accounts ?? {};
     const mapped = Object.values(mapping).filter((to) => to !== "");
     if (mapped.length === 0) return;
 
     const start = feedStartDate(mapping);
-    const search = start === undefined ? "" : `?start=${encodeURIComponent(`${start}T00:00:00.000Z`)}`;
+    const items = await feedTransactions(start === undefined ? "" : `${start}T00:00:00.000Z`);
 
-    const answer = (await fetch(`/api/feed/transactions${search}`).then((r) => r.json())) as {
-      items?: AkahuTransaction[];
-      error?: string;
-    };
-    if (answer.error !== undefined) throw new Error(answer.error);
-
-    const read = fromAkahu(answer.items ?? [], {
+    const read = fromAkahu(items, {
       accountFor: (id) => {
         const to = mapping[id];
         return to === undefined || to === "" ? null : to;
@@ -334,12 +334,10 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
   load.addEventListener("click", () => {
     load.disabled = true;
     said.textContent = "Asking Akahu…";
-    void fetch("/api/feed/accounts")
-      .then(async (r) => {
-        const answer = (await r.json()) as { accounts?: AkahuAccount[]; error?: string };
-        if (!r.ok) throw new Error(answer.error ?? "could not list the accounts");
+    void feedAccounts()
+      .then((accounts) => {
         said.textContent = "";
-        draw(answer.accounts ?? []);
+        draw(accounts);
       })
       .catch((error: Error) => {
         said.textContent = error.message;
@@ -458,20 +456,11 @@ async function pullFromFeed(
   button.setAttribute("aria-busy", "true");
   said.textContent = "Fetching…";
   try {
-    await fetch("/api/feed/accounts", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ accounts: mapping }),
-    });
+    await feedMapping(mapping);
 
-    const search = from === "" ? "" : `?start=${encodeURIComponent(`${from}T00:00:00.000Z`)}`;
-    const answer = (await fetch(`/api/feed/transactions${search}`).then((r) => r.json())) as {
-      items?: AkahuTransaction[];
-      error?: string;
-    };
-    if (answer.error !== undefined) throw new Error(answer.error);
+    const items = await feedTransactions(from === "" ? "" : `${from}T00:00:00.000Z`);
 
-    const read = fromAkahu(answer.items ?? [], {
+    const read = fromAkahu(items, {
       accountFor: (id) => {
         const to = mapping[id];
         return to === undefined || to === "" ? null : to;
@@ -518,27 +507,18 @@ export async function renderFeed(): Promise<void> {
   const body = $("feed-body");
   body.textContent = "";
 
-  if (!writesToFolder()) {
+  if (!feedPossible()) {
     body.append(
       note(
-        "A bank feed needs the app running with a folder behind it, because the " +
-          "connection is held there rather than in this browser. Start it from the " +
-          "NZOSA shortcut rather than opening the page on its own.",
+        "A bank feed needs somewhere to keep the connection that is not this browser: " +
+          "the app running with a folder behind it, or a set of books on the server, " +
+          "opened from the Books page. Start it from the NZOSA shortcut, or sign in.",
       ),
     );
     return;
   }
 
-  const status = (await fetch("/api/feed").then((r) => r.json()).catch(() => null)) as
-    | {
-        configured: boolean;
-        appToken: string;
-        accounts: Record<string, string>;
-        autoFetch: boolean;
-        lastFetch: string;
-        balances: { at: string; balances: Record<string, number> }[];
-      }
-    | null;
+  const status = await feedStatus();
 
   if (status === null) {
     body.append(note("Could not ask the app about the bank feed."));
@@ -558,7 +538,11 @@ export async function renderFeed(): Promise<void> {
     "Connect your bank there. Nothing appears here until at least one account is connected, " +
       "and the User Access Token does not exist until then.",
     "Open my.akahu.nz/developers, accept the developer terms, and copy the two tokens.",
-    "Paste them below. They are kept by this app on this machine, not in the browser.",
+    feedIsHosted()
+      ? "Paste them below. They are your own tokens: they are stored encrypted on the " +
+        "server, used only to fetch your transactions, deleted when you disconnect, and " +
+        "you can revoke them at my.akahu.nz at any time."
+      : "Paste them below. They are kept by this app on this machine, not in the browser.",
   ]) {
     const li = document.createElement("li");
     li.textContent = step;
@@ -593,14 +577,8 @@ export async function renderFeed(): Promise<void> {
   save.addEventListener("click", () => {
     save.disabled = true;
     said.textContent = "Connecting…";
-    void fetch("/api/feed", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ appToken: appToken.value, userToken: userToken.value }),
-    })
-      .then(async (r) => {
-        const answer = (await r.json()) as { error?: string };
-        if (!r.ok) throw new Error(answer.error ?? "could not save the connection");
+    void feedConnect(appToken.value, userToken.value)
+      .then(() => {
         appToken.value = "";
         userToken.value = "";
         void renderFeed();
@@ -624,8 +602,16 @@ export async function renderFeed(): Promise<void> {
   forget.className = "link-button";
   forget.textContent = "forget this connection";
   forget.addEventListener("click", () => {
-    if (!confirm("Forget the bank feed connection? The tokens are deleted from this machine.")) return;
-    void fetch("/api/feed", { method: "DELETE" }).then(() => renderFeed());
+    if (
+      !confirm(
+        feedIsHosted()
+          ? "Forget the bank feed connection? The tokens are deleted from the server."
+          : "Forget the bank feed connection? The tokens are deleted from this machine.",
+      )
+    ) {
+      return;
+    }
+    void feedDisconnect().then(() => renderFeed());
   });
   connected.append(" · ", forget);
   body.append(connected);
@@ -645,11 +631,7 @@ export async function renderFeed(): Promise<void> {
   box.type = "checkbox";
   box.checked = status.autoFetch;
   box.addEventListener("change", () => {
-    void fetch("/api/feed/settings", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ autoFetch: box.checked }),
-    });
+    void feedAutoFetch(box.checked);
   });
   auto.append(box, " Fetch new transactions when NZOSA opens");
   body.append(auto);

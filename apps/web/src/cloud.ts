@@ -379,6 +379,30 @@ export async function savePart(
 }
 
 /**
+ * Call one of the project's edge functions, as the person signed in.
+ *
+ * The bank feed lives behind one of these: the tokens it uses are in a vault
+ * no browser can open, so the page asks the function to do the fetching and
+ * gets transactions back, never credentials.
+ */
+export async function callFunction<T>(name: string, body: unknown): Promise<T> {
+  const token = await freshToken();
+  if (token === null) throw new Error("not signed in");
+  const response = await fetch(`${CLOUD.url}/functions/v1/${name}`, {
+    method: "POST",
+    headers: {
+      apikey: CLOUD.publishableKey,
+      authorization: `Bearer ${token}`,
+      "content-type": "application/json",
+    },
+    body: JSON.stringify(body),
+  });
+  const answer = (await response.json().catch(() => ({}))) as { error?: string };
+  if (!response.ok) throw new Error(answer.error ?? `the server said ${response.status}`);
+  return answer as T;
+}
+
+/**
  * Call one of the database's own functions.
  *
  * Looking somebody up by email, or adding them to a set of books, cannot be

@@ -10,6 +10,7 @@ import {
   writesToFolder,
 } from "../store.js";
 import { note } from "../ui.js";
+import { renderCloudBooks } from "./cloud-books.js";
 import { reclassify } from "../books.js";
 import { render } from "../daily/bank-import.js";
 import { state } from "../state.js";
@@ -170,6 +171,9 @@ export async function renderBooks(): Promise<void> {
   body.textContent = "";
 
   if (!writesToFolder()) {
+    // Hosted books first, when this build has a project behind it: the browser
+    // copy is what somebody has until they sign in, not what they came for.
+    if (renderCloudBooks(body)) return;
     body.append(
       note(
         "This copy has no folder behind it, so there is only one set of books: " +

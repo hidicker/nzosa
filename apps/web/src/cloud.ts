@@ -164,6 +164,58 @@ export async function signUp(
   return { ok: true, confirm: true };
 }
 
+/**
+ * What an access token says about who it is for.
+ *
+ * The middle part of a JWT is public: it is signed, not secret, and every
+ * holder can read it. Only the claims this app needs are taken, and nothing is
+ * trusted because of them -- the server checks the signature on every request,
+ * and this is only so the page can say a name and address a row.
+ */
+function claimsOf(accessToken: string): { sub?: string; email?: string } {
+  try {
+    const part = accessToken.split(".")[1] ?? "";
+    const padded = part.replace(/-/g, "+").replace(/_/g, "/");
+    const json = atob(padded + "=".repeat((4 - (padded.length % 4)) % 4));
+    return JSON.parse(json) as { sub?: string; email?: string };
+  } catch {
+    return {};
+  }
+}
+
+/**
+ * Tokens handed back in the address bar.
+ *
+ * A confirmation link returns with the session in the fragment rather than in
+ * a reply to anything this page asked for, so somebody who has just confirmed
+ * their address arrives holding a session nothing has read. This is what turns
+ * clicking the link in the email into being signed in.
+ *
+ * The fragment is then cleared. A web address somebody might copy, bookmark or
+ * paste to somebody else has no business carrying a refresh token.
+ */
+export function sessionFromUrl(): boolean {
+  if (!cloudConfigured()) return false;
+  const hash = location.hash.startsWith("#") ? location.hash.slice(1) : "";
+  if (hash === "") return false;
+
+  const params = new URLSearchParams(hash);
+  const accessToken = params.get("access_token");
+  const refreshToken = params.get("refresh_token");
+  if (accessToken === null || refreshToken === null) return false;
+
+  const claims = claimsOf(accessToken);
+  remember({
+    userId: claims.sub ?? "",
+    email: claims.email ?? "",
+    accessToken,
+    refreshToken,
+    expiresAt: Math.floor(Date.now() / 1000) + Number(params.get("expires_in") ?? 3600),
+  });
+  history.replaceState(null, "", location.pathname + location.search);
+  return true;
+}
+
 export async function signOut(): Promise<void> {
   const held = currentSession();
   if (held !== null) {

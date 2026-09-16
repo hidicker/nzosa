@@ -1,5 +1,5 @@
 import type { LedgerEvent } from "./events.js";
-import { $, state } from "./state.js";
+import { state } from "./state.js";
 import {
   ledgerName,
   loadEvents,
@@ -261,14 +261,4 @@ export function backupTools(body: HTMLElement, books: string, hosted: boolean): 
   row.className = "backup-tools";
   row.append(take, pick, input);
   body.append(said, row);
-}
-
-/** Wired once, for the copy of this that lives on the Bank import page. */
-export function wireBackup(): void {
-  const button = document.getElementById("export-button");
-  if (button === null) return;
-  // Left exactly as it was. The ledger export is a different thing with a
-  // different use -- moving books between copies of NZOSA -- and renaming it
-  // to "backup" would make both harder to find.
-  void $;
 }

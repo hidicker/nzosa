@@ -71,12 +71,20 @@ interface FeedSecrets {
   app_token: string;
   user_token: string;
   accounts: Record<string, string>;
-  settings: Record<string, unknown>;
+  settings: { autoFetch?: boolean };
+  balances: { at: string; balances: Record<string, number> }[];
+  last_fetch: string | null;
 }
 
 async function secretsFor(book: string): Promise<FeedSecrets | null> {
   const rows = (await asService("feed_secrets", { book })) as FeedSecrets[] | null;
   return rows && rows.length > 0 ? (rows[0] ?? null) : null;
+}
+
+interface AkahuReply {
+  items?: unknown[];
+  cursor?: { next?: string };
+  message?: string;
 }
 
 /**
@@ -85,16 +93,70 @@ async function secretsFor(book: string): Promise<FeedSecrets | null> {
  * Both tokens go on every request: the app token says which app is asking, the
  * user token says whose data it may see.
  */
-async function akahu(feed: FeedSecrets, path: string, search = ""): Promise<unknown> {
+async function akahu(feed: FeedSecrets, path: string, search = ""): Promise<AkahuReply> {
   const response = await fetch(`https://api.akahu.io/v1${path}${search}`, {
     headers: {
       authorization: `Bearer ${feed.user_token}`,
       "X-Akahu-Id": feed.app_token,
     },
   });
-  const body = (await response.json().catch(() => ({}))) as { message?: string };
+  const body = (await response.json().catch(() => ({}))) as AkahuReply;
   if (!response.ok) throw new Error(body.message ?? `Akahu said ${response.status}`);
   return body;
+}
+
+/**
+ * Everything in the window, not the first page of it.
+ *
+ * Akahu answers a page at a time and says where the next one starts. Paged
+ * through here rather than in the browser, so a fetch is one answer rather
+ * than a conversation the page has to manage -- and so a busy account does not
+ * quietly come back short, which looks exactly like a month with fewer
+ * transactions in it.
+ */
+async function allTransactions(feed: FeedSecrets, start: string, end: string): Promise<unknown[]> {
+  const items: unknown[] = [];
+  let cursor = "";
+  for (let page = 0; page < 200; page += 1) {
+    const search = new URLSearchParams();
+    if (start !== "") search.set("start", start);
+    if (end !== "") search.set("end", end);
+    if (cursor !== "") search.set("cursor", cursor);
+    const body = await akahu(feed, "/transactions", `?${search.toString()}`);
+    items.push(...(body.items ?? []));
+    cursor = body.cursor?.next ?? "";
+    if (cursor === "") break;
+  }
+  return items;
+}
+
+/**
+ * The balances as they stand, kept with the date.
+ *
+ * Akahu gives the balance now and no history, and one figure proves nothing:
+ * two of them do. How far a balance moved between one fetch and the next has to
+ * equal what the transactions in that window come to. So the history the bank
+ * will not give is built here, a fetch at a time, for one extra call.
+ */
+async function balancesNow(
+  feed: FeedSecrets,
+): Promise<{ at: string; balances: Record<string, number> }[]> {
+  try {
+    const now = await akahu(feed, "/accounts");
+    const taken: Record<string, number> = {};
+    for (const account of (now.items ?? []) as {
+      _id?: string;
+      balance?: { current?: number };
+    }[]) {
+      if (account._id !== undefined && account.balance?.current !== undefined) {
+        taken[account._id] = Math.round(account.balance.current * 100);
+      }
+    }
+    return [...(feed.balances ?? []), { at: new Date().toISOString(), balances: taken }].slice(-60);
+  } catch {
+    // A fetch that worked should not fail because the balances did.
+    return feed.balances ?? [];
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -117,7 +179,9 @@ Deno.serve(async (request: Request) => {
 
   // Reading a feed's state is for anybody in these books; changing it, or
   // fetching from the bank, is for the people who write to them.
-  const roles = action === "status" ? ["owner", "bookkeeper", "accountant"] : ["owner", "bookkeeper"];
+  const roles = action === "status"
+    ? ["owner", "bookkeeper", "accountant"]
+    : ["owner", "bookkeeper"];
   const allowed = await asCaller(jwt, "has_role", { book, roles });
   if (allowed !== true) return reply({ error: "not your books" }, 403);
 
@@ -129,7 +193,11 @@ Deno.serve(async (request: Request) => {
         // Enough to recognise which app it is, never enough to use.
         appToken: feed ? `${feed.app_token.slice(0, 14)}…` : "",
         accounts: feed?.accounts ?? {},
-        settings: feed?.settings ?? {},
+        balances: feed?.balances ?? [],
+        // Defaults to on: somebody who connected a feed wants what it holds,
+        // and having to ask for it every time is the step the feed removed.
+        autoFetch: feed?.settings?.autoFetch !== false,
+        lastFetch: feed?.last_fetch ?? "",
       });
     }
 
@@ -159,7 +227,7 @@ Deno.serve(async (request: Request) => {
     if (action === "accounts") {
       const feed = await secretsFor(book);
       if (feed === null) return reply({ error: "no bank feed is connected" }, 400);
-      const listed = (await akahu(feed, "/accounts")) as { items?: unknown[] };
+      const listed = await akahu(feed, "/accounts");
       return reply({ accounts: listed.items ?? [] });
     }
 
@@ -169,18 +237,19 @@ Deno.serve(async (request: Request) => {
     }
 
     if (action === "settings") {
-      await asService("feed_settings_set", { book, wanted: body.settings ?? {} });
-      return reply({ settings: body.settings ?? {} });
+      await asService("feed_settings_set", {
+        book,
+        wanted: { autoFetch: body.autoFetch !== false },
+      });
+      return reply({ autoFetch: body.autoFetch !== false });
     }
 
     if (action === "transactions") {
       const feed = await secretsFor(book);
       if (feed === null) return reply({ error: "no bank feed is connected" }, 400);
-      const start = String(body.start ?? "");
-      const search = start === "" ? "" : `?start=${encodeURIComponent(start)}`;
-      const got = (await akahu(feed, "/transactions", search)) as { items?: unknown[] };
-      await asService("feed_touch", { book });
-      return reply({ items: got.items ?? [] });
+      const items = await allTransactions(feed, String(body.start ?? ""), String(body.end ?? ""));
+      await asService("feed_record_fetch", { book, seen: await balancesNow(feed) });
+      return reply({ items });
     }
 
     return reply({ error: `no such action: ${action}` }, 400);

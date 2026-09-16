@@ -10,6 +10,7 @@ import {
   writesToFolder,
 } from "../store.js";
 import { note } from "../ui.js";
+import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
 import { reclassify } from "../books.js";
 import { render } from "../daily/bank-import.js";
@@ -312,6 +313,8 @@ export async function renderBooks(): Promise<void> {
   make.textContent = "New set of books…";
   make.addEventListener("click", () => void chooseLedger("\u0000new"));
   body.append(make);
+
+  backupTools(body, books.find((b) => b.id === open)?.name ?? "", false);
 
   // Named, since the table above lists several sets and this list is of one.
   const openName = books.find((b) => b.id === open)?.name ?? "";

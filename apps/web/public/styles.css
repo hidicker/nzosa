@@ -1745,6 +1745,7 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .cloud-who { font-size: 0.9rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
 .cloud-add { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.8rem 0; }
 .cloud-add input { font-size: 0.95rem; padding: 0.35rem 0.45rem; flex: 1 1 18rem; max-width: 24rem; }
+.backup-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0 1.4rem; }
 
 /* Migration (on trial) ----------------------------------------------------- */
 .migration-card { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;

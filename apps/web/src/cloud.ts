@@ -261,11 +261,13 @@ export async function createBook(name: string): Promise<CloudBook | null> {
 }
 
 /** Every part of one set of books, with the version each is at. */
-export async function loadParts(bookId: string): Promise<Record<string, CloudPart>> {
+export async function loadParts(bookId: string): Promise<Record<string, CloudPart> | null> {
   const response = await rest(
     `book_parts?book_id=eq.${encodeURIComponent(bookId)}&select=part,version,data`,
   );
-  if (response === null || !response.ok) return {};
+  // Null rather than nothing: a set of books that could not be read is not a
+  // set of books with nothing in it, and the caller must be able to tell.
+  if (response === null || !response.ok) return null;
   const rows = (await response.json().catch(() => [])) as {
     part: string;
     version: number;

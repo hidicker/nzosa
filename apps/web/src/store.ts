@@ -16,6 +16,8 @@ import type {
   VarianceNote,
 } from "@nzosa/core";
 import type { LedgerEvent } from "./events.js";
+import { cloudConfigured } from "./cloud-config.js";
+import { loadParts as loadCloudParts, savePart as saveCloudPart, signedIn } from "./cloud.js";
 
 /**
  * Browser-side ledger storage.
@@ -340,10 +342,54 @@ const PARTS = [
  * Which of the two is decided once, by asking, rather than configured. An app
  * that has to be told where its data is will one day be told wrong.
  */
-type Backend = "folder" | "browser";
+type Backend = "folder" | "browser" | "cloud";
 
 let backend: Backend = "browser";
 let folderName = "";
+
+/**
+ * Which hosted books are open, when the books are hosted.
+ *
+ * Kept in this browser rather than with the books themselves: which set
+ * somebody last had open is a fact about them and this screen, and the books
+ * are on a server that several people may reach from several computers.
+ */
+const CLOUD_BOOK_KEY = "nzosa:cloud-book";
+let cloudBook: { id: string; name: string } | null = null;
+
+function rememberedCloudBook(): { id: string; name: string } | null {
+  try {
+    const raw = localStorage.getItem(CLOUD_BOOK_KEY);
+    if (raw === null) return null;
+    const parsed = JSON.parse(raw) as { id?: string; name?: string };
+    return typeof parsed.id === "string" && parsed.id !== ""
+      ? { id: parsed.id, name: String(parsed.name ?? "") }
+      : null;
+  } catch {
+    return null;
+  }
+}
+
+/** Open a set of hosted books, or none. The page reloads around it, as switching always does. */
+export function openCloudBook(book: { id: string; name: string } | null): void {
+  try {
+    if (book === null) localStorage.removeItem(CLOUD_BOOK_KEY);
+    else localStorage.setItem(CLOUD_BOOK_KEY, JSON.stringify(book));
+  } catch {
+    // Not remembered, so the picker asks again next time.
+  }
+  cloudBook = book;
+}
+
+/** Which set of hosted books is open, for a screen that has to say. */
+export function openCloudBookId(): string {
+  return (cloudBook ?? rememberedCloudBook())?.id ?? "";
+}
+
+/** Where the books this session is holding actually live. */
+export function backendKind(): Backend {
+  return backend;
+}
 
 /**
  * The version each part was last read or written at.
@@ -477,6 +523,24 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
     parts: Record<string, { version: number; data: unknown }>;
   };
 
+  const ledger = ledgerFromParts(body.parts);
+
+  backend = "folder";
+  folderName = status.name ?? "";
+  return ledger;
+}
+
+/**
+ * Build a ledger from the parts a folder or a server handed over.
+ *
+ * Every part arrives with the version it is at, which is kept so a later write
+ * can say what it is replacing, and remembered as written so an unchanged part
+ * is not sent back.
+ */
+function ledgerFromParts(
+  parts: Record<string, { version: number; data: unknown }>,
+): StoredLedger {
+  const body = { parts };
   const ledger = emptyLedger() as unknown as Record<string, unknown>;
   for (const part of FOLDER_PARTS) {
     const held = body.parts[part];
@@ -543,12 +607,68 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
     ledger[part] = held.data;
   }
 
-  backend = "folder";
-  folderName = status.name ?? "";
   // The decisions object read back is not the one the app will hold once it
   // spreads the keys out, so nothing may be skipped on the first write.
   lastWritten.delete("decisions");
   return ledger as unknown as StoredLedger;
+}
+
+/**
+ * The hosted books, when somebody is signed in and has opened a set.
+ *
+ * Tried after the folder and before this browser's own copy: a local server
+ * means the folder is the truth, and with neither a folder nor a sign-in there
+ * is nothing but the browser. A set of books that cannot be read is not opened
+ * at all -- the app falls back rather than showing empty books that the next
+ * save would write over the real ones.
+ */
+async function loadFromCloud(): Promise<StoredLedger | null> {
+  if (!cloudConfigured() || !signedIn()) return null;
+  const book = cloudBook ?? rememberedCloudBook();
+  if (book === null) return null;
+
+  const parts = await loadCloudParts(book.id);
+  if (parts === null) return null;
+
+  const ledger = ledgerFromParts(parts);
+  backend = "cloud";
+  cloudBook = book;
+  folderName = book.name;
+  return ledger;
+}
+
+/**
+ * Write to the hosted books, skipping the parts that did not change.
+ *
+ * The same rule the folder follows, with one addition: every write says which
+ * version it replaces. A save built on a stale read is refused by the server,
+ * because the alternative is one person's morning quietly overwriting
+ * another's.
+ */
+async function writeCloud(
+  ledger: StoredLedger,
+  parts: readonly string[],
+): Promise<boolean> {
+  const book = cloudBook;
+  if (book === null) return false;
+  let ok = true;
+  for (const part of parts) {
+    const value = partValue(ledger, part);
+    if (value === undefined) continue;
+    if (!loadedParts.has(part) && !changedParts.has(part)) continue;
+    if (lastWritten.get(part) === value) continue;
+
+    const outcome = await saveCloudPart(book.id, part, value, versions.get(part) ?? 0);
+    if (outcome.kind === "saved") {
+      versions.set(part, outcome.version);
+      lastWritten.set(part, value);
+      continue;
+    }
+    // Not a write to retry: on a conflict somebody else's save is now the
+    // truth, and this page is holding something built on what it replaced.
+    ok = false;
+  }
+  return ok;
 }
 
 /** The ledgers side by side in the same place, for the picker. */
@@ -623,6 +743,9 @@ export async function load(): Promise<{ ledger: StoredLedger; persistent: boolea
   const fromFolder = await loadFromFolder();
   if (fromFolder !== null) return { ledger: fromFolder, persistent: true };
 
+  const fromCloud = await loadFromCloud();
+  if (fromCloud !== null) return { ledger: fromCloud, persistent: true };
+
   try {
     const db = await open();
     const read = <T>(key: string): Promise<T | undefined> =>
@@ -653,6 +776,7 @@ export async function load(): Promise<{ ledger: StoredLedger; persistent: boolea
 /** Write the whole ledger, every part. Used on import and first run. */
 export async function save(ledger: StoredLedger): Promise<boolean> {
   if (backend === "folder") return writeFolder(ledger, FOLDER_PARTS);
+  if (backend === "cloud") return writeCloud(ledger, FOLDER_PARTS);
   return write(ledger, PARTS);
 }
 
@@ -708,6 +832,9 @@ export async function savePart(
     // file has to be written whatever else changed: a coding and a chart edit
     // both arrive here naming only what the caller thought moved.
     return writeFolder(ledger, [...parts, "transactions", "decisions"]);
+  }
+  if (backend === "cloud") {
+    return writeCloud(ledger, [...parts, "transactions", "decisions"]);
   }
   return write(ledger, parts);
 }

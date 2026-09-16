@@ -375,7 +375,10 @@ export async function savePart(
   }
 
   const error = (await response.json().catch(() => ({}))) as PostgrestError;
-  if (error.code === "40001") return { kind: "conflict" };
+  // PT409, sent as HTTP 409. It was 40001, which PostgREST retries as a
+  // transient failure -- so the refusal was retried until the gateway gave up,
+  // and this line never saw it.
+  if (response.status === 409 || error.code === "PT409") return { kind: "conflict" };
   if (error.code === "42501") {
     return { kind: "refused", why: "You do not have permission to change these books." };
   }

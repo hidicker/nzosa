@@ -214,12 +214,16 @@ Deno.serve(async (request: Request) => {
           400,
         );
       }
+      // Proved against Akahu before anything is stored. It used to store first
+      // and check afterwards, which left bad tokens in the vault and the feed
+      // reported as connected after an error -- and a failed attempt to
+      // replace a connection that worked would have destroyed the one that
+      // worked. A refusal from Akahu now leaves everything exactly as it was.
+      await akahu(
+        { app_token: appToken, user_token: userToken, accounts: {}, settings: {}, balances: [], last_fetch: null },
+        "/accounts",
+      );
       await asService("feed_store", { book, app_token: appToken, user_token: userToken });
-      // Proved before it is called connected: a typo in a token should be a
-      // message now, not an empty transaction list next week.
-      const feed = await secretsFor(book);
-      if (feed === null) return reply({ error: "could not store those tokens" }, 500);
-      await akahu(feed, "/accounts");
       return reply({ configured: true });
     }
 

@@ -292,26 +292,21 @@ export async function listBooks(): Promise<CloudBook[]> {
 /**
  * A new set of books, owned by whoever made it.
  *
- * `created_by` is sent because the policy insists it is the person signing the
- * request -- the database will not take anybody else's word for who owns a set
- * of books -- and the membership row is written by a trigger, so a book is
- * never left with no one able to open it.
+ * Through a function rather than by inserting a row, and not for tidiness:
+ * inserting cannot work. A row handed back by an insert has to satisfy the
+ * read policy too, that policy asks whether the caller is a member of these
+ * books, and the trigger that makes them the owner has not fired at that
+ * moment -- so the whole statement is refused and nothing is made at all. The
+ * page needs the id back, so it has to ask for the row.
+ *
+ * The function does both halves as its definer, where no policy stands between
+ * making the books and being their owner.
  */
 export async function createBook(name: string): Promise<CloudBook | null> {
-  const held = currentSession();
-  if (held === null) return null;
-  const response = await rest("books?select=id,name,created_at", {
-    method: "POST",
-    headers: { prefer: "return=representation" },
-    body: JSON.stringify({ name, created_by: held.userId }),
+  const rows = await rpc<{ id: string; name: string; created_at: string }[]>("create_book", {
+    wanted: name,
   });
-  if (response === null || !response.ok) return null;
-  const rows = (await response.json().catch(() => [])) as {
-    id: string;
-    name: string;
-    created_at: string;
-  }[];
-  const made = rows[0];
+  const made = rows?.[0];
   return made === undefined
     ? null
     : { id: made.id, name: made.name, createdAt: made.created_at };

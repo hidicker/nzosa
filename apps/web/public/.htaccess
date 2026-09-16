@@ -1,0 +1,23 @@
+# Apache hosting: make sure an updated NZOSA is the one that actually loads.
+#
+# The page, its styles and its bundle keep the same names from one build to the
+# next, so a browser holding yesterday's copy will go on running yesterday's app
+# against today's books -- and the person has no way to tell, because it looks
+# exactly like the app. That matters more here than in most places: the bug they
+# hit may be one that was fixed a fortnight ago.
+#
+# "no-cache" does not mean "do not store". It means ask before reusing, so an
+# unchanged file costs one round trip and a 304 rather than a fresh download.
+<IfModule mod_headers.c>
+  <FilesMatch "\.(html|js|css|map)$">
+    Header set Cache-Control "no-cache, must-revalidate"
+  </FilesMatch>
+</IfModule>
+
+# Hosts that do not serve these types leave the browser guessing, and a bundle
+# served as text/plain does not run at all.
+<IfModule mod_mime.c>
+  AddType application/javascript .js
+  AddType application/json .json .map
+  AddType text/css .css
+</IfModule>

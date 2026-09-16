@@ -392,6 +392,31 @@ export function backendKind(): Backend {
 }
 
 /**
+ * A save that did not happen, and somebody to tell.
+ *
+ * Failing to save to a server is not like failing to save in a browser. The
+ * usual reason is that these books have moved on somewhere else -- another
+ * computer, a colleague, another tab -- and this page is holding work built on
+ * what has since been replaced. Nothing here is thrown away: the page keeps
+ * what it has. But carrying on in silence would let somebody code all
+ * afternoon into a copy that can never be written, which is exactly the way to
+ * lose a day's work while being told nothing.
+ *
+ * Reported through a handler rather than drawn here, because storage has no
+ * business knowing what a banner is.
+ */
+export interface SaveTrouble {
+  kind: "conflict" | "refused" | "failed";
+  why: string;
+}
+
+let tellAboutTrouble: (trouble: SaveTrouble) => void = () => {};
+
+export function onSaveTrouble(handler: (trouble: SaveTrouble) => void): void {
+  tellAboutTrouble = handler;
+}
+
+/**
  * The version each part was last read or written at.
  *
  * Sent back with every write so the server can refuse one built on a stale
@@ -667,6 +692,16 @@ async function writeCloud(
     // Not a write to retry: on a conflict somebody else's save is now the
     // truth, and this page is holding something built on what it replaced.
     ok = false;
+    tellAboutTrouble(
+      outcome.kind === "conflict"
+        ? {
+            kind: "conflict",
+            why:
+              "These books changed somewhere else, so your last change was not saved. " +
+              "Reload to get the latest, then make it again.",
+          }
+        : { kind: outcome.kind, why: outcome.why },
+    );
   }
   return ok;
 }

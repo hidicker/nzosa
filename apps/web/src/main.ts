@@ -76,7 +76,7 @@ import {
   renderCheck,
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
-import { sessionFromUrl } from "./cloud.js";
+import { sessionFromUrl, signedIn } from "./cloud.js";
 import { reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
 import {
@@ -92,6 +92,7 @@ import {
   writesToFolder,
   loadEvents,
   loadUser,
+  onSaveTrouble,
   requestPersistence,
   savePart,
   saveUser,
@@ -158,7 +159,10 @@ async function init(): Promise<void> {
     // for a browser that has nothing in it; a ledger folder is the books
     // themselves, and loading a second set of files over the top is the muddle
     // that makes clearing look as though it had not worked.
-    if (!writesToFolder()) await seedBrowser();
+    // Not for somebody signed in to books of their own: seeding would fill this
+    // browser's copy with an invented company, and send half a dozen requests
+    // after seed files a hosted copy does not have.
+    if (!writesToFolder() && !signedIn()) await seedBrowser();
 
     setLoadingStatus("Preparing workspace…");
     renderFormats();
@@ -254,6 +258,23 @@ function wireUp(): void {
   // those do.
   wireChrome();
   wireMenu();
+
+  // A save that did not happen, said across the top of the app rather than on
+  // whichever page happened to be open when it failed.
+  onSaveTrouble((trouble) => {
+    const banner = document.getElementById("save-banner");
+    const said = document.getElementById("save-banner-text");
+    if (banner === null || said === null) return;
+    said.textContent = trouble.why;
+    banner.hidden = false;
+  });
+  document.getElementById("save-banner-reload")?.addEventListener("click", () => {
+    location.reload();
+  });
+  document.getElementById("save-banner-close")?.addEventListener("click", () => {
+    const banner = document.getElementById("save-banner");
+    if (banner !== null) banner.hidden = true;
+  });
   wireBankImport();
   wireFileIntake();
   wireReconcile();

@@ -36,7 +36,7 @@ mv apps/web/public/data/ledger.json apps/web/public/data/ledger.json.hold
 
 Put it back at the end.
 
-**Export your current work first** — Bank import → Export ledger — even though the
+**Export your current work first** — Books → Download a backup — even though the
 separate origin should make that unnecessary. Cheap insurance.
 
 ---

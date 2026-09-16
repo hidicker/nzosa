@@ -1,11 +1,11 @@
 import { redraw, showPage } from "../app.js";
-import { asCsvText, reclassify, recomputeVariance, saveManualJournals, record } from "../books.js";
-import { checkBankBalances, handleFiles, render } from "../daily/bank-import.js";
+import { asCsvText, recomputeVariance, saveManualJournals, record } from "../books.js";
+import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
-import { save, savePart } from "../store.js";
-import type { StoredLedger } from "../store.js";
+import { ledgerName, save, savePart } from "../store.js";
+import { downloadBackupNow, restoreWithConfirm } from "../backup.js";
 import { readFiledReturns } from "../variance.js";
 import {
   identifyExport,
@@ -39,51 +39,17 @@ import type { Identified, Journal } from "@nzosa/core";
  */
 
 export function exportLedger(): void {
-  const blob = new Blob([`${JSON.stringify(state.ledger, null, 2)}\n`], {
-    type: "application/json",
-  });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "ledger.json";
-  link.click();
-  URL.revokeObjectURL(url);
+  // The same file the Books page makes: everything, rules and history included.
+  // This button used to write the ledger alone, which was not a backup.
+  void downloadBackupNow(ledgerName());
 }
 
 export async function importLedger(file: File): Promise<void> {
-  try {
-    const parsed = JSON.parse(await file.text()) as Partial<StoredLedger>;
-    if (parsed.version !== 1 || !Array.isArray(parsed.transactions)) {
-      throw new Error("That file is not a NZOSA ledger.");
-    }
-    // Setup is not transaction data. The chart, entities, asset register,
-    // ledger and hand-entered income were configured in this browser and are
-    // not in an exported ledger file, so importing one must not silently
-    // discard them -- it did, which turned a refresh into a reset.
-    state.ledger = {
-      ...state.ledger,
-      version: 1,
-      legitimateDuplicates: parsed.legitimateDuplicates ?? [],
-      transactions: parsed.transactions,
-      ...(parsed.splits ? { splits: parsed.splits } : {}),
-      ...(parsed.overrides ? { overrides: parsed.overrides } : {}),
-      ...(parsed.varianceNotes ? { varianceNotes: parsed.varianceNotes } : {}),
-      ...(parsed.chart ? { chart: parsed.chart } : {}),
-      ...(parsed.entities ? { entities: parsed.entities } : {}),
-      ...(parsed.assets ? { assets: parsed.assets } : {}),
-      ...(parsed.journals ? { journals: parsed.journals } : {}),
-      ...(parsed.invoices ? { invoices: parsed.invoices } : {}),
-      ...(parsed.allocations ? { allocations: parsed.allocations } : {}),
-      ...(parsed.taxExtras ? { taxExtras: parsed.taxExtras } : {}),
-    };
-    state.chart = state.ledger.chart ?? [];
-    reclassify();
-    state.persistent = await save(state.ledger);
-    state.reports = [];
-    render();
-  } catch (error) {
-    alert((error as Error).message);
-  }
+  // A backup, or a ledger file from before backups existed; either way every
+  // field comes back. This used to read back only part of what "Export ledger"
+  // wrote, so a round trip into new books quietly lost opening balances, manual
+  // journals, invoice matches, transfers and filed returns.
+  await restoreWithConfirm(file, ledgerName());
 }
 
 export async function loadFiledReturns(files: File[]): Promise<void> {

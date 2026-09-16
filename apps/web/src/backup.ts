@@ -23,10 +23,12 @@ import { note } from "./ui.js";
  * business, and no trust in either: it opens in any copy of NZOSA, including
  * the one that runs from a folder on their own machine.
  *
- * "Export ledger" already existed and is not this. It writes the ledger alone,
- * which leaves out the coding rules, the rule sets they replaced, and the
- * history of who changed what -- three things nobody notices are missing until
- * the day they are restoring from it.
+ * It replaced "Export ledger", which wrote the ledger alone -- leaving out the
+ * coding rules, the rule sets they replaced and the history -- and whose import
+ * read back only part of what it wrote, so a round trip into new books quietly
+ * lost opening balances, manual journals, invoice matches, transfers and filed
+ * returns. Both places now make and read this one file, and a ledger file from
+ * before still restores.
  */
 
 const FORMAT = "nzosa-backup";
@@ -142,15 +144,26 @@ export async function restoreBackup(
   } catch {
     return { ok: false, why: "That file is not readable as a backup." };
   }
-  if (parsed.format !== FORMAT || !Array.isArray(parsed.ledger?.transactions)) {
+  const isBackup = parsed.format === FORMAT && Array.isArray(parsed.ledger?.transactions);
+  // A ledger file from the old "Export ledger" is the ledger on its own. People
+  // have these, so it still restores -- and every field in it comes back now.
+  const old = parsed as unknown as Partial<StoredLedger>;
+  const isOldLedger = !isBackup && old.version === 1 && Array.isArray(old.transactions);
+  if (!isBackup && !isOldLedger) {
     return {
       ok: false,
-      why: "That is not an NZOSA backup. A backup file starts with a line saying so.",
+      why:
+        "That is not an NZOSA backup, or a ledger file from an earlier version. " +
+        "Nothing was changed.",
     };
   }
 
   partChanged(...BACKUP_PARTS);
-  state.ledger = { ...parsed.ledger, version: 1 } as StoredLedger;
+  // A backup is everything, so it replaces everything. An old ledger file holds
+  // the ledger alone, so whatever it does not mention is kept rather than wiped.
+  state.ledger = (isBackup
+    ? { ...parsed.ledger, version: 1 }
+    : { ...state.ledger, ...old, version: 1 }) as StoredLedger;
   state.chart = state.ledger.chart ?? [];
   const saved = await save(state.ledger);
   if (parsed.rules) await saveRules(parsed.rules);
@@ -159,6 +172,37 @@ export async function restoreBackup(
   return saved
     ? { ok: true }
     : { ok: false, why: "Some of it could not be written. Nothing was cleared first." };
+}
+
+/** Take a backup of the books open now and save it to this computer. */
+export async function downloadBackupNow(books: string): Promise<void> {
+  download(await buildBackup());
+  markBackedUp(books);
+}
+
+/**
+ * Restore from a file somebody picked, having said first what it replaces.
+ *
+ * What is open now is named and counted rather than described: "these books"
+ * is not a thing anybody can check before agreeing to replace it.
+ */
+export async function restoreWithConfirm(file: File, books: string): Promise<void> {
+  const count = state.ledger.transactions.length;
+  if (
+    !confirm(
+      `Restore from ${file.name}?\n\n` +
+        `This replaces what is in ${books === "" ? "the books open now" : books} ` +
+        `(${count} transaction${count === 1 ? "" : "s"}) with what is in that file.`,
+    )
+  ) {
+    return;
+  }
+  const result = await restoreBackup(file);
+  if (result.ok) {
+    location.reload();
+    return;
+  }
+  alert(result.why);
 }
 
 /**
@@ -180,9 +224,9 @@ export function backupTools(body: HTMLElement, books: string, hosted: boolean): 
           "the chart, entities, invoices, assets, the rules and the history. It saves to " +
           "this computer, and opens in any copy of NZOSA — including one running from a " +
           "folder of your own. Take one whenever you have done a solid piece of work."
-        : "One file with everything in these books, including the rules and the history " +
-          "that “Export ledger” leaves out. The folder itself is the truth here, so this " +
-          "is for keeping a copy somewhere else.",
+        : "One file with everything in these books, the rules and the history included. " +
+          "The folder itself is the truth here, so this is for keeping a copy somewhere " +
+          "else: another disk, or another computer.",
     ),
   );
 

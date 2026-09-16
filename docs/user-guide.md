@@ -37,7 +37,7 @@ Either way, **nothing is uploaded**. Your files are read on your own machine and
 
 The app tells you which mode you are in: with a folder behind it, the ledger's name shows at the bottom of the sidebar and the demo offers to "Open the demo books"; without one, it offers to "Load demo data".
 
-**Back it up.** In folder mode, copy the folder. Wherever you are, `Bank import → Export ledger` writes the whole thing to a single file you can keep somewhere else.
+**Back it up.** In folder mode, copy the folder. Wherever you are, `Books → Download a backup` (also on Bank import) writes everything to a single file you can keep somewhere else, the coding rules and the history included, and `Restore from a backup` puts it all back.
 
 ---
 

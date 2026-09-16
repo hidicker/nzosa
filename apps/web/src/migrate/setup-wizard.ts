@@ -80,7 +80,13 @@ function startupFiles(): StartupFile[] {
       what: "ledger",
       have: () => state.ledger.transactions.length > 0,
       load: async (text) => {
-        const parsed = JSON.parse(text) as Partial<StoredLedger>;
+        // A backup file works here too, so "download a backup, drop it in as
+        // ledger.json" is a way to seed a copy -- the ledger is inside it.
+        const raw = JSON.parse(text) as Partial<StoredLedger> & {
+          format?: string;
+          ledger?: Partial<StoredLedger>;
+        };
+        const parsed = raw.format === "nzosa-backup" && raw.ledger ? raw.ledger : raw;
         if (!Array.isArray(parsed.transactions) || parsed.transactions.length === 0) return null;
         state.ledger = { ...state.ledger, ...parsed, version: 1 };
         state.chart = state.ledger.chart ?? [];

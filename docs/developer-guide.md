@@ -728,7 +728,7 @@ and is an Expense.
 of that kind**, so files seed an empty browser and never overwrite work. A
 missing file is a setup step not done, not an error.
 
-Nothing writes back. A page cannot write to disk; `Export ledger`, `Save chart`
+Nothing writes back. A page cannot write to disk; `Download a backup`, `Save chart`
 and `Download JSON` produce files you copy in yourself. The folder is a seed,
 not a sync, and it goes stale the moment anything changes.
 
@@ -1044,7 +1044,7 @@ of that kind yet: `ledger.json`, `rules.json`, `chart-of-accounts.csv`,
 optional; a missing file is a setup step not done, not an error.
 
 It is a **seed, not a sync**. A page cannot write to disk, so changes never flow
-back — use *Export ledger* and copy the file in yourself. The folder is
+back — use *Download a backup*, and copy the file in as `ledger.json` yourself. The folder is
 gitignored, so real data never reaches the repository.
 
 ### Deploying your own copy

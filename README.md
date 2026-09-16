@@ -51,4 +51,10 @@ Every figure is meant to be checkable, and the guides say how to check it. Do th
 
 ## Licence
 
-MIT. See [LICENSE](LICENSE). Provided as is, without warranty of any kind. You remain responsible for what you file.
+Copyright (C) 2026 hidicker.
+
+GNU Affero General Public License, version 3 or later. See [LICENSE](LICENSE).
+
+You may run, study, share and change it. If you change it and let other people use
+your version over a network, you have to offer them its source too. Provided as is,
+without warranty of any kind. You remain responsible for what you file.

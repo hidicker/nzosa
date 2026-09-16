@@ -258,6 +258,6 @@ Online, it loads by itself: anything you see there is invented, and you can chan
 
 ## Licence and liability
 
-NZOSA is open-source software under the MIT Licence. It is provided as is, with no warranty. Nobody who wrote or distributes it is liable if a figure is wrong.
+NZOSA is free software under the GNU Affero General Public Licence, version 3 or later. You may run, study, share and change it; if you change it and let other people use your version over a network, you have to offer them its source too. It is provided as is, with no warranty. Nobody who wrote or distributes it is liable if a figure is wrong.
 
 You remain responsible for what you file. Check the figures.

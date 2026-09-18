@@ -1733,6 +1733,11 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .setup-go { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
 .setup-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
 
+.excel-extract-controls { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;
+  margin-top: 0.35rem; }
+.excel-extract-controls select { font-size: 0.8rem; max-width: 16rem; }
+.excel-extract-controls button { font-size: 0.78rem; padding: 0.2rem 0.6rem; }
+
 /* Books kept on a server ---------------------------------------------------- */
 .cloud-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end;
   margin: 0.6rem 0; max-width: 34rem; }
@@ -2672,7 +2677,7 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .ir10-form tr.ir10-rule td { border-bottom: 1px solid rgba(128,128,128,0.6); }
 
 /* The list of reports: grouped, starred favourites first. */
-.page-actions.reports-home > :not(#report-kind) { display: none !important; }
+.page-actions.reports-home > :not(#report-kind):not(#report-download-excel) { display: none !important; }
 .reports-home-group { margin: 1rem 0 1.4rem; max-width: 62rem; }
 .reports-home-group h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
 .reports-home-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.35rem 1rem; }

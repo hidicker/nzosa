@@ -20,6 +20,7 @@ import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
+import { downloadExcelReport } from "./excel-export.js";
 import { unresolvedNote } from "../widgets.js";
 import {
   filedReturnFromOurs,
@@ -2970,6 +2971,11 @@ function renderReportsHome(body: HTMLElement): void {
   const all = groups.flatMap((group) => group.reports);
   const favourites = readFavourites().filter((value) => all.some((r) => r.value === value));
 
+  const txYears = state.ledger.transactions.map((t) => financialYearOf(t.date));
+  const journalYears = (state.ledger.journals ?? []).map((j) => financialYearOf(j.date));
+  const allYears = [...new Set([...txYears, ...journalYears])].sort((a, b) => b - a);
+  const years = allYears.length > 0 ? allYears : [new Date().getFullYear()];
+
   const open = (value: string): void => {
     select.value = value;
     select.dispatchEvent(new Event("change", { bubbles: true }));
@@ -3089,6 +3095,60 @@ function renderReportsHome(body: HTMLElement): void {
     return row;
   };
 
+  /**
+   * Everything at once, for a spreadsheet.
+   *
+   * Not a report to read on screen: every report and every underlying table in
+   * one workbook, which is what an accountant asks for when they would rather
+   * work in Excel than click through a year. It sits at the end, under the
+   * checks, because that is where the whole-file outputs belong.
+   */
+  const excelExtractItem = (): HTMLElement => {
+    const row = document.createElement("div");
+    row.className = "reports-home-item";
+    const spacer = document.createElement("span");
+
+    const name = document.createElement("span");
+    name.className = "reports-open";
+    name.textContent = "Excel detailed extract";
+
+    const about = document.createElement("span");
+    about.className = "reports-about";
+    about.textContent =
+      "One workbook: the general ledger, bank coding, revenue and expenses, unusual " +
+      "transactions, the depreciation schedule, trial balance and GST returns, and behind " +
+      "them every table these books are made of.";
+
+    const controls = document.createElement("div");
+    controls.className = "excel-extract-controls";
+
+    const yearSelect = document.createElement("select");
+    yearSelect.id = "excel-export-year-select";
+    yearSelect.setAttribute("aria-label", "Which year to put in the workbook");
+    const allOpt = document.createElement("option");
+    allOpt.value = "all";
+    allOpt.textContent = "Every year";
+    yearSelect.append(allOpt);
+    for (const y of years) {
+      const opt = document.createElement("option");
+      opt.value = String(y);
+      opt.textContent = `FY${y} (year to 31 Mar ${y})`;
+      yearSelect.append(opt);
+    }
+
+    const exportBtn = document.createElement("button");
+    exportBtn.type = "button";
+    exportBtn.textContent = "Download (.xlsx)";
+    exportBtn.addEventListener("click", () => {
+      downloadExcelReport(yearSelect.value === "all" ? "all" : Number(yearSelect.value));
+    });
+
+    controls.append(yearSelect, exportBtn);
+    about.append(controls);
+    row.append(spacer, name, about);
+    return row;
+  };
+
   const placed = new Set<string>();
   for (const group of groups) {
     const rows = group.reports.map(item);
@@ -3100,7 +3160,9 @@ function renderReportsHome(body: HTMLElement): void {
   }
   // Groups the report picker has no reports in, listed after the rest.
   for (const label of [...new Set(elsewhere.filter((e) => !placed.has(e.name)).map((e) => e.group))]) {
-    section(label, elsewhere.filter((e) => e.group === label && !placed.has(e.name)).map(pageItem));
+    const rows = elsewhere.filter((e) => e.group === label && !placed.has(e.name)).map(pageItem);
+    if (label === "Checks and history") rows.push(excelExtractItem());
+    section(label, rows);
   }
 }
 
@@ -3967,6 +4029,7 @@ export function wireReports(): void {
   $("report-owner").addEventListener("change", () => redraw("reports"));
   $("report-year").addEventListener("change", () => redraw("reports"));
   $("report-download").addEventListener("click", () => downloadReport());
+  $("report-download-excel").addEventListener("click", () => downloadExcelReport());
 }
 
 /**

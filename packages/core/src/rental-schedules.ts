@@ -228,6 +228,18 @@ export function residentialPortfolio(
  * here, and the return says so rather than working tax out on a guess.
  */
 const INCOME_TAX: Readonly<Record<number, readonly { upTo: number | null; rate: number }[]>> = {
+  // The year ended 31 March 2025 straddles the threshold change of 31 July
+  // 2024, so Inland Revenue published composite bands for it: four months on
+  // the old thresholds and eight on the new, blended into one set. Held so a
+  // past year can be worked out and checked; a return for that year is still
+  // filed on Inland Revenue's own figures.
+  2025: [
+    { upTo: 14_533, rate: 0.105 },
+    { upTo: 49_833, rate: 0.175 },
+    { upTo: 72_700, rate: 0.3 },
+    { upTo: 180_000, rate: 0.33 },
+    { upTo: null, rate: 0.39 },
+  ],
   2026: [
     { upTo: 15_600, rate: 0.105 },
     { upTo: 53_500, rate: 0.175 },
@@ -289,6 +301,77 @@ export interface Ir3Box {
   amount?: Cents;
   text?: string;
   total?: boolean;
+}
+
+export interface ProvisionalStandard {
+  /** What the figure is worked out from, said plainly because the two differ. */
+  basis: "105% of last year" | "110% of the year before" | "not due";
+  amount: Cents;
+  /** Three equal instalments, the last carrying the odd dollars. */
+  instalments: Cents[];
+  why: string;
+}
+
+/**
+ * Next year's provisional tax under the standard option, both ways round.
+ *
+ * The usual way is 105% of last year's residual income tax, which needs last
+ * year's return to have been filed. It often has not been by the first
+ * instalment in August, and the Act does not leave a hole there: until that
+ * return is in, the instalment is 110% of the year before it. Working it out
+ * the usual way regardless would understate what is due and earn use-of-money
+ * interest on the difference, which is the sort of quiet cost this app exists
+ * to stop.
+ *
+ * Whole dollars, as Inland Revenue states them, and only once residual income
+ * tax passes $5,000 -- below that, provisional tax is not due at all.
+ */
+export function provisionalStandardOption(options: {
+  /** Last year's residual income tax, once that return is filed. */
+  lastYear: Cents | null;
+  /** The year before it, for while last year's return is still outstanding. */
+  yearBefore?: Cents;
+  /** False while last year's return has not been filed. */
+  lastYearFiled?: boolean;
+}): ProvisionalStandard {
+  const filed = options.lastYearFiled !== false;
+  const wholeDollars = (cents: number): Cents => Math.floor(cents / 100) * 100;
+  const split = (amount: Cents): Cents[] => {
+    const third = Math.floor(amount / 300) * 100;
+    return [third, third, amount - 2 * third];
+  };
+
+  if (filed && options.lastYear !== null && options.lastYear > 500_000) {
+    const amount = wholeDollars(options.lastYear * 1.05);
+    return {
+      basis: "105% of last year",
+      amount,
+      instalments: split(amount),
+      why: "Last year's residual income tax plus 5%, the standard option.",
+    };
+  }
+
+  if (!filed && options.yearBefore !== undefined && options.yearBefore > 500_000) {
+    const amount = wholeDollars(options.yearBefore * 1.1);
+    return {
+      basis: "110% of the year before",
+      amount,
+      instalments: split(amount),
+      why:
+        "Last year's return is not filed yet, so the standard option is 110% of the year " +
+        "before it until it is.",
+    };
+  }
+
+  return {
+    basis: "not due",
+    amount: 0,
+    instalments: [],
+    why:
+      filed && options.lastYear !== null && options.lastYear <= 500_000
+        ? "Residual income tax of $5,000 or less: provisional tax is not due."
+        : "Not enough is known yet to work out provisional tax.",
+  };
 }
 
 export interface Ir3ReturnOptions {
@@ -379,6 +462,19 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
   const taxOnIncome = incomeTaxOn(taxableIncome, year);
   const notes: string[] = [];
   if (taxOnIncome === null) notes.push(`No income tax rates are held for ${year}, so no tax is worked out.`);
+  // A year can have income tax bands here without the other two tables. Both
+  // would then come out as nothing, which on a return reads as a figure rather
+  // than as a gap -- so the gap is named.
+  if (taxOnIncome !== null && earnings > 0 && EARNER_LEVY[year] === undefined) {
+    notes.push(
+      `No ACC earner levy rate is held for ${year}, so none is separated out of the PAYE credit.`,
+    );
+  }
+  if (taxOnIncome !== null && IETC[year] === undefined) {
+    notes.push(
+      `No independent earner tax credit thresholds are held for ${year}, so none is claimed.`,
+    );
+  }
 
   const eligible = options.ietcEligible !== false;
   const ietc = eligible && taxOnIncome !== null ? ietcOn(taxableIncome, year) : 0;
@@ -397,16 +493,15 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
       ? null
       : residualIncomeTax - options.provisionalTaxPaid;
 
-  // Standard option: last year's residual income tax plus 5%, in whole dollars,
-  // once it is over $5,000.
-  const nextYearProvisional =
-    residualIncomeTax !== null && residualIncomeTax > 500_000
-      ? Math.floor((residualIncomeTax * 1.05) / 100) * 100
-      : null;
-  const instalments: Cents[] = [];
+  const standard = provisionalStandardOption({ lastYear: residualIncomeTax });
+  const nextYearProvisional = standard.basis === "not due" ? null : standard.amount;
+  const instalments = standard.instalments;
   if (nextYearProvisional !== null) {
-    const third = Math.floor(nextYearProvisional / 300) * 100;
-    instalments.push(third, third, nextYearProvisional - 2 * third);
+    notes.push(
+      "That is the standard option on this return once it is filed. If it is not filed " +
+        "before the first instalment, that instalment is 110% of the year before instead, " +
+        "and the later ones pick up the 105% once it is.",
+    );
   }
 
   const box = (id: string, title: string, amount: Cents, total = false): Ir3Box =>

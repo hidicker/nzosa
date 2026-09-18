@@ -81,7 +81,7 @@ const options = {
   format: "esm",
   target: ["es2022"],
   outfile: join(outdir, "app.js"),
-  sourcemap: true,
+  sourcemap: serve,
   minify: !serve,
   logLevel: "info",
 };

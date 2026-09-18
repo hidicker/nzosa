@@ -21,6 +21,13 @@ interface MemberRow {
   since: string;
 }
 
+interface InvitationRow {
+  id: string;
+  email: string;
+  role: "owner" | "bookkeeper" | "accountant";
+  sent: string;
+}
+
 const ROLES: readonly (readonly [MemberRow["role"], string, string])[] = [
   ["bookkeeper", "Bookkeeper", "Codes and saves. Cannot change who else is here."],
   ["accountant", "Accountant (read only)", "Sees everything, changes nothing."],
@@ -136,9 +143,9 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       return;
     }
 
-    // Adding somebody. The address has to belong to an account already: an
-    // invitation to a stranger means this system sending mail to an address
-    // nobody has verified, which is a different thing with different risks.
+    // Inviting somebody. Nothing is shared until they accept, and the answer
+    // never says whether that address has an account -- otherwise this becomes
+    // a way for anybody to test whether an email is registered here.
     const add = document.createElement("div");
     add.className = "cloud-add";
 
@@ -158,31 +165,30 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
     const go = document.createElement("button");
     go.type = "button";
     go.className = "primary";
-    go.textContent = "Add";
+    go.textContent = "Invite";
     go.addEventListener("click", () => {
       const wanted = email.value.trim();
       if (wanted === "") return;
       go.disabled = true;
-      say(said, "Adding…");
-      void rpc<string>("add_book_member", {
+      say(said, "Inviting…");
+      void rpc<string>("invite_to_book", {
         book: book.id,
         who: wanted,
         as_role: role.value,
       }).then((result) => {
         go.disabled = false;
-        if (result === "added") {
+        if (result === "invited") {
           email.value = "";
+          // The same words whether or not that address has an account here.
+          say(
+            said,
+            `Invited ${wanted}. They will see it on their own Books page the next ` +
+              "time they sign in, and these books stay private until they accept.",
+          );
           void draw();
           return;
         }
-        say(
-          said,
-          result === "no account"
-            ? `There is no account for ${wanted} yet. Ask them to create one here first, ` +
-              "then add them."
-            : "Could not add that person.",
-          true,
-        );
+        say(said, "Could not send that invitation.", true);
       });
     });
 
@@ -194,6 +200,43 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
           "to hand over a year while you carry on working.",
       ),
     );
+
+    // Invitations sent and not yet answered, so an owner can see what is
+    // outstanding and take one back.
+    const waiting = await rpc<InvitationRow[]>("book_invitation_list", { book: book.id });
+    if (waiting !== null && waiting.length > 0) {
+      const pending = document.createElement("h4");
+      pending.textContent = "Invited, not yet accepted";
+      list.append(pending);
+
+      const table = document.createElement("table");
+      table.className = "report-table owner-table";
+      const head = document.createElement("thead");
+      head.innerHTML = "<tr><th>Person</th><th>Would be</th><th></th></tr>";
+      const rows = document.createElement("tbody");
+      for (const row of waiting) {
+        const tr = document.createElement("tr");
+        const who = document.createElement("td");
+        who.className = "report-name";
+        who.textContent = row.email;
+        const what = document.createElement("td");
+        what.textContent = roleName(row.role);
+        const actions = document.createElement("td");
+        actions.className = "report-amount";
+        const take = document.createElement("button");
+        take.type = "button";
+        take.textContent = "Withdraw";
+        take.addEventListener("click", () => {
+          take.disabled = true;
+          void rpc<string>("cancel_invitation", { invitation: row.id }).then(() => void draw());
+        });
+        actions.append(take);
+        tr.append(who, what, actions);
+        rows.append(tr);
+      }
+      table.append(head, rows);
+      list.append(table);
+    }
   };
 
   void draw();

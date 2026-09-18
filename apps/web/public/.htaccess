@@ -12,7 +12,26 @@
   <FilesMatch "\.(html|js|css|map)$">
     Header set Cache-Control "no-cache, must-revalidate"
   </FilesMatch>
+
+  # Found in the security review of 16 September 2026: the site sent none of
+  # these, so a hosted copy had no second line of defence behind the app.
+  #
+  # The policy is the one that earns its place. Even with no way in found, it
+  # decides where a page may send data -- so a bug that did let script run could
+  # not post somebody's books to another site, or frame this app inside one.
+  # The hash is of the small inline script in index.html; change that script and
+  # this must be recomputed, or the loading screen loses its fallback.
+  Header always set Content-Security-Policy "default-src 'self'; script-src 'self' 'sha256-oTz+q8MR8+08GCXffD++8GyxIgNQmdzeNYWBHcmFeKY='; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://*.supabase.co; object-src 'none'; base-uri 'none'; form-action 'self'; frame-ancestors 'none'"
+  Header always set Strict-Transport-Security "max-age=31536000"
+  Header always set X-Content-Type-Options "nosniff"
+  Header always set X-Frame-Options "DENY"
+  Header always set Referrer-Policy "strict-origin-when-cross-origin"
+  Header always set Permissions-Policy "geolocation=(), camera=(), microphone=(), payment=()"
 </IfModule>
+
+# A folder with no index file listed everything in it. Nothing secret sits in
+# these folders, but a listing invites a look and grows its own surprises.
+Options -Indexes
 
 # Hosts that do not serve these types leave the browser guessing, and a bundle
 # served as text/plain does not run at all.

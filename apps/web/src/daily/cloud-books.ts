@@ -9,6 +9,7 @@ import {
 } from "../cloud.js";
 import { backupTools } from "../backup.js";
 import { renderMembers } from "./cloud-members.js";
+import { rpc } from "../cloud.js";
 import { openCloudBook, openCloudBookId } from "../store.js";
 import { note } from "../ui.js";
 
@@ -126,6 +127,67 @@ function signInForm(body: HTMLElement): void {
   body.append(form, said);
 }
 
+interface InvitationForMe {
+  id: string;
+  books: string;
+  role: string;
+  invited_by: string;
+  sent: string;
+}
+
+/**
+ * Books somebody has asked you to join.
+ *
+ * Nothing appears in your list because somebody else decided it should: an
+ * invitation waits here until you take it up, and declining ends it.
+ */
+async function renderInvitations(body: HTMLElement): Promise<void> {
+  const waiting = await rpc<InvitationForMe[]>("my_invitations", {});
+  if (waiting === null || waiting.length === 0) return;
+
+  const wrap = document.createElement("div");
+  wrap.className = "cloud-invitations";
+  const heading = document.createElement("h3");
+  heading.textContent = waiting.length === 1 ? "You have an invitation" : "You have invitations";
+  wrap.append(heading);
+
+  for (const one of waiting) {
+    const row = document.createElement("p");
+    row.className = "cloud-who";
+    const what = one.role === "accountant"
+      ? "to read them"
+      : one.role === "owner"
+        ? "as an owner"
+        : "to code them";
+    row.append(
+      document.createTextNode(
+        `${one.invited_by === "" ? "Somebody" : one.invited_by} invited you to ${one.books}, ${what}.`,
+      ),
+    );
+
+    const accept = document.createElement("button");
+    accept.type = "button";
+    accept.className = "primary";
+    accept.textContent = "Accept";
+    accept.addEventListener("click", () => {
+      accept.disabled = true;
+      void rpc<string>("accept_invitation", { invitation: one.id }).then(() => location.reload());
+    });
+
+    const decline = document.createElement("button");
+    decline.type = "button";
+    decline.textContent = "Decline";
+    decline.addEventListener("click", () => {
+      decline.disabled = true;
+      void rpc<string>("decline_invitation", { invitation: one.id }).then(() => location.reload());
+    });
+
+    row.append(" ", accept, " ", decline);
+    wrap.append(row);
+  }
+  body.append(wrap);
+}
+
 /** The sets of books this person may open. */
 async function booksList(body: HTMLElement, email: string): Promise<void> {
   const who = document.createElement("p");
@@ -149,6 +211,8 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   said.className = "cloud-said";
   say(said, "Looking…");
   body.append(said);
+
+  await renderInvitations(body);
 
   const books = await listBooks();
   const open = openCloudBookId();

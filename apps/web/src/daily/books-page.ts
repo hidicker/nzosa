@@ -170,11 +170,17 @@ export async function chooseLedger(value: string): Promise<void> {
 export async function renderBooks(): Promise<void> {
   const body = $("books-body");
   body.textContent = "";
+  const hint = document.getElementById("books-hint");
 
   if (!writesToFolder()) {
     // Hosted books first, when this build has a project behind it: the browser
     // copy is what somebody has until they sign in, not what they came for.
     if (renderCloudBooks(body)) return;
+    if (hint !== null) {
+      hint.textContent =
+        "These books are held by this browser alone. Download a backup to keep a copy, " +
+        "and to move them to another computer.";
+    }
     body.append(
       note(
         "This copy has no folder behind it, so there is only one set of books: " +
@@ -182,6 +188,12 @@ export async function renderBooks(): Promise<void> {
       ),
     );
     return;
+  }
+
+  if (hint !== null) {
+    hint.textContent =
+      "Every set of books in your ledgers folder. Clearing one empties it and keeps a " +
+      "dated copy beside it, so it can be put back: nothing here deletes a folder.";
   }
 
   const books = await ledgers();

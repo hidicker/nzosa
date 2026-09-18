@@ -1,7 +1,7 @@
 import { $ } from "./state.js";
 import { THEME_KEY, currentTheme } from "./ui.js";
 import type { Theme } from "./ui.js";
-import { writesToFolder } from "./store.js";
+import { backendKind } from "./store.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -76,14 +76,39 @@ export function cycleTheme(): void {
 }
 
 /** The frame: theme, sidebar width, and the demo banner. */
+/**
+ * Where these books actually are, said in the footer.
+ *
+ * It used to say one thing everywhere: that the ledger stays in this browser
+ * until you export it, and that NZOSA keeps running until you double-click Stop
+ * NZOSA in the folder you started it from. On the hosted copy none of that is
+ * true -- there is no folder and no local server to stop, and the books are on
+ * a server rather than in the browser -- so the footer told the people most
+ * likely to be strangers here something plainly wrong.
+ */
+function sayWhereBooksLive(): void {
+  const where = document.getElementById("footer-where");
+  if (where === null) return;
+  const kind = backendKind();
+  where.textContent =
+    kind === "folder"
+      ? "These books are the folder on this computer. NZOSA keeps running after you " +
+        "close this tab; to stop it, double-click Stop NZOSA in the folder you started it from."
+      : kind === "cloud"
+        ? "These books are kept on the server, under the account you are signed in to. " +
+          "Download a backup from the Books page to keep a copy of your own."
+        : "These books stay in this browser until you download a backup from the Books page.";
+}
+
 export function wireChrome(): void {
+  sayWhereBooksLive();
   const demoBanner = document.getElementById("demo-banner");
   if (demoBanner) {
     // Shown only where the page itself says it is the demo: the demo build
     // takes the hidden attribute off, and nothing else does. The app used to
     // show it on any copy with no folder behind it, which put "this is a demo"
     // across the top of books people keep for real on the hosted site.
-    if (writesToFolder()) demoBanner.hidden = true;
+    if (backendKind() === "folder") demoBanner.hidden = true;
     $("demo-banner-close")?.addEventListener("click", () => {
       demoBanner.hidden = true;
     });
@@ -93,7 +118,7 @@ export function wireChrome(): void {
   if (demoNotice) {
     // The same rule: a warning not to import private data belongs on the demo,
     // and is wrong on hosted books, where importing your own data is the point.
-    if (writesToFolder()) demoNotice.hidden = true;
+    if (backendKind() === "folder") demoNotice.hidden = true;
   }
   $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
   try {

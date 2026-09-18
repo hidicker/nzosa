@@ -41,8 +41,8 @@ function signInForm(body: HTMLElement): void {
   body.append(
     note(
       "Books kept on the server can be reached from any computer you sign in " +
-        "from, and shared with whoever you add to them. Nothing on this page " +
-        "touches the books already in this browser.",
+        "from, and shared with whoever you invite, once they accept. Nothing on " +
+        "this page touches the books already in this browser.",
     ),
   );
 
@@ -310,6 +310,13 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
  */
 export function renderCloudBooks(body: HTMLElement): boolean {
   if (!cloudConfigured()) return false;
+
+  const hint = document.getElementById("books-hint");
+  if (hint !== null) {
+    hint.textContent =
+      "The sets of books on the server you can open, and any invitation waiting for you. " +
+      "Nothing is shared until you accept it.";
+  }
 
   body.append(heading("Books on the server"));
   const session = currentSession();

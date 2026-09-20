@@ -18,7 +18,16 @@ import type { EntityKind } from "@nzosa/core";
 
 export type Source = "xero" | "sheet" | "new";
 
-export type Step = "source" | "date" | "one" | "shared" | "entities" | "plan";
+export type Step =
+  | "source"
+  | "date"
+  | "one"
+  | "shared"
+  | "entities"
+  | "plan"
+  | "bank"
+  | "files"
+  | "done";
 
 export interface PlannedEntity {
   name: string;

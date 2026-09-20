@@ -131,7 +131,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   agents: "rental property management fees rent",
   reports: "all reports",
   gstreturn: "gst return box refund pay ird",
-  migration: "xero convert move start new",
+  migration: "start begin setup migration xero convert move new first",
   setup: "start files load",
   opening: "trial balance conversion year end",
   gst: "filed returns mark as filed variance",

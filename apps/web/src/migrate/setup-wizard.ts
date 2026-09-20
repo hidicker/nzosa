@@ -1165,7 +1165,7 @@ function clearHereControl(): HTMLElement {
   return wrap;
 }
 
-async function loadDemoData(button: HTMLButtonElement): Promise<void> {
+export async function loadDemoData(button: HTMLButtonElement): Promise<void> {
   if (writesToFolder()) {
     button.disabled = true;
     button.textContent = "Opening…";

@@ -2,11 +2,12 @@ import { showPage } from "../app.js";
 import { saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
-import { backendKind, openCloudBook, save, switchLedger } from "../store.js";
+import { backendKind, openCloudBook, save, switchLedger, writesToFolder } from "../store.js";
 import { note } from "../ui.js";
 import { DEFAULT_ENTITY_NAME, emptyEntityModel, entityId } from "@nzosa/core";
 import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
-import { xeroMigrationFiles } from "./setup-wizard.js";
+import { loadWhatever } from "./file-intake.js";
+import { loadDemoData, xeroMigrationFiles } from "./setup-wizard.js";
 import {
   booksKey,
   booksStartDate,
@@ -64,8 +65,32 @@ function stepsFor(held: Onboarding): Step[] {
   if (held.opening === true) steps.push("date");
   steps.push("one");
   if (held.onlyOne === false) steps.push("shared");
-  steps.push("entities", "plan");
+  steps.push("entities", "plan", "bank");
+  if (held.source === "xero" || held.source === "sheet") steps.push("files");
+  steps.push("done");
   return steps;
+}
+
+/** The step after this one, for a "Continue" that does not care which it is. */
+function nextAfter(held: Onboarding, step: Step): Step {
+  const steps = stepsFor(held);
+  return steps[steps.indexOf(step) + 1] ?? "done";
+}
+
+/** One entity at a time, except where they genuinely share a set of books. */
+function oneAtATime(held: Onboarding): boolean {
+  return held.onlyOne === true || held.shared === false;
+}
+
+/** The entities that already have a set of books of their own. */
+function started(held: Onboarding): PlannedEntity[] {
+  return (held.entities ?? []).filter((e) => e.name.trim() !== "" && e.book !== undefined);
+}
+
+/** The one being set up now: the last named that has nowhere to live yet. */
+function pending(held: Onboarding): PlannedEntity | undefined {
+  const waiting = (held.entities ?? []).filter((e) => e.name.trim() !== "" && e.book === undefined);
+  return waiting[waiting.length - 1];
 }
 
 function at(held: Onboarding): Step {
@@ -82,6 +107,8 @@ export function renderMigration(): void {
   const steps = stepsFor(held);
   const reached = steps.indexOf(here);
 
+  if (held.at === undefined) body.append(haveALook());
+
   steps.forEach((step, index) => {
     if (index < reached) body.append(summary(step, held));
     else if (index === reached) body.append(question(index + 1, step, held));
@@ -89,6 +116,45 @@ export function renderMigration(): void {
 
   if (held.source === "xero") body.append(xeroGuide(held));
   if (held.at !== undefined) body.append(startAgain());
+}
+
+/**
+ * Somewhere to look before answering anything.
+ *
+ * Every question below asks about books that do not exist yet, which is hard
+ * to answer if you have never seen what the answers lead to. The demo is a
+ * complete set of books in its own right, so it can be walked around without
+ * touching anything -- and on a copy running in somebody's browser, the one
+ * online is a link rather than a download.
+ */
+function haveALook(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "migration-look";
+  const text = document.createElement("p");
+  text.textContent =
+    "Never seen it work? There is a complete invented set of books -- a coffee roastery " +
+    "and a rental, part way through a year, with codings, splits, invoices and a transfer. " +
+    "It opens in books of its own, so nothing of yours is touched.";
+  wrap.append(text);
+
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  const open = document.createElement("button");
+  open.type = "button";
+  open.textContent = writesToFolder() ? "Open the demo books" : "Load the demo books";
+  open.addEventListener("click", () => void loadDemoData(open));
+  row.append(open);
+
+  const online = document.createElement("a");
+  online.className = "migration-look-link";
+  online.href = "https://nbparagliding.nz/nzosa_demo/";
+  online.target = "_blank";
+  online.rel = "noopener noreferrer";
+  online.textContent = "or try the demo online";
+  row.append(online);
+
+  wrap.append(row);
+  return wrap;
 }
 
 /** Setup opens on the source already answered here, rather than on Xero every time. */
@@ -217,7 +283,26 @@ function said(held: Onboarding, step: Step): string {
         .filter((e) => e.name.trim() !== "")
         .map((e) => e.name)
         .join(", ");
-    case "plan":
+    case "plan": {
+      const mine = started(held);
+      return oneAtATime(held) && held.onlyOne === false
+        ? mine.length === 1
+          ? `${mine[0]?.name ?? ""} has a set of books`
+          : `${mine.length} sets of books started`
+        : "One set of books";
+    }
+    case "bank": {
+      const many = state.ledger.transactions.length;
+      return many === 0
+        ? "No bank transactions yet"
+        : `${many} bank transaction${many === 1 ? "" : "s"}`;
+    }
+    case "files": {
+      const files = xeroMigrationFiles();
+      const have = files.filter((f) => f.have).length;
+      return `${have} of ${files.length} files loaded`;
+    }
+    case "done":
       return "";
   }
 }
@@ -404,7 +489,11 @@ function sharedQuestion(number: number): HTMLElement {
 
 // --- 5. who they are --------------------------------------------------------
 
-function entityRow(entity: PlannedEntity | undefined, onChange: () => void): HTMLElement {
+function entityRow(
+  entity: PlannedEntity | undefined,
+  onChange: () => void,
+  removable: boolean,
+): HTMLElement {
   const row = document.createElement("div");
   row.className = "migration-entity";
 
@@ -433,38 +522,69 @@ function entityRow(entity: PlannedEntity | undefined, onChange: () => void): HTM
   gst.addEventListener("change", onChange);
   gstLabel.append(gst, " GST registered");
 
-  const remove = button("Remove", () => {
-    row.remove();
-    onChange();
-  });
-  remove.className = "migration-entity-remove";
-
-  row.append(name, kind, gstLabel, remove);
+  row.append(name, kind, gstLabel);
+  if (removable) {
+    const remove = button("Remove", () => {
+      row.remove();
+      onChange();
+    });
+    remove.className = "migration-entity-remove";
+    row.append(remove);
+  }
   return row;
 }
 
 function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
-  const one = held.onlyOne === true;
+  // Only where the accounts are genuinely shared is there anything to gain
+  // from naming several at once. Where each is getting books of its own there
+  // is nothing to arrange between them, so asking for a list up front is
+  // asking somebody to plan out an afternoon before they have seen one set of
+  // books work. One, then the next one whenever they come back.
+  const one = oneAtATime(held);
+  const mine = started(held);
   const [box, inner] = card(
     number,
-    one ? "What is this entity called?" : "Which entities do you have?",
+    held.onlyOne === true
+      ? "What is this entity called?"
+      : one
+        ? mine.length > 0
+          ? "Which entity next?"
+          : "Which entity would you like to start with?"
+        : "Which entities do you have?",
   );
 
   inner.append(
     note(
-      one
+      held.onlyOne === true
         ? "The one fact no export contains: a chart arrives with sixty accounts and not one " +
             "of them says whose they are."
-        : held.shared === true
-          ? "Name each one that shares those accounts. They all go in one set of books, and " +
-            "each still gets its own profit and loss and its own GST return."
-          : "Name each one. Each gets a set of books of its own, started for you at the end.",
+        : one
+          ? "One at a time. This one gets a set of books of its own, and the next one gets " +
+            "its own when you come back for it -- there is nothing to arrange between them."
+          : "Name each one that shares those accounts. They all go in one set of books, and " +
+            "each still gets its own profit and loss and its own GST return.",
     ),
   );
 
+  if (one && mine.length > 0) {
+    const already = document.createElement("ul");
+    already.className = "migration-list";
+    for (const entity of mine) {
+      const item = document.createElement("li");
+      item.textContent = `${entity.name} — ${kindName(entity.kind)}, already has its own books`;
+      already.append(item);
+    }
+    inner.append(already);
+  }
+
   const rows = document.createElement("div");
   rows.className = "migration-entities";
-  const known = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const waiting = pending(held);
+  const known = one
+    ? waiting === undefined
+      ? []
+      : [waiting]
+    : (held.entities ?? []).filter((e) => e.name.trim() !== "");
   const collect = (): PlannedEntity[] => {
     const found: PlannedEntity[] = [];
     for (const row of Array.from(rows.children)) {
@@ -497,7 +617,7 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
 
   const existing: (PlannedEntity | undefined)[] = known.length > 0 ? [...known] : [undefined];
   for (const entity of one ? existing.slice(0, 1) : existing) {
-    rows.append(entityRow(entity, changed));
+    rows.append(entityRow(entity, changed, !one));
   }
   inner.append(rows);
 
@@ -505,7 +625,7 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
     inner.append(
       actions(
         button("Add another", () => {
-          rows.append(entityRow(undefined, changed));
+          rows.append(entityRow(undefined, changed, true));
           changed();
         }),
       ),
@@ -524,7 +644,9 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
             trouble.textContent = "A name is needed before this can go any further.";
             return;
           }
-          answer({ entities, at: "plan" });
+          // Naming one does not forget the ones already living in books of
+          // their own; this question is only ever about the next.
+          answer({ entities: one ? [...mine, ...entities.slice(0, 1)] : entities, at: "plan" });
         },
         true,
       ),
@@ -596,13 +718,13 @@ async function applyEntities(planned: readonly PlannedEntity[]): Promise<void> {
   }
 }
 
-function applyPanel(planned: readonly PlannedEntity[], held: Onboarding): HTMLElement {
-  const wrap = document.createElement("div");
+/** Whether the books that are open are still nobody's. */
+function unclaimed(): boolean {
   const live = state.ledger.entities ?? emptyEntityModel();
-  const alreadyThere =
-    planned.length > 0 &&
-    planned.every((p) => live.entities.some((e) => e.id === entityId(p.name)));
+  return live.entities.length === 0 || live.entities.every((e) => e.name === DEFAULT_ENTITY_NAME);
+}
 
+function entityList(planned: readonly PlannedEntity[]): HTMLElement {
   const list = document.createElement("ul");
   list.className = "migration-list";
   for (const entity of planned) {
@@ -612,14 +734,34 @@ function applyPanel(planned: readonly PlannedEntity[], held: Onboarding): HTMLEl
       (entity.gst ? "GST registered" : "not GST registered");
     list.append(item);
   }
-  wrap.append(list);
+  return list;
+}
+
+/**
+ * Write the entities into the books that are open, and say when it is done.
+ *
+ * `record` is what the answer has to remember afterwards -- which set of books
+ * this entity ended up in, where each is getting its own.
+ */
+function applyPanel(
+  planned: readonly PlannedEntity[],
+  held: Onboarding,
+  record: Onboarding = {},
+): HTMLElement {
+  const wrap = document.createElement("div");
+  const live = state.ledger.entities ?? emptyEntityModel();
+  const alreadyThere =
+    planned.length > 0 &&
+    planned.every((p) => live.entities.some((e) => e.id === entityId(p.name)));
+
+  wrap.append(entityList(planned));
 
   const trouble = document.createElement("p");
   trouble.className = "cloud-said";
 
   if (alreadyThere) {
     trouble.textContent = "Saved to these books ✓";
-    wrap.append(trouble, nextSteps(held));
+    wrap.append(trouble, actions(button("Continue", () => answer({ at: "bank" }), true)));
     return wrap;
   }
 
@@ -631,6 +773,7 @@ function applyPanel(planned: readonly PlannedEntity[], held: Onboarding): HTMLEl
       void applyEntities(planned).then(
         () => {
           if (held.source !== undefined) tellSetup(held.source);
+          rememberOnboarding(record);
           renderMigration();
         },
         () => {
@@ -646,57 +789,12 @@ function applyPanel(planned: readonly PlannedEntity[], held: Onboarding): HTMLEl
   return wrap;
 }
 
-/** Where to go once the questions are answered and the entities are in. */
-function nextSteps(held: Onboarding): HTMLElement {
-  const wrap = document.createElement("div");
-  const several = (held.entities ?? []).length > 1 && held.shared === true;
-  const points: string[] = [];
-
-  if (held.source === "xero") {
-    points.push(
-      "Read the Xero guide below before exporting anything, then drop the files on Setup.",
-    );
-  } else if (held.source === "sheet") {
-    points.push(
-      "Have ready: the spreadsheet, with a column for the account each line was coded to; " +
-        "your bank's exports for the same accounts and dates; and last year's balance sheet " +
-        "from your accountant, for the opening balances.",
-    );
-  } else if (held.opening === true) {
-    points.push(
-      "Have ready: last year's balance sheet or trial balance from your accountant, and your " +
-        "bank's exports from the start date on.",
-    );
-  } else {
-    points.push(
-      "Nothing to bring across: your bank transactions, and a starter chart of accounts to " +
-        "adjust. New books are not always a new entity, though -- a company or rental that " +
-        "has been going a while still has opening balances.",
-    );
-  }
-  if (several) {
-    points.push(
-      "Then give each account in the chart, and each bank account, to the entity it belongs " +
-        "to, on Entities & accounts. Until that is done the reports cannot be split by entity.",
-    );
-  }
-
-  wrap.append(advice(...points));
-  wrap.append(
-    actions(
-      button("Continue to Setup →", () => showPage("setup", "top"), true),
-      ...(several ? [button("Entities & accounts", () => showPage("entities"))] : []),
-    ),
-  );
-  return wrap;
-}
-
 function planQuestion(number: number, held: Onboarding): HTMLElement {
-  const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
   const separate = held.onlyOne === false && held.shared === false;
-  const [box, inner] = card(number, separate ? "A set of books for each" : "One set of books");
+  const [box, inner] = card(number, separate ? "A set of books of its own" : "One set of books");
 
   if (!separate) {
+    const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
     inner.append(
       advice(
         planned.length === 1
@@ -719,97 +817,278 @@ function planQuestion(number: number, held: Onboarding): HTMLElement {
     return box;
   }
 
-  inner.append(
-    advice(
-      `${planned.length} separate sets of books, one for each. Nothing in one can reach ` +
-        "another's figures, and each can go to its accountant on its own.",
-      "They are started one at a time, from here. Starting one opens it, and these questions " +
-        "carry on inside it.",
-    ),
-  );
-  inner.append(queue(planned, held));
+  inner.append(theirOwnBooks(held));
   return box;
 }
 
 /**
- * The sets of books still to start, and the one that is open.
+ * Giving one entity a set of books of its own.
  *
- * Starting a set switches to it and reloads, which is what the Books page does
- * too -- half the app holding one ledger while half holds another is a class
- * of bug that produces plausible wrong figures. So the list is kept outside
- * any one set of books, and picks up where it left off afterwards.
+ * Which is either the books that are open, when nobody has claimed them, or a
+ * new set -- and starting a new set switches to it and reloads, the same thing
+ * the Books page does. Half the app holding one ledger while half holds
+ * another is a class of bug that produces plausible wrong figures. So the
+ * answers are kept outside any one set of books and picked up afterwards.
  */
-function queue(planned: readonly PlannedEntity[], held: Onboarding): HTMLElement {
+function theirOwnBooks(held: Onboarding): HTMLElement {
   const wrap = document.createElement("div");
   const open = booksKey();
+  const mine = started(held);
+  const waiting = pending(held);
+
+  if (mine.length > 0) {
+    const list = document.createElement("div");
+    list.className = "migration-queue";
+    for (const entity of mine) {
+      const row = document.createElement("div");
+      row.className = "migration-queue-row";
+      const name = document.createElement("span");
+      name.className = "migration-queue-name";
+      name.textContent = `${entity.name} — ${kindName(entity.kind)}`;
+      const mark = document.createElement("span");
+      if (entity.book === open) {
+        mark.className = "books-open";
+        mark.textContent = "open now";
+      } else {
+        mark.className = "migration-queue-done";
+        mark.textContent = "✓ has its own books";
+      }
+      row.append(name, mark);
+      list.append(row);
+    }
+    wrap.append(list);
+  }
+
+  // Whoever's books are open but are not in them yet -- which is where the
+  // reload after starting a new set lands.
+  const here = mine.find((e) => e.book === open);
+  if (here !== undefined && unclaimed()) {
+    const heading = document.createElement("h4");
+    heading.textContent = `These books are for ${here.name}`;
+    wrap.append(heading, applyPanel([here], held));
+    return wrap;
+  }
+
+  if (waiting === undefined) {
+    wrap.append(
+      advice("Each of these has books of its own."),
+      actions(
+        button("Start another entity", () => answer({ at: "entities" })),
+        button("Continue", () => answer({ at: "bank" }), true),
+      ),
+    );
+    return wrap;
+  }
+
+  if (unclaimed()) {
+    wrap.append(
+      advice(
+        `These books are still nobody's, so ${waiting.name} can have them. Nothing in them ` +
+          "can reach another entity's figures, and they can go to an accountant on their own.",
+      ),
+      applyPanel([waiting], held, {
+        entities: [...mine, { ...waiting, book: open }],
+      }),
+    );
+    return wrap;
+  }
 
   if (backendKind() === "browser") {
     wrap.append(
       note(
-        "This copy runs in a browser, so it holds one set of books. To keep a set for each " +
-          "entity, run NZOSA on your own computer, where each set is a folder of its own, or " +
-          "sign in to keep them on the server.",
+        "This copy runs in a browser, so it holds one set of books, and these ones are " +
+          "taken. To keep a set for each entity, run NZOSA on your own computer, where each " +
+          "set is a folder of its own, or sign in to keep them on the server.",
       ),
     );
-    const first = planned[0];
-    if (first !== undefined) {
-      wrap.append(
-        advice(`These books can hold ${first.name}. The rest need somewhere to live first.`),
-        applyPanel([first], held),
-      );
-    }
     return wrap;
   }
 
-  const list = document.createElement("div");
-  list.className = "migration-queue";
-  for (const entity of planned) {
-    const row = document.createElement("div");
-    row.className = "migration-queue-row";
-    const name = document.createElement("span");
-    name.className = "migration-queue-name";
-    name.textContent = `${entity.name} — ${kindName(entity.kind)}`;
-    row.append(name);
+  wrap.append(
+    advice(
+      `The books open now belong to somebody else, so ${waiting.name} gets a new set. ` +
+        "Starting it opens it, and these questions carry on inside it.",
+    ),
+    entityList([waiting]),
+    actions(
+      button(
+        `Start ${waiting.name}'s books`,
+        () => {
+          void startBooksFor(waiting, [...mine, waiting]);
+        },
+        true,
+      ),
+    ),
+  );
+  return wrap;
+}
 
-    if (entity.book !== undefined && entity.book === open) {
-      const here = document.createElement("span");
-      here.className = "books-open";
-      here.textContent = "open now";
-      row.append(here);
-    } else if (entity.book !== undefined) {
-      const done = document.createElement("span");
-      done.className = "migration-queue-done";
-      done.textContent = "✓ started";
-      row.append(done);
-    } else {
-      row.append(
-        button(`Start ${entity.name}'s books`, () => {
-          void startBooksFor(entity, planned);
-        }),
-      );
-    }
-    list.append(row);
+// --- 7. the bank, and anything else being brought across --------------------
+
+/**
+ * Somewhere to drop files, here rather than only on Setup.
+ *
+ * The same reader Setup uses, which takes anything and works out what each
+ * file is, so there is nothing to get in the wrong order. Setup's own drop
+ * zone is a single element that moves around the page, and taking it would
+ * leave Setup without one.
+ */
+function dropZone(): HTMLElement {
+  const zone = document.createElement("div");
+  zone.className = "dropzone dropzone-mini";
+
+  const text = document.createElement("span");
+  text.className = "dropzone-mini-text";
+  text.textContent = "Drop files here, or";
+
+  const input = document.createElement("input");
+  input.type = "file";
+  input.accept = ".csv,.xlsx,.txt";
+  input.multiple = true;
+  input.hidden = true;
+
+  const pick = document.createElement("button");
+  pick.type = "button";
+  pick.className = "dropzone-mini-btn";
+  pick.textContent = "Choose files";
+  pick.addEventListener("click", () => input.click());
+
+  const take = (files: FileList | null | undefined): void => {
+    if (!files || files.length === 0) return;
+    text.textContent = "Reading…";
+    void loadWhatever([...files]).finally(() => renderMigration());
+  };
+  input.addEventListener("change", () => {
+    take(input.files);
+    input.value = "";
+  });
+  for (const event of ["dragenter", "dragover"]) {
+    zone.addEventListener(event, (e) => {
+      e.preventDefault();
+      zone.classList.add("dragging");
+    });
   }
-  wrap.append(list);
+  for (const event of ["dragleave", "drop"]) {
+    zone.addEventListener(event, (e) => {
+      e.preventDefault();
+      zone.classList.remove("dragging");
+    });
+  }
+  zone.addEventListener("drop", (e) => take((e as DragEvent).dataTransfer?.files));
 
-  // The entity whose books are open now still has to be written into them.
-  const here = planned.find((e) => e.book !== undefined && e.book === open);
-  if (here !== undefined) {
-    const mine = document.createElement("div");
-    mine.className = "migration-here";
-    const heading = document.createElement("h4");
-    heading.textContent = `These books are for ${here.name}`;
-    mine.append(heading, applyPanel([here], held));
-    wrap.append(mine);
-  } else if (planned.some((e) => e.book !== undefined)) {
-    wrap.append(
-      note(
-        "Start the next one when you are ready. The ones already started stay as they are " +
-          "until you open them.",
+  zone.append(text, pick, input);
+  return zone;
+}
+
+function bankQuestion(number: number, held: Onboarding): HTMLElement {
+  const [box, inner] = card(number, "Bring in your bank transactions");
+  const many = state.ledger.transactions.length;
+
+  inner.append(
+    advice(
+      "Everything else hangs off these. They come from the bank itself -- a feed, or the " +
+        "bank's own CSV exports -- rather than from whatever you are moving away from, so " +
+        "they are the bank's record and not somebody's copy of it.",
+    ),
+  );
+
+  if (many > 0) {
+    inner.append(
+      note(`${many} transaction${many === 1 ? "" : "s"} loaded.`),
+      actions(
+        button("Continue", () => answer({ at: nextAfter(held, "bank") }), true),
+        button("Bank import", () => showPage("import")),
       ),
     );
+    return box;
   }
-  return wrap;
+
+  inner.append(
+    dropZone(),
+    note(
+      "A feed fetches them every day and cannot mistype a figure. Connect one on the Bank " +
+        "import page, or drop your exports above.",
+    ),
+    actions(
+      button("Bank import", () => showPage("import"), true),
+      button("Skip for now", () => answer({ at: nextAfter(held, "bank") })),
+    ),
+  );
+  return box;
+}
+
+function filesQuestion(number: number, held: Onboarding): HTMLElement {
+  const xero = held.source === "xero";
+  const [box, inner] = card(
+    number,
+    xero ? "Bring your Xero organisation across" : "Bring your spreadsheet across",
+  );
+
+  if (xero) {
+    const files = xeroMigrationFiles();
+    const have = files.filter((f) => f.have).length;
+    inner.append(
+      advice(
+        "The full guide is below: what to finish in Xero first, what to export, and how to " +
+          "prove the figures arrived intact. Drop the exports here as you get them -- each " +
+          "one is recognised on its own, so the order does not matter.",
+      ),
+      note(`${have} of ${files.length} loaded.`),
+      dropZone(),
+      table(
+        ["Export", "Where in Xero", "What it gives NZOSA"],
+        files.map((f) => [f.have ? `✓ ${f.what}` : f.what, f.where, f.why]),
+      ),
+    );
+  } else {
+    inner.append(
+      advice(
+        "Have ready: the spreadsheet, with a column for the account each line was coded to; " +
+          "and last year's balance sheet from your accountant, for the opening balances. The " +
+          "coding already in the sheet becomes the rules.",
+      ),
+      dropZone(),
+    );
+  }
+
+  inner.append(actions(button("Continue", () => answer({ at: "done" }), true)));
+  return box;
+}
+
+function doneQuestion(number: number, held: Onboarding): HTMLElement {
+  const [box, inner] = card(number, "That is the start of it");
+  const several = (held.entities ?? []).length > 1 && held.shared === true;
+  const many = state.ledger.transactions.length;
+
+  const points: string[] = [
+    many > 0
+      ? `${many} bank transaction${many === 1 ? "" : "s"} in, and these books know whose ` +
+        "they are. Setup lists what is left: the chart of accounts, opening balances, and " +
+        "the rest, each saying what it would give you."
+      : "These books know whose they are. Setup lists what is left, starting with the bank " +
+        "transactions everything else hangs off.",
+  ];
+  if (several) {
+    points.push(
+      "Then give each account in the chart, and each bank account, to the entity it belongs " +
+        "to, on Entities & accounts. Until that is done the reports cannot be split by entity.",
+    );
+  }
+  if (held.opening === true) {
+    points.push(
+      "Opening balances matter most of all: without them a balance sheet shows the movement " +
+        "since your first bank line rather than the position, which is wrong rather than short.",
+    );
+  }
+
+  inner.append(
+    advice(...points),
+    actions(
+      button("Continue to Setup →", () => showPage("setup", "top"), true),
+      ...(several ? [button("Entities & accounts", () => showPage("entities"))] : []),
+    ),
+  );
+  return box;
 }
 
 /**
@@ -875,6 +1154,12 @@ function question(number: number, step: Step, held: Onboarding): HTMLElement {
       return entitiesQuestion(number, held);
     case "plan":
       return planQuestion(number, held);
+    case "bank":
+      return bankQuestion(number, held);
+    case "files":
+      return filesQuestion(number, held);
+    case "done":
+      return doneQuestion(number, held);
   }
 }
 

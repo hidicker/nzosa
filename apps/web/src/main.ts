@@ -216,10 +216,10 @@ async function init(): Promise<void> {
     void autoFetchFromFeed();
 
     // Someone opening this for the first time has nothing to reconcile, and the
-    // Reconcile page cannot say what to do about that. Setup can: it lists what
-    // is missing and what each thing would give them. Once there are
-    // transactions, Reconcile is the page you actually live on.
-    if (state.ledger.transactions.length === 0) state.page = "setup";
+    // Reconcile page cannot say what to do about that. The guided start can: it
+    // asks what it needs and hands over to Setup with the answers in. Once
+    // there are transactions, Reconcile is the page you actually live on.
+    if (state.ledger.transactions.length === 0) state.page = "migration";
 
     showPage(state.page);
   } finally {

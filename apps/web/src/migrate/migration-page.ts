@@ -114,7 +114,6 @@ export function renderMigration(): void {
     else if (index === reached) body.append(question(index + 1, step, held));
   });
 
-  if (held.source === "xero") body.append(xeroGuide(held));
   if (held.at !== undefined) body.append(startAgain());
 }
 
@@ -553,18 +552,19 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
         : "Which entities do you have?",
   );
 
-  inner.append(
-    note(
-      held.onlyOne === true
-        ? "The one fact no export contains: a chart arrives with sixty accounts and not one " +
-            "of them says whose they are."
-        : one
+  // Nothing to explain where there is only one of them: the question is the
+  // whole of it.
+  if (held.onlyOne !== true) {
+    inner.append(
+      note(
+        one
           ? "One at a time. This one gets a set of books of its own, and the next one gets " +
             "its own when you come back for it -- there is nothing to arrange between them."
           : "Name each one that shares those accounts. They all go in one set of books, and " +
             "each still gets its own profit and loss and its own GST return.",
-    ),
-  );
+      ),
+    );
+  }
 
   if (one && mine.length > 0) {
     const already = document.createElement("ul");
@@ -980,6 +980,17 @@ function dropZone(): HTMLElement {
   return zone;
 }
 
+/** Reference material, out of the way until it is asked for. */
+function folded(summary: string, content: HTMLElement): HTMLElement {
+  const details = document.createElement("details");
+  details.className = "setup-migration-details migration-folded";
+  const head = document.createElement("summary");
+  head.className = "setup-migration-summary";
+  head.textContent = summary;
+  details.append(head, content);
+  return details;
+}
+
 function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const [box, inner] = card(number, "Bring in your bank transactions");
   const many = state.ledger.transactions.length;
@@ -1029,15 +1040,18 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     const have = files.filter((f) => f.have).length;
     inner.append(
       advice(
-        "The full guide is below: what to finish in Xero first, what to export, and how to " +
-          "prove the figures arrived intact. Drop the exports here as you get them -- each " +
-          "one is recognised on its own, so the order does not matter.",
+        "Drop the exports here as you get them. Each is recognised on its own, so the order " +
+          "does not matter, and the list below ticks off what has arrived.",
       ),
       note(`${have} of ${files.length} loaded.`),
       dropZone(),
       table(
         ["Export", "Where in Xero", "What it gives NZOSA"],
         files.map((f) => [f.have ? `✓ ${f.what}` : f.what, f.where, f.why]),
+      ),
+      folded(
+        "The full Xero guide: what to finish first, what to export, how to check the figures",
+        xeroGuide(held),
       ),
     );
   } else {
@@ -1219,12 +1233,10 @@ function xeroGuide(held: Onboarding): HTMLElement {
     guide.append(list);
   };
 
-  add("h3", "Moving from Xero");
   add(
     "p",
-    "How a Xero organisation comes across: the date it happens on, what to finish first, " +
-      "what to export, the order to load it in, and how to check the figures arrived intact. " +
-      "Xero stays the record until those checks agree.",
+    "Xero stays the record until the checks at the end of this agree. Keep it open until " +
+      "they do.",
   );
 
   add("h4", "1. Pick a conversion date");
@@ -1360,6 +1372,5 @@ function xeroGuide(held: Onboarding): HTMLElement {
       "balance are the ones they will ask for first.",
   ]);
 
-  guide.append(actions(button("Continue to Setup →", () => showPage("setup", "top"), true)));
   return guide;
 }

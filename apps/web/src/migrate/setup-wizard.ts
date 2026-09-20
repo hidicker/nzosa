@@ -551,8 +551,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
       done: named,
       detail: named
         ? entities.map((e) => e.name).join(", ")
-        : "The one thing no export contains: a chart arrives with sixty accounts and " +
-          "not one of them says whose they are.",
+        : "The name these books report and file under.",
       unlocks: "Every report, and every return, can say who it is for",
       // The field itself, rather than a step telling you to go and find it.
       // It was sitting above the list saying the same words as the first step

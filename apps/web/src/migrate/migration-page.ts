@@ -1,94 +1,111 @@
 import { showPage } from "../app.js";
 import { saveEntities } from "../books.js";
-import { chooseLedger } from "../daily/books-page.js";
-import { addEntityForm } from "../daily/entities.js";
+import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
-import { currentLedger, ledgerName, ledgers, writesToFolder } from "../store.js";
+import { backendKind, openCloudBook, save, switchLedger } from "../store.js";
 import { note } from "../ui.js";
-import { DEFAULT_ENTITY_NAME, emptyEntityModel, reportsNetOfGst } from "@nzosa/core";
-import type { EntityKind } from "@nzosa/core";
-import { setupNameField, xeroMigrationFiles } from "./setup-wizard.js";
+import { DEFAULT_ENTITY_NAME, emptyEntityModel, entityId } from "@nzosa/core";
+import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
+import { xeroMigrationFiles } from "./setup-wizard.js";
+import {
+  booksKey,
+  booksStartDate,
+  forgetOnboarding,
+  onboarding,
+  rememberOnboarding,
+  rememberSource,
+  sourceForTheseBooks,
+} from "./onboarding-state.js";
+import type { Onboarding, PlannedEntity, Source, Step } from "./onboarding-state.js";
 
 /**
- * Migration: a guided start, on trial beside Setup.
+ * Migration: the guided start.
  *
  * Setup lists everything a set of books can be given and ticks it off, which
- * suits somebody who already knows what they have. Somebody new does not yet
- * know the thing it all depends on: whether their money is kept apart for each
- * entity, which decides how many sets of books they want before a single file
- * is loaded. So this asks that first, then whose books these are, then where
- * they are coming from -- and hands over to Setup, chosen for that answer.
+ * suits somebody who already knows what they have. Somebody new does not, and
+ * the first thing they need is not a file -- it is to know how many sets of
+ * books they are making, because that is not cheap to undo once there are
+ * figures in them.
  *
- * Nothing here is new accounting. The name is the field Setup uses, entities
- * are added with the form from Entities & accounts, and the source is Setup's
- * own selector, so the two pages cannot disagree.
+ * So: one question on screen at a time, each answered one collapsing to a
+ * line. Where the books are coming from, the day they start, whether this is
+ * one entity or several, and -- when it is several -- whether any account is
+ * shared, which is the fact that decides one set of books or several.
+ *
+ * What it learns, it fills in. The entities are written into the books, the
+ * start date becomes the date opening balances open on, and Setup opens on the
+ * source that was chosen with the steps this answered already ticked. Nothing
+ * here is new accounting: they are Setup's own fields, asked in an order that
+ * makes sense to somebody who has just arrived.
  */
 
-type Banks = "separate" | "shared" | "one";
-type Source = "xero" | "sheet" | "new";
+const KINDS: readonly (readonly [EntityKind, string])[] = [
+  ["business", "Business"],
+  ["residential", "Residential rental"],
+  ["commercial", "Commercial rental"],
+  ["personal", "Personal"],
+];
 
-// How the money is kept is a fact about the person rather than about one set
-// of books, so it is remembered across all of them: somebody sent off to start
-// a separate set should not be asked again inside it. Where the books are
-// coming from is asked of each set.
-const BANKS_KEY = "nzosa.migration.banks";
-const SOURCE_KEY = "nzosa.migration.source.";
-
-function remembered(key: string): string | null {
-  try {
-    return localStorage.getItem(key);
-  } catch {
-    return null;
-  }
+function kindName(kind: EntityKind | undefined): string {
+  return KINDS.find(([value]) => value === (kind ?? "business"))?.[1] ?? "Business";
 }
 
-function remember(key: string, value: string): void {
-  try {
-    localStorage.setItem(key, value);
-  } catch {
-    // A browser that blocks storage simply asks again next time.
-  }
+// --- the shape of the questions --------------------------------------------
+
+/**
+ * Which questions apply, in order.
+ *
+ * The date is only worth asking when there are figures to bring in, and the
+ * shared-account question only when there is more than one entity to share
+ * between -- so neither is a step somebody has to answer "not applicable" to.
+ */
+function stepsFor(held: Onboarding): Step[] {
+  const steps: Step[] = ["source"];
+  if (held.opening === true) steps.push("date");
+  steps.push("one");
+  if (held.onlyOne === false) steps.push("shared");
+  steps.push("entities", "plan");
+  return steps;
 }
 
-function banksAnswer(): Banks | undefined {
-  const value = remembered(BANKS_KEY);
-  return value === "separate" || value === "shared" || value === "one" ? value : undefined;
-}
-
-function sourceKey(): string {
-  return SOURCE_KEY + (ledgerName() || "browser");
-}
-
-function sourceAnswer(): Source | undefined {
-  const value = remembered(sourceKey());
-  return value === "xero" || value === "sheet" || value === "new" ? value : undefined;
+function at(held: Onboarding): Step {
+  const steps = stepsFor(held);
+  const wanted = held.at;
+  return wanted !== undefined && steps.includes(wanted) ? wanted : "source";
 }
 
 export function renderMigration(): void {
   const body = $("migration-body");
   body.textContent = "";
-  const banks = banksAnswer();
-  body.append(bankQuestion(banks));
-  if (banks === undefined) return;
-  body.append(nameQuestion(banks));
-  const source = sourceAnswer();
-  body.append(sourceQuestion(source));
-  if (source === "xero") body.append(xeroGuide());
+  const held = onboarding();
+  const here = at(held);
+  const steps = stepsFor(held);
+  const reached = steps.indexOf(here);
+
+  steps.forEach((step, index) => {
+    if (index < reached) body.append(summary(step, held));
+    else if (index === reached) body.append(question(index + 1, step, held));
+  });
+
+  if (held.source === "xero") body.append(xeroGuide(held));
+  if (held.at !== undefined) body.append(startAgain());
 }
 
 /** Setup opens on the source already answered here, rather than on Xero every time. */
 export function wireMigration(): void {
-  const source = sourceAnswer();
+  const source = sourceForTheseBooks();
   if (source !== undefined) $<HTMLSelectElement>("setup-source").value = source;
 }
 
-function card(step: number, title: string, done: boolean): [HTMLElement, HTMLElement] {
+// --- the furniture ----------------------------------------------------------
+
+function card(step: number, title: string): [HTMLElement, HTMLElement] {
   const box = document.createElement("div");
-  box.className = done ? "migration-card done" : "migration-card";
+  box.className = "migration-card";
   const heading = document.createElement("h3");
   const mark = document.createElement("span");
   mark.className = "migration-num";
-  mark.textContent = done ? "✓" : String(step);
+  mark.textContent = String(step);
   heading.append(mark, document.createTextNode(title));
   const inner = document.createElement("div");
   box.append(heading, inner);
@@ -97,7 +114,6 @@ function card(step: number, title: string, done: boolean): [HTMLElement, HTMLEle
 
 function choices<T extends string>(
   options: readonly (readonly [T, string, string])[],
-  chosen: T | undefined,
   pick: (value: T) => void,
 ): HTMLElement {
   const wrap = document.createElement("div");
@@ -107,7 +123,6 @@ function choices<T extends string>(
     const choice = document.createElement("button");
     choice.type = "button";
     choice.className = "migration-choice";
-    choice.setAttribute("aria-pressed", String(chosen === value));
     const strong = document.createElement("strong");
     strong.textContent = label;
     const small = document.createElement("span");
@@ -146,14 +161,181 @@ function actions(...buttons: readonly HTMLButtonElement[]): HTMLElement {
   return row;
 }
 
-// --- 1. how the money is kept ---------------------------------------------
+function answer(patch: Onboarding): void {
+  rememberOnboarding(patch);
+  renderMigration();
+}
 
-function bankQuestion(banks: Banks | undefined): HTMLElement {
-  const [box, inner] = card(
-    1,
-    "Do you have bank accounts that are separate for each entity?",
-    banks !== undefined,
+/**
+ * Tell Setup where these books are coming from.
+ *
+ * Both the remembered answer, for the next time this set of books is opened,
+ * and the selector on the page now -- which is a different set of books from
+ * the one that was open when the question was asked, every time somebody is
+ * sent off to start a second set.
+ */
+function tellSetup(source: Source): void {
+  rememberSource(source);
+  const select = document.getElementById("setup-source");
+  if (select instanceof HTMLSelectElement) select.value = source;
+}
+
+function startAgain(): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "migration-restart";
+  row.append(
+    button("Start these questions again", () => {
+      forgetOnboarding();
+      renderMigration();
+    }),
   );
+  return row;
+}
+
+// --- answered questions, in a line -----------------------------------------
+
+function said(held: Onboarding, step: Step): string {
+  switch (step) {
+    case "source":
+      return held.source === "xero"
+        ? "Moving from Xero"
+        : held.source === "sheet"
+          ? "Moving from a spreadsheet"
+          : held.opening === true
+            ? "Starting from last year's closing balances"
+            : "Starting with empty books";
+    case "date":
+      return `These books start ${held.startDate ?? ""}`;
+    case "one":
+      return held.onlyOne === true ? "One entity, and nothing else" : "More than one entity";
+    case "shared":
+      return held.shared === true
+        ? "An account or card is used by more than one of them"
+        : "Nothing is shared between them";
+    case "entities":
+      return (held.entities ?? [])
+        .filter((e) => e.name.trim() !== "")
+        .map((e) => e.name)
+        .join(", ");
+    case "plan":
+      return "";
+  }
+}
+
+function summary(step: Step, held: Onboarding): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "migration-card done migration-summary";
+  const mark = document.createElement("span");
+  mark.className = "migration-num";
+  mark.textContent = "✓";
+  const text = document.createElement("span");
+  text.className = "migration-summary-text";
+  text.textContent = said(held, step);
+  row.append(mark, text, button("Change", () => answer({ at: step })));
+  return row;
+}
+
+// --- 1. where the books are starting from -----------------------------------
+
+function sourceQuestion(number: number): HTMLElement {
+  const [box, inner] = card(number, "Where are these books starting from?");
+  inner.append(
+    note(
+      "This decides what Setup asks you for. It is about this set of books, so if you end " +
+        "up with more than one set, each can be answered differently.",
+    ),
+  );
+
+  // Two of these are the same source -- nothing to bring across -- and differ
+  // only in whether there are opening balances, which is the difference
+  // between a balance sheet that is a position and one that is a movement.
+  const pick = (source: Source, opening: boolean): void => {
+    tellSetup(source);
+    answer({ source, opening, at: opening ? "date" : "one" });
+  };
+
+  inner.append(
+    choices<"empty" | "balances" | "xero" | "sheet">(
+      [
+        [
+          "empty",
+          "Empty books",
+          "Nothing to bring in. The books start here and your bank import fills them",
+        ],
+        [
+          "balances",
+          "From last year's closing balances",
+          "A trial balance at your last year end, then on from there",
+        ],
+        [
+          "xero",
+          "Import from Xero",
+          "Chart, coding, opening balances, invoices and assets come across from Xero's exports",
+        ],
+        ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
+      ],
+      (value) => {
+        if (value === "empty") pick("new", false);
+        else if (value === "balances") pick("new", true);
+        else if (value === "xero") pick("xero", true);
+        else pick("sheet", true);
+      },
+    ),
+  );
+  return box;
+}
+
+// --- 2. the day they start --------------------------------------------------
+
+function dateQuestion(number: number, held: Onboarding): HTMLElement {
+  const [box, inner] = card(number, "What date do these books start?");
+  inner.append(
+    held.source === "xero"
+      ? advice(
+          "The day NZOSA takes over from Xero. The first day of a financial year (1 April " +
+            "for most) is the cleanest: the whole year's reports, depreciation and IR10 then " +
+            "come from one system, and the opening balances are year-end figures your " +
+            "accountant has already signed off.",
+          "Part way through a year works too. Choose the first day of a GST period, so no " +
+            "return is split between two systems.",
+        )
+      : advice(
+          "The day these books take over. What happened before it arrives as opening " +
+            "balances; what happens after it arrives as transactions.",
+        ),
+  );
+
+  const row = document.createElement("div");
+  row.className = "migration-entity";
+  const label = document.createElement("label");
+  label.append("Start date ");
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = held.startDate ?? booksStartDate();
+  label.append(date);
+  row.append(label);
+  inner.append(row);
+
+  inner.append(
+    note("Opening balances open dated this day, so nothing asks you for it twice."),
+    actions(
+      button(
+        "Save the date",
+        () => {
+          if (date.value === "") return;
+          answer({ startDate: date.value, at: "one" });
+        },
+        true,
+      ),
+    ),
+  );
+  return box;
+}
+
+// --- 3. one entity, or more than one ----------------------------------------
+
+function oneQuestion(number: number): HTMLElement {
+  const [box, inner] = card(number, "Is this one business, and nothing else?");
   inner.append(
     note(
       "An entity is anything whose income is worked out on its own: a company, a rental " +
@@ -161,265 +343,539 @@ function bankQuestion(banks: Banks | undefined): HTMLElement {
     ),
   );
   inner.append(
-    choices<Banks>(
+    choices<"yes" | "no">(
       [
         [
-          "separate",
-          "Yes, each has its own",
+          "yes",
+          "Yes, just the one",
+          "One company, or one person's affairs. Every account in these books belongs to it",
+        ],
+        [
+          "no",
+          "No, there is more than one",
+          "A company and a rental, say, or your own affairs alongside a business",
+        ],
+      ],
+      (value) =>
+        value === "yes"
+          ? answer({ onlyOne: true, at: "entities" })
+          : answer({ onlyOne: false, at: "shared" }),
+    ),
+  );
+  return box;
+}
+
+// --- 4. whether anything is shared ------------------------------------------
+
+function sharedQuestion(number: number): HTMLElement {
+  const [box, inner] = card(number, "Is any account or card used by more than one of them?");
+  inner.append(
+    advice(
+      "A set of books has one ledger, and it balances to $0.",
+      "Best practice is one set of books for each entity -- a business, your personal " +
+        "affairs, a residential rental, a commercial rental. Each one's accounts, reports " +
+        "and returns then stand on their own: nothing from one can reach another's figures, " +
+        "and each can go to its accountant, or to its other owners, without the rest.",
+      "But if you have cards or accounts used by more than one entity, it is easier to have " +
+        "more than one entity in one set of books. The shared account's transactions then " +
+        "exist once, instead of being copied into two sets -- which is how a payment ends up " +
+        "counted twice, or in neither.",
+    ),
+  );
+  inner.append(
+    choices<"no" | "yes">(
+      [
+        [
+          "no",
+          "No, each has its own",
           "The company's account pays only the company's costs, the rental's only the rental's",
         ],
         [
-          "shared",
-          "No, some are shared",
+          "yes",
+          "Yes, some are shared",
           "One account pays for more than one entity: rental costs from a personal account, say",
         ],
-        ["one", "There is only one entity", "Just a company, or just one person's affairs"],
       ],
-      banks,
-      (value) => {
-        remember(BANKS_KEY, value);
-        renderMigration();
-      },
+      (value) => answer({ shared: value === "yes", at: "entities" }),
     ),
   );
-
-  if (banks === "separate") {
-    inner.append(
-      advice(
-        "We recommend a separate set of books for each entity. Each one's accounts, reports " +
-          "and returns then stand on their own: nothing from one can reach another's figures, " +
-          "and each can go to its accountant, or its other owners, without the rest.",
-        "Set them up one at a time. The questions below are about the books open now.",
-      ),
-    );
-    const books = document.createElement("div");
-    inner.append(books);
-    void listBooks(books);
-  } else if (banks === "shared") {
-    inner.append(
-      advice(
-        "Keep them together in one set of books, with an entity for each. Every account in " +
-          "the chart belongs to one entity, so each still gets its own profit and loss, and a " +
-          "shared bank account is ticked for every entity it pays for.",
-        "Separate books would each need their own copy of the shared account's transactions, " +
-          "which is how a payment ends up counted in both sets, or in neither.",
-      ),
-    );
-  } else if (banks === "one") {
-    inner.append(advice("One set of books, with one entity. Nothing to keep apart."));
-  }
   return box;
 }
 
-async function listBooks(where: HTMLElement): Promise<void> {
-  if (!writesToFolder()) {
-    where.append(
-      note(
-        "This copy runs in a browser, so it holds one set of books. To keep a set for each " +
-          "entity, run NZOSA on your own computer, where each set is a folder of its own.",
-      ),
-    );
-    return;
-  }
-  const [all, open] = await Promise.all([ledgers(), currentLedger()]);
-  const list = document.createElement("ul");
-  list.className = "migration-list";
-  for (const book of all) {
-    const item = document.createElement("li");
-    item.textContent =
-      `${book.name} — ${book.transactions} transaction${book.transactions === 1 ? "" : "s"}`;
-    if (book.id === open) {
-      const here = document.createElement("span");
-      here.className = "books-open";
-      here.textContent = "open now";
-      item.append(" ", here);
-    }
-    list.append(item);
-  }
-  where.append(
-    list,
-    actions(
-      button("New set of books…", () => void chooseLedger(" new")),
-      button("Books page", () => showPage("books")),
-    ),
-  );
-}
+// --- 5. who they are --------------------------------------------------------
 
-// --- 2. whose books -------------------------------------------------------
-
-const KINDS: readonly (readonly [EntityKind, string])[] = [
-  ["business", "Business"],
-  ["residential", "Residential rental"],
-  ["commercial", "Commercial rental"],
-  ["personal", "Personal"],
-];
-
-function kindName(kind: EntityKind | undefined): string {
-  return KINDS.find(([value]) => value === (kind ?? "business"))?.[1] ?? "Business";
-}
-
-function nameQuestion(banks: Banks): HTMLElement {
-  const model = state.ledger.entities ?? emptyEntityModel();
-  const first = model.entities[0];
-  const named =
-    first !== undefined && !model.entities.some((e) => e.name === DEFAULT_ENTITY_NAME);
-  const [box, inner] = card(2, "For this set of books, what is the entity name?", named);
-  inner.append(setupNameField());
-  if (first !== undefined && first.name !== DEFAULT_ENTITY_NAME) {
-    inner.append(entityDetails(first.id));
-  }
-
-  const others = model.entities.slice(1);
-  if (banks === "shared" || others.length > 0) {
-    const heading = document.createElement("h4");
-    heading.textContent = "The other entities in these books";
-    inner.append(heading);
-    if (others.length === 0) {
-      inner.append(
-        note(
-          "None yet. Add each one that shares these bank accounts: a rental property, your " +
-            "personal affairs, a trust.",
-        ),
-      );
-    } else {
-      const list = document.createElement("ul");
-      list.className = "migration-list";
-      for (const entity of others) {
-        const item = document.createElement("li");
-        item.textContent =
-          `${entity.name} — ${kindName(entity.kind)}, ` +
-          (reportsNetOfGst(entity) ? "GST registered" : "not GST registered");
-        list.append(item);
-      }
-      inner.append(list);
-    }
-    inner.append(addEntityForm());
-    inner.append(
-      note(
-        "Then give each account in the chart, and each bank account, to the entity it " +
-          "belongs to.",
-      ),
-      actions(button("Entities & accounts", () => showPage("entities"))),
-    );
-  }
-  return box;
-}
-
-/**
- * What the entity is, and whether it is registered.
- *
- * Asked straight after the name because both change figures: a residential
- * rental's losses are ring-fenced, and registration decides whether its
- * reports are net of GST. The name field makes a GST-registered business,
- * which is wrong for most rentals and for anybody's personal books.
- */
-function entityDetails(id: string): HTMLElement {
+function entityRow(entity: PlannedEntity | undefined, onChange: () => void): HTMLElement {
   const row = document.createElement("div");
   row.className = "migration-entity";
-  const entity = (state.ledger.entities ?? emptyEntityModel()).entities.find((e) => e.id === id);
-  if (entity === undefined) return row;
 
-  const kindLabel = document.createElement("label");
-  kindLabel.append("What it is ");
+  const name = document.createElement("input");
+  name.type = "text";
+  name.className = "migration-entity-name";
+  name.placeholder = "Company, trust, rental address, or your own name";
+  name.value = entity?.name ?? "";
+  name.addEventListener("input", onChange);
+
   const kind = document.createElement("select");
   for (const [value, caption] of KINDS) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = caption;
-    option.selected = (entity.kind ?? "business") === value;
+    option.selected = (entity?.kind ?? "business") === value;
     kind.append(option);
   }
   kind.title = "Residential rental losses are ring-fenced; the others are not.";
-  kind.addEventListener("change", () => {
-    const live = state.ledger.entities ?? emptyEntityModel();
-    void saveEntities({
-      ...live,
-      entities: live.entities.map((e) =>
-        e.id === id ? { ...e, kind: kind.value as EntityKind } : e,
-      ),
-    });
-  });
-  kindLabel.append(kind);
+  kind.addEventListener("change", onChange);
 
   const gstLabel = document.createElement("label");
   const gst = document.createElement("input");
   gst.type = "checkbox";
-  gst.checked = reportsNetOfGst(entity);
+  gst.checked = entity?.gst ?? true;
+  gst.addEventListener("change", onChange);
   gstLabel.append(gst, " GST registered");
-  gst.addEventListener("change", () => {
-    const live = state.ledger.entities ?? emptyEntityModel();
-    void saveEntities(
-      {
-        ...live,
-        entities: live.entities.map((e) =>
-          e.id === id ? { ...e, gstRegistered: gst.checked } : e,
-        ),
-      },
-      `${entity.name} ${gst.checked ? "is" : "is not"} GST registered`,
-    );
-  });
 
-  row.append(kindLabel, gstLabel);
+  const remove = button("Remove", () => {
+    row.remove();
+    onChange();
+  });
+  remove.className = "migration-entity-remove";
+
+  row.append(name, kind, gstLabel, remove);
   return row;
 }
 
-// --- 3. where the books are coming from -------------------------------------
-
-function sourceQuestion(source: Source | undefined): HTMLElement {
+function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
+  const one = held.onlyOne === true;
   const [box, inner] = card(
-    3,
-    "For this set of books, are you moving from Xero, a spreadsheet, or starting fresh?",
-    source !== undefined,
+    number,
+    one ? "What is this entity called?" : "Which entities do you have?",
   );
+
   inner.append(
-    choices<Source>(
-      [
-        [
-          "xero",
-          "From Xero",
-          "Chart, coding, opening balances, invoices and assets come across from Xero's exports",
-        ],
-        ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
-        ["new", "Starting fresh", "A starter chart to adjust; rules come from your first codings"],
-      ],
-      source,
-      (value) => {
-        remember(sourceKey(), value);
-        $<HTMLSelectElement>("setup-source").value = value;
-        renderMigration();
-      },
+    note(
+      one
+        ? "The one fact no export contains: a chart arrives with sixty accounts and not one " +
+            "of them says whose they are."
+        : held.shared === true
+          ? "Name each one that shares those accounts. They all go in one set of books, and " +
+            "each still gets its own profit and loss and its own GST return."
+          : "Name each one. Each gets a set of books of its own, started for you at the end.",
     ),
   );
 
-  if (source === "xero") {
+  const rows = document.createElement("div");
+  rows.className = "migration-entities";
+  const known = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const collect = (): PlannedEntity[] => {
+    const found: PlannedEntity[] = [];
+    for (const row of Array.from(rows.children)) {
+      const name = row.querySelector("input[type=text]");
+      const kind = row.querySelector("select");
+      const gst = row.querySelector("input[type=checkbox]");
+      if (
+        !(name instanceof HTMLInputElement) ||
+        !(kind instanceof HTMLSelectElement) ||
+        !(gst instanceof HTMLInputElement)
+      ) {
+        continue;
+      }
+      // A set of books already started for this one is not forgotten because
+      // its name was retyped.
+      const was = known.find((e) => e.name === name.value.trim());
+      found.push({
+        name: name.value.trim(),
+        kind: kind.value as EntityKind,
+        gst: gst.checked,
+        ...(was?.book !== undefined ? { book: was.book } : {}),
+        ...(was?.ready === true ? { ready: true } : {}),
+      });
+    }
+    return found;
+  };
+  const changed = (): void => {
+    rememberOnboarding({ entities: collect() });
+  };
+
+  const existing: (PlannedEntity | undefined)[] = known.length > 0 ? [...known] : [undefined];
+  for (const entity of one ? existing.slice(0, 1) : existing) {
+    rows.append(entityRow(entity, changed));
+  }
+  inner.append(rows);
+
+  if (!one) {
     inner.append(
-      advice(
-        "Read the guide below before exporting anything. The conversion date decides which " +
-          "date every Xero report is run for.",
-      ),
-    );
-  } else if (source === "sheet") {
-    inner.append(
-      advice(
-        "Have ready: the spreadsheet, with a column for the account each line was coded to; " +
-          "your bank's exports for the same accounts and dates; and last year's balance sheet " +
-          "from your accountant, for the opening balances.",
-      ),
-    );
-  } else if (source === "new") {
-    inner.append(
-      advice(
-        "Nothing to bring across: your bank transactions, the name above, and a starter chart " +
-          "of accounts to adjust.",
-        "New books are not always a new entity. A company or rental that has been going a " +
-          "while still has opening balances, so ask your accountant for last year's balance sheet.",
+      actions(
+        button("Add another", () => {
+          rows.append(entityRow(undefined, changed));
+          changed();
+        }),
       ),
     );
   }
-  if (source !== undefined) {
-    inner.append(actions(button("Continue to Setup →", () => showPage("setup", "top"), true)));
-  }
+
+  const trouble = document.createElement("p");
+  trouble.className = "cloud-said";
+  inner.append(
+    actions(
+      button(
+        "Continue",
+        () => {
+          const entities = collect().filter((e) => e.name.trim() !== "");
+          if (entities.length === 0) {
+            trouble.textContent = "A name is needed before this can go any further.";
+            return;
+          }
+          answer({ entities, at: "plan" });
+        },
+        true,
+      ),
+    ),
+    trouble,
+  );
   return box;
+}
+
+// --- 6. what that means, and doing it ---------------------------------------
+
+/**
+ * Write the planned entities into the books that are open.
+ *
+ * Books that already hold entities somebody has named keep them: these
+ * questions are for a set of books that is starting, and quietly replacing the
+ * entities of a set that is already going would take every account assignment
+ * with it.
+ *
+ * The placeholder entity is the exception, because it is not somebody's
+ * answer. It does own things, though -- a new set of books gives it every
+ * account in the starter chart and every bank account -- so what it owned goes
+ * to the first entity named here. Dropping it without that would leave all
+ * sixty-six accounts pointing at an entity that no longer exists, and every
+ * per-entity report empty.
+ */
+async function applyEntities(planned: readonly PlannedEntity[]): Promise<void> {
+  const live: EntityModel = state.ledger.entities ?? emptyEntityModel();
+  const placeholderOnly =
+    live.entities.length === 0 || live.entities.every((e) => e.name === DEFAULT_ENTITY_NAME);
+
+  const made: Entity[] = [];
+  for (const entity of planned) {
+    // Two rentals given the same name would otherwise become one entity.
+    let id = entityId(entity.name);
+    for (let n = 2; made.some((m) => m.id === id); n += 1) id = `${entityId(entity.name)}-${n}`;
+    made.push({ id, name: entity.name, kind: entity.kind, gstRegistered: entity.gst });
+  }
+
+  const kept = placeholderOnly
+    ? []
+    : live.entities.filter((e) => !made.some((m) => m.id === e.id));
+
+  const successor = made[0]?.id;
+  const replaced = new Set(placeholderOnly ? live.entities.map((e) => e.id) : []);
+  const inherit = (id: string): string =>
+    successor !== undefined && replaced.has(id) ? successor : id;
+
+  const accounts: Record<string, string> = {};
+  for (const [key, id] of Object.entries(live.accounts)) accounts[key] = inherit(id);
+  const banks: Record<string, readonly string[]> = {};
+  for (const [key, ids] of Object.entries(live.banks)) {
+    banks[key] = [...new Set(ids.map(inherit))];
+  }
+
+  const next: EntityModel = { entities: [...kept, ...made], accounts, banks };
+
+  await saveEntities(
+    next,
+    made.length === 1 && kept.length === 0
+      ? `These books are for ${made[0]?.name ?? ""}`
+      : `${made.length} entities named in the guided start`,
+  );
+
+  // Setup asks whether there is more than one entity. It has been answered.
+  if (next.entities.length === 1) {
+    state.ledger.singleEntityConfirmed = true;
+    await save(state.ledger);
+  }
+}
+
+function applyPanel(planned: readonly PlannedEntity[], held: Onboarding): HTMLElement {
+  const wrap = document.createElement("div");
+  const live = state.ledger.entities ?? emptyEntityModel();
+  const alreadyThere =
+    planned.length > 0 &&
+    planned.every((p) => live.entities.some((e) => e.id === entityId(p.name)));
+
+  const list = document.createElement("ul");
+  list.className = "migration-list";
+  for (const entity of planned) {
+    const item = document.createElement("li");
+    item.textContent =
+      `${entity.name} — ${kindName(entity.kind)}, ` +
+      (entity.gst ? "GST registered" : "not GST registered");
+    list.append(item);
+  }
+  wrap.append(list);
+
+  const trouble = document.createElement("p");
+  trouble.className = "cloud-said";
+
+  if (alreadyThere) {
+    trouble.textContent = "Saved to these books ✓";
+    wrap.append(trouble, nextSteps(held));
+    return wrap;
+  }
+
+  const apply = button(
+    planned.length === 1 ? "Save to these books" : "Save these to these books",
+    () => {
+      apply.disabled = true;
+      trouble.textContent = "Saving…";
+      void applyEntities(planned).then(
+        () => {
+          if (held.source !== undefined) tellSetup(held.source);
+          renderMigration();
+        },
+        () => {
+          apply.disabled = false;
+          trouble.textContent =
+            "Could not save that. Try again, or name them on Entities & accounts.";
+        },
+      );
+    },
+    true,
+  );
+  wrap.append(actions(apply), trouble);
+  return wrap;
+}
+
+/** Where to go once the questions are answered and the entities are in. */
+function nextSteps(held: Onboarding): HTMLElement {
+  const wrap = document.createElement("div");
+  const several = (held.entities ?? []).length > 1 && held.shared === true;
+  const points: string[] = [];
+
+  if (held.source === "xero") {
+    points.push(
+      "Read the Xero guide below before exporting anything, then drop the files on Setup.",
+    );
+  } else if (held.source === "sheet") {
+    points.push(
+      "Have ready: the spreadsheet, with a column for the account each line was coded to; " +
+        "your bank's exports for the same accounts and dates; and last year's balance sheet " +
+        "from your accountant, for the opening balances.",
+    );
+  } else if (held.opening === true) {
+    points.push(
+      "Have ready: last year's balance sheet or trial balance from your accountant, and your " +
+        "bank's exports from the start date on.",
+    );
+  } else {
+    points.push(
+      "Nothing to bring across: your bank transactions, and a starter chart of accounts to " +
+        "adjust. New books are not always a new entity, though -- a company or rental that " +
+        "has been going a while still has opening balances.",
+    );
+  }
+  if (several) {
+    points.push(
+      "Then give each account in the chart, and each bank account, to the entity it belongs " +
+        "to, on Entities & accounts. Until that is done the reports cannot be split by entity.",
+    );
+  }
+
+  wrap.append(advice(...points));
+  wrap.append(
+    actions(
+      button("Continue to Setup →", () => showPage("setup", "top"), true),
+      ...(several ? [button("Entities & accounts", () => showPage("entities"))] : []),
+    ),
+  );
+  return wrap;
+}
+
+function planQuestion(number: number, held: Onboarding): HTMLElement {
+  const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const separate = held.onlyOne === false && held.shared === false;
+  const [box, inner] = card(number, separate ? "A set of books for each" : "One set of books");
+
+  if (!separate) {
+    inner.append(
+      advice(
+        planned.length === 1
+          ? "One set of books, with one entity. Nothing to keep apart."
+          : "One set of books, holding all of them. Every account in the chart belongs to " +
+              "one entity, so each gets its own profit and loss and its own GST return, and " +
+              "a shared bank account is ticked for every entity it pays for.",
+      ),
+    );
+    if (planned.length > 1) {
+      inner.append(
+        note(
+          "The balance sheet is for the set of books as a whole, which is what balances to " +
+            "$0. Nothing is posted between entities, so one entity's balance sheet on its " +
+            "own would be short the cash another entity's account paid out.",
+        ),
+      );
+    }
+    inner.append(applyPanel(planned, held));
+    return box;
+  }
+
+  inner.append(
+    advice(
+      `${planned.length} separate sets of books, one for each. Nothing in one can reach ` +
+        "another's figures, and each can go to its accountant on its own.",
+      "They are started one at a time, from here. Starting one opens it, and these questions " +
+        "carry on inside it.",
+    ),
+  );
+  inner.append(queue(planned, held));
+  return box;
+}
+
+/**
+ * The sets of books still to start, and the one that is open.
+ *
+ * Starting a set switches to it and reloads, which is what the Books page does
+ * too -- half the app holding one ledger while half holds another is a class
+ * of bug that produces plausible wrong figures. So the list is kept outside
+ * any one set of books, and picks up where it left off afterwards.
+ */
+function queue(planned: readonly PlannedEntity[], held: Onboarding): HTMLElement {
+  const wrap = document.createElement("div");
+  const open = booksKey();
+
+  if (backendKind() === "browser") {
+    wrap.append(
+      note(
+        "This copy runs in a browser, so it holds one set of books. To keep a set for each " +
+          "entity, run NZOSA on your own computer, where each set is a folder of its own, or " +
+          "sign in to keep them on the server.",
+      ),
+    );
+    const first = planned[0];
+    if (first !== undefined) {
+      wrap.append(
+        advice(`These books can hold ${first.name}. The rest need somewhere to live first.`),
+        applyPanel([first], held),
+      );
+    }
+    return wrap;
+  }
+
+  const list = document.createElement("div");
+  list.className = "migration-queue";
+  for (const entity of planned) {
+    const row = document.createElement("div");
+    row.className = "migration-queue-row";
+    const name = document.createElement("span");
+    name.className = "migration-queue-name";
+    name.textContent = `${entity.name} — ${kindName(entity.kind)}`;
+    row.append(name);
+
+    if (entity.book !== undefined && entity.book === open) {
+      const here = document.createElement("span");
+      here.className = "books-open";
+      here.textContent = "open now";
+      row.append(here);
+    } else if (entity.book !== undefined) {
+      const done = document.createElement("span");
+      done.className = "migration-queue-done";
+      done.textContent = "✓ started";
+      row.append(done);
+    } else {
+      row.append(
+        button(`Start ${entity.name}'s books`, () => {
+          void startBooksFor(entity, planned);
+        }),
+      );
+    }
+    list.append(row);
+  }
+  wrap.append(list);
+
+  // The entity whose books are open now still has to be written into them.
+  const here = planned.find((e) => e.book !== undefined && e.book === open);
+  if (here !== undefined) {
+    const mine = document.createElement("div");
+    mine.className = "migration-here";
+    const heading = document.createElement("h4");
+    heading.textContent = `These books are for ${here.name}`;
+    mine.append(heading, applyPanel([here], held));
+    wrap.append(mine);
+  } else if (planned.some((e) => e.book !== undefined)) {
+    wrap.append(
+      note(
+        "Start the next one when you are ready. The ones already started stay as they are " +
+          "until you open them.",
+      ),
+    );
+  }
+  return wrap;
+}
+
+/**
+ * Start a set of books for one entity, and go into it.
+ *
+ * A folder gets a folder; a server account gets a set of books on the server.
+ * Either way the page reloads into the new set, because everything on screen
+ * belongs to the books that were open.
+ */
+async function startBooksFor(
+  entity: PlannedEntity,
+  planned: readonly PlannedEntity[],
+): Promise<void> {
+  let id: string;
+
+  if (backendKind() === "cloud") {
+    const made = await createBook(entity.name);
+    if (made === null) {
+      alert("Could not start that set of books.");
+      return;
+    }
+    openCloudBook({ id: made.id, name: made.name });
+    id = made.id;
+  } else {
+    // A folder name, so only what a folder name may hold.
+    const slug = entity.name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "");
+    if (slug === "") {
+      alert("That name has nothing in it a folder can be called.");
+      return;
+    }
+    // Never into a folder this list has already given to somebody else.
+    const taken = planned.some((e) => e.name !== entity.name && e.book === slug);
+    id = taken ? `${slug}-books` : slug;
+    if (!(await switchLedger(id, entity.name))) {
+      alert("Could not start that set of books.");
+      return;
+    }
+  }
+
+  rememberOnboarding({
+    entities: planned.map((e) => (e.name === entity.name ? { ...e, book: id } : e)),
+    at: "plan",
+  });
+  location.reload();
+}
+
+// --- the router between them ------------------------------------------------
+
+function question(number: number, step: Step, held: Onboarding): HTMLElement {
+  switch (step) {
+    case "source":
+      return sourceQuestion(number);
+    case "date":
+      return dateQuestion(number, held);
+    case "one":
+      return oneQuestion(number);
+    case "shared":
+      return sharedQuestion(number);
+    case "entities":
+      return entitiesQuestion(number, held);
+    case "plan":
+      return planQuestion(number, held);
+  }
 }
 
 // --- the Xero guide ---------------------------------------------------------
@@ -460,7 +916,7 @@ function table(head: readonly string[], rows: readonly (readonly string[])[]): H
  * report hangs on, what to finish in Xero first, and how to prove the figures
  * arrived intact before Xero stops being the record.
  */
-function xeroGuide(): HTMLElement {
+function xeroGuide(held: Onboarding): HTMLElement {
   const guide = document.createElement("div");
   guide.className = "migration-guide";
   const add = (tag: "h3" | "h4" | "p", text: string): void => {
@@ -487,6 +943,9 @@ function xeroGuide(): HTMLElement {
   );
 
   add("h4", "1. Pick a conversion date");
+  if (held.startDate !== undefined) {
+    add("p", `You chose ${held.startDate}. Run the Xero reports below for the day before it.`);
+  }
   add(
     "p",
     "The day NZOSA takes over. The first day of a financial year (1 April for most) is the " +
@@ -561,13 +1020,48 @@ function xeroGuide(): HTMLElement {
     table(
       ["Check", "In NZOSA", "Against", "Should show"],
       [
-        ["Trial balance", "Reports → Journal report and trial balance", "Xero Trial Balance", "Every account agrees, to the cent"],
-        ["Balance sheet", "Reports → Balance sheet", "Xero Balance Sheet", "Every line agrees, retained earnings included"],
-        ["Bank accounts", "Bank import → Import bank balances", "Your bank statements", "Each balance agrees with the bank on the conversion date"],
-        ["Money owed", "Reports → Balance sheet", "Xero Aged Receivables and Aged Payables", "Accounts receivable and payable agree with the aged totals"],
-        ["Fixed assets", "Reports → Depreciation schedule", "Xero Fixed Asset Reconciliation", "Cost, depreciation and book value agree"],
-        ["GST", "GST reconciliation", "Each GST return as filed", "Every filed period agrees, or the difference is explained"],
-        ["Coding", "Coding reconciliation", "Xero Account Transactions", "Lines coded differently are listed for you to decide"],
+        [
+          "Trial balance",
+          "Reports → Journal report and trial balance",
+          "Xero Trial Balance",
+          "Every account agrees, to the cent",
+        ],
+        [
+          "Balance sheet",
+          "Reports → Balance sheet",
+          "Xero Balance Sheet",
+          "Every line agrees, retained earnings included",
+        ],
+        [
+          "Bank accounts",
+          "Bank import → Import bank balances",
+          "Your bank statements",
+          "Each balance agrees with the bank on the conversion date",
+        ],
+        [
+          "Money owed",
+          "Reports → Balance sheet",
+          "Xero Aged Receivables and Aged Payables",
+          "Accounts receivable and payable agree with the aged totals",
+        ],
+        [
+          "Fixed assets",
+          "Reports → Depreciation schedule",
+          "Xero Fixed Asset Reconciliation",
+          "Cost, depreciation and book value agree",
+        ],
+        [
+          "GST",
+          "GST reconciliation",
+          "Each GST return as filed",
+          "Every filed period agrees, or the difference is explained",
+        ],
+        [
+          "Coding",
+          "Coding reconciliation",
+          "Xero Account Transactions",
+          "Lines coded differently are listed for you to decide",
+        ],
       ],
     ),
   );

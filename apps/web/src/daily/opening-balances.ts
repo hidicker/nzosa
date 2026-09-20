@@ -3,6 +3,7 @@ import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
+import { chosenStartDate, startOfFinancialYear } from "../migrate/onboarding-state.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { financialYearBalances, financialYearOf, parseAmount } from "@nzosa/core";
 import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
@@ -333,7 +334,7 @@ export function renderOpeningBalances(): void {
 /** Add or change one opening balance. */
 function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): void {
   const held = state.ledger.openingBalances;
-  const asAt = targetAsAt ?? held?.asAt ?? `${new Date().getFullYear()}-04-01`;
+  const asAt = targetAsAt ?? held?.asAt ?? chosenStartDate() ?? startOfFinancialYear();
   const which = window.prompt("Account code, or a bank account number", code);
   if (which === null || which.trim() === "") return;
   const amount = window.prompt(
@@ -369,7 +370,7 @@ async function saveOpeningBalance(
     return financialYearOf(date);
   };
 
-  const asAt = targetAsAt ?? held?.asAt ?? `${new Date().getFullYear()}-04-01`;
+  const asAt = targetAsAt ?? held?.asAt ?? chosenStartDate() ?? startOfFinancialYear();
   const byDate = held?.byDate ? { ...held.byDate } : undefined;
   if (byDate) {
     for (const d of Object.keys(byDate)) {
@@ -772,7 +773,7 @@ function draftFromHeld(): OpeningDraft {
     credit: cents < 0 ? (-cents / 100).toFixed(2) : "",
   }));
   return {
-    asAt: held?.asAt ?? `${startYear}-04-01`,
+    asAt: held?.asAt ?? chosenStartDate() ?? `${startYear}-04-01`,
     lines: lines.length > 0 ? lines : [blankOpeningLine(), blankOpeningLine()],
   };
 }

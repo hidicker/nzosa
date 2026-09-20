@@ -346,6 +346,8 @@ type Backend = "folder" | "browser" | "cloud";
 
 let backend: Backend = "browser";
 let folderName = "";
+// The folder itself, which the display name is free to differ from.
+let folderId = "";
 
 /**
  * Which hosted books are open, when the books are hosted.
@@ -542,11 +544,11 @@ async function putPart(part: string, data: unknown): Promise<boolean> {
 
 /** Ask whether there is a folder behind this app, and read it if so. */
 async function loadFromFolder(): Promise<StoredLedger | null> {
-  let status: { writable?: boolean; name?: string } | null = null;
+  let status: { writable?: boolean; name?: string; ledger?: string } | null = null;
   try {
     const response = await api("status");
     if (!response.ok) return null;
-    status = (await response.json()) as { writable?: boolean; name?: string };
+    status = (await response.json()) as { writable?: boolean; name?: string; ledger?: string };
   } catch {
     return null;
   }
@@ -562,6 +564,7 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
 
   backend = "folder";
   folderName = status.name ?? "";
+  folderId = status.ledger ?? "";
   return ledger;
 }
 
@@ -819,6 +822,11 @@ export async function switchLedger(id: string, name?: string): Promise<boolean> 
 /** Which folder this browser is a working copy of, for the app to show. */
 export function ledgerName(): string {
   return folderName;
+}
+
+/** Which folder, as opposed to what it is called. Empty when there is no folder. */
+export function ledgerId(): string {
+  return folderId;
 }
 
 /** True when there is a folder behind the app rather than only a browser. */

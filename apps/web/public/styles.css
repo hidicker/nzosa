@@ -1773,6 +1773,24 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-list { margin: 0.4rem 0; padding-left: 1.2rem; font-size: 0.85rem; }
 .migration-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
 .migration-entity { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; font-size: 0.85rem; margin: 0 0 0.5rem; }
+.migration-entity-name { flex: 1 1 11rem; min-width: 8rem; }
+.migration-entity-remove { font-size: 0.78rem; padding: 0.15rem 0.5rem; }
+.migration-entities .migration-entity { border-bottom: 1px solid rgba(128,128,128,0.18);
+  padding-bottom: 0.5rem; }
+.migration-entities .migration-entity:last-child { border-bottom: 0; }
+.migration-summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.8rem; }
+.migration-summary-text { flex: 1 1 auto; font-size: 0.86rem; }
+.migration-summary button { font-size: 0.78rem; padding: 0.15rem 0.6rem; }
+.migration-queue { margin: 0.6rem 0; }
+.migration-queue-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  padding: 0.4rem 0; border-bottom: 1px solid rgba(128,128,128,0.18); }
+.migration-queue-row:last-child { border-bottom: 0; }
+.migration-queue-name { flex: 1 1 16rem; font-size: 0.88rem; }
+.migration-queue-done { font-size: 0.8rem; color: #1f6f4a; }
+.migration-here { margin-top: 1rem; }
+.migration-here h4 { margin: 0 0 0.4rem; font-size: 0.92rem; }
+.migration-restart { margin: 1.2rem 0 2rem; }
+.migration-restart button { font-size: 0.78rem; }
 .migration-guide { max-width: 54rem; margin: 1.4rem 0 2rem; }
 .migration-guide h3 { margin: 0 0 0.4rem; }
 .migration-guide h4 { margin: 1.2rem 0 0.35rem; font-size: 0.92rem; }

@@ -1,4 +1,5 @@
 import { markSidebar } from "./menu.js";
+import { returnBorrowed } from "./borrow.js";
 import { $, state } from "./state.js";
 
 /**
@@ -83,6 +84,10 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   // The bank feed used to be a page of its own and is now a section of the
   // import page. A ledger saved before that still names it.
   if (page === "feed") page = "import";
+  // The guided start shows the bank feed and the bank file import inside its
+  // own steps, by moving them. Whatever it has, it gives back before anything
+  // else draws -- including before the guided start draws again.
+  returnBorrowed();
   const moved = state.page !== page;
   state.page = page;
   for (const section of document.querySelectorAll<HTMLElement>("section.page")) {

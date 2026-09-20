@@ -765,6 +765,10 @@ export function render(): void {
   renderReports();
   renderBalanceEntry();
   redraw("importRows");
+  // The guided start shows this section inside one of its steps, and counts
+  // what has arrived. Only when it is the page being looked at: redrawing it
+  // moves this section back to its own page and then borrows it again.
+  if (state.page === "migration") redraw("migration");
 }
 
 /** Statement balances being typed in, kept while the page redraws around them. */

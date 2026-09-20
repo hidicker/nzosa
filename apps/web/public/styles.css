@@ -1794,6 +1794,11 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-look p { margin: 0 0 0.6rem; font-size: 0.86rem; }
 .migration-look .migration-actions { margin: 0; align-items: center; }
 .migration-look-link { font-size: 0.82rem; align-self: center; }
+/* A section borrowed from the Bank import page, sitting inside a step: it
+   keeps its own contents and loses the separator it wore between siblings. */
+.migration-card .import-subsection { margin-top: 0.8rem; padding-top: 0; border-top: 0; }
+.migration-card .import-subsection h3 { font-size: 0.92rem; margin: 0; }
+.migration-card .import-subsection .page-hint { margin: 0.3rem 0 0.5rem; }
 .migration-folded { margin-top: 0.8rem; }
 .migration-folded .migration-guide { margin: 0.6rem 0 0.2rem; }
 .migration-restart { margin: 1.2rem 0 2rem; }

@@ -51,6 +51,8 @@ export interface Onboarding {
   /** Decision 2: an account or card used by more than one entity. */
   shared?: boolean;
   entities?: PlannedEntity[];
+  /** How the bank transactions are coming in: a live feed, or files. */
+  bank?: "feed" | "files";
   /** Set when the questions are behind them, so the page stops asking. */
   finished?: boolean;
 }

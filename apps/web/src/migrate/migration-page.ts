@@ -6,6 +6,8 @@ import { backendKind, openCloudBook, save, switchLedger, writesToFolder } from "
 import { note } from "../ui.js";
 import { DEFAULT_ENTITY_NAME, emptyEntityModel, entityId } from "@nzosa/core";
 import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
+import { borrow, returnBorrowed } from "../borrow.js";
+import { renderFeed } from "../daily/bank-import.js";
 import { loadWhatever } from "./file-intake.js";
 import { loadDemoData, xeroMigrationFiles } from "./setup-wizard.js";
 import {
@@ -101,6 +103,9 @@ function at(held: Onboarding): Step {
 
 export function renderMigration(): void {
   const body = $("migration-body");
+  // Anything a step borrowed from another page goes back before the step that
+  // borrowed it is thrown away, or emptying this would take it with it.
+  returnBorrowed();
   body.textContent = "";
   const held = onboarding();
   const here = at(held);
@@ -180,6 +185,7 @@ function card(step: number, title: string): [HTMLElement, HTMLElement] {
 function choices<T extends string>(
   options: readonly (readonly [T, string, string])[],
   pick: (value: T) => void,
+  chosen?: T,
 ): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "migration-choices";
@@ -188,6 +194,7 @@ function choices<T extends string>(
     const choice = document.createElement("button");
     choice.type = "button";
     choice.className = "migration-choice";
+    if (chosen !== undefined) choice.setAttribute("aria-pressed", String(chosen === value));
     const strong = document.createElement("strong");
     strong.textContent = label;
     const small = document.createElement("span");
@@ -292,9 +299,12 @@ function said(held: Onboarding, step: Step): string {
     }
     case "bank": {
       const many = state.ledger.transactions.length;
+      const how = held.bank === "feed" ? "bank feed" : held.bank === "files" ? "bank files" : "";
       return many === 0
-        ? "No bank transactions yet"
-        : `${many} bank transaction${many === 1 ? "" : "s"}`;
+        ? how === ""
+          ? "No bank transactions yet"
+          : `No bank transactions yet, from the ${how}`
+        : `${many} bank transaction${many === 1 ? "" : "s"}` + (how === "" ? "" : `, from the ${how}`);
     }
     case "files": {
       const files = xeroMigrationFiles();
@@ -997,32 +1007,55 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
 
   inner.append(
     advice(
-      "Everything else hangs off these. They come from the bank itself -- a feed, or the " +
-        "bank's own CSV exports -- rather than from whatever you are moving away from, so " +
-        "they are the bank's record and not somebody's copy of it.",
+      "Everything else hangs off these. They come from the bank itself rather than from " +
+        "whatever you are moving away from, so they are the bank's record and not somebody's " +
+        "copy of it.",
     ),
   );
 
-  if (many > 0) {
-    inner.append(
-      note(`${many} transaction${many === 1 ? "" : "s"} loaded.`),
-      actions(
-        button("Continue", () => answer({ at: nextAfter(held, "bank") }), true),
-        button("Bank import", () => showPage("import")),
-      ),
-    );
-    return box;
+  inner.append(
+    choices<"feed" | "files">(
+      [
+        [
+          "feed",
+          "Connect your NZ bank accounts directly",
+          "A live connection: transactions arrive on their own, and nothing is typed or mistyped",
+        ],
+        [
+          "files",
+          "Import from a file",
+          "CSV exports from your bank. Several at once is fine, and duplicates are caught",
+        ],
+      ],
+      (value) => answer({ bank: value }),
+      held.bank,
+    ),
+  );
+
+  // The page that does it, shown here rather than linked to. It is the live
+  // one, moved: a second copy would be a second thing to keep in step.
+  if (held.bank === "feed") {
+    const feed = borrow("import-feed");
+    if (feed !== null) {
+      inner.append(feed);
+      // Not yet: this card is still being built and is not in the page, and
+      // what draws the feed looks its own element up by id. Once the render
+      // that asked for this card has finished putting it there.
+      queueMicrotask(() => {
+        if (document.getElementById("feed-body") !== null) void renderFeed();
+      });
+    }
+  } else if (held.bank === "files") {
+    const files = borrow("import-files");
+    if (files !== null) inner.append(files);
   }
 
+  if (many > 0) inner.append(note(`${many} transaction${many === 1 ? "" : "s"} loaded.`));
+
   inner.append(
-    dropZone(),
-    note(
-      "A feed fetches them every day and cannot mistype a figure. Connect one on the Bank " +
-        "import page, or drop your exports above.",
-    ),
     actions(
-      button("Bank import", () => showPage("import"), true),
-      button("Skip for now", () => answer({ at: nextAfter(held, "bank") })),
+      button("Continue", () => answer({ at: nextAfter(held, "bank") }), many > 0),
+      button("The whole Bank import page", () => showPage("import")),
     ),
   );
   return box;

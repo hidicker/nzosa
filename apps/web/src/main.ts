@@ -228,7 +228,9 @@ async function init(): Promise<void> {
 }
 
 function wireUp(): void {
-  for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-page]")) {
+  for (const button of document.querySelectorAll<HTMLButtonElement>(
+    ".sidebar-nav button[data-page], .sidebar-foot button[data-page]",
+  )) {
     button.addEventListener("click", () => {
       if (button.dataset["page"] === "reports") reportsFromMenu();
       showPage(button.dataset["page"] ?? "reconcile");

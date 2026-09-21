@@ -2,7 +2,9 @@ import { CLEAR_PHRASE, clearEverything } from "../books.js";
 import { $ } from "../state.js";
 import {
   archiveOther,
+  backendKind,
   currentLedger,
+  ledgerName,
   ledgers,
   listArchives,
   restoreArchive,
@@ -334,23 +336,36 @@ export async function renderBooks(): Promise<void> {
 }
 
 /**
- * Which set of books is open, in the corner of the menu.
+ * Which set of books is open, at the foot of the menu.
  *
  * This was a dropdown that also switched between them. Switching lives on the
  * Books page now, where there is room to say what each set holds before you
  * open it -- but the name stays here, because not knowing which books you are
  * coding into is how a morning's work ends up in the wrong ones.
+ *
+ * It is also the way to that page. There used to be an item in the menu as
+ * well, directly above this, and two ways to one page is one of them wasted --
+ * so this is shown whatever the books are kept in, including the cases with
+ * nothing to name yet, where getting to the Books page is the whole point.
  */
 export async function renderOpenBooks(): Promise<void> {
   const button = $("ledger-open");
+  button.hidden = false;
+  const name = $("ledger-open-name");
+
+  if (backendKind() === "cloud") {
+    // Signed out, or signed in without a set open: the page is where both are
+    // answered, so it says what to do rather than naming nothing.
+    name.textContent = ledgerName() || "Choose a set";
+    return;
+  }
   if (!writesToFolder()) {
-    button.hidden = true;
+    name.textContent = "This browser";
     return;
   }
   const [all, current] = await Promise.all([ledgers(), currentLedger()]);
   const open = all.find((one) => one.id === current);
-  $("ledger-open-name").textContent = open?.name ?? current;
-  button.hidden = false;
+  name.textContent = open?.name ?? current;
 }
 
 /** Clearing these books and starting again. */

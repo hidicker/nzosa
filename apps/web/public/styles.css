@@ -250,7 +250,12 @@
   display: flex;
   flex-direction: column;
   gap: 2px;
-  flex: 1;
+  /* The list scrolls; the set of books at the foot does not. It is the only
+     way to the Books page from the menu now, and on a short window a long
+     list of sections used to push it off the bottom. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
 }
 
 .sidebar-heading {
@@ -309,6 +314,7 @@
   padding: 12px 8px 0;
   border-top: 1px solid rgba(255, 255, 255, 0.09);
   margin-top: 12px;
+  flex: 0 0 auto;
 }
 
 .sidebar .ledger-picker {
@@ -2008,6 +2014,8 @@ main:has(#page-check:not([hidden])) { max-width: none; }
   border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem;
   cursor: pointer; color: inherit; }
 .ledger-open:hover { border-color: var(--accent); }
+/* Lit the way a menu item is, because it is one: the way to the Books page. */
+.ledger-open.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
 .ledger-open-label { font-size: 0.7rem; text-transform: uppercase;
   letter-spacing: 0.06em; color: var(--muted); }
 .ledger-open-name { font-size: 0.85rem; font-weight: 600; }

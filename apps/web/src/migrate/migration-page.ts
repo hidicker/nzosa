@@ -809,18 +809,16 @@ function applyPanel(
 }
 
 function planQuestion(number: number, held: Onboarding): HTMLElement {
-  const separate = held.onlyOne === false && held.shared === false;
-  const [box, inner] = card(number, separate ? "A set of books of its own" : "One set of books");
+  const shared = held.onlyOne === false && held.shared === true;
+  const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const [box, inner] = card(number, shared ? "One set of books" : "A set of books of its own");
 
-  if (!separate) {
-    const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  if (shared) {
     inner.append(
       advice(
-        planned.length === 1
-          ? "One set of books, with one entity. Nothing to keep apart."
-          : "One set of books, holding all of them. Every account in the chart belongs to " +
-              "one entity, so each gets its own profit and loss and its own GST return, and " +
-              "a shared bank account is ticked for every entity it pays for.",
+        "One set of books, holding all of them. Every account in the chart belongs to one " +
+          "entity, so each gets its own profit and loss and its own GST return, and a shared " +
+          "bank account is ticked for every entity it pays for.",
       ),
     );
     if (planned.length > 1) {
@@ -832,45 +830,54 @@ function planQuestion(number: number, held: Onboarding): HTMLElement {
         ),
       );
     }
-    inner.append(applyPanel(planned, held));
-    return box;
   }
 
-  inner.append(theirOwnBooks(held));
+  inner.append(theirOwnBooks(held, shared));
   return box;
 }
 
 /**
- * Giving one entity a set of books of its own.
+ * Putting the entities somewhere.
  *
- * Which is either the books that are open, when nobody has claimed them, or a
- * new set -- and starting a new set switches to it and reloads, the same thing
- * the Books page does. Half the app holding one ledger while half holds
- * another is a class of bug that produces plausible wrong figures. So the
- * answers are kept outside any one set of books and picked up afterwards.
+ * Which is the books that are open, when nobody has claimed them, or a new set
+ * when somebody has. That second case used to be missed for a single entity:
+ * it wrote the name into whatever books happened to be open and said "saved",
+ * so asking for a company's books while another company's were open quietly
+ * added an entity to theirs and started nothing. One question -- are these
+ * books already somebody's -- answers it for every shape of set-up, so there
+ * is one answer rather than one per branch.
+ *
+ * Starting a new set switches to it and reloads, the same thing the Books page
+ * does: half the app holding one ledger while half holds another is a class of
+ * bug that produces plausible wrong figures. So the answers are kept outside
+ * any one set of books and picked up afterwards.
  */
-function theirOwnBooks(held: Onboarding): HTMLElement {
+function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
   const wrap = document.createElement("div");
   const open = booksKey();
-  const mine = started(held);
+  const all = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const placed = all.filter((e) => e.book !== undefined);
   const waiting = pending(held);
+  // Several at once only where they share a set of books. Otherwise one, and
+  // the next one when they come back for it.
+  const group = shared ? all.filter((e) => e.book === undefined) : waiting ? [waiting] : [];
 
-  if (mine.length > 0) {
+  if (placed.length > 0 && !shared) {
     const list = document.createElement("div");
     list.className = "migration-queue";
-    for (const entity of mine) {
+    for (const entity of placed) {
       const row = document.createElement("div");
       row.className = "migration-queue-row";
       const name = document.createElement("span");
       name.className = "migration-queue-name";
-      name.textContent = `${entity.name} — ${kindName(entity.kind)}`;
+      name.textContent = `${entity.name} \u2014 ${kindName(entity.kind)}`;
       const mark = document.createElement("span");
       if (entity.book === open) {
         mark.className = "books-open";
         mark.textContent = "open now";
       } else {
         mark.className = "migration-queue-done";
-        mark.textContent = "✓ has its own books";
+        mark.textContent = "\u2713 has its own books";
       }
       row.append(name, mark);
       list.append(row);
@@ -878,46 +885,57 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
     wrap.append(list);
   }
 
-  // Whoever's books are open but are not in them yet -- which is where the
-  // reload after starting a new set lands.
-  const here = mine.find((e) => e.book === open);
-  if (here !== undefined && unclaimed()) {
+  // Whose books are open but are not written into them yet -- which is where
+  // the reload after starting a new set lands.
+  const hereNow = all.filter((e) => e.book === open);
+  if (hereNow.length > 0 && unclaimed()) {
     const heading = document.createElement("h4");
-    heading.textContent = `These books are for ${here.name}`;
-    wrap.append(heading, applyPanel([here], held));
+    heading.textContent =
+      hereNow.length === 1
+        ? `These books are for ${hereNow[0]?.name ?? ""}`
+        : "These books are for all of them";
+    wrap.append(heading, applyPanel(hereNow, held));
     return wrap;
   }
 
-  if (waiting === undefined) {
+  if (group.length === 0) {
     wrap.append(
-      advice("Each of these has books of its own."),
+      advice(
+        shared ? "These books hold all of them." : "Each of these has a set of books of its own.",
+      ),
       actions(
-        button("Start another entity", () => answer({ at: "entities" })),
+        ...(shared ? [] : [button("Start another entity", () => answer({ at: "entities" }))]),
         button("Continue", () => answer({ at: "bank" }), true),
       ),
     );
     return wrap;
   }
 
+  const first = group[0];
+  if (first === undefined) return wrap;
+
   if (unclaimed()) {
     wrap.append(
       advice(
-        `These books are still nobody's, so ${waiting.name} can have them. Nothing in them ` +
-          "can reach another entity's figures, and they can go to an accountant on their own.",
+        group.length === 1
+          ? `These books are still nobody's, so ${first.name} can have them.`
+          : "These books are still nobody's, so all of them can go in here.",
       ),
-      applyPanel([waiting], held, {
-        entities: [...mine, { ...waiting, book: open }],
+      applyPanel(group, held, {
+        entities: [...placed, ...group.map((e) => ({ ...e, book: open }))],
       }),
     );
     return wrap;
   }
 
+  const theirs = (state.ledger.entities ?? emptyEntityModel()).entities[0]?.name ?? "somebody else";
+
   if (backendKind() === "browser") {
     wrap.append(
       note(
-        "This copy runs in a browser, so it holds one set of books, and these ones are " +
-          "taken. To keep a set for each entity, run NZOSA on your own computer, where each " +
-          "set is a folder of its own, or sign in to keep them on the server.",
+        `The books open now are ${theirs}'s, and this copy runs in a browser, which holds ` +
+          "one set. To keep a set for each entity, run NZOSA on your own computer, where " +
+          "each set is a folder of its own, or sign in to keep them on the server.",
       ),
     );
     return wrap;
@@ -925,19 +943,12 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
 
   wrap.append(
     advice(
-      `The books open now belong to somebody else, so ${waiting.name} gets a new set. ` +
-        "Starting it opens it, and these questions carry on inside it.",
+      `The books open now are ${theirs}'s, so ` +
+        (group.length === 1 ? `${first.name} gets a new set.` : "these get a new set.") +
+        " Starting it opens it, and these questions carry on inside it.",
     ),
-    entityList([waiting]),
-    actions(
-      button(
-        `Start ${waiting.name}'s books`,
-        () => {
-          void startBooksFor(waiting, [...mine, waiting]);
-        },
-        true,
-      ),
-    ),
+    entityList(group),
+    actions(button(`Start ${first.name}'s books`, () => void startBooksFor(group, all), true)),
   );
   return wrap;
 }
@@ -1299,20 +1310,22 @@ function doneQuestion(number: number, held: Onboarding): HTMLElement {
 }
 
 /**
- * Start a set of books for one entity, and go into it.
+ * Start a set of books for these entities, and go into it.
  *
- * A folder gets a folder; a server account gets a set of books on the server.
- * Either way the page reloads into the new set, because everything on screen
- * belongs to the books that were open.
+ * A folder gets a folder; a server account gets a set of books on the server,
+ * named after the first of them. Either way the page reloads into the new set,
+ * because everything on screen belongs to the books that were open.
  */
 async function startBooksFor(
-  entity: PlannedEntity,
+  group: readonly PlannedEntity[],
   planned: readonly PlannedEntity[],
 ): Promise<void> {
+  const first = group[0];
+  if (first === undefined) return;
   let id: string;
 
   if (backendKind() === "cloud") {
-    const made = await createBook(entity.name);
+    const made = await createBook(first.name);
     if (made === null) {
       alert("Could not start that set of books.");
       return;
@@ -1321,7 +1334,7 @@ async function startBooksFor(
     id = made.id;
   } else {
     // A folder name, so only what a folder name may hold.
-    const slug = entity.name
+    const slug = first.name
       .toLowerCase()
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
@@ -1330,16 +1343,16 @@ async function startBooksFor(
       return;
     }
     // Never into a folder this list has already given to somebody else.
-    const taken = planned.some((e) => e.name !== entity.name && e.book === slug);
+    const taken = planned.some((e) => !group.includes(e) && e.book === slug);
     id = taken ? `${slug}-books` : slug;
-    if (!(await switchLedger(id, entity.name))) {
+    if (!(await switchLedger(id, first.name))) {
       alert("Could not start that set of books.");
       return;
     }
   }
 
   rememberOnboarding({
-    entities: planned.map((e) => (e.name === entity.name ? { ...e, book: id } : e)),
+    entities: planned.map((e) => (group.includes(e) ? { ...e, book: id } : e)),
     at: "plan",
   });
   location.reload();

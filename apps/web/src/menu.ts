@@ -45,6 +45,9 @@ function menuItems(): HTMLButtonElement[] {
     ...document.querySelectorAll<HTMLButtonElement>(
       ".sidebar-nav button[data-page], .sidebar-nav button[data-report]",
     ),
+    // The set of books at the foot of the menu is the way to the Books page,
+    // so it is lit, titled and searched like any other item on it.
+    ...document.querySelectorAll<HTMLButtonElement>(".sidebar-foot button[data-page]"),
   ];
 }
 

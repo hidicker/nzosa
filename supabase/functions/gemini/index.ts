@@ -15,12 +15,15 @@
  *
  * And two kinds of key. One somebody brought is theirs: they pay Google, and
  * the only limit is a batch size that keeps the answers readable. The
- * project's own key is here so that somebody can see this work without having
- * one, and it is paid for by whoever runs this installation -- so it is capped
- * per batch, per set of books for their lifetime, and, the one that actually
- * protects anything, for the whole installation per day. Sign-up is open and
- * accounts are free, so a per-book cap is politeness; the daily ceiling is the
- * number that decides the worst day possible.
+ * project's own key is here so somebody can see this work without having one,
+ * and it is paid for by whoever runs this installation -- so it is capped at
+ * twenty a batch and a thousand transactions per person, for good rather than
+ * per day, a trial being a trial and not an allowance that refills.
+ *
+ * Per person and not per set of books, because one person may start twenty of
+ * those. Counting a person means knowing who they are, so that count is taken
+ * by the database from their own token rather than from anything this function
+ * says about them.
  */
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
@@ -198,6 +201,7 @@ Deno.serve(async (request: Request) => {
   const roles = action === "state"
     ? ["owner", "bookkeeper", "accountant"]
     : ["owner", "bookkeeper"];
+  // Asking also has to be affordable, which the database decides below.
   const allowed = await asCaller(jwt, "has_role", { book, roles }).catch(() => false);
   if (allowed !== true) return reply({ error: "not your books" }, 403);
 
@@ -257,10 +261,14 @@ Deno.serve(async (request: Request) => {
         return reply({ error: "no key set for these books" }, 400);
       }
 
-      // Counted first. A cap checked afterwards is a cap that spends the money
+      // Counted first. A cap checked afterwards is one that spends the money
       // and then discovers it was not allowed to.
+      //
+      // Asked as the caller, not as the service role: the allowance is the
+      // person's, and auth.uid() inside the database is the only account of
+      // who they are that this function cannot get wrong or be lied to about.
       try {
-        await asService("ai_take", { book, asking, demo });
+        await asCaller(jwt, "ai_take", { book, asking, demo });
       } catch (error) {
         return reply({ error: (error as Error).message }, 429);
       }

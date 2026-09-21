@@ -93,13 +93,13 @@ export async function aiStatus(): Promise<AiStatus | null> {
     model: String(said["model"] ?? ""),
     models: (said["models"] as AiModel[] | undefined) ?? [],
     usedToday: Number(said["used_today"] ?? 0),
-    // On the server the daily number that matters to one person is the shared
-    // allowance for their own books, not the installation's.
-    limit: Number(said["per_book"] ?? 0),
+    // The shared key's allowance is the person's, for good, rather than a
+    // daily one: a trial is a trial and not something that refills.
+    limit: Number(said["per_person"] ?? 0),
     sharedKey: said["sharedKey"] === true,
     sharedModel: String(said["sharedModel"] ?? ""),
     demoUsed: Number(said["demo_used"] ?? 0),
-    demoLimit: Number(said["per_book"] ?? 0),
+    demoLimit: Number(said["per_person"] ?? 0),
   };
 }
 

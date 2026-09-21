@@ -209,10 +209,11 @@ function keyPanel(): HTMLElement {
     const left = Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0));
     inner.append(
       note(
-        `You can try this without a key of your own. This site offers a shared one -- ` +
-          `${status.sharedModel || "a flash model"}, ${left} transactions left for these books ` +
-          "-- paid for by whoever runs the site, and asked twenty at a time. What you send " +
-          "goes to Google under their account, so use your own key for a client's books.",
+        "You can try this without a key of your own. This site offers a shared one -- " +
+          `${status.sharedModel || "a flash model"}, ${left} transactions left on your ` +
+          "account, ever, not per day -- paid for by whoever runs the site and asked twenty " +
+          "at a time. What you send goes to Google under their account, so use a key of " +
+          "your own for a client's books.",
       ),
     );
   }

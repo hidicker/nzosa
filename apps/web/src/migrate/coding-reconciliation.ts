@@ -5,6 +5,7 @@ import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
   accountDecided,
+  bankLabel,
   codingRefusedForTransfer,
   accountsFor,
   ensureDefaultEntity,
@@ -92,6 +93,34 @@ import { clearCheck } from "../migrate/file-intake.js";
  * nothing is not a decision, and a line no rule could code is exactly the one
  * that deserves a person's attention.
  */
+/**
+ * Record a batch of transfers, each as its own entry in the change log.
+ *
+ * One entry apiece rather than one for the batch, because a transfer is
+ * undone one at a time everywhere else in this app and a batch that could
+ * only be undone whole would be the odd one out.
+ */
+async function pairAll(pairs: readonly { out: Transaction; into: Transaction }[]): Promise<void> {
+  const transfers = { ...(state.ledger.transfers ?? {}) };
+  for (const { out, into } of pairs) {
+    transfers[out.id] = into.id;
+    transfers[into.id] = out.id;
+  }
+  state.ledger = { ...state.ledger, transfers };
+  state.persistent = await savePart(state.ledger, "transfers");
+
+  for (const { out, into } of pairs) {
+    await record(
+      "transfer",
+      `${out.date} ${formatAmount(out.amount)} \u2014 transfer from ` +
+        `${bankLabel(out.account)} to ${bankLabel(into.account)}`,
+      null,
+      { from: out.id, to: into.id },
+      out.id,
+    );
+  }
+}
+
 export async function acceptAllShown(): Promise<void> {
   /**
    * A suggestion is not only a code.
@@ -149,13 +178,85 @@ export async function acceptAllShown(): Promise<void> {
   const held = new Set(eligible.filter(couldBeTransfer).map((one) => one.transaction.id));
   const lines = eligible.filter((one) => !held.has(one.transaction.id));
 
-  if (lines.length === 0) {
+  /**
+   * Transfers proposed and waiting to be agreed to.
+   *
+   * These are not lines with a coding to accept: nothing coded them, and the
+   * only thing their tick does is pair them. So they were not in `offered` at
+   * all, and a screen made entirely of them met "nothing on screen to accept",
+   * which was both wrong and unhelpful -- there were thirty-two things on it
+   * to accept.
+   *
+   * Only where the matcher found exactly one partner. Two candidates is a
+   * question, and a question answered in bulk is a question nobody answered.
+   * And only where nothing else has claimed the line, so pairing can never
+   * quietly drop a coding -- that is the failure this batch was taught to
+   * avoid, and it stays avoided by not touching those lines rather than by
+   * asking about them here.
+   */
+  const shown = shownSuggestions();
+  const pairs: { out: Transaction; into: Transaction }[] = [];
+  const claimed = new Set<string>();
+  for (const one of shown) {
+    const id = one.transaction.id;
+    if (one.confirmed || one.code !== null) continue;
+    if (transfersNow[id] !== undefined || claimed.has(id)) continue;
+    if (settledElsewhere(one) || decided(id)) continue;
+    if (rejected.has(id)) continue;
+    const candidates = transferCandidates(one.transaction, state.ledger.transactions, {
+      sameEntity: sameEntityBanks(one.transaction.account).accounts,
+      taken: new Set([...unavailable, ...claimed]),
+    });
+    if (candidates.length !== 1) continue;
+    const partner = candidates[0]?.transaction;
+    if (partner === undefined || claimed.has(partner.id)) continue;
+    claimed.add(id);
+    claimed.add(partner.id);
+    pairs.push(
+      one.transaction.amount < 0
+        ? { out: one.transaction, into: partner }
+        : { out: partner, into: one.transaction },
+    );
+  }
+
+  if (lines.length === 0 && pairs.length === 0) {
     alert(
       held.size > 0
         ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
-            "transfer between your own accounts. Check each one on its own."
+            "transfer between your own accounts, and more than one line matches. Check each " +
+            "one on its own."
         : "Nothing on screen to accept: every line here is settled already, or has no suggestion to accept.",
     );
+    return;
+  }
+
+  // A screen of nothing but proposed transfers: its own question, because
+  // pairing is not coding and agreeing to it in bulk deserves to be asked for
+  // in those words.
+  if (lines.length === 0) {
+    if (
+      !confirm(
+        `Pair ${pairs.length} transfer${pairs.length === 1 ? "" : "s"} between your own accounts?` +
+          "\n\n" +
+          pairs
+            .slice(0, 6)
+            .map(
+              ({ out, into }) =>
+                `  ${out.date} ${formatAmount(out.amount)}: ${bankLabel(out.account)} to ${bankLabel(into.account)}`,
+            )
+            .join("\n") +
+          (pairs.length > 6 ? `\n  ...and ${pairs.length - 6} more` : "") +
+          "\n\nEach is the same amount the other way, between two of your own accounts, " +
+          "within four days, and each has exactly one match. None of them is coded to " +
+          "anything, so nothing is being replaced. Any of them can be undone with \"not a " +
+          "transfer\", and the change log has them one by one.",
+      )
+    ) {
+      return;
+    }
+    await pairAll(pairs);
+    reclassify();
+    redraw("reconcile");
     return;
   }
 
@@ -181,6 +282,11 @@ export async function acceptAllShown(): Promise<void> {
         (elsewhere > 0
           ? `${elsewhere} of them ${elsewhere === 1 ? "is" : "are"} settled by a split or by ` +
             "the invoice it pays rather than by an account, and is confirmed as that.\n\n"
+          : "") +
+        (pairs.length > 0
+          ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} also on ` +
+            "this screen. Pairing is not coding, so it is asked separately: press Accept all " +
+            "again afterwards.\n\n"
           : "") +
         "This confirms them exactly as shown. The change log can undo the whole batch.",
     )

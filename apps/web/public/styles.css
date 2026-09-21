@@ -1882,6 +1882,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .bank-link-table td, .bank-link-table th { font-size: 0.82rem; }
 .bank-link-table select { max-width: 22rem; }
 .migration-place { font-size: 0.78rem; color: var(--muted, #667); margin: 0 0 0.5rem; }
+/* Clearing and backing up belong on the Bank import page, not in the middle
+   of setting the books up for the first time. */
+.migration-card #import-table .ledger-actions { display: none; }
 .migration-folded { margin-top: 0.8rem; }
 .migration-folded .migration-guide { margin: 0.6rem 0 0.2rem; }
 .migration-restart { margin: 1.2rem 0 2rem; }

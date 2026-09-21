@@ -898,7 +898,14 @@ function renderBalanceEntry(): void {
   box.append(details);
 }
 
-function renderStatus(): void {
+/**
+ * The counts, and which filter is lit.
+ *
+ * Exported because the guided start shows this section inside one of its
+ * steps, and a review queue whose count says nothing has arrived is worse
+ * than no count at all.
+ */
+export function renderStatus(): void {
   const counts = {
     total: state.entries.length,
     review: state.entries.filter((entry) => entry.status === "review").length,

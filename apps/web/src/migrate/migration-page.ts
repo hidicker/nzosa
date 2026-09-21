@@ -7,10 +7,15 @@ import { note } from "../ui.js";
 import { DEFAULT_ENTITY_NAME, emptyEntityModel, entityId } from "@nzosa/core";
 import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
 import { borrow, returnBorrowed } from "../borrow.js";
-import { renderFeed } from "../daily/bank-import.js";
+import { renderFeed, renderStatus, renderTable, showWhatNeedsDeciding } from "../daily/bank-import.js";
 import { bankLinkTable } from "../daily/entities.js";
 import { loadWhatever } from "./file-intake.js";
-import { loadDemoData, setupSteps, xeroMigrationFiles } from "./setup-wizard.js";
+import {
+  XERO_ACCOUNT_TRANSACTIONS,
+  loadDemoData,
+  setupSteps,
+  xeroMigrationFiles,
+} from "./setup-wizard.js";
 import type { SetupStep } from "./setup-wizard.js";
 import {
   booksKey,
@@ -1068,6 +1073,21 @@ function dropZone(): HTMLElement {
   return zone;
 }
 
+/**
+ * The financial year that ended the day before these books start.
+ *
+ * Which is the year whose history would come across: 1 April to 31 March, the
+ * year containing the day before the conversion date. Null when no date has
+ * been given, because a year worked out from a guess is a year nobody chose.
+ */
+function financialYearBefore(start: string | undefined): { from: string; to: string } | null {
+  if (start === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return null;
+  const day = new Date(`${start}T00:00:00Z`);
+  day.setUTCDate(day.getUTCDate() - 1);
+  const year = day.getUTCMonth() >= 3 ? day.getUTCFullYear() : day.getUTCFullYear() - 1;
+  return { from: `${year}-04-01`, to: `${year + 1}-03-31` };
+}
+
 /** Reference material, out of the way until it is asked for. */
 function folded(summary: string, content: HTMLElement): HTMLElement {
   const details = document.createElement("details");
@@ -1082,6 +1102,10 @@ function folded(summary: string, content: HTMLElement): HTMLElement {
 function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const [box, inner] = card(number, "Bring in your bank transactions");
   const many = state.ledger.transactions.length;
+  // A feed unless they say otherwise. It is the way in that cannot mistype a
+  // figure or miss a week, so it is what the step should be showing when
+  // somebody arrives at it rather than a choice between two blanks.
+  const how = held.bank ?? "feed";
 
   inner.append(
     advice(
@@ -1106,13 +1130,13 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
         ],
       ],
       (value) => answer({ bank: value }),
-      held.bank,
+      how,
     ),
   );
 
   // The page that does it, shown here rather than linked to. It is the live
   // one, moved: a second copy would be a second thing to keep in step.
-  if (held.bank === "feed") {
+  if (how === "feed") {
     const feed = borrow("import-feed");
     if (feed !== null) {
       inner.append(feed);
@@ -1123,12 +1147,26 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
         if (document.getElementById("feed-body") !== null) void renderFeed();
       });
     }
-  } else if (held.bank === "files") {
+  } else {
     const files = borrow("import-files");
     if (files !== null) inner.append(files);
   }
 
   if (many > 0) inner.append(note(`${many} transaction${many === 1 ? "" : "s"} loaded.`));
+
+  // What arrived, and what of it wants a decision. Landing on the review
+  // queue rather than on all five thousand rows: the queue is the only part
+  // anybody has to act on.
+  const table = borrow("import-table");
+  if (table !== null) {
+    inner.append(table);
+    showWhatNeedsDeciding();
+    queueMicrotask(() => {
+      if (document.getElementById("filter-review") === null) return;
+      renderStatus();
+      renderTable();
+    });
+  }
 
   inner.append(
     actions(
@@ -1143,7 +1181,7 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
   const xero = held.source === "xero";
   const [box, inner] = card(
     number,
-    xero ? "Bring your Xero organisation across" : "Bring your spreadsheet across",
+    xero ? "Migration from Xero" : "Migration from a spreadsheet",
   );
 
   if (xero) {
@@ -1151,15 +1189,66 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     const have = files.filter((f) => f.have).length;
     inner.append(
       advice(
-        "Drop the exports here as you get them. Each is recognised on its own, so the order " +
-          "does not matter, and the list below ticks off what has arrived.",
+        "If you have a full financial year in Xero, bring it across. It is worth more than " +
+          "a starting balance: a year of coded transactions teaches the rules, carries the " +
+          "invoices, assets and filed returns, and leaves most of the rest of this set-up " +
+          "already done.",
       ),
+    );
+
+    // The year it would be. Asked rather than assumed, because a Xero
+    // organisation that started part way through one has no full year to give.
+    const year = financialYearBefore(held.startDate);
+    if (year !== null) {
+      inner.append(
+        note(
+          `You chose ${held.startDate} as the day these books start. Do you have Xero ` +
+            `records for the financial year ${year.from} to ${year.to}?`,
+        ),
+        choices<"yes" | "no">(
+          [
+            [
+              "yes",
+              "Yes, the whole year",
+              "Export the account transactions for it. The coding comes across with them",
+            ],
+            [
+              "no",
+              "No, or only part of it",
+              "Bring what there is. The chart and the trial balance are the two that matter",
+            ],
+          ],
+          (value) => answer({ xeroYear: value === "yes" }),
+          held.xeroYear === undefined ? undefined : held.xeroYear ? "yes" : "no",
+        ),
+      );
+      if (held.xeroYear === true) {
+        inner.append(
+          advice(
+            `${XERO_ACCOUNT_TRANSACTIONS}, for ${year.from} to ${year.to}. That one export ` +
+              "is what the rules are learned from.",
+          ),
+        );
+      } else if (held.xeroYear === false) {
+        inner.append(
+          advice(
+            "Then the chart of accounts and the trial balance at the day before you start " +
+              "are the two to get right. The rules will come from the first codings you make " +
+              "instead.",
+          ),
+        );
+      }
+    }
+
+    inner.append(
       note(`${have} of ${files.length} loaded.`),
-      dropZone(),
       table(
         ["Export", "Where in Xero", "What it gives NZOSA"],
-        files.map((f) => [f.have ? `✓ ${f.what}` : f.what, f.where, f.why]),
+        files.map((f) => [f.have ? `\u2713 ${f.what}` : f.what, f.where, f.why]),
       ),
+      // Under the list of what to get, rather than above it: there is nothing
+      // to drop until you have read what to export.
+      dropZone(),
       folded(
         "The full Xero guide: what to finish first, what to export, how to check the figures",
         xeroGuide(held),
@@ -1221,7 +1310,8 @@ function remainingSteps(): SetupStep[] {
  * somebody who has not met the thing yet. The step's own line stays, as the
  * status underneath.
  */
-function guidance(what: string): HTMLElement | null {
+function guidance(what: string, held: Onboarding): HTMLElement | null {
+  if (what === "Coded history") return codedHistory(held);
   if (what !== "Chart of accounts") return null;
 
   const wrap = document.createElement("div");
@@ -1252,6 +1342,49 @@ function guidance(what: string): HTMLElement | null {
   return wrap;
 }
 
+/**
+ * What a coded history is, and whether they have one.
+ *
+ * The step's own line names a Xero export or a spreadsheet column and assumes
+ * you know why either matters. What it is: work already done. Every coding
+ * this app proposes is lined up against what the other system recorded, the
+ * ones that agree become rules, and the ones that differ are listed for a
+ * decision -- which is how a year gets coded back through without doing it
+ * line by line.
+ */
+function codedHistory(held: Onboarding): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.append(
+    advice(
+      "Transactions somebody has already coded -- in Xero, or in a spreadsheet. Each coding " +
+        "this app proposes is lined up against what you did before: where the two agree, " +
+        "that coding becomes a rule you keep; where they differ, both are shown and you " +
+        "decide. It is how a year gets coded back through without going line by line.",
+    ),
+  );
+
+  if (held.source === "xero") {
+    wrap.append(advice(`${XERO_ACCOUNT_TRANSACTIONS}.`));
+  } else if (held.source === "sheet") {
+    wrap.append(
+      advice(
+        "Your spreadsheet, with a column saying what each line was coded to. Anything the " +
+          "column names that the chart does not have is listed rather than guessed at.",
+      ),
+    );
+  } else {
+    wrap.append(
+      advice(
+        "You chose to start with empty books, so there is nothing here you have to load. " +
+          "But if you do have a spreadsheet of transactions that were already coded -- a " +
+          "year kept by hand, or an export from something you are leaving -- load it here " +
+          "and that work becomes the rules.",
+      ),
+    );
+  }
+  return wrap;
+}
+
 function checklistQuestion(number: number, held: Onboarding): HTMLElement {
   const rest = remainingSteps();
   const total = rest.length;
@@ -1277,9 +1410,10 @@ function checklistQuestion(number: number, held: Onboarding): HTMLElement {
     (step.done ? " · done ✓" : "");
   inner.append(place);
 
-  const said = guidance(step.what);
-  if (said !== null) inner.append(said, note(step.detail));
-  else inner.append(advice(step.detail));
+  const said = guidance(step.what, held);
+  if (said === null) inner.append(advice(step.detail));
+  else if (step.done) inner.append(said, note(step.detail));
+  else inner.append(said);
   if (step.unlocks !== "") inner.append(note(`Gives you: ${step.unlocks}`));
   if (step.takesFiles === true && !step.done) inner.append(dropZone());
 

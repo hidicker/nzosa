@@ -56,6 +56,8 @@ export interface Onboarding {
   bank?: "feed" | "files";
   /** How far through the rest of the set-up list they have walked. */
   checklistAt?: number;
+  /** Whether Xero holds the whole financial year before these books start. */
+  xeroYear?: boolean;
   /** Set when the questions are behind them, so the page stops asking. */
   finished?: boolean;
 }

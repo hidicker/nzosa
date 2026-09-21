@@ -235,7 +235,7 @@ export interface SetupLink {
   action?: () => void;
 }
 
-interface SetupStep {
+export interface SetupStep {
   what: string;
   done: boolean;
   detail: string;
@@ -270,6 +270,15 @@ interface SetupStep {
   partial?: boolean;
   /** Interactive content of its own: a file list, a drop zone. */
   extra?: HTMLElement;
+  /**
+   * Satisfied by loading a file, so somewhere to drop one is worth offering.
+   *
+   * The guided start walks these steps one at a time and puts a drop zone on
+   * the ones it would help. A step that is a decision rather than a file --
+   * the rules, or tying a chart's bank rows to the accounts the import found
+   * -- gets no drop zone, because there is nothing to drop on it.
+   */
+  takesFiles?: boolean;
 }
 
 /**
@@ -475,7 +484,7 @@ function migrationStepContent(source: string): HTMLElement {
  * removed the drop zone from a page nobody was even looking at. Anything that
  * wants the answer rather than the elements asks for it without them.
  */
-function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
+export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
   const withContent = options.withContent !== false;
   const led = state.ledger;
   const source = $<HTMLSelectElement>("setup-source").value;
@@ -561,6 +570,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "Chart of accounts",
+      takesFiles: true,
       done: chartLoaded,
       detail: chartLoaded
         ? `${state.chart.length} accounts, ${typed} with a type set`
@@ -597,6 +607,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
       // produce a short balance sheet, it produces a wrong one, which is the
       // reason this is its own step rather than a note on the reports page.
       what: "Opening balances",
+      takesFiles: true,
       done: led.openingBalances !== undefined,
       optional: fromNew,
       detail:
@@ -615,6 +626,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "Coded history",
+      takesFiles: true,
       done: state.reference.length > 0,
       optional: fromNew,
       detail:
@@ -699,6 +711,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "Invoices",
+      takesFiles: true,
       done: (led.invoices ?? []).length > 0,
       optional: true,
       detail:
@@ -712,6 +725,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "Fixed assets",
+      takesFiles: true,
       done: (led.assets ?? []).length > 0,
       optional: true,
       detail:
@@ -725,6 +739,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "General ledger",
+      takesFiles: true,
       done: (led.journals ?? []).length > 0,
       optional: true,
       detail:
@@ -742,6 +757,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
       // Everything else in this list comes from the same two systems; a total
       // built from the rows cannot tell you a row is missing.
       what: "Daily bank balances",
+      takesFiles: true,
       done: state.balanceChecks.length > 0,
       optional: true,
       detail:
@@ -754,6 +770,7 @@ function setupSteps(options: { withContent?: boolean } = {}): SetupStep[] {
     },
     {
       what: "Filed GST returns",
+      takesFiles: true,
       done: state.filed.length > 0,
       optional: true,
       detail:

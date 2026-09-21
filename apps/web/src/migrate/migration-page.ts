@@ -9,7 +9,8 @@ import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
 import { borrow, returnBorrowed } from "../borrow.js";
 import { renderFeed } from "../daily/bank-import.js";
 import { loadWhatever } from "./file-intake.js";
-import { loadDemoData, xeroMigrationFiles } from "./setup-wizard.js";
+import { loadDemoData, setupSteps, xeroMigrationFiles } from "./setup-wizard.js";
+import type { SetupStep } from "./setup-wizard.js";
 import {
   booksKey,
   booksStartDate,
@@ -69,7 +70,7 @@ function stepsFor(held: Onboarding): Step[] {
   if (held.onlyOne === false) steps.push("shared");
   steps.push("entities", "plan", "bank");
   if (held.source === "xero" || held.source === "sheet") steps.push("files");
-  steps.push("done");
+  steps.push("checklist", "done");
   return steps;
 }
 
@@ -310,6 +311,11 @@ function said(held: Onboarding, step: Step): string {
       const files = xeroMigrationFiles();
       const have = files.filter((f) => f.have).length;
       return `${have} of ${files.length} files loaded`;
+    }
+    case "checklist": {
+      const rest = remainingSteps();
+      const done = rest.filter((s) => s.done).length;
+      return `${done} of ${rest.length} of the rest set up`;
     }
     case "done":
       return "";
@@ -987,6 +993,11 @@ function dropZone(): HTMLElement {
   zone.addEventListener("drop", (e) => take((e as DragEvent).dataTransfer?.files));
 
   zone.append(text, pick, input);
+  // What the reader says about each file it was given. It writes into one
+  // element, which lives in Setup's own drop zone, so a file dropped here
+  // would otherwise be read in silence.
+  const told = borrow("setup-loaded");
+  if (told !== null) zone.append(told);
   return zone;
 }
 
@@ -1102,6 +1113,99 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
   return box;
 }
 
+/**
+ * What the questions above have already answered, in Setup's own words.
+ *
+ * Kept as names rather than positions because the list is Setup's and may grow
+ * -- and a step that has been answered and is asked again reads as the guided
+ * start not having listened.
+ */
+const ALREADY_ASKED = new Set([
+  "Bank transactions",
+  "Whose books are these?",
+  "More than one entity?",
+]);
+
+/**
+ * The rest of the set-up list, walked one step at a time.
+ *
+ * Setup lists the same steps on one page and ticks them off, which suits
+ * somebody who knows what they have. Walking them is for somebody who does
+ * not: one at a time, in the order they depend on each other, each saying what
+ * it is and what it gives you, with somewhere to drop the file it wants.
+ *
+ * The steps are Setup's own, asked for without their interactive content --
+ * building that moves Setup's drop zone out of Setup. The drop zone here is
+ * this page's own.
+ */
+function remainingSteps(): SetupStep[] {
+  return setupSteps({ withContent: false }).filter(
+    (step) =>
+      // "Migration from Xero", and its spreadsheet twin, is the step above
+      // this walk rather than one inside it.
+      !ALREADY_ASKED.has(step.what) && !step.what.startsWith("Migration from "),
+  );
+}
+
+function checklistQuestion(number: number, held: Onboarding): HTMLElement {
+  const rest = remainingSteps();
+  const total = rest.length;
+  const where = Math.min(Math.max(held.checklistAt ?? 0, 0), Math.max(total - 1, 0));
+  const step = rest[where];
+
+  if (step === undefined) {
+    const [box, inner] = card(number, "The rest of the set-up");
+    inner.append(
+      advice("Nothing left to walk through."),
+      actions(button("Continue", () => answer({ at: "done" }), true)),
+    );
+    return box;
+  }
+
+  const [box, inner] = card(number, step.what);
+
+  const place = document.createElement("p");
+  place.className = "migration-place";
+  place.textContent =
+    `Step ${where + 1} of ${total}` +
+    (step.optional === true ? " · optional" : "") +
+    (step.done ? " · done ✓" : "");
+  inner.append(place);
+
+  inner.append(advice(step.detail));
+  if (step.unlocks !== "") inner.append(note(`Gives you: ${step.unlocks}`));
+  if (step.takesFiles === true && !step.done) inner.append(dropZone());
+
+  // The step's own way in, whether that is a page or something it does here.
+  const ways: HTMLButtonElement[] = [];
+  for (const link of step.links ?? []) {
+    const go = link.page;
+    ways.push(
+      button(link.label, () => {
+        if (go !== undefined) showPage(go);
+        else link.action?.();
+      }),
+    );
+  }
+  if (ways.length === 0 && step.page !== undefined) {
+    const page = step.page;
+    ways.push(button(step.done ? "Review" : "Go", () => showPage(page)));
+  }
+
+  const move = (to: number): void =>
+    answer(to >= total ? { at: "done", checklistAt: total } : { checklistAt: Math.max(to, 0) });
+
+  inner.append(
+    actions(
+      button(where + 1 === total ? "Finish" : "Next", () => move(where + 1), true),
+      ...ways,
+      ...(where > 0 ? [button("Back", () => move(where - 1))] : []),
+      button("Skip the rest", () => answer({ at: "done" })),
+    ),
+  );
+  return box;
+}
+
 function doneQuestion(number: number, held: Onboarding): HTMLElement {
   const [box, inner] = card(number, "That is the start of it");
   const several = (held.entities ?? []).length > 1 && held.shared === true;
@@ -1205,6 +1309,8 @@ function question(number: number, step: Step, held: Onboarding): HTMLElement {
       return bankQuestion(number, held);
     case "files":
       return filesQuestion(number, held);
+    case "checklist":
+      return checklistQuestion(number, held);
     case "done":
       return doneQuestion(number, held);
   }

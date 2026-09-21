@@ -27,6 +27,7 @@ export type Step =
   | "plan"
   | "bank"
   | "files"
+  | "checklist"
   | "done";
 
 export interface PlannedEntity {
@@ -53,6 +54,8 @@ export interface Onboarding {
   entities?: PlannedEntity[];
   /** How the bank transactions are coming in: a live feed, or files. */
   bank?: "feed" | "files";
+  /** How far through the rest of the set-up list they have walked. */
+  checklistAt?: number;
   /** Set when the questions are behind them, so the page stops asking. */
   finished?: boolean;
 }

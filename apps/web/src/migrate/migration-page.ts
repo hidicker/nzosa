@@ -762,6 +762,36 @@ function entityList(planned: readonly PlannedEntity[]): HTMLElement {
  * `record` is what the answer has to remember afterwards -- which set of books
  * this entity ended up in, where each is getting its own.
  */
+/**
+ * Saving without asking, where asking would be asking nothing.
+ *
+ * One entity and nothing else has already been named and confirmed a screen
+ * ago; a panel listing that one name again with a Save button under it is the
+ * same answer twice. Where there is a choice -- several entities, or books
+ * that already belong to somebody -- the panel stays.
+ */
+let saving = false;
+
+function saveQuietly(
+  group: readonly PlannedEntity[],
+  held: Onboarding,
+  record: Onboarding,
+): void {
+  if (saving) return;
+  saving = true;
+  void applyEntities(group).then(
+    () => {
+      if (held.source !== undefined) tellSetup(held.source);
+      rememberOnboarding(record);
+      saving = false;
+      renderMigration();
+    },
+    () => {
+      saving = false;
+    },
+  );
+}
+
 function applyPanel(
   planned: readonly PlannedEntity[],
   held: Onboarding,
@@ -832,7 +862,7 @@ function planQuestion(number: number, held: Onboarding): HTMLElement {
     }
   }
 
-  inner.append(theirOwnBooks(held, shared));
+  inner.append(theirOwnBooks(held));
   return box;
 }
 
@@ -852,8 +882,12 @@ function planQuestion(number: number, held: Onboarding): HTMLElement {
  * bug that produces plausible wrong figures. So the answers are kept outside
  * any one set of books and picked up afterwards.
  */
-function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
+function theirOwnBooks(held: Onboarding): HTMLElement {
   const wrap = document.createElement("div");
+  const shared = held.onlyOne === false && held.shared === true;
+  // One entity and nothing else: there is no list to keep, no second one
+  // coming, and nothing to confirm that was not confirmed a screen ago.
+  const single = held.onlyOne === true;
   const open = booksKey();
   const all = (held.entities ?? []).filter((e) => e.name.trim() !== "");
   const placed = all.filter((e) => e.book !== undefined);
@@ -862,7 +896,7 @@ function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
   // the next one when they come back for it.
   const group = shared ? all.filter((e) => e.book === undefined) : waiting ? [waiting] : [];
 
-  if (placed.length > 0 && !shared) {
+  if (placed.length > 0 && !shared && !single) {
     const list = document.createElement("div");
     list.className = "migration-queue";
     for (const entity of placed) {
@@ -889,6 +923,11 @@ function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
   // the reload after starting a new set lands.
   const hereNow = all.filter((e) => e.book === open);
   if (hereNow.length > 0 && unclaimed()) {
+    if (single) {
+      saveQuietly(hereNow, held, {});
+      wrap.append(advice(`Setting these books up for ${hereNow[0]?.name ?? ""}\u2026`));
+      return wrap;
+    }
     const heading = document.createElement("h4");
     heading.textContent =
       hereNow.length === 1
@@ -899,12 +938,22 @@ function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
   }
 
   if (group.length === 0) {
+    const mine = placed[0]?.name ?? "";
     wrap.append(
       advice(
-        shared ? "These books hold all of them." : "Each of these has a set of books of its own.",
+        single
+          ? `These books are ${mine}'s.`
+          : shared
+            ? "These books hold all of them."
+            : "Each of these has a set of books of its own.",
       ),
       actions(
-        ...(shared ? [] : [button("Start another entity", () => answer({ at: "entities" }))]),
+        // Only where there is another one to start. Asked of somebody who
+        // said there is one entity and nothing else, it is an offer to undo
+        // the answer they just gave.
+        ...(shared || single
+          ? []
+          : [button("Start another entity", () => answer({ at: "entities" }))]),
         button("Continue", () => answer({ at: "bank" }), true),
       ),
     );
@@ -915,15 +964,19 @@ function theirOwnBooks(held: Onboarding, shared: boolean): HTMLElement {
   if (first === undefined) return wrap;
 
   if (unclaimed()) {
+    const record = { entities: [...placed, ...group.map((e) => ({ ...e, book: open }))] };
+    if (single) {
+      saveQuietly(group, held, record);
+      wrap.append(advice(`Setting these books up for ${first.name}\u2026`));
+      return wrap;
+    }
     wrap.append(
       advice(
         group.length === 1
           ? `These books are still nobody's, so ${first.name} can have them.`
           : "These books are still nobody's, so all of them can go in here.",
       ),
-      applyPanel(group, held, {
-        entities: [...placed, ...group.map((e) => ({ ...e, book: open }))],
-      }),
+      applyPanel(group, held, record),
     );
     return wrap;
   }

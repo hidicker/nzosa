@@ -516,9 +516,30 @@
   .sidebar-nav button {
     padding: 8px;
   }
-  .sidebar-heading,
-  .sidebar-foot {
+  .sidebar-heading {
     display: none;
+  }
+  /* The set of books is the way to the Books page, so it stays -- as the name
+     alone, on the end of the strip, rather than a labelled block. Hiding it
+     here left a narrow window with no way to that page at all. */
+  .sidebar-foot {
+    display: block;
+    flex: 0 0 auto;
+    padding: 0;
+    margin: 0;
+    border-top: 0;
+  }
+  .sidebar-foot .ledger-open {
+    width: auto;
+    padding: 6px 10px;
+    flex-direction: row;
+  }
+  .sidebar-foot .ledger-open-label {
+    display: none;
+  }
+  .sidebar-foot .ledger-open-name {
+    font-size: 0.78rem;
+    white-space: nowrap;
   }
   main,
   .topbar {
@@ -626,6 +647,58 @@
 .code-description { flex: 2 1 14rem !important; }
 .code-form button { min-width: 4rem; }
 .code-reason { grid-column: 3; font-size: 0.75rem; color: var(--muted, #667); }
+
+/* A phone.
+   Three columns side by side need forty-odd rems between them, which is wider
+   than a phone -- so the phone zoomed the whole page out to fit, and the
+   amount, sitting in a column of its own between the transaction and the
+   coding, read as floating between the two. Stacked instead: who and what on
+   the left with the amount beside it, the coding underneath at full width. */
+@media (max-width: 700px) {
+  .code-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 0;
+  }
+  .code-bank { grid-column: 1; grid-row: 1; }
+  .code-amount { grid-column: 2; grid-row: 1; padding-top: 0; align-self: start; }
+  .code-form, .code-reason { grid-column: 1 / -1; }
+  /* One field per line: half a dozen of them wrapping in pairs is harder to
+     read than a list, and a description is the field that wants the room. */
+  .code-form { gap: 0.35rem; }
+  .code-form select,
+  .code-form input[type="text"],
+  .code-form .combo,
+  .code-contact,
+  .code-description {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+  .code-form button { flex: 0 0 auto; }
+}
+
+/* Tables, on a phone.
+   A table of accounts with a picker in every row wants seven hundred-odd
+   pixels and will not fold, so the whole page was shrunk to fit it and every
+   word on the page went with it. Each table scrolls sideways within itself
+   instead, and the page around it stays the width of the screen. */
+@media (max-width: 700px) {
+  main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  /* A floor under every column. Without it five columns share three hundred
+     pixels, each gets sixty, and the cells break words down the middle to fit
+     -- "unat tribu ted", which is harder to read than scrolling is. With it
+     the table is wider than the screen, which is what the scrolling above is
+     for, and the words stay whole. */
+  main table th,
+  main table td {
+    min-width: 5rem;
+  }
+}
 
 #rules-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
 #rules-body th, #rules-body td { padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); text-align: right; }

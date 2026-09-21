@@ -243,6 +243,32 @@ export function wholePrompt(
 }
 
 /**
+ * The account these books call that code.
+ *
+ * A model is asked for a chart code because a number is short, unambiguous
+ * and cheap to check. What this app codes to is not a number: it is a label,
+ * "ACC Levy Expenses - 401", and writing the bare 401 would post to an
+ * account of that name which nothing else in the books has ever heard of --
+ * a report keyed on labels would show it as a separate line, and the account
+ * it was meant for would be short by exactly that much.
+ *
+ * So the number is translated back, and a number that translates to nothing,
+ * or to more than one thing, is refused. Refused rather than guessed at: two
+ * accounts ending in the same number is a chart somebody has to look at, and
+ * picking one of them here would hide that from them.
+ */
+export function labelForCode(code: string, labels: readonly string[]): string | null {
+  const wanted = code.trim().toLowerCase();
+  if (wanted === "") return null;
+  const hits = labels.filter((label) => {
+    const at = label.lastIndexOf(" - ");
+    if (at < 0) return label.trim().toLowerCase() === wanted;
+    return label.slice(at + 3).trim().toLowerCase() === wanted;
+  });
+  return hits.length === 1 ? (hits[0] ?? null) : null;
+}
+
+/**
  * Read what came back, expecting it to be wrong.
  *
  * A model can return prose around its JSON, a code that is not in the chart,

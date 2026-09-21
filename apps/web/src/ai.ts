@@ -1,11 +1,12 @@
 import { accountsFor, unregisteredCode } from "./books.js";
-import { suggest } from "./reconcile.js";
+import { knownCodes, suggest } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
 import {
   askAbout,
   briefing,
   emptyEntityModel,
+  labelForCode,
   parseSuggestions,
   unmatched,
   wholePrompt,
@@ -168,12 +169,27 @@ export async function askAboutLines(
     asked: asked.map((one) => one.id),
     codes,
   });
+
+  // Checked twice, against two different lists, because the cost of a wrong
+  // one is a posting to an account nobody meant. The chart says the number
+  // exists; this says which account in these books that number is, and a
+  // number that answers to no account -- or to two -- is thrown away rather
+  // than coded to a name the books have never used.
+  const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  let got = 0;
+  let invented = 0;
   for (const one of back) {
-    // Only the ones it would actually place. A blank is the model saying it
-    // does not know, which is worth nothing on a queue of things to decide.
-    if (one.code !== "") found.set(one.id, one);
+    // A blank is the model saying it does not know, which is worth nothing on
+    // a queue of things to decide, and is not an invented account either.
+    if (one.code === "") continue;
+    const label = labelForCode(one.code, labels);
+    if (label === null) {
+      invented += 1;
+      continue;
+    }
+    found.set(one.id, { ...one, code: label });
+    got += 1;
   }
-  const got = back.filter((one) => one.code !== "").length;
   return {
     got,
     said:
@@ -181,6 +197,9 @@ export async function askAboutLines(
         ? "Nothing came back that could be read as an answer. Nothing has changed."
         : got === 0
           ? `Asked about ${asked.length}, and it would not place any of them.`
-          : "",
+          : invented === 0
+            ? ""
+            : `${invented} of ${back.length} named an account these books do not have, and ` +
+              "were thrown away. The rest are on the lines they belong to.",
   };
 }

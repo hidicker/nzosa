@@ -5,6 +5,7 @@ import {
   briefing,
   examples,
   instructions,
+  labelForCode,
   parseSuggestions,
   unmatched,
   wholePrompt,
@@ -171,4 +172,25 @@ test("a confidence that is not a number between nothing and certain is not belie
   );
   assert.equal(out[0].confidence, 0);
   assert.equal(out[1].confidence, 0);
+});
+
+test("a code is translated to the account these books actually code to", () => {
+  const labels = ["ACC Levy Expenses - 401", "Sales - 200", "Bank Fees - 404", "Suspense"];
+  assert.equal(labelForCode("401", labels), "ACC Levy Expenses - 401");
+  assert.equal(labelForCode(" 200 ", labels), "Sales - 200");
+  // A label with no code at all is matched by its whole name.
+  assert.equal(labelForCode("Suspense", labels), "Suspense");
+});
+
+test("a code this chart does not have translates to nothing", () => {
+  const labels = ["Sales - 200"];
+  assert.equal(labelForCode("9999", labels), null);
+  assert.equal(labelForCode("", labels), null);
+  assert.equal(labelForCode("20", labels), null, "a prefix is not a match");
+});
+
+test("a code two accounts share is refused rather than picked between", () => {
+  // Two charts loaded, one house-prefixed: the number alone cannot say which.
+  const labels = ["Advertising - 400", "NB Advertising - 400"];
+  assert.equal(labelForCode("400", labels), null);
 });

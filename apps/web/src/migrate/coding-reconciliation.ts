@@ -1,4 +1,5 @@
 import { redraw, showPage } from "../app.js";
+import { AI_BATCH, aiStatus, askAboutLines, waitingForAnswers } from "../ai.js";
 import {
   unregisteredCode,
   accountDecided,
@@ -1892,10 +1893,55 @@ const CODING_TEMPLATE =
   "15/04/2025,-120.50,Motor Vehicle Expenses,Fuel (example -- replace with your own)\r\n" +
   "30/04/2025,2300.00,Sales,Invoice 1001 (example)\r\n";
 
+/**
+ * Asking a model about the next few lines nothing recognises.
+ *
+ * On the page where the coding is done rather than only on its own, because
+ * this is where somebody already is when a line has nothing on it -- and
+ * hidden entirely until a key is set, so books that do not use it never see a
+ * button they cannot press.
+ */
+function wireAiButton(): void {
+  const button = $<HTMLButtonElement>("reconcile-ai");
+
+  const say = (): void => {
+    const left = waitingForAnswers().length;
+    button.textContent =
+      left === 0
+        ? "Nothing left to ask about"
+        : `Get AI suggestions (${Math.min(left, AI_BATCH)} of ${left})`;
+    button.disabled = left === 0;
+  };
+
+  void aiStatus().then((status) => {
+    if (status === null || !status.configured || state.ledger.aiEnabled !== true) return;
+    button.hidden = false;
+    say();
+  });
+
+  button.addEventListener("click", () => {
+    button.disabled = true;
+    button.textContent = "Asking…";
+    void askAboutLines(waitingForAnswers()).then(({ got, said }) => {
+      if (said !== "") alert(said);
+      // Straight to them: a suggestion nobody can find is a suggestion nobody
+      // asked for.
+      if (got > 0) {
+        state.reconcileFilter = "ai";
+        const filter = document.getElementById("reconcile-filter");
+        if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
+      }
+      say();
+      redraw("reconcile");
+    });
+  });
+}
+
 /** Loading what the other system coded, clearing it, and accepting in bulk. */
 export function wireCodingReconciliation(): void {
 
   $("accept-all").addEventListener("click", () => void acceptAllShown());
+  wireAiButton();
   $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
   $("check-template").addEventListener("click", () =>
     download(CODING_TEMPLATE, "coding-history-template.csv", "text/csv"),

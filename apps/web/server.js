@@ -255,6 +255,34 @@ const AI_DAILY_LIMIT = 200;
 const AI_PREFERRED = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.6-pro"];
 
 /**
+ * Models that answer questions, out of everything on the key.
+ *
+ * A key lists forty-odd, and most of them draw pictures, read text aloud,
+ * transcribe speech or write music. Offering those for coding a bank
+ * transaction is offering somebody a choice they cannot evaluate, so the list
+ * is cut to what could sensibly do this job.
+ */
+const AI_NOT_FOR_THIS =
+  /image|tts|audio|video|robotics|computer-use|transcribe|lyria|deep-research|antigravity|nano-banana|omni|embedding|aqa/i;
+
+/** Newest first, and the one we would reach for at the top. */
+function orderModels(models) {
+  const rank = (model) => {
+    const preferred = AI_PREFERRED.indexOf(model.name);
+    if (preferred >= 0) return preferred;
+    // Then Gemini before anything else, and within that by version
+    // descending: 3.8 before 3.6 before 2.5. A model named "latest" carries no
+    // number and belongs with the newest rather than with the oldest.
+    const family = /^gemini/.test(model.name) ? 10 : 1000;
+    const version = /latest/.test(model.name)
+      ? 99
+      : Number((model.name.match(/\d+(\.\d+)?/) ?? ["0"])[0]);
+    return family + (100 - version);
+  };
+  return [...models].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
+}
+
+/**
  * Every model this key may use that can answer this kind of question.
  *
  * Also how a key is checked. Listing costs nothing and says more than a test
@@ -274,13 +302,14 @@ async function geminiModels(key) {
         : `HTTP ${response.status}`;
     throw new Error(said);
   }
-  return (body?.models ?? [])
+  const usable = (body?.models ?? [])
     .filter((model) => (model.supportedGenerationMethods ?? []).includes("generateContent"))
     .map((model) => ({
       name: String(model.name ?? "").replace(/^models\//, ""),
       label: String(model.displayName ?? model.name ?? ""),
     }))
-    .filter((model) => model.name !== "");
+    .filter((model) => model.name !== "" && !AI_NOT_FOR_THIS.test(model.name));
+  return orderModels(usable);
 }
 
 /** The one to start on: a preference if this key has it, else a flash, else any. */
@@ -741,6 +770,15 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         if (ai === null) {
           send(response, 400, { error: "no key set for these books" });
           return;
+        }
+        // A model the list no longer offers is not a choice any more: it is
+        // the error it is about to produce. Quietly moved to the one we would
+        // have picked, rather than failing and saying so to somebody who did
+        // not choose it in the first place.
+        const offered = ai.models ?? [];
+        if (offered.length > 0 && !offered.some((model) => model.name === ai.model)) {
+          ai.model = pickModel(offered, "");
+          writeAi(ledgerRoot, current, ai);
         }
         const body = JSON.parse(await readBody(request));
         const prompt = String(body.prompt ?? "");

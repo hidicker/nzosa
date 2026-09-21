@@ -210,9 +210,11 @@
             <div class="chips" id="reconcile-accounts" role="group" aria-label="Accounts"></div>
             <input id="reconcile-search" type="search" placeholder="Search payee or amount&hellip;" />
             <button id="accept-all" type="button">Accept all</button>
+            <button id="reconcile-ai" type="button" hidden>Get AI suggestions</button>
             <select id="reconcile-filter" title="Which lines to show">
               <option value="todo">Still to confirm</option>
               <option value="suggested">Suggested, not yet confirmed</option>
+              <option value="ai">AI suggested</option>
               <option value="nocode">Nothing suggested</option>
               <option value="coded">Coded</option>
               <option value="all">All</option>

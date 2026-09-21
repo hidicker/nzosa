@@ -1,20 +1,19 @@
 import { redraw, showPage } from "../app.js";
-import { accountsFor, saveEntities, unregisteredCode } from "../books.js";
+import { saveEntities } from "../books.js";
 import { $, state } from "../state.js";
 import { backendKind, save } from "../store.js";
 import { note } from "../ui.js";
-import { suggest } from "../reconcile.js";
-import { confirmLine } from "./reconcile-page.js";
 import {
-  askAbout,
-  briefing,
-  emptyEntityModel,
-  parseSuggestions,
-  unmatched,
-  wholePrompt,
-} from "@nzosa/core";
-import type { AiSuggestion, AskedAbout, Entity } from "@nzosa/core";
-import type { Suggestion } from "../reconcile.js";
+  AI_BATCH,
+  aiRequest as api,
+  aiSuggestionCount,
+  aiStatus,
+  waitingForAnswers,
+  whatWouldBeAsked,
+} from "../ai.js";
+import type { AiStatus } from "../ai.js";
+import { emptyEntityModel } from "@nzosa/core";
+import type { Entity } from "@nzosa/core";
 
 /**
  * Asking a model about the lines nothing in these books recognises.
@@ -40,34 +39,7 @@ import type { Suggestion } from "../reconcile.js";
  * nothing until somebody agrees with it.
  */
 
-interface AiModel {
-  name: string;
-  label: string;
-}
-
-interface AiStatus {
-  configured: boolean;
-  key: string;
-  model: string;
-  /** What this key's own account offers. Asked for rather than assumed. */
-  models: AiModel[];
-  usedToday: number;
-  limit: number;
-}
-
 let status: AiStatus | null = null;
-let found: AiSuggestion[] = [];
-let asked: AskedAbout[] = [];
-let said = "";
-let working = false;
-
-async function api(path: string, init?: RequestInit): Promise<Response | null> {
-  try {
-    return await fetch(path, init);
-  } catch {
-    return null;
-  }
-}
 
 export function renderAi(): void {
   const body = $("ai-body");
@@ -91,14 +63,12 @@ export function renderAi(): void {
   }
 
   body.append(keyPanel(), briefingPanel(), askPanel());
-  if (found.length > 0) body.append(resultsPanel());
   void refreshStatus();
 }
 
 async function refreshStatus(): Promise<void> {
-  const response = await api("/api/ai");
-  if (response === null || !response.ok) return;
-  const next = (await response.json()) as AiStatus;
+  const next = await aiStatus();
+  if (next === null) return;
   const changed =
     status === null ||
     status.configured !== next.configured ||
@@ -379,65 +349,31 @@ function briefingPanel(): HTMLElement {
   return box;
 }
 
-// --- asking ----------------------------------------------------------------
+// --- asking, which happens on the page where the coding is done -------------
 
-/** Every line, coded the way the Reconcile page codes them: rules first. */
-function allLines(): Suggestion[] {
-  return suggest(
-    state.ledger.transactions,
-    state.rules,
-    state.ledger.overrides ?? {},
-    accountsFor([]),
-    unregisteredCode(),
-  );
-}
-
-/** The lines nothing in these books recognises, and what would be said about them. */
-function whatWouldBeAsked(): { asked: AskedAbout[]; prompt: string; codes: string[] } {
-  const all = allLines();
-  const labels = new Map(
-    state.ledger.transactions.map((t) => [
-      t.id,
-      String(t.extras?.["accountLabel"] ?? t.account),
-    ]),
-  );
-  const asking = unmatched(all).map((one) =>
-    askAbout(one.transaction, labels.get(one.transaction.id) ?? ""),
-  );
-
-  const model = state.ledger.entities ?? emptyEntityModel();
-  const books = {
-    ...briefing(model, state.chart, (entity) => entity.about ?? ""),
-    about: state.ledger.booksAbout ?? "",
-  };
-  // Work already done, as worked examples: what a confirmed line was coded to.
-  const coded = all
-    .filter((one) => one.confirmed && (one.code ?? "").trim() !== "")
-    .map((one) => ({ payee: one.transaction.otherParty, code: one.code ?? "" }));
-
-  return {
-    asked: asking,
-    prompt: wholePrompt(books, asking, coded),
-    codes: books.accounts.map((account) => account.code),
-  };
-}
-
+/**
+ * Where the suggestions are, which is not here.
+ *
+ * This page sets the thing up. The asking is on Reconcile, beside the lines
+ * it is about, because a suggestion read anywhere else has to be carried back
+ * to the row it belongs to before it can be agreed to.
+ */
 function askPanel(): HTMLElement {
-  const [box, inner] = panel("Ask about what is left");
-  const { asked: asking, prompt, codes } = whatWouldBeAsked();
+  const [box, inner] = panel("Asking for suggestions");
+  const waiting = waitingForAnswers().length;
+  const ready = aiSuggestionCount();
 
-  const left = status === null ? null : status.limit - status.usedToday;
   inner.append(
     note(
-      asking.length === 0
-        ? "Nothing is waiting: every line has a rule, a default or your own answer."
-        : `${asking.length} line${asking.length === 1 ? "" : "s"} nothing recognises.` +
-          (left === null ? "" : ` ${status?.usedToday ?? 0} of ${status?.limit ?? 0} asked today.`),
+      status?.configured !== true
+        ? "A key is needed first."
+        : `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
+          `${AI_BATCH} at a time. ${status.usedToday} of ${status.limit} asked today.` +
+          (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
     ),
   );
 
-  // Readable before it is sent, in full, rather than described.
-  if (asking.length > 0) {
+  if (waiting > 0 && status?.configured === true) {
     const details = document.createElement("details");
     details.className = "setup-migration-details";
     const summary = document.createElement("summary");
@@ -445,7 +381,7 @@ function askPanel(): HTMLElement {
     summary.textContent = "Show exactly what would be sent";
     const pre = document.createElement("pre");
     pre.className = "ai-prompt";
-    pre.textContent = prompt;
+    pre.textContent = whatWouldBeAsked(waitingForAnswers()).prompt;
     details.append(summary, pre);
     inner.append(details);
   }
@@ -453,146 +389,17 @@ function askPanel(): HTMLElement {
   const go = document.createElement("button");
   go.type = "button";
   go.className = "primary";
-  go.textContent = working ? "Asking…" : "Get AI recommendations";
-  go.disabled = working || asking.length === 0 || status?.configured !== true;
-  go.addEventListener("click", () => {
-    working = true;
-    said = "";
-    redraw("ai");
-    void api("/api/ai/suggest", {
-      method: "POST",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ prompt, asking: asking.length }),
-    }).then(async (response) => {
-      working = false;
-      if (response === null) {
-        said = "Could not reach the app on this computer.";
-        redraw("ai");
-        return;
-      }
-      const answer = (await response.json().catch(() => ({}))) as {
-        text?: string;
-        error?: string;
-      };
-      if (!response.ok) {
-        said = answer.error ?? "The model would not answer.";
-        redraw("ai");
-        return;
-      }
-      asked = asking;
-      found = parseSuggestions(answer.text ?? "", {
-        asked: asking.map((one) => one.id),
-        codes,
-      });
-      said =
-        found.length === 0
-          ? "Nothing came back that could be read as an answer. Nothing has changed."
-          : "";
-      void refreshStatus().then(() => redraw("ai"));
-    });
-  });
-
+  go.textContent = "Go to Reconcile";
+  go.addEventListener("click", () => showPage("reconcile"));
   const row = document.createElement("div");
   row.className = "migration-actions";
   row.append(go);
-  if (status?.configured !== true) {
-    inner.append(note("A key is needed first."));
-  }
-  inner.append(row);
-
-  if (said !== "") {
-    const trouble = document.createElement("p");
-    trouble.className = "cloud-said bad";
-    trouble.textContent = said;
-    inner.append(trouble);
-  }
-  return box;
-}
-
-// --- what came back --------------------------------------------------------
-
-function resultsPanel(): HTMLElement {
-  const [box, inner] = panel("What it suggests");
   inner.append(
     note(
-      "Nothing here is coded until you say so. Accepting one codes that line the way the " +
-        "Reconcile page would, and it shows up in History as your decision.",
+      "The button is on Reconcile, under “Get AI suggestions”, and what comes back " +
+        "appears on the lines themselves. The filter there has a view of its own for them.",
     ),
+    row,
   );
-
-  const byId = new Map(asked.map((one) => [one.id, one]));
-  const named = new Map(state.chart.map((a) => [a.code.trim(), a.name]));
-  const lines = allLines();
-
-  const table = document.createElement("table");
-  table.className = "report-table ai-table";
-  const head = document.createElement("thead");
-  head.innerHTML =
-    "<tr><th>Payee</th><th>Amount</th><th>Suggested</th><th>Sure</th><th>Why</th><th></th></tr>";
-  const tbody = document.createElement("tbody");
-
-  for (const one of found) {
-    const about = byId.get(one.id);
-    if (about === undefined) continue;
-    const row = document.createElement("tr");
-
-    const payee = document.createElement("td");
-    payee.className = "report-name";
-    payee.textContent = about.payee || "--";
-
-    const amount = document.createElement("td");
-    amount.className = "report-amount";
-    amount.textContent = about.amount;
-
-    const code = document.createElement("td");
-    code.textContent =
-      one.code === "" ? "--" : `${one.code} ${named.get(one.code) ?? ""}`.trim();
-
-    const sure = document.createElement("td");
-    sure.className = "report-amount";
-    sure.textContent = one.code === "" ? "" : `${Math.round(one.confidence * 100)}%`;
-
-    const why = document.createElement("td");
-    why.className = "ai-why";
-    why.textContent = one.because;
-
-    const act = document.createElement("td");
-    if (one.code !== "") {
-      const take = document.createElement("button");
-      take.type = "button";
-      take.textContent = "Accept";
-      take.addEventListener("click", () => {
-        const line = lines.find((s) => s.transaction.id === one.id);
-        if (line === undefined) return;
-        take.disabled = true;
-        take.textContent = "Coded ✓";
-        void confirmLine(line, one.code, "15", "", about.payee);
-      });
-      act.append(take);
-    }
-
-    row.append(payee, amount, code, sure, why, act);
-    tbody.append(row);
-  }
-
-  table.append(head, tbody);
-  inner.append(table);
-
-  const row = document.createElement("div");
-  row.className = "migration-actions";
-  const clear = document.createElement("button");
-  clear.type = "button";
-  clear.textContent = "Clear these";
-  clear.addEventListener("click", () => {
-    found = [];
-    asked = [];
-    redraw("ai");
-  });
-  const go = document.createElement("button");
-  go.type = "button";
-  go.textContent = "Reconcile";
-  go.addEventListener("click", () => showPage("reconcile"));
-  row.append(clear, go);
-  inner.append(row);
   return box;
 }

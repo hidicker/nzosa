@@ -1891,6 +1891,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .ai-prompt { white-space: pre-wrap; font-size: 0.72rem; line-height: 1.45;
   max-height: 22rem; overflow: auto; background: rgba(128,128,128,0.08);
   padding: 0.6rem 0.8rem; border-radius: 4px; margin: 0.5rem 0 0; }
+/* A reason that is a model's, marked as one: the difference between "your own
+   rule says so" and "something guessed" is the whole of what to weigh. */
+.code-reason-ai { color: var(--accent); }
 .ai-table { margin: 0.6rem 0; }
 .ai-table td, .ai-table th { font-size: 0.8rem; }
 .ai-why { white-space: normal; max-width: 22rem; color: var(--muted, #667); }

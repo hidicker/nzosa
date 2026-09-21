@@ -8,6 +8,7 @@ import { buildRows } from "./variance.js";
 import type { VarianceInput } from "./variance.js";
 import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
+import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
 import {
   agentStatementJournal,
@@ -347,6 +348,13 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     (one.confirmed && hasCoding(one)) || linked[one.transaction.id] !== undefined;
 
   const shown = all.filter((one) => {
+    // What a model proposed and nobody has agreed to yet. Its own view
+    // because it is its own kind of work: every one of these wants reading
+    // rather than accepting in bulk.
+    if (state.reconcileFilter === "ai") {
+      if (settled(one)) return false;
+      if (aiSuggestionFor(one.transaction.id) === undefined) return false;
+    }
     if (state.reconcileFilter === "todo" && settled(one)) return false;
     if (state.reconcileFilter === "coded" && !settled(one)) return false;
     // A line with no code is one no rule matched. Confirming it means deciding

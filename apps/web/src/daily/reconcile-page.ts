@@ -34,6 +34,7 @@ import type { GstRate, Suggestion } from "../reconcile.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { splitEditor } from "../split-ui.js";
 import { $, state } from "../state.js";
+import { aiSuggestionFor } from "../ai.js";
 import { save, savePart } from "../store.js";
 import { note } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
@@ -158,6 +159,7 @@ export function renderReconcile(): void {
   const showing: Record<typeof state.reconcileFilter, string> = {
     todo: `${shown.length} still to confirm`,
     suggested: `${shown.length} suggested and waiting`,
+    ai: `${shown.length} suggested by the model, none of them agreed to yet`,
     nocode: `${shown.length} with nothing suggested`,
     coded: `${shown.length} coded`,
     all: `${shown.length} lines`,
@@ -310,7 +312,12 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const form = document.createElement("div");
   form.className = "code-form";
 
-  const codeSelect = combobox(codes, one.code, "Search accounts…");
+  // What a model proposed, where the rules proposed nothing. Offered in the
+  // picker the same as a rule's suggestion is, because it is the same kind of
+  // thing -- something to agree with or change -- and refusing to put it there
+  // would mean retyping an answer that is already on screen.
+  const fromModel = one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
+  const codeSelect = combobox(codes, one.code ?? fromModel?.code ?? null, "Search accounts…");
 
   const gstSelect = document.createElement("select");
   gstSelect.className = "gst-select";
@@ -411,7 +418,13 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     ? (one.note ?? "Confirmed")
     : (state.ledger.splits ?? {})[one.transaction.id]
       ? "Coded by its split, below. The tick agrees to it."
-      : `${rateLabel(one.classification)} · ${one.reason}`;
+      : fromModel !== undefined
+        ? // Named as a model's, and never as a rule's. Somebody deciding whether
+          // to press the tick is owed the difference between "your own rule says
+          // so" and "something guessed, this confidently, because".
+          `AI suggestion, ${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`
+        : `${rateLabel(one.classification)} · ${one.reason}`;
+  if (fromModel !== undefined) reason.classList.add("code-reason-ai");
 
   form.append(codeSelect.element, gstSelect, to, description, ok, splitButton);
   row.append(bank, amount, form, reason);

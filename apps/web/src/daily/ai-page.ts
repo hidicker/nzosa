@@ -52,23 +52,34 @@ export function renderAi(): void {
     return;
   }
 
-  // The route that needs nothing first, because it needs nothing: no key, no
-  // server, no account. It is the only one that works at all in a browser.
-  body.append(briefingPanel(), carryPanel());
+  // What both ways need, first and once.
+  body.append(step("Set up", "What these books are"), briefingPanel());
+
+  // Then the choice. Neither is better everywhere: one needs no key and can
+  // use a model somebody already pays for, the other is a button on the page
+  // where the coding is done.
+  body.append(
+    step("Then, either way", "Two ways to ask"),
+    note(
+      "The same question, the same checks on the answer, and the same place the answers " +
+        "land. What differs is who carries it.",
+    ),
+    carryPanel(),
+  );
 
   if (backendKind() !== "folder") {
     body.append(
       note(
-        "Asking automatically needs somewhere to keep a key that is not this browser, and " +
-          "somewhere to ask from that is not this page: the app running on your own " +
-          "computer, where the key sits in a file only you can read. A copy running in a " +
-          "browser has neither, so only the route above is offered here.",
+        "The other way -- a key of your own, asked automatically -- needs somewhere to keep " +
+          "that key which is not this browser, and somewhere to ask from which is not this " +
+          "page: the app running on your own computer. A copy running in a browser has " +
+          "neither, so only the way above is offered here.",
       ),
     );
     return;
   }
 
-  body.append(keyPanel(), askPanel());
+  body.append(keyPanel());
   void refreshStatus();
 }
 
@@ -151,6 +162,25 @@ function offerIt(): HTMLElement {
   return wrap;
 }
 
+/**
+ * Where you are on this page.
+ *
+ * It read as four boxes of equal weight, and it is not four things: it is one
+ * set-up and then a choice between two ways of asking. Saying so is cheaper
+ * than hoping somebody infers it from the order.
+ */
+function step(kicker: string, title: string): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "ai-step";
+  const small = document.createElement("span");
+  small.className = "ai-step-kicker";
+  small.textContent = kicker;
+  const heading = document.createElement("h2");
+  heading.textContent = title;
+  wrap.append(small, heading);
+  return wrap;
+}
+
 function button(label: string, onClick: () => void): HTMLButtonElement {
   const b = document.createElement("button");
   b.type = "button";
@@ -162,17 +192,21 @@ function button(label: string, onClick: () => void): HTMLButtonElement {
 function panel(title: string): [HTMLElement, HTMLElement] {
   const box = document.createElement("div");
   box.className = "ai-panel";
-  const heading = document.createElement("h3");
-  heading.textContent = title;
   const inner = document.createElement("div");
-  box.append(heading, inner);
+  // A panel the step above has already named does not name itself again.
+  if (title !== "") {
+    const heading = document.createElement("h3");
+    heading.textContent = title;
+    box.append(heading);
+  }
+  box.append(inner);
   return [box, inner];
 }
 
 // --- the key ---------------------------------------------------------------
 
 function keyPanel(): HTMLElement {
-  const [box, inner] = panel("Your Google AI key");
+  const [box, inner] = panel("Or: your own AI key, asked automatically");
 
   if (status?.configured === true) {
     inner.append(
@@ -220,6 +254,41 @@ function keyPanel(): HTMLElement {
       );
     }
 
+    // What asking with it would do, said here rather than under a heading of
+    // its own: it is the same subject as the key, one paragraph later.
+    const waiting = waitingForAnswers().length;
+    const ready = aiSuggestionCount();
+    inner.append(
+      note(
+        `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
+          `${AI_BATCH} at a time. ${status.usedToday} of ${status.limit} asked today.` +
+          (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
+      ),
+    );
+
+    if (waiting > 0) {
+      const details = document.createElement("details");
+      details.className = "setup-migration-details";
+      const summary = document.createElement("summary");
+      summary.className = "setup-migration-summary";
+      summary.textContent = "Show exactly what would be sent";
+      const pre = document.createElement("pre");
+      pre.className = "ai-prompt";
+      pre.textContent = whatWouldBeAsked(waitingForAnswers()).prompt;
+      details.append(summary, pre);
+      inner.append(details);
+    }
+
+    inner.append(
+      note(
+        "The button is on Reconcile, beside the filter: choose “AI from my key” " +
+          "and press Get suggestions. What comes back appears on the lines themselves.",
+      ),
+    );
+
+    const go = button("Go to Reconcile", () => showPage("reconcile"));
+    go.className = "primary";
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Remove the key";
@@ -232,7 +301,7 @@ function keyPanel(): HTMLElement {
     });
     const row = document.createElement("div");
     row.className = "migration-actions";
-    row.append(remove);
+    row.append(go, remove);
     inner.append(row);
     return box;
   }
@@ -307,7 +376,7 @@ function entitiesOf(): Entity[] {
  * a session nobody kept.
  */
 function briefingPanel(): HTMLElement {
-  const [box, inner] = panel("What these books are");
+  const [box, inner] = panel("");
   inner.append(
     note(
       "Sent with every question. A chart of accounts does not say whether “supplies” " +
@@ -497,48 +566,3 @@ function carryPanel(): HTMLElement {
  * it is about, because a suggestion read anywhere else has to be carried back
  * to the row it belongs to before it can be agreed to.
  */
-function askPanel(): HTMLElement {
-  const [box, inner] = panel("Asking for suggestions");
-  const waiting = waitingForAnswers().length;
-  const ready = aiSuggestionCount();
-
-  inner.append(
-    note(
-      status?.configured !== true
-        ? "A key is needed first."
-        : `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
-          `${AI_BATCH} at a time. ${status.usedToday} of ${status.limit} asked today.` +
-          (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
-    ),
-  );
-
-  if (waiting > 0 && status?.configured === true) {
-    const details = document.createElement("details");
-    details.className = "setup-migration-details";
-    const summary = document.createElement("summary");
-    summary.className = "setup-migration-summary";
-    summary.textContent = "Show exactly what would be sent";
-    const pre = document.createElement("pre");
-    pre.className = "ai-prompt";
-    pre.textContent = whatWouldBeAsked(waitingForAnswers()).prompt;
-    details.append(summary, pre);
-    inner.append(details);
-  }
-
-  const go = document.createElement("button");
-  go.type = "button";
-  go.className = "primary";
-  go.textContent = "Go to Reconcile";
-  go.addEventListener("click", () => showPage("reconcile"));
-  const row = document.createElement("div");
-  row.className = "migration-actions";
-  row.append(go);
-  inner.append(
-    note(
-      "The button is on Reconcile, under “Get AI suggestions”, and what comes back " +
-        "appears on the lines themselves. The filter there has a view of its own for them.",
-    ),
-    row,
-  );
-  return box;
-}

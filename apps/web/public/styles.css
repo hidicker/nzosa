@@ -625,6 +625,35 @@
 .page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
 .page-head h2 { margin: 0; font-size: 1.15rem; }
 .page-actions { display: flex; gap: 0.6rem; align-items: flex-start; flex-wrap: wrap; }
+
+/* The coding page's toolbar, held still.
+   The account chips are a list that changes length with the books, and they
+   sat first in a wrapping row -- so the search, the filter and the buttons
+   after them moved every time the list did, and again whenever a button's own
+   label changed. The chips take a line of their own underneath now, the
+   controls keep one order above them, and the button that counts what is left
+   is wide enough for the longest thing it says. */
+#page-reconcile .page-actions { align-items: center; }
+#page-reconcile .page-actions > *:not(#reconcile-accounts) { order: 1; }
+#reconcile-accounts { order: 2; flex: 1 0 100%; max-width: none; margin-top: 0.1rem; }
+#reconcile-search { flex: 0 1 16rem; }
+.ai-group { display: inline-flex; gap: 0.35rem; align-items: center; }
+.ai-group select { font-size: 0.8rem; }
+#reconcile-ai { min-width: 11.5rem; }
+
+.ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
+  margin: 0 0 0.8rem; max-width: 52rem; }
+.ai-paste p { margin: 0 0 0.45rem; }
+.ai-paste textarea { width: 100%; font: inherit; font-size: 0.8rem; padding: 0.45rem 0.6rem;
+  border-radius: 4px; }
+
+/* One set-up, then a choice: said, rather than left to be inferred from four
+   boxes of equal weight. */
+.ai-step { margin: 1.4rem 0 0.6rem; }
+.ai-step:first-child { margin-top: 0; }
+.ai-step h2 { margin: 0.1rem 0 0; font-size: 1.05rem; }
+.ai-step-kicker { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted, #667); }
 .page-hint { color: var(--muted, #667); font-size: 0.85rem; margin: 0.4rem 0 1rem; }
 .toggle { font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
 

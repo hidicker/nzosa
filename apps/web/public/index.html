@@ -209,8 +209,6 @@
           <div class="page-actions">
             <div class="chips" id="reconcile-accounts" role="group" aria-label="Accounts"></div>
             <input id="reconcile-search" type="search" placeholder="Search payee or amount&hellip;" />
-            <button id="accept-all" type="button">Accept all</button>
-            <button id="reconcile-ai" type="button" hidden>Get AI suggestions</button>
             <select id="reconcile-filter" title="Which lines to show">
               <option value="todo">Still to confirm</option>
               <option value="suggested">Suggested, not yet confirmed</option>
@@ -219,8 +217,17 @@
               <option value="coded">Coded</option>
               <option value="all">All</option>
             </select>
+            <button id="accept-all" type="button">Accept all</button>
+            <span class="ai-group" id="reconcile-ai-group" hidden>
+              <select id="reconcile-ai-how" title="Where the suggestions come from">
+                <option value="key">AI from my key</option>
+                <option value="prompt">AI from a prompt</option>
+              </select>
+              <button id="reconcile-ai" type="button">Get suggestions</button>
+            </span>
           </div>
         </div>
+        <div id="reconcile-ai-paste" class="ai-paste" hidden></div>
         <p class="page-hint" id="reconcile-hint">
           Each line carries a suggested code and GST treatment from the rules. Accept it, or
           change it, and the line is coded and stays that way.

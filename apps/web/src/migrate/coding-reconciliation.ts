@@ -1,5 +1,12 @@
 import { redraw, showPage } from "../app.js";
-import { AI_BATCH, aiStatus, askAboutLines, waitingForAnswers } from "../ai.js";
+import {
+  AI_BATCH,
+  aiStatus,
+  askAboutLines,
+  keepWhatIsUsable,
+  promptToCarry,
+  waitingForAnswers,
+} from "../ai.js";
 import {
   unregisteredCode,
   accountDecided,
@@ -1902,35 +1909,138 @@ const CODING_TEMPLATE =
  * button they cannot press.
  */
 function wireAiButton(): void {
+  const group = $("reconcile-ai-group");
+  const how = $<HTMLSelectElement>("reconcile-ai-how");
   const button = $<HTMLButtonElement>("reconcile-ai");
+  const paste = $("reconcile-ai-paste");
+
+  // Held between copying a prompt and pasting the answer: the answer names
+  // transactions by id, and the ids only mean anything against the batch that
+  // was copied.
+  let carried: ReturnType<typeof promptToCarry> | null = null;
 
   const say = (): void => {
     const left = waitingForAnswers().length;
-    button.textContent =
-      left === 0
-        ? "Nothing left to ask about"
-        : `Get AI suggestions (${Math.min(left, AI_BATCH)} of ${left})`;
+    if (how.value === "prompt") {
+      button.textContent = left === 0 ? "Nothing to ask about" : `Copy a prompt (${left})`;
+    } else {
+      button.textContent =
+        left === 0 ? "Nothing to ask about" : `Get suggestions (${Math.min(left, AI_BATCH)})`;
+    }
     button.disabled = left === 0;
   };
 
   void aiStatus().then((status) => {
-    if (status === null || !status.configured || state.ledger.aiEnabled !== true) return;
-    button.hidden = false;
+    if (state.ledger.aiEnabled !== true) return;
+    group.hidden = false;
+    // Only offered where there is a key to use. Without one the choice is not
+    // a choice, and an option that always fails is worse than no option.
+    if (status === null || !status.configured) {
+      how.value = "prompt";
+      const key = how.querySelector('option[value="key"]');
+      if (key instanceof HTMLOptionElement) key.disabled = true;
+    }
     say();
   });
 
+  how.addEventListener("change", () => {
+    paste.hidden = true;
+    say();
+  });
+
+  /** Somewhere to put the answer, once a prompt has gone out. */
+  const showPasteBox = (copied: boolean): void => {
+    paste.textContent = "";
+    paste.hidden = false;
+
+    const said = document.createElement("p");
+    said.className = "cloud-said";
+    said.textContent = copied
+      ? `${carried?.asked.length ?? 0} lines copied. Paste them into ChatGPT, Claude, ` +
+        "Gemini or anything else, then paste its answer back here."
+      : "This browser would not let the page reach the clipboard, so here is the prompt " +
+        "to copy by hand. Paste it into a model, then paste its answer back below.";
+
+    const answer = document.createElement("textarea");
+    answer.rows = 3;
+    answer.placeholder = '[{"id": "...", "code": "401", "confidence": 0.8, "because": "..."}]';
+
+    const read = document.createElement("button");
+    read.type = "button";
+    read.className = "primary";
+    read.textContent = "Read the answer";
+    read.addEventListener("click", () => {
+      if (carried === null || answer.value.trim() === "") return;
+      const { got, said: trouble } = keepWhatIsUsable(
+        answer.value,
+        carried.asked,
+        carried.codes,
+        "pasted",
+      );
+      answer.value = "";
+      if (trouble !== "") {
+        said.textContent = trouble;
+        return;
+      }
+      paste.hidden = true;
+      if (got > 0) showTheAiOnes();
+      say();
+      redraw("reconcile");
+    });
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Close";
+    close.addEventListener("click", () => {
+      paste.hidden = true;
+    });
+
+    const row = document.createElement("div");
+    row.className = "migration-actions";
+    row.append(read, close);
+    paste.append(said);
+
+    // Where the clipboard is refused, the prompt itself rather than directions
+    // to somewhere else: being sent to another page to fetch something is not
+    // a fallback, it is the same failure with an extra step.
+    if (!copied && carried !== null) {
+      const pre = document.createElement("pre");
+      pre.className = "ai-prompt";
+      pre.textContent = carried.text;
+      paste.append(pre);
+    }
+
+    paste.append(answer, row);
+  };
+
+  const showTheAiOnes = (): void => {
+    // Straight to them: a suggestion nobody can find is a suggestion nobody
+    // asked for.
+    state.reconcileFilter = "ai";
+    const filter = document.getElementById("reconcile-filter");
+    if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
+  };
+
   button.addEventListener("click", () => {
+    const waiting = waitingForAnswers();
+    if (waiting.length === 0) return;
+
+    if (how.value === "prompt") {
+      // A hundred rather than twenty: nobody is paying per line here, and a
+      // bigger model asked once about a hundred is better than ten pastes.
+      carried = promptToCarry(waiting, Math.min(waiting.length, 100));
+      void navigator.clipboard.writeText(carried.text).then(
+        () => showPasteBox(true),
+        () => showPasteBox(false),
+      );
+      return;
+    }
+
     button.disabled = true;
     button.textContent = "Asking…";
-    void askAboutLines(waitingForAnswers()).then(({ got, said }) => {
-      if (said !== "") alert(said);
-      // Straight to them: a suggestion nobody can find is a suggestion nobody
-      // asked for.
-      if (got > 0) {
-        state.reconcileFilter = "ai";
-        const filter = document.getElementById("reconcile-filter");
-        if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
-      }
+    void askAboutLines(waiting).then(({ got, said: trouble }) => {
+      if (trouble !== "") alert(trouble);
+      if (got > 0) showTheAiOnes();
       say();
       redraw("reconcile");
     });

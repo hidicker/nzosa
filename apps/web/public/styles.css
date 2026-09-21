@@ -1885,6 +1885,10 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* Clearing and backing up belong on the Bank import page, not in the middle
    of setting the books up for the first time. */
 .migration-card #import-table .ledger-actions { display: none; }
+.migration-todo { margin: 0.9rem 0; }
+.migration-todo h4 { margin: 0 0 0.35rem; font-size: 0.92rem; }
+.migration-todo ul { margin: 0; padding-left: 1.2rem; }
+.migration-todo li { font-size: 0.85rem; line-height: 1.5; margin: 0.15rem 0; }
 .migration-folded { margin-top: 0.8rem; }
 .migration-folded .migration-guide { margin: 0.6rem 0 0.2rem; }
 .migration-restart { margin: 1.2rem 0 2rem; }

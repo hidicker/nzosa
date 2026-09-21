@@ -1088,6 +1088,22 @@ function financialYearBefore(start: string | undefined): { from: string; to: str
   return { from: `${year}-04-01`, to: `${year + 1}-03-31` };
 }
 
+/** A handful of things to do, with a heading, inside a step. */
+function toDoList(title: string, items: readonly string[]): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "migration-todo";
+  const heading = document.createElement("h4");
+  heading.textContent = title;
+  const list = document.createElement("ul");
+  for (const line of items) {
+    const item = document.createElement("li");
+    item.textContent = line;
+    list.append(item);
+  }
+  wrap.append(heading, list);
+  return wrap;
+}
+
 /** Reference material, out of the way until it is asked for. */
 function folded(summary: string, content: HTMLElement): HTMLElement {
   const details = document.createElement("details");
@@ -1241,6 +1257,14 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     }
 
     inner.append(
+      toDoList("Finish off in Xero first", [
+        "Reconcile every bank account in Xero up to the day before the conversion date.",
+        "File the last GST return that ends before it.",
+        "Converting at a year end: have your accountant's year-end journals posted, so the " +
+          "trial balance is the one the accounts were signed from.",
+        "Keep access to Xero until your first year in NZOSA is filed. The history stays " +
+          "there if a question comes up.",
+      ]),
       note(`${have} of ${files.length} loaded.`),
       table(
         ["Export", "Where in Xero", "What it gives NZOSA"],
@@ -1650,17 +1674,7 @@ function xeroGuide(held: Onboarding): HTMLElement {
       "is split between two systems, and bring the year so far across as coded history.",
   );
 
-  add("h4", "2. Finish off in Xero first");
-  items("ul", [
-    "Reconcile every bank account in Xero up to the day before the conversion date.",
-    "File the last GST return that ends before it.",
-    "Converting at a year end: have your accountant's year-end journals posted, so the trial " +
-      "balance is the one the accounts were signed from.",
-    "Keep access to Xero until your first year in NZOSA is filed. The history stays there if " +
-      "a question comes up.",
-  ]);
-
-  add("h4", "3. Export from Xero");
+  add("h4", "2. Export from Xero");
   add(
     "p",
     "Export each of these as CSV or Excel. The chart of accounts and the account transactions " +
@@ -1681,7 +1695,7 @@ function xeroGuide(held: Onboarding): HTMLElement {
       "Xero's copy of it.",
   );
 
-  add("h4", "4. Load the files");
+  add("h4", "3. Load the files");
   add(
     "p",
     "Drop them on Setup all at once, with your bank's exports. Each file is recognised and " +
@@ -1702,7 +1716,7 @@ function xeroGuide(held: Onboarding): HTMLElement {
       "on Entities & accounts. Setup lists it as a step of its own.",
   );
 
-  add("h4", "5. Check the conversion");
+  add("h4", "4. Check the conversion");
   add(
     "p",
     "Before trusting the new books, prove they agree with the old ones. Run each Xero report " +
@@ -1758,7 +1772,7 @@ function xeroGuide(held: Onboarding): HTMLElement {
     ),
   );
 
-  add("h4", "6. After the conversion date");
+  add("h4", "5. After the conversion date");
   items("ul", [
     "Code new transactions in NZOSA only. Entering them in both is how the two drift apart " +
       "without anybody noticing.",

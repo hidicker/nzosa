@@ -640,6 +640,9 @@
 /* One button that opens its two ways, rather than a picker beside a verb that
    changes meaning depending on it. */
 .ai-menu { position: relative; display: inline-block; }
+/* The group itself starts hidden, and would have shown for books that never
+   turned this on: the same trap, one element out. */
+.ai-menu[hidden] { display: none; }
 /* Anchored to the button's left edge: it is anchored to a button that can sit
    anywhere in a wrapping toolbar, and hanging it off the right put it off the
    side of the screen. */
@@ -652,6 +655,10 @@
   cursor: pointer; }
 .ai-menu-items button:hover:not(:disabled) { background: rgba(128,128,128,0.14); }
 .ai-menu-items button:disabled { opacity: 0.45; cursor: default; }
+/* An author's display beats the browser's [hidden] rule, so a menu given
+   display:flex is open whatever its hidden attribute says. It said hidden and
+   showed anyway, and the attribute was the only thing the code was setting. */
+.ai-menu-items[hidden] { display: none; }
 #reconcile-ai { min-width: 10.5rem; }
 
 .ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
@@ -2163,6 +2170,7 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .books-new { margin-bottom: 1.5rem; }
 /* Which books are open, in the corner of the menu. A label, not a control:
    it goes to the Books page rather than changing anything itself. */
+.ledger-open[hidden] { display: none; }
 .ledger-open { display: flex; flex-direction: column; align-items: flex-start;
   gap: 0.1rem; width: 100%; text-align: left; background: transparent;
   border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem;
@@ -2374,6 +2382,7 @@ button.working {
 .setup-migration-details .setup-files {
   margin: 0.3rem 0;
 }
+.dropzone-mini[hidden] { display: none; }
 .dropzone-mini {
   display: inline-flex;
   flex-wrap: wrap;

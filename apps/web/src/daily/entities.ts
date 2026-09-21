@@ -187,6 +187,95 @@ function bankTable(model: EntityModel): HTMLElement {
 
 }
 
+/**
+ * Which account in this ledger a chart's bank row actually is.
+ *
+ * A chart brings bank accounts with it, under the names the other system used.
+ * Import the transactions and the same accounts arrive again under the names
+ * the bank issues, and now one card is two rows: one with a name and no money,
+ * one with money and no name. Nothing can safely join them by their words, so
+ * this asks the one person who knows, once.
+ *
+ * Its own function because the guided start asks the same question, and a
+ * second picker built beside this one is a second thing to keep in step.
+ */
+export function bankLinkSelect(account: Account): HTMLSelectElement {
+  const id = ledgerAccountFor(account.name, account);
+  const link = document.createElement("select");
+  link.className = "bank-link";
+
+  const unsaid = document.createElement("option");
+  unsaid.value = "";
+  unsaid.textContent = "— which account is this? —";
+  unsaid.selected = account.ledgerAccount === undefined && id === null;
+  link.append(unsaid);
+
+  const { accounts: held, labels } = banks();
+  for (const bank of [...held].sort()) {
+    const option = document.createElement("option");
+    option.value = bank;
+    const label = labels.get(bank);
+    option.textContent = label !== undefined && label !== bank ? `${label} (${bank})` : bank;
+    option.selected = bank === id;
+    link.append(option);
+  }
+
+  const none = document.createElement("option");
+  none.value = NOT_IN_LEDGER;
+  none.textContent = "not in this ledger";
+  none.selected = account.ledgerAccount === NOT_IN_LEDGER;
+  link.append(none);
+
+  link.title =
+    "The account in this ledger that this chart row is. Set it and the two stop " +
+    "being two accounts; say it is not in this ledger and it stops being asked about.";
+  link.addEventListener("change", () => {
+    void setLedgerAccount(account, link.value);
+  });
+  return link;
+}
+
+/**
+ * Every bank row in the chart, with its picker, as a table of its own.
+ *
+ * For the guided start, which asks this as one of its steps: the answer is a
+ * handful of rows, and sending somebody to another page to find them among
+ * sixty-six others is how a step gets left undone.
+ */
+export function bankLinkTable(): HTMLElement | null {
+  const rows = accountsForEditing().filter(
+    ({ account }) => account.type.trim().toLowerCase() === "bank",
+  );
+  if (rows.length === 0) return null;
+
+  const table = document.createElement("table");
+  table.className = "report-table accounts-table bank-link-table";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const text of ["From the chart", "Is this account"]) {
+    const th = document.createElement("th");
+    th.textContent = text;
+    headRow.append(th);
+  }
+  head.append(headRow);
+
+  const body = document.createElement("tbody");
+  for (const { account } of rows) {
+    const tr = document.createElement("tr");
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = account.code.trim() === ""
+      ? account.name
+      : `${account.code} ${account.name}`;
+    const picker = document.createElement("td");
+    picker.append(bankLinkSelect(account));
+    tr.append(name, picker);
+    body.append(tr);
+  }
+  table.append(head, body);
+  return table;
+}
+
 export function renderEntities(): void {
   const body = $("entities-body");
   body.textContent = "";
@@ -696,38 +785,7 @@ export function renderEntities(): void {
       // name and no money, one with money and no name. Nothing can safely join
       // them by their words, so this asks the one person who knows, once.
       const id = ledgerAccountFor(account.name, account);
-      const link = document.createElement("select");
-      link.className = "bank-link";
-
-      const unsaid = document.createElement("option");
-      unsaid.value = "";
-      unsaid.textContent = "— which account is this? —";
-      unsaid.selected = account.ledgerAccount === undefined && id === null;
-      link.append(unsaid);
-
-      const { accounts: held, labels } = banks();
-      for (const bank of [...held].sort()) {
-        const option = document.createElement("option");
-        option.value = bank;
-        const label = labels.get(bank);
-        option.textContent = label !== undefined && label !== bank ? `${label} (${bank})` : bank;
-        option.selected = bank === id;
-        link.append(option);
-      }
-
-      const none = document.createElement("option");
-      none.value = NOT_IN_LEDGER;
-      none.textContent = "not in this ledger";
-      none.selected = account.ledgerAccount === NOT_IN_LEDGER;
-      link.append(none);
-
-      link.title =
-        "The account in this ledger that this chart row is. Set it and the two stop " +
-        "being two accounts; say it is not in this ledger and it stops being asked about.";
-      link.addEventListener("change", () => {
-        void setLedgerAccount(account, link.value);
-      });
-      cell.append(link);
+      cell.append(bankLinkSelect(account));
 
       // And, quietly beside it, which entities that account serves -- decided
       // above, shown here so the row is not half an answer.
@@ -815,7 +873,12 @@ async function setLedgerAccount(account: Account, to: string): Promise<void> {
     if (moved.length > 0) state.ledger = { ...state.ledger, openingBalances: balances };
   }
 
-  state.persistent = await savePart(state.ledger);
+  // Naming the chart, because a save that names nothing writes only the parts
+  // that are written every time -- the transactions and the decisions. The
+  // opening balances moved just above ride along in the decisions; the link
+  // itself lives in the chart, and without this it was held in memory until
+  // the next reload threw it away.
+  state.persistent = await savePart(state.ledger, "chart");
   await record(
     "chart",
     to === ""
@@ -828,6 +891,8 @@ async function setLedgerAccount(account: Account, to: string): Promise<void> {
     `${account.code}|${account.name}`,
   );
   redraw("entities");
+  // The guided start asks this as one of its steps and counts what is left.
+  redraw("migration");
 }
 
 /**

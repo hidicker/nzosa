@@ -8,6 +8,7 @@ import { DEFAULT_ENTITY_NAME, emptyEntityModel, entityId } from "@nzosa/core";
 import type { Entity, EntityKind, EntityModel } from "@nzosa/core";
 import { borrow, returnBorrowed } from "../borrow.js";
 import { renderFeed } from "../daily/bank-import.js";
+import { bankLinkTable } from "../daily/entities.js";
 import { loadWhatever } from "./file-intake.js";
 import { loadDemoData, setupSteps, xeroMigrationFiles } from "./setup-wizard.js";
 import type { SetupStep } from "./setup-wizard.js";
@@ -360,7 +361,8 @@ function sourceQuestion(number: number): HTMLElement {
         [
           "empty",
           "Empty books",
-          "Nothing to bring in. The books start here and your bank import fills them",
+          "The books will start from the date of your bank transactions. You can add " +
+            "historical data and opening balances later",
         ],
         [
           "balances",
@@ -370,7 +372,8 @@ function sourceQuestion(number: number): HTMLElement {
         [
           "xero",
           "Import from Xero",
-          "Chart, coding, opening balances, invoices and assets come across from Xero's exports",
+          "Chart, coding, opening balances, invoices and assets come across from Xero's " +
+            "exports. Historical transactions can be coded as they were in Xero",
         ],
         ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
       ],
@@ -438,8 +441,8 @@ function oneQuestion(number: number): HTMLElement {
   const [box, inner] = card(number, "Is this one business, and nothing else?");
   inner.append(
     note(
-      "An entity is anything whose income is worked out on its own: a company, a rental " +
-        "property, a trust, your personal affairs.",
+      "An entity is anything that requires its own financial record: a business, a rental " +
+        "property, a trust, or your personal finances.",
     ),
   );
   inner.append(
@@ -1147,6 +1150,44 @@ function remainingSteps(): SetupStep[] {
   );
 }
 
+/**
+ * What a step is for, where its one line in Setup's list does not say.
+ *
+ * Setup's list is read by somebody checking what is left; this walk is read by
+ * somebody who has not met the thing yet. The step's own line stays, as the
+ * status underneath.
+ */
+function guidance(what: string): HTMLElement | null {
+  if (what !== "Chart of accounts") return null;
+
+  const wrap = document.createElement("div");
+  wrap.append(
+    advice(
+      "These are the accounts you reconcile transactions to. A standard chart of accounts " +
+        "is preloaded, for example:",
+    ),
+  );
+
+  const examples = document.createElement("ul");
+  examples.className = "migration-list";
+  for (const line of ["200 Sales", "433 Insurance", "408 Cleaning", "720 Computer Equipment"]) {
+    const item = document.createElement("li");
+    item.textContent = line;
+    examples.append(item);
+  }
+  wrap.append(examples);
+
+  wrap.append(
+    advice(
+      "If you would like to add more, or import a chart of accounts, you can do it here now " +
+        "or at any time in the future.",
+      "There is no need to enter bank accounts or credit cards on the chart of accounts. " +
+        "They are picked up from your transactions.",
+    ),
+  );
+  return wrap;
+}
+
 function checklistQuestion(number: number, held: Onboarding): HTMLElement {
   const rest = remainingSteps();
   const total = rest.length;
@@ -1172,9 +1213,25 @@ function checklistQuestion(number: number, held: Onboarding): HTMLElement {
     (step.done ? " · done ✓" : "");
   inner.append(place);
 
-  inner.append(advice(step.detail));
+  const said = guidance(step.what);
+  if (said !== null) inner.append(said, note(step.detail));
+  else inner.append(advice(step.detail));
   if (step.unlocks !== "") inner.append(note(`Gives you: ${step.unlocks}`));
   if (step.takesFiles === true && !step.done) inner.append(dropZone());
+
+  // The rows this step is about, rather than a button to a page holding them
+  // among sixty-six others. A step somebody has to go looking for is a step
+  // that gets left.
+  if (step.what === "Link bank accounts on chart of accounts") {
+    const links = bankLinkTable();
+    inner.append(
+      links ??
+        note(
+          "No bank accounts in the chart to link. They are picked up from your " +
+            "transactions, so there is nothing to do here.",
+        ),
+    );
+  }
 
   // The step's own way in, whether that is a page or something it does here.
   const ways: HTMLButtonElement[] = [];
@@ -1200,7 +1257,6 @@ function checklistQuestion(number: number, held: Onboarding): HTMLElement {
       button(where + 1 === total ? "Finish" : "Next", () => move(where + 1), true),
       ...ways,
       ...(where > 0 ? [button("Back", () => move(where - 1))] : []),
-      button("Skip the rest", () => answer({ at: "done" })),
     ),
   );
   return box;

@@ -1,12 +1,6 @@
 import { redraw, showPage } from "../app.js";
-import {
-  AI_BATCH,
-  aiStatus,
-  askAboutLines,
-  keepWhatIsUsable,
-  promptToCarry,
-  waitingForAnswers,
-} from "../ai.js";
+import { AI_BATCH, aiStatus, askAboutLines, waitingForAnswers } from "../ai.js";
+import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
   accountDecided,
@@ -1917,11 +1911,6 @@ function wireAiButton(): void {
   const paste = $("reconcile-ai-paste");
   let haveKey = false;
 
-  // Held between copying a prompt and pasting the answer: the answer names
-  // transactions by id, and the ids only mean anything against the batch that
-  // was copied.
-  let carried: ReturnType<typeof promptToCarry> | null = null;
-
   const openMenu = (open: boolean): void => {
     menu.hidden = !open;
     button.setAttribute("aria-expanded", String(open));
@@ -1936,7 +1925,9 @@ function wireAiButton(): void {
     withKey.title = haveKey
       ? "Asked automatically, and charged to your key."
       : "No key set for these books. Set one on the AI suggestions page.";
-    withPrompt.textContent = `Copy a prompt (${Math.min(left, 100)})`;
+    // No count: how many is chosen in the section this opens, so naming one
+    // here would be promising a number the next screen then asks about.
+    withPrompt.textContent = "Copy a prompt for any AI model";
   };
 
   void aiStatus().then((status) => {
@@ -1968,82 +1959,35 @@ function wireAiButton(): void {
     if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
   };
 
-  /** Somewhere to put the answer, once a prompt has gone out. */
-  const showPasteBox = (copied: boolean): void => {
+  withPrompt.addEventListener("click", () => {
+    openMenu(false);
+    if (waitingForAnswers().length === 0) return;
+    // The whole of it, here: how many, the copying, and somewhere to paste the
+    // answer -- rather than a copy that has already happened and a box under
+    // it. Choosing how many is part of the question, and on this page the
+    // lines it is about are the ones behind it.
     paste.textContent = "";
     paste.hidden = false;
-
-    const said = document.createElement("p");
-    said.className = "cloud-said";
-    said.textContent = copied
-      ? `${carried?.asked.length ?? 0} lines copied. Paste them into ChatGPT, Claude, ` +
-        "Gemini or anything else, then paste its answer back here."
-      : "This browser would not let the page reach the clipboard, so here is the prompt " +
-        "to copy by hand. Paste it into a model, then paste its answer back below.";
-
-    const answer = document.createElement("textarea");
-    answer.rows = 3;
-    answer.placeholder = '[{"id": "...", "code": "401", "confidence": 0.8, "because": "..."}]';
-
-    const read = document.createElement("button");
-    read.type = "button";
-    read.className = "primary";
-    read.textContent = "Read the answer";
-    read.addEventListener("click", () => {
-      if (carried === null || answer.value.trim() === "") return;
-      const { got, said: trouble } = keepWhatIsUsable(
-        answer.value,
-        carried.asked,
-        carried.codes,
-        "pasted",
-      );
-      answer.value = "";
-      if (trouble !== "") {
-        said.textContent = trouble;
-        return;
-      }
-      paste.hidden = true;
-      if (got > 0) showTheAiOnes();
-      say();
-      redraw("reconcile");
-    });
-
     const close = document.createElement("button");
     close.type = "button";
     close.textContent = "Close";
     close.addEventListener("click", () => {
       paste.hidden = true;
     });
-
-    const row = document.createElement("div");
-    row.className = "migration-actions";
-    row.append(read, close);
-    paste.append(said);
-
-    // Where the clipboard is refused, the prompt itself rather than directions
-    // to somewhere else: being sent to another page to fetch something is not
-    // a fallback, it is the same failure with an extra step.
-    if (!copied && carried !== null) {
-      const pre = document.createElement("pre");
-      pre.className = "ai-prompt";
-      pre.textContent = carried.text;
-      paste.append(pre);
-    }
-
-    paste.append(answer, row);
-  };
-
-  withPrompt.addEventListener("click", () => {
-    openMenu(false);
-    const waiting = waitingForAnswers();
-    if (waiting.length === 0) return;
-    // A hundred rather than twenty: nobody is paying per line here, and a
-    // bigger model asked once about a hundred beats ten pastes.
-    carried = promptToCarry(waiting, Math.min(waiting.length, 100));
-    void navigator.clipboard.writeText(carried.text).then(
-      () => showPasteBox(true),
-      () => showPasteBox(false),
+    paste.append(
+      carrySection({
+        onRead: ({ got }) => {
+          // Done with, so out of the way: it would otherwise sit open over
+          // the suggestions it just produced.
+          paste.hidden = true;
+          if (got > 0) showTheAiOnes();
+          say();
+          redraw("reconcile");
+        },
+        alongside: [close],
+      }),
     );
+    paste.scrollIntoView({ block: "nearest" });
   });
 
   withKey.addEventListener("click", () => {

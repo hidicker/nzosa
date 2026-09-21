@@ -661,11 +661,15 @@
 .ai-menu-items[hidden] { display: none; }
 #reconcile-ai { min-width: 10.5rem; }
 
+.ai-paste[hidden] { display: none; }
 .ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
   margin: 0 0 0.8rem; max-width: 52rem; }
-.ai-paste p { margin: 0 0 0.45rem; }
-.ai-paste textarea { width: 100%; font: inherit; font-size: 0.8rem; padding: 0.45rem 0.6rem;
-  border-radius: 4px; }
+.ai-carry h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.ai-carry h4 { margin: 0.9rem 0 0.35rem; font-size: 0.88rem; }
+.ai-carry p { margin: 0 0 0.45rem; }
+.ai-carry textarea { width: 100%; max-width: 46rem; font: inherit; font-size: 0.8rem;
+  padding: 0.45rem 0.6rem; border-radius: 4px; }
+.ai-carry .ai-prompt[hidden] { display: none; }
 
 /* One set-up, then a choice: said, rather than left to be inferred from four
    boxes of equal weight. */

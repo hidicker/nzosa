@@ -319,6 +319,20 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const fromModel = one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
   const codeSelect = combobox(codes, one.code ?? fromModel?.code ?? null, "Search accounts…");
 
+  /**
+   * What is standing in for the account, said where the account would be.
+   *
+   * It was said at the foot of the row, under everything, in the same grey as
+   * the reason a rule matched -- so a line that was finished and only wanted a
+   * tick read exactly like a line that wanted reading. The account picker is
+   * where somebody looks to find out what a line is coded to, so that is where
+   * this belongs, and it takes the picker's place rather than sitting beside a
+   * dimmed one.
+   */
+  const insteadOfAccount = document.createElement("div");
+  insteadOfAccount.className = "code-instead";
+  insteadOfAccount.hidden = true;
+
   const gstSelect = document.createElement("select");
   gstSelect.className = "gst-select";
   const currentRate = classificationToRate(one.classification);
@@ -431,7 +445,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   // does: money in coded to an account money goes out of wants reading twice.
   if (fromModel?.caution !== undefined) reason.classList.add("code-reason-caution");
 
-  form.append(codeSelect.element, gstSelect, to, description, ok, splitButton);
+  form.append(codeSelect.element, insteadOfAccount, gstSelect, to, description, ok, splitButton);
   row.append(bank, amount, form, reason);
 
   /**
@@ -483,7 +497,21 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     }
     if (comboInput instanceof HTMLInputElement) comboInput.disabled = off;
     codeSelect.element.classList.toggle("is-transfer", off);
+    codeSelect.element.hidden = off;
     form.classList.toggle("coding-off", off);
+
+    insteadOfAccount.hidden = !off;
+    insteadOfAccount.textContent = splitChosen
+      ? "Split across accounts"
+      : invoiceChosen
+        ? "Pays an invoice"
+        : pendingTransfer === null
+          ? "Transfer between your own accounts"
+          : "Transfer — agree to it with the tick";
+    insteadOfAccount.classList.toggle(
+      "code-instead-ready",
+      off && (pendingTransfer !== null || invoiceChosen || splitChosen),
+    );
 
     // Only a transfer already on record leaves nothing for the tick to do. An
     // invoice match still wants confirming, and so does a transfer that has

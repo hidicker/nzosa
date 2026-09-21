@@ -93,7 +93,24 @@ import { clearCheck } from "../migrate/file-intake.js";
  * that deserves a person's attention.
  */
 export async function acceptAllShown(): Promise<void> {
-  const offered = shownSuggestions().filter((one) => !one.confirmed && one.code !== null);
+  /**
+   * A suggestion is not only a code.
+   *
+   * "Suggested, not yet confirmed" gathers lines settled by a split or matched
+   * to an invoice as well as lines a rule coded, because all three are waiting
+   * to be agreed to -- and the tick confirms all three. This did not: it took
+   * only the ones with a code, so accepting a screen left the split and
+   * invoice lines sitting on it, still listed as waiting, to be ticked one at
+   * a time. Which is the work the button exists to save.
+   */
+  const splits = state.ledger.splits ?? {};
+  const invoices = invoiceAssignments();
+  const settledElsewhere = (one: Suggestion): boolean =>
+    splits[one.transaction.id] !== undefined || invoices.has(one.transaction.id);
+
+  const offered = shownSuggestions().filter(
+    (one) => !one.confirmed && (one.code !== null || settledElsewhere(one)),
+  );
 
   /**
    * Lines that are a transfer, or could be one, are left for a person.
@@ -116,6 +133,9 @@ export async function acceptAllShown(): Promise<void> {
   const unavailable = new Set([
     ...Object.keys(transfersNow),
     ...state.ledger.transactions.filter((t) => decided(t.id)).map((t) => t.id),
+    // A receipt that settles an invoice is not a movement between your own
+    // accounts, whatever else has the same amount on the same day.
+    ...invoices.keys(),
   ]);
   const couldBeTransfer = (one: Suggestion): boolean =>
     !rejected.has(one.transaction.id) &&
@@ -139,11 +159,16 @@ export async function acceptAllShown(): Promise<void> {
     return;
   }
 
-  const accounts = new Set(lines.map((one) => one.code));
+  const accounts = new Set(
+    lines.map((one) => one.code).filter((code): code is string => code !== null),
+  );
+  const elsewhere = lines.filter((one) => one.code === null).length;
   const summary =
-    accounts.size === 1
-      ? `all to ${[...accounts][0]}`
-      : `across ${accounts.size} accounts`;
+    accounts.size === 0
+      ? "settled by their splits or the invoices they pay"
+      : accounts.size === 1
+        ? `all to ${[...accounts][0]}`
+        : `across ${accounts.size} accounts`;
   if (
     !confirm(
       `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?` +
@@ -152,6 +177,10 @@ export async function acceptAllShown(): Promise<void> {
           ? `${held.size} line${held.size === 1 ? " matches" : "s match"} a line of the same amount in ` +
             `another of your accounts and could be a transfer. ${held.size === 1 ? "It is" : "They are"} ` +
             "left unconfirmed -- neither coded nor paired -- to check one at a time.\n\n"
+          : "") +
+        (elsewhere > 0
+          ? `${elsewhere} of them ${elsewhere === 1 ? "is" : "are"} settled by a split or by ` +
+            "the invoice it pays rather than by an account, and is confirmed as that.\n\n"
           : "") +
         "This confirms them exactly as shown. The change log can undo the whole batch.",
     )

@@ -82,7 +82,10 @@ export function renderAi(): void {
   }
 
   body.append(keyPanel());
-  body.append(step("And separately", "A second pair of eyes on the year"), reviewPanel());
+  body.append(
+    step("Check the year", "Year-end review against New Zealand tax rules"),
+    reviewPanel(),
+  );
   void refreshStatus();
 }
 
@@ -450,7 +453,10 @@ function briefingPanel(): HTMLElement {
 
 function reviewPanelStep(): HTMLElement {
   const wrap = document.createElement("div");
-  wrap.append(step("And separately", "A second pair of eyes on the year"), reviewPanel());
+  wrap.append(
+    step("Check the year", "Year-end review against New Zealand tax rules"),
+    reviewPanel(),
+  );
   return wrap;
 }
 
@@ -471,9 +477,11 @@ function reviewPanel(): HTMLElement {
 
   inner.append(
     note(
-      "Not about coding a line: about whether the year hangs together. Something in the " +
-        "wrong account, GST claimed that cannot be, a deduction that needs a logbook nobody " +
-        "has written, a cost this kind of business always has and these books do not.",
+      "A review of the finished year rather than of one line: whether each account holds " +
+        "what belongs in it, whether the GST treatments match what each entity is " +
+        "registered for, which deductions need a record the books do not show, and what a " +
+        "business of this kind usually has that these books do not. It reads the year's " +
+        "totals, not its transactions.",
     ),
   );
 
@@ -500,6 +508,16 @@ function reviewPanel(): HTMLElement {
   connect.textContent = "openaccountants.com/connect";
   why.append(connect, document.createTextNode(` (${OPENACCOUNTANTS_MCP})`));
   inner.append(why);
+
+  inner.append(
+    note(
+      "Not every assistant can reach a connector. Claude, ChatGPT, Cursor and Windsurf take " +
+        "MCP connectors; a plain chat window or an API call has no way to load one, and " +
+        "Gemini answered this prompt by saying so — which is what it was told to do, and " +
+        "worth more than a confident answer from memory. If you get that reply, connect " +
+        "OpenAccountants to the assistant first, or ask one that already has it.",
+    ),
+  );
 
   const years = yearsInBooks();
   const pickYear = document.createElement("select");

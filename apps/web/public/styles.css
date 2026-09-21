@@ -2239,6 +2239,23 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .coding-off input:disabled, .coding-off select:disabled, .coding-off button:disabled {
   cursor: not-allowed; background: var(--surface-2); }
 .combo.is-transfer { opacity: 0.42; pointer-events: none; }
+/* What stands in for the account, in the account's place. It is not dimmed
+   with the controls around it: it is the one thing on the row still worth
+   reading, and the row is only waiting for a tick to agree with it. */
+.code-instead[hidden] { display: none; }
+.code-instead { flex: 1 1 15rem; max-width: 22rem; display: flex; align-items: center;
+  gap: 0.35rem; font-size: 0.84rem; font-weight: 600; padding: 0.35rem 0.6rem;
+  border-radius: 6px; background: rgba(31,111,74,0.12); border: 1px solid rgba(31,111,74,0.45);
+  color: #1f6f4a; }
+.coding-off > .code-instead { opacity: 1; }
+.code-instead::before { content: "✓"; font-weight: 700; }
+.code-instead-ready { background: rgba(31,111,74,0.18); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .code-instead { background: rgba(80,200,140,0.14);
+    border-color: rgba(80,200,140,0.5); color: #7fd7a8; }
+}
+:root[data-theme="dark"] .code-instead { background: rgba(80,200,140,0.14);
+  border-color: rgba(80,200,140,0.5); color: #7fd7a8; }
 
 /* A pairing whose legs fell on different days: made, and worth a glance. */
 .transfer-matched.transfer-stretched { color: var(--review); }

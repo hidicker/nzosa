@@ -5,7 +5,7 @@ import { note } from "./ui.js";
 import { emptyEntityModel, financialYearOf, formatAmount } from "@nzosa/core";
 
 /**
- * A second pair of eyes on the books, carried by hand.
+ * A year-end review of the accounts, carried by hand.
  *
  * Not the coding queue. That asks about one transaction at a time and gets a
  * code back; this asks what a reviewer would ask at year end -- does the GST

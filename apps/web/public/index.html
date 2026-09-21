@@ -218,12 +218,14 @@
               <option value="all">All</option>
             </select>
             <button id="accept-all" type="button">Accept all</button>
-            <span class="ai-group" id="reconcile-ai-group" hidden>
-              <select id="reconcile-ai-how" title="Where the suggestions come from">
-                <option value="key">AI from my key</option>
-                <option value="prompt">AI from a prompt</option>
-              </select>
-              <button id="reconcile-ai" type="button">Get suggestions</button>
+            <span class="ai-menu" id="reconcile-ai-group" hidden>
+              <button id="reconcile-ai" type="button" aria-haspopup="true" aria-expanded="false">
+                AI suggestions
+              </button>
+              <div class="ai-menu-items" id="reconcile-ai-menu" hidden>
+                <button type="button" data-how="key" id="reconcile-ai-key"></button>
+                <button type="button" data-how="prompt" id="reconcile-ai-prompt"></button>
+              </div>
             </span>
           </div>
         </div>

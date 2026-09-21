@@ -1910,43 +1910,63 @@ const CODING_TEMPLATE =
  */
 function wireAiButton(): void {
   const group = $("reconcile-ai-group");
-  const how = $<HTMLSelectElement>("reconcile-ai-how");
   const button = $<HTMLButtonElement>("reconcile-ai");
+  const menu = $("reconcile-ai-menu");
+  const withKey = $<HTMLButtonElement>("reconcile-ai-key");
+  const withPrompt = $<HTMLButtonElement>("reconcile-ai-prompt");
   const paste = $("reconcile-ai-paste");
+  let haveKey = false;
 
   // Held between copying a prompt and pasting the answer: the answer names
   // transactions by id, and the ids only mean anything against the batch that
   // was copied.
   let carried: ReturnType<typeof promptToCarry> | null = null;
 
+  const openMenu = (open: boolean): void => {
+    menu.hidden = !open;
+    button.setAttribute("aria-expanded", String(open));
+  };
+
   const say = (): void => {
     const left = waitingForAnswers().length;
-    if (how.value === "prompt") {
-      button.textContent = left === 0 ? "Nothing to ask about" : `Copy a prompt (${left})`;
-    } else {
-      button.textContent =
-        left === 0 ? "Nothing to ask about" : `Get suggestions (${Math.min(left, AI_BATCH)})`;
-    }
+    button.textContent = left === 0 ? "Nothing to ask about" : `AI suggestions (${left})`;
     button.disabled = left === 0;
+    withKey.textContent = `Ask with my key (${Math.min(left, AI_BATCH)} at a time)`;
+    withKey.disabled = !haveKey;
+    withKey.title = haveKey
+      ? "Asked automatically, and charged to your key."
+      : "No key set for these books. Set one on the AI suggestions page.";
+    withPrompt.textContent = `Copy a prompt (${Math.min(left, 100)})`;
   };
 
   void aiStatus().then((status) => {
     if (state.ledger.aiEnabled !== true) return;
+    haveKey = status !== null && status.configured;
     group.hidden = false;
-    // Only offered where there is a key to use. Without one the choice is not
-    // a choice, and an option that always fails is worse than no option.
-    if (status === null || !status.configured) {
-      how.value = "prompt";
-      const key = how.querySelector('option[value="key"]');
-      if (key instanceof HTMLOptionElement) key.disabled = true;
-    }
     say();
   });
 
-  how.addEventListener("change", () => {
-    paste.hidden = true;
+  button.addEventListener("click", () => {
+    if (button.disabled) return;
     say();
+    openMenu(menu.hidden);
   });
+
+  // A menu that will not close is worse than no menu.
+  document.addEventListener("click", (event) => {
+    if (!group.contains(event.target as Node)) openMenu(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape") openMenu(false);
+  });
+
+  const showTheAiOnes = (): void => {
+    // Straight to them: a suggestion nobody can find is a suggestion nobody
+    // asked for.
+    state.reconcileFilter = "ai";
+    const filter = document.getElementById("reconcile-filter");
+    if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
+  };
 
   /** Somewhere to put the answer, once a prompt has gone out. */
   const showPasteBox = (copied: boolean): void => {
@@ -2013,29 +2033,23 @@ function wireAiButton(): void {
     paste.append(answer, row);
   };
 
-  const showTheAiOnes = (): void => {
-    // Straight to them: a suggestion nobody can find is a suggestion nobody
-    // asked for.
-    state.reconcileFilter = "ai";
-    const filter = document.getElementById("reconcile-filter");
-    if (filter instanceof HTMLSelectElement) filter.value = state.reconcileFilter;
-  };
-
-  button.addEventListener("click", () => {
+  withPrompt.addEventListener("click", () => {
+    openMenu(false);
     const waiting = waitingForAnswers();
     if (waiting.length === 0) return;
+    // A hundred rather than twenty: nobody is paying per line here, and a
+    // bigger model asked once about a hundred beats ten pastes.
+    carried = promptToCarry(waiting, Math.min(waiting.length, 100));
+    void navigator.clipboard.writeText(carried.text).then(
+      () => showPasteBox(true),
+      () => showPasteBox(false),
+    );
+  });
 
-    if (how.value === "prompt") {
-      // A hundred rather than twenty: nobody is paying per line here, and a
-      // bigger model asked once about a hundred is better than ten pastes.
-      carried = promptToCarry(waiting, Math.min(waiting.length, 100));
-      void navigator.clipboard.writeText(carried.text).then(
-        () => showPasteBox(true),
-        () => showPasteBox(false),
-      );
-      return;
-    }
-
+  withKey.addEventListener("click", () => {
+    openMenu(false);
+    const waiting = waitingForAnswers();
+    if (waiting.length === 0 || !haveKey) return;
     button.disabled = true;
     button.textContent = "Asking…";
     void askAboutLines(waiting).then(({ got, said: trouble }) => {

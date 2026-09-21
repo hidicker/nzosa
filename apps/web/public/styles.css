@@ -637,9 +637,22 @@
 #page-reconcile .page-actions > *:not(#reconcile-accounts) { order: 1; }
 #reconcile-accounts { order: 2; flex: 1 0 100%; max-width: none; margin-top: 0.1rem; }
 #reconcile-search { flex: 0 1 16rem; }
-.ai-group { display: inline-flex; gap: 0.35rem; align-items: center; }
-.ai-group select { font-size: 0.8rem; }
-#reconcile-ai { min-width: 11.5rem; }
+/* One button that opens its two ways, rather than a picker beside a verb that
+   changes meaning depending on it. */
+.ai-menu { position: relative; display: inline-block; }
+/* Anchored to the button's left edge: it is anchored to a button that can sit
+   anywhere in a wrapping toolbar, and hanging it off the right put it off the
+   side of the screen. */
+.ai-menu-items { position: absolute; left: 0; top: calc(100% + 0.3rem); z-index: 30;
+  display: flex; flex-direction: column; min-width: 15rem;
+  background: var(--card, #fff); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.25rem; box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+.ai-menu-items button { text-align: left; border: 0; background: transparent;
+  padding: 0.45rem 0.6rem; border-radius: 4px; font-size: 0.82rem; color: inherit;
+  cursor: pointer; }
+.ai-menu-items button:hover:not(:disabled) { background: rgba(128,128,128,0.14); }
+.ai-menu-items button:disabled { opacity: 0.45; cursor: default; }
+#reconcile-ai { min-width: 10.5rem; }
 
 .ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
   margin: 0 0 0.8rem; max-width: 52rem; }

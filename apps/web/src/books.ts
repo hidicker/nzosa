@@ -296,6 +296,60 @@ export function invoiceAssignments(): Map<string, string> {
  * the two ever disagreed, "accept all" would confirm lines that were not on
  * screen -- which is the one thing a bulk action must never do.
  */
+/**
+ * Whether a line has been given an account, by any of the ways there are.
+ *
+ * A code is the usual one. A split is a better one -- it is what the line
+ * actually was. An invoice match is the third: a receipt settling an invoice
+ * posts against the debtor rather than to an account of its own.
+ */
+function hasCoding(one: Suggestion): boolean {
+  return (
+    one.code !== null ||
+    (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
+    invoiceAssignments().has(one.transaction.id)
+  );
+}
+
+/**
+ * A line that needs nothing further.
+ *
+ * Confirmed is not enough on its own. A line confirmed with no account is a
+ * decision to post nothing, which is not a decision anybody means to make --
+ * and because confirming took it out of the queue, it left no trace. A
+ * recorded transfer is settled by being paired: there is no coding to confirm
+ * and its tick has nothing left to do.
+ */
+export function settledAlready(one: Suggestion): boolean {
+  return (
+    (one.confirmed && hasCoding(one)) ||
+    (state.ledger.transfers ?? {})[one.transaction.id] !== undefined
+  );
+}
+
+/**
+ * Nothing in these books has anything to say about this line.
+ *
+ * The one question worth asking before paying to ask a model, and it is not
+ * "is the code null". A recorded transfer, a split, a matched invoice and an
+ * offered transfer are all answers -- three of them better answers than a
+ * single code would be -- and a line carrying one of them wants agreeing to,
+ * not describing to a stranger.
+ *
+ * Written once and shared, because the Reconcile filter and the model queue
+ * asking the same question differently is how a transfer already settled ends
+ * up in a batch somebody is charged for and then offered an account for.
+ */
+export function nothingHasAnswered(one: Suggestion): boolean {
+  if (settledAlready(one)) return false;
+  return !(
+    one.code !== null ||
+    (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
+    invoiceAssignments().has(one.transaction.id) ||
+    transferSuggestions().has(one.transaction.id)
+  );
+}
+
 export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
   const all = suggest(
     state.ledger.transactions,
@@ -320,19 +374,6 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
    * to confirm" for ever, unable to leave, because confirming was the one
    * thing it could not be made to do.
    */
-  const linked = state.ledger.transfers ?? {};
-
-  /**
-   * Whether a line has been given an account, by any of the ways there are.
-   *
-   * A code is the usual one. A split is a better one -- it is what the line
-   * actually was. An invoice match is the third: a receipt settling an invoice
-   * posts against the debtor rather than to an account of its own.
-   */
-  const hasCoding = (one: Suggestion): boolean =>
-    one.code !== null ||
-    (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
-    invoiceAssignments().has(one.transaction.id);
 
   /**
    * A line that needs nothing further.
@@ -344,8 +385,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
    * code, were absent from every report, and showed nowhere as outstanding.
    * So it stays in the queue until it has an account.
    */
-  const settled = (one: Suggestion): boolean =>
-    (one.confirmed && hasCoding(one)) || linked[one.transaction.id] !== undefined;
+  const settled = settledAlready;
 
   const shown = all.filter((one) => {
     // What a model proposed and nobody has agreed to yet. Its own view
@@ -359,17 +399,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     if (state.reconcileFilter === "coded" && !settled(one)) return false;
     // A line with no code is one no rule matched. Confirming it means deciding
     // what it is, rather than agreeing with a suggestion.
-    if (state.reconcileFilter === "nocode") {
-      const suggested =
-        one.code !== null ||
-        // A split is a coding, and a better one than a single code: it is what
-        // the line actually was. Left out, a payment already divided correctly
-        // fell into "nothing suggested" and stayed there.
-        (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
-        invoiceAssignments().has(one.transaction.id) ||
-        transferSuggestions().has(one.transaction.id);
-      if (settled(one) || suggested) return false;
-    }
+    if (state.reconcileFilter === "nocode" && !nothingHasAnswered(one)) return false;
     // The mirror of "no code suggested", and the one that makes accepting in
     // bulk work. Suggestions are scattered through thousands of lines, so
     // "accept everything on screen" met screen after screen with nothing on it

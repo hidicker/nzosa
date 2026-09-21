@@ -1,4 +1,4 @@
-import { accountsFor, unregisteredCode } from "./books.js";
+import { accountsFor, nothingHasAnswered, unregisteredCode } from "./books.js";
 import { knownCodes, suggest } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
@@ -9,7 +9,6 @@ import {
   emptyEntityModel,
   labelForCode,
   parseSuggestions,
-  unmatched,
   wholePrompt,
 } from "@nzosa/core";
 import type { AiSuggestion, AskedAbout } from "@nzosa/core";
@@ -92,16 +91,23 @@ export function allLines(): Suggestion[] {
 }
 
 /**
- * The lines nothing recognises and nobody has answered, oldest first.
+ * The lines nothing in these books has answered, oldest first.
+ *
+ * "Nothing has answered" rather than "no code": a recorded transfer, a split,
+ * a matched invoice and an offered transfer are all answers, and three of them
+ * are better answers than a code would be. Asking about those was paying to
+ * describe decisions already taken -- a hundred and seventeen of them on one
+ * real set of books -- and then offering an account for a transfer, which is
+ * how a movement between your own accounts gets filed as income.
  *
  * Oldest first because that is the order somebody works in, so the twenty
- * asked about are the twenty they are about to reach -- and because asking
- * about the same twenty twice is the one way to spend an allowance on
+ * asked about are the twenty they are about to reach -- and never one already
+ * answered, because asking twice is the one way to spend an allowance on
  * nothing.
  */
 export function waitingForAnswers(lines = allLines()): Suggestion[] {
-  return unmatched(lines)
-    .filter((one) => !found.has(one.transaction.id))
+  return lines
+    .filter((one) => nothingHasAnswered(one) && !found.has(one.transaction.id))
     .sort((a, b) => a.transaction.date.localeCompare(b.transaction.date));
 }
 

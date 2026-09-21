@@ -243,7 +243,54 @@ function today() {
 }
 
 const AI_DAILY_LIMIT = 200;
-const AI_MODEL = "gemini-2.5-flash";
+
+/**
+ * Which model, when nobody has said.
+ *
+ * In preference order, and only ever a name this key's own account offers:
+ * models are retired, and one hard-coded here becomes an error message months
+ * after it was written. The list comes from Google, the choice comes from the
+ * person, and this is only what to reach for first.
+ */
+const AI_PREFERRED = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.6-pro"];
+
+/**
+ * Every model this key may use that can answer this kind of question.
+ *
+ * Also how a key is checked. Listing costs nothing and says more than a test
+ * question would: a key that cannot list is a key that cannot do anything,
+ * and a key that can gives us the names to offer rather than a guess.
+ */
+async function geminiModels(key) {
+  const response = await fetch(
+    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
+    { headers: { "x-goog-api-key": key } },
+  );
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const said =
+      body && body.error && typeof body.error.message === "string"
+        ? body.error.message
+        : `HTTP ${response.status}`;
+    throw new Error(said);
+  }
+  return (body?.models ?? [])
+    .filter((model) => (model.supportedGenerationMethods ?? []).includes("generateContent"))
+    .map((model) => ({
+      name: String(model.name ?? "").replace(/^models\//, ""),
+      label: String(model.displayName ?? model.name ?? ""),
+    }))
+    .filter((model) => model.name !== "");
+}
+
+/** The one to start on: a preference if this key has it, else a flash, else any. */
+function pickModel(models, wanted) {
+  const has = (name) => models.some((model) => model.name === name);
+  if (wanted && has(wanted)) return wanted;
+  for (const name of AI_PREFERRED) if (has(name)) return name;
+  const flash = models.find((model) => /flash/i.test(model.name));
+  return flash?.name ?? models[0]?.name ?? "";
+}
 
 /** How many transactions have been asked about today, out of how many allowed. */
 function aiUsedToday(ai) {
@@ -623,7 +670,8 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           configured: ai !== null,
           // Enough to recognise which key it is, and not enough to use it.
           key: ai ? `${ai.key.slice(0, 6)}\u2026${ai.key.slice(-4)}` : "",
-          model: ai?.model ?? AI_MODEL,
+          model: ai?.model ?? "",
+          models: ai?.models ?? [],
           usedToday: aiUsedToday(ai),
           limit: AI_DAILY_LIMIT,
         });
@@ -637,22 +685,44 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         }
         const body = JSON.parse(await readBody(request));
         const key = String(body.key ?? "").trim();
-        const model = String(body.model ?? "").trim() || AI_MODEL;
+        const wanted = String(body.model ?? "").trim();
+        const existing = readAi(ledgerRoot, current);
+
+        // Changing only which model, on a key already kept. No reason to ask
+        // for the key again to answer a question about the model.
+        if (key === "" && wanted !== "" && existing !== null) {
+          if (!(existing.models ?? []).some((model) => model.name === wanted)) {
+            send(response, 400, { error: "that is not a model this key offers" });
+            return;
+          }
+          writeAi(ledgerRoot, current, { ...existing, model: wanted });
+          send(response, 200, { configured: true, model: wanted });
+          return;
+        }
+
         if (key === "") {
           send(response, 400, { error: "no key given" });
           return;
         }
-        // Verified before it is kept, so a key that was mistyped is said to be
-        // wrong now rather than the first time somebody needs it.
+
+        // Checked before it is kept, so a key that was mistyped is said to be
+        // wrong now rather than the first time somebody needs it -- and the
+        // check is the list of models, which costs nothing and is the thing we
+        // wanted anyway.
+        let models;
         try {
-          await askGemini(key, model, 'Reply with the JSON array [] and nothing else.');
+          models = await geminiModels(key);
         } catch (error) {
           send(response, 400, { error: String(error.message ?? error) });
           return;
         }
-        const existing = readAi(ledgerRoot, current);
-        writeAi(ledgerRoot, current, { key, model, used: existing?.used ?? {} });
-        send(response, 200, { configured: true, model });
+        if (models.length === 0) {
+          send(response, 400, { error: "that key can reach Google but has no models on it" });
+          return;
+        }
+        const model = pickModel(models, wanted);
+        writeAi(ledgerRoot, current, { key, model, models, used: existing?.used ?? {} });
+        send(response, 200, { configured: true, model, models });
         return;
       }
 
@@ -695,7 +765,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 
         let said;
         try {
-          said = await askGemini(ai.key, ai.model ?? AI_MODEL, prompt);
+          said = await askGemini(ai.key, ai.model ?? pickModel(ai.models ?? [], ""), prompt);
         } catch (error) {
           send(response, 502, { error: String(error.message ?? error) });
           return;

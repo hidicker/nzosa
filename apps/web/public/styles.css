@@ -1878,6 +1878,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .ai-offer li { font-size: 0.85rem; line-height: 1.5; margin: 0.2rem 0; }
 /* The two sentences somebody must not skim past. */
 .ai-careful { border-left: 3px solid var(--accent); padding-left: 0.7rem; }
+.ai-model { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;
+  margin: 0.5rem 0; }
+.ai-model select { max-width: 28rem; font-size: 0.85rem; }
 .ai-key-input { flex: 1 1 22rem; min-width: 12rem; font-family: inherit; }
 .ai-about { width: 100%; max-width: 46rem; font: inherit; font-size: 0.85rem;
   padding: 0.5rem 0.6rem; border-radius: 4px; }

@@ -40,10 +40,17 @@ import type { Suggestion } from "../reconcile.js";
  * nothing until somebody agrees with it.
  */
 
+interface AiModel {
+  name: string;
+  label: string;
+}
+
 interface AiStatus {
   configured: boolean;
   key: string;
   model: string;
+  /** What this key's own account offers. Asked for rather than assumed. */
+  models: AiModel[];
   usedToday: number;
   limit: number;
 }
@@ -96,6 +103,7 @@ async function refreshStatus(): Promise<void> {
     status === null ||
     status.configured !== next.configured ||
     status.usedToday !== next.usedToday ||
+    status.model !== next.model ||
     status.key !== next.key;
   status = next;
   if (changed) redraw("ai");
@@ -185,11 +193,49 @@ function keyPanel(): HTMLElement {
   if (status?.configured === true) {
     inner.append(
       note(
-        `Set: ${status.key}, using ${status.model}. It is kept in a file on this computer ` +
-          "that only your user account can read, beside the bank feed's tokens, and it is " +
-          "never sent to this page.",
+        `Set: ${status.key}. It is kept in a file on this computer that only your user ` +
+          "account can read, beside the bank feed's tokens, and it is never sent to this page.",
       ),
     );
+
+    // The models this key may actually use, as Google listed them. Hard-coding
+    // one is how a working app becomes an error message months later: they are
+    // retired, and the message says so to somebody who cannot act on it.
+    const models = status.models ?? [];
+    if (models.length > 0) {
+      const label = document.createElement("label");
+      label.className = "ai-model";
+      label.append("Model ");
+      const pick = document.createElement("select");
+      for (const model of models) {
+        const option = document.createElement("option");
+        option.value = model.name;
+        option.textContent =
+          model.label === "" || model.label === model.name
+            ? model.name
+            : `${model.label} (${model.name})`;
+        option.selected = model.name === status?.model;
+        pick.append(option);
+      }
+      pick.addEventListener("change", () => {
+        pick.disabled = true;
+        void api("/api/ai", {
+          method: "PUT",
+          headers: { "content-type": "application/json" },
+          body: JSON.stringify({ model: pick.value }),
+        }).then(() => refreshStatus().then(() => redraw("ai")));
+      });
+      label.append(pick);
+      inner.append(label);
+      inner.append(
+        note(
+          `${models.length} models on this key. A flash model is the cheap one and is what ` +
+            "this asks for; a pro model costs more per transaction and is worth trying if " +
+            "the suggestions are poor.",
+        ),
+      );
+    }
+
     const remove = document.createElement("button");
     remove.type = "button";
     remove.textContent = "Remove the key";

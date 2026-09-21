@@ -1,18 +1,12 @@
 import { redraw, showPage } from "../app.js";
 import { saveEntities } from "../books.js";
 import { $, state } from "../state.js";
-import { backendKind, save } from "../store.js";
+import { save } from "../store.js";
 import { note } from "../ui.js";
-import {
-  AI_BATCH,
-  aiRequest as api,
-  aiSuggestionCount,
-  aiStatus,
-  waitingForAnswers,
-  whatWouldBeAsked,
-} from "../ai.js";
+import { AI_BATCH, aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
-import type { AiStatus } from "../ai.js";
+import { aiClearKey, aiRoute, aiSetKey, aiSetModel, aiStatus } from "../ai-backend.js";
+import type { AiStatus } from "../ai-backend.js";
 import { emptyEntityModel } from "@nzosa/core";
 import type { Entity } from "@nzosa/core";
 
@@ -66,13 +60,13 @@ export function renderAi(): void {
     carryPanel(),
   );
 
-  if (backendKind() !== "folder") {
+  if (aiRoute() === "none") {
     body.append(
       note(
-        "The other way -- a key of your own, asked automatically -- needs somewhere to keep " +
-          "that key which is not this browser, and somewhere to ask from which is not this " +
-          "page: the app running on your own computer. A copy running in a browser has " +
-          "neither, so only the way above is offered here.",
+        "The other way -- a key asked automatically -- needs somewhere to keep it that is " +
+          "not this browser, and somewhere to ask from that is not this page. That is the " +
+          "app running on your own computer, or a set of books on the server. A copy running " +
+          "in a browser alone has neither, so only the way above is offered here.",
       ),
     );
     return;
@@ -205,13 +199,34 @@ function panel(title: string): [HTMLElement, HTMLElement] {
 // --- the key ---------------------------------------------------------------
 
 function keyPanel(): HTMLElement {
-  const [box, inner] = panel("Or: your own AI key, asked automatically");
+  const [box, inner] = panel("Or: a key, asked automatically");
+
+  // Where the books are on the server and this installation offers one, there
+  // is something to try before bringing a key at all -- said plainly, because
+  // somebody about to use somebody else's key should know that is what they
+  // are doing, and on whose model.
+  if (status?.configured !== true && status?.sharedKey === true) {
+    const left = Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0));
+    inner.append(
+      note(
+        `You can try this without a key of your own. This site offers a shared one -- ` +
+          `${status.sharedModel || "a flash model"}, ${left} transactions left for these books ` +
+          "-- paid for by whoever runs the site, and asked twenty at a time. What you send " +
+          "goes to Google under their account, so use your own key for a client's books.",
+      ),
+    );
+  }
 
   if (status?.configured === true) {
     inner.append(
       note(
-        `Set: ${status.key}. It is kept in a file on this computer that only your user ` +
-          "account can read, beside the bank feed's tokens, and it is never sent to this page.",
+        `Set: ${status.key}. ` +
+          (aiRoute() === "cloud"
+            ? "It is kept in the server's vault, which only the function that asks Google " +
+              "can open, beside the bank feed's tokens."
+            : "It is kept in a file on this computer that only your user account can read, " +
+              "beside the bank feed's tokens.") +
+          " It is never sent back to this page.",
       ),
     );
 
@@ -236,11 +251,7 @@ function keyPanel(): HTMLElement {
       }
       pick.addEventListener("change", () => {
         pick.disabled = true;
-        void api("/api/ai", {
-          method: "PUT",
-          headers: { "content-type": "application/json" },
-          body: JSON.stringify({ model: pick.value }),
-        }).then(() => refreshStatus().then(() => redraw("ai")));
+        void aiSetModel(pick.value).then(() => refreshStatus().then(() => redraw("ai")));
       });
       label.append(pick);
       inner.append(label);
@@ -293,7 +304,7 @@ function keyPanel(): HTMLElement {
     remove.textContent = "Remove the key";
     remove.addEventListener("click", () => {
       remove.disabled = true;
-      void api("/api/ai", { method: "DELETE" }).then(() => {
+      void aiClearKey().then(() => {
         status = null;
         void refreshStatus().then(() => redraw("ai"));
       });
@@ -309,7 +320,8 @@ function keyPanel(): HTMLElement {
     note(
       "A key of your own, from aistudio.google.com. You pay Google for what you use, which " +
         "for coding a few hundred transactions is cents rather than dollars. NZOSA is open " +
-        "source and ships with no key in it, so everybody brings their own.",
+        "source and ships with no key in it, so a copy you run yourself has none until you " +
+        "bring one.",
     ),
   );
 
@@ -330,20 +342,11 @@ function keyPanel(): HTMLElement {
     const key = input.value.trim();
     if (key === "") return;
     save.disabled = true;
-    trouble.textContent = "Asking Google whether it works…";
-    void api("/api/ai", {
-      method: "PUT",
-      headers: { "content-type": "application/json" },
-      body: JSON.stringify({ key }),
-    }).then(async (response) => {
+    trouble.textContent = "Checking it with Google…";
+    void aiSetKey(key).then((answer) => {
       save.disabled = false;
-      if (response === null) {
-        trouble.textContent = "Could not reach the app on this computer.";
-        return;
-      }
-      const answer = (await response.json().catch(() => ({}))) as { error?: string };
-      if (!response.ok) {
-        trouble.textContent = answer.error ?? "That key was not accepted.";
+      if (!answer.ok) {
+        trouble.textContent = answer.error;
         return;
       }
       // Out of this page the moment it is somewhere better.

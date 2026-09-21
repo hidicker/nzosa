@@ -1,5 +1,6 @@
 import { redraw, showPage } from "../app.js";
-import { AI_BATCH, aiStatus, askAboutLines, waitingForAnswers } from "../ai.js";
+import { AI_BATCH, askAboutLines, waitingForAnswers } from "../ai.js";
+import { aiStatus } from "../ai-backend.js";
 import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
@@ -1932,7 +1933,9 @@ function wireAiButton(): void {
 
   void aiStatus().then((status) => {
     if (state.ledger.aiEnabled !== true) return;
-    haveKey = status !== null && status.configured;
+    // A shared key counts: somebody with none of their own can still ask
+    // automatically, up to what the site allows.
+    haveKey = status !== null && (status.configured || status.sharedKey === true);
     group.hidden = false;
     say();
   });

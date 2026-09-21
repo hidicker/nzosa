@@ -1,3 +1,4 @@
+import { aiSuggest } from "./ai-backend.js";
 import { accountsFor, nothingHasAnswered, unregisteredCode } from "./books.js";
 import { knownCodes, suggest } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
@@ -36,20 +37,6 @@ import type { AiSuggestion, AskedAbout } from "@nzosa/core";
  */
 export const AI_BATCH = 20;
 
-export interface AiModel {
-  name: string;
-  label: string;
-}
-
-export interface AiStatus {
-  configured: boolean;
-  key: string;
-  model: string;
-  models: AiModel[];
-  usedToday: number;
-  limit: number;
-}
-
 /** What came back, by transaction. Emptied by a reload, and that is right. */
 const found = new Map<string, AiSuggestion>();
 
@@ -63,20 +50,6 @@ export function aiSuggestionCount(): number {
 
 export function forgetAiSuggestions(): void {
   found.clear();
-}
-
-export async function aiRequest(path: string, init?: RequestInit): Promise<Response | null> {
-  try {
-    return await fetch(path, init);
-  } catch {
-    return null;
-  }
-}
-
-export async function aiStatus(): Promise<AiStatus | null> {
-  const response = await aiRequest("/api/ai");
-  if (response === null || !response.ok) return null;
-  return (await response.json().catch(() => null)) as AiStatus | null;
 }
 
 /** Every line, coded the way the Reconcile page codes them: rules first. */
@@ -186,20 +159,11 @@ export async function askAboutLines(
   const { prompt, asked, codes } = whatWouldBeAsked(lines);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
-  const response = await aiRequest("/api/ai/suggest", {
-    method: "POST",
-    headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt, asking: asked.length }),
-  });
-  if (response === null) {
-    return { got: 0, said: "Could not reach the app on this computer." };
-  }
-  const answer = (await response.json().catch(() => ({}))) as { text?: string; error?: string };
-  if (!response.ok) {
-    return { got: 0, said: answer.error ?? "The model would not answer." };
-  }
-
-  return keepWhatIsUsable(answer.text ?? "", asked, codes);
+  const answer = await aiSuggest(prompt, asked.length);
+  if (answer.error !== undefined) return { got: 0, said: answer.error };
+  // Where the answer came from matters a year later: a suggestion made on the
+  // shared key was made on a model somebody else chose and paid for.
+  return keepWhatIsUsable(answer.text ?? "", asked, codes, answer.demo === true ? "shared key" : undefined);
 }
 
 /**

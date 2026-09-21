@@ -1080,6 +1080,30 @@ function dropZone(): HTMLElement {
  * year containing the day before the conversion date. Null when no date has
  * been given, because a year worked out from a guess is a year nobody chose.
  */
+function today(): string {
+  const now = new Date();
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+/**
+ * The account transactions worth exporting, and the dates to ask Xero for.
+ *
+ * From the start of the financial year before these books begin, to whatever
+ * Xero has now -- not to the conversion date. Everything after that date is
+ * coded history too: it does not become transactions here, because those come
+ * from the bank, but it is more work already done for the rules to learn from.
+ */
+function xeroTransactionsExport(start: string | undefined): string | null {
+  const year = financialYearBefore(start);
+  if (year === null) return null;
+  return (
+    `${XERO_ACCOUNT_TRANSACTIONS}, for ${year.from} to ${today()}. Everything Xero holds, ` +
+    "not only up to the day these books start: it is all coding somebody has already done, " +
+    "and it is what the rules are learned from."
+  );
+}
+
 function financialYearBefore(start: string | undefined): { from: string; to: string } | null {
   if (start === undefined || !/^\d{4}-\d{2}-\d{2}$/.test(start)) return null;
   const day = new Date(`${start}T00:00:00Z`);
@@ -1240,10 +1264,7 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
       );
       if (held.xeroYear === true) {
         inner.append(
-          advice(
-            `${XERO_ACCOUNT_TRANSACTIONS}, for ${year.from} to ${year.to}. That one export ` +
-              "is what the rules are learned from.",
-          ),
+          advice(xeroTransactionsExport(held.startDate) ?? XERO_ACCOUNT_TRANSACTIONS),
         );
       } else if (held.xeroYear === false) {
         inner.append(
@@ -1388,7 +1409,7 @@ function codedHistory(held: Onboarding): HTMLElement {
   );
 
   if (held.source === "xero") {
-    wrap.append(advice(`${XERO_ACCOUNT_TRANSACTIONS}.`));
+    wrap.append(advice(xeroTransactionsExport(held.startDate) ?? `${XERO_ACCOUNT_TRANSACTIONS}.`));
   } else if (held.source === "sheet") {
     wrap.append(
       advice(

@@ -243,6 +243,10 @@ function today() {
 }
 
 const AI_DAILY_LIMIT = 200;
+// The most in one call. Not about money -- the key is theirs -- but about
+// reading the answers and the attention a model gives each of a hundred
+// lines rather than each of a thousand.
+const AI_MOST_AT_ONCE = 100;
 
 /**
  * Which model, when nobody has said.
@@ -785,6 +789,12 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         const asking = Number(body.asking ?? 0);
         if (prompt === "" || !Number.isInteger(asking) || asking < 1) {
           send(response, 400, { error: "nothing to ask about" });
+          return;
+        }
+        if (asking > AI_MOST_AT_ONCE) {
+          send(response, 400, {
+            error: `ask about between 1 and ${AI_MOST_AT_ONCE} at a time`,
+          });
           return;
         }
         // The cap is on transactions rather than on calls, because a call can

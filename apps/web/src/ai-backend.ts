@@ -28,9 +28,11 @@ export interface AiStatus {
   /** The shared key this installation offers, when it offers one. */
   sharedKey?: boolean;
   sharedModel?: string;
-  /** Of the shared key's allowance for these books, how much is gone. */
+  /** Of the shared key's allowance for this person, how much is gone. */
   demoUsed?: number;
   demoLimit?: number;
+  /** The most that may be asked in one call on a key of their own. */
+  ownBatch?: number;
 }
 
 export interface AiAnswer {
@@ -100,6 +102,7 @@ export async function aiStatus(): Promise<AiStatus | null> {
     sharedModel: String(said["sharedModel"] ?? ""),
     demoUsed: Number(said["demo_used"] ?? 0),
     demoLimit: Number(said["per_person"] ?? 0),
+    ownBatch: Number(said["own_batch"] ?? 0),
   };
 }
 

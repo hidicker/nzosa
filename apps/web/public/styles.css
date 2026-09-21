@@ -661,6 +661,8 @@
 .ai-menu-items[hidden] { display: none; }
 #reconcile-ai { min-width: 10.5rem; }
 
+.ai-notice[hidden] { display: none; }
+.ai-notice { border-left: 3px solid var(--accent); padding-left: 0.7rem; max-width: 52rem; }
 .ai-paste[hidden] { display: none; }
 .ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
   margin: 0 0 0.8rem; max-width: 52rem; }

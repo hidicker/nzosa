@@ -33,6 +33,14 @@ export function carrySection(options: {
   const heading = document.createElement("h3");
   heading.textContent = "Copy a prompt for any AI model";
   wrap.append(heading);
+  // The honest contrast with the other route, which is Google's alone: this
+  // one has no idea where the answer came from and does not need to.
+  wrap.append(
+    note(
+      "ChatGPT, Claude, Gemini, Copilot, a local model — anything that can read a " +
+        "question and write JSON. Nothing is set up and nothing is charged here.",
+    ),
+  );
 
   const waiting = waitingForAnswers();
   wrap.append(

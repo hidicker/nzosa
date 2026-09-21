@@ -37,6 +37,16 @@ import type { AiSuggestion, AskedAbout } from "@nzosa/core";
  */
 export const AI_BATCH = 20;
 
+/**
+ * The most in one call, for somebody spending their own money.
+ *
+ * The twenty above is the shared key's, where a trial that can be emptied in
+ * ten presses is not one. On a key of their own the only reasons to keep a
+ * batch small are reading the answers and the attention a model gives each
+ * line -- both of which hold at a hundred.
+ */
+export const AI_OWN_BATCH = 100;
+
 /** What came back, by transaction. Emptied by a reload, and that is right. */
 const found = new Map<string, AiSuggestion>();
 
@@ -155,8 +165,9 @@ export function promptToCarry(lines: readonly Suggestion[], howMany: number): {
  */
 export async function askAboutLines(
   lines: readonly Suggestion[],
+  howMany = AI_BATCH,
 ): Promise<{ got: number; said: string }> {
-  const { prompt, asked, codes } = whatWouldBeAsked(lines);
+  const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
   const answer = await aiSuggest(prompt, asked.length);

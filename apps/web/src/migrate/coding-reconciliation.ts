@@ -1,5 +1,5 @@
 import { redraw, showPage } from "../app.js";
-import { AI_BATCH, askAboutLines, waitingForAnswers } from "../ai.js";
+import { AI_BATCH, AI_OWN_BATCH, askAboutLines, waitingForAnswers } from "../ai.js";
 import { aiStatus } from "../ai-backend.js";
 import { carrySection } from "../ai-carry.js";
 import {
@@ -1910,7 +1910,10 @@ function wireAiButton(): void {
   const withKey = $<HTMLButtonElement>("reconcile-ai-key");
   const withPrompt = $<HTMLButtonElement>("reconcile-ai-prompt");
   const paste = $("reconcile-ai-paste");
+  const notice = $("reconcile-ai-notice");
   let haveKey = false;
+  let ownKey = false;
+  let shared: { model: string; left: number } | null = null;
 
   const openMenu = (open: boolean): void => {
     menu.hidden = !open;
@@ -1921,11 +1924,17 @@ function wireAiButton(): void {
     const left = waitingForAnswers().length;
     button.textContent = left === 0 ? "Nothing to ask about" : `AI suggestions (${left})`;
     button.disabled = left === 0;
-    withKey.textContent = `Ask with my key (${Math.min(left, AI_BATCH)} at a time)`;
+    withKey.textContent = ownKey
+      ? "Ask with my key…"
+      : shared !== null
+        ? `Ask with the shared key (${Math.min(left, AI_BATCH)} at a time)`
+        : "Ask with my key";
     withKey.disabled = !haveKey;
-    withKey.title = haveKey
+    withKey.title = ownKey
       ? "Asked automatically, and charged to your key."
-      : "No key set for these books. Set one on the AI suggestions page.";
+      : shared !== null
+        ? "Asked automatically, on this site's key rather than one of yours."
+        : "No key set for these books. Set one on the AI suggestions page.";
     // No count: how many is chosen in the section this opens, so naming one
     // here would be promising a number the next screen then asks about.
     withPrompt.textContent = "Copy a prompt for any AI model";
@@ -1933,9 +1942,24 @@ function wireAiButton(): void {
 
   void aiStatus().then((status) => {
     if (state.ledger.aiEnabled !== true) return;
+    ownKey = status?.configured === true;
     // A shared key counts: somebody with none of their own can still ask
     // automatically, up to what the site allows.
-    haveKey = status !== null && (status.configured || status.sharedKey === true);
+    haveKey = ownKey || status?.sharedKey === true;
+    if (!ownKey && status?.sharedKey === true) {
+      shared = {
+        model: status.sharedModel ?? "",
+        left: Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0)),
+      };
+      // Said on the page where the asking happens, not only on the page where
+      // it is set up: somebody here has not necessarily been there.
+      notice.hidden = false;
+      notice.textContent =
+        "You can try this without a key of your own. This site offers a shared one — " +
+        `${shared.model || "a flash model"}, ${shared.left} transactions left on your ` +
+        "account — asked twenty at a time. What you send goes to Google under the " +
+        "site owner's account, so add a key of your own for a client's books.";
+    }
     group.hidden = false;
     say();
   });
@@ -1993,18 +2017,75 @@ function wireAiButton(): void {
     paste.scrollIntoView({ block: "nearest" });
   });
 
-  withKey.addEventListener("click", () => {
-    openMenu(false);
+  /** Ask, and put what comes back where it can be found. */
+  const askFor = (howMany: number): void => {
     const waiting = waitingForAnswers();
     if (waiting.length === 0 || !haveKey) return;
+    paste.hidden = true;
     button.disabled = true;
     button.textContent = "Asking…";
-    void askAboutLines(waiting).then(({ got, said: trouble }) => {
+    void askAboutLines(waiting, howMany).then(({ got, said: trouble }) => {
       if (trouble !== "") alert(trouble);
       if (got > 0) showTheAiOnes();
       say();
       redraw("reconcile");
     });
+  };
+
+  withKey.addEventListener("click", () => {
+    openMenu(false);
+    const waiting = waitingForAnswers();
+    if (waiting.length === 0 || !haveKey) return;
+
+    // On the shared key the size is not a choice: twenty is what it allows.
+    if (!ownKey) {
+      askFor(AI_BATCH);
+      return;
+    }
+
+    // On their own, it is. Asked here rather than assumed, the same way the
+    // prompt route asks it.
+    paste.textContent = "";
+    paste.hidden = false;
+    const heading = document.createElement("h3");
+    heading.textContent = "Ask with my key";
+    const said = document.createElement("p");
+    said.className = "cloud-said";
+    said.textContent =
+      `${waiting.length} lines are waiting. Charged to your key, so how many is yours to ` +
+      `say -- up to ${AI_OWN_BATCH} in one go.`;
+
+    const howMany = document.createElement("select");
+    for (const size of [20, 50, AI_OWN_BATCH, waiting.length]) {
+      if (size > Math.min(waiting.length, AI_OWN_BATCH)) continue;
+      const option = document.createElement("option");
+      option.value = String(size);
+      option.textContent = `${size} lines`;
+      option.selected = size === Math.min(AI_BATCH, waiting.length);
+      howMany.append(option);
+    }
+    const label = document.createElement("label");
+    label.className = "ai-model";
+    label.append("How many ", howMany);
+
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "primary";
+    go.textContent = "Get suggestions";
+    go.addEventListener("click", () => askFor(Number(howMany.value)));
+
+    const close = document.createElement("button");
+    close.type = "button";
+    close.textContent = "Close";
+    close.addEventListener("click", () => {
+      paste.hidden = true;
+    });
+
+    const row = document.createElement("div");
+    row.className = "migration-actions";
+    row.append(go, close);
+    paste.append(heading, said, label, row);
+    paste.scrollIntoView({ block: "nearest" });
   });
 }
 

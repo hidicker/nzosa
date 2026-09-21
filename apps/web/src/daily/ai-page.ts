@@ -199,7 +199,7 @@ function panel(title: string): [HTMLElement, HTMLElement] {
 // --- the key ---------------------------------------------------------------
 
 function keyPanel(): HTMLElement {
-  const [box, inner] = panel("Or: a key, asked automatically");
+  const [box, inner] = panel("Or: a Google AI key, asked automatically");
 
   // Where the books are on the server and this installation offers one, there
   // is something to try before bringing a key at all -- said plainly, because
@@ -319,10 +319,11 @@ function keyPanel(): HTMLElement {
 
   inner.append(
     note(
-      "A key of your own, from aistudio.google.com. You pay Google for what you use, which " +
-        "for coding a few hundred transactions is cents rather than dollars. NZOSA is open " +
-        "source and ships with no key in it, so a copy you run yourself has none until you " +
-        "bring one.",
+      "A Google AI key, from aistudio.google.com — the automatic route asks Google and " +
+        "nobody else, so a key from OpenAI or Anthropic will not work here. To use one of " +
+        "those, copy a prompt above: that goes to any model you like. You pay Google for " +
+        "what you use, which for coding a few hundred transactions is cents rather than " +
+        "dollars, and NZOSA ships with no key in it.",
     ),
   );
 

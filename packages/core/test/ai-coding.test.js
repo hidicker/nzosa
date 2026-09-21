@@ -3,6 +3,7 @@ import test from "node:test";
 import {
   askAbout,
   briefing,
+  directionCaution,
   examples,
   instructions,
   labelForCode,
@@ -73,7 +74,10 @@ test("a transaction is reduced to what would identify it, and nothing else", () 
     },
     "Trading account",
   );
-  assert.equal(asked.amount, "-1284.50");
+  // Unsigned now: the direction is what says which way, in words a model
+  // cannot skim past the way it skimmed past a minus sign.
+  assert.equal(asked.amount, "1284.50");
+  assert.equal(asked.direction, "money out");
   assert.equal(asked.payee, "Rimu Hardware");
   // The empty field is left out rather than sent as a blank.
   assert.equal(asked.details, "POS W/D · 4929-0011");
@@ -94,7 +98,7 @@ test("the briefing carries what changes the right answer, not only the names", (
   // A bank row with no code is not something to code to.
   assert.equal(said.includes("Trading account"), false);
   // And it is told to refuse rather than guess.
-  assert.match(said, /return an empty\n {2}code rather than a guess/);
+  assert.match(said, /return an\n {2}empty code rather than a guess/);
 });
 
 test("worked examples are one per payee, and the newest win", () => {
@@ -193,4 +197,53 @@ test("a code two accounts share is refused rather than picked between", () => {
   // Two charts loaded, one house-prefixed: the number alone cannot say which.
   const labels = ["Advertising - 400", "NB Advertising - 400"];
   assert.equal(labelForCode("400", labels), null);
+});
+
+test("the direction is said in words, and the amount is not signed", () => {
+  const paid = askAbout(
+    { id: "t", date: "2025-04-22", amount: -80000, currency: "NZD", serial: "", trn: "",
+      particulars: "Rimu Hardware", code: "", reference: "", otherParty: "Payment",
+      origin: "", type: "", batch: "", otherPartyAccount: "", account: "a", occurrence: 1 },
+    "Trading account",
+  );
+  assert.equal(paid.direction, "money out");
+  assert.equal(paid.amount, "800.00", "unsigned: the direction is what says which way");
+  // "Payment" is the bank's word for the kind of transaction, not a payee.
+  assert.equal(paid.payee, "Rimu Hardware");
+
+  const got = askAbout(
+    { id: "t2", date: "2025-04-22", amount: 80000, currency: "NZD", serial: "", trn: "",
+      particulars: "Tai Whitcombe", code: "", reference: "INTERNET XFR", otherParty: "Payment",
+      origin: "", type: "", batch: "", otherPartyAccount: "", account: "a", occurrence: 1 },
+    "Trading account",
+  );
+  assert.equal(got.direction, "money in");
+  assert.equal(got.payee, "Tai Whitcombe");
+});
+
+test("a real payee is left alone", () => {
+  const one = askAbout(
+    { id: "t3", date: "2025-04-22", amount: -1000, currency: "NZD", serial: "", trn: "",
+      particulars: "POS W/D", code: "", reference: "", otherParty: "Kea Fuel Co",
+      origin: "", type: "", batch: "", otherPartyAccount: "", account: "a", occurrence: 1 },
+    "Trading account",
+  );
+  assert.equal(one.payee, "Kea Fuel Co");
+});
+
+test("money in coded to spending is flagged, not refused", () => {
+  assert.match(directionCaution("money in", "Overhead"), /Right for a refund/);
+  assert.match(directionCaution("money in", "Direct Costs"), /Right for a refund/);
+  assert.match(directionCaution("money out", "Revenue"), /income account/);
+  // The ordinary cases say nothing at all.
+  assert.equal(directionCaution("money out", "Overhead"), undefined);
+  assert.equal(directionCaution("money in", "Revenue"), undefined);
+  assert.equal(directionCaution("money in", "Current Liability"), undefined);
+});
+
+test("the instructions tell it which way the money went, and stop telling it to ignore the amount", () => {
+  const said = instructions(briefing(model, chart, about));
+  assert.match(said, /direction is the first thing to read/);
+  assert.match(said, /Money in is normally revenue/);
+  assert.equal(said.includes("Do not infer anything from the amount alone"), false);
 });

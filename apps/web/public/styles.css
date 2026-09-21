@@ -1894,6 +1894,8 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* A reason that is a model's, marked as one: the difference between "your own
    rule says so" and "something guessed" is the whole of what to weigh. */
 .code-reason-ai { color: var(--accent); }
+/* A suggestion that does not sit right: read twice before pressing the tick. */
+.code-reason-caution { color: #c62828; }
 .ai-table { margin: 0.6rem 0; }
 .ai-table td, .ai-table th { font-size: 0.8rem; }
 .ai-why { white-space: normal; max-width: 22rem; color: var(--muted, #667); }

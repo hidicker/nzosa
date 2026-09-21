@@ -5,6 +5,7 @@ import { state } from "./state.js";
 import {
   askAbout,
   briefing,
+  directionCaution,
   emptyEntityModel,
   labelForCode,
   parseSuggestions,
@@ -111,7 +112,7 @@ interface Asking {
 }
 
 /** What would be sent about these lines, in full, so it can be read first. */
-export function whatWouldBeAsked(lines: readonly Suggestion[]): Asking {
+export function whatWouldBeAsked(lines: readonly Suggestion[], howMany = AI_BATCH): Asking {
   const labels = new Map(
     state.ledger.transactions.map((t) => [
       t.id,
@@ -119,7 +120,7 @@ export function whatWouldBeAsked(lines: readonly Suggestion[]): Asking {
     ]),
   );
   const asked = lines
-    .slice(0, AI_BATCH)
+    .slice(0, Math.max(1, howMany))
     .map((one) => askAbout(one.transaction, labels.get(one.transaction.id) ?? ""));
 
   const model = state.ledger.entities ?? emptyEntityModel();
@@ -136,6 +137,33 @@ export function whatWouldBeAsked(lines: readonly Suggestion[]): Asking {
     prompt: wholePrompt(books, asked, coded),
     asked,
     codes: books.accounts.map((account) => account.code),
+  };
+}
+
+/**
+ * The same question, addressed to a person to carry.
+ *
+ * No key, no proxy, no cost: the prompt goes on the clipboard, into whatever
+ * model somebody already pays for, and the answer comes back through the same
+ * door and the same checks. It is the only route that works at all on a copy
+ * running in a browser, and on a bigger model than a per-transaction budget
+ * would buy it is likely to be the better answer as well.
+ */
+export function promptToCarry(lines: readonly Suggestion[], howMany: number): {
+  text: string;
+  asked: AskedAbout[];
+  codes: string[];
+} {
+  const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
+  return {
+    text:
+      "Below is a set of bank transactions from a New Zealand set of books, and the " +
+      "chart of accounts they are coded to. Follow the instructions in it and reply " +
+      "with the JSON array and nothing else -- no explanation around it. Keep every id " +
+      "exactly as given.\n\n" +
+      prompt,
+    asked,
+    codes,
   };
 }
 
@@ -165,7 +193,24 @@ export async function askAboutLines(
     return { got: 0, said: answer.error ?? "The model would not answer." };
   }
 
-  const back = parseSuggestions(answer.text ?? "", {
+  return keepWhatIsUsable(answer.text ?? "", asked, codes);
+}
+
+/**
+ * Read an answer and keep the part of it that can be trusted.
+ *
+ * One place, whether the answer came from the configured model or was pasted
+ * back from somewhere else, because an answer from a chat window deserves
+ * exactly the same suspicion as one from the API -- more, if anything, since
+ * nothing about it was under this app's control at all.
+ */
+export function keepWhatIsUsable(
+  text: string,
+  asked: readonly AskedAbout[],
+  codes: readonly string[],
+  via?: string,
+): { got: number; said: string } {
+  const back = parseSuggestions(text, {
     asked: asked.map((one) => one.id),
     codes,
   });
@@ -176,6 +221,11 @@ export async function askAboutLines(
   // number that answers to no account -- or to two -- is thrown away rather
   // than coded to a name the books have never used.
   const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const typeOf = new Map(
+    state.chart.map((account) => [account.code.trim(), account.type ?? ""]),
+  );
+  const facing = new Map(asked.map((one) => [one.id, one.direction]));
+
   let got = 0;
   let invented = 0;
   for (const one of back) {
@@ -187,16 +237,25 @@ export async function askAboutLines(
       invented += 1;
       continue;
     }
-    found.set(one.id, { ...one, code: label });
+    const caution = directionCaution(
+      facing.get(one.id) ?? "",
+      typeOf.get(one.code) ?? "",
+    );
+    found.set(one.id, {
+      ...one,
+      code: label,
+      ...(caution !== undefined ? { caution } : {}),
+      ...(via !== undefined ? { via } : {}),
+    });
     got += 1;
   }
   return {
     got,
     said:
       back.length === 0
-        ? "Nothing came back that could be read as an answer. Nothing has changed."
+        ? "Nothing there could be read as an answer. Nothing has changed."
         : got === 0
-          ? `Asked about ${asked.length}, and it would not place any of them.`
+          ? `Read ${back.length}, and none of them named an account these books have.`
           : invented === 0
             ? ""
             : `${invented} of ${back.length} named an account these books do not have, and ` +

@@ -422,9 +422,14 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         ? // Named as a model's, and never as a rule's. Somebody deciding whether
           // to press the tick is owed the difference between "your own rule says
           // so" and "something guessed, this confidently, because".
-          `AI suggestion, ${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`
+          `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
+          `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}` +
+          (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`)
         : `${rateLabel(one.classification)} · ${one.reason}`;
   if (fromModel !== undefined) reason.classList.add("code-reason-ai");
+  // A suggestion that does not sit right is not the same colour as one that
+  // does: money in coded to an account money goes out of wants reading twice.
+  if (fromModel?.caution !== undefined) reason.classList.add("code-reason-caution");
 
   form.append(codeSelect.element, gstSelect, to, description, ok, splitButton);
   row.append(bank, amount, form, reason);

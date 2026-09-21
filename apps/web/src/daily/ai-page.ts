@@ -8,6 +8,8 @@ import {
   aiRequest as api,
   aiSuggestionCount,
   aiStatus,
+  keepWhatIsUsable,
+  promptToCarry,
   waitingForAnswers,
   whatWouldBeAsked,
 } from "../ai.js";
@@ -45,24 +47,28 @@ export function renderAi(): void {
   const body = $("ai-body");
   body.textContent = "";
 
-  if (backendKind() !== "folder") {
-    body.append(
-      note(
-        "Suggestions need somewhere to keep the key that is not this browser, and somewhere " +
-          "to ask from that is not this page. That is the app running on your own computer, " +
-          "where the key sits in a file only you can read and the question goes out from " +
-          "your machine. A copy running in a browser has neither, so this is not offered here.",
-      ),
-    );
-    return;
-  }
-
   if (state.ledger.aiEnabled !== true) {
     body.append(offerIt());
     return;
   }
 
-  body.append(keyPanel(), briefingPanel(), askPanel());
+  // The route that needs nothing first, because it needs nothing: no key, no
+  // server, no account. It is the only one that works at all in a browser.
+  body.append(briefingPanel(), carryPanel());
+
+  if (backendKind() !== "folder") {
+    body.append(
+      note(
+        "Asking automatically needs somewhere to keep a key that is not this browser, and " +
+          "somewhere to ask from that is not this page: the app running on your own " +
+          "computer, where the key sits in a file only you can read. A copy running in a " +
+          "browser has neither, so only the route above is offered here.",
+      ),
+    );
+    return;
+  }
+
+  body.append(keyPanel(), askPanel());
   void refreshStatus();
 }
 
@@ -143,6 +149,14 @@ function offerIt(): HTMLElement {
   row.append(on);
   wrap.append(row);
   return wrap;
+}
+
+function button(label: string, onClick: () => void): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.textContent = label;
+  b.addEventListener("click", onClick);
+  return b;
 }
 
 function panel(title: string): [HTMLElement, HTMLElement] {
@@ -349,7 +363,132 @@ function briefingPanel(): HTMLElement {
   return box;
 }
 
-// --- asking, which happens on the page where the coding is done -------------
+// --- the route that needs nothing set up -----------------------------------
+
+/**
+ * The prompt, for a person to carry to whatever model they already have.
+ *
+ * No key, no proxy and no cost. It is also often the better answer: a
+ * frontier model asked once about two hundred lines will beat a cheap one
+ * asked ten times about twenty, and somebody pasting into a window they
+ * already pay for is not watching a meter.
+ *
+ * What comes back goes through the same door as everything else -- the chart
+ * check, the account translation, the direction look -- because an answer
+ * from a chat window has had even less of this app's care than one from the
+ * API, not more.
+ */
+function carryPanel(): HTMLElement {
+  const [box, inner] = panel("Copy a prompt for any AI model");
+  const waiting = waitingForAnswers();
+
+  inner.append(
+    note(
+      waiting.length === 0
+        ? "Nothing is waiting: every line has a rule, a default or your own answer."
+        : `${waiting.length} line${waiting.length === 1 ? "" : "s"} nothing recognises. ` +
+          "Copy the prompt, paste it into ChatGPT, Claude, Gemini or anything else, and " +
+          "paste the answer back below. No key needed, and nothing is charged to anybody " +
+          "but whoever you pasted it into.",
+    ),
+  );
+
+  if (waiting.length === 0) return box;
+
+  const howMany = document.createElement("select");
+  for (const size of [20, 50, 100, 250, waiting.length]) {
+    if (size > waiting.length) continue;
+    const option = document.createElement("option");
+    option.value = String(size);
+    option.textContent = size === waiting.length ? `All ${size}` : `${size} lines`;
+    option.selected = size === Math.min(50, waiting.length);
+    howMany.append(option);
+  }
+  const label = document.createElement("label");
+  label.className = "ai-model";
+  label.append("How many ", howMany);
+  inner.append(label);
+
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+
+  // Held from the copy to the paste: the answer names transactions by id, and
+  // the ids only mean anything against the batch that was copied.
+  let carried = promptToCarry(waiting, Number(howMany.value));
+  howMany.addEventListener("change", () => {
+    carried = promptToCarry(waiting, Number(howMany.value));
+    said.textContent = "";
+  });
+
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "primary";
+  copy.textContent = "Copy the prompt";
+  copy.addEventListener("click", () => {
+    carried = promptToCarry(waiting, Number(howMany.value));
+    void navigator.clipboard.writeText(carried.text).then(
+      () => {
+        said.textContent =
+          `${carried.asked.length} lines copied. Paste it into your model, then paste ` +
+          "its answer into the box below.";
+      },
+      () => {
+        said.textContent = "This browser would not let the page use the clipboard.";
+      },
+    );
+  });
+
+  const show = document.createElement("button");
+  show.type = "button";
+  show.textContent = "Show it instead";
+  show.addEventListener("click", () => {
+    const pre = document.createElement("pre");
+    pre.className = "ai-prompt";
+    pre.textContent = carried.text;
+    show.replaceWith(pre);
+  });
+
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(copy, show);
+  inner.append(row, said);
+
+  const backHeading = document.createElement("h4");
+  backHeading.textContent = "Paste the answer back";
+  const answer = document.createElement("textarea");
+  answer.className = "ai-about";
+  answer.rows = 4;
+  answer.placeholder = '[{"id": "...", "code": "401", "confidence": 0.8, "because": "..."}]';
+
+  const take = document.createElement("button");
+  take.type = "button";
+  take.className = "primary";
+  take.textContent = "Read the answer";
+  take.addEventListener("click", () => {
+    if (answer.value.trim() === "") return;
+    const { got, said: trouble } = keepWhatIsUsable(
+      answer.value,
+      carried.asked,
+      carried.codes,
+      "pasted",
+    );
+    answer.value = "";
+    said.textContent =
+      trouble !== ""
+        ? trouble
+        : `${got} suggestion${got === 1 ? "" : "s"} read. They are on the lines they ` +
+          "belong to, under AI suggested on Reconcile.";
+    redraw("ai");
+  });
+
+  const backRow = document.createElement("div");
+  backRow.className = "migration-actions";
+  backRow.append(take, button("Go to Reconcile", () => showPage("reconcile")));
+  inner.append(backHeading, answer, backRow);
+  return box;
+}
+
+// --- asking automatically, which happens on the page where the coding is done -
 
 /**
  * Where the suggestions are, which is not here.

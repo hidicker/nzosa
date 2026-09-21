@@ -50,7 +50,15 @@ export interface BriefedAccount {
 export interface AskedAbout {
   id: string;
   date: string;
-  /** Dollars, signed, as a string -- negative is money out. */
+  /**
+   * Which way the money went, in words.
+   *
+   * A sign can be missed, and was: $800 in from a customer came back coded to
+   * Salaries, because a minus is one character and a person's name is a
+   * strong hint. Two words cannot be overlooked in the same way.
+   */
+  direction: "money in" | "money out";
+  /** Dollars, unsigned. The direction above is what says which way. */
   amount: string;
   payee: string;
   details: string;
@@ -67,6 +75,10 @@ export interface AiSuggestion {
   confidence: number;
   /** One line, in its words, for somebody deciding whether to accept it. */
   because: string;
+  /** Something about it that does not sit right, for the person reading it. */
+  caution?: string;
+  /** Where it came from, when that is not the configured model. */
+  via?: string;
 }
 
 /**
@@ -90,18 +102,34 @@ function dollars(cents: Cents): string {
   return `${sign}${Math.floor(whole / 100)}.${String(whole % 100).padStart(2, "0")}`;
 }
 
+/**
+ * Words a bank puts in the payee field instead of a payee.
+ *
+ * An internet transfer arrives with "Payment" where the counterparty should
+ * be, and the person's name in the particulars. Left alone, every transfer in
+ * a year looks like the same payee -- so nothing learned from one of them
+ * applies to the next, and the model is handed the word "Payment" and asked
+ * who it was.
+ */
+const BANK_WORDS =
+  /^(payment|transfer|deposit|direct credit|direct debit|internet xfr|automatic payment|credit|debit|withdrawal|bill payment|pos w\/d|eftpos)$/i;
+
 /** What the bank said, with the empty fields left out rather than sent as blanks. */
 export function askAbout(transaction: Transaction, paidFrom: string): AskedAbout {
-  const details = [transaction.particulars, transaction.code, transaction.reference]
+  const parts = [transaction.particulars, transaction.code, transaction.reference]
     .map((part) => part.trim())
-    .filter((part) => part !== "")
-    .join(" · ");
+    .filter((part) => part !== "");
+  const said = transaction.otherParty.trim();
+  // The first thing in the particulars is the counterparty, where the payee
+  // field holds only the bank's word for what kind of transaction it was.
+  const payee = said === "" || BANK_WORDS.test(said) ? (parts[0] ?? said) : said;
   return {
     id: transaction.id,
     date: transaction.date,
-    amount: dollars(transaction.amount),
-    payee: transaction.otherParty.trim(),
-    details,
+    direction: transaction.amount < 0 ? "money out" : "money in",
+    amount: dollars(Math.abs(transaction.amount)),
+    payee,
+    details: parts.join(" · "),
     paidFrom,
   };
 }
@@ -171,10 +199,19 @@ export function instructions(books: BooksBriefing): string {
     "",
     "Rules:",
     "- Choose one account code from the chart below. Never invent a code or a name.",
-    "- If nothing in the chart fits, or the payee is too vague to place, return an empty",
-    "  code rather than a guess. An unanswered line costs a moment; a wrong one coded",
-    "  confidently is found at year end, if at all.",
-    "- Do not infer anything from the amount alone.",
+    "- direction is the first thing to read. \"money in\" is money the entity received;",
+    "  \"money out\" is money it paid. Money in is normally revenue, or a balance sheet",
+    "  account such as a loan or a shareholder advance -- not an expense. Code money in to",
+    "  an expense account only when it is plainly a refund of that expense, and say so.",
+    "  Money out is almost never revenue.",
+    "- Code by who the counterparty is and what the reference says. The size of the amount",
+    "  is not a reason on its own: $800 is a week's wages, a month's rent or an invoice,",
+    "  and which of those it is does not depend on it being $800.",
+    "- If nothing in the chart fits, or the counterparty is too vague to place, return an",
+    "  empty code rather than a guess. An unanswered line costs a moment; a wrong one",
+    "  coded confidently is found at year end, if at all. A payment from a person could be",
+    "  a customer, a loan, or an owner putting money in: if the books do not say which,",
+    "  neither should you.",
     "- Reply with JSON only: an array of {id, code, confidence, because}.",
     "  confidence is 0 to 1. because is one short sentence naming what in the",
     "  transaction led you there.",
@@ -266,6 +303,31 @@ export function labelForCode(code: string, labels: readonly string[]): string | 
     return label.slice(at + 3).trim().toLowerCase() === wanted;
   });
   return hits.length === 1 ? (hits[0] ?? null) : null;
+}
+
+/**
+ * Money in, coded to an expense. Worth a second look rather than a refusal.
+ *
+ * A refund from a supplier is money in coded to the expense it refunds, and
+ * that is correct: refusing it would throw away right answers to catch wrong
+ * ones. But money in to an expense account is also exactly what the mistake
+ * looks like -- a customer payment filed as Salaries -- so it is marked for
+ * the person reading it rather than silently allowed or silently dropped.
+ */
+export function directionCaution(
+  direction: string,
+  accountType: string,
+): string | undefined {
+  const type = accountType.trim().toLowerCase();
+  const spending = /expense|overhead|direct costs|cost of sales/.test(type);
+  const earning = /revenue|income|sales/.test(type);
+  if (direction === "money in" && spending) {
+    return "Money in, coded to an account money normally goes out of. Right for a refund, wrong for anything else.";
+  }
+  if (direction === "money out" && earning) {
+    return "Money out, coded to an income account. Right for a refund to a customer, wrong for anything else.";
+  }
+  return undefined;
 }
 
 /**

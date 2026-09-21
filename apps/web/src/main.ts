@@ -71,6 +71,7 @@ import {
   wireSetup,
 } from "./migrate/setup-wizard.js";
 import { renderMigration, wireMigration } from "./migrate/migration-page.js";
+import { renderAi } from "./daily/ai-page.js";
 import {
   applyChartColumns,
   renderCheck,
@@ -131,6 +132,7 @@ async function init(): Promise<void> {
     invoiceEditor: renderInvoiceEditor,
     invoices: renderInvoices,
     migration: renderMigration,
+    ai: renderAi,
     openBooks: renderOpenBooks,
     openingBalances: renderOpeningBalances,
     reconcile: renderReconcile,

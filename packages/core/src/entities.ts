@@ -99,6 +99,15 @@ export interface Entity {
    * are paid another way entirely.
    */
   payTo?: string;
+  /**
+   * What this entity does, in the owner's own words.
+   *
+   * Nothing in a chart of accounts says whether "Supplies" means green beans
+   * or gib board, and the difference decides where a payment to a wholesaler
+   * belongs. Held because it is the one thing no import can tell you and the
+   * one thing a person can say in a sentence.
+   */
+  about?: string;
 }
 
 export type EntityKind = "residential" | "commercial" | "business" | "personal";

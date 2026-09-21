@@ -1868,6 +1868,30 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-queue-done { font-size: 0.8rem; color: #1f6f4a; }
 .migration-here { margin-top: 1rem; }
 .migration-here h4 { margin: 0 0 0.4rem; font-size: 0.92rem; }
+/* Asking a model ------------------------------------------------------------ */
+.ai-offer, .ai-panel { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;
+  padding: 0.9rem 1.1rem; margin: 0 0 1rem; max-width: 62rem; }
+.ai-offer h3, .ai-panel h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.ai-panel h4 { margin: 0.9rem 0 0.35rem; font-size: 0.88rem; }
+.ai-offer p { font-size: 0.86rem; margin: 0.4rem 0; }
+.ai-offer ul { margin: 0.3rem 0 0.6rem; padding-left: 1.2rem; }
+.ai-offer li { font-size: 0.85rem; line-height: 1.5; margin: 0.2rem 0; }
+/* The two sentences somebody must not skim past. */
+.ai-careful { border-left: 3px solid var(--accent); padding-left: 0.7rem; }
+.ai-key-input { flex: 1 1 22rem; min-width: 12rem; font-family: inherit; }
+.ai-about { width: 100%; max-width: 46rem; font: inherit; font-size: 0.85rem;
+  padding: 0.5rem 0.6rem; border-radius: 4px; }
+.ai-entity { display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap;
+  margin: 0 0 0.4rem; }
+.ai-entity-name { flex: 0 0 11rem; font-size: 0.85rem; font-weight: 600; }
+.ai-entity input { flex: 1 1 18rem; min-width: 10rem; font-size: 0.85rem; }
+.ai-prompt { white-space: pre-wrap; font-size: 0.72rem; line-height: 1.45;
+  max-height: 22rem; overflow: auto; background: rgba(128,128,128,0.08);
+  padding: 0.6rem 0.8rem; border-radius: 4px; margin: 0.5rem 0 0; }
+.ai-table { margin: 0.6rem 0; }
+.ai-table td, .ai-table th { font-size: 0.8rem; }
+.ai-why { white-space: normal; max-width: 22rem; color: var(--muted, #667); }
+
 .migration-look { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;
   padding: 0.9rem 1.1rem; margin: 0 0 1.2rem; max-width: 62rem; }
 .migration-look p { margin: 0 0 0.6rem; font-size: 0.86rem; }

@@ -1735,7 +1735,7 @@ async function unmatchInvoice(transactionId: string): Promise<void> {
   redraw("reconcile");
 }
 
-async function confirmLine(
+export async function confirmLine(
   one: Suggestion,
   code: string,
   rate: GstRate,

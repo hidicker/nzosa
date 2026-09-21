@@ -200,6 +200,10 @@ export interface StoredLedger {
    */
   transfers?: Record<string, string>;
   singleEntityConfirmed?: boolean;
+  /** Whether these books may be described to a model at all. Off until asked. */
+  aiEnabled?: boolean;
+  /** What these books are, for the briefing that goes with every question. */
+  booksAbout?: string;
 }
 
 export function emptyLedger(): StoredLedger {
@@ -499,6 +503,8 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.payouts ? { payouts: ledger.payouts } : {}),
     ...(ledger.manualJournals ? { manualJournals: ledger.manualJournals } : {}),
     ...(ledger.singleEntityConfirmed ? { singleEntityConfirmed: true } : {}),
+    ...(ledger.aiEnabled ? { aiEnabled: true } : {}),
+    ...(ledger.booksAbout ? { booksAbout: ledger.booksAbout } : {}),
   };
 }
 

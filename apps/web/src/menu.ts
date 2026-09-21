@@ -141,6 +141,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   check: "xero coding compare account transactions",
   entities: "chart of accounts owners company rental gst registered bank links",
   rules: "coding rules automatic",
+  ai: "ai gemini suggestions unknown unrecognised model key",
   books: "ledger switch open new set clear archive",
   history: "undo changes log who",
   pl: "profit and loss income statement p&l",

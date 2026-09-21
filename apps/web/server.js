@@ -192,6 +192,97 @@ function forgetFeed(root, ledger) {
 }
 
 /**
+ * Where the key for the model lives.
+ *
+ * Its own file, beside the bank feed's and read the same way: mode 0600, in
+ * the ledger root rather than in any one set of books, and never in a ledger
+ * file that somebody might export or commit. A key here is a key on this
+ * machine -- there is no server holding it and nothing to decrypt it against,
+ * which is a stronger position than any amount of encryption on somebody
+ * else's computer.
+ */
+function aiFile(root) {
+  return join(root, ".ai.json");
+}
+
+function readAiStore(root) {
+  try {
+    return JSON.parse(readFileSync(aiFile(root), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeAiStore(root, store) {
+  mkdirSync(root, { recursive: true });
+  const file = aiFile(root);
+  const temporary = `${file}.writing`;
+  writeFileSync(temporary, JSON.stringify(store, null, 1), { mode: 0o600 });
+  renameSync(temporary, file);
+}
+
+function readAi(root, ledger) {
+  return readAiStore(root)[ledger] ?? null;
+}
+
+function writeAi(root, ledger, ai) {
+  writeAiStore(root, { ...readAiStore(root), [ledger]: ai });
+}
+
+function forgetAi(root, ledger) {
+  const store = readAiStore(root);
+  delete store[ledger];
+  writeAiStore(root, store);
+}
+
+/** Today, where the day changes when it changes here rather than in Greenwich. */
+function today() {
+  const now = new Date();
+  const pad = (n) => String(n).padStart(2, "0");
+  return `${now.getFullYear()}-${pad(now.getMonth() + 1)}-${pad(now.getDate())}`;
+}
+
+const AI_DAILY_LIMIT = 200;
+const AI_MODEL = "gemini-2.5-flash";
+
+/** How many transactions have been asked about today, out of how many allowed. */
+function aiUsedToday(ai) {
+  return ai?.used?.[today()] ?? 0;
+}
+
+/**
+ * Ask the model, and say plainly when it will not answer.
+ *
+ * A key that has expired, a project with no billing, a model name that is not
+ * a model: all of these come back as an HTTP error with Google's own words in
+ * it, and those words are more use to somebody than "could not get
+ * suggestions" would be. They are passed through rather than swallowed.
+ */
+async function askGemini(key, model, prompt) {
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify({
+        contents: [{ role: "user", parts: [{ text: prompt }] }],
+        generationConfig: { responseMimeType: "application/json", temperature: 0 },
+      }),
+    },
+  );
+  const body = await response.json().catch(() => null);
+  if (!response.ok) {
+    const said =
+      body && body.error && typeof body.error.message === "string"
+        ? body.error.message
+        : `HTTP ${response.status}`;
+    throw new Error(said);
+  }
+  const parts = body?.candidates?.[0]?.content?.parts ?? [];
+  return parts.map((part) => part.text ?? "").join("");
+}
+
+/**
  * Ask Akahu something, as this installation.
  *
  * Both tokens go on every request: the app token says which app is asking and
@@ -523,6 +614,99 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         } catch (error) {
           send(response, 502, { error: `Akahu said: ${error.message}` });
         }
+        return;
+      }
+
+      if (path === "/api/ai" && request.method === "GET") {
+        const ai = readAi(ledgerRoot, current);
+        send(response, 200, {
+          configured: ai !== null,
+          // Enough to recognise which key it is, and not enough to use it.
+          key: ai ? `${ai.key.slice(0, 6)}\u2026${ai.key.slice(-4)}` : "",
+          model: ai?.model ?? AI_MODEL,
+          usedToday: aiUsedToday(ai),
+          limit: AI_DAILY_LIMIT,
+        });
+        return;
+      }
+
+      if (path === "/api/ai" && request.method === "PUT") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        const key = String(body.key ?? "").trim();
+        const model = String(body.model ?? "").trim() || AI_MODEL;
+        if (key === "") {
+          send(response, 400, { error: "no key given" });
+          return;
+        }
+        // Verified before it is kept, so a key that was mistyped is said to be
+        // wrong now rather than the first time somebody needs it.
+        try {
+          await askGemini(key, model, 'Reply with the JSON array [] and nothing else.');
+        } catch (error) {
+          send(response, 400, { error: String(error.message ?? error) });
+          return;
+        }
+        const existing = readAi(ledgerRoot, current);
+        writeAi(ledgerRoot, current, { key, model, used: existing?.used ?? {} });
+        send(response, 200, { configured: true, model });
+        return;
+      }
+
+      if (path === "/api/ai" && request.method === "DELETE") {
+        forgetAi(ledgerRoot, current);
+        send(response, 200, { configured: false });
+        return;
+      }
+
+      if (path === "/api/ai/suggest" && request.method === "POST") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const ai = readAi(ledgerRoot, current);
+        if (ai === null) {
+          send(response, 400, { error: "no key set for these books" });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        const prompt = String(body.prompt ?? "");
+        const asking = Number(body.asking ?? 0);
+        if (prompt === "" || !Number.isInteger(asking) || asking < 1) {
+          send(response, 400, { error: "nothing to ask about" });
+          return;
+        }
+        // The cap is on transactions rather than on calls, because a call can
+        // carry one or a hundred and it is the hundred that costs.
+        const used = aiUsedToday(ai);
+        if (used + asking > AI_DAILY_LIMIT) {
+          send(response, 429, {
+            error:
+              `That would be ${used + asking} transactions today, and the daily limit is ` +
+              `${AI_DAILY_LIMIT}. ${AI_DAILY_LIMIT - used} left.`,
+            usedToday: used,
+            limit: AI_DAILY_LIMIT,
+          });
+          return;
+        }
+
+        let said;
+        try {
+          said = await askGemini(ai.key, ai.model ?? AI_MODEL, prompt);
+        } catch (error) {
+          send(response, 502, { error: String(error.message ?? error) });
+          return;
+        }
+        // Counted against what was asked, answered or not: the tokens were
+        // spent either way.
+        writeAi(ledgerRoot, current, {
+          ...ai,
+          used: { ...(ai.used ?? {}), [today()]: used + asking },
+        });
+        send(response, 200, { text: said, usedToday: used + asking, limit: AI_DAILY_LIMIT });
         return;
       }
 

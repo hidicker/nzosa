@@ -662,10 +662,25 @@
 #reconcile-ai { min-width: 10.5rem; }
 
 .ai-notice[hidden] { display: none; }
-.ai-notice { border-left: 3px solid var(--accent); padding-left: 0.7rem; max-width: 52rem; }
+/* Yellow, because it is not the page talking about itself: it is an offer of
+   somebody else's key, with somebody else's bill behind it. */
+.ai-notice { background: #fff8e1; border: 1px solid #f0c36d; border-left: 4px solid #e0a800;
+  border-radius: 4px; color: #4a3c10; padding: 0.6rem 0.85rem; max-width: 52rem;
+  margin: 0 0 0.9rem; }
+.ai-notice .link-button { color: #7a5c00; font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ai-notice { background: #3a3008; border-color: #7a6412;
+    border-left-color: #c9a227; color: #f0e2b6; }
+  :root:not([data-theme="light"]) .ai-notice .link-button { color: #ffd968; }
+}
+:root[data-theme="dark"] .ai-notice { background: #3a3008; border-color: #7a6412;
+  border-left-color: #c9a227; color: #f0e2b6; }
+:root[data-theme="dark"] .ai-notice .link-button { color: #ffd968; }
 .ai-paste[hidden] { display: none; }
 .ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
   margin: 0 0 0.8rem; max-width: 52rem; }
+.ai-review-read { margin: 0.8rem 0 0; }
+.ai-review-read h4 { margin: 0 0 0.35rem; font-size: 0.92rem; }
 .ai-carry h3 { margin: 0 0 0.4rem; font-size: 1rem; }
 .ai-carry h4 { margin: 0.9rem 0 0.35rem; font-size: 0.88rem; }
 .ai-carry p { margin: 0 0 0.45rem; }

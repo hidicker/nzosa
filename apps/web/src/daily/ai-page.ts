@@ -5,6 +5,14 @@ import { save } from "../store.js";
 import { note } from "../ui.js";
 import { AI_BATCH, aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
+import {
+  OPENACCOUNTANTS_CONNECT,
+  OPENACCOUNTANTS_MCP,
+  reviewDisclaimer,
+  reviewPossible,
+  reviewPrompt,
+  yearsInBooks,
+} from "../ai-review.js";
 import { aiClearKey, aiRoute, aiSetKey, aiSetModel, aiStatus } from "../ai-backend.js";
 import type { AiStatus } from "../ai-backend.js";
 import { emptyEntityModel } from "@nzosa/core";
@@ -62,6 +70,7 @@ export function renderAi(): void {
 
   if (aiRoute() === "none") {
     body.append(
+      reviewPanelStep(),
       note(
         "The other way -- a key asked automatically -- needs somewhere to keep it that is " +
           "not this browser, and somewhere to ask from that is not this page. That is the " +
@@ -73,6 +82,7 @@ export function renderAi(): void {
   }
 
   body.append(keyPanel());
+  body.append(step("And separately", "A second pair of eyes on the year"), reviewPanel());
   void refreshStatus();
 }
 
@@ -433,6 +443,154 @@ function briefingPanel(): HTMLElement {
       inner.append(row);
     }
   }
+  return box;
+}
+
+// --- a review of the year, which is a different question ------------------
+
+function reviewPanelStep(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.append(step("And separately", "A second pair of eyes on the year"), reviewPanel());
+  return wrap;
+}
+
+/**
+ * Asking what a reviewer would ask, rather than what an account is.
+ *
+ * The coding queue asks about one line and gets a code back, which this app
+ * can check against the chart. This asks whether the year hangs together, and
+ * gets prose back, which it cannot check at all -- so it does not pretend to.
+ * The answer is shown as what it is and goes nowhere near the ledger.
+ *
+ * Pointed at OpenAccountants, because the difference between a model citing a
+ * guide an accountant signed and a model remembering something about New
+ * Zealand tax is the whole difference between useful and dangerous here.
+ */
+function reviewPanel(): HTMLElement {
+  const [box, inner] = panel("");
+
+  inner.append(
+    note(
+      "Not about coding a line: about whether the year hangs together. Something in the " +
+        "wrong account, GST claimed that cannot be, a deduction that needs a logbook nobody " +
+        "has written, a cost this kind of business always has and these books do not.",
+    ),
+  );
+
+  if (!reviewPossible()) {
+    inner.append(note("Nothing to review yet: these books need transactions and a chart first."));
+    return box;
+  }
+
+  // What makes the answer worth reading rather than plausible.
+  const why = document.createElement("p");
+  why.className = "ai-careful";
+  why.append(
+    document.createTextNode(
+      "The prompt tells the model to use OpenAccountants — tax guides written against " +
+        "primary sources and signed off by named, licensed accountants — rather than its " +
+        "own memory, and to cite the guide and reviewer for anything it relies on. Connect " +
+        "it to your model first: ",
+    ),
+  );
+  const connect = document.createElement("a");
+  connect.href = OPENACCOUNTANTS_CONNECT;
+  connect.target = "_blank";
+  connect.rel = "noopener noreferrer";
+  connect.textContent = "openaccountants.com/connect";
+  why.append(connect, document.createTextNode(` (${OPENACCOUNTANTS_MCP})`));
+  inner.append(why);
+
+  const years = yearsInBooks();
+  const pickYear = document.createElement("select");
+  for (const year of years) {
+    const option = document.createElement("option");
+    option.value = String(year);
+    option.textContent = `Year to 31 March ${year}`;
+    option.selected = year === years[0];
+    pickYear.append(option);
+  }
+  const label = document.createElement("label");
+  label.className = "ai-model";
+  label.append("Which year ", pickYear);
+  inner.append(label);
+
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  const shown = document.createElement("pre");
+  shown.className = "ai-prompt";
+  shown.hidden = true;
+
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "primary";
+  copy.textContent = "Copy the review prompt";
+  copy.addEventListener("click", () => {
+    const text = reviewPrompt(Number(pickYear.value));
+    void navigator.clipboard.writeText(text).then(
+      () => {
+        said.textContent =
+          "Copied. Paste it into a model with OpenAccountants connected, then paste what it " +
+          "says back below.";
+      },
+      () => {
+        shown.textContent = text;
+        shown.hidden = false;
+        said.textContent =
+          "This browser would not let the page reach the clipboard, so here it is to copy " +
+          "by hand.";
+      },
+    );
+  });
+
+  const show = document.createElement("button");
+  show.type = "button";
+  show.textContent = "Show it instead";
+  show.addEventListener("click", () => {
+    shown.textContent = reviewPrompt(Number(pickYear.value));
+    shown.hidden = !shown.hidden;
+    show.textContent = shown.hidden ? "Show it instead" : "Hide it";
+  });
+
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(copy, show);
+  inner.append(row, said, shown);
+
+  const backHeading = document.createElement("h4");
+  backHeading.textContent = "Paste what it said back";
+  const answer = document.createElement("textarea");
+  answer.className = "ai-about";
+  answer.rows = 4;
+  answer.placeholder = "The review, as the model wrote it";
+
+  // Held on the page and nowhere else. A review is somebody's reading of the
+  // books, not a fact about them, and writing it into the ledger would make it
+  // indistinguishable a year later from something the books themselves say.
+  const kept = document.createElement("div");
+  kept.className = "ai-review-read";
+
+  const read = document.createElement("button");
+  read.type = "button";
+  read.className = "primary";
+  read.textContent = "Keep it on screen";
+  read.addEventListener("click", () => {
+    const text = answer.value.trim();
+    if (text === "") return;
+    kept.textContent = "";
+    const heading = document.createElement("h4");
+    heading.textContent = `Review of the year to 31 March ${pickYear.value}`;
+    const body = document.createElement("pre");
+    body.className = "ai-prompt";
+    body.textContent = text;
+    kept.append(heading, body, reviewDisclaimer());
+    answer.value = "";
+  });
+
+  const backRow = document.createElement("div");
+  backRow.className = "migration-actions";
+  backRow.append(read);
+  inner.append(backHeading, answer, backRow, kept, reviewDisclaimer());
   return box;
 }
 

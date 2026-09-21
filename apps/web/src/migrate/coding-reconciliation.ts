@@ -1954,11 +1954,21 @@ function wireAiButton(): void {
       // Said on the page where the asking happens, not only on the page where
       // it is set up: somebody here has not necessarily been there.
       notice.hidden = false;
-      notice.textContent =
-        "You can try this without a key of your own. This site offers a shared one — " +
-        `${shared.model || "a flash model"}, ${shared.left} transactions left on your ` +
-        "account — asked twenty at a time. What you send goes to Google under the " +
-        "site owner's account, so add a key of your own for a client's books.";
+      notice.textContent = "";
+      notice.append(
+        document.createTextNode(
+          "You can try this without a key of your own. This site offers a shared one — " +
+            `${shared.model || "a flash model"}, ${shared.left} transactions left on your ` +
+            "account — asked twenty at a time. What you send goes to Google under the " +
+            "site owner's account, so add a key of your own for a client's books. ",
+        ),
+      );
+      const where = document.createElement("button");
+      where.type = "button";
+      where.className = "link-button";
+      where.textContent = "Add your own key";
+      where.addEventListener("click", () => showPage("ai"));
+      notice.append(where);
     }
     group.hidden = false;
     say();

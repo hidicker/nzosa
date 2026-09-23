@@ -82,8 +82,6 @@ export function renderAiCheck(): void {
     return;
   }
 
-  body.append(whatTheGuidesAre());
-
   const pickYear = yearPicker();
   body.append(step("Choose", "Which year"), pickYear.box);
   body.append(
@@ -154,43 +152,6 @@ function sourceNote(): HTMLElement {
   // is being asked to do anything with.
   why.append(connect);
   return why;
-}
-
-/**
- * What the guides are, and what they are not.
- *
- * The library's own front page says every skill "reports whether a licensed
- * accountant has signed it off", and for New Zealand today the answer it
- * reports is no: all ten NZ guides come back as engine drafts, verification
- * "research_verified", zero verified facts, no named reviewer. This page said
- * "signed off by named, licensed accountants" until a real run printed the
- * statuses back and showed that it was not true here.
- *
- * Said on the page rather than only in the prompt, because somebody deciding
- * whether to act on the answer is the one who needs it, and by then the
- * prompt is long gone.
- */
-function whatTheGuidesAre(): HTMLElement {
-  const [box, inner] = panel();
-  inner.append(
-    note(
-      "What the guides are: written from primary sources — the Acts, Inland Revenue's own " +
-        "material — and each one carries its own review status. The New Zealand guides are " +
-        "drafts today: none has been signed off by a named accountant. That still beats a " +
-        "model answering from memory, because you can read what it cited and check it. It " +
-        "does not make the answer reviewed, and the check is told to repeat each guide's " +
-        "status rather than imply one it does not have.",
-    ),
-  );
-  inner.append(
-    note(
-      "The library allows three lookups to anyone not signed in, and a review of a whole " +
-        "year wants more than three. Your assistant asks you to sign in the first time it " +
-        "uses the connector — a free account, once — and after that the lookups are yours. " +
-        "Nothing here signs you in or holds an account of yours.",
-    ),
-  );
-  return box;
 }
 
 // --- what is being asked ---------------------------------------------------

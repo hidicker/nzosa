@@ -1,5 +1,11 @@
 import { redraw, showPage } from "../app.js";
-import { AI_BATCH, AI_OWN_BATCH, askAboutLines, waitingForAnswers } from "../ai.js";
+import {
+  AI_BATCH,
+  AI_OWN_BATCH,
+  aiSuggestionFor,
+  askAboutLines,
+  waitingForAnswers,
+} from "../ai.js";
 import { aiStatus } from "../ai-backend.js";
 import { carrySection } from "../ai-carry.js";
 import {
@@ -28,6 +34,7 @@ import type { CodingBatchEntry } from "../events.js";
 import { fillAccounts } from "../widgets.js";
 import { knownCodes, rateLabel, suggest, transferCandidates } from "../reconcile.js";
 import type { Suggestion } from "../reconcile.js";
+import type { AiSuggestion } from "@nzosa/core";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
@@ -137,9 +144,37 @@ export async function acceptAllShown(): Promise<void> {
   const settledElsewhere = (one: Suggestion): boolean =>
     splits[one.transaction.id] !== undefined || invoices.has(one.transaction.id);
 
+  /**
+   * What a model proposed counts as a suggestion too.
+   *
+   * It is not in `one.code`, and deliberately: nothing in the books has
+   * answered these lines, and a proposal nobody has agreed to is not written
+   * into them. The row paints it into the account picker and the tick saves
+   * it. This knew nothing about any of that, so a screen filtered to "AI
+   * suggested" -- twelve lines, each showing an account -- met "nothing on
+   * screen to accept", which is the third kind of suggestion this button has
+   * been blind to while looking straight at it.
+   *
+   * One kind is held back. A suggestion carrying a caution is money moving the
+   * opposite way to the account it names, which is why that row is red; swept
+   * up in a batch, the red would have been for nothing.
+   */
+  const modelSaid = (one: Suggestion): AiSuggestion | undefined =>
+    one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
+  const codeFor = (one: Suggestion): string | null => {
+    if (one.code !== null) return one.code;
+    const said = modelSaid(one);
+    return said === undefined || said.caution !== undefined || said.code === ""
+      ? null
+      : said.code;
+  };
+
   const offered = shownSuggestions().filter(
-    (one) => !one.confirmed && (one.code !== null || settledElsewhere(one)),
+    (one) => !one.confirmed && (codeFor(one) !== null || settledElsewhere(one)),
   );
+  const cautioned = shownSuggestions().filter(
+    (one) => !one.confirmed && modelSaid(one)?.caution !== undefined,
+  ).length;
 
   /**
    * Lines that are a transfer, or could be one, are left for a person.
@@ -200,6 +235,11 @@ export async function acceptAllShown(): Promise<void> {
   for (const one of shown) {
     const id = one.transaction.id;
     if (one.confirmed || one.code !== null) continue;
+    // A line a model has answered is not paired here either, whether its
+    // answer was taken or held back for its caution. Coding and pairing are
+    // the two things a line cannot both be, and choosing between them on
+    // somebody's behalf is the whole of what this button must not do.
+    if (modelSaid(one) !== undefined) continue;
     if (transfersNow[id] !== undefined || claimed.has(id)) continue;
     if (settledElsewhere(one) || decided(id)) continue;
     if (rejected.has(id)) continue;
@@ -261,9 +301,10 @@ export async function acceptAllShown(): Promise<void> {
   }
 
   const accounts = new Set(
-    lines.map((one) => one.code).filter((code): code is string => code !== null),
+    lines.map((one) => codeFor(one)).filter((code): code is string => code !== null),
   );
-  const elsewhere = lines.filter((one) => one.code === null).length;
+  const elsewhere = lines.filter((one) => codeFor(one) === null).length;
+  const guessed = lines.filter((one) => modelSaid(one) !== undefined).length;
   const summary =
     accounts.size === 0
       ? "settled by their splits or the invoices they pay"
@@ -288,6 +329,19 @@ export async function acceptAllShown(): Promise<void> {
             "this screen. Pairing is not coding, so it is asked separately: press Accept all " +
             "again afterwards.\n\n"
           : "") +
+        // Said out loud, and counted apart from the rules. A rule is
+        // something these books were told; a model's answer is something
+        // guessed, and agreeing to a screen of them without being told which
+        // is which is not agreeing to the same thing.
+        (guessed > 0
+          ? `${guessed} of them ${guessed === 1 ? "was" : "were"} suggested by the model ` +
+            "rather than by a rule, and each is recorded as that with what it said.\n\n"
+          : "") +
+        (cautioned > 0
+          ? `${cautioned} AI suggestion${cautioned === 1 ? " is" : "s are"} left alone: the ` +
+            `money goes the opposite way to the account ${cautioned === 1 ? "it names" : "they name"}, ` +
+            "which is the one thing worth reading before agreeing to it.\n\n"
+          : "") +
         "This confirms them exactly as shown. The change log can undo the whole batch.",
     )
   ) {
@@ -299,12 +353,24 @@ export async function acceptAllShown(): Promise<void> {
   const today = new Date().toISOString().slice(0, 10);
   for (const one of lines) {
     batch.push({ id: one.transaction.id, before: overrides[one.transaction.id] ?? null });
+    const code = codeFor(one);
+    const said = modelSaid(one);
     overrides[one.transaction.id] = {
-      ...(one.code !== null ? { code: one.code } : {}),
+      ...(code !== null ? { code } : {}),
       confirmed: true,
       treatment: one.classification.treatment,
       side: one.classification.side,
-      note: "Suggestion accepted unchanged, with others",
+      // Read a year later by somebody asking why an account was chosen, where
+      // "a rule said so" and "a model guessed, this confidently, because"
+      // are not the same answer. Written down at the moment it stops being a
+      // suggestion, because the suggestion itself is only in memory and does
+      // not survive the reload.
+      note:
+        said === undefined
+          ? "Suggestion accepted unchanged, with others"
+          : "AI suggestion accepted unchanged, with others" +
+            (said.via === undefined ? "" : ` (${said.via})`) +
+            ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,
       at: today,
     };
   }
@@ -313,7 +379,8 @@ export async function acceptAllShown(): Promise<void> {
   state.persistent = await save(state.ledger);
   await record(
     "codingBatch",
-    `Accepted ${lines.length} suggestions ${summary}`,
+    `Accepted ${lines.length} suggestions ${summary}` +
+      (guessed > 0 ? ` (${guessed} from the model)` : ""),
     batch,
     null,
   );

@@ -1,19 +1,14 @@
 import { redraw, showPage } from "../app.js";
 import { $, state } from "../state.js";
 import { note } from "../ui.js";
-import { aiRoute } from "../ai-backend.js";
-import { aiKeyPanel, canAskAutomatically, refreshAiStatus } from "../ai-key-panel.js";
-import { runReview } from "../ai-review-run.js";
 import {
   OPENACCOUNTANTS_CONNECT,
   OPENACCOUNTANTS_MCP,
-  REVIEW_FOCUSES,
   reviewDisclaimer,
   reviewPossible,
   reviewPrompt,
   yearsInBooks,
 } from "../ai-review.js";
-import type { ReviewFocus } from "../ai-review.js";
 import { downloadExcelReport } from "./excel-export.js";
 
 /**
@@ -28,31 +23,29 @@ import { downloadExcelReport } from "./excel-export.js";
  * So nothing here pretends to: the answer is shown as what it is and goes
  * nowhere near the ledger.
  *
- * Two ways to ask, and they share the key with the suggestions page because a
- * key belongs to a set of books rather than to a page.
+ * One way to ask: download the workbook, copy the prompt, paste both into an
+ * assistant that has OpenAccountants connected, and paste the answer back.
  *
- * Run it here, and the guide library is genuinely connected: the tools are
- * listed, offered to the model as functions it may call, and each call is
- * carried across and each answer back. Or copy the prompt into an assistant
- * that has its own connector. The second was the only way until now, because
- * Gemini has no connector of its own -- which is what it says when asked for
- * one, and the reason the loop had to be written here.
+ * There was a second -- a button that asked the key on the AI suggestions
+ * page, with this page driving the guide library itself through an MCP client
+ * of ours. It worked, and it is still here: packages/core/src/mcp.ts holds
+ * the client and ai-review-run.ts the loop, tested and unused. It is not
+ * offered because it is not yet the equal of the route below. Three
+ * anonymous lookups against a review that wants eight, each guide truncated
+ * to fit, a cheap model, no workbook and no follow-up questions. Better to
+ * offer one route that is good than two where the near one is worse and
+ * looks easier.
  */
 
-let running = false;
-let lastSaid = "";
 /**
- * What was asked for last, kept across redraws.
+ * The year last chosen, kept across redraws.
  *
- * The pickers were rebuilt on every render and reset themselves, so finishing
- * a run put the year back to the newest and the subject back to the first --
- * and the answer above them was about neither.
+ * The picker was rebuilt on every render and reset itself, so reading an
+ * answer put the year back to the newest and the heading above it then named
+ * a year nobody had asked about.
  */
 let chosenYear = 0;
-let chosenFocus: ReviewFocus = "year";
-let result:
-  | { text: string; consulted: string[]; connected: boolean; year: number; focus: ReviewFocus }
-  | null = null;
+let result: { text: string; year: number } | null = null;
 
 export function renderAiCheck(): void {
   const body = $("ai-check-body");
@@ -62,10 +55,10 @@ export function renderAiCheck(): void {
     body.append(
       step("Not on yet", "AI accounts check"),
       note(
-        "Asking a model anything is off until it is turned on for these books, and that is " +
-          "done on the AI suggestions page, where what would be sent is set out in full. " +
-          "Turn it on there and this page works too — it is the same key and the same " +
-          "decision.",
+        "Sending anything about these books to a model is off until it is turned on, and " +
+          "that is done on the AI suggestions page, where what would be sent is set out in " +
+          "full. Turn it on there and this page works too — it is the same decision, and " +
+          "this page needs no key at all.",
       ),
       actions([primary("Go to AI suggestions", () => showPage("ai"))]),
     );
@@ -89,36 +82,17 @@ export function renderAiCheck(): void {
     return;
   }
 
-  body.append(whatTheGuidesAre(), whichNeedsAConnector());
+  body.append(whatTheGuidesAre());
 
-  // Both routes ask the same two questions, so the pickers are built once and
-  // handed to each. Two pairs would be two answers to keep in step.
-  const choose = choosePanel();
-  body.append(step("Choose", "Which year, and what to check"), choose.box);
-
-  // The carried route comes first, because it is the one that works for
-  // everybody: no key, no cost, and the better answer. It was underneath a
-  // key panel most people will never fill in.
+  const pickYear = yearPicker();
+  body.append(step("Choose", "Which year"), pickYear.box);
   body.append(
     step("Take it to an assistant", "Download, copy, paste back"),
-    carryPanel(choose.pickYear, choose.pickFocus),
+    carryPanel(pickYear.pick),
   );
-
-  if (aiRoute() !== "none") {
-    body.append(
-      step("Or ask from here", "Your key, and the check"),
-      aiKeyPanel({
-        page: "aiCheck",
-        title: "A Google AI key, asked automatically",
-        countedIn: "reviews and transactions",
-      }),
-      runPanel(choose.pickYear, choose.pickFocus),
-    );
-  }
 
   if (result !== null) body.append(answerPanel(result));
   body.append(reviewDisclaimer());
-  void refreshAiStatus("aiCheck");
 }
 
 // --- small builders, kept here so the page reads top to bottom -------------
@@ -210,37 +184,10 @@ function whatTheGuidesAre(): HTMLElement {
   );
   inner.append(
     note(
-      "The library allows three lookups to anyone not signed in, then asks for a free " +
-        "account. A check usually wants more than three, so expect the answer to say which " +
-        "guides it could not reach — it is told to. Sign in at openaccountants.com if you " +
-        "want the rest; nothing here signs you in or holds an account of yours.",
-    ),
-  );
-  return box;
-}
-
-/**
- * Which of the two routes needs a connector, which is the opposite of how it
- * reads.
- *
- * The obvious guess is that asking from inside the app is the simple one and
- * pasting into Claude is the one that needs setting up. It is the other way
- * round. An assistant you paste into is on its own and must have
- * OpenAccountants installed; the model asked from here is handed the
- * library's tools by this page and never learns MCP exists. That is why a key
- * for any provider would work from here -- the connector is not the model's
- * job -- and why the paste route has a one-off setup step and this one does
- * not.
- */
-function whichNeedsAConnector(): HTMLElement {
-  const [box, inner] = panel();
-  inner.append(
-    note(
-      "Which one needs setting up, since it is the opposite of what you would expect. " +
-        "Pasting into an assistant needs OpenAccountants connected there, once — it is on " +
-        "its own and has to be able to reach the library itself. Asking from here needs no " +
-        "connector at all: this page opens the library, hands your model the tools, and " +
-        "carries each lookup across. The model never learns MCP exists.",
+      "The library allows three lookups to anyone not signed in, and a review of a whole " +
+        "year wants more than three. Your assistant asks you to sign in the first time it " +
+        "uses the connector — a free account, once — and after that the lookups are yours. " +
+        "Nothing here signs you in or holds an account of yours.",
     ),
   );
   return box;
@@ -249,17 +196,12 @@ function whichNeedsAConnector(): HTMLElement {
 // --- what is being asked ---------------------------------------------------
 
 /**
- * The year and the subject, chosen once for both routes.
+ * Which year, chosen before either the workbook or the prompt is made.
  *
- * The elements themselves are handed on rather than their values, because
- * the two routes are built at the same moment and neither can read a choice
- * that has not been made yet.
+ * The element is handed on rather than its value: the buttons below are
+ * built now and pressed later, and what matters is what it says then.
  */
-function choosePanel(): {
-  box: HTMLElement;
-  pickYear: HTMLSelectElement;
-  pickFocus: HTMLSelectElement;
-} {
+function yearPicker(): { box: HTMLElement; pick: HTMLSelectElement } {
   const [box, inner] = panel();
 
   const years = yearsInBooks();
@@ -276,146 +218,14 @@ function choosePanel(): {
     chosenYear = Number(pickYear.value);
   });
 
-  /**
-   * Which review, because they are three different jobs.
-   *
-   * One prompt that carried account totals and then asked whether the GST
-   * treatments were right was asking a question its own contents could not
-   * answer. Each of these carries what its question needs: the GST one every
-   * period's boxes and what was filed, the income tax one the IR10 and the
-   * depreciation.
-   */
-  const pickFocus = document.createElement("select");
-  for (const one of REVIEW_FOCUSES) {
-    const option = document.createElement("option");
-    option.value = one.id;
-    option.textContent = one.label;
-    option.title = one.blurb;
-    option.selected = one.id === chosenFocus;
-    pickFocus.append(option);
-  }
-  const blurb = document.createElement("p");
-  blurb.className = "page-hint";
-  const sayBlurb = (): void => {
-    blurb.textContent = REVIEW_FOCUSES.find((one) => one.id === chosenFocus)?.blurb ?? "";
-  };
-  sayBlurb();
-  pickFocus.addEventListener("change", () => {
-    chosenFocus = pickFocus.value as ReviewFocus;
-    sayBlurb();
-  });
-
   const label = document.createElement("label");
   label.className = "ai-model";
   label.append("Which year ", pickYear);
-  const focusLabel = document.createElement("label");
-  focusLabel.className = "ai-model";
-  focusLabel.append("What to check ", pickFocus);
-  inner.append(label, focusLabel, blurb);
+  inner.append(label);
 
-  return { box, pickYear, pickFocus };
+  return { box, pick: pickYear };
 }
 
-// --- asking from here ------------------------------------------------------
-
-/**
- * The route that uses a key, which needs no connector of its own.
- *
- * Worth being plain about, because the two routes differ in exactly the
- * opposite way to how it reads: an assistant you paste into has to have
- * OpenAccountants installed, and the model asked from here does not -- this
- * page is the connector. The model never learns MCP exists; it is handed
- * tools and it calls them.
- */
-function runPanel(
-  pickYear: HTMLSelectElement,
-  pickFocus: HTMLSelectElement,
-): HTMLElement {
-  const [box, inner] = panel();
-
-  const said = document.createElement("p");
-  said.className = "cloud-said";
-  said.textContent = lastSaid;
-
-  // What actually leaves this machine, and where each part of it goes. Two
-  // destinations, not one, and somebody turning this on is owed the
-  // difference: the figures go to Google; the guide library only ever sees
-  // the questions the model decides to ask it.
-  inner.append(
-    note(
-      "Running it here sends the year's account totals and your entity descriptions to " +
-        "Google, the same as the coding suggestions do. The guide library sees only the " +
-        "lookups the model chooses to make — “motor vehicle logbook, NZ” — and never the " +
-        "figures. It usually takes a minute: the model reads a few guides before it answers.",
-    ),
-  );
-
-  const run = document.createElement("button");
-  run.type = "button";
-  run.className = "primary";
-  run.textContent = running ? "Checking…" : "Run the check";
-  run.disabled = running || !canAskAutomatically();
-  if (running) {
-    run.classList.add("working");
-    run.setAttribute("aria-busy", "true");
-  }
-  run.title = canAskAutomatically()
-    ? "This page connects to the guide library; your model is handed its tools."
-    : "Needs a key. Add one above, or use the prompt further up instead.";
-  run.addEventListener("click", () => {
-    running = true;
-    lastSaid = "Starting…";
-    redraw("aiCheck");
-    const year = Number(pickYear.value);
-    const focus = pickFocus.value as ReviewFocus;
-    void runReview(reviewPrompt(year, focus), (progress) => {
-      // Straight onto the element rather than through a redraw: a redraw
-      // mid-run would rebuild the button that is running.
-      lastSaid = progress;
-      const live = document.querySelector("#ai-check-body .cloud-said");
-      if (live !== null) live.textContent = progress;
-    }).then(
-      (done) => {
-        running = false;
-        if (done.error !== undefined) {
-          lastSaid = done.error;
-          redraw("aiCheck");
-          return;
-        }
-        lastSaid = "";
-        result = { ...done, year, focus };
-        redraw("aiCheck");
-      },
-      (error: unknown) => {
-        running = false;
-        lastSaid = (error as Error).message;
-        redraw("aiCheck");
-      },
-    );
-  });
-
-  inner.append(actions([run]), said);
-
-  if (!canAskAutomatically()) {
-    inner.append(
-      note(
-        "No key set, so this button is off. The route above needs none — it goes into " +
-          "whatever assistant you already use.",
-      ),
-    );
-  }
-
-  return box;
-}
-
-/**
- * The other way, which needs nothing set up.
- *
- * Kept because it is often the better answer and sometimes the only one: a
- * frontier assistant with OpenAccountants already connected, asked once, will
- * usually beat a cheap model driven from here -- and a copy of this app
- * running in a browser alone has no key route at all.
- */
 /**
  * The same prompt, addressed to an assistant that has the connector.
  *
@@ -425,36 +235,31 @@ function runPanel(
  * themselves and then handing them a prompt without it is how the advice gets
  * lost between the reading and the pasting, so it is in the text they copy.
  */
-function promptForAssistant(year: number, focus: ReviewFocus): string {
+function promptForAssistant(year: number): string {
   return (
     "Using OpenAccountants, work through the review below. Look the rules up in the " +
     "guides rather than answering from memory." +
     "\n\n" +
-    reviewPrompt(year, focus)
+    reviewPrompt(year)
   );
 }
 
-function carryPanel(
-  pickYear: HTMLSelectElement,
-  pickFocus: HTMLSelectElement,
-): HTMLElement {
+function carryPanel(pickYear: HTMLSelectElement): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "ai-carry";
 
   wrap.append(
     note(
-      "Often the better answer, and free. Asking from here uses whatever model your key is " +
-        "for, which is a fast cheap one; a frontier assistant reads the guides more " +
-        "carefully and is better at telling what matters from what does not. It costs " +
-        "nothing here, and nothing extra there if you already pay for one.",
+      "Nothing is set up and nothing is charged here. The work happens in an assistant you " +
+        "already use — it reads the guides, checks them against the figures below, and you " +
+        "can ask it follow-up questions afterwards, which is most of the value.",
     ),
-    // The whole reason to bother, said before the instructions rather than
-    // after them: three lookups is not enough for a year-end review, and the
-    // thing that lifts it is free and takes a minute.
+    // The setup is one-off and the reason for it is not obvious, so it is
+    // said before the steps rather than after them.
     note(
-      "It also gets past the three-lookup limit. Signing in to OpenAccountants — a free " +
-        "account — is what lifts it, and your assistant asks you to do that once, the first " +
-        "time it uses the connector.",
+      "It needs OpenAccountants connected to that assistant, once. That is what lets it " +
+        "look the rules up rather than answering from memory, and it is what gets you past " +
+        "the three free lookups.",
     ),
     connectSteps(),
   );
@@ -470,7 +275,7 @@ function carryPanel(
   copy.className = "primary";
   copy.textContent = "Copy the review prompt";
   copy.addEventListener("click", () => {
-    const text = promptForAssistant(Number(pickYear.value), pickFocus.value as ReviewFocus);
+    const text = promptForAssistant(Number(pickYear.value));
     void navigator.clipboard.writeText(text).then(
       () => {
         said.textContent =
@@ -491,10 +296,7 @@ function carryPanel(
   show.type = "button";
   show.textContent = "Show prompt";
   show.addEventListener("click", () => {
-    shown.textContent = promptForAssistant(
-      Number(pickYear.value),
-      pickFocus.value as ReviewFocus,
-    );
+    shown.textContent = promptForAssistant(Number(pickYear.value));
     shown.hidden = !shown.hidden;
     show.textContent = shown.hidden ? "Show prompt" : "Hide prompt";
   });
@@ -561,13 +363,7 @@ function carryPanel(
   read.addEventListener("click", () => {
     const text = answer.value.trim();
     if (text === "") return;
-    result = {
-      text,
-      consulted: [],
-      connected: false,
-      year: Number(pickYear.value),
-      focus: pickFocus.value as ReviewFocus,
-    };
+    result = { text, year: Number(pickYear.value) };
     answer.value = "";
     redraw("aiCheck");
   });
@@ -582,8 +378,8 @@ function carryPanel(
  * "Connect OpenAccountants there" was the whole of what this used to say,
  * which assumes somebody knows what a connector is and where their assistant
  * keeps them. It is a two-minute job done once, and the reason the answer
- * from this route is worth more than the one from the button above -- so it
- * is worth four lines rather than four words.
+ * from this route is worth having at all -- so it is worth four lines rather
+ * than four words.
  *
  * Claude is named first because OpenAccountants names it first: their install
  * page marks Claude.ai recommended, and second-guessing the people who wrote
@@ -668,46 +464,12 @@ function connectSteps(): HTMLElement {
  * the books themselves say, so it is not written into the ledger. Closing the
  * page loses it, which is the right trade.
  */
-function answerPanel(got: {
-  text: string;
-  consulted: string[];
-  connected: boolean;
-  year: number;
-  focus: ReviewFocus;
-}): HTMLElement {
+function answerPanel(got: { text: string; year: number }): HTMLElement {
   const [box, inner] = panel();
 
   const heading = document.createElement("h3");
-  // Named, because three reviews of the same year look alike at the top and
-  // are about entirely different things.
-  const what = REVIEW_FOCUSES.find((one) => one.id === got.focus)?.label ?? "Review";
-  heading.textContent = `${what} — year to 31 March ${got.year}`;
+  heading.textContent = `Review of the year to 31 March ${got.year}`;
   inner.append(heading);
-
-  // Whether the guides were actually read is the first thing worth knowing
-  // about the answer, so it is said above it rather than below.
-  if (got.consulted.length > 0) {
-    const what = document.createElement("details");
-    what.className = "setup-migration-details";
-    const summary = document.createElement("summary");
-    summary.className = "setup-migration-summary";
-    summary.textContent = `${got.consulted.length} lookup${got.consulted.length === 1 ? "" : "s"} in the guide library`;
-    const list = document.createElement("ul");
-    for (const one of got.consulted) {
-      const item = document.createElement("li");
-      item.textContent = one;
-      list.append(item);
-    }
-    what.append(summary, list);
-    inner.append(what);
-  } else if (got.connected) {
-    inner.append(
-      note(
-        "The model answered without looking anything up, so this is its own memory of New " +
-          "Zealand tax rather than a guide anybody signed. Worth less than it reads.",
-      ),
-    );
-  }
 
   const text = document.createElement("pre");
   text.className = "ai-prompt";

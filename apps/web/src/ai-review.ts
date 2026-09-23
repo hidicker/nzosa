@@ -13,7 +13,7 @@ import {
 import type { GstReturnResult } from "@nzosa/core";
 
 /**
- * A year-end review of the accounts, asked in whichever of three ways.
+ * A year-end review of the accounts, in one prompt.
  *
  * Not the coding queue. That asks about one transaction at a time and gets a
  * code back; this asks what a reviewer would ask at year end and gets prose
@@ -31,44 +31,23 @@ import type { GstReturnResult } from "@nzosa/core";
  * asks for that status to be repeated rather than for an accountant's name,
  * because asking for a name where there is none invites one to be invented.
  *
- * Three prompts rather than one, because they are three different jobs. The
- * first version carried account totals and nothing else, and then asked
- * whether the GST treatments were right -- a question its own contents could
- * not answer, since a net figure says nothing about whether a supply is
- * standard-rated. A GST review wants every period's boxes, what was filed
- * against them and the treatment on each account; an income tax review wants
- * the IR10, whether it balances, and the depreciation. Asking for all of it
- * at once answered none of it properly.
+ * It was briefly three prompts -- the year, GST, income tax -- which was a
+ * wrong reading of what had been wrong with it. The first version carried
+ * account totals and nothing else and then asked whether the GST treatments
+ * were right, a question its own contents could not answer. The fault was the
+ * missing data, not the number of questions, and splitting it afterwards
+ * solved nothing: everything it needs comes to about eight thousand
+ * characters, which is nothing to any model that can read it at all.
+ *
+ * One prompt is also the better shape for where this goes. It is carried to
+ * an assistant and pasted in, and that is a conversation: everything in one
+ * context can be asked about afterwards. Three pastes are three conversations
+ * that cannot see each other, each spending its own lookups fetching the same
+ * guides.
  */
 
 export const OPENACCOUNTANTS_MCP = "https://www.openaccountants.com/api/mcp";
 export const OPENACCOUNTANTS_CONNECT = "https://www.openaccountants.com/connect";
-
-export type ReviewFocus = "year" | "gst" | "incometax";
-
-export const REVIEW_FOCUSES: { id: ReviewFocus; label: string; blurb: string }[] = [
-  {
-    id: "year",
-    label: "The year as a whole",
-    blurb:
-      "What sits in an account it does not belong in, what is missing, and what needs a " +
-      "record the books do not hold.",
-  },
-  {
-    id: "gst",
-    label: "GST: treatments, returns and what was filed",
-    blurb:
-      "Every period's boxes as these books compute them, against what was filed, with the " +
-      "treatment set on each account and whatever the return left out.",
-  },
-  {
-    id: "incometax",
-    label: "Income tax and the IR10",
-    blurb:
-      "The IR10 boxes as they stand, whether the balance sheet holds together, depreciation, " +
-      "drawings and ring-fencing.",
-  },
-];
 
 /** The New Zealand guides that library holds, so the model can name them. */
 const NZ_GUIDES = [
@@ -211,12 +190,12 @@ function entitiesBlock(): string[] {
 }
 
 /** The instructions all three share. */
-function preamble(year: number, what: string): string[] {
+function preamble(year: number): string[] {
   return [
     "You are reviewing a small New Zealand set of books at year end, as an accountant would",
-    "before signing anything off.",
-    "",
-    `What to look at this time: ${what}`,
+    "before signing anything off. Everything you need is below: the entities, every GST",
+    "period against what was filed, the IR10 as it stands, the asset register, what is",
+    "outstanding, and every account's total with the GST treatment set on it.",
     "",
     "Use the OpenAccountants MCP connector for the rules rather than your training data:",
     `  ${OPENACCOUNTANTS_MCP}`,
@@ -424,106 +403,69 @@ function invoicesBlock(period: Period): string[] {
 
 // --- the three prompts -----------------------------------------------------
 
-export function reviewPrompt(year: number, focus: ReviewFocus = "year"): string {
+export function reviewPrompt(year: number): string {
   const period = periodOf(year);
   const model = state.ledger.entities ?? emptyEntityModel();
   const registered = model.entities.some((one) => one.gstRegistered !== false);
 
-  if (focus === "gst") {
-    return [
-      ...preamble(
-        year,
-        "GST only. The treatment set on each account, every period's return as these books " +
-          "compute it, how that compares with what was filed, and what the return left out.",
-      ),
-      ...entitiesBlock(),
-      "",
-      ...gstBlock(period),
-      "",
-      "Account totals for the year, with the GST treatment set on each:",
-      ...accountTotals(period),
-      "",
-      "What to check, in this order:",
-      "- Any account whose GST treatment cannot be right for what it holds: zero-rated or",
-      "  exempt where the supply is standard-rated, standard-rated where nothing can be",
-      "  claimed, and anything with no treatment set at all.",
-      "- Anything claimed that an entity not registered for GST cannot claim.",
-      "- Where our figure and the filed figure differ, what would explain it and what would",
-      "  not. Name the period and both figures.",
-      "- Periods with nothing filed against them, and what that means with the year closing.",
-      "- Excluded transactions, late claims and missing tax points: whether each is right.",
-      ...(registered
-        ? []
-        : ["- No entity here is registered, so say plainly whether any GST should be claimed."]),
-      ...uncodedBlock(period),
-    ].join("\n");
-  }
-
-  if (focus === "incometax") {
-    return [
-      ...preamble(
-        year,
-        "income tax. The IR10 as it stands, whether the balance sheet holds together, " +
-          "depreciation, drawings and anything ring-fenced.",
-      ),
-      ...entitiesBlock(),
-      "",
-      ...ir10Block(year),
-      "",
-      ...assetsBlock(period),
-      "",
-      ...invoicesBlock(period),
-      "",
-      "Account totals for the year:",
-      ...accountTotals(period),
-      "",
-      "What to check, in this order:",
-      "- Anything in the profit and loss that is not deductible, or not in full: drawings,",
-      "  entertainment, fines, private use, capital dressed up as repairs.",
-      "- Anything expensed that should have been capitalised and depreciated, and the reverse.",
-      "- Depreciation: whether the rates and methods suit the assets, and whether anything",
-      "  bought this year is missing from the register.",
-      "- A residential rental's ring-fencing, and what it changes here.",
-      "- Shareholder current accounts and drawings: whether they sit where they belong, and",
-      "  whether anything about them would be treated as income.",
-      "- What the IR10 needs that these books do not hold.",
-      ...uncodedBlock(period),
-    ].join("\n");
-  }
-
   return [
-    ...preamble(
-      year,
-      "the year as a whole -- what is in the wrong place, what is missing, and what needs a " +
-        "record these books do not hold. There are separate GST and income tax reviews for " +
-        "either of those in depth, so keep this one broad.",
-    ),
+    ...preamble(year),
     ...entitiesBlock(),
     "",
-    "Account totals for the year, with the GST treatment set on each:",
-    ...accountTotals(period),
+    ...gstBlock(period),
     "",
-    ...invoicesBlock(period),
+    ...ir10Block(year),
     "",
     ...assetsBlock(period),
     "",
-    "What to check, in this order:",
-    "- Anything in an account it does not belong in, and why you think so.",
-    "- GST: whether the treatment on each account matches what the entity is registered for,",
-    "  and anything claimed that cannot be.",
-    "- Deductions that need something the books do not show -- a logbook, an apportionment, a",
-    "  written agreement -- and say which.",
-    "- Anything a residential rental's ring-fencing would change.",
-    "- What is missing entirely: a category of cost this kind of business always has and these",
-    "  books do not.",
-    ...(registered
-      ? [
-          "",
-          "At least one entity is GST registered, so check the treatments against the",
-          "nz-gst-return guide as well as the income tax ones.",
-        ]
-      : []),
+    ...invoicesBlock(period),
+    "",
+    "Account totals for the year, with the GST treatment set on each:",
+    ...accountTotals(period),
     ...uncodedBlock(period),
+    "",
+    "WHAT TO CHECK. Work through these in order, and say which you could not answer and why.",
+    "",
+    "Coding",
+    "- Anything in an account it does not belong in, and why you think so.",
+    "- Anything expensed that should have been capitalised and depreciated, and the reverse.",
+    "- What is missing entirely: a category of cost this kind of business always has and",
+    "  these books do not.",
+    "",
+    "GST",
+    "- Any account whose GST treatment cannot be right for what it holds: zero-rated or",
+    "  exempt where the supply is standard-rated, standard-rated where nothing can be",
+    "  claimed, and anything with no treatment set at all.",
+    "- Anything claimed that an entity not registered for GST cannot claim.",
+    "- Where our figure and the filed figure differ, what would explain it and what would",
+    "  not. Name the period and both figures.",
+    "- Periods with nothing filed against them, and what that means with the year closing.",
+    "- Excluded transactions, late claims and missing tax points: whether each is right.",
+    ...(registered
+      ? []
+      : ["- No entity here is registered, so say plainly whether any GST should be claimed."]),
+    "",
+    "Income tax",
+    "- Anything in the profit and loss that is not deductible, or not in full: drawings,",
+    "  entertainment, fines, private use, capital dressed up as repairs.",
+    "- Depreciation: whether the rates and methods suit the assets, and whether anything",
+    "  bought this year is missing from the register.",
+    "- A residential rental’s ring-fencing, and what it changes here.",
+    "- Shareholder current accounts and drawings: whether they sit where they belong, and",
+    "  whether anything about them would be treated as income.",
+    "- What the IR10 needs that these books do not hold.",
+    "",
+    "Records",
+    "- Deductions that need something the books do not show -- a logbook, an apportionment,",
+    "  a written agreement -- and say which.",
+    "",
+    // The last instruction, because this is a conversation rather than a
+    // report: whoever pasted it is sitting in front of an assistant that
+    // still has all of this in front of it, and the useful next move is a
+    // question rather than a filing.
+    "Finish by naming the three findings that would change the numbers most, and offer to go",
+    "further into any of them. Whoever is reading this can ask you follow-up questions, and",
+    "you still have every figure above.",
   ].join("\n");
 }
 

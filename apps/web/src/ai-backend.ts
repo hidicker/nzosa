@@ -35,6 +35,18 @@ export interface AiStatus {
   ownBatch?: number;
 }
 
+/** One part of a model's turn: something said, or something it wants called. */
+export interface AiPart {
+  text?: string;
+  functionCall?: { name?: string; args?: Record<string, unknown> };
+}
+
+export interface AiTurn {
+  parts: AiPart[];
+  finishReason: string;
+  error?: string;
+}
+
 export interface AiAnswer {
   text?: string;
   error?: string;
@@ -139,6 +151,37 @@ export async function aiClearKey(): Promise<void> {
     return;
   }
   await hosted("clear-key");
+}
+
+/**
+ * One turn of a conversation the model may use tools in.
+ *
+ * The loop is not here and not on either server: it is on the page. The tools
+ * belong to an MCP server out on the web, the page can reach it directly, and
+ * the only thing that has to stay behind a server is the key. Keeping the
+ * conversation on the page also means the same loop serves books in a folder
+ * and books on the server, rather than one written twice in two languages.
+ */
+export async function aiConverse(
+  contents: readonly unknown[],
+  tools: readonly unknown[],
+): Promise<AiTurn> {
+  const empty = { parts: [] as AiPart[], finishReason: "" };
+  if (aiRoute() === "cloud") {
+    const answer = await hosted<AiTurn>("converse", { contents, tools });
+    return answer.ok ? answer.body : { ...empty, error: answer.error };
+  }
+  const response = await local("/api/ai/converse", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ contents, tools }),
+  });
+  if (response === null) return { ...empty, error: "Could not reach the app." };
+  const said = (await response.json().catch(() => ({}))) as AiTurn;
+  if (!response.ok) {
+    return { ...empty, error: said.error ?? "The model would not answer." };
+  }
+  return { parts: said.parts ?? [], finishReason: said.finishReason ?? "" };
 }
 
 export async function aiSuggest(prompt: string, asking: number): Promise<AiAnswer> {

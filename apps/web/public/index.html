@@ -160,13 +160,22 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 16V8l4-3 4 3v8"/><path d="M11 16V11l3-2 3 2v5"/><path d="M2 16h16"/></svg>
                 <span>Entities &amp; accounts</span>
               </button>
+              <button type="button" data-page="rules">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h12M4 10h12M4 14h7"/><circle cx="14.5" cy="14" r="1.5"/></svg>
+                <span>Rules</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="ai">
+            <button type="button" class="sidebar-heading" aria-expanded="true">AI</button>
+            <div class="sidebar-group-items">
               <button type="button" data-page="ai">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3l1.6 3.6L15 8l-3.4 1.4L10 13l-1.6-3.6L5 8l3.4-1.4z"/><path d="M15 13l.8 1.8L17.5 16l-1.7.7L15 18l-.8-1.3L12.5 16l1.7-1.2z"/></svg>
                 <span>AI suggestions</span>
               </button>
-              <button type="button" data-page="rules">
-                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h12M4 10h12M4 14h7"/><circle cx="14.5" cy="14" r="1.5"/></svg>
-                <span>Rules</span>
+              <button type="button" data-page="aicheck">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 5h11l3 3v9H3z"/><path d="M6.5 11.5 8.5 13.5l4-4.5"/></svg>
+                <span>AI accounts check</span>
               </button>
             </div>
           </div>
@@ -334,6 +343,14 @@
           what it would send before it sends anything.
         </p>
         <div id="ai-body"></div>
+      </section>
+
+      <section id="page-aicheck" class="page" hidden>
+        <p class="page-hint">
+          A read of the finished year against New Zealand tax rules, with the guide library
+          connected. A draft for a qualified person, never a filing.
+        </p>
+        <div id="ai-check-body"></div>
       </section>
 
       <section id="page-setup" class="page" hidden>

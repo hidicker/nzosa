@@ -168,6 +168,47 @@ async function ask(key: string, model: string, prompt: string): Promise<string> 
   return (body?.candidates?.[0]?.content?.parts ?? []).map((part) => part.text ?? "").join("");
 }
 
+/**
+ * The same model, asked to hold a conversation it may use tools in.
+ *
+ * The turn comes back unread. What a function call means, and how to answer
+ * it, is the page's business: the tools belong to an MCP server out on the
+ * web and the page can reach it itself. What has to be here is the key.
+ */
+async function talk(
+  key: string,
+  model: string,
+  contents: unknown[],
+  tools: unknown[],
+): Promise<{ parts: unknown[]; finishReason: string }> {
+  const body: Record<string, unknown> = {
+    contents,
+    generationConfig: { temperature: 0 },
+  };
+  if (tools.length > 0) body.tools = [{ functionDeclarations: tools }];
+
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(body),
+    },
+  );
+  const answer = (await response.json().catch(() => null)) as {
+    candidates?: { content?: { parts?: unknown[] }; finishReason?: string }[];
+    error?: { message?: string };
+  } | null;
+  if (!response.ok) {
+    throw new Error(answer?.error?.message ?? `Google said ${response.status}`);
+  }
+  const candidate = answer?.candidates?.[0];
+  return {
+    parts: candidate?.content?.parts ?? [],
+    finishReason: candidate?.finishReason ?? "",
+  };
+}
+
 interface KeyRow {
   key: string;
   model: string;
@@ -278,6 +319,44 @@ Deno.serve(async (request: Request) => {
       try {
         const text = await ask(key, model, prompt);
         return reply({ text, demo });
+      } catch (error) {
+        return reply({ error: (error as Error).message }, 502);
+      }
+    }
+
+    if (action === "converse") {
+      const contents = Array.isArray(body.contents) ? (body.contents as unknown[]) : [];
+      const tools = Array.isArray(body.tools) ? (body.tools as unknown[]) : [];
+      if (contents.length === 0) return reply({ error: "nothing to say" }, 400);
+      // A conversation can run long, and a page that will not stop asking is
+      // the way a bill surprises somebody. Bounded here as well as on the
+      // page, because the page is the thing that might be wrong.
+      if (contents.length > 40) return reply({ error: "that conversation is too long" }, 400);
+
+      const theirs = await keyFor(book);
+      const demo = theirs === null;
+      if (demo && SHARED_KEY === "") {
+        return reply({ error: "no key set for these books" }, 400);
+      }
+
+      // One turn counts as one, against the same allowance the coding uses.
+      // A review is one question however many guides the model reads, but
+      // each turn is a paid call and an allowance that ignored them would
+      // not be an allowance.
+      try {
+        await asCaller(jwt, "ai_take", { book, asking: 1, demo });
+      } catch (error) {
+        return reply({ error: (error as Error).message }, 429);
+      }
+
+      try {
+        const turn = await talk(
+          theirs?.key ?? SHARED_KEY,
+          theirs?.model ?? SHARED_MODEL,
+          contents,
+          tools,
+        );
+        return reply({ ...turn, demo });
       } catch (error) {
         return reply({ error: (error as Error).message }, 502);
       }

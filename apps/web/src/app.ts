@@ -35,6 +35,7 @@ export type PageName =
   | "invoices"
   | "migration"
   | "ai"
+  | "aiCheck"
   | "openBooks"
   | "openingBalances"
   | "reconcile"
@@ -124,6 +125,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "setup") redraw("setup");
   if (page === "migration") redraw("migration");
   if (page === "ai") redraw("ai");
+  if (page === "aicheck") redraw("aiCheck");
   if (page === "import") redraw("feed");
   if (page === "opening") redraw("openingBalances");
   if (page === "gst") redraw("variance");

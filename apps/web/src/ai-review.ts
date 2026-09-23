@@ -14,12 +14,21 @@ import { emptyEntityModel, financialYearOf, formatAmount } from "@nzosa/core";
  * is shown as what it is, a draft for a person to read.
  *
  * It points the model at OpenAccountants, a library of tax guides written
- * against primary sources and reviewed by named, licensed accountants, served
- * over MCP. A model with that connected cites a guide and the accountant who
- * signed it off; a model without it answers from training data and cannot say
- * where the number came from. The difference matters more here than anywhere
- * else in this app, because this is the one place asking a question whose
- * answer is a judgement rather than a category.
+ * against primary sources -- the Acts, and Inland Revenue's own material --
+ * and served over MCP. A model with that connected cites a guide and can say
+ * which source the figure came from; a model without it answers from training
+ * data and cannot say anything about where it came from at all. That
+ * difference matters more here than anywhere else in this app, because this is
+ * the one place asking a question whose answer is a judgement rather than a
+ * category.
+ *
+ * What it is not: reviewed. The library carries a verification status per
+ * guide and every New Zealand one is an unreviewed draft today --
+ * "research_verified", contribution source "engine-draft", no named accountant
+ * and zero verified facts. So the prompt asks for that status to be repeated
+ * rather than for an accountant's name, because asking for a name where there
+ * is none invites one to be invented, and a citation nobody signed reading as
+ * though somebody did is worse than no citation.
  *
  * What goes in it is the shape of the year, not the year: account totals, the
  * entities and their registration, what is uncoded. Not a transaction list --
@@ -114,9 +123,12 @@ export function reviewPrompt(year: number): string {
     "Use the OpenAccountants MCP connector for the rules rather than your training data:",
     `  ${OPENACCOUNTANTS_MCP}`,
     "Its New Zealand guides include " + NZ_GUIDES.join(", ") + ".",
-    "Cite the guide, and the accountant who reviewed it, for every figure or rule you rely",
-    "on. Where the connector is not available to you, say so plainly at the top of your",
-    "answer rather than answering from memory as though it were.",
+    "Name the guide you used for every figure or rule you rely on, and repeat that",
+    "guide's verification status exactly as the guide gives it. Most New Zealand guides",
+    "are unreviewed drafts written from primary sources; say so where that is what they",
+    "say, and never describe one as reviewed or signed off unless it tells you it is.",
+    "Where the connector is not available to you, or a lookup is refused, say so plainly",
+    "at the top of your answer rather than answering from memory as though it were.",
     "",
     "What to look for, in this order:",
     "- Anything in an account it does not belong in, and why you think so.",

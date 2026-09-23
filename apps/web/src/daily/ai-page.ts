@@ -5,16 +5,8 @@ import { save } from "../store.js";
 import { note } from "../ui.js";
 import { AI_BATCH, aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
-import {
-  OPENACCOUNTANTS_CONNECT,
-  OPENACCOUNTANTS_MCP,
-  reviewDisclaimer,
-  reviewPossible,
-  reviewPrompt,
-  yearsInBooks,
-} from "../ai-review.js";
-import { aiClearKey, aiRoute, aiSetKey, aiSetModel, aiStatus } from "../ai-backend.js";
-import type { AiStatus } from "../ai-backend.js";
+import { aiRoute } from "../ai-backend.js";
+import { aiKeyPanel, refreshAiStatus } from "../ai-key-panel.js";
 import { emptyEntityModel } from "@nzosa/core";
 import type { Entity } from "@nzosa/core";
 
@@ -42,7 +34,6 @@ import type { Entity } from "@nzosa/core";
  * nothing until somebody agrees with it.
  */
 
-let status: AiStatus | null = null;
 
 export function renderAi(): void {
   const body = $("ai-body");
@@ -70,7 +61,6 @@ export function renderAi(): void {
 
   if (aiRoute() === "none") {
     body.append(
-      reviewPanelStep(),
       note(
         "The other way -- a key asked automatically -- needs somewhere to keep it that is " +
           "not this browser, and somewhere to ask from that is not this page. That is the " +
@@ -81,25 +71,92 @@ export function renderAi(): void {
     return;
   }
 
-  body.append(keyPanel());
   body.append(
-    step("Check the year", "Year-end review against New Zealand tax rules"),
-    reviewPanel(),
+    aiKeyPanel({
+      page: "ai",
+      title: "Or: a Google AI key, asked automatically",
+      countedIn: "transactions",
+      whenSet: aboutAsking,
+    }),
   );
-  void refreshStatus();
+  body.append(step("And separately", "Checking the finished year"), checkPointer());
+  void refreshAiStatus("ai");
 }
 
-async function refreshStatus(): Promise<void> {
-  const next = await aiStatus();
-  if (next === null) return;
-  const changed =
-    status === null ||
-    status.configured !== next.configured ||
-    status.usedToday !== next.usedToday ||
-    status.model !== next.model ||
-    status.key !== next.key;
-  status = next;
-  if (changed) redraw("ai");
+/**
+ * Where the year-end check went.
+ *
+ * It was a section at the foot of this page, which made it the last thing
+ * under a page about coding -- and it is not about coding. It has its own
+ * entry under AI now, and this is a signpost rather than a copy: two places
+ * to run the same review is two places for it to drift.
+ */
+function checkPointer(): HTMLElement {
+  const [box, inner] = panel("");
+  inner.append(
+    note(
+      "The AI accounts check reads the finished year rather than one line: whether each " +
+        "account holds what belongs in it, whether the GST treatments match the " +
+        "registration, and what is missing. It uses this same key, and it connects to " +
+        "OpenAccountants — tax guides written from the Acts and Inland Revenue's own " +
+        "material — so the answer cites what it relied on and how far that guide has been " +
+        "checked.",
+    ),
+  );
+  const go = button("Go to the AI accounts check", () => showPage("aicheck"));
+  go.className = "primary";
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(go);
+  inner.append(row);
+  return box;
+}
+
+/**
+ * What asking would do, said under the key rather than beside it.
+ *
+ * This is the part of the panel that is about coding, so it is this page's
+ * and not the shared panel's: the year-end check shares the key and should
+ * not inherit a sentence about lines nothing recognises.
+ */
+function aboutAsking(): HTMLElement[] {
+  const out: HTMLElement[] = [];
+  const waiting = waitingForAnswers().length;
+  const ready = aiSuggestionCount();
+  out.push(
+    note(
+      `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
+        `${AI_BATCH} at a time.` +
+        (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
+    ),
+  );
+
+  if (waiting > 0) {
+    const details = document.createElement("details");
+    details.className = "setup-migration-details";
+    const summary = document.createElement("summary");
+    summary.className = "setup-migration-summary";
+    summary.textContent = "Show exactly what would be sent";
+    const pre = document.createElement("pre");
+    pre.className = "ai-prompt";
+    pre.textContent = whatWouldBeAsked(waitingForAnswers()).prompt;
+    details.append(summary, pre);
+    out.push(details);
+  }
+
+  out.push(
+    note(
+      "The button is on Reconcile, beside the filter: press AI suggestions and choose " +
+        "“Ask with my key”. What comes back appears on the lines themselves.",
+    ),
+  );
+  const go = button("Go to Reconcile", () => showPage("reconcile"));
+  go.className = "primary";
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(go);
+  out.push(row);
+  return out;
 }
 
 // --- turning it on ---------------------------------------------------------
@@ -209,174 +266,6 @@ function panel(title: string): [HTMLElement, HTMLElement] {
   return [box, inner];
 }
 
-// --- the key ---------------------------------------------------------------
-
-function keyPanel(): HTMLElement {
-  const [box, inner] = panel("Or: a Google AI key, asked automatically");
-
-  // Where the books are on the server and this installation offers one, there
-  // is something to try before bringing a key at all -- said plainly, because
-  // somebody about to use somebody else's key should know that is what they
-  // are doing, and on whose model.
-  if (status?.configured !== true && status?.sharedKey === true) {
-    const left = Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0));
-    inner.append(
-      note(
-        "You can try this without a key of your own. This site offers a shared one -- " +
-          `${status.sharedModel || "a flash model"}, ${left} transactions left on your ` +
-          "account, ever, not per day -- paid for by whoever runs the site and asked twenty " +
-          "at a time. What you send goes to Google under their account, so use a key of " +
-          "your own for a client's books.",
-      ),
-    );
-  }
-
-  if (status?.configured === true) {
-    inner.append(
-      note(
-        `Set: ${status.key}. ` +
-          (aiRoute() === "cloud"
-            ? "It is kept in the server's vault, which only the function that asks Google " +
-              "can open, beside the bank feed's tokens."
-            : "It is kept in a file on this computer that only your user account can read, " +
-              "beside the bank feed's tokens.") +
-          " It is never sent back to this page.",
-      ),
-    );
-
-    // The models this key may actually use, as Google listed them. Hard-coding
-    // one is how a working app becomes an error message months later: they are
-    // retired, and the message says so to somebody who cannot act on it.
-    const models = status.models ?? [];
-    if (models.length > 0) {
-      const label = document.createElement("label");
-      label.className = "ai-model";
-      label.append("Model ");
-      const pick = document.createElement("select");
-      for (const model of models) {
-        const option = document.createElement("option");
-        option.value = model.name;
-        option.textContent =
-          model.label === "" || model.label === model.name
-            ? model.name
-            : `${model.label} (${model.name})`;
-        option.selected = model.name === status?.model;
-        pick.append(option);
-      }
-      pick.addEventListener("change", () => {
-        pick.disabled = true;
-        void aiSetModel(pick.value).then(() => refreshStatus().then(() => redraw("ai")));
-      });
-      label.append(pick);
-      inner.append(label);
-      inner.append(
-        note(
-          `${models.length} models on this key. A flash model is the cheap one and is what ` +
-            "this asks for; a pro model costs more per transaction and is worth trying if " +
-            "the suggestions are poor.",
-        ),
-      );
-    }
-
-    // What asking with it would do, said here rather than under a heading of
-    // its own: it is the same subject as the key, one paragraph later.
-    const waiting = waitingForAnswers().length;
-    const ready = aiSuggestionCount();
-    inner.append(
-      note(
-        `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
-          `${AI_BATCH} at a time. ${status.usedToday} of ${status.limit} asked today.` +
-          (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
-      ),
-    );
-
-    if (waiting > 0) {
-      const details = document.createElement("details");
-      details.className = "setup-migration-details";
-      const summary = document.createElement("summary");
-      summary.className = "setup-migration-summary";
-      summary.textContent = "Show exactly what would be sent";
-      const pre = document.createElement("pre");
-      pre.className = "ai-prompt";
-      pre.textContent = whatWouldBeAsked(waitingForAnswers()).prompt;
-      details.append(summary, pre);
-      inner.append(details);
-    }
-
-    inner.append(
-      note(
-        "The button is on Reconcile, beside the filter: choose “AI from my key” " +
-          "and press Get suggestions. What comes back appears on the lines themselves.",
-      ),
-    );
-
-    const go = button("Go to Reconcile", () => showPage("reconcile"));
-    go.className = "primary";
-
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.textContent = "Remove the key";
-    remove.addEventListener("click", () => {
-      remove.disabled = true;
-      void aiClearKey().then(() => {
-        status = null;
-        void refreshStatus().then(() => redraw("ai"));
-      });
-    });
-    const row = document.createElement("div");
-    row.className = "migration-actions";
-    row.append(go, remove);
-    inner.append(row);
-    return box;
-  }
-
-  inner.append(
-    note(
-      "A Google AI key, from aistudio.google.com — the automatic route asks Google and " +
-        "nobody else, so a key from OpenAI or Anthropic will not work here. To use one of " +
-        "those, copy a prompt above: that goes to any model you like. You pay Google for " +
-        "what you use, which for coding a few hundred transactions is cents rather than " +
-        "dollars, and NZOSA ships with no key in it.",
-    ),
-  );
-
-  const input = document.createElement("input");
-  input.type = "password";
-  input.autocomplete = "off";
-  input.placeholder = "Paste the key here";
-  input.className = "ai-key-input";
-
-  const trouble = document.createElement("p");
-  trouble.className = "cloud-said";
-
-  const save = document.createElement("button");
-  save.type = "button";
-  save.className = "primary";
-  save.textContent = "Check it and keep it";
-  save.addEventListener("click", () => {
-    const key = input.value.trim();
-    if (key === "") return;
-    save.disabled = true;
-    trouble.textContent = "Checking it with Google…";
-    void aiSetKey(key).then((answer) => {
-      save.disabled = false;
-      if (!answer.ok) {
-        trouble.textContent = answer.error;
-        return;
-      }
-      // Out of this page the moment it is somewhere better.
-      input.value = "";
-      void refreshStatus().then(() => redraw("ai"));
-    });
-  });
-
-  const row = document.createElement("div");
-  row.className = "migration-actions";
-  row.append(input, save);
-  inner.append(row, trouble);
-  return box;
-}
-
 // --- what these books are --------------------------------------------------
 
 function entitiesOf(): Entity[] {
@@ -450,167 +339,6 @@ function briefingPanel(): HTMLElement {
 }
 
 // --- a review of the year, which is a different question ------------------
-
-function reviewPanelStep(): HTMLElement {
-  const wrap = document.createElement("div");
-  wrap.append(
-    step("Check the year", "Year-end review against New Zealand tax rules"),
-    reviewPanel(),
-  );
-  return wrap;
-}
-
-/**
- * Asking what a reviewer would ask, rather than what an account is.
- *
- * The coding queue asks about one line and gets a code back, which this app
- * can check against the chart. This asks whether the year hangs together, and
- * gets prose back, which it cannot check at all -- so it does not pretend to.
- * The answer is shown as what it is and goes nowhere near the ledger.
- *
- * Pointed at OpenAccountants, because the difference between a model citing a
- * guide an accountant signed and a model remembering something about New
- * Zealand tax is the whole difference between useful and dangerous here.
- */
-function reviewPanel(): HTMLElement {
-  const [box, inner] = panel("");
-
-  inner.append(
-    note(
-      "A review of the finished year rather than of one line: whether each account holds " +
-        "what belongs in it, whether the GST treatments match what each entity is " +
-        "registered for, which deductions need a record the books do not show, and what a " +
-        "business of this kind usually has that these books do not. It reads the year's " +
-        "totals, not its transactions.",
-    ),
-  );
-
-  if (!reviewPossible()) {
-    inner.append(note("Nothing to review yet: these books need transactions and a chart first."));
-    return box;
-  }
-
-  // What makes the answer worth reading rather than plausible.
-  const why = document.createElement("p");
-  why.className = "ai-careful";
-  why.append(
-    document.createTextNode(
-      "The prompt tells the model to use OpenAccountants — tax guides written against " +
-        "primary sources and signed off by named, licensed accountants — rather than its " +
-        "own memory, and to cite the guide and reviewer for anything it relies on. Connect " +
-        "it to your model first: ",
-    ),
-  );
-  const connect = document.createElement("a");
-  connect.href = OPENACCOUNTANTS_CONNECT;
-  connect.target = "_blank";
-  connect.rel = "noopener noreferrer";
-  connect.textContent = "openaccountants.com/connect";
-  why.append(connect, document.createTextNode(` (${OPENACCOUNTANTS_MCP})`));
-  inner.append(why);
-
-  inner.append(
-    note(
-      "Not every assistant can reach a connector. Claude, ChatGPT, Cursor and Windsurf take " +
-        "MCP connectors; a plain chat window or an API call has no way to load one, and " +
-        "Gemini answered this prompt by saying so — which is what it was told to do, and " +
-        "worth more than a confident answer from memory. If you get that reply, connect " +
-        "OpenAccountants to the assistant first, or ask one that already has it.",
-    ),
-  );
-
-  const years = yearsInBooks();
-  const pickYear = document.createElement("select");
-  for (const year of years) {
-    const option = document.createElement("option");
-    option.value = String(year);
-    option.textContent = `Year to 31 March ${year}`;
-    option.selected = year === years[0];
-    pickYear.append(option);
-  }
-  const label = document.createElement("label");
-  label.className = "ai-model";
-  label.append("Which year ", pickYear);
-  inner.append(label);
-
-  const said = document.createElement("p");
-  said.className = "cloud-said";
-  const shown = document.createElement("pre");
-  shown.className = "ai-prompt";
-  shown.hidden = true;
-
-  const copy = document.createElement("button");
-  copy.type = "button";
-  copy.className = "primary";
-  copy.textContent = "Copy the review prompt";
-  copy.addEventListener("click", () => {
-    const text = reviewPrompt(Number(pickYear.value));
-    void navigator.clipboard.writeText(text).then(
-      () => {
-        said.textContent =
-          "Copied. Paste it into a model with OpenAccountants connected, then paste what it " +
-          "says back below.";
-      },
-      () => {
-        shown.textContent = text;
-        shown.hidden = false;
-        said.textContent =
-          "This browser would not let the page reach the clipboard, so here it is to copy " +
-          "by hand.";
-      },
-    );
-  });
-
-  const show = document.createElement("button");
-  show.type = "button";
-  show.textContent = "Show it instead";
-  show.addEventListener("click", () => {
-    shown.textContent = reviewPrompt(Number(pickYear.value));
-    shown.hidden = !shown.hidden;
-    show.textContent = shown.hidden ? "Show it instead" : "Hide it";
-  });
-
-  const row = document.createElement("div");
-  row.className = "migration-actions";
-  row.append(copy, show);
-  inner.append(row, said, shown);
-
-  const backHeading = document.createElement("h4");
-  backHeading.textContent = "Paste what it said back";
-  const answer = document.createElement("textarea");
-  answer.className = "ai-about";
-  answer.rows = 4;
-  answer.placeholder = "The review, as the model wrote it";
-
-  // Held on the page and nowhere else. A review is somebody's reading of the
-  // books, not a fact about them, and writing it into the ledger would make it
-  // indistinguishable a year later from something the books themselves say.
-  const kept = document.createElement("div");
-  kept.className = "ai-review-read";
-
-  const read = document.createElement("button");
-  read.type = "button";
-  read.className = "primary";
-  read.textContent = "Keep it on screen";
-  read.addEventListener("click", () => {
-    const text = answer.value.trim();
-    if (text === "") return;
-    kept.textContent = "";
-    const heading = document.createElement("h4");
-    heading.textContent = `Review of the year to 31 March ${pickYear.value}`;
-    const body = document.createElement("pre");
-    body.className = "ai-prompt";
-    body.textContent = text;
-    kept.append(heading, body, reviewDisclaimer());
-    answer.value = "";
-  });
-
-  const backRow = document.createElement("div");
-  backRow.className = "migration-actions";
-  backRow.append(read);
-  inner.append(backHeading, answer, backRow, kept, reviewDisclaimer());
-  return box;
-}
 
 // --- the route that needs nothing set up -----------------------------------
 

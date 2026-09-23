@@ -363,6 +363,46 @@ async function askGemini(key, model, prompt) {
 }
 
 /**
+ * The same model, asked to hold a conversation it may use tools in.
+ *
+ * Separate from askGemini because almost nothing is shared: no JSON response
+ * type (the answer is prose), a whole conversation rather than one prompt,
+ * and a reply that may be a request to call something rather than an answer.
+ *
+ * The turn is returned whole, unread. Deciding what a function call means is
+ * the caller's job, and this process is not the one holding the conversation
+ * -- the page is, because the tools live out on the web and the page can
+ * reach them itself. What has to be here is the key, and only the key.
+ */
+async function talkToGemini(key, model, contents, tools) {
+  const body = { contents, generationConfig: { temperature: 0 } };
+  if (Array.isArray(tools) && tools.length > 0) {
+    body.tools = [{ functionDeclarations: tools }];
+  }
+  const response = await fetch(
+    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
+    {
+      method: "POST",
+      headers: { "content-type": "application/json", "x-goog-api-key": key },
+      body: JSON.stringify(body),
+    },
+  );
+  const answer = await response.json().catch(() => null);
+  if (!response.ok) {
+    const said =
+      answer && answer.error && typeof answer.error.message === "string"
+        ? answer.error.message
+        : `HTTP ${response.status}`;
+    throw new Error(said);
+  }
+  const candidate = answer?.candidates?.[0] ?? null;
+  return {
+    parts: candidate?.content?.parts ?? [],
+    finishReason: candidate?.finishReason ?? "",
+  };
+}
+
+/**
  * Ask Akahu something, as this installation.
  *
  * Both tokens go on every request: the app token says which app is asking and
@@ -825,6 +865,56 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           used: { ...(ai.used ?? {}), [today()]: used + asking },
         });
         send(response, 200, { text: said, usedToday: used + asking, limit: AI_DAILY_LIMIT });
+        return;
+      }
+
+      if (path === "/api/ai/converse" && request.method === "POST") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const ai = readAi(ledgerRoot, current);
+        if (ai === null) {
+          send(response, 400, { error: "no key set for these books" });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        const contents = Array.isArray(body.contents) ? body.contents : [];
+        const tools = Array.isArray(body.tools) ? body.tools : [];
+        if (contents.length === 0) {
+          send(response, 400, { error: "nothing to say" });
+          return;
+        }
+        // Counted as one, whatever the conversation costs, because a review
+        // is one question however many times the model looks something up.
+        // The transaction cap is for coding and does not fit here; this is
+        // the same allowance so that a loop that will not end still stops.
+        const used = aiUsedToday(ai);
+        if (used >= AI_DAILY_LIMIT) {
+          send(response, 429, {
+            error: `The daily limit of ${AI_DAILY_LIMIT} is used up.`,
+            usedToday: used,
+            limit: AI_DAILY_LIMIT,
+          });
+          return;
+        }
+        let turn;
+        try {
+          turn = await talkToGemini(
+            ai.key,
+            ai.model ?? pickModel(ai.models ?? [], ""),
+            contents,
+            tools,
+          );
+        } catch (error) {
+          send(response, 502, { error: String(error.message ?? error) });
+          return;
+        }
+        writeAi(ledgerRoot, current, {
+          ...ai,
+          used: { ...(ai.used ?? {}), [today()]: used + 1 },
+        });
+        send(response, 200, { ...turn, usedToday: used + 1, limit: AI_DAILY_LIMIT });
         return;
       }
 

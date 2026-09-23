@@ -291,6 +291,24 @@ function askPanel(): HTMLElement {
  * usually beat a cheap model driven from here -- and a copy of this app
  * running in a browser alone has no key route at all.
  */
+/**
+ * The same prompt, addressed to an assistant that has the connector.
+ *
+ * It opens by naming OpenAccountants because the library says to: an
+ * assistant with a connector installed will often answer from memory anyway
+ * unless the question reaches for it by name. Telling somebody to type that
+ * themselves and then handing them a prompt without it is how the advice gets
+ * lost between the reading and the pasting, so it is in the text they copy.
+ */
+function promptForAssistant(year: number): string {
+  return (
+    "Using OpenAccountants, work through the review below. Look the rules up in the " +
+    "guides rather than answering from memory." +
+    "\n\n" +
+    reviewPrompt(year)
+  );
+}
+
 function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "ai-carry";
@@ -300,10 +318,20 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   wrap.append(
     heading,
     note(
-      "Claude, ChatGPT, Cursor and Windsurf take MCP connectors of their own. Connect " +
-        "OpenAccountants there, paste this in, and paste what it says back below. Nothing " +
-        "is set up and nothing is charged here.",
+      "Often the better answer, and free. The button above asks the model your key is for, " +
+        "which is a fast cheap one; a frontier assistant reads the guides more carefully and " +
+        "is better at telling what matters from what does not. It costs nothing here, and " +
+        "nothing extra there if you already pay for one.",
     ),
+    // The whole reason to bother, said before the instructions rather than
+    // after them: three lookups is not enough for a year-end review, and the
+    // thing that lifts it is free and takes a minute.
+    note(
+      "It also gets past the three-lookup limit. Signing in to OpenAccountants — a free " +
+        "account — is what lifts it, and your assistant asks you to do that once, the first " +
+        "time it uses the connector.",
+    ),
+    connectSteps(),
   );
 
   const said = document.createElement("p");
@@ -316,7 +344,7 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   copy.type = "button";
   copy.textContent = "Copy the review prompt";
   copy.addEventListener("click", () => {
-    const text = reviewPrompt(Number(pickYear.value));
+    const text = promptForAssistant(Number(pickYear.value));
     void navigator.clipboard.writeText(text).then(
       () => {
         said.textContent =
@@ -337,7 +365,7 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   show.type = "button";
   show.textContent = "Show it instead";
   show.addEventListener("click", () => {
-    shown.textContent = reviewPrompt(Number(pickYear.value));
+    shown.textContent = promptForAssistant(Number(pickYear.value));
     shown.hidden = !shown.hidden;
     show.textContent = shown.hidden ? "Show it instead" : "Hide it";
   });
@@ -363,6 +391,93 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   });
 
   wrap.append(backHeading, answer, actions([read]));
+  return wrap;
+}
+
+/**
+ * The one-off step, spelled out.
+ *
+ * "Connect OpenAccountants there" was the whole of what this used to say,
+ * which assumes somebody knows what a connector is and where their assistant
+ * keeps them. It is a two-minute job done once, and the reason the answer
+ * from this route is worth more than the one from the button above -- so it
+ * is worth four lines rather than four words.
+ *
+ * Claude is named first because OpenAccountants names it first: their install
+ * page marks Claude.ai recommended, and second-guessing the people who wrote
+ * the server about which client works best with it would be invention.
+ */
+function connectSteps(): HTMLElement {
+  const wrap = document.createElement("div");
+
+  const heading = document.createElement("h4");
+  heading.textContent = "First time only: connect OpenAccountants to your assistant";
+  wrap.append(heading);
+
+  const steps = document.createElement("ol");
+  steps.className = "ai-connect-steps";
+
+  const add = (text: string, extra?: Node[]): void => {
+    const item = document.createElement("li");
+    item.append(document.createTextNode(text));
+    for (const node of extra ?? []) item.append(node);
+    steps.append(item);
+  };
+
+  const where = document.createElement("a");
+  where.href = OPENACCOUNTANTS_CONNECT;
+  where.target = "_blank";
+  where.rel = "noopener noreferrer";
+  where.textContent = "openaccountants.com/connect";
+
+  // The address belongs to the step that asks for it, inside its list item.
+  // It was a list item of its own and drew no number, which was only true
+  // because a flex container is not a list-item box -- the right-looking
+  // result for a reason that would not survive a change of layout.
+  const address = document.createElement("code");
+  address.className = "ai-connect-url";
+  address.textContent = OPENACCOUNTANTS_MCP;
+
+  const copyUrl = document.createElement("button");
+  copyUrl.type = "button";
+  copyUrl.textContent = "Copy the address";
+  copyUrl.addEventListener("click", () => {
+    void navigator.clipboard.writeText(OPENACCOUNTANTS_MCP).then(
+      () => {
+        copyUrl.textContent = "Copied";
+      },
+      () => {
+        // It is on the screen either way, which is why it is shown rather
+        // than hidden behind the button.
+        copyUrl.textContent = "Copy it from above";
+      },
+    );
+  });
+
+  const addressRow = document.createElement("div");
+  addressRow.className = "ai-connect-url-row";
+  addressRow.append(address, copyUrl);
+
+  add(
+    "In Claude: Settings → Customize → Connectors → + → Add custom connector. Name it " +
+      "OpenAccountants and paste this address:",
+    [addressRow],
+  );
+
+  add("Add, then Allow tools. Sign in to OpenAccountants when it asks — free, once.");
+  add(
+    "ChatGPT, Cursor, Windsurf and Copilot Studio take connectors too; Claude is the one " +
+      "OpenAccountants recommends. Either way it has to be a desktop app or browser — a " +
+      "phone cannot add one. The current steps for each are at ",
+    [where, document.createTextNode(".")],
+  );
+  add(
+    "Then copy the prompt below and paste it in. It already opens with “Using " +
+      "OpenAccountants” — an assistant with the connector installed will still answer from " +
+      "memory unless the question reaches for it by name, which is the library's own advice.",
+  );
+
+  wrap.append(steps);
   return wrap;
 }
 

@@ -2969,3 +2969,35 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .gst-return-form { max-width: 42rem; }
 .gst-return-form td.ir10-box { width: 4rem; white-space: nowrap; }
 .reports-star { font-size: 1rem; line-height: 1; }
+
+/* The one-off connector setup, as numbered steps. A list rather than a
+   paragraph because it is a thing to do while looking at another window, and
+   somebody coming back to it needs to find their place again. */
+.ai-connect-steps {
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.4rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 46rem;
+}
+.ai-connect-steps li { margin: 0.35rem 0; }
+/* The address is the one thing that has to be exact, so it is shown as well
+   as copied: a clipboard that silently does nothing leaves nothing behind. */
+.ai-connect-url-row {
+  display: flex;
+  margin: 0.4rem 0 0.2rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ai-connect-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  word-break: break-all;
+}

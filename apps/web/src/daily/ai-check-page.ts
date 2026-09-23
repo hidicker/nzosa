@@ -167,8 +167,7 @@ function sourceNote(): HTMLElement {
     document.createTextNode(
       "The rules come from OpenAccountants — tax guides written against primary sources, " +
         "the Acts and Inland Revenue's own material — rather than from the model's memory. " +
-        "Run the check here and this page connects to it directly and makes the model cite " +
-        "what it used and how far that guide has been checked: ",
+        "For more information on OpenAccountants: ",
     ),
   );
   const connect = document.createElement("a");
@@ -176,7 +175,10 @@ function sourceNote(): HTMLElement {
   connect.target = "_blank";
   connect.rel = "noopener noreferrer";
   connect.textContent = "openaccountants.com";
-  why.append(connect, document.createTextNode(` (${OPENACCOUNTANTS_MCP})`));
+  // Not the MCP address as well. It belongs in the connect steps, where there
+  // is a button to copy it and a reason to; here it was a second link nobody
+  // is being asked to do anything with.
+  why.append(connect);
   return why;
 }
 

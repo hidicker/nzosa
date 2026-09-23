@@ -2168,13 +2168,31 @@ function wireAiButton(): void {
     if (waiting.length === 0 || !haveKey) return;
     paste.hidden = true;
     button.disabled = true;
-    button.textContent = "Asking…";
-    void askAboutLines(waiting, howMany).then(({ got, said: trouble }) => {
-      if (trouble !== "") alert(trouble);
-      if (got > 0) showTheAiOnes();
-      say();
-      redraw("reconcile");
-    });
+    // Said, and moving, for the reason the bank fetch says and moves: the
+    // request goes out to a model and comes back when the model is done, and
+    // a button that does not change is how somebody comes to press it three
+    // times. The same stripes as the feed, so waiting looks the same
+    // wherever this app is waiting.
+    button.textContent = "Asking AI…";
+    button.classList.add("working");
+    button.setAttribute("aria-busy", "true");
+    void askAboutLines(waiting, howMany)
+      .then(({ got, said: trouble }) => {
+        if (trouble !== "") alert(trouble);
+        if (got > 0) showTheAiOnes();
+        redraw("reconcile");
+      })
+      .catch((error: unknown) => {
+        // Nothing below this throws today, but a button left saying "Asking
+        // AI" for good is the wrong way to find out that changed.
+        alert((error as Error).message);
+      })
+      .finally(() => {
+        button.classList.remove("working");
+        button.removeAttribute("aria-busy");
+        // Puts the label and the count back, whatever happened.
+        say();
+      });
   };
 
   withKey.addEventListener("click", () => {

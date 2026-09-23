@@ -2278,6 +2278,17 @@ button.working {
   animation: working-stripes 0.8s linear infinite;
 }
 @keyframes working-stripes { to { background-position: 1.1rem 0; } }
+/* The same stripes on a button that is not the accent one. White at a fifth
+   opacity is legible on the accent and invisible on a pale surface, which is
+   the whole of the effect on the plain buttons. Mid-grey instead: it darkens
+   a light surface and lightens a dark one, so one rule covers both themes. */
+button.working:not(.primary):not(.active) {
+  background-image: linear-gradient(
+    115deg,
+    rgba(128, 128, 128, 0.3) 25%, transparent 25%,
+    transparent 50%, rgba(128, 128, 128, 0.3) 50%,
+    rgba(128, 128, 128, 0.3) 75%, transparent 75%);
+}
 @media (prefers-reduced-motion: reduce) {
   button.working { animation: none; }
 }

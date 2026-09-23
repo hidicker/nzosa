@@ -60,12 +60,17 @@ writeFileSync(join(demoDir, ".htaccess"), htaccessContent, "utf-8");
 const readmeContent = `# NZOSA Online Demo Build
 
 This directory contains the production build for the online demo hosted at:
-https://nbparagliding.nz/nzosa/
+https://nbparagliding.nz/nzosa_demo/
+
+That is **not** the same place as the app itself, which lives at
+https://nbparagliding.nz/nzosa/ and is deployed separately. Unpacking this
+over \`nzosa/\` would replace the app with the demo, banner and seed data and
+all.
 
 ## How to Deploy / Upload
-Upload the files in this directory (or \`online-demo.zip\`) to the \`nzosa/\` web directory on your hosting server (cPanel File Manager, SFTP, or FTP).
+Upload the files in this directory (or \`online-demo.zip\`) to the \`nzosa_demo/\` web directory on your hosting server (cPanel File Manager, SFTP, or FTP).
 
-Ensure the following files and folders sit in \`/nzosa/\`:
+Ensure the following files and folders sit in \`/nzosa_demo/\`:
 - \`index.html\`
 - \`styles.css\`
 - \`app.js\`

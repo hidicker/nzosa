@@ -7,11 +7,14 @@ import { runReview } from "../ai-review-run.js";
 import {
   OPENACCOUNTANTS_CONNECT,
   OPENACCOUNTANTS_MCP,
+  REVIEW_FOCUSES,
   reviewDisclaimer,
   reviewPossible,
   reviewPrompt,
   yearsInBooks,
 } from "../ai-review.js";
+import type { ReviewFocus } from "../ai-review.js";
+import { downloadExcelReport } from "./excel-export.js";
 
 /**
  * A year-end check of the accounts, against New Zealand tax rules.
@@ -38,7 +41,18 @@ import {
 
 let running = false;
 let lastSaid = "";
-let result: { text: string; consulted: string[]; connected: boolean; year: number } | null = null;
+/**
+ * What was asked for last, kept across redraws.
+ *
+ * The pickers were rebuilt on every render and reset themselves, so finishing
+ * a run put the year back to the newest and the subject back to the first --
+ * and the answer above them was about neither.
+ */
+let chosenYear = 0;
+let chosenFocus: ReviewFocus = "year";
+let result:
+  | { text: string; consulted: string[]; connected: boolean; year: number; focus: ReviewFocus }
+  | null = null;
 
 export function renderAiCheck(): void {
   const body = $("ai-check-body");
@@ -194,18 +208,55 @@ function askPanel(): HTMLElement {
   const [box, inner] = panel();
 
   const years = yearsInBooks();
+  if (chosenYear === 0) chosenYear = years[0] ?? new Date().getFullYear();
   const pickYear = document.createElement("select");
   for (const year of years) {
     const option = document.createElement("option");
     option.value = String(year);
     option.textContent = `Year to 31 March ${year}`;
-    option.selected = year === years[0];
+    option.selected = year === chosenYear;
     pickYear.append(option);
   }
+  pickYear.addEventListener("change", () => {
+    chosenYear = Number(pickYear.value);
+  });
+
+  /**
+   * Which review, because they are three different jobs.
+   *
+   * One prompt that carried account totals and then asked whether the GST
+   * treatments were right was asking a question its own contents could not
+   * answer. Each of these carries what its question needs: the GST one every
+   * period's boxes and what was filed, the income tax one the IR10 and the
+   * depreciation.
+   */
+  const pickFocus = document.createElement("select");
+  for (const one of REVIEW_FOCUSES) {
+    const option = document.createElement("option");
+    option.value = one.id;
+    option.textContent = one.label;
+    option.title = one.blurb;
+    option.selected = one.id === chosenFocus;
+    pickFocus.append(option);
+  }
+  const blurb = document.createElement("p");
+  blurb.className = "page-hint";
+  const sayBlurb = (): void => {
+    blurb.textContent = REVIEW_FOCUSES.find((one) => one.id === chosenFocus)?.blurb ?? "";
+  };
+  sayBlurb();
+  pickFocus.addEventListener("change", () => {
+    chosenFocus = pickFocus.value as ReviewFocus;
+    sayBlurb();
+  });
+
   const label = document.createElement("label");
   label.className = "ai-model";
   label.append("Which year ", pickYear);
-  inner.append(label);
+  const focusLabel = document.createElement("label");
+  focusLabel.className = "ai-model";
+  focusLabel.append("What to check ", pickFocus);
+  inner.append(label, focusLabel, blurb);
 
   const said = document.createElement("p");
   said.className = "cloud-said";
@@ -241,7 +292,8 @@ function askPanel(): HTMLElement {
     lastSaid = "Starting…";
     redraw("aiCheck");
     const year = Number(pickYear.value);
-    void runReview(reviewPrompt(year), (progress) => {
+    const focus = pickFocus.value as ReviewFocus;
+    void runReview(reviewPrompt(year, focus), (progress) => {
       // Straight onto the element rather than through a redraw: a redraw
       // mid-run would rebuild the button that is running.
       lastSaid = progress;
@@ -256,7 +308,7 @@ function askPanel(): HTMLElement {
           return;
         }
         lastSaid = "";
-        result = { ...done, year };
+        result = { ...done, year, focus };
         redraw("aiCheck");
       },
       (error: unknown) => {
@@ -278,7 +330,7 @@ function askPanel(): HTMLElement {
     );
   }
 
-  inner.append(carryItYourself(pickYear));
+  inner.append(carryItYourself(pickYear, pickFocus));
   inner.append(reviewDisclaimer());
   return box;
 }
@@ -300,16 +352,19 @@ function askPanel(): HTMLElement {
  * themselves and then handing them a prompt without it is how the advice gets
  * lost between the reading and the pasting, so it is in the text they copy.
  */
-function promptForAssistant(year: number): string {
+function promptForAssistant(year: number, focus: ReviewFocus): string {
   return (
     "Using OpenAccountants, work through the review below. Look the rules up in the " +
     "guides rather than answering from memory." +
     "\n\n" +
-    reviewPrompt(year)
+    reviewPrompt(year, focus)
   );
 }
 
-function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
+function carryItYourself(
+  pickYear: HTMLSelectElement,
+  pickFocus: HTMLSelectElement,
+): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "ai-carry";
 
@@ -344,7 +399,7 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   copy.type = "button";
   copy.textContent = "Copy the review prompt";
   copy.addEventListener("click", () => {
-    const text = promptForAssistant(Number(pickYear.value));
+    const text = promptForAssistant(Number(pickYear.value), pickFocus.value as ReviewFocus);
     void navigator.clipboard.writeText(text).then(
       () => {
         said.textContent =
@@ -365,12 +420,40 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   show.type = "button";
   show.textContent = "Show it instead";
   show.addEventListener("click", () => {
-    shown.textContent = promptForAssistant(Number(pickYear.value));
+    shown.textContent = promptForAssistant(
+      Number(pickYear.value),
+      pickFocus.value as ReviewFocus,
+    );
     shown.hidden = !shown.hidden;
     show.textContent = shown.hidden ? "Show it instead" : "Hide it";
   });
 
-  wrap.append(actions([copy, show]), said, shown);
+  // The workbook, because a prompt can only carry so much.
+  //
+  // What goes in the prompt is the shape of the year -- totals, boxes,
+  // registrations -- and an assistant asked to check whether a particular
+  // account holds the wrong thing has to take that on trust. The workbook is
+  // the working underneath it: a trial balance, the general ledger, every
+  // coded transaction, the depreciation schedule, each GST return and the
+  // filed ones beside them. This route can attach a file, so it should.
+  const workbook = document.createElement("button");
+  workbook.type = "button";
+  workbook.textContent = "Download the workbook to attach";
+  workbook.addEventListener("click", () => {
+    downloadExcelReport(Number(pickYear.value));
+  });
+
+  wrap.append(actions([copy, workbook, show]), said, shown);
+  wrap.append(
+    note(
+      "Attach the workbook to the same message as the prompt. It holds the working the " +
+        "prompt only summarises: trial balance, general ledger, every transaction and how it " +
+        "was coded, the depreciation schedule, each GST return and the filed ones beside " +
+        "them. Without it the assistant is checking your totals; with it, it can check the " +
+        "transactions behind them. It is your books in full, so send it only where you would " +
+        "send the books.",
+    ),
+  );
 
   const backHeading = document.createElement("h4");
   backHeading.textContent = "Paste what it said back";
@@ -385,7 +468,13 @@ function carryItYourself(pickYear: HTMLSelectElement): HTMLElement {
   read.addEventListener("click", () => {
     const text = answer.value.trim();
     if (text === "") return;
-    result = { text, consulted: [], connected: false, year: Number(pickYear.value) };
+    result = {
+      text,
+      consulted: [],
+      connected: false,
+      year: Number(pickYear.value),
+      focus: pickFocus.value as ReviewFocus,
+    };
     answer.value = "";
     redraw("aiCheck");
   });
@@ -472,9 +561,10 @@ function connectSteps(): HTMLElement {
     [where, document.createTextNode(".")],
   );
   add(
-    "Then copy the prompt below and paste it in. It already opens with “Using " +
-      "OpenAccountants” — an assistant with the connector installed will still answer from " +
-      "memory unless the question reaches for it by name, which is the library's own advice.",
+    "Then copy the prompt below, attach the workbook, and send both together. The prompt " +
+      "already opens with “Using OpenAccountants” — an assistant with the connector " +
+      "installed will still answer from memory unless the question reaches for it by name, " +
+      "which is the library's own advice.",
   );
 
   wrap.append(steps);
@@ -491,13 +581,20 @@ function connectSteps(): HTMLElement {
  * the books themselves say, so it is not written into the ledger. Closing the
  * page loses it, which is the right trade.
  */
-function answerPanel(
-  got: { text: string; consulted: string[]; connected: boolean; year: number },
-): HTMLElement {
+function answerPanel(got: {
+  text: string;
+  consulted: string[];
+  connected: boolean;
+  year: number;
+  focus: ReviewFocus;
+}): HTMLElement {
   const [box, inner] = panel();
 
   const heading = document.createElement("h3");
-  heading.textContent = `Review of the year to 31 March ${got.year}`;
+  // Named, because three reviews of the same year look alike at the top and
+  // are about entirely different things.
+  const what = REVIEW_FOCUSES.find((one) => one.id === got.focus)?.label ?? "Review";
+  heading.textContent = `${what} — year to 31 March ${got.year}`;
   inner.append(heading);
 
   // Whether the guides were actually read is the first thing worth knowing

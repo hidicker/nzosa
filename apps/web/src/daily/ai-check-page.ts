@@ -89,20 +89,35 @@ export function renderAiCheck(): void {
     return;
   }
 
+  body.append(whatTheGuidesAre(), whichNeedsAConnector());
+
+  // Both routes ask the same two questions, so the pickers are built once and
+  // handed to each. Two pairs would be two answers to keep in step.
+  const choose = choosePanel();
+  body.append(step("Choose", "Which year, and what to check"), choose.box);
+
+  // The carried route comes first, because it is the one that works for
+  // everybody: no key, no cost, and the better answer. It was underneath a
+  // key panel most people will never fill in.
+  body.append(
+    step("Take it to an assistant", "Download, copy, paste back"),
+    carryPanel(choose.pickYear, choose.pickFocus),
+  );
+
   if (aiRoute() !== "none") {
     body.append(
-      step("The key", "One key, both pages"),
+      step("Or ask from here", "Your key, and the check"),
       aiKeyPanel({
         page: "aiCheck",
         title: "A Google AI key, asked automatically",
         countedIn: "reviews and transactions",
       }),
+      runPanel(choose.pickYear, choose.pickFocus),
     );
   }
 
-  body.append(whatTheGuidesAre());
-  body.append(step("Ask", "Run the check, or carry it yourself"), askPanel());
   if (result !== null) body.append(answerPanel(result));
+  body.append(reviewDisclaimer());
   void refreshAiStatus("aiCheck");
 }
 
@@ -202,9 +217,47 @@ function whatTheGuidesAre(): HTMLElement {
   return box;
 }
 
-// --- asking ----------------------------------------------------------------
+/**
+ * Which of the two routes needs a connector, which is the opposite of how it
+ * reads.
+ *
+ * The obvious guess is that asking from inside the app is the simple one and
+ * pasting into Claude is the one that needs setting up. It is the other way
+ * round. An assistant you paste into is on its own and must have
+ * OpenAccountants installed; the model asked from here is handed the
+ * library's tools by this page and never learns MCP exists. That is why a key
+ * for any provider would work from here -- the connector is not the model's
+ * job -- and why the paste route has a one-off setup step and this one does
+ * not.
+ */
+function whichNeedsAConnector(): HTMLElement {
+  const [box, inner] = panel();
+  inner.append(
+    note(
+      "Which one needs setting up, since it is the opposite of what you would expect. " +
+        "Pasting into an assistant needs OpenAccountants connected there, once — it is on " +
+        "its own and has to be able to reach the library itself. Asking from here needs no " +
+        "connector at all: this page opens the library, hands your model the tools, and " +
+        "carries each lookup across. The model never learns MCP exists.",
+    ),
+  );
+  return box;
+}
 
-function askPanel(): HTMLElement {
+// --- what is being asked ---------------------------------------------------
+
+/**
+ * The year and the subject, chosen once for both routes.
+ *
+ * The elements themselves are handed on rather than their values, because
+ * the two routes are built at the same moment and neither can read a choice
+ * that has not been made yet.
+ */
+function choosePanel(): {
+  box: HTMLElement;
+  pickYear: HTMLSelectElement;
+  pickFocus: HTMLSelectElement;
+} {
   const [box, inner] = panel();
 
   const years = yearsInBooks();
@@ -258,6 +311,26 @@ function askPanel(): HTMLElement {
   focusLabel.append("What to check ", pickFocus);
   inner.append(label, focusLabel, blurb);
 
+  return { box, pickYear, pickFocus };
+}
+
+// --- asking from here ------------------------------------------------------
+
+/**
+ * The route that uses a key, which needs no connector of its own.
+ *
+ * Worth being plain about, because the two routes differ in exactly the
+ * opposite way to how it reads: an assistant you paste into has to have
+ * OpenAccountants installed, and the model asked from here does not -- this
+ * page is the connector. The model never learns MCP exists; it is handed
+ * tools and it calls them.
+ */
+function runPanel(
+  pickYear: HTMLSelectElement,
+  pickFocus: HTMLSelectElement,
+): HTMLElement {
+  const [box, inner] = panel();
+
   const said = document.createElement("p");
   said.className = "cloud-said";
   said.textContent = lastSaid;
@@ -285,8 +358,8 @@ function askPanel(): HTMLElement {
     run.setAttribute("aria-busy", "true");
   }
   run.title = canAskAutomatically()
-    ? "Connects to the guide library and asks your model."
-    : "Needs a key. Add one above, or copy the prompt below into an assistant instead.";
+    ? "This page connects to the guide library; your model is handed its tools."
+    : "Needs a key. Add one above, or use the prompt further up instead.";
   run.addEventListener("click", () => {
     running = true;
     lastSaid = "Starting…";
@@ -324,14 +397,12 @@ function askPanel(): HTMLElement {
   if (!canAskAutomatically()) {
     inner.append(
       note(
-        "No key set, so the button above is off. The prompt below needs none: it goes into " +
+        "No key set, so this button is off. The route above needs none — it goes into " +
           "whatever assistant you already use.",
       ),
     );
   }
 
-  inner.append(carryItYourself(pickYear, pickFocus));
-  inner.append(reviewDisclaimer());
   return box;
 }
 
@@ -361,22 +432,19 @@ function promptForAssistant(year: number, focus: ReviewFocus): string {
   );
 }
 
-function carryItYourself(
+function carryPanel(
   pickYear: HTMLSelectElement,
   pickFocus: HTMLSelectElement,
 ): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "ai-carry";
 
-  const heading = document.createElement("h3");
-  heading.textContent = "Or carry it to an assistant yourself";
   wrap.append(
-    heading,
     note(
-      "Often the better answer, and free. The button above asks the model your key is for, " +
-        "which is a fast cheap one; a frontier assistant reads the guides more carefully and " +
-        "is better at telling what matters from what does not. It costs nothing here, and " +
-        "nothing extra there if you already pay for one.",
+      "Often the better answer, and free. Asking from here uses whatever model your key is " +
+        "for, which is a fast cheap one; a frontier assistant reads the guides more " +
+        "carefully and is better at telling what matters from what does not. It costs " +
+        "nothing here, and nothing extra there if you already pay for one.",
     ),
     // The whole reason to bother, said before the instructions rather than
     // after them: three lookups is not enough for a year-end review, and the
@@ -397,6 +465,7 @@ function carryItYourself(
 
   const copy = document.createElement("button");
   copy.type = "button";
+  copy.className = "primary";
   copy.textContent = "Copy the review prompt";
   copy.addEventListener("click", () => {
     const text = promptForAssistant(Number(pickYear.value), pickFocus.value as ReviewFocus);
@@ -418,14 +487,14 @@ function carryItYourself(
 
   const show = document.createElement("button");
   show.type = "button";
-  show.textContent = "Show it instead";
+  show.textContent = "Show prompt";
   show.addEventListener("click", () => {
     shown.textContent = promptForAssistant(
       Number(pickYear.value),
       pickFocus.value as ReviewFocus,
     );
     shown.hidden = !shown.hidden;
-    show.textContent = shown.hidden ? "Show it instead" : "Hide it";
+    show.textContent = shown.hidden ? "Show prompt" : "Hide prompt";
   });
 
   // The workbook, because a prompt can only carry so much.
@@ -438,25 +507,47 @@ function carryItYourself(
   // filed ones beside them. This route can attach a file, so it should.
   const workbook = document.createElement("button");
   workbook.type = "button";
-  workbook.textContent = "Download the workbook to attach";
+  workbook.className = "primary";
+  workbook.textContent = "Download the workbook";
   workbook.addEventListener("click", () => {
     downloadExcelReport(Number(pickYear.value));
   });
 
-  wrap.append(actions([copy, workbook, show]), said, shown);
+  // The file first, then the prompt, because that is the order the work is
+  // done in: an attachment added after the message has been sent is an
+  // attachment nobody reads.
+  const fileHeading = document.createElement("h4");
+  fileHeading.textContent = "1. Download the workbook";
   wrap.append(
+    fileHeading,
     note(
-      "Attach the workbook to the same message as the prompt. It holds the working the " +
-        "prompt only summarises: trial balance, general ledger, every transaction and how it " +
-        "was coded, the depreciation schedule, each GST return and the filed ones beside " +
-        "them. Without it the assistant is checking your totals; with it, it can check the " +
-        "transactions behind them. It is your books in full, so send it only where you would " +
-        "send the books.",
+      "Attach it to the same message as the prompt. It holds the working the prompt only " +
+        "summarises: trial balance, general ledger, every transaction and how it was coded, " +
+        "the depreciation schedule, each GST return and the filed ones beside them. Without " +
+        "it the assistant is checking your totals; with it, it can check the transactions " +
+        "behind them. It is your books in full, so send it only where you would send the " +
+        "books.",
     ),
+    actions([workbook]),
+  );
+
+  const promptHeading = document.createElement("h4");
+  promptHeading.textContent = "2. Copy the prompt";
+  wrap.append(
+    promptHeading,
+    note(
+      "It already opens with “Using OpenAccountants”. An assistant with the connector " +
+        "installed will still answer from memory unless the question reaches for it by " +
+        "name, which is the library's own advice. Send it in the same message as the " +
+        "workbook.",
+    ),
+    actions([copy, show]),
+    said,
+    shown,
   );
 
   const backHeading = document.createElement("h4");
-  backHeading.textContent = "Paste what it said back";
+  backHeading.textContent = "3. Paste what it said back";
   const answer = document.createElement("textarea");
   answer.className = "ai-about";
   answer.rows = 4;
@@ -559,12 +650,6 @@ function connectSteps(): HTMLElement {
       "OpenAccountants recommends. Either way it has to be a desktop app or browser — a " +
       "phone cannot add one. The current steps for each are at ",
     [where, document.createTextNode(".")],
-  );
-  add(
-    "Then copy the prompt below, attach the workbook, and send both together. The prompt " +
-      "already opens with “Using OpenAccountants” — an assistant with the connector " +
-      "installed will still answer from memory unless the question reaches for it by name, " +
-      "which is the library's own advice.",
   );
 
   wrap.append(steps);

@@ -110,12 +110,12 @@ export function carrySection(options: {
 
   const show = document.createElement("button");
   show.type = "button";
-  show.textContent = "Show it instead";
+  show.textContent = "Show prompt";
   show.addEventListener("click", () => {
     carried = promptToCarry(waiting, Number(howMany.value));
     shown.textContent = carried.text;
     shown.hidden = !shown.hidden;
-    show.textContent = shown.hidden ? "Show it instead" : "Hide it";
+    show.textContent = shown.hidden ? "Show prompt" : "Hide prompt";
   });
 
   const row = document.createElement("div");

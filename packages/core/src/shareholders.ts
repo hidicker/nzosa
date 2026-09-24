@@ -204,9 +204,10 @@ export function splitByShareholding(
   const total = shareholders.reduce((sum, s) => sum + s.percent, 0);
   if (shareholders.length === 0 || total <= 0) return [];
   const part = (amount: Cents): Cents[] => {
-    const parts = shareholders.map((s) => Math.round((amount * s.percent) / total));
+    // `|| 0` turns -0 into 0, which would otherwise print as "-0.00".
+    const parts = shareholders.map((s) => Math.round((amount * s.percent) / total) || 0);
     const last = parts.length - 1;
-    parts[last] = amount - parts.slice(0, last).reduce((sum, v) => sum + v, 0);
+    parts[last] = amount - parts.slice(0, last).reduce((sum, v) => sum + v, 0) || 0;
     return parts;
   };
   const opening = part(schedule.opening);
@@ -216,6 +217,6 @@ export function splitByShareholding(
     const o = opening[i] ?? 0;
     const n = introduced[i] ?? 0;
     const d = drawings[i] ?? 0;
-    return { name: s.name, percent: s.percent, opening: o, introduced: n, drawings: d, closing: o + n - d };
+    return { name: s.name, percent: s.percent, opening: o, introduced: n, drawings: d, closing: o + n - d || 0 };
   });
 }

@@ -878,7 +878,7 @@ function renderShareholders(body: HTMLElement, year: number): void {
         amountCell(`${part.percent}%`),
         amountCell(money(part.opening)),
         amountCell(money(part.introduced)),
-        amountCell(money(-part.drawings)),
+        amountCell(money(part.drawings === 0 ? 0 : -part.drawings)),
         amountCell(money(part.closing)),
       );
       rows.append(tr);

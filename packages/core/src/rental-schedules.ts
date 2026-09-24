@@ -312,6 +312,15 @@ const INCOME_TAX: Readonly<Record<number, readonly { upTo: number | null; rate: 
     { upTo: 180_000, rate: 0.33 },
     { upTo: null, rate: 0.39 },
   ],
+  // The year to 31 March 2028: the same bands, which are legislated with no
+  // end date. Check each April that no Budget has changed them.
+  2028: [
+    { upTo: 15_600, rate: 0.105 },
+    { upTo: 53_500, rate: 0.175 },
+    { upTo: 78_100, rate: 0.3 },
+    { upTo: 180_000, rate: 0.33 },
+    { upTo: null, rate: 0.39 },
+  ],
 };
 
 /** ACC earner levy, which PAYE includes and which is not a credit against tax. */
@@ -322,6 +331,8 @@ const EARNER_LEVY: Readonly<Record<number, { rate: number; maximum: Cents }>> = 
   2025: { rate: 0.016, maximum: 14_228_300 },
   2026: { rate: 0.0167, maximum: 15_279_000 },
   2027: { rate: 0.0175, maximum: 15_664_100 },
+  // Published by IRD ahead of the levy year: 1.83%, to $160,244.
+  2028: { rate: 0.0183, maximum: 16_024_400 },
 };
 
 /** The independent earner tax credit: its full amount, where it starts to abate, and where it ends. */
@@ -329,7 +340,23 @@ const IETC: Readonly<Record<number, { from: Cents; full: Cents; to: Cents; amoun
   2026: { from: 2_400_000, full: 6_600_000, to: 7_000_000, amount: 52_000, abatement: 0.13 },
   // Unchanged: Inland Revenue's figures "from July 2024" still apply.
   2027: { from: 2_400_000, full: 6_600_000, to: 7_000_000, amount: 52_000, abatement: 0.13 },
+  2028: { from: 2_400_000, full: 6_600_000, to: 7_000_000, amount: 52_000, abatement: 0.13 },
 };
+
+/**
+ * Which of the yearly tables have nothing for a year.
+ *
+ * The rates change each April and are added by hand; a year with none held
+ * quietly works out no tax or no levy. This names what is missing so a test
+ * can fail on it the day a new tax year starts.
+ */
+export function taxTablesMissing(year: number): string[] {
+  return [
+    INCOME_TAX[year] === undefined ? "income tax bands" : "",
+    EARNER_LEVY[year] === undefined ? "ACC earners' levy" : "",
+    IETC[year] === undefined ? "independent earner tax credit" : "",
+  ].filter((s) => s !== "");
+}
 
 /**
  * Tax on a year's taxable income.

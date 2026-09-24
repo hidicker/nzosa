@@ -241,9 +241,18 @@ interface PayrollRates {
 const RATES: Readonly<Record<number, PayrollRates>> = {
   2026: { levy: 0.0167, levyCap: 152_790, levyMax: 2_551.59, kiwiSaverDefault: 0.03 },
   2027: { levy: 0.0175, levyCap: 156_641, levyMax: 2_741.22, kiwiSaverDefault: 0.035 },
+  // 2027-28: IRD's published levy (1.83%, to $160,244, at most $2,932.47);
+  // the bands and KiwiSaver unchanged. IR's payroll specification for the
+  // year comes out in March -- check it against these then.
+  2028: { levy: 0.0183, levyCap: 160_244, levyMax: 2_932.47, kiwiSaverDefault: 0.035 },
 };
 const FIRST_YEAR = 2026;
-const LAST_YEAR = 2027;
+const LAST_YEAR = 2028;
+
+/** Whether payroll rates are held for a tax year, for the yearly test. */
+export function payrollRatesHeld(year: number): boolean {
+  return RATES[year] !== undefined;
+}
 
 /** The tax year a payday falls in, named by the 31 March it ends on. */
 export function payrollTaxYear(payDate: IsoDate): number {

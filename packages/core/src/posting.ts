@@ -98,7 +98,9 @@ export type JournalSource =
   | "manual"
   | "transfer"
   /** A year-end adjustment: private use of a vehicle, prepayments. */
-  | "adjustment";
+  | "adjustment"
+  /** A pay run. */
+  | "payroll";
 
 /**
  * Which basis this journal's tax belongs to.

@@ -5,14 +5,9 @@ import type {
   VehicleUse,
   Ir3Details,
   Account, Cents, Employee, EntityModel, FixedAsset, Invoice, Journal, ManualJournal,
-  PayRun, PaymentAllocation, Payout, TaxExtra,
+  PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
-export interface PayrollData {
-  employerIrd?: string | undefined;
-  employees: Employee[];
-  payRuns: PayRun[];
-}
 import type {
   FiledReturn,
   OpeningBalances,
@@ -56,6 +51,28 @@ const RULES_KEY = "rules";
 const ARCHIVE_KEY = "rules-archive";
 const EVENTS_KEY = "events";
 const USER_KEY = "user";
+
+/**
+ * Payroll, kept as a part of its own: the employer's details, the employees,
+ * and every pay run as it was worked out. A pay run's figures are stored, not
+ * recomputed, because they are what was paid and filed; its journal is derived
+ * from them each time, like depreciation's.
+ */
+export interface PayrollData {
+  employerIrd?: string | undefined;
+  /** Who IR should contact about the payday filing return. */
+  contact?: PayrollContact | undefined;
+  /** Chart codes a pay run posts to; until wages, wages payable and PAYE payable are set, none post. */
+  accounts?: {
+    wages?: string | undefined;
+    kiwiSaverExpense?: string | undefined;
+    wagesPayable?: string | undefined;
+    payePayable?: string | undefined;
+    kiwiSaverPayable?: string | undefined;
+  } | undefined;
+  employees: Employee[];
+  payRuns: PayRun[];
+}
 
 export interface StoredLedger {
   version: 1;

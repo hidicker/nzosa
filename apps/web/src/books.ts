@@ -22,6 +22,7 @@ import {
   proceedsFromDisposalJournals,
   decodeText,
   invoiceBalancesFor,
+  payrollJournal,
   postLedger,
   prepaymentAdjustments,
   readXlsx,
@@ -47,6 +48,7 @@ import type {
   CodingEngine,
   EntityModel,
   InvoiceBalance,
+  PayrollAccounts,
   PostedJournal,
   RuleSet,
   Transaction,
@@ -991,12 +993,53 @@ export function postedJournals(): PostedJournal[] {
     // A property manager's statement posts as a journal of its own, derived
     // each time so an edited statement cannot leave its old journal behind.
     manualJournals: [...(state.ledger.manualJournals ?? []), ...agentStatementJournals()],
-    assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
+    // Pay runs post like depreciation: derived from what was stored, each time.
+    assetJournals: [
+      ...depreciationJournals(),
+      ...disposalJournals({ resolveAccount }),
+      ...payrollJournals(),
+    ],
   });
   // The year-end adjustments come last, because they are worked out from
   // everything else: a share of what the vehicle accounts ended up holding, a
   // part of what a prepayment was coded to.
   return [...posted, ...yearEndJournals(posted)];
+}
+
+/**
+ * Where pay runs post, from the accounts chosen on the Payroll page.
+ *
+ * Null until wages, wages payable and PAYE payable are all chosen and still in
+ * the chart. Guessing would be worse than waiting: a pay run posted to an
+ * account that happens to share a code with Xero's wages account is how wages
+ * ended up in telephone and internet.
+ */
+export function payrollAccounts(): PayrollAccounts | null {
+  const chosen = state.ledger.payroll?.accounts ?? {};
+  const find = (code: string | undefined) => {
+    if (code === undefined || code === "") return undefined;
+    const account = state.chart.find((a) => a.code === code);
+    return account === undefined ? undefined : { code: account.code, name: account.name };
+  };
+  const wages = find(chosen.wages);
+  const wagesPayable = find(chosen.wagesPayable);
+  const payePayable = find(chosen.payePayable);
+  if (wages === undefined || wagesPayable === undefined || payePayable === undefined) return null;
+  return {
+    wages,
+    wagesPayable,
+    payePayable,
+    kiwiSaverExpense: find(chosen.kiwiSaverExpense),
+    kiwiSaverPayable: find(chosen.kiwiSaverPayable),
+  };
+}
+
+function payrollJournals(): PostedJournal[] {
+  const accounts = payrollAccounts();
+  if (accounts === null) return [];
+  return (state.ledger.payroll?.payRuns ?? [])
+    .map((run) => payrollJournal(run, accounts))
+    .filter((j): j is PostedJournal => j !== null);
 }
 
 function chartName(code: string): string {

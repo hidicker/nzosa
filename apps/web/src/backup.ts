@@ -48,6 +48,7 @@ const BACKUP_PARTS = [
   "reference",
   "filed",
   "events",
+  "payroll",
 ] as const;
 
 export interface Backup {

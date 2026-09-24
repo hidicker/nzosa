@@ -1,18 +1,23 @@
 import { redraw } from "../app.js";
+import { payrollAccounts, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
-import { download, escapeHtml } from "../ui.js";
+import { download, escapeHtml, note } from "../ui.js";
 import {
+  accountEntityKey,
   buildPayRun,
   cleanIrdNumber,
-  createPayrollJournal,
+  emptyEntityModel,
   formatAmount,
   formatIrdNumber,
   generatePaydayFilingCsv,
   isValidIrdNumber,
+  kiwiSaverDefaultRate,
   parseAmount,
+  paydayFilingProblems,
 } from "@nzosa/core";
 import type {
+  Account,
   Cents,
   Employee,
   IsoDate,
@@ -23,16 +28,14 @@ import type {
 import type { PayrollData } from "../store.js";
 
 /**
- * NZ Payroll & Payday Filing (myIR) module.
+ * Payroll and payday filing.
  *
- * Runs payroll strictly in-browser using core pure functions:
- * - Full New Zealand PAYE threshold bands & ACC earner levy
- * - KiwiSaver employee deductions & compulsory employer contributions
- * - ESCT (Employer Superannuation Contribution Tax)
- * - Student Loan threshold repayments (12%)
- * - IRD Modulus-11 check-digit validation
- * - Employment Information (EI) CSV export for myIR Express File Transfer
- * - Balanced double-entry General Ledger journal postings
+ * The figures are worked out in core, to Inland Revenue's payroll calculation
+ * specification for the year of the payday, and tested against IR's own
+ * casebook. This page takes the employees and the hours, keeps each pay run as
+ * it was paid, makes the Employment Information file for myIR, and says where
+ * the pay run posts in the books -- which it does by itself once the accounts
+ * are chosen, the way depreciation does.
  */
 
 type PayrollTab = "runs" | "employees";
@@ -69,11 +72,16 @@ const TAX_CODE_OPTIONS: Array<{ code: TaxCode; label: string }> = [
   { code: "ST SL", label: "ST SL - Secondary $78,101 - $180,000 with student loan" },
   { code: "SA", label: "SA - Secondary income over $180,000 (39%)" },
   { code: "SA SL", label: "SA SL - Secondary over $180,000 with student loan" },
-  { code: "WT", label: "WT - Schedular payments (withholding tax)" },
-  { code: "CAE", label: "CAE - Casual agricultural employee" },
-  { code: "EDW", label: "EDW - Election day worker" },
-  { code: "ND", label: "ND - Non-declaration rate (45%)" },
+  { code: "CAE", label: "CAE - Casual agricultural employee (17.5%)" },
+  { code: "EDW", label: "EDW - Election day worker (17.5%)" },
+  { code: "NSW", label: "NSW - Non-resident seasonal worker (10.5%)" },
+  { code: "ND", label: "ND - No notification: no IR330 or no IRD number (45%)" },
+  { code: "STC", label: "STC - Tailored tax code, rate from IR's certificate" },
+  { code: "WT", label: "WT - Schedular payments to a contractor, elected rate" },
 ];
+
+/** The payroll as last saved, so a change can be recorded against it. */
+let committed: string | null = null;
 
 function getPayroll(): PayrollData {
   if (!state.ledger.payroll) {
@@ -82,11 +90,64 @@ function getPayroll(): PayrollData {
   return state.ledger.payroll;
 }
 
-async function commitPayroll(payroll: PayrollData): Promise<void> {
+async function commitPayroll(payroll: PayrollData, what = "Payroll changed"): Promise<void> {
+  const before = committed === null ? null : (JSON.parse(committed) as PayrollData);
   state.ledger = { ...state.ledger, payroll };
   partChanged("payroll");
   state.persistent = await savePart(state.ledger, "payroll");
+  await record("payroll", what, before, payroll);
+  committed = JSON.stringify(payroll);
+  // A pay run posts a journal, so what the books say has changed.
+  reclassify();
   redraw("payroll");
+}
+
+/** The accounts a pay run posts to, and what to add when the chart has none. */
+const PAYROLL_ACCOUNTS: {
+  key: keyof NonNullable<PayrollData["accounts"]>;
+  label: string;
+  required: boolean;
+  find: RegExp;
+  make: { code: string; name: string; type: string };
+}[] = [
+  { key: "wages", label: "Wages and salaries (expense)", required: true, find: /^wages|salar/i, make: { code: "477", name: "Wages and Salaries", type: "Expense" } },
+  { key: "kiwiSaverExpense", label: "KiwiSaver employer contributions (expense)", required: false, find: /kiwisaver.*(employer|contribution)|superannuation/i, make: { code: "478", name: "KiwiSaver Employer Contributions", type: "Expense" } },
+  { key: "wagesPayable", label: "Wages payable (liability)", required: true, find: /wages.*payable|payroll.*clearing/i, make: { code: "804", name: "Wages Payable", type: "Current Liability" } },
+  { key: "payePayable", label: "PAYE payable (liability)", required: true, find: /paye/i, make: { code: "825", name: "PAYE Payable", type: "Current Liability" } },
+  { key: "kiwiSaverPayable", label: "KiwiSaver payable (liability)", required: false, find: /kiwisaver.*payable/i, make: { code: "826", name: "KiwiSaver Payable", type: "Current Liability" } },
+];
+
+/** Add whichever payroll accounts are not chosen, for the entity that employs. */
+async function addPayrollAccounts(payroll: PayrollData, entityId: string): Promise<void> {
+  const chart = [...state.chart];
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const assigned = { ...model.accounts };
+  const accounts = { ...(payroll.accounts ?? {}) };
+  const added: string[] = [];
+  for (const spec of PAYROLL_ACCOUNTS) {
+    if ((accounts[spec.key] ?? "") !== "") continue;
+    const used = new Set(chart.map((a) => a.code));
+    let n = Number(spec.make.code);
+    while (used.has(String(n))) n += 1;
+    const account: Account = {
+      code: String(n),
+      name: spec.make.name,
+      type: spec.make.type,
+      taxCode: "No GST",
+      description: "Added for payroll",
+    };
+    chart.push(account);
+    if (entityId !== "") assigned[accountEntityKey(account)] = entityId;
+    accounts[spec.key] = account.code;
+    added.push(`${account.code} ${account.name}`);
+  }
+  if (added.length === 0) return;
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart, entities: { ...model, accounts: assigned } };
+  state.persistent = await savePart(state.ledger, "chart", "entities");
+  await record("chart", `Payroll accounts added: ${added.join(", ")}`, null, added);
+  payroll.accounts = accounts;
+  await commitPayroll(payroll, "Payroll accounts chosen");
 }
 
 /** Render employer IRD configuration bar at top. */
@@ -137,6 +198,118 @@ function renderEmployerBar(container: HTMLElement): void {
 
   bar.append(label, input, feedback);
   container.append(bar);
+  renderContact(container, payroll);
+  renderAccounts(container, payroll);
+}
+
+/** Who IR should contact: the payday filing file will not go without it. */
+function renderContact(container: HTMLElement, payroll: PayrollData): void {
+  const row = document.createElement("div");
+  row.className = "payroll-employer-bar";
+  const box = (label: string, key: "name" | "phone" | "email", max: number): HTMLLabelElement => {
+    const wrap = document.createElement("label");
+    wrap.className = "payroll-employer-label";
+    const input = document.createElement("input");
+    input.type = key === "email" ? "email" : "text";
+    input.value = payroll.contact?.[key] ?? "";
+    input.maxLength = max;
+    input.addEventListener("change", () => {
+      const contact = payroll.contact ?? { name: "", phone: "", email: "" };
+      payroll.contact = { ...contact, [key]: input.value.trim() };
+      void commitPayroll(payroll, "Payroll contact changed");
+    });
+    wrap.append(`${label} `, input);
+    return wrap;
+  };
+  row.append(box("Payroll contact", "name", 20), box("Phone", "phone", 12), box("Email", "email", 60));
+  container.append(row);
+}
+
+/** Where pay runs post. Nothing posts until the three that must be there are chosen. */
+function renderAccounts(container: HTMLElement, payroll: PayrollData): void {
+  const details = document.createElement("details");
+  details.className = "payroll-accounts";
+  const ready = payrollAccounts() !== null;
+  details.open = !ready;
+  const summary = document.createElement("summary");
+  summary.textContent = ready
+    ? "Pay runs post to the books. The accounts they use"
+    : "Pay runs are not in the books yet: choose the accounts they post to";
+  details.append(summary);
+
+  const chosen = payroll.accounts ?? {};
+  const grid = document.createElement("div");
+  grid.className = "payroll-form-grid";
+  for (const spec of PAYROLL_ACCOUNTS) {
+    const field = document.createElement("div");
+    field.className = "payroll-form-field";
+    const label = document.createElement("label");
+    label.textContent = spec.required ? `${spec.label} *` : spec.label;
+    const pick = document.createElement("select");
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = spec.required
+      ? "Choose..."
+      : spec.key === "kiwiSaverExpense"
+        ? "None: use the wages account"
+        : "None: use PAYE payable";
+    pick.append(none);
+    for (const account of state.chart.filter((a) => a.code !== "")) {
+      const option = document.createElement("option");
+      option.value = account.code;
+      option.textContent = `${account.code} ${account.name}`;
+      option.selected = account.code === (chosen[spec.key] ?? "");
+      pick.append(option);
+    }
+    // A likely account, offered rather than chosen.
+    if ((chosen[spec.key] ?? "") === "") {
+      const guess = state.chart.find((a) => spec.find.test(a.name));
+      if (guess !== undefined) label.textContent += ` (perhaps ${guess.code} ${guess.name})`;
+    }
+    pick.addEventListener("change", () => {
+      payroll.accounts = { ...(payroll.accounts ?? {}), [spec.key]: pick.value };
+      void commitPayroll(payroll, "Payroll accounts chosen");
+    });
+    field.append(label, pick);
+    grid.append(field);
+  }
+  details.append(grid);
+
+  const missing = PAYROLL_ACCOUNTS.filter((spec) => (chosen[spec.key] ?? "") === "");
+  if (missing.length > 0) {
+    const model = state.ledger.entities ?? emptyEntityModel();
+    const employers = model.entities.filter((e) => e.kind !== "personal");
+    const row = document.createElement("div");
+    row.className = "payroll-form-actions";
+    const entity = document.createElement("select");
+    for (const e of employers) {
+      const option = document.createElement("option");
+      option.value = e.id;
+      option.textContent = e.name;
+      entity.append(option);
+    }
+    const add = document.createElement("button");
+    add.type = "button";
+    add.textContent = `Add the ${missing.length} not chosen to the chart`;
+    add.addEventListener("click", () => {
+      add.disabled = true;
+      void addPayrollAccounts(payroll, entity.value);
+    });
+    if (employers.length > 0) row.append("For ", entity, " ");
+    row.append(add);
+    details.append(row);
+  }
+
+  details.append(
+    note(
+      "Each pay run posts on its payday: gross pay and the employer's KiwiSaver as expenses, " +
+        "net pay to wages payable, and PAYE, student loan, child support, ESCT and KiwiSaver to " +
+        "the payables. Then code the bank payment of net pay to wages payable, and the payment " +
+        "to Inland Revenue to PAYE payable (and KiwiSaver payable). Coding either to wages " +
+        "would count the wages twice.",
+    ),
+  );
+  container.append(details);
 }
 
 /** Render employee add/edit form. */
@@ -199,7 +372,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
   const checkIrd = () => {
     const val = irdInput.value.trim();
     if (!val) {
-      irdFeedback.textContent = "8 or 9 digits required";
+      irdFeedback.textContent = "None given yet: taxed at the no-notification rate (45%)";
       irdFeedback.className = "payroll-ird-feedback hint";
     } else if (isValidIrdNumber(val)) {
       irdFeedback.textContent = "✓ Valid NZ IRD number";
@@ -214,7 +387,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
 
   const irdWrap = document.createElement("div");
   irdWrap.append(irdInput, irdFeedback);
-  grid.append(createField("IRD Number *", irdWrap, "Validated via Modulus-11 algorithm"));
+  grid.append(createField("IRD Number", irdWrap, "Checked against IR's check digit"));
 
   // Tax Code
   const taxCodeSelect = document.createElement("select");
@@ -227,9 +400,28 @@ function renderEmployeeEditor(container: HTMLElement): void {
   }
   grid.append(createField("Tax Code (IR330) *", taxCodeSelect, "From employee's IR330 declaration", 2));
 
+  // The rate a WT payee elected on their IR330C, or the one on an STC certificate.
+  const rateOfTax = document.createElement("input");
+  rateOfTax.type = "number";
+  rateOfTax.step = "0.5";
+  rateOfTax.min = "0";
+  rateOfTax.max = "100";
+  rateOfTax.value = existing?.taxRate !== undefined ? String(Math.round(existing.taxRate * 1000) / 10) : "";
+  const rateOfTaxField = createField(
+    "Tax rate %",
+    rateOfTax,
+    "WT: the rate on their IR330C (45% if none). STC: the rate on IR's certificate; the ACC earners' levy is added.",
+  );
+  const syncRate = () => {
+    rateOfTaxField.style.display = taxCodeSelect.value === "WT" || taxCodeSelect.value === "STC" ? "" : "none";
+  };
+  taxCodeSelect.addEventListener("change", syncRate);
+  syncRate();
+  grid.append(rateOfTaxField);
+
   // Pay Frequency
   const freqSelect = document.createElement("select");
-  for (const f of ["weekly", "fortnightly", "monthly"] as const) {
+  for (const f of ["weekly", "fortnightly", "four-weekly", "monthly"] as const) {
     const o = document.createElement("option");
     o.value = f;
     o.textContent = f.charAt(0).toUpperCase() + f.slice(1);
@@ -291,10 +483,14 @@ function renderEmployeeEditor(container: HTMLElement): void {
   grid.append(createField("Pay Structure", payTypeSelect), rateFieldWrap, hoursFieldWrap, salaryFieldWrap);
 
   // KiwiSaver Employee Rate
+  // 3.5% is the default from 1 April 2026; 3% only with IR's approval of a
+  // temporary rate reduction.
+  const defaultRate = kiwiSaverDefaultRate(new Date().toISOString().slice(0, 10));
   const ksSelect = document.createElement("select");
   const ksRates = [
-    { rate: 0, label: "0% (Opted out / Not enrolled)" },
-    { rate: 0.03, label: "3% (Standard minimum)" },
+    { rate: 0, label: "0% (not a member, or on a savings suspension)" },
+    { rate: 0.03, label: "3% (only with an approved rate reduction)" },
+    { rate: 0.035, label: "3.5% (the default from 1 April 2026)" },
     { rate: 0.04, label: "4%" },
     { rate: 0.06, label: "6%" },
     { rate: 0.08, label: "8%" },
@@ -304,7 +500,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
     const o = document.createElement("option");
     o.value = String(k.rate);
     o.textContent = k.label;
-    o.selected = (existing?.kiwiSaverRate ?? 0.03) === k.rate;
+    o.selected = (existing?.kiwiSaverRate ?? defaultRate) === k.rate;
     ksSelect.append(o);
   }
   grid.append(createField("KiwiSaver Employee Deduction", ksSelect));
@@ -312,8 +508,9 @@ function renderEmployeeEditor(container: HTMLElement): void {
   // KiwiSaver Employer Rate
   const ksEmployerSelect = document.createElement("select");
   const ksEmployerRates = [
-    { rate: 0.03, label: "3% (Compulsory minimum)" },
-    { rate: 0, label: "0% (Employee opted out)" },
+    { rate: 0.035, label: "3.5% (the compulsory rate from 1 April 2026)" },
+    { rate: 0.03, label: "3% (the employee has an approved rate reduction)" },
+    { rate: 0, label: "0% (not a member)" },
     { rate: 0.04, label: "4%" },
     { rate: 0.06, label: "6%" },
   ];
@@ -321,34 +518,45 @@ function renderEmployeeEditor(container: HTMLElement): void {
     const o = document.createElement("option");
     o.value = String(k.rate);
     o.textContent = k.label;
-    o.selected = (existing?.kiwiSaverEmployerRate ?? 0.03) === k.rate;
+    o.selected = (existing?.kiwiSaverEmployerRate ?? defaultRate) === k.rate;
     ksEmployerSelect.append(o);
   }
   grid.append(createField("KiwiSaver Employer Contribution", ksEmployerSelect));
 
   // Auto-sync employer KS when employee KS changes
   ksSelect.addEventListener("change", () => {
-    if (Number(ksSelect.value) === 0) ksEmployerSelect.value = "0";
-    else if (Number(ksEmployerSelect.value) === 0) ksEmployerSelect.value = "0.03";
+    const rate = Number(ksSelect.value);
+    if (rate === 0) ksEmployerSelect.value = "0";
+    else if (rate === 0.03) ksEmployerSelect.value = "0.03";
+    else if (Number(ksEmployerSelect.value) <= 0.035) ksEmployerSelect.value = String(defaultRate);
   });
 
   // ESCT Rate
   const esctSelect = document.createElement("select");
+  // The bands from 1 April 2025, on last year's pay plus the employer's gross
+  // contributions (or an estimate of this year's for somebody new).
   const esctTiers = [
-    { rate: 0.175, label: "17.5% (Standard tier: $16,801 - $57,600)" },
-    { rate: 0.105, label: "10.5% (Tier under $16,800)" },
-    { rate: 0.3, label: "30.0% (Tier $57,601 - $84,000)" },
-    { rate: 0.33, label: "33.0% (Tier $84,001 - $216,000)" },
-    { rate: 0.39, label: "39.0% (Tier over $216,000)" },
+    { rate: 0, label: "Work it out from this employee's pay" },
+    { rate: 0.105, label: "10.5% (up to $18,720)" },
+    { rate: 0.175, label: "17.5% ($18,721 to $64,200)" },
+    { rate: 0.3, label: "30% ($64,201 to $93,720)" },
+    { rate: 0.33, label: "33% ($93,721 to $216,000)" },
+    { rate: 0.39, label: "39% (over $216,000)" },
   ];
   for (const t of esctTiers) {
     const o = document.createElement("option");
     o.value = String(t.rate);
     o.textContent = t.label;
-    o.selected = (existing?.esctRate ?? 0.175) === t.rate;
+    o.selected = (existing?.esctRate ?? 0) === t.rate;
     esctSelect.append(o);
   }
-  grid.append(createField("ESCT Rate", esctSelect, "Employer superannuation tax rate tier"));
+  grid.append(
+    createField(
+      "ESCT Rate",
+      esctSelect,
+      "Set each April from last year's pay plus the employer's KiwiSaver contributions",
+    ),
+  );
 
   // Bank Account
   const bankInput = document.createElement("input");
@@ -395,8 +603,19 @@ function renderEmployeeEditor(container: HTMLElement): void {
       errorMsg.hidden = false;
       return;
     }
-    if (!isValidIrdNumber(ird)) {
-      errorMsg.textContent = "Please enter a valid New Zealand IRD number.";
+    if (ird !== "" && !isValidIrdNumber(ird)) {
+      errorMsg.textContent = "That IRD number does not pass IR's check digit. Leave it empty if they have not given one.";
+      errorMsg.hidden = false;
+      return;
+    }
+    const taxRate =
+      taxCodeSelect.value === "WT" || taxCodeSelect.value === "STC"
+        ? rateOfTax.value.trim() === ""
+          ? undefined
+          : Number(rateOfTax.value) / 100
+        : undefined;
+    if (taxCodeSelect.value === "STC" && (taxRate === undefined || !Number.isFinite(taxRate))) {
+      errorMsg.textContent = "A tailored tax code needs the rate from IR's certificate.";
       errorMsg.hidden = false;
       return;
     }
@@ -419,6 +638,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       kiwiSaverRate: Number(ksSelect.value),
       kiwiSaverEmployerRate: Number(ksEmployerSelect.value),
       esctRate: Number(esctSelect.value),
+      ...(taxRate !== undefined ? { taxRate } : {}),
       bankAccount: bankInput.value.trim(),
       startDate: (startInput.value || undefined) as IsoDate | undefined,
       finishDate: (finishInput.value || undefined) as IsoDate | undefined,
@@ -430,7 +650,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
 
     payroll.employees = updated;
     editingEmployeeId = null;
-    await commitPayroll(payroll);
+    await commitPayroll(payroll, existing ? `${name}: employee details changed` : `${name}: employee added`);
   });
 
   const cancelBtn = document.createElement("button");
@@ -504,9 +724,10 @@ function renderEmployeesTable(container: HTMLElement): void {
         ? `${formatAmount(emp.hourlyRate)}/hr (${emp.standardHours ?? 40}h)`
         : "--";
 
+    const percent = (rate: number): string => `${Math.round(rate * 1000) / 10}%`;
     const ksText = emp.kiwiSaverRate > 0
-      ? `${(emp.kiwiSaverRate * 100).toFixed(0)}% (ER ${(emp.kiwiSaverEmployerRate * 100).toFixed(0)}%)`
-      : "Opted out";
+      ? `${percent(emp.kiwiSaverRate)} (employer ${percent(emp.kiwiSaverEmployerRate)})`
+      : "Not a member";
 
     const isFinished = emp.finishDate && emp.finishDate <= new Date().toISOString().slice(0, 10);
     const statusBadge = isFinished
@@ -515,7 +736,7 @@ function renderEmployeesTable(container: HTMLElement): void {
 
     tr.innerHTML = `
       <td><strong>${escapeHtml(emp.name)}</strong></td>
-      <td><code>${formatIrdNumber(emp.irdNumber)}</code></td>
+      <td><code>${emp.irdNumber ? formatIrdNumber(emp.irdNumber) : "none (ND)"}</code></td>
       <td><span class="payroll-tax-badge">${escapeHtml(emp.taxCode)}</span></td>
       <td style="text-transform: capitalize;">${escapeHtml(emp.payFrequency)}</td>
       <td>${rateText}</td>
@@ -537,7 +758,7 @@ function renderEmployeesTable(container: HTMLElement): void {
     tr.querySelector(".del-emp")?.addEventListener("click", async () => {
       if (confirm(`Are you sure you want to remove employee "${emp.name}"?`)) {
         payroll.employees = payroll.employees.filter((e) => e.id !== emp.id);
-        await commitPayroll(payroll);
+        await commitPayroll(payroll, `${emp.name}: employee removed`);
       }
     });
 
@@ -662,7 +883,7 @@ function renderPayRunCreator(container: HTMLElement): void {
     }
 
     const previewRun = buildPayRun({
-      employerIrd: payroll.employerIrd || "12345678",
+      employerIrd: payroll.employerIrd ?? "",
       periodStart: payRunDraft.periodStart as IsoDate,
       periodEnd: payRunDraft.periodEnd as IsoDate,
       payDate: payRunDraft.payDate as IsoDate,
@@ -804,7 +1025,7 @@ function renderPayRunCreator(container: HTMLElement): void {
     payroll.payRuns.unshift(payRun);
     creatingPayRun = false;
     payRunDraft.inputs.clear();
-    await commitPayroll(payroll);
+    await commitPayroll(payroll, `Pay run for ${payRun.payDate}`);
   });
 
   const cancelBtn = document.createElement("button");
@@ -849,13 +1070,10 @@ function renderPayRunsList(container: HTMLElement): void {
     const head = document.createElement("div");
     head.className = "payroll-run-card-head";
 
-    const isJournalPosted = (state.ledger.journals ?? []).some(
-      (j) => j.id === `payrun-${run.id}`,
-    );
-
-    const postedBadge = isJournalPosted
-      ? '<span class="payroll-badge posted" title="Posted to General Ledger">✓ Posted to GL</span>'
-      : '<span class="payroll-badge unposted" title="Not yet posted to GL">Unposted</span>';
+    const inBooks = payrollAccounts() !== null;
+    const postedBadge = inBooks
+      ? '<span class="payroll-badge posted" title="Posted on the payday">In the books</span>'
+      : '<span class="payroll-badge unposted" title="Choose the payroll accounts above">Not in the books</span>';
 
     head.innerHTML = `
       <div class="payroll-run-title-group">
@@ -888,31 +1106,15 @@ function renderPayRunsList(container: HTMLElement): void {
     `;
     dlBtn.title = "Export Inland Revenue Employment Information (EI) CSV";
     dlBtn.addEventListener("click", () => {
-      const csv = generatePaydayFilingCsv(run);
-      const filename = `EI_Payday_${run.payDate.replace(/-/g, "")}_${run.id.slice(0, 8)}.csv`;
+      const contact = payroll.contact ?? { name: "", phone: "", email: "" };
+      const problems = paydayFilingProblems(run, contact);
+      if (problems.length > 0) {
+        alert(`The file cannot be made yet: ${problems.join("; ")}.`);
+        return;
+      }
+      const csv = generatePaydayFilingCsv(run, contact);
+      const filename = `EI_${run.payDate.replace(/-/g, "")}.csv`;
       download(csv, filename, "text/csv;charset=utf-8");
-    });
-
-    // 2. Post to Ledger Journal
-    const postBtn = document.createElement("button");
-    postBtn.type = "button";
-    postBtn.className = isJournalPosted ? "payroll-action-btn" : "payroll-action-btn secondary";
-    postBtn.innerHTML = `
-      <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" fill="currentColor">
-        <path d="M4 16h3l9-9-3-3-9 9z"/><path d="M11 6l3 3"/>
-      </svg>
-      <span>${isJournalPosted ? "Re-post to Ledger" : "Post to Ledger"}</span>
-    `;
-    postBtn.title = "Post balanced double-entry payroll journal into General Ledger";
-    postBtn.addEventListener("click", async () => {
-      const journal = createPayrollJournal(run, state.chart);
-      const existingJournals = state.ledger.journals ?? [];
-      const filtered = existingJournals.filter((j) => j.id !== journal.id);
-      state.ledger = { ...state.ledger, journals: [...filtered, journal] };
-      partChanged("journals");
-      await savePart(state.ledger, "journals");
-      alert(`Payroll journal (${journal.id}) posted successfully to General Ledger!\n\nDebits: Gross Wages + KiwiSaver Employer\nCredits: PAYE Payable + KiwiSaver Payable + Net Wages Payable`);
-      redraw("payroll");
     });
 
     // 3. View / Hide Breakdown
@@ -934,21 +1136,15 @@ function renderPayRunsList(container: HTMLElement): void {
     delBtn.title = "Delete this pay run";
     delBtn.addEventListener("click", async () => {
       if (confirm(`Are you sure you want to delete the pay run for ${run.payDate}?`)) {
+        // Its journal goes with it: journals are derived from the pay runs kept.
         payroll.payRuns = payroll.payRuns.filter((r) => r.id !== run.id);
-        // Also remove posted journal if present
-        if (state.ledger.journals) {
-          state.ledger.journals = state.ledger.journals.filter(
-            (j) => j.id !== `payrun-${run.id}`,
-          );
-          partChanged("journals");
-          await savePart(state.ledger, "journals");
-        }
-        await commitPayroll(payroll);
+        await commitPayroll(payroll, `Pay run for ${run.payDate} removed`);
       }
     });
 
-    actionsBar.append(dlBtn, postBtn, viewBtn, delBtn);
+    actionsBar.append(dlBtn, viewBtn, delBtn);
     card.append(actionsBar);
+    for (const said of run.notes ?? []) card.append(note(said));
 
     // Breakdown table if expanded
     if (isExpanded) {
@@ -967,7 +1163,7 @@ function renderPayRunsList(container: HTMLElement): void {
             <th style="text-align: right;">PAYE</th>
             <th style="text-align: right;">Student Loan</th>
             <th style="text-align: right;">KiwiSaver (EE)</th>
-            <th style="text-align: right;">KiwiSaver (ER)</th>
+            <th style="text-align: right;">KiwiSaver (employer)</th>
             <th style="text-align: right;">ESCT</th>
             <th style="text-align: right;">Child Support</th>
             <th style="text-align: right;">Net Pay</th>
@@ -1007,6 +1203,7 @@ function renderPayRunsList(container: HTMLElement): void {
 
 /** Main Page Renderer */
 export function renderPayrollPage(): void {
+  committed = JSON.stringify(getPayroll());
   const editorHost = $("payroll-editor");
   const bodyHost = $("payroll-body");
   const employerBarHost = $("payroll-employer-bar");

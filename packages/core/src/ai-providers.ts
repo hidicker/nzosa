@@ -82,6 +82,17 @@ async function readJson(
         : typeof body?.error === "string"
           ? body.error
           : body?.message;
+    // A Claude key made for several workspaces must name one on every request.
+    // Anthropic's own words for that talk about headers, which mean nothing to
+    // somebody pasting a key into a box -- so it is said as what to do instead.
+    if (who === "Anthropic" && said !== undefined && /workspace/i.test(said)) {
+      throw new Error(
+        "This Claude key works across more than one workspace, so Anthropic needs to be told " +
+          "which one to use. Make a key for a single workspace instead: in the Claude Console, " +
+          "Settings, API keys, Create key, and choose a workspace (Default is fine). Then paste " +
+          "that key here.",
+      );
+    }
     throw new Error(said !== undefined && said !== "" ? said : `${who} answered ${response.status}.`);
   }
   return body ?? {};

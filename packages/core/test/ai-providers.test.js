@@ -115,6 +115,12 @@ test("a refusal says what the provider said", async () => {
   await assert.rejects(() => listModels("anthropic", "sk-ant-bad", fetcher), /invalid x-api-key/);
 });
 
+test("a Claude key for several workspaces is explained as what to do, not as a header", async () => {
+  const { fetcher } = fake([{ status: 400, body: { type: "error", error: { type: "invalid_request_error",
+    message: "This API key is not scoped to a workspace, so this request must include the anthropic-workspace-id header with the ID of the workspace to use." } } }]);
+  await assert.rejects(() => listModels("anthropic", "sk-ant-api03-multi", fetcher), /Make a key for a single workspace/);
+});
+
 test("the Supabase function's copy is this file, exactly", () => {
   const here = dirname(fileURLToPath(import.meta.url));
   const source = readFileSync(join(here, "../src/ai-providers.ts"), "utf8");

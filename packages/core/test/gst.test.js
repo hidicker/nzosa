@@ -157,7 +157,10 @@ test("a percentage share splits every amount", () => {
     sharePercent: 50,
   });
 
-  assert.equal(result.boxes.box5, 57501, "rounded half away from zero");
+  // Checked on the line, where the share is applied: Box 5 is worked back
+  // from the GST in the default mode and is not a sum of lines.
+  assert.equal(result.lines[0].amount, 57501, "rounded half away from zero");
+  assert.equal(result.boxes.box7, result.boxes.box5 - result.boxes.box6);
   assert.equal(result.sharePercent, 50);
 });
 
@@ -524,7 +527,11 @@ test("a refund sits on the side of the return its account is on, not the side it
   assert.equal(resolve(repaid).side, "sales");
 
   const result = gstReturn([refund, repaid], { from: "2025-04-01", to: "2025-05-31" }, { resolve, basis: "payments" });
-  assert.equal(result.boxes.box5, -80000, "a refund to a customer reduces sales");
+  // Negative, which is the point: a refund to a customer reduces sales. The
+  // figure is -800.02 rather than -800.00 because Box 5 is worked back from
+  // the GST (-104.35 x 23/3), the way Xero states it.
+  assert.ok(result.boxes.box5 < 0, "a refund to a customer reduces sales");
+  assert.equal(result.boxes.box5, -80002);
   // Box 11 is stated from the tax rather than summed from the lines, so the
   // refund shows as the tax it carries: 4.79 off Box 12, and Box 11 down with it.
   assert.equal(result.boxes.box12, -479, "a refund from a supplier reduces the tax claimed");
@@ -569,4 +576,24 @@ test("a transfer stays a transfer on an unregistered entity's account", () => {
     transfers: { leg: "other" },
   });
   assert.match(resolve(leg).reason, /transfer/);
+});
+
+test("Box 7 is always Box 5 less Box 6, whichever way the GST is rounded", () => {
+  // A real period read Box 5 7,467.09 against Box 7 7,466.95 with nothing
+  // zero-rated: Box 7 had been worked back from the GST and Box 5 had not.
+  // The form defines Box 7 as Box 5 less Box 6, so every mode must keep it.
+  const lines = [
+    txn("2025-04-03", 12999, { id: "s1" }),
+    txn("2025-04-04", 33337, { id: "s2" }),
+    txn("2025-04-05", 101, { id: "s3" }),
+    txn("2025-04-06", 5003, { id: "z1" }),
+    txn("2025-04-07", 77777, { id: "s4" }),
+  ];
+  const resolve = (t) =>
+    t.id === "z1" ? { treatment: "zero-rated", side: "sales" } : { treatment: "standard", side: "sales" };
+  for (const rounding of ["per-line", "form"]) {
+    const b = gstReturn(lines, PERIOD, { resolve, basis: "payments", rounding }).boxes;
+    assert.equal(b.box7, b.box5 - b.box6, `${rounding}: Box 7 = Box 5 - Box 6`);
+    assert.equal(b.box6, 5003, `${rounding}: zero-rated sales stay whole in Box 6`);
+  }
 });

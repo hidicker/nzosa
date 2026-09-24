@@ -123,7 +123,14 @@ export function formatGstReturn(result: GstReturnResult, title: string): string 
   const money = (cents: Cents): string => (cents / 100).toFixed(2);
   const rows: string[][] = [
     [title],
-    [`For the period ${result.period.from} to ${result.period.to}`, `Due ${result.period.due}`],
+    [
+      `For the period ${result.period.from} to ${result.period.to}`,
+      // The due date the law names, and -- where it falls on a weekend or a
+      // holiday -- the working day it can still be paid on.
+      result.period.payBy !== undefined && result.period.payBy !== result.period.due
+        ? `Due ${result.period.due} (a weekend or public holiday: pay by ${result.period.payBy})`
+        : `Due ${result.period.due}`,
+    ],
     [`${result.basis.charAt(0).toUpperCase()}${result.basis.slice(1)} basis`],
     [gstOutcomeLabel(result), money(result.boxes.box15)],
     [],

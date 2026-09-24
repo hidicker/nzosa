@@ -1361,7 +1361,7 @@ function buildGstReturnsSheet(ctx: SheetContext): string {
         ${textCell(`A${rIdx}`, res.period.label, 5)}
         ${textCell(`B${rIdx}`, res.period.from, 5)}
         ${textCell(`C${rIdx}`, res.period.to, 5)}
-        ${textCell(`D${rIdx}`, res.period.due, 5)}
+        ${textCell(`D${rIdx}`, res.period.payBy !== undefined && res.period.payBy !== res.period.due ? `${res.period.due} (pay by ${res.period.payBy})` : res.period.due, 5)}
         ${numCell(`E${rIdx}`, b5, 6)}
         ${numCell(`F${rIdx}`, b6, 6)}
         ${numCell(`G${rIdx}`, b7, 6, `E${rIdx}-F${rIdx}`)}

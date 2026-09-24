@@ -1,6 +1,7 @@
 import type { Cents } from "./money.js";
 import type { IsoDate, DateRange } from "./dates.js";
 import { daysInMonth, inRange } from "./dates.js";
+import { nextWorkingDay } from "./nz-holidays.js";
 import type { Transaction } from "./types.js";
 
 /**
@@ -105,8 +106,14 @@ export interface GstPeriod {
   to: IsoDate;
   /** e.g. `2025-05` for the two months ending 31 May 2025. */
   label: string;
-  /** When the return and payment are due. */
+  /** When the return and payment are due, as the law names the date. */
   due: IsoDate;
+  /**
+   * The last day it can actually be filed and paid without penalty: the due
+   * date, or the next working day where that falls on a weekend or a public
+   * holiday. Absent on a period made by hand, which means the due date.
+   */
+  payBy?: IsoDate;
 }
 
 export interface GstReturnBoxes {
@@ -346,8 +353,19 @@ export function gstReturn(
   const perLine = rounding === "per-line";
 
   let box7 = box5 - box6;
-  let box8 = perLine ? perLineGst : gstContent(box7);
-  if (perLine) box7 = Math.round((box8 * GST_DENOMINATOR) / GST_NUMERATOR);
+  const box8 = perLine ? perLineGst : gstContent(box7);
+  if (perLine) {
+    // Box 7 is worked back from Box 8, and Box 5 has to follow it.
+    //
+    // The form defines Box 7 as Box 5 less Box 6. Working Box 7 back while
+    // leaving Box 5 as the raw total broke that by a few cents -- a real
+    // period read Box 5 7,467.09 and Box 7 7,466.95 with nothing zero-rated --
+    // which is a return whose own boxes do not add up, and the first thing an
+    // accountant checks. Xero works Box 5 back the same way, which is what its
+    // filed returns show.
+    box7 = Math.round((box8 * GST_DENOMINATOR) / GST_NUMERATOR);
+    box5 = box7 + box6;
+  }
 
   const box9 = (options.adjustments ?? 0) + lateDebit;
   const box10 = box8 + box9;
@@ -449,7 +467,13 @@ export function gstPeriods(range: DateRange, options: GstPeriodOptions): GstPeri
 
     if (from > range.to) break;
     if (to >= range.from) {
-      periods.push({ from, to, label: `${pad4(endYear)}-${pad2(endMonth)}`, due: gstDueDate(to) });
+      periods.push({
+        from,
+        to,
+        label: `${pad4(endYear)}-${pad2(endMonth)}`,
+        due: gstDueDate(to),
+        payBy: gstPayBy(to),
+      });
     }
   }
 
@@ -483,6 +507,19 @@ export function gstDueDate(periodEnd: IsoDate): IsoDate {
 
   const next = addMonths(year, month, 1);
   return `${pad4(next.year)}-${pad2(next.month)}-28`;
+}
+
+/**
+ * The last day a return can be filed and paid without penalty.
+ *
+ * The due date, moved to the next working day where it falls on a weekend or
+ * a national public holiday -- Inland Revenue: "If a due date falls on a
+ * weekend or public holiday you can file or pay on the next business day
+ * without incurring penalties." In the year to March 2027 alone that moves
+ * three: 28 June and 28 February are Sundays, 28 November a Saturday.
+ */
+export function gstPayBy(periodEnd: IsoDate): IsoDate {
+  return nextWorkingDay(gstDueDate(periodEnd));
 }
 
 function pad2(value: number): string {

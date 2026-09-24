@@ -108,6 +108,16 @@ export interface Entity {
    * one thing a person can say in a sentence.
    */
   about?: string;
+  /**
+   * A residential property exempt from the interest limitation rules -- a new
+   * build, or one of Inland Revenue's other exemptions.
+   *
+   * The rules capped residential rental interest by year (80% for the year to
+   * 31 March 2025, and 100% again from 1 April 2025) for everything except
+   * exempt property. Only the owner knows whether theirs is one, so it is said
+   * here rather than guessed.
+   */
+  interestExempt?: boolean;
 }
 
 export type EntityKind = "residential" | "commercial" | "business" | "personal";

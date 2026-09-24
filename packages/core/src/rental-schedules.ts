@@ -105,6 +105,22 @@ export function rentalSchedule(
   return { entity, income, expenses, totalIncome, totalExpenses, net: totalIncome - totalExpenses };
 }
 
+/**
+ * How much residential rental interest is deductible, for the year a return
+ * is for (the year ending 31 March).
+ *
+ * From Inland Revenue's interest limitation rules: 80% for the year to 31
+ * March 2025 whenever the property was bought or the loan drawn, and 100%
+ * from 1 April 2025. Earlier years turn on when the property was acquired and
+ * when the money was borrowed, which these books do not hold, so they give
+ * null and the schedule says it has not applied a limit rather than guess.
+ */
+export function residentialInterestDeductible(year: number): number | null {
+  if (year >= 2026) return 1;
+  if (year === 2025) return 0.8;
+  return null;
+}
+
 /** One owner's share of one property, as the IR3 schedules set it out. */
 export interface OwnerRentalSchedule {
   property: string;
@@ -122,6 +138,8 @@ export interface OwnerRentalSchedule {
   other: RentalLine[];
   totalExpenses: Cents;
   netRents: Cents;
+  /** Said about this schedule for the owner to read: a limit applied, or not. */
+  notes?: string[];
 }
 
 /**
@@ -134,6 +152,12 @@ export interface OwnerRentalSchedule {
 export function ownerRentalSchedule(
   schedule: RentalSchedule,
   owner: string,
+  /**
+   * The year the return is for. Given, a residential property's interest is
+   * limited as that year's rules say; left out, it is taken in full, as the
+   * profit and loss shows it.
+   */
+  year?: number,
 ): OwnerRentalSchedule | null {
   const share = (schedule.entity.owners ?? []).find((o) => o.name === owner);
   // A share with no usable percentage -- an owner saved before shares were
@@ -155,6 +179,32 @@ export function ownerRentalSchedule(
     totals.set(line.heading, (totals.get(line.heading) ?? 0) + amount);
     if (line.heading === "other") other.push({ code: line.code, name: line.name, amount });
   }
+  // The interest limitation is a tax rule, not an accounting one: the profit
+  // and loss keeps the whole cost, and only the schedule the return is made
+  // from is limited.
+  const notes: string[] = [];
+  const residential = schedule.entity.kind === "residential";
+  const interestPaid = totals.get("interest") ?? 0;
+  if (residential && year !== undefined && interestPaid !== 0) {
+    const share = schedule.entity.interestExempt === true ? 1 : residentialInterestDeductible(year);
+    if (share === null) {
+      notes.push(
+        `${schedule.entity.name}: no interest limit applied for the year to 31 March ${year}. ` +
+          "It depends on when the property was bought and the money borrowed; check the " +
+          "percentage with Inland Revenue's interest limitation rules.",
+      );
+    } else if (share < 1) {
+      const allowed = Math.round(interestPaid * share);
+      totals.set("interest", allowed);
+      notes.push(
+        `${schedule.entity.name}: ${Math.round(share * 100)}% of the residential interest is ` +
+          `deductible for the year to 31 March ${year}, so ${(allowed / 100).toFixed(2)} of ` +
+          `${(interestPaid / 100).toFixed(2)} is claimed. A new build or other exempt property ` +
+          "can claim it all: mark it exempt on the Entities page.",
+      );
+    }
+  }
+
   const headings = RENTAL_HEADINGS.map((h) => ({ ...h, amount: totals.get(h.heading) ?? 0 }));
   const totalIncome = rents + otherIncome;
   const totalExpenses = headings.reduce((sum, h) => sum + h.amount, 0);
@@ -171,6 +221,7 @@ export function ownerRentalSchedule(
     other,
     totalExpenses,
     netRents: totalIncome - totalExpenses,
+    ...(notes.length > 0 ? { notes } : {}),
   };
 }
 
@@ -224,19 +275,24 @@ export function residentialPortfolio(
 /**
  * Income tax rates for an individual, by the year the return is for.
  *
- * The thresholds in force from 31 July 2024. A year not listed has no rates
- * here, and the return says so rather than working tax out on a guess.
+ * As Inland Revenue publishes them (ird.govt.nz, "Tax rates for individuals").
+ * A year not listed has no rates here, and the return says so rather than
+ * working tax out on a guess.
  */
 const INCOME_TAX: Readonly<Record<number, readonly { upTo: number | null; rate: number }[]>> = {
   // The year ended 31 March 2025 straddles the threshold change of 31 July
-  // 2024, so Inland Revenue published composite bands for it: four months on
-  // the old thresholds and eight on the new, blended into one set. Held so a
-  // past year can be worked out and checked; a return for that year is still
-  // filed on Inland Revenue's own figures.
+  // 2024, and Inland Revenue's table for it keeps the new thresholds but
+  // blends the *rates* between the old and new ones -- 12.82%, 21.64% and
+  // 30.99% on the stretches that moved. This held blended thresholds instead,
+  // which is not the same arithmetic: on $100,000 it came to about $350 more
+  // tax than Inland Revenue's table. Found by checking against that table.
   2025: [
-    { upTo: 14_533, rate: 0.105 },
-    { upTo: 49_833, rate: 0.175 },
-    { upTo: 72_700, rate: 0.3 },
+    { upTo: 14_000, rate: 0.105 },
+    { upTo: 15_600, rate: 0.1282 },
+    { upTo: 48_000, rate: 0.175 },
+    { upTo: 53_500, rate: 0.2164 },
+    { upTo: 70_000, rate: 0.3 },
+    { upTo: 78_100, rate: 0.3099 },
     { upTo: 180_000, rate: 0.33 },
     { upTo: null, rate: 0.39 },
   ],
@@ -247,16 +303,32 @@ const INCOME_TAX: Readonly<Record<number, readonly { upTo: number | null; rate: 
     { upTo: 180_000, rate: 0.33 },
     { upTo: null, rate: 0.39 },
   ],
+  // The year to 31 March 2027: Inland Revenue's "From 1 April 2025" table,
+  // which has not changed.
+  2027: [
+    { upTo: 15_600, rate: 0.105 },
+    { upTo: 53_500, rate: 0.175 },
+    { upTo: 78_100, rate: 0.3 },
+    { upTo: 180_000, rate: 0.33 },
+    { upTo: null, rate: 0.39 },
+  ],
 };
 
 /** ACC earner levy, which PAYE includes and which is not a credit against tax. */
+// Including GST, as PAYE deducts it (ird.govt.nz, "ACC earners' levy rates").
+// A year missing here meant no levy was taken out of PAYE for it, which
+// overstated the tax credit -- 2025 had tax bands and no levy.
 const EARNER_LEVY: Readonly<Record<number, { rate: number; maximum: Cents }>> = {
+  2025: { rate: 0.016, maximum: 14_228_300 },
   2026: { rate: 0.0167, maximum: 15_279_000 },
+  2027: { rate: 0.0175, maximum: 15_664_100 },
 };
 
 /** The independent earner tax credit: its full amount, where it starts to abate, and where it ends. */
 const IETC: Readonly<Record<number, { from: Cents; full: Cents; to: Cents; amount: Cents; abatement: number }>> = {
   2026: { from: 2_400_000, full: 6_600_000, to: 7_000_000, amount: 52_000, abatement: 0.13 },
+  // Unchanged: Inland Revenue's figures "from July 2024" still apply.
+  2027: { from: 2_400_000, full: 6_600_000, to: 7_000_000, amount: 52_000, abatement: 0.13 },
 };
 
 /**
@@ -394,6 +466,16 @@ export interface Ir3ReturnOptions {
    * only where nobody has said.
    */
   ietcEligible?: boolean;
+  /**
+   * Months of the year the credit is ruled out, 0 to 12.
+   *
+   * Inland Revenue works the credit out on whole months: any month in which
+   * the person receives Working for Families, New Zealand Super, a main
+   * benefit or a veteran's pension -- even for a day -- loses that month's
+   * credit, and only that month's. A single yes-or-no for the year got a
+   * part-year wrong in one direction or the other.
+   */
+  ietcMonthsOut?: number;
 }
 
 export interface Ir3Return {
@@ -461,6 +543,9 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
     earnings + grossInterest + grossDividends + residential.netIncome + netRents + otherIncome;
   const taxOnIncome = incomeTaxOn(taxableIncome, year);
   const notes: string[] = [];
+  // What each rental schedule had to say -- an interest limit applied, or one it
+  // could not work out -- belongs with the return it was made for.
+  for (const rental of options.rentals) notes.push(...(rental.notes ?? []));
   if (taxOnIncome === null) notes.push(`No income tax rates are held for ${year}, so no tax is worked out.`);
   // A year can have income tax bands here without the other two tables. Both
   // would then come out as nothing, which on a return reads as a figure rather
@@ -477,8 +562,18 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
   }
 
   const eligible = options.ietcEligible !== false;
-  const ietc = eligible && taxOnIncome !== null ? ietcOn(taxableIncome, year) : 0;
-  if (ietc > 0 && options.ietcEligible === undefined) {
+  const monthsOut = Math.min(12, Math.max(0, Math.round(options.ietcMonthsOut ?? 0)));
+  const fullYear = eligible && taxOnIncome !== null ? ietcOn(taxableIncome, year) : 0;
+  // The year's entitlement, for the months it is not ruled out.
+  const ietc = Math.round((fullYear * (12 - monthsOut)) / 12);
+  if (fullYear > 0 && monthsOut > 0) {
+    notes.push(
+      `The independent earner tax credit is for ${12 - monthsOut} of 12 months: it is worked ` +
+        "out on whole months, and a month with Working for Families, New Zealand Super, a main " +
+        "benefit or a veteran's pension loses that month's credit.",
+    );
+  }
+  if (ietc > 0 && options.ietcEligible === undefined && options.ietcMonthsOut === undefined) {
     notes.push(
       "The independent earner tax credit is included on the assumption nothing rules it out: " +
         "not New Zealand Super, a main benefit or Working for Families.",
@@ -573,5 +668,7 @@ export interface Ir3Details {
   year: number;
   provisionalTaxPaid?: Cents;
   ietcEligible?: boolean;
+  /** Months the independent earner credit is ruled out, 0 to 12. */
+  ietcMonthsOut?: number;
   residentialBroughtForward?: Cents;
 }

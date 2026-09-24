@@ -146,3 +146,56 @@ test("an owner without a usable percentage has no share, rather than NaN", () =>
   );
   assert.equal(ownerRentalSchedule(schedule, "Ana"), null);
 });
+
+// --- the residential interest limitation, by year ---------------------------
+
+import { ownerRentalSchedule as ownerSchedule, residentialInterestDeductible } from "../dist/index.js";
+
+function aHouse(extra = {}) {
+  return {
+    entity: {
+      id: "kowhai-lane", name: "3 Kowhai Lane", kind: "residential",
+      owners: [{ name: "Tui Harrow", percent: 100 }], ...extra,
+    },
+    income: [{ code: "210", name: "Rent received", amount: 2_600_000 }],
+    expenses: [
+      { code: "606", name: "Interest - Kowhai Lane", amount: 1_000_000, heading: "interest" },
+      { code: "604", name: "Rates", amount: 300_000, heading: "rates" },
+    ],
+    totalIncome: 2_600_000, totalExpenses: 1_300_000, net: 1_300_000,
+  };
+}
+const interestOf = (s) => s.headings.find((h) => h.heading === "interest").amount;
+
+test("residential interest is 80% deductible for the year to 31 March 2025", () => {
+  assert.equal(residentialInterestDeductible(2025), 0.8);
+  const s = ownerSchedule(aHouse(), "Tui Harrow", 2025);
+  assert.equal(interestOf(s), 800_000);
+  assert.equal(s.totalExpenses, 1_100_000, "rates untouched, interest cut to 80%");
+  assert.match(s.notes.join(" "), /80% of the residential interest/);
+});
+
+test("from 1 April 2025 residential interest is deductible in full again", () => {
+  assert.equal(residentialInterestDeductible(2026), 1);
+  const s = ownerSchedule(aHouse(), "Tui Harrow", 2027);
+  assert.equal(interestOf(s), 1_000_000);
+  assert.equal(s.notes, undefined);
+});
+
+test("an exempt property (a new build) claims all its interest even in 2025", () => {
+  const s = ownerSchedule(aHouse({ interestExempt: true }), "Tui Harrow", 2025);
+  assert.equal(interestOf(s), 1_000_000);
+});
+
+test("before 2025 the limit depends on facts the books do not hold, and says so", () => {
+  assert.equal(residentialInterestDeductible(2024), null);
+  const s = ownerSchedule(aHouse(), "Tui Harrow", 2024);
+  assert.equal(interestOf(s), 1_000_000, "left as paid rather than guessed");
+  assert.match(s.notes.join(" "), /no interest limit applied/);
+});
+
+test("commercial property is never limited, and no year means the profit and loss figure", () => {
+  const shop = aHouse({ kind: "commercial" });
+  assert.equal(interestOf(ownerSchedule(shop, "Tui Harrow", 2025)), 1_000_000);
+  assert.equal(interestOf(ownerSchedule(aHouse(), "Tui Harrow")), 1_000_000);
+});

@@ -21,6 +21,8 @@ import { PROVIDER_NAMES, detectProvider } from "@nzosa/core";
  */
 
 let status: AiStatus | null = null;
+/** Fired when the key, the model or the allowance has changed. */
+export const AI_CHANGED = "nzosa:ai-changed";
 /** Pages showing the panel now, so a change on one redraws the other. */
 const watching = new Set<PageName>();
 
@@ -54,7 +56,13 @@ export async function refreshAiStatus(from: PageName): Promise<void> {
     status.demoLimit !== next.demoLimit ||
     status.demoUsed !== next.demoUsed;
   status = next;
-  if (changed) for (const page of watching) redraw(page);
+  if (changed) {
+    for (const page of watching) redraw(page);
+    // Said to anything else that shows which key is in use -- the button on
+    // Reconcile works that out for itself, once, and went on saying "shared
+    // key" after a key of somebody's own had been added.
+    document.dispatchEvent(new Event(AI_CHANGED));
+  }
 }
 
 /** Forget what we knew, for when a key has just been removed. */

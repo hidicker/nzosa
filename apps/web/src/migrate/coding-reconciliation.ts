@@ -8,6 +8,7 @@ import {
 } from "../ai.js";
 import { aiRoute, aiStatus } from "../ai-backend.js";
 import { aiAllowed } from "../ai-consent.js";
+import { AI_CHANGED } from "../ai-key-panel.js";
 import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
@@ -2230,6 +2231,9 @@ function wireAiButton(): void {
       say();
     });
   void learn();
+  // A key added, changed or removed on the AI page: find out again, rather
+  // than go on offering the key that was there when these books opened.
+  document.addEventListener(AI_CHANGED, () => void learn());
 
   /** Off: say so where the button is, with the way to turn it on. */
   const sayItIsOff = (): void => {

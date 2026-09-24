@@ -23,7 +23,9 @@ import {
   decodeText,
   invoiceBalancesFor,
   postLedger,
+  prepaymentAdjustments,
   readXlsx,
+  vehicleAdjustment,
   sheetToCsv,
   dedupe,
   defaultEntityModel,
@@ -48,6 +50,8 @@ import type {
   PostedJournal,
   RuleSet,
   Transaction,
+  VehicleAdjustment,
+  VehicleUse,
 } from "@nzosa/core";
 
 /**
@@ -723,6 +727,9 @@ export function varianceInput(): VarianceInput {
     // accounts against that company's filed returns and reported the rest of
     // the household as a disagreement.
     accounts: accountsFor(state.varianceAccounts),
+    // The private use of a vehicle gives back GST once a year, in Box 9 of
+    // the return covering the balance date.
+    debitAdjustments: vehicleBox9(accountsFor(state.varianceAccounts)),
   };
 }
 
@@ -966,7 +973,7 @@ export function postedJournals(): PostedJournal[] {
     return { code: digits || account?.code || "", name: account?.name ?? name };
   };
 
-  return postLedger({
+  const posted = postLedger({
     transactions: engine.transactions,
     codeOf: engine.codeOf,
     classify: engine.classify,
@@ -986,6 +993,97 @@ export function postedJournals(): PostedJournal[] {
     manualJournals: [...(state.ledger.manualJournals ?? []), ...agentStatementJournals()],
     assetJournals: [...depreciationJournals(), ...disposalJournals({ resolveAccount })],
   });
+  // The year-end adjustments come last, because they are worked out from
+  // everything else: a share of what the vehicle accounts ended up holding, a
+  // part of what a prepayment was coded to.
+  return [...posted, ...yearEndJournals(posted)];
+}
+
+function chartName(code: string): string {
+  return state.chart.find((a) => a.code === code)?.name ?? code;
+}
+
+function gstAccount(): { code: string; name: string } {
+  const account =
+    state.chart.find((a) => a.code === "820") ??
+    state.chart.find((a) => /^gst/i.test(a.name.trim()));
+  return { code: account?.code ?? "820", name: account?.name ?? "GST" };
+}
+
+function prepaymentsAccount(): { code: string; name: string } {
+  const account =
+    state.chart.find((a) => /prepayment/i.test(a.name)) ?? state.chart.find((a) => a.code === "620");
+  return { code: account?.code ?? "620", name: account?.name ?? "Prepayments" };
+}
+
+/** Each vehicle's private-use adjustment, worked from the journals as posted. */
+export function vehicleAdjustments(
+  posted: readonly PostedJournal[],
+): { use: VehicleUse; result: VehicleAdjustment }[] {
+  const gst = gstAccount();
+  return (state.ledger.vehicleUse ?? []).map((use) => ({
+    use,
+    result: vehicleAdjustment(
+      { ...use, counterName: use.counterName ?? chartName(use.counterCode) },
+      posted,
+      { gstAccountCode: gst.code, gstAccountName: gst.name },
+    ),
+  }));
+}
+
+/** The fiscal years any prepayment runs across, oldest first. */
+export function prepaymentYears(): number[] {
+  const years = new Set<number>();
+  const fiscal = (date: string): number => Number(date.slice(0, 4)) + (date.slice(5) > "03-31" ? 1 : 0);
+  for (const p of state.ledger.prepayments ?? []) {
+    for (let y = fiscal(p.from); y <= fiscal(p.to); y += 1) years.add(y);
+  }
+  return [...years].sort((a, b) => a - b);
+}
+
+export function prepaymentsFor(posted: readonly PostedJournal[], year: number) {
+  const account = prepaymentsAccount();
+  return prepaymentAdjustments(state.ledger.prepayments ?? [], posted, year, {
+    prepaymentsCode: account.code,
+    prepaymentsName: account.name,
+    accountName: chartName,
+  });
+}
+
+function yearEndJournals(posted: readonly PostedJournal[]): PostedJournal[] {
+  const journals: PostedJournal[] = [];
+  for (const { result } of vehicleAdjustments(posted)) {
+    if (result.journal !== null) journals.push(result.journal);
+  }
+  if ((state.ledger.prepayments ?? []).length > 0) {
+    for (const year of prepaymentYears()) journals.push(...prepaymentsFor(posted, year).journals);
+  }
+  return journals;
+}
+
+/**
+ * The GST on vehicles' private use falling in a return, for Box 9.
+ *
+ * A return is worked from bank accounts, and the adjustment belongs to an
+ * entity, so it is counted where the return covers one of that entity's banks
+ * -- or every bank, when no selection is made.
+ */
+function vehicleBox9(accounts: readonly string[]): (period: { from: string; to: string }) => Cents {
+  return (period) => {
+    const uses = (state.ledger.vehicleUse ?? []).filter((use) => {
+      const end = `${use.year}-03-31`;
+      return end >= period.from && end <= period.to;
+    });
+    if (uses.length === 0) return 0;
+    const model = state.ledger.entities ?? emptyEntityModel();
+    const covers = (entityId: string): boolean =>
+      accounts.length === 0 ||
+      accounts.some((account) => (model.banks[account] ?? []).includes(entityId));
+    const posted = postedJournals();
+    return vehicleAdjustments(posted)
+      .filter(({ use }) => uses.includes(use) && covers(use.entityId))
+      .reduce((sum, { result }) => sum + result.privateGst, 0);
+  };
 }
 
 /**

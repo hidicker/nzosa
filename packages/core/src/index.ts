@@ -350,3 +350,4 @@ export * from "./ai-coding.js";
 export * from "./mcp.js";
 export * from "./ai-providers.js";
 export * from "./nz-holidays.js";
+export * from "./year-end-adjustments.js";

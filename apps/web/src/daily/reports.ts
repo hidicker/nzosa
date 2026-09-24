@@ -1,4 +1,5 @@
 import { computeOurReturns } from "../variance.js";
+import { renderYearEnd } from "./year-end.js";
 import { redraw, showPage } from "../app.js";
 import {
   recordFiledReturn,
@@ -2947,6 +2948,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   rentals: "Each rental property's income and expenses, and all of them together.",
   ir3: "One owner's individual return: their rental schedules, other income and the tax.",
   agents: "What each property manager collected and paid out, posted and checked against the bank.",
+  yearend: "Private use of a vehicle and prepayments, posted as journals at balance date.",
   journal: "Every posting for the year, and the trial balance they prove.",
   general: "Every line in the ledger, account by account.",
   manual: "Year-end and correcting journals written by hand.",
@@ -3209,6 +3211,12 @@ function reportsHint(basis: string, kind: string): string {
       "is not includes it, because it cannot claim it back."
     );
   }
+  if (kind === "yearend") {
+    return (
+      "The adjustments an accountant makes at balance date: the private share of a vehicle, and " +
+      "the unused part of anything paid in advance. Each posts a journal on 31 March."
+    );
+  }
   if (kind === "agents") {
     return (
       "A property manager passes on the rent less what they paid out of it, so the bank shows " +
@@ -3441,6 +3449,12 @@ export function renderReportsPage(): void {
   if (kind === "rentals") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderRentalSchedules(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "yearend") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderYearEnd(body, chosenYearNow);
     return;
   }
 

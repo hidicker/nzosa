@@ -236,6 +236,7 @@ export {
   gstReturn,
   gstPeriods,
   gstDueDate,
+  gstPayBy,
   gstContent,
 } from "./gst.js";
 export type {
@@ -349,3 +350,5 @@ export * from "./ai-coding.js";
 export * from "./mcp.js";
 export * from "./ai-providers.js";
 export * from "./payroll.js";
+export * from "./nz-holidays.js";
+export * from "./year-end-adjustments.js";

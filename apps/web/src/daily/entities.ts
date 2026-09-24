@@ -420,6 +420,33 @@ export function renderEntities(): void {
       );
     });
 
+    // Only a residential property is caught by the interest limitation rules,
+    // so only one is asked. Exempt means its interest is claimed in full in
+    // every year, including the year to 31 March 2025 when others got 80%.
+    const exemptWrap = document.createElement("label");
+    exemptWrap.className = "entity-gst";
+    exemptWrap.hidden = entity.kind !== "residential";
+    const exemptBox = document.createElement("input");
+    exemptBox.type = "checkbox";
+    exemptBox.checked = entity.interestExempt === true;
+    exemptWrap.title =
+      "A new build, or another property Inland Revenue exempts from the interest " +
+      "limitation rules. Its mortgage interest is then claimed in full on the rental " +
+      "schedule in every year.";
+    exemptWrap.append(exemptBox, document.createTextNode(" Interest exempt (new build)"));
+    exemptBox.addEventListener("change", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      void saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((e) =>
+            e.id === entity.id ? { ...e, interestExempt: exemptBox.checked } : e,
+          ),
+        },
+        `${entity.name} ${exemptBox.checked ? "is" : "is not"} exempt from the interest limit`,
+      );
+    });
+
     const rename = document.createElement("button");
     rename.type = "button";
     rename.textContent = "Rename";
@@ -461,7 +488,7 @@ export function renderEntities(): void {
       });
     });
 
-    row.append(name, ownersWrap, kind, gstWrap, rename, remove);
+    row.append(name, ownersWrap, kind, gstWrap, exemptWrap, rename, remove);
 
     // What goes at the top of an invoice you send somebody. Nothing else in
     // these books knows any of it, and without it an invoice cannot be sent:

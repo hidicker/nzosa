@@ -375,7 +375,9 @@ function filedReturnTools(): HTMLElement {
       const tr = document.createElement("tr");
       for (const text of [
         `${result.period.from} to ${result.period.to}`,
-        result.period.due,
+        result.period.payBy !== undefined && result.period.payBy !== result.period.due
+          ? `${result.period.due} (pay by ${result.period.payBy})`
+          : result.period.due,
         formatAmount(result.boxes.box5),
         formatAmount(result.boxes.box11),
         result.boxes.outcome === "refund"

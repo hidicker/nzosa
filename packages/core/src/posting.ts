@@ -96,7 +96,9 @@ export type JournalSource =
   | "depreciation"
   | "disposal"
   | "manual"
-  | "transfer";
+  | "transfer"
+  /** A year-end adjustment: private use of a vehicle, prepayments. */
+  | "adjustment";
 
 /**
  * Which basis this journal's tax belongs to.

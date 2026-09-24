@@ -56,6 +56,8 @@ export interface VarianceInput {
   transfers?: Readonly<Record<string, string>>;
   /** Whether a code belongs to an entity not registered for GST. */
   unregistered?: (code: string) => boolean;
+  /** Box 9 debit adjustments for a period: the private use of a vehicle. */
+  debitAdjustments?: (period: { from: string; to: string }) => number;
 }
 
 export interface VarianceRow {
@@ -142,6 +144,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
       claimIn: (t) => expanded.overrides[t.id]?.claimIn ?? null,
       basis: "payments",
       rounding: "per-line",
+      adjustments: input.debitAdjustments?.(period) ?? 0,
     }),
   );
 }

@@ -7,13 +7,19 @@ import { incomeTaxOn, ir3Return, provisionalStandardOption } from "../dist/index
  * rules they belong to.
  */
 
-test("the year ended 31 March 2025 uses the composite bands", () => {
-  // 2024-25 straddles the threshold change of 31 July 2024, so Inland Revenue
-  // published one blended set of bands for it.
-  //   14,533 at 10.5%   = 1,525.965
-  //   35,300 at 17.5%   = 6,177.50
-  //   10,167 at 30%     = 3,050.10
-  assert.equal(incomeTaxOn(6_000_000, 2025), 1_075_357);
+test("the year ended 31 March 2025 uses Inland Revenue's composite table", () => {
+  // 2024-25 straddles the threshold change of 31 July 2024. Inland Revenue's
+  // table for it keeps the new thresholds and blends the rates between them.
+  // This test used to pin blended *thresholds* (14,533 / 49,833 / 72,700),
+  // which is a different calculation, and so pinned a wrong figure. On $60,000:
+  //   14,000 at 10.5%   = 1,470.00
+  //    1,600 at 12.82%  =   205.12
+  //   32,400 at 17.5%   = 5,670.00
+  //    5,500 at 21.64%  = 1,190.20
+  //    6,500 at 30%     = 1,950.00   total 10,485.32
+  assert.equal(incomeTaxOn(6_000_000, 2025), 1_048_532);
+  // And on $100,000, where the old table was about $350 too high.
+  assert.equal(incomeTaxOn(10_000_000, 2025), 2_322_251);
 
   // The first band alone, where the old and new thresholds differ most.
   assert.equal(incomeTaxOn(1_000_000, 2025), 105_000);
@@ -40,7 +46,9 @@ test("a year whose levy and credit are not held says so rather than showing noth
     rentals: [],
   });
   assert.ok(filed.taxOnIncome !== null, "2025 now has income tax rates");
-  assert.match(filed.notes.join(" "), /No ACC earner levy rate is held for 2025/);
+  // The 2024/25 levy (1.60%) is held now, so PAYE is reduced by it...
+  assert.doesNotMatch(filed.notes.join(" "), /No ACC earner levy rate is held for 2025/);
+  // ...but that year's independent earner credit is still not, and says so.
   assert.match(filed.notes.join(" "), /No independent earner tax credit thresholds are held for 2025/);
 });
 
@@ -84,4 +92,45 @@ test("under five thousand dollars, provisional tax is not due at all", () => {
 
 test("a year with no rates at all still refuses to guess", () => {
   assert.equal(incomeTaxOn(6_000_000, 2019), null);
+});
+
+test("the year to 31 March 2027 has its rates, levy and credit", () => {
+  // Inland Revenue's "From 1 April 2025" bands, unchanged for 2026-27.
+  assert.equal(incomeTaxOn(10_000_000, 2027), 2_287_750);
+  assert.equal(incomeTaxOn(10_000_000, 2027), incomeTaxOn(10_000_000, 2026));
+});
+
+test("a 2027 return takes the 1.75% levy out of PAYE and gives the independent earner credit", () => {
+  const filed = ir3Return({
+    owner: "Ana Whitcombe",
+    year: 2027,
+    extras: [
+      { owner: "Ana Whitcombe", year: 2027, category: "salary", payer: "Kea Coffee Roasters", gross: 5_000_000, credits: 900_000 },
+    ],
+    rentals: [],
+  });
+  const notes = filed.notes.join(" ");
+  assert.doesNotMatch(notes, /No ACC earner levy rate is held for 2027/);
+  assert.doesNotMatch(notes, /No independent earner tax credit thresholds are held for 2027/);
+  // $50,000 is inside the full-credit range: $520, in Box 33.
+  assert.equal(filed.boxes.find((b) => b.box === "33")?.amount, 52_000);
+});
+
+test("the independent earner credit is lost only for the months ruled out", () => {
+  const base = {
+    owner: "Ana Whitcombe",
+    year: 2027,
+    extras: [
+      { owner: "Ana Whitcombe", year: 2027, category: "salary", payer: "Kea Coffee Roasters", gross: 5_000_000, credits: 900_000 },
+    ],
+    rentals: [],
+  };
+  const credit = (r) => r.boxes.find((b) => b.box === "33")?.amount;
+  // Three months of Working for Families: nine months of $520 a year.
+  const part = ir3Return({ ...base, ietcMonthsOut: 3 });
+  assert.equal(credit(part), 39_000);
+  assert.match(part.notes.join(" "), /9 of 12 months/);
+  // All twelve out is the same as not eligible.
+  assert.equal(credit(ir3Return({ ...base, ietcMonthsOut: 12 })), 0);
+  assert.equal(credit(ir3Return({ ...base, ietcEligible: false })), 0);
 });

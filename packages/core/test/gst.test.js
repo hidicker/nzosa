@@ -157,7 +157,10 @@ test("a percentage share splits every amount", () => {
     sharePercent: 50,
   });
 
-  assert.equal(result.boxes.box5, 57501, "rounded half away from zero");
+  // Checked on the line, where the share is applied: Box 5 is worked back
+  // from the GST in the default mode and is not a sum of lines.
+  assert.equal(result.lines[0].amount, 57501, "rounded half away from zero");
+  assert.equal(result.boxes.box7, result.boxes.box5 - result.boxes.box6);
   assert.equal(result.sharePercent, 50);
 });
 
@@ -383,6 +386,23 @@ test("invoice basis places a transaction by its tax point", () => {
   assert.equal(gstReturn([paid], march, { resolve, basis: "invoice" }).boxes.box5, 115000);
 });
 
+test("hybrid basis dates sales by invoice and purchases by payment", () => {
+  const resolve = (t) => ({ treatment: "standard", side: t.amount > 0 ? "sales" : "purchases" });
+  // Both invoiced in March, both paid in April.
+  const sale = txn("2025-04-10", 115000, { extras: { taxPointDate: "2025-03-01" } });
+  const bill = txn("2025-04-12", -23000, { extras: { taxPointDate: "2025-03-05" } });
+  const march = { from: "2025-02-01", to: "2025-03-31", label: "2025-03", due: "2025-05-07" };
+
+  const inMarch = gstReturn([sale, bill], march, { resolve, basis: "hybrid" });
+  assert.equal(inMarch.boxes.box5, 115000, "the sale counts when invoiced");
+  assert.equal(inMarch.boxes.box11, 0, "the purchase does not count until paid");
+
+  const inApril = gstReturn([sale, bill], PERIOD, { resolve, basis: "hybrid" });
+  assert.equal(inApril.boxes.box5, 0);
+  assert.equal(inApril.boxes.box11, 23000, "the purchase counts when paid");
+  assert.equal(inApril.missingTaxPoint.length, 0, "a purchase needs no tax point on hybrid");
+});
+
 test("invoice basis reports transactions with no tax point instead of guessing", () => {
   // Silently falling back to the payment date would produce a payments-basis
   // return wearing an invoice-basis label, which is the worst outcome.
@@ -524,7 +544,11 @@ test("a refund sits on the side of the return its account is on, not the side it
   assert.equal(resolve(repaid).side, "sales");
 
   const result = gstReturn([refund, repaid], { from: "2025-04-01", to: "2025-05-31" }, { resolve, basis: "payments" });
-  assert.equal(result.boxes.box5, -80000, "a refund to a customer reduces sales");
+  // Negative, which is the point: a refund to a customer reduces sales. The
+  // figure is -800.02 rather than -800.00 because Box 5 is worked back from
+  // the GST (-104.35 x 23/3), the way Xero states it.
+  assert.ok(result.boxes.box5 < 0, "a refund to a customer reduces sales");
+  assert.equal(result.boxes.box5, -80002);
   // Box 11 is stated from the tax rather than summed from the lines, so the
   // refund shows as the tax it carries: 4.79 off Box 12, and Box 11 down with it.
   assert.equal(result.boxes.box12, -479, "a refund from a supplier reduces the tax claimed");
@@ -569,4 +593,24 @@ test("a transfer stays a transfer on an unregistered entity's account", () => {
     transfers: { leg: "other" },
   });
   assert.match(resolve(leg).reason, /transfer/);
+});
+
+test("Box 7 is always Box 5 less Box 6, whichever way the GST is rounded", () => {
+  // A real period read Box 5 7,467.09 against Box 7 7,466.95 with nothing
+  // zero-rated: Box 7 had been worked back from the GST and Box 5 had not.
+  // The form defines Box 7 as Box 5 less Box 6, so every mode must keep it.
+  const lines = [
+    txn("2025-04-03", 12999, { id: "s1" }),
+    txn("2025-04-04", 33337, { id: "s2" }),
+    txn("2025-04-05", 101, { id: "s3" }),
+    txn("2025-04-06", 5003, { id: "z1" }),
+    txn("2025-04-07", 77777, { id: "s4" }),
+  ];
+  const resolve = (t) =>
+    t.id === "z1" ? { treatment: "zero-rated", side: "sales" } : { treatment: "standard", side: "sales" };
+  for (const rounding of ["per-line", "form"]) {
+    const b = gstReturn(lines, PERIOD, { resolve, basis: "payments", rounding }).boxes;
+    assert.equal(b.box7, b.box5 - b.box6, `${rounding}: Box 7 = Box 5 - Box 6`);
+    assert.equal(b.box6, 5003, `${rounding}: zero-rated sales stay whole in Box 6`);
+  }
 });

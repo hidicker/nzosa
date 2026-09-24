@@ -1,4 +1,5 @@
 import { computeOurReturns } from "../variance.js";
+import { renderYearEnd } from "./year-end.js";
 import { redraw, showPage } from "../app.js";
 import {
   recordFiledReturn,
@@ -1945,7 +1946,12 @@ function renderGstReturn(body: HTMLElement, year: number): void {
   const sub = document.createElement("p");
   sub.className = "gst-return-sub";
   sub.textContent =
-    (entity?.gstNumber ? `GST number ${entity.gstNumber} · ` : "") + `File by ${result.period.due}`;
+    (entity?.gstNumber ? `GST number ${entity.gstNumber} · ` : "") +
+    // The date the law names, and the working day it can still be done on
+    // where that date is a weekend or a public holiday.
+    (result.period.payBy !== undefined && result.period.payBy !== result.period.due
+      ? `Due ${result.period.due}, a weekend or public holiday, so file and pay by ${result.period.payBy}`
+      : `File by ${result.period.due}`);
   who.append(name, sub);
   const owed = document.createElement("div");
   owed.className = "gst-return-owed";
@@ -2396,7 +2402,9 @@ function renderRentalSchedules(body: HTMLElement, year: number): void {
 function ir3For(owner: string, year: number): ReturnType<typeof ir3Return> {
   const shares: OwnerRentalSchedule[] = [];
   for (const { now } of rentalSchedulesFor(year, false)) {
-    const share = ownerRentalSchedule(now, owner);
+    // The year goes with it, so a residential interest limit is applied as
+    // that year's rules say.
+    const share = ownerRentalSchedule(now, owner, year);
     if (share !== null) shares.push(share);
   }
   const details = (state.ledger.ir3Details ?? []).find((d) => d.owner === owner && d.year === year);
@@ -2407,6 +2415,7 @@ function ir3For(owner: string, year: number): ReturnType<typeof ir3Return> {
     rentals: shares,
     ...(details?.provisionalTaxPaid !== undefined ? { provisionalTaxPaid: details.provisionalTaxPaid } : {}),
     ...(details?.ietcEligible !== undefined ? { ietcEligible: details.ietcEligible } : {}),
+    ...(details?.ietcMonthsOut !== undefined ? { ietcMonthsOut: details.ietcMonthsOut } : {}),
     ...(details?.residentialBroughtForward !== undefined
       ? { residentialBroughtForward: details.residentialBroughtForward }
       : {}),
@@ -2573,6 +2582,19 @@ function renderIr3Details(body: HTMLElement, owner: string, year: number): void 
   ietc.title =
     "The independent earner tax credit is ruled out by New Zealand Super, a main benefit or Working for Families.";
 
+  // Part of a year, which a yes-or-no could not say: the credit is worked out
+  // on whole months, and only the months with one of those payments are lost.
+  const monthsOut = document.createElement("input");
+  monthsOut.type = "number";
+  monthsOut.min = "0";
+  monthsOut.max = "12";
+  monthsOut.step = "1";
+  monthsOut.placeholder = "IETC months ruled out (0-12)";
+  monthsOut.title =
+    "Months in which you received Working for Families, NZ Super, a main benefit or a " +
+    "veteran's pension, even for a day. Each loses that month's credit; the rest are kept.";
+  monthsOut.value = details?.ietcMonthsOut === undefined ? "" : String(details.ietcMonthsOut);
+
   const save = document.createElement("button");
   save.type = "button";
   save.className = "primary";
@@ -2592,10 +2614,18 @@ function renderIr3Details(body: HTMLElement, owner: string, year: number): void 
       next[key] = amount;
     }
     if (ietc.value !== "") next.ietcEligible = ietc.value === "yes";
+    if (monthsOut.value.trim() !== "") {
+      const months = Number(monthsOut.value);
+      if (!Number.isInteger(months) || months < 0 || months > 12) {
+        alert("Months ruled out needs to be a whole number from 0 to 12.");
+        return;
+      }
+      next.ietcMonthsOut = months;
+    }
     void saveIr3Details(next);
   });
 
-  form.append(paid, carried, ietc, save);
+  form.append(paid, carried, ietc, monthsOut, save);
   body.append(form);
 }
 
@@ -2918,6 +2948,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   rentals: "Each rental property's income and expenses, and all of them together.",
   ir3: "One owner's individual return: their rental schedules, other income and the tax.",
   agents: "What each property manager collected and paid out, posted and checked against the bank.",
+  yearend: "Private use of a vehicle and prepayments, posted as journals at balance date.",
   journal: "Every posting for the year, and the trial balance they prove.",
   general: "Every line in the ledger, account by account.",
   manual: "Year-end and correcting journals written by hand.",
@@ -3180,6 +3211,12 @@ function reportsHint(basis: string, kind: string): string {
       "is not includes it, because it cannot claim it back."
     );
   }
+  if (kind === "yearend") {
+    return (
+      "The adjustments an accountant makes at balance date: the private share of a vehicle, and " +
+      "the unused part of anything paid in advance. Each posts a journal on 31 March."
+    );
+  }
   if (kind === "agents") {
     return (
       "A property manager passes on the rent less what they paid out of it, so the bank shows " +
@@ -3412,6 +3449,12 @@ export function renderReportsPage(): void {
   if (kind === "rentals") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderRentalSchedules(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "yearend") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderYearEnd(body, chosenYearNow);
     return;
   }
 

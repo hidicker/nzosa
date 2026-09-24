@@ -3387,3 +3387,16 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   color: var(--text);
 }
 
+/* Year-end adjustments: the fields sit in a row, the account ticks in columns. */
+.year-end-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 16px 8px 0;
+}
+.year-end-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 4px 16px;
+  margin: 6px 0 12px;
+}

@@ -133,6 +133,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   manual: "journal entries adjustments year end accountant",
   assets: "depreciation register disposals purchases",
   agents: "rental property management fees rent",
+  yearend: "vehicle logbook private use prepayments balance date adjustments",
   reports: "all reports",
   gstreturn: "gst return box refund pay ird",
   migration: "start begin setup migration xero convert move new first",

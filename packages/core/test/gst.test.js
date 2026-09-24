@@ -614,3 +614,14 @@ test("Box 7 is always Box 5 less Box 6, whichever way the GST is rounded", () =>
     assert.equal(b.box6, 5003, `${rounding}: zero-rated sales stay whole in Box 6`);
   }
 });
+
+test("six-monthly periods end 30 September and 31 March, due 28 October and 7 May", () => {
+  const periods = gstPeriods({ from: "2025-04-01", to: "2026-03-31" }, { months: 6, anchorMonth: 3 });
+  assert.deepEqual(
+    periods.map((p) => [p.from, p.to, p.due]),
+    [
+      ["2025-04-01", "2025-09-30", "2025-10-28"],
+      ["2025-10-01", "2026-03-31", "2026-05-07"],
+    ],
+  );
+});

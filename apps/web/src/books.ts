@@ -730,6 +730,7 @@ export function varianceInput(): VarianceInput {
     // accounts against that company's filed returns and reported the rest of
     // the household as a disagreement.
     accounts: accountsFor(state.varianceAccounts),
+    months: gstFrequency(),
     // The private use of a vehicle gives back GST once a year, in Box 9 of
     // the return covering the balance date.
     debitAdjustments: vehicleBox9(accountsFor(state.varianceAccounts)),
@@ -1015,6 +1016,22 @@ export function postedJournals(): PostedJournal[] {
  * account that happens to share a code with Xero's wages account is how wages
  * ended up in telephone and internet.
  */
+/**
+ * How often the GST return is filed, for the entity chosen.
+ *
+ * The entity chosen says, when one is; with all entities showing, the one
+ * frequency every registered entity shares, and two-monthly -- IRD's default
+ * -- when they differ or nobody has said.
+ */
+export function gstFrequency(): 1 | 2 | 6 {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const chosen = model.entities.find((e) => e.id === state.entityFilter);
+  if (chosen !== undefined) return chosen.gstFrequency ?? 2;
+  const registered = model.entities.filter((e) => e.gstRegistered !== false && e.kind !== "personal");
+  const set = new Set(registered.map((e) => e.gstFrequency ?? 2));
+  return set.size === 1 ? ([...set][0] ?? 2) : 2;
+}
+
 /**
  * Every income year the books hold anything for, newest first.
  *

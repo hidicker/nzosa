@@ -1890,7 +1890,7 @@ let gstReturnTab: "return" | "transactions" = "return";
 /** When a box was clicked, which lines the Transactions tab narrows to. */
 let gstBoxFocus: "sales" | "purchases" | "late" | null = null;
 
-/** Every two-monthly return a financial year holds, from the coding. */
+/** Every return a financial year holds, from the coding, at the filing frequency. */
 function gstReturnsFor(year: number): GstReturnResult[] {
   try {
     return computeOurReturns(varianceInput(), `${year - 1}-04-01`, `${year}-03-31`).filter(

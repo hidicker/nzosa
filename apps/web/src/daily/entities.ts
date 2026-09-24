@@ -461,6 +461,37 @@ export function renderEntities(): void {
       );
     });
 
+    // How often its GST return is filed, which sets every return's period.
+    const frequency = document.createElement("select");
+    frequency.className = "entity-gst-frequency";
+    for (const [value, caption] of [
+      ["1", "Monthly GST"],
+      ["2", "Two-monthly GST"],
+      ["6", "Six-monthly GST"],
+    ] as const) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = caption;
+      option.selected = String(entity.gstFrequency ?? 2) === value;
+      frequency.append(option);
+    }
+    frequency.hidden = !reportsNetOfGst(entity);
+    frequency.title =
+      "How often the GST return is filed. Six-monthly is only for sales under $500,000 in " +
+      "any 12 months; its periods end 30 September and 31 March.";
+    frequency.addEventListener("change", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      const months = Number(frequency.value) as 1 | 2 | 6;
+      void saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((e) => (e.id === entity.id ? { ...e, gstFrequency: months } : e)),
+        },
+        `${entity.name} files GST ${months === 1 ? "monthly" : months === 6 ? "six-monthly" : "two-monthly"}`,
+      );
+    });
+    gstWrap.append(frequency);
+
     // Only a residential property is caught by the interest limitation rules,
     // so only one is asked. Exempt means its interest is claimed in full in
     // every year, including the year to 31 March 2025 when others got 80%.

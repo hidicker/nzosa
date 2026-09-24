@@ -74,6 +74,13 @@ export interface Entity {
    */
   gstRegistered?: boolean;
   /**
+   * How often the GST return is filed: every month, two months or six.
+   * Undefined is two-monthly, Inland Revenue's default. Six-monthly is only
+   * open to sales under $500,000 in any 12 months; with a 31 March balance
+   * date its periods end 30 September and 31 March.
+   */
+  gstFrequency?: 1 | 2 | 6;
+  /**
    * The GST number, as it goes on an invoice you send somebody.
    *
    * Held rather than derived because nothing else in these books knows it, and

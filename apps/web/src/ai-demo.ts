@@ -110,12 +110,31 @@ async function shared<T>(body: Record<string, unknown>): Promise<T & { error?: s
   }
 }
 
+/**
+ * The shared pool, for any copy with no key of its own.
+ *
+ * The demo uses it, and so does a copy of NZOSA downloaded and run on
+ * somebody's own computer whose books have no key: one allowance for all of
+ * them together, reset by the site owner. Nothing here knows or asks who is
+ * calling -- the pool is what bounds it.
+ */
+export async function sharedPoolStatus(): Promise<{ left: number; model: string } | null> {
+  const pool = await shared<{ left?: number; model?: string }>({ action: "state" });
+  if (pool.error !== undefined || typeof pool.left !== "number") return null;
+  return { left: pool.left, model: pool.model ?? "" };
+}
+
+export async function sharedPoolSuggest(prompt: string, asking: number): Promise<AiAnswer> {
+  const said = await shared<{ text?: string }>({ action: "suggest", prompt, asking });
+  return said.error !== undefined ? { error: said.error } : { text: said.text ?? "", demo: true };
+}
+
 // --- the four questions every route answers --------------------------------
 
 export async function demoStatus(): Promise<AiStatus> {
   const own = kept();
-  const pool = await shared<{ left?: number; model?: string }>({ action: "state" });
-  const left = typeof pool.left === "number" ? pool.left : 0;
+  const pool = await sharedPoolStatus();
+  const left = pool?.left ?? 0;
   return {
     configured: own !== null,
     key: own === null ? "" : `${own.key.slice(0, 6)}…${own.key.slice(-4)}`,
@@ -123,8 +142,8 @@ export async function demoStatus(): Promise<AiStatus> {
     models: own?.models ?? [],
     usedToday: 0,
     limit: 0,
-    sharedKey: pool.error === undefined,
-    sharedModel: pool.model ?? "",
+    sharedKey: pool !== null,
+    sharedModel: pool?.model ?? "",
     // The pool only reports what is left, so that is what is passed on. The
     // allowance itself is whatever the site owner set, and naming a figure
     // here would be naming one they may since have changed.
@@ -159,10 +178,7 @@ export function demoClearKey(): void {
 
 export async function demoSuggest(prompt: string, asking: number): Promise<AiAnswer> {
   const own = kept();
-  if (own === null) {
-    const said = await shared<{ text?: string }>({ action: "suggest", prompt, asking });
-    return said.error !== undefined ? { error: said.error } : { text: said.text ?? "", demo: true };
-  }
+  if (own === null) return sharedPoolSuggest(prompt, asking);
   try {
     const response = await fetch(
       `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(own.model)}:generateContent`,

@@ -1,7 +1,15 @@
 import { callFunction } from "./cloud.js";
 import { backendKind, openCloudBookId } from "./store.js";
 import { isDemoBuild } from "./ai-consent.js";
-import { demoClearKey, demoSetKey, demoSetModel, demoStatus, demoSuggest } from "./ai-demo.js";
+import {
+  demoClearKey,
+  demoSetKey,
+  demoSetModel,
+  demoStatus,
+  demoSuggest,
+  sharedPoolStatus,
+  sharedPoolSuggest,
+} from "./ai-demo.js";
 
 /**
  * Where the asking is done, which depends on where the books are.
@@ -101,7 +109,14 @@ export async function aiStatus(): Promise<AiStatus | null> {
   if (aiRoute() === "folder") {
     const response = await local("/api/ai");
     if (response === null || !response.ok) return null;
-    return (await response.json().catch(() => null)) as AiStatus | null;
+    const own = (await response.json().catch(() => null)) as AiStatus | null;
+    if (own === null || own.configured) return own;
+    // No key on these books: offer the shared pool, if it can be reached.
+    // A copy downloaded and run anywhere gets this, not only this site's
+    // owner, which is why the page says whose key it is.
+    const pool = await sharedPoolStatus();
+    if (pool === null) return own;
+    return { ...own, sharedKey: true, sharedModel: pool.model, demoUsed: 0, demoLimit: pool.left };
   }
   if (aiRoute() !== "cloud") return null;
 
@@ -203,6 +218,15 @@ export async function aiConverse(
 
 export async function aiSuggest(prompt: string, asking: number): Promise<AiAnswer> {
   if (aiRoute() === "demo") return demoSuggest(prompt, asking);
+  if (aiRoute() === "folder") {
+    // Asked of this computer's app first, which knows whether these books
+    // have a key. Without one, the shared pool -- never a guess at the error.
+    const response = await local("/api/ai");
+    const own = response !== null && response.ok
+      ? ((await response.json().catch(() => null)) as AiStatus | null)
+      : null;
+    if (own !== null && !own.configured) return sharedPoolSuggest(prompt, asking);
+  }
   if (aiRoute() === "cloud") {
     const answer = await hosted<AiAnswer>("suggest", { prompt, asking });
     return answer.ok ? answer.body : { error: answer.error };

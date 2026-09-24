@@ -1,5 +1,8 @@
 /**
- * AI suggestions for the online demo, on the site's shared key.
+ * AI suggestions on the site's shared key, for any copy without a key of its own.
+ *
+ * The online demo uses it, and so does NZOSA downloaded and run on somebody's
+ * own computer when their books have no key. Both draw on the one pool.
  *
  * Separate from `gemini` on purpose. That one serves books kept on the server
  * and checks, through the caller's own token, that they may touch them. The
@@ -113,13 +116,24 @@ Deno.serve(async (request: Request) => {
         return reply({ error: `ask about between 1 and ${MOST_LINES} lines at a time` }, 400);
       }
       if (prompt.length > MOST_PROMPT) {
-        return reply({ error: "that is more than the demo will send in one go" }, 413);
+        return reply({ error: "that is more than the shared key takes in one go" }, 413);
       }
       let left: number;
       try {
         left = Number(await asService("ai_demo_take", { asking }));
       } catch (error) {
-        return reply({ error: (error as Error).message }, 429);
+        // The database's words name the demo; this is said to downloaded copies
+        // too, so it is said in words that fit both.
+        const message = (error as Error).message;
+        return reply(
+          {
+            error: /allowance/i.test(message)
+              ? "The shared allowance of AI suggestions is used up. Copy a prompt instead, " +
+                "or add a key of your own."
+              : message,
+          },
+          429,
+        );
       }
       try {
         const text = await ask(prompt);

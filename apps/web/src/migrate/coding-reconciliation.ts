@@ -2141,7 +2141,9 @@ function wireAiButton(): void {
     withKey.title = ownKey
       ? "Asked automatically, and charged to your key."
       : shared !== null
-        ? "Asked automatically, on this site's key rather than one of yours."
+        ? aiRoute() === "folder"
+          ? "Asked automatically, on a shared key belonging to whoever runs nbparagliding.nz."
+          : "Asked automatically, on this site's key rather than one of yours."
         : aiRoute() === "none"
           ? "Needs the app on your own computer, or books on the server. Copy a prompt " +
             "instead: that works anywhere and needs no key."
@@ -2185,7 +2187,13 @@ function wireAiButton(): void {
                 "You can try this without a key of your own. The demo offers a shared one — " +
                   `${shared.model || "a flash model"}, with ${shared.left} transactions left ` +
                   "in one allowance shared by every visitor, asked twenty at a time. "
-              : "You can try this without a key of your own. This site offers a shared one — " +
+              : aiRoute() === "folder"
+                ? "No key on these books, so this can use a shared key belonging to whoever " +
+                  `runs nbparagliding.nz — ${shared.model || "a flash model"}, with ` +
+                  `${shared.left} transactions left in one allowance shared by everybody ` +
+                  "without a key, asked twenty at a time. What you send goes to Google through " +
+                  "their account, so add a key of your own for a client's books. "
+                : "You can try this without a key of your own. This site offers a shared one — " +
                   `${shared.model || "a flash model"}, ${shared.left} transactions left on ` +
                   "your account — asked twenty at a time. What you send goes to Google under " +
                   "the site owner's account, so add a key of your own for a client's books. ",

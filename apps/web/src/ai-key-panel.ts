@@ -106,10 +106,18 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
               `${status.sharedModel || "a flash model"}, with ${left} ${counted} left in one ` +
               "allowance shared by every visitor, until the site owner resets it. Or add a " +
               "key of your own below."
-          : "You can try this without a key of your own. This site offers a shared one -- " +
-              `${status.sharedModel || "a flash model"}, ${left} ${counted} left on your ` +
-              "account, ever, not per day -- paid for by whoever runs the site. What you send " +
-              "goes to Google under their account, so use a key of your own for a client's books.",
+          : aiRoute() === "folder"
+            ? // A downloaded copy with no key: the same pool as the demo, and its
+              // transactions are real, so whose key it is gets said first.
+              "No key on these books, so this uses a shared key belonging to whoever runs " +
+                `nbparagliding.nz -- ${status.sharedModel || "a flash model"}, with ${left} ` +
+                `${counted} left in one allowance shared by everybody without a key of their ` +
+                "own. What you send goes to Google through their account. For a client's " +
+                "books, or to keep it on your own account, add a key of your own below."
+            : "You can try this without a key of your own. This site offers a shared one -- " +
+                `${status.sharedModel || "a flash model"}, ${left} ${counted} left on your ` +
+                "account, ever, not per day -- paid for by whoever runs the site. What you send " +
+                "goes to Google under their account, so use a key of your own for a client's books.",
       ),
     );
   }

@@ -206,9 +206,11 @@ function offerIt(): HTMLElement {
   const whose = document.createElement("p");
   whose.className = "ai-careful";
   whose.textContent =
-    "If these are a client's books rather than your own, that is their data and their " +
-    "decision. It is off until you turn it on, and it is off separately for every set of " +
-    "books.";
+    "Asked on a key of your own, it goes to Google on your account. Without one, it can " +
+    "go through a shared key belonging to whoever runs nbparagliding.nz, and so through " +
+    "their account. If these are a client's books rather than your own, that is their " +
+    "data and their decision. It is off until you turn it on, and it is off separately " +
+    "for every set of books.";
   wrap.append(whose);
 
   const on = document.createElement("button");

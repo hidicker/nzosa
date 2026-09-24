@@ -270,8 +270,13 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
       card.append(
         note(
           "This entity has no owners, so it may be a company. A company's vehicle used privately " +
-            "by a shareholder-employee is a fringe benefit instead, and Inland Revenue does not " +
-            "expect this adjustment from an employer registered for FBT.",
+            "by a shareholder-employee is normally a fringe benefit, taxed through FBT, and then " +
+            "this adjustment is not made. A close company with only one or two vehicles available " +
+            "to shareholder-employees, and no other fringe benefits, can opt out of FBT for them " +
+            "instead -- by a written note with the income tax return for the year the vehicle was " +
+            "bought or first used for business, and no later than that return's due date. Then " +
+            "this adjustment is exactly what Inland Revenue expects, for income tax and GST. Use " +
+            "it only if that election was made.",
         ),
       );
     }

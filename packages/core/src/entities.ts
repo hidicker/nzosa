@@ -118,6 +118,15 @@ export interface Entity {
    * here rather than guessed.
    */
   interestExempt?: boolean;
+  /**
+   * A company's shareholders and the shares they hold.
+   *
+   * Not `owners`: an owner's share of an entity's profit reaches their own
+   * return, which is right for a partnership or a rental and wrong for a
+   * company, whose profit is its own. Shareholders decide only how the
+   * shareholder current account is split on the IR4.
+   */
+  shareholders?: Owner[];
 }
 
 export type EntityKind = "residential" | "commercial" | "business" | "personal";

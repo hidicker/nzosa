@@ -174,3 +174,48 @@ export function overdrawnWarning(schedule: ShareholderSchedule): string | null {
     "for whoever prepares the return rather than a figure taken from here."
   );
 }
+
+/** One shareholder's part of the current account. */
+export interface ShareholderShare {
+  name: string;
+  percent: number;
+  opening: Cents;
+  introduced: Cents;
+  drawings: Cents;
+  closing: Cents;
+}
+
+/**
+ * The current account split between shareholders by shareholding.
+ *
+ * What the IR4 asks for: each shareholder's current account balance (box
+ * 40E). The books hold one joint account, so each figure is divided by the
+ * shares held, and the last shareholder takes the odd cents so the parts add
+ * back to the whole exactly -- two halves of 39,622.98 are 19,811.49 each.
+ *
+ * It is only right where the shareholders deal with the company in proportion
+ * to their shares. Where one draws more than the other, the split belongs in
+ * separate current accounts, and the page says so.
+ */
+export function splitByShareholding(
+  schedule: ShareholderSchedule,
+  shareholders: readonly { name: string; percent: number }[],
+): ShareholderShare[] {
+  const total = shareholders.reduce((sum, s) => sum + s.percent, 0);
+  if (shareholders.length === 0 || total <= 0) return [];
+  const part = (amount: Cents): Cents[] => {
+    const parts = shareholders.map((s) => Math.round((amount * s.percent) / total));
+    const last = parts.length - 1;
+    parts[last] = amount - parts.slice(0, last).reduce((sum, v) => sum + v, 0);
+    return parts;
+  };
+  const opening = part(schedule.opening);
+  const introduced = part(schedule.introduced);
+  const drawings = part(schedule.drawings);
+  return shareholders.map((s, i) => {
+    const o = opening[i] ?? 0;
+    const n = introduced[i] ?? 0;
+    const d = drawings[i] ?? 0;
+    return { name: s.name, percent: s.percent, opening: o, introduced: n, drawings: d, closing: o + n - d };
+  });
+}

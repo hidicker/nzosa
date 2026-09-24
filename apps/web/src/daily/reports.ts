@@ -67,6 +67,7 @@ import {
   reportLookups as coreReportLookups,
   reportsNetOfGst,
   shareholderSchedule,
+  splitByShareholding,
   summariseForOwner,
   taxSummary,
   totalExtras,
@@ -850,6 +851,48 @@ function renderShareholders(body: HTMLElement, year: number): void {
 
   table.append(head, tbody);
   body.append(table);
+
+  // Each shareholder's part, which is what the IR4 asks for (box 40E).
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const companies = model.entities.filter((e) => (e.shareholders ?? []).length > 0);
+  const company =
+    companies.find((e) => e.id === state.entityFilter) ?? (companies.length === 1 ? companies[0] : undefined);
+  if (company === undefined) {
+    body.append(
+      note(
+        "To split this between shareholders as the IR4 does, give the company its " +
+          "shareholders on Entities & accounts.",
+      ),
+    );
+  } else {
+    const parts = splitByShareholding(schedule, company.shareholders ?? []);
+    const split = document.createElement("table");
+    split.className = "report-table balance-sheet";
+    split.innerHTML =
+      "<thead><tr><th>Shareholder</th><th>Share</th><th>Opening</th><th>In</th><th>Out</th><th>Closing (IR4 box 40E)</th></tr></thead>";
+    const rows = document.createElement("tbody");
+    for (const part of parts) {
+      const tr = document.createElement("tr");
+      tr.append(
+        nameCell(part.name),
+        amountCell(`${part.percent}%`),
+        amountCell(money(part.opening)),
+        amountCell(money(part.introduced)),
+        amountCell(money(-part.drawings)),
+        amountCell(money(part.closing)),
+      );
+      rows.append(tr);
+    }
+    split.append(rows);
+    body.append(split);
+    body.append(
+      note(
+        "Split by shareholding, which is right when the shareholders put money in and take it " +
+          "out in proportion to their shares. If one draws more than the other, keep a current " +
+          "account for each instead, so the IR4 shows what each actually owes or is owed.",
+      ),
+    );
+  }
 
   body.append(
     note(

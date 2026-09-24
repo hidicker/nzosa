@@ -369,6 +369,47 @@ export function renderEntities(): void {
     });
     ownersWrap.append(owners, said);
 
+    // A company's shareholders, for the IR4's split of the current account.
+    // Kept apart from owners, whose shares carry profit to their own returns.
+    const holders = document.createElement("input");
+    holders.type = "text";
+    holders.className = "entity-owners";
+    holders.placeholder = "If a company: shareholders, e.g. Ana Whitcombe 50%, Tom Whitcombe 50%";
+    holders.value = formatOwners(entity.shareholders ?? []);
+    holders.hidden = (entity.kind ?? "business") !== "business";
+    holders.title =
+      "Only for a company. The shareholder current account is split between them on " +
+      "the IR4. Leave empty for a sole trader, partnership or trust.";
+    const holdersSaid = document.createElement("span");
+    holdersSaid.className = "entity-owners-said";
+    const sayHolders = (text: string): void => {
+      if (text.trim() === "") {
+        holdersSaid.textContent = "";
+        return;
+      }
+      const total = ownersTotal(parseOwners(text));
+      holdersSaid.textContent = total.said;
+      holdersSaid.classList.toggle("owners-wrong", !total.ok);
+    };
+    sayHolders(holders.value);
+    holders.addEventListener("input", () => sayHolders(holders.value));
+    holders.addEventListener("change", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      const parsed = parseOwners(holders.value);
+      void saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((e) => {
+            if (e.id !== entity.id) return e;
+            const { shareholders: _gone, ...rest } = e;
+            return parsed.length > 0 ? { ...rest, shareholders: parsed } : rest;
+          }),
+        },
+        `${entity.name} shareholders set`,
+      );
+    });
+    ownersWrap.append(holders, holdersSaid);
+
     const kind = document.createElement("select");
     for (const [value, caption] of [
       ["business", "Business"],

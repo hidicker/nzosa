@@ -266,10 +266,14 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
       `${entity?.name ?? use.entityId}: ${result.businessPercent}% business` +
       (use.logbookFrom ? `, logbook from ${use.logbookFrom}` : ", no logbook");
     card.append(title);
-    if (entity !== undefined && (entity.owners ?? []).length === 0 && entity.kind === "business") {
+    const company =
+      entity !== undefined &&
+      ((entity.shareholders ?? []).length > 0 ||
+        ((entity.owners ?? []).length === 0 && (entity.kind ?? "business") === "business"));
+    if (company) {
       card.append(
         note(
-          "This entity has no owners, so it may be a company. A company's vehicle used privately " +
+          "This entity looks like a company (it has shareholders, or no owners). A company's vehicle used privately " +
             "by a shareholder-employee is normally a fringe benefit, taxed through FBT, and then " +
             "this adjustment is not made. A close company with only one or two vehicles available " +
             "to shareholder-employees, and no other fringe benefits, can opt out of FBT for them " +

@@ -8,6 +8,7 @@ import {
   accountsForEditing,
   assetProceedsInUse,
   bankLabel,
+  bookYears,
   banks,
   entityBankAccounts,
   ledgerAccountFor,
@@ -46,7 +47,6 @@ import {
   postedFromImported,
   depreciationSchedule,
   emptyEntityModel,
-  financialYearOf,
   formatAccountTransactions,
   formatAmount,
   formatDepreciationSchedule,
@@ -214,9 +214,7 @@ export function currentReport(
     if (unresolved) hint.insertAdjacentElement("afterend", unresolved);
   }
 
-  const years = [
-    ...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date))),
-  ].sort((a, b) => b - a);
+  const years = bookYears();
   const chosenYear = Number($<HTMLSelectElement>("report-year").value) || years[0];
   if (chosenYear === undefined) return null;
 
@@ -3002,9 +3000,7 @@ function renderReportsHome(body: HTMLElement): void {
   const all = groups.flatMap((group) => group.reports);
   const favourites = readFavourites().filter((value) => all.some((r) => r.value === value));
 
-  const txYears = state.ledger.transactions.map((t) => financialYearOf(t.date));
-  const journalYears = (state.ledger.journals ?? []).map((j) => financialYearOf(j.date));
-  const allYears = [...new Set([...txYears, ...journalYears])].sort((a, b) => b - a);
+  const allYears = bookYears();
   const years = allYears.length > 0 ? allYears : [new Date().getFullYear()];
 
   const open = (value: string): void => {
@@ -3354,9 +3350,7 @@ export function renderReportsPage(): void {
           : " Figures exclude GST, which is the basis a return is filed on."
       : "");
 
-  const years = [
-    ...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date))),
-  ].sort((a, b) => b - a);
+  const years = bookYears();
   const yearSelect = $<HTMLSelectElement>("report-year");
   const chosenYear = yearSelect.value;
   yearSelect.textContent = "";
@@ -3973,9 +3967,7 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
 }
 
 export function downloadReport(): void {
-  const years = [
-    ...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date))),
-  ].sort((a, b) => b - a);
+  const years = bookYears();
   const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
 
   if ($<HTMLSelectElement>("report-kind").value === "depreciation") {

@@ -1,4 +1,4 @@
-import { postedJournals, varianceInput } from "./books.js";
+import { bookYears, postedJournals, varianceInput } from "./books.js";
 import { reportLookups } from "./daily/reports.js";
 import { state } from "./state.js";
 import { note } from "./ui.js";
@@ -6,7 +6,6 @@ import { computeOurReturns } from "./variance.js";
 import {
   accountTreatment,
   emptyEntityModel,
-  financialYearOf,
   formatAmount,
   ir10Summary,
 } from "@nzosa/core";
@@ -62,9 +61,7 @@ const NZ_GUIDES = [
 ];
 
 export function yearsInBooks(): number[] {
-  return [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))].sort(
-    (a, b) => b - a,
-  );
+  return bookYears();
 }
 
 function kindWords(kind: string | undefined): string {

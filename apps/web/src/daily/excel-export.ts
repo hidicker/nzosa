@@ -1,5 +1,6 @@
 import {
   assetProceedsInUse,
+  bookYears,
   entityBankAccounts,
   invoiceAssignments,
   postedJournals,
@@ -13,7 +14,6 @@ import {
   balanceSheetRole,
   categorise,
   depreciationSchedule,
-  financialYearOf,
   generalLedgerRows,
   gstWithin,
   plClassForType,
@@ -2754,9 +2754,7 @@ function buildRawRulesArchiveSheet(ctx: SheetContext): string {
 // --- Master Workbook Assembler ---
 
 export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
-  const txYears = state.ledger.transactions.map((t) => financialYearOf(t.date));
-  const journalYears = (state.ledger.journals ?? []).map((j) => financialYearOf(j.date));
-  const allYears = [...new Set([...txYears, ...journalYears])].sort((a, b) => b - a);
+  const allYears = bookYears();
   const years = allYears.length > 0 ? allYears : [new Date().getFullYear()];
 
   const defaultYear = years[0] ?? new Date().getFullYear();
@@ -2963,9 +2961,7 @@ export function downloadBytes(
 }
 
 export function downloadExcelReport(year?: number | "all"): void {
-  const txYears = state.ledger.transactions.map((t) => financialYearOf(t.date));
-  const journalYears = (state.ledger.journals ?? []).map((j) => financialYearOf(j.date));
-  const allYears = [...new Set([...txYears, ...journalYears])].sort((a, b) => b - a);
+  const allYears = bookYears();
   const years = allYears.length > 0 ? allYears : [new Date().getFullYear()];
 
   const defaultYear = years[0] ?? new Date().getFullYear();

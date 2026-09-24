@@ -17,6 +17,7 @@ import {
   chartTreatments,
   codingCounts,
   codingEngine,
+  financialYearOf,
   depreciationJournals as coreDepreciationJournals,
   disposalJournals as coreDisposalJournals,
   proceedsFromDisposalJournals,
@@ -1014,6 +1015,27 @@ export function postedJournals(): PostedJournal[] {
  * account that happens to share a code with Xero's wages account is how wages
  * ended up in telephone and internet.
  */
+/**
+ * Every income year the books hold anything for, newest first.
+ *
+ * Bank lines were the only thing asked, so a year with pay runs, a year-end
+ * adjustment or a hand journal and no bank lines yet had no year to show it
+ * in -- the figures were posted and no report could reach them.
+ */
+export function bookYears(): number[] {
+  const dates: string[] = [
+    ...state.ledger.transactions.map((t) => t.date),
+    ...(state.ledger.journals ?? []).map((j) => j.date),
+    ...(state.ledger.manualJournals ?? []).map((j) => j.date),
+    ...(state.ledger.payroll?.payRuns ?? []).map((r) => r.payDate),
+    ...(state.ledger.agentStatements ?? []).map((a) => a.to),
+    ...(state.ledger.prepayments ?? []).map((p) => p.from),
+  ];
+  const years = new Set(dates.filter((d) => d !== "").map((d) => financialYearOf(d)));
+  for (const use of state.ledger.vehicleUse ?? []) years.add(use.year);
+  return [...years].sort((a, b) => b - a);
+}
+
 export function payrollAccounts(): PayrollAccounts | null {
   const chosen = state.ledger.payroll?.accounts ?? {};
   const find = (code: string | undefined) => {

@@ -65,16 +65,27 @@ test("the standard option is 105% of last year, in whole dollars", () => {
   );
 });
 
-test("until last year's return is filed, it is 110% of the year before", () => {
+test("under an extension of time, until last year's return is filed, it is 110% of the year before", () => {
   const next = provisionalStandardOption({
     lastYear: 1_234_567,
     yearBefore: 1_000_000,
     lastYearFiled: false,
+    extensionOfTime: true,
   });
   assert.equal(next.basis, "110% of the year before");
   assert.equal(next.amount, 1_100_000);
   assert.deepEqual(next.instalments, [366_600, 366_600, 366_800]);
   assert.match(next.why, /not filed yet/);
+});
+
+test("without an extension of time a late return is still 105% of last year", () => {
+  const next = provisionalStandardOption({
+    lastYear: 1_234_567,
+    yearBefore: 1_000_000,
+    lastYearFiled: false,
+  });
+  assert.equal(next.basis, "105% of last year");
+  assert.equal(next.amount, 1_296_200);
 });
 
 test("under five thousand dollars, provisional tax is not due at all", () => {

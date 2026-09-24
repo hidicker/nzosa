@@ -387,13 +387,13 @@ export interface ProvisionalStandard {
 /**
  * Next year's provisional tax under the standard option, both ways round.
  *
- * The usual way is 105% of last year's residual income tax, which needs last
- * year's return to have been filed. It often has not been by the first
- * instalment in August, and the Act does not leave a hole there: until that
- * return is in, the instalment is 110% of the year before it. Working it out
- * the usual way regardless would understate what is due and earn use-of-money
- * interest on the difference, which is the sort of quiet cost this app exists
- * to stop.
+ * The usual way is 105% of last year's residual income tax -- and that stays
+ * the rule when last year's return is filed late. Inland Revenue: "This
+ * includes if you file your return after any of your provisional tax dates."
+ * Only a tax agent's extension of time changes it: while last year's return
+ * is still unfiled under an extension, an instalment is 110% of the year
+ * before instead. It used to apply that to anybody whose return was not in,
+ * which asked somebody filing their own return for the wrong amount.
  *
  * Whole dollars, as Inland Revenue states them, and only once residual income
  * tax passes $5,000 -- below that, provisional tax is not due at all.
@@ -405,6 +405,8 @@ export function provisionalStandardOption(options: {
   yearBefore?: Cents;
   /** False while last year's return has not been filed. */
   lastYearFiled?: boolean;
+  /** A tax agent's extension of time for last year's return. */
+  extensionOfTime?: boolean;
 }): ProvisionalStandard {
   const filed = options.lastYearFiled !== false;
   const wholeDollars = (cents: number): Cents => Math.floor(cents / 100) * 100;
@@ -413,7 +415,8 @@ export function provisionalStandardOption(options: {
     return [third, third, amount - 2 * third];
   };
 
-  if (filed && options.lastYear !== null && options.lastYear > 500_000) {
+  const underExtension = !filed && options.extensionOfTime === true;
+  if (!underExtension && options.lastYear !== null && options.lastYear > 500_000) {
     const amount = wholeDollars(options.lastYear * 1.05);
     return {
       basis: "105% of last year",
@@ -423,15 +426,15 @@ export function provisionalStandardOption(options: {
     };
   }
 
-  if (!filed && options.yearBefore !== undefined && options.yearBefore > 500_000) {
+  if (underExtension && options.yearBefore !== undefined && options.yearBefore > 500_000) {
     const amount = wholeDollars(options.yearBefore * 1.1);
     return {
       basis: "110% of the year before",
       amount,
       instalments: split(amount),
       why:
-        "Last year's return is not filed yet, so the standard option is 110% of the year " +
-        "before it until it is.",
+        "Last year's return is not filed yet under a tax agent's extension of time, so the " +
+        "standard option is 110% of the year before it until it is.",
     };
   }
 
@@ -593,9 +596,11 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
   const instalments = standard.instalments;
   if (nextYearProvisional !== null) {
     notes.push(
-      "That is the standard option on this return once it is filed. If it is not filed " +
-        "before the first instalment, that instalment is 110% of the year before instead, " +
-        "and the later ones pick up the 105% once it is.",
+      "That is the standard option: this year's residual income tax plus 5%, even if " +
+        "the return is filed after an instalment date. Only with a tax agent's extension " +
+        "of time, while this return is unfiled, is an instalment 110% of the year before " +
+        "instead. Under $60,000 of residual income tax, use-of-money interest on the " +
+        "standard option runs only from the day after the terminal tax date.",
     );
   }
 

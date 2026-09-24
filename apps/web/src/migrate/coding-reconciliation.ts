@@ -6,7 +6,7 @@ import {
   askAboutLines,
   waitingForAnswers,
 } from "../ai.js";
-import { aiStatus } from "../ai-backend.js";
+import { aiRoute, aiStatus } from "../ai-backend.js";
 import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
@@ -2132,11 +2132,19 @@ function wireAiButton(): void {
         ? `Ask with the shared key (${Math.min(left, AI_BATCH)} at a time)`
         : "Ask with my key";
     withKey.disabled = !haveKey;
+    // A copy running in a browser alone has nowhere to keep a key and nothing
+    // to ask from, so there is no key to set anywhere -- and telling somebody
+    // to go and set one on a page that cannot is worse than saying nothing.
+    // The demo is exactly this case, and it is the first thing a visitor
+    // hovers over.
     withKey.title = ownKey
       ? "Asked automatically, and charged to your key."
       : shared !== null
         ? "Asked automatically, on this site's key rather than one of yours."
-        : "No key set for these books. Set one on the AI suggestions page.";
+        : aiRoute() === "none"
+          ? "Needs the app on your own computer, or books on the server. Copy a prompt " +
+            "instead: that works anywhere and needs no key."
+          : "No key set for these books. Set one on the AI suggestions page.";
     // No count: how many is chosen in the section this opens, so naming one
     // here would be promising a number the next screen then asks about.
     withPrompt.textContent = "Copy a prompt for any AI model";

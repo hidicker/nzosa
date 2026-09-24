@@ -364,6 +364,25 @@ const ledger = {
   invoices: invoices.invoices,
   taxExtras,
   ir3Details,
+  // On in the demo, off everywhere else.
+  //
+  // The flag is a consent: it is what somebody agrees to before anything
+  // about their books can be sent to a model, and it stays off until they
+  // turn it on. There is nobody to ask here and nothing to protect -- every
+  // figure in this ledger is invented -- and a visitor who cannot see the
+  // button cannot see how the app works. The hosted demo has no key route
+  // anyway, so the only thing it turns on is the prompt somebody copies and
+  // carries themselves, which sends nothing anywhere until they paste it.
+  aiEnabled: true,
+  // What the prompt tells a model about the business, which is the difference
+  // between "a supermarket, probably groceries" and knowing this one roasts
+  // coffee and rents out two buildings. Named generically on purpose: the
+  // privacy audit caught a real payee here, quoted inside the comment that
+  // explains the field -- the same way a real bank account number once got
+  // into the comment explaining a bank-number leak.
+  booksAbout:
+    "A small coffee roastery that sells wholesale to cafes and retail from its own door, " +
+    "with two rental properties alongside it: one residential flat and one commercial unit.",
 };
 writeFileSync(join(out, "ledger.json"), JSON.stringify(ledger, null, 2));
 

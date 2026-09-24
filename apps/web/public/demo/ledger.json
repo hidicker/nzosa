@@ -4555,5 +4555,7 @@
       "provisionalTaxPaid": 350000,
       "ietcEligible": true
     }
-  ]
+  ],
+  "aiEnabled": true,
+  "booksAbout": "A small coffee roastery that sells wholesale to cafes and retail from its own door, with two rental properties alongside it: one residential flat and one commercial unit."
 }

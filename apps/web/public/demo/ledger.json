@@ -211,13 +211,39 @@
       }
     },
     {
-      "id": "c645c56b0868ea6e",
+      "id": "3291196c2987ac45",
+      "occurrence": 1,
+      "date": "2025-05-13",
+      "amount": -42000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "008",
+      "particulars": "Grinder burrs",
+      "code": "",
+      "reference": "",
+      "otherParty": "Canterbury Espresso Parts",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-3141",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 11
+      }
+    },
+    {
+      "id": "be556c2a9553d19f",
       "occurrence": 1,
       "date": "2025-05-15",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "008",
+      "trn": "009",
       "particulars": "Rent May",
       "code": "",
       "reference": "",
@@ -233,17 +259,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 11
+        "line": 12
       }
     },
     {
-      "id": "c0d4eddb4ef3faef",
+      "id": "6f9cc5592954e1fd",
       "occurrence": 1,
       "date": "2025-05-20",
       "amount": -34500,
       "currency": "NZD",
       "serial": "",
-      "trn": "009",
+      "trn": "010",
       "particulars": "Courier",
       "code": "",
       "reference": "",
@@ -259,17 +285,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 12
+        "line": 13
       }
     },
     {
-      "id": "74a8a6603f6e42b0",
+      "id": "6722141e0eaba431",
       "occurrence": 1,
       "date": "2025-05-28",
       "amount": -21850,
       "currency": "NZD",
       "serial": "",
-      "trn": "010",
+      "trn": "011",
       "particulars": "Power",
       "code": "",
       "reference": "",
@@ -285,17 +311,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 13
+        "line": 14
       }
     },
     {
-      "id": "32789f6247c3db67",
+      "id": "807b136f275e1b02",
       "occurrence": 1,
       "date": "2025-06-04",
       "amount": 184000,
       "currency": "NZD",
       "serial": "",
-      "trn": "011",
+      "trn": "012",
       "particulars": "",
       "code": "",
       "reference": "INV-1004",
@@ -311,17 +337,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 14
+        "line": 15
       }
     },
     {
-      "id": "a3e9d7262c2121f6",
+      "id": "fa2f67e50c22b9fb",
       "occurrence": 1,
       "date": "2025-06-10",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "012",
+      "trn": "013",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -337,17 +363,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 15
+        "line": 16
       }
     },
     {
-      "id": "91ff8c7c3b957cf1",
+      "id": "5c02810a390bbc10",
       "occurrence": 1,
       "date": "2025-06-16",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "013",
+      "trn": "014",
       "particulars": "Rent June",
       "code": "",
       "reference": "",
@@ -363,17 +389,43 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 16
+        "line": 17
       }
     },
     {
-      "id": "c66825e8d1dc9e02",
+      "id": "550b2a39103ca3d3",
+      "occurrence": 1,
+      "date": "2025-06-19",
+      "amount": -57500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "015",
+      "particulars": "Van signage",
+      "code": "",
+      "reference": "",
+      "otherParty": "Ruru Signwriters",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-2718",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 18
+      }
+    },
+    {
+      "id": "ffee1417858cfa48",
       "occurrence": 1,
       "date": "2025-06-24",
       "amount": -28750,
       "currency": "NZD",
       "serial": "",
-      "trn": "014",
+      "trn": "016",
       "particulars": "Accounting",
       "code": "",
       "reference": "",
@@ -389,17 +441,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 17
+        "line": 19
       }
     },
     {
-      "id": "4f33ad8bf9d819a6",
+      "id": "311c41a54ba53238",
       "occurrence": 1,
       "date": "2025-07-02",
       "amount": 310500,
       "currency": "NZD",
       "serial": "",
-      "trn": "015",
+      "trn": "017",
       "particulars": "",
       "code": "",
       "reference": "INV-1005",
@@ -415,17 +467,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 18
+        "line": 20
       }
     },
     {
-      "id": "6c9fb1cedbd8d30e",
+      "id": "97962aeef5baed8c",
       "occurrence": 1,
       "date": "2025-07-08",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "016",
+      "trn": "018",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -441,17 +493,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 19
+        "line": 21
       }
     },
     {
-      "id": "16c41356e925c3a3",
+      "id": "4167b636df1a43d5",
       "occurrence": 1,
       "date": "2025-07-15",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "017",
+      "trn": "019",
       "particulars": "Rent July",
       "code": "",
       "reference": "",
@@ -467,17 +519,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 20
+        "line": 22
       }
     },
     {
-      "id": "b22dde6a7c7aa4c1",
+      "id": "8dc3752c31d61170",
       "occurrence": 1,
       "date": "2025-07-21",
       "amount": -149500,
       "currency": "NZD",
       "serial": "",
-      "trn": "018",
+      "trn": "020",
       "particulars": "Roaster service",
       "code": "",
       "reference": "",
@@ -493,17 +545,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 21
+        "line": 23
       }
     },
     {
-      "id": "786205a1e4a09d7a",
+      "id": "d3d3dbe77e43a86b",
       "occurrence": 1,
       "date": "2025-07-30",
       "amount": -21850,
       "currency": "NZD",
       "serial": "",
-      "trn": "019",
+      "trn": "021",
       "particulars": "Power",
       "code": "",
       "reference": "",
@@ -519,17 +571,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 22
+        "line": 24
       }
     },
     {
-      "id": "cc5ae1112136e560",
+      "id": "be5a9d0af437f84e",
       "occurrence": 1,
       "date": "2025-08-05",
       "amount": 126500,
       "currency": "NZD",
       "serial": "",
-      "trn": "020",
+      "trn": "022",
       "particulars": "",
       "code": "",
       "reference": "INV-1006",
@@ -545,17 +597,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 23
+        "line": 25
       }
     },
     {
-      "id": "ac36298de9521a84",
+      "id": "77f9abc5d08bc61a",
       "occurrence": 1,
       "date": "2025-08-12",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "021",
+      "trn": "023",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -571,17 +623,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 24
+        "line": 26
       }
     },
     {
-      "id": "95989f4073b02b0b",
+      "id": "2dae0c7c5c149e31",
       "occurrence": 1,
       "date": "2025-08-15",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "022",
+      "trn": "024",
       "particulars": "Rent August",
       "code": "",
       "reference": "",
@@ -597,17 +649,43 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 25
+        "line": 27
       }
     },
     {
-      "id": "6e52ea6a13d8484a",
+      "id": "423dbf27ffe9078c",
+      "occurrence": 1,
+      "date": "2025-08-20",
+      "amount": -34500,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "025",
+      "particulars": "Website hosting",
+      "code": "",
+      "reference": "",
+      "otherParty": "Weka Web Studio",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-1618",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 28
+      }
+    },
+    {
+      "id": "252c12a96f374573",
       "occurrence": 1,
       "date": "2025-08-26",
       "amount": -40250,
       "currency": "NZD",
       "serial": "",
-      "trn": "023",
+      "trn": "026",
       "particulars": "Insurance",
       "code": "",
       "reference": "",
@@ -623,17 +701,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 26
+        "line": 29
       }
     },
     {
-      "id": "957f85211f95bbf1",
+      "id": "f753a8e3e84175cc",
       "occurrence": 1,
       "date": "2025-09-03",
       "amount": 218500,
       "currency": "NZD",
       "serial": "",
-      "trn": "024",
+      "trn": "027",
       "particulars": "",
       "code": "",
       "reference": "INV-1007",
@@ -649,17 +727,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 27
+        "line": 30
       }
     },
     {
-      "id": "351721f343fd10bd",
+      "id": "b5f0b706d9a0c4f4",
       "occurrence": 1,
       "date": "2025-09-09",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "025",
+      "trn": "028",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -675,17 +753,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 28
+        "line": 31
       }
     },
     {
-      "id": "11d2c8d706cf5634",
+      "id": "324e758978367db3",
       "occurrence": 1,
       "date": "2025-09-15",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "026",
+      "trn": "029",
       "particulars": "Rent September",
       "code": "",
       "reference": "",
@@ -701,17 +779,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 29
+        "line": 32
       }
     },
     {
-      "id": "82a5ade33dd57147",
+      "id": "8cd68011b7a42217",
       "occurrence": 1,
       "date": "2025-09-23",
       "amount": -69000,
       "currency": "NZD",
       "serial": "",
-      "trn": "027",
+      "trn": "030",
       "particulars": "Market stall fees",
       "code": "",
       "reference": "",
@@ -727,17 +805,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 30
+        "line": 33
       }
     },
     {
-      "id": "35dc0a96dc5c51a8",
+      "id": "48cc8aa5026c9e82",
       "occurrence": 1,
       "date": "2025-10-01",
       "amount": 149500,
       "currency": "NZD",
       "serial": "",
-      "trn": "028",
+      "trn": "031",
       "particulars": "",
       "code": "",
       "reference": "INV-1008",
@@ -753,17 +831,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 31
+        "line": 34
       }
     },
     {
-      "id": "8c19954644f642a5",
+      "id": "06eed10c62c59a79",
       "occurrence": 1,
       "date": "2025-10-07",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "029",
+      "trn": "032",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -779,17 +857,43 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 32
+        "line": 35
       }
     },
     {
-      "id": "964469bbcbe91d0c",
+      "id": "187b2f8bbf27e61d",
+      "occurrence": 1,
+      "date": "2025-10-09",
+      "amount": -16100,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "033",
+      "particulars": "Monthly clean",
+      "code": "",
+      "reference": "",
+      "otherParty": "Tui Cleaning Services",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-1414",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 36
+      }
+    },
+    {
+      "id": "4b5b9463e4daf370",
       "occurrence": 1,
       "date": "2025-10-15",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "030",
+      "trn": "034",
       "particulars": "Rent October",
       "code": "",
       "reference": "",
@@ -805,17 +909,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 33
+        "line": 37
       }
     },
     {
-      "id": "1c928b77f8eac96b",
+      "id": "19b2e59e18435657",
       "occurrence": 1,
       "date": "2025-10-21",
       "amount": -105800,
       "currency": "NZD",
       "serial": "",
-      "trn": "031",
+      "trn": "035",
       "particulars": "Hardware",
       "code": "",
       "reference": "",
@@ -831,17 +935,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 34
+        "line": 38
       }
     },
     {
-      "id": "e9641a005d915a02",
+      "id": "056d5f057e915a8e",
       "occurrence": 1,
       "date": "2025-10-28",
       "amount": -128435,
       "currency": "NZD",
       "serial": "",
-      "trn": "032",
+      "trn": "036",
       "particulars": "Card payment",
       "code": "",
       "reference": "",
@@ -857,17 +961,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 35
+        "line": 39
       }
     },
     {
-      "id": "3ffecda17459ac96",
+      "id": "794ecb56cd88edf2",
       "occurrence": 1,
       "date": "2025-11-04",
       "amount": 276000,
       "currency": "NZD",
       "serial": "",
-      "trn": "033",
+      "trn": "037",
       "particulars": "",
       "code": "",
       "reference": "INV-1009",
@@ -883,117 +987,13 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 36
-      }
-    },
-    {
-      "id": "2365e0486c075b59",
-      "occurrence": 1,
-      "date": "2025-11-11",
-      "amount": -86250,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "034",
-      "particulars": "Green beans",
-      "code": "",
-      "reference": "",
-      "otherParty": "Highland Bean Co",
-      "origin": "02-1234",
-      "type": "BP",
-      "batch": "0000",
-      "otherPartyAccount": "02-8811",
-      "account": "02-1234-0056789-000",
-      "extras": {
-        "accountLabel": "Kea Coffee Roasters Trading"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-trading.csv",
-        "line": 37
-      }
-    },
-    {
-      "id": "a88419eb85273e40",
-      "occurrence": 1,
-      "date": "2025-11-17",
-      "amount": -115000,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "035",
-      "particulars": "Rent November",
-      "code": "",
-      "reference": "",
-      "otherParty": "Rimu Property Trust",
-      "origin": "02-1234",
-      "type": "BP",
-      "batch": "0000",
-      "otherPartyAccount": "02-9911",
-      "account": "02-1234-0056789-000",
-      "extras": {
-        "accountLabel": "Kea Coffee Roasters Trading"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-trading.csv",
-        "line": 38
-      }
-    },
-    {
-      "id": "fc9757b278e89fa4",
-      "occurrence": 1,
-      "date": "2025-11-25",
-      "amount": -21850,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "036",
-      "particulars": "Power",
-      "code": "",
-      "reference": "",
-      "otherParty": "Trustpower",
-      "origin": "02-1234",
-      "type": "BP",
-      "batch": "0000",
-      "otherPartyAccount": "02-7766",
-      "account": "02-1234-0056789-000",
-      "extras": {
-        "accountLabel": "Kea Coffee Roasters Trading"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-trading.csv",
-        "line": 39
-      }
-    },
-    {
-      "id": "2baedcdfa2005eff",
-      "occurrence": 1,
-      "date": "2025-12-02",
-      "amount": 345000,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "037",
-      "particulars": "",
-      "code": "",
-      "reference": "INV-1010",
-      "otherParty": "Kea Cafe Group",
-      "origin": "02-1234",
-      "type": "DC",
-      "batch": "0000",
-      "otherPartyAccount": "02-4455",
-      "account": "02-1234-0056789-000",
-      "extras": {
-        "accountLabel": "Kea Coffee Roasters Trading"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-trading.csv",
         "line": 40
       }
     },
     {
-      "id": "e655e3945924c95f",
+      "id": "89d232256c11c835",
       "occurrence": 1,
-      "date": "2025-12-09",
+      "date": "2025-11-11",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
@@ -1017,14 +1017,14 @@
       }
     },
     {
-      "id": "f0707b15ce17fad0",
+      "id": "1865398b021e2b44",
       "occurrence": 1,
-      "date": "2025-12-15",
+      "date": "2025-11-17",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
       "trn": "039",
-      "particulars": "Rent December",
+      "particulars": "Rent November",
       "code": "",
       "reference": "",
       "otherParty": "Rimu Property Trust",
@@ -1043,21 +1043,21 @@
       }
     },
     {
-      "id": "9096aad138874154",
+      "id": "0338f0dd471b9f6b",
       "occurrence": 1,
-      "date": "2026-01-13",
-      "amount": -115000,
+      "date": "2025-11-25",
+      "amount": -21850,
       "currency": "NZD",
       "serial": "",
       "trn": "040",
-      "particulars": "Rent January",
+      "particulars": "Power",
       "code": "",
       "reference": "",
-      "otherParty": "Rimu Property Trust",
+      "otherParty": "Trustpower",
       "origin": "02-1234",
       "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-9911",
+      "otherPartyAccount": "02-7766",
       "account": "02-1234-0056789-000",
       "extras": {
         "accountLabel": "Kea Coffee Roasters Trading"
@@ -1069,21 +1069,21 @@
       }
     },
     {
-      "id": "4ce6700c468afe72",
+      "id": "99a5e59fcfeda75e",
       "occurrence": 1,
-      "date": "2026-01-20",
-      "amount": 161000,
+      "date": "2025-12-02",
+      "amount": 345000,
       "currency": "NZD",
       "serial": "",
       "trn": "041",
       "particulars": "",
       "code": "",
-      "reference": "INV-1011",
-      "otherParty": "The Roastery Bar",
+      "reference": "INV-1010",
+      "otherParty": "Kea Cafe Group",
       "origin": "02-1234",
       "type": "DC",
       "batch": "0000",
-      "otherPartyAccount": "02-1177",
+      "otherPartyAccount": "02-4455",
       "account": "02-1234-0056789-000",
       "extras": {
         "accountLabel": "Kea Coffee Roasters Trading"
@@ -1095,9 +1095,9 @@
       }
     },
     {
-      "id": "3cb04688bfc5c841",
+      "id": "03d9f9690cfe2e20",
       "occurrence": 1,
-      "date": "2026-01-27",
+      "date": "2025-12-09",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
@@ -1121,13 +1121,169 @@
       }
     },
     {
-      "id": "b369e306cce8c335",
+      "id": "873c58939a9cc6dd",
+      "occurrence": 1,
+      "date": "2025-12-15",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "043",
+      "particulars": "Rent December",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 46
+      }
+    },
+    {
+      "id": "5845ae29f36a66fb",
+      "occurrence": 1,
+      "date": "2025-12-18",
+      "amount": 4600,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "044",
+      "particulars": "Credit note",
+      "code": "",
+      "reference": "",
+      "otherParty": "Canterbury Espresso Parts",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-3141",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 47
+      }
+    },
+    {
+      "id": "73d17f377e913527",
+      "occurrence": 1,
+      "date": "2026-01-08",
+      "amount": -138000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "045",
+      "particulars": "Barista training",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kereru Coffee School",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-5772",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 48
+      }
+    },
+    {
+      "id": "08476ef04ce79dc6",
+      "occurrence": 1,
+      "date": "2026-01-13",
+      "amount": -115000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "046",
+      "particulars": "Rent January",
+      "code": "",
+      "reference": "",
+      "otherParty": "Rimu Property Trust",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-9911",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 49
+      }
+    },
+    {
+      "id": "10fb496132d9a234",
+      "occurrence": 1,
+      "date": "2026-01-20",
+      "amount": 161000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "047",
+      "particulars": "",
+      "code": "",
+      "reference": "INV-1011",
+      "otherParty": "The Roastery Bar",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1177",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 50
+      }
+    },
+    {
+      "id": "423878f5f78c7e67",
+      "occurrence": 1,
+      "date": "2026-01-27",
+      "amount": -86250,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "048",
+      "particulars": "Green beans",
+      "code": "",
+      "reference": "",
+      "otherParty": "Highland Bean Co",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-8811",
+      "account": "02-1234-0056789-000",
+      "extras": {
+        "accountLabel": "Kea Coffee Roasters Trading"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-trading.csv",
+        "line": 51
+      }
+    },
+    {
+      "id": "c6def9968c92272f",
       "occurrence": 1,
       "date": "2026-02-04",
       "amount": -28750,
       "currency": "NZD",
       "serial": "",
-      "trn": "043",
+      "trn": "049",
       "particulars": "Accounting",
       "code": "",
       "reference": "",
@@ -1143,17 +1299,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 46
+        "line": 52
       }
     },
     {
-      "id": "5c3ab18e99dcdc5d",
+      "id": "45b1f582ced14b98",
       "occurrence": 1,
       "date": "2026-02-11",
       "amount": 207000,
       "currency": "NZD",
       "serial": "",
-      "trn": "044",
+      "trn": "050",
       "particulars": "",
       "code": "",
       "reference": "INV-1012",
@@ -1169,17 +1325,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 47
+        "line": 53
       }
     },
     {
-      "id": "326590e4934cc959",
+      "id": "7d402f78555fd204",
       "occurrence": 1,
       "date": "2026-02-16",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "045",
+      "trn": "051",
       "particulars": "Rent February",
       "code": "",
       "reference": "",
@@ -1195,17 +1351,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 48
+        "line": 54
       }
     },
     {
-      "id": "840707e99e5e337f",
+      "id": "31cebcd3b8ef9ae8",
       "occurrence": 1,
       "date": "2026-02-24",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "046",
+      "trn": "052",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -1221,17 +1377,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 49
+        "line": 55
       }
     },
     {
-      "id": "c63de240fac964fc",
+      "id": "20372bee95a1a30f",
       "occurrence": 1,
       "date": "2026-03-03",
       "amount": -21850,
       "currency": "NZD",
       "serial": "",
-      "trn": "047",
+      "trn": "053",
       "particulars": "Power",
       "code": "",
       "reference": "",
@@ -1247,17 +1403,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 50
+        "line": 56
       }
     },
     {
-      "id": "97acc0877ddf1ab1",
+      "id": "02b64e84c6d9fab4",
       "occurrence": 1,
       "date": "2026-03-10",
       "amount": 184000,
       "currency": "NZD",
       "serial": "",
-      "trn": "048",
+      "trn": "054",
       "particulars": "",
       "code": "",
       "reference": "INV-1013",
@@ -1273,17 +1429,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 51
+        "line": 57
       }
     },
     {
-      "id": "f4012a445d1c67df",
+      "id": "cc35a9f3b22a7b78",
       "occurrence": 1,
       "date": "2026-03-16",
       "amount": -115000,
       "currency": "NZD",
       "serial": "",
-      "trn": "049",
+      "trn": "055",
       "particulars": "Rent March",
       "code": "",
       "reference": "",
@@ -1299,17 +1455,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 52
+        "line": 58
       }
     },
     {
-      "id": "5c167ea5f07ae64b",
+      "id": "b56e5da40de8c059",
       "occurrence": 1,
       "date": "2026-03-24",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "050",
+      "trn": "056",
       "particulars": "Green beans",
       "code": "",
       "reference": "",
@@ -1325,7 +1481,7 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-trading.csv",
-        "line": 53
+        "line": 59
       }
     },
     {
@@ -1667,13 +1823,39 @@
       }
     },
     {
-      "id": "805b60b44d3351f7",
+      "id": "cbe3656d9e2637ef",
+      "occurrence": 1,
+      "date": "2025-09-05",
+      "amount": -18975,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "013",
+      "particulars": "Smoke alarm check",
+      "code": "",
+      "reference": "",
+      "otherParty": "Moana Fire Safety",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-4040",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 16
+      }
+    },
+    {
+      "id": "31be4111ef886bbc",
       "occurrence": 1,
       "date": "2025-09-19",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
-      "trn": "013",
+      "trn": "014",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -1689,17 +1871,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 16
+        "line": 17
       }
     },
     {
-      "id": "2b279b2857c881e8",
+      "id": "0b03196770584141",
       "occurrence": 1,
       "date": "2025-09-28",
       "amount": -61240,
       "currency": "NZD",
       "serial": "",
-      "trn": "014",
+      "trn": "015",
       "particulars": "Interest",
       "code": "",
       "reference": "",
@@ -1715,17 +1897,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 17
+        "line": 18
       }
     },
     {
-      "id": "5f9128ca7f8bc52d",
+      "id": "070072f8fbdbc8d2",
       "occurrence": 1,
       "date": "2025-10-17",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
-      "trn": "015",
+      "trn": "016",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -1741,17 +1923,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 18
+        "line": 19
       }
     },
     {
-      "id": "1d14f0f6d1b7bfa4",
+      "id": "10b8324604b7769f",
       "occurrence": 1,
       "date": "2025-10-24",
       "amount": -124000,
       "currency": "NZD",
       "serial": "",
-      "trn": "016",
+      "trn": "017",
       "particulars": "Rates",
       "code": "",
       "reference": "",
@@ -1767,17 +1949,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 19
+        "line": 20
       }
     },
     {
-      "id": "25159f76177cb359",
+      "id": "7b55d762d072f03a",
       "occurrence": 1,
       "date": "2025-10-28",
       "amount": -61240,
       "currency": "NZD",
       "serial": "",
-      "trn": "017",
+      "trn": "018",
       "particulars": "Interest",
       "code": "",
       "reference": "",
@@ -1793,17 +1975,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 20
+        "line": 21
       }
     },
     {
-      "id": "90b87f7704b07eec",
+      "id": "7d9302ec893b1395",
       "occurrence": 1,
       "date": "2025-11-14",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
-      "trn": "018",
+      "trn": "019",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -1819,17 +2001,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 21
+        "line": 22
       }
     },
     {
-      "id": "004ab50478206608",
+      "id": "d94a87a799b385a8",
       "occurrence": 1,
       "date": "2025-11-28",
       "amount": -86250,
       "currency": "NZD",
       "serial": "",
-      "trn": "019",
+      "trn": "020",
       "particulars": "Plumbing repair",
       "code": "",
       "reference": "",
@@ -1845,17 +2027,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 22
+        "line": 23
       }
     },
     {
-      "id": "dca495e99ed1644e",
+      "id": "26ac0523000292cf",
       "occurrence": 1,
       "date": "2025-11-28",
       "amount": -61240,
       "currency": "NZD",
       "serial": "",
-      "trn": "020",
+      "trn": "021",
       "particulars": "Interest",
       "code": "",
       "reference": "",
@@ -1864,32 +2046,6 @@
       "type": "BP",
       "batch": "0000",
       "otherPartyAccount": "02-7788",
-      "account": "02-1234-0056789-001",
-      "extras": {
-        "accountLabel": "17 Rimu Lane Rental"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-rental.csv",
-        "line": 23
-      }
-    },
-    {
-      "id": "4ca5353baab08f39",
-      "occurrence": 1,
-      "date": "2025-12-12",
-      "amount": 260000,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "021",
-      "particulars": "Rent",
-      "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
-      "origin": "02-1234",
-      "type": "DC",
-      "batch": "0000",
-      "otherPartyAccount": "02-1199",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1901,21 +2057,21 @@
       }
     },
     {
-      "id": "f938be730e9913cb",
+      "id": "313b0ebcfd40c3ce",
       "occurrence": 1,
-      "date": "2025-12-28",
-      "amount": -61240,
+      "date": "2025-12-12",
+      "amount": 260000,
       "currency": "NZD",
       "serial": "",
       "trn": "022",
-      "particulars": "Interest",
+      "particulars": "Rent",
       "code": "",
-      "reference": "",
-      "otherParty": "Kiwi Home Loans",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
       "origin": "02-1234",
-      "type": "BP",
+      "type": "DC",
       "batch": "0000",
-      "otherPartyAccount": "02-7788",
+      "otherPartyAccount": "02-1199",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1927,21 +2083,21 @@
       }
     },
     {
-      "id": "79782ba9cf88c86a",
+      "id": "50d90b81170c0c1a",
       "occurrence": 1,
-      "date": "2026-01-16",
-      "amount": 260000,
+      "date": "2025-12-28",
+      "amount": -61240,
       "currency": "NZD",
       "serial": "",
       "trn": "023",
-      "particulars": "Rent",
+      "particulars": "Interest",
       "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-1199",
+      "otherPartyAccount": "02-7788",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1953,21 +2109,21 @@
       }
     },
     {
-      "id": "468564a2a7b62ac0",
+      "id": "23a91f95206e6d61",
       "occurrence": 1,
-      "date": "2026-01-28",
-      "amount": -61240,
+      "date": "2026-01-16",
+      "amount": 260000,
       "currency": "NZD",
       "serial": "",
       "trn": "024",
-      "particulars": "Interest",
+      "particulars": "Rent",
       "code": "",
-      "reference": "",
-      "otherParty": "Kiwi Home Loans",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
       "origin": "02-1234",
-      "type": "BP",
+      "type": "DC",
       "batch": "0000",
-      "otherPartyAccount": "02-7788",
+      "otherPartyAccount": "02-1199",
       "account": "02-1234-0056789-001",
       "extras": {
         "accountLabel": "17 Rimu Lane Rental"
@@ -1979,39 +2135,13 @@
       }
     },
     {
-      "id": "d7b9273a2e5fcab0",
+      "id": "808e91e82ad693b9",
       "occurrence": 1,
-      "date": "2026-02-13",
-      "amount": 260000,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "025",
-      "particulars": "Rent",
-      "code": "",
-      "reference": "17 Rimu Lane",
-      "otherParty": "Beattie tenancy",
-      "origin": "02-1234",
-      "type": "DC",
-      "batch": "0000",
-      "otherPartyAccount": "02-1199",
-      "account": "02-1234-0056789-001",
-      "extras": {
-        "accountLabel": "17 Rimu Lane Rental"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-rental.csv",
-        "line": 28
-      }
-    },
-    {
-      "id": "fd6abb5714755aa5",
-      "occurrence": 1,
-      "date": "2026-02-28",
+      "date": "2026-01-28",
       "amount": -61240,
       "currency": "NZD",
       "serial": "",
-      "trn": "026",
+      "trn": "025",
       "particulars": "Interest",
       "code": "",
       "reference": "",
@@ -2027,17 +2157,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 29
+        "line": 28
       }
     },
     {
-      "id": "7de8741cb4c8df23",
+      "id": "14ee5be45707846f",
       "occurrence": 1,
-      "date": "2026-03-13",
+      "date": "2026-02-13",
       "amount": 260000,
       "currency": "NZD",
       "serial": "",
-      "trn": "027",
+      "trn": "026",
       "particulars": "Rent",
       "code": "",
       "reference": "17 Rimu Lane",
@@ -2053,17 +2183,69 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
+        "line": 29
+      }
+    },
+    {
+      "id": "4f29e8a1fc5776dc",
+      "occurrence": 1,
+      "date": "2026-02-28",
+      "amount": -61240,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "027",
+      "particulars": "Interest",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kiwi Home Loans",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-7788",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
         "line": 30
       }
     },
     {
-      "id": "d87842b86925a3b2",
+      "id": "797fbba40a42b238",
+      "occurrence": 1,
+      "date": "2026-03-13",
+      "amount": 260000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "028",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "17 Rimu Lane",
+      "otherParty": "Beattie tenancy",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-1199",
+      "account": "02-1234-0056789-001",
+      "extras": {
+        "accountLabel": "17 Rimu Lane Rental"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-rental.csv",
+        "line": 31
+      }
+    },
+    {
+      "id": "bc9a6e7925f028af",
       "occurrence": 1,
       "date": "2026-03-20",
       "amount": -51750,
       "currency": "NZD",
       "serial": "",
-      "trn": "028",
+      "trn": "029",
       "particulars": "Gutter clean",
       "code": "",
       "reference": "",
@@ -2079,17 +2261,17 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 31
+        "line": 32
       }
     },
     {
-      "id": "c0943948c9eaf1e7",
+      "id": "89eabfa4b60a0fe9",
       "occurrence": 1,
       "date": "2026-03-28",
       "amount": -61240,
       "currency": "NZD",
       "serial": "",
-      "trn": "029",
+      "trn": "030",
       "particulars": "Interest",
       "code": "",
       "reference": "",
@@ -2105,7 +2287,7 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-rental.csv",
-        "line": 32
+        "line": 33
       }
     },
     {
@@ -2395,21 +2577,21 @@
       }
     },
     {
-      "id": "4ded74e51f850e6c",
+      "id": "a27532d0e77e0ac0",
       "occurrence": 1,
-      "date": "2025-12-05",
-      "amount": 345000,
+      "date": "2025-12-03",
+      "amount": -28750,
       "currency": "NZD",
       "serial": "",
       "trn": "011",
-      "particulars": "Rent",
+      "particulars": "Exit light repair",
       "code": "",
-      "reference": "4 Matai St",
-      "otherParty": "Harakeke Florist Ltd",
+      "reference": "",
+      "otherParty": "Piwakawaka Electrical",
       "origin": "02-1234",
-      "type": "DC",
+      "type": "BP",
       "batch": "0000",
-      "otherPartyAccount": "02-4411",
+      "otherPartyAccount": "02-9090",
       "account": "02-1234-0056789-002",
       "extras": {
         "accountLabel": "4 Matai Street Commercial"
@@ -2421,9 +2603,9 @@
       }
     },
     {
-      "id": "23cbf0a416d0c996",
+      "id": "8f26e54d3dc32c19",
       "occurrence": 1,
-      "date": "2026-01-05",
+      "date": "2025-12-05",
       "amount": 345000,
       "currency": "NZD",
       "serial": "",
@@ -2447,9 +2629,9 @@
       }
     },
     {
-      "id": "47854a2918b3a70c",
+      "id": "60741e6b1305a4c5",
       "occurrence": 1,
-      "date": "2026-02-05",
+      "date": "2026-01-05",
       "amount": 345000,
       "currency": "NZD",
       "serial": "",
@@ -2473,39 +2655,13 @@
       }
     },
     {
-      "id": "c1fa3ebc159455e1",
+      "id": "d962e47021ccff65",
       "occurrence": 1,
-      "date": "2026-02-10",
-      "amount": -41400,
-      "currency": "NZD",
-      "serial": "",
-      "trn": "014",
-      "particulars": "Lease renewal fee",
-      "code": "",
-      "reference": "",
-      "otherParty": "Kowhai Property Management",
-      "origin": "02-1234",
-      "type": "BP",
-      "batch": "0000",
-      "otherPartyAccount": "02-6611",
-      "account": "02-1234-0056789-002",
-      "extras": {
-        "accountLabel": "4 Matai Street Commercial"
-      },
-      "source": {
-        "importer": "bnz-transaction-list",
-        "file": "bank-commercial.csv",
-        "line": 17
-      }
-    },
-    {
-      "id": "cbd4516a8219122d",
-      "occurrence": 1,
-      "date": "2026-03-05",
+      "date": "2026-02-05",
       "amount": 345000,
       "currency": "NZD",
       "serial": "",
-      "trn": "015",
+      "trn": "014",
       "particulars": "Rent",
       "code": "",
       "reference": "4 Matai St",
@@ -2521,7 +2677,59 @@
       "source": {
         "importer": "bnz-transaction-list",
         "file": "bank-commercial.csv",
+        "line": 17
+      }
+    },
+    {
+      "id": "1c1a363ee5513868",
+      "occurrence": 1,
+      "date": "2026-02-10",
+      "amount": -41400,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "015",
+      "particulars": "Lease renewal fee",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kowhai Property Management",
+      "origin": "02-1234",
+      "type": "BP",
+      "batch": "0000",
+      "otherPartyAccount": "02-6611",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
         "line": 18
+      }
+    },
+    {
+      "id": "ddb99d5a67b04360",
+      "occurrence": 1,
+      "date": "2026-03-05",
+      "amount": 345000,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "016",
+      "particulars": "Rent",
+      "code": "",
+      "reference": "4 Matai St",
+      "otherParty": "Harakeke Florist Ltd",
+      "origin": "02-1234",
+      "type": "DC",
+      "batch": "0000",
+      "otherPartyAccount": "02-4411",
+      "account": "02-1234-0056789-002",
+      "extras": {
+        "accountLabel": "4 Matai Street Commercial"
+      },
+      "source": {
+        "importer": "bnz-transaction-list",
+        "file": "bank-commercial.csv",
+        "line": 19
       }
     },
     {
@@ -2861,6 +3069,30 @@
       }
     },
     {
+      "id": "9d34d9de1d92d0f3",
+      "occurrence": 1,
+      "date": "2025-11-07",
+      "amount": -3850,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Kotuku Books",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 16
+      }
+    },
+    {
       "id": "c20dd82678542662",
       "occurrence": 1,
       "date": "2025-11-19",
@@ -2881,7 +3113,7 @@
       "source": {
         "importer": "bnz-card",
         "file": "bank-card.csv",
-        "line": 16
+        "line": 17
       }
     },
     {
@@ -2905,7 +3137,7 @@
       "source": {
         "importer": "bnz-card",
         "file": "bank-card.csv",
-        "line": 17
+        "line": 18
       }
     },
     {
@@ -2929,7 +3161,31 @@
       "source": {
         "importer": "bnz-card",
         "file": "bank-card.csv",
-        "line": 18
+        "line": 19
+      }
+    },
+    {
+      "id": "d2e65dc6f4a46068",
+      "occurrence": 1,
+      "date": "2026-02-02",
+      "amount": -2400,
+      "currency": "NZD",
+      "serial": "",
+      "trn": "",
+      "particulars": "Nelson",
+      "code": "",
+      "reference": "",
+      "otherParty": "Mahoe Parking",
+      "origin": "",
+      "type": "PUR",
+      "batch": "",
+      "otherPartyAccount": "",
+      "account": "kea-card-4021",
+      "extras": {},
+      "source": {
+        "importer": "bnz-card",
+        "file": "bank-card.csv",
+        "line": 20
       }
     },
     {
@@ -2953,7 +3209,7 @@
       "source": {
         "importer": "bnz-card",
         "file": "bank-card.csv",
-        "line": 19
+        "line": 21
       }
     },
     {
@@ -2977,7 +3233,7 @@
       "source": {
         "importer": "bnz-card",
         "file": "bank-card.csv",
-        "line": 20
+        "line": 22
       }
     }
   ],
@@ -3014,7 +3270,7 @@
       "note": "Green beans for roasting",
       "at": "2025-05-06"
     },
-    "c645c56b0868ea6e": {
+    "be556c2a9553d19f": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3022,7 +3278,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-05-15"
     },
-    "74a8a6603f6e42b0": {
+    "6722141e0eaba431": {
       "confirmed": true,
       "code": "Light, power, heating - 445",
       "treatment": "standard",
@@ -3030,7 +3286,7 @@
       "note": "Power at the roastery",
       "at": "2025-05-28"
     },
-    "a3e9d7262c2121f6": {
+    "fa2f67e50c22b9fb": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3038,7 +3294,7 @@
       "note": "Green beans for roasting",
       "at": "2025-06-10"
     },
-    "91ff8c7c3b957cf1": {
+    "5c02810a390bbc10": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3046,7 +3302,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-06-16"
     },
-    "6c9fb1cedbd8d30e": {
+    "97962aeef5baed8c": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3054,7 +3310,7 @@
       "note": "Green beans for roasting",
       "at": "2025-07-08"
     },
-    "16c41356e925c3a3": {
+    "4167b636df1a43d5": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3062,7 +3318,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-07-15"
     },
-    "786205a1e4a09d7a": {
+    "d3d3dbe77e43a86b": {
       "confirmed": true,
       "code": "Light, power, heating - 445",
       "treatment": "standard",
@@ -3070,7 +3326,7 @@
       "note": "Power at the roastery",
       "at": "2025-07-30"
     },
-    "ac36298de9521a84": {
+    "77f9abc5d08bc61a": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3078,7 +3334,7 @@
       "note": "Green beans for roasting",
       "at": "2025-08-12"
     },
-    "95989f4073b02b0b": {
+    "2dae0c7c5c149e31": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3086,7 +3342,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-08-15"
     },
-    "351721f343fd10bd": {
+    "b5f0b706d9a0c4f4": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3094,7 +3350,7 @@
       "note": "Green beans for roasting",
       "at": "2025-09-09"
     },
-    "11d2c8d706cf5634": {
+    "324e758978367db3": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3102,7 +3358,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-09-15"
     },
-    "8c19954644f642a5": {
+    "06eed10c62c59a79": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3110,7 +3366,7 @@
       "note": "Green beans for roasting",
       "at": "2025-10-07"
     },
-    "964469bbcbe91d0c": {
+    "4b5b9463e4daf370": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3118,7 +3374,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-10-15"
     },
-    "2365e0486c075b59": {
+    "89d232256c11c835": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3126,7 +3382,7 @@
       "note": "Green beans for roasting",
       "at": "2025-11-11"
     },
-    "a88419eb85273e40": {
+    "1865398b021e2b44": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3134,7 +3390,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-11-17"
     },
-    "fc9757b278e89fa4": {
+    "0338f0dd471b9f6b": {
       "confirmed": true,
       "code": "Light, power, heating - 445",
       "treatment": "standard",
@@ -3142,7 +3398,7 @@
       "note": "Power at the roastery",
       "at": "2025-11-25"
     },
-    "e655e3945924c95f": {
+    "03d9f9690cfe2e20": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3150,7 +3406,7 @@
       "note": "Green beans for roasting",
       "at": "2025-12-09"
     },
-    "f0707b15ce17fad0": {
+    "873c58939a9cc6dd": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3158,7 +3414,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2025-12-15"
     },
-    "9096aad138874154": {
+    "08476ef04ce79dc6": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3166,7 +3422,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2026-01-13"
     },
-    "3cb04688bfc5c841": {
+    "423878f5f78c7e67": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3174,7 +3430,7 @@
       "note": "Green beans for roasting",
       "at": "2026-01-27"
     },
-    "326590e4934cc959": {
+    "7d402f78555fd204": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3182,7 +3438,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2026-02-16"
     },
-    "840707e99e5e337f": {
+    "31cebcd3b8ef9ae8": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3190,7 +3446,7 @@
       "note": "Green beans for roasting",
       "at": "2026-02-24"
     },
-    "c63de240fac964fc": {
+    "20372bee95a1a30f": {
       "confirmed": true,
       "code": "Light, power, heating - 445",
       "treatment": "standard",
@@ -3198,7 +3454,7 @@
       "note": "Power at the roastery",
       "at": "2026-03-03"
     },
-    "f4012a445d1c67df": {
+    "cc35a9f3b22a7b78": {
       "confirmed": true,
       "code": "Rent paid - 461",
       "treatment": "standard",
@@ -3206,7 +3462,7 @@
       "note": "Monthly rent on the roastery unit",
       "at": "2026-03-16"
     },
-    "5c167ea5f07ae64b": {
+    "b56e5da40de8c059": {
       "confirmed": true,
       "code": "Cost of goods sold - 300",
       "treatment": "standard",
@@ -3310,7 +3566,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2025-08-28"
     },
-    "805b60b44d3351f7": {
+    "31be4111ef886bbc": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3318,7 +3574,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-09-19"
     },
-    "2b279b2857c881e8": {
+    "0b03196770584141": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3326,7 +3582,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2025-09-28"
     },
-    "5f9128ca7f8bc52d": {
+    "070072f8fbdbc8d2": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3334,7 +3590,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-10-17"
     },
-    "1d14f0f6d1b7bfa4": {
+    "10b8324604b7769f": {
       "confirmed": true,
       "code": "Rates - 604",
       "treatment": "exempt",
@@ -3342,7 +3598,7 @@
       "note": "Council rates on the rental",
       "at": "2025-10-24"
     },
-    "25159f76177cb359": {
+    "7b55d762d072f03a": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3350,7 +3606,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2025-10-28"
     },
-    "90b87f7704b07eec": {
+    "7d9302ec893b1395": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3358,7 +3614,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-11-14"
     },
-    "dca495e99ed1644e": {
+    "26ac0523000292cf": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3366,7 +3622,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2025-11-28"
     },
-    "4ca5353baab08f39": {
+    "313b0ebcfd40c3ce": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3374,7 +3630,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2025-12-12"
     },
-    "f938be730e9913cb": {
+    "50d90b81170c0c1a": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3382,7 +3638,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2025-12-28"
     },
-    "79782ba9cf88c86a": {
+    "23a91f95206e6d61": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3390,7 +3646,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2026-01-16"
     },
-    "468564a2a7b62ac0": {
+    "808e91e82ad693b9": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3398,7 +3654,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2026-01-28"
     },
-    "d7b9273a2e5fcab0": {
+    "14ee5be45707846f": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3406,7 +3662,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2026-02-13"
     },
-    "fd6abb5714755aa5": {
+    "4f29e8a1fc5776dc": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3414,7 +3670,7 @@
       "note": "Mortgage interest on the rental",
       "at": "2026-02-28"
     },
-    "7de8741cb4c8df23": {
+    "797fbba40a42b238": {
       "confirmed": true,
       "code": "Rent received - 210",
       "treatment": "exempt",
@@ -3422,7 +3678,7 @@
       "note": "Residential rent, exempt from GST",
       "at": "2026-03-13"
     },
-    "c0943948c9eaf1e7": {
+    "89eabfa4b60a0fe9": {
       "confirmed": true,
       "code": "Interest - 17 Rimu Lane - 606",
       "treatment": "exempt",
@@ -3510,7 +3766,7 @@
       "note": "Commercial rent",
       "at": "2025-11-05"
     },
-    "4ded74e51f850e6c": {
+    "8f26e54d3dc32c19": {
       "confirmed": true,
       "code": "Rent received - Matai Street - 220",
       "treatment": "standard",
@@ -3518,7 +3774,7 @@
       "note": "Commercial rent",
       "at": "2025-12-05"
     },
-    "23cbf0a416d0c996": {
+    "60741e6b1305a4c5": {
       "confirmed": true,
       "code": "Rent received - Matai Street - 220",
       "treatment": "standard",
@@ -3526,7 +3782,7 @@
       "note": "Commercial rent",
       "at": "2026-01-05"
     },
-    "47854a2918b3a70c": {
+    "d962e47021ccff65": {
       "confirmed": true,
       "code": "Rent received - Matai Street - 220",
       "treatment": "standard",
@@ -3534,7 +3790,7 @@
       "note": "Commercial rent",
       "at": "2026-02-05"
     },
-    "cbd4516a8219122d": {
+    "ddb99d5a67b04360": {
       "confirmed": true,
       "code": "Rent received - Matai Street - 220",
       "treatment": "standard",
@@ -3616,7 +3872,7 @@
     }
   },
   "splits": {
-    "1c928b77f8eac96b": [
+    "19b2e59e18435657": [
       {
         "amount": -51750,
         "code": "Property repairs - 600",
@@ -3655,8 +3911,8 @@
     "73e453763e405905": "INV-1003"
   },
   "transfers": {
-    "e9641a005d915a02": "5b0e6def40e069fd",
-    "5b0e6def40e069fd": "e9641a005d915a02"
+    "056d5f057e915a8e": "5b0e6def40e069fd",
+    "5b0e6def40e069fd": "056d5f057e915a8e"
   },
   "entities": {
     "entities": [

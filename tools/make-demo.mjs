@@ -94,6 +94,18 @@ const trading = [
   ["2026-03-10", 1840.0, "", "INV-1013", "Kea Cafe Group", "02-4455"],
   ["2026-03-16", -1150.0, "Rent March", "", "Rimu Property Trust", "02-9911"],
   ["2026-03-24", -862.5, "Green beans", "", "Highland Bean Co", "02-8811"],
+  // Payees no rule knows. Every other line here has a supplier the rules
+  // were written for, which left the AI suggestions with one line to talk
+  // about -- a demo of the feature that showed almost none of it. These are
+  // ordinary costs a bookkeeper would place at a glance and a rule has never
+  // seen, and one is money in from a supplier: a refund, which is the case
+  // the direction check exists for.
+  ["2025-05-13", -420.0, "Grinder burrs", "", "Canterbury Espresso Parts", "02-3141"],
+  ["2025-06-19", -575.0, "Van signage", "", "Ruru Signwriters", "02-2718"],
+  ["2025-08-20", -345.0, "Website hosting", "", "Weka Web Studio", "02-1618"],
+  ["2025-10-09", -161.0, "Monthly clean", "", "Tui Cleaning Services", "02-1414"],
+  ["2025-12-18", 46.0, "Credit note", "", "Canterbury Espresso Parts", "02-3141"],
+  ["2026-01-08", -1380.0, "Barista training", "", "Kereru Coffee School", "02-5772"],
   // Paying the card off. The other leg is on the card account below, so the
   // pair can be joined as a transfer.
   ["2025-10-28", -1284.35, "Card payment", "", "BNZCREDITCDS", CARD],
@@ -121,6 +133,7 @@ const rental = [
   ["2026-02-13", 2600.0, "Rent", "17 Rimu Lane", "Beattie tenancy", "02-1199"],
   ["2026-03-13", 2600.0, "Rent", "17 Rimu Lane", "Beattie tenancy", "02-1199"],
   ["2026-03-20", -517.5, "Gutter clean", "", "Topline Roofing", "02-2277"],
+  ["2025-09-05", -189.75, "Smoke alarm check", "", "Moana Fire Safety", "02-4040"],
   // The mortgage on the house: interest charged each month, a deduction on the
   // residential schedule.
   ...MONTHS.map((month) => [`${month}-28`, -612.4, "Interest", "", "Kiwi Home Loans", "02-7788"]),
@@ -136,6 +149,7 @@ const commercial = [
   ["2025-08-18", -2760.0, "Commercial insurance", "", "Tasman Insurance", "02-4488"],
   ["2025-09-12", 2760.0, "Insurance recovery", "4 Matai St", "Harakeke Florist Ltd", "02-4411"],
   ["2025-11-20", -632.5, "Roller door repair", "", "Southern Doors Ltd", "02-3355"],
+  ["2025-12-03", -287.5, "Exit light repair", "", "Piwakawaka Electrical", "02-9090"],
   ["2026-02-10", -414.0, "Lease renewal fee", "", "Kowhai Property Management", "02-6611"],
 ];
 
@@ -161,6 +175,8 @@ const card = [
   ["2025-12-04", -132.25, "Phone and internet", "Nelson", "", "PUR"],
   ["2026-01-22", -46.0, "Cafe supplies", "Nelson", "", "PUR"],
   ["2026-02-19", -167.9, "Fuel", "Richmond", "", "PUR"],
+  ["2025-11-07", -38.5, "Kotuku Books", "Nelson", "", "PUR"],
+  ["2026-02-02", -24.0, "Mahoe Parking", "Nelson", "", "PUR"],
   ["2026-03-05", -132.25, "Phone and internet", "Nelson", "", "PUR"],
 ];
 

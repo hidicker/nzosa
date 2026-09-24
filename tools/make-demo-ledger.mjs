@@ -290,6 +290,12 @@ const entities = {
       id: "kea-coffee-roasters-limited",
       name: "Kea Coffee Roasters Limited",
       note: "The trading company",
+      // What the AI suggestions page shows in "Each entity", and what every
+      // question to a model carries about this one. Written to match what the
+      // demo's own transactions show it doing.
+      about:
+        "Roasts green beans bought by the sack and sells the coffee wholesale to cafes, " +
+        "and at markets and trade shows. Runs one van. Rents its roastery unit.",
       kind: "business",
       gstRegistered: true,
       owners: [],
@@ -298,6 +304,9 @@ const entities = {
       id: "17-rimu-lane",
       name: "17 Rimu Lane",
       note: "Residential rental, jointly owned",
+      about:
+        "A house let to one long-term tenant, with a mortgage on it. Rent, rates, " +
+        "insurance, mortgage interest and the odd repair.",
       kind: "residential",
       // Residential rent is an exempt supply, so the rental registers for nothing.
       gstRegistered: false,
@@ -310,6 +319,9 @@ const entities = {
       id: "4-matai-street",
       name: "4 Matai Street",
       note: "Commercial rental, jointly owned",
+      about:
+        "A shop unit leased to a florist, who pays GST-inclusive rent and repays the " +
+        "building insurance. Repairs and letting fees are the landlord's.",
       kind: "commercial",
       gstRegistered: true,
       owners: [
@@ -381,8 +393,9 @@ const ledger = {
   // explains the field -- the same way a real bank account number once got
   // into the comment explaining a bank-number leak.
   booksAbout:
-    "A small coffee roastery that sells wholesale to cafes and retail from its own door, " +
-    "with two rental properties alongside it: one residential flat and one commercial unit.",
+    "A small coffee roastery in Nelson, owned by a couple, alongside two rental " +
+    "properties they own together: a house let to a tenant and a shop unit leased to a " +
+    "florist. Each is its own entity, kept in one set of books.",
 };
 writeFileSync(join(out, "ledger.json"), JSON.stringify(ledger, null, 2));
 

@@ -101,6 +101,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
                 <span>Invoices</span>
               </button>
+              <button type="button" data-page="payroll">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
+                <span>Payroll</span>
+              </button>
             </div>
           </div>
           <div class="sidebar-group" data-group="enter">
@@ -420,6 +424,26 @@
         </p>
         <div id="invoice-editor"></div>
         <div id="invoices-body"></div>
+      </section>
+
+      <section id="page-payroll" class="page" hidden>
+        <div class="page-head">
+          <h2>Payroll &amp; Payday Filing</h2>
+          <div class="page-actions" id="payroll-actions">
+            <div class="filters" id="payroll-tabs" role="group" aria-label="Payroll view">
+              <button id="payroll-tab-runs" type="button" class="active">Pay Runs</button>
+              <button id="payroll-tab-employees" type="button">Employees</button>
+            </div>
+            <button id="payroll-new-run" type="button" class="primary">New pay run</button>
+            <button id="payroll-add-employee" type="button">Add employee</button>
+          </div>
+        </div>
+        <p class="page-hint" id="payroll-hint">
+          Manage employees, run payroll with statutory New Zealand PAYE, KiwiSaver, ESCT, and student loan deductions, and export official Employment Information (EI) CSVs for direct upload to Inland Revenue via myIR.
+        </p>
+        <div id="payroll-employer-bar"></div>
+        <div id="payroll-editor"></div>
+        <div id="payroll-body"></div>
       </section>
 
       <section id="page-reports" class="page" hidden>

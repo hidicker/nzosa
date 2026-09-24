@@ -129,6 +129,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   reconcile: "code coding categorise transactions review",
   import: "bank feed akahu csv statements balances upload",
   invoices: "sales customers receivables owed allocations",
+  payroll: "wages salaries paye kiwisaver payday filing ird employee employer esct student loan",
   manual: "journal entries adjustments year end accountant",
   assets: "depreciation register disposals purchases",
   agents: "rental property management fees rent",

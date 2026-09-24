@@ -2,9 +2,15 @@ import { entityId } from "@nzosa/core";
 import type {
   AgentStatement,
   Ir3Details,
-  Account, Cents, EntityModel, FixedAsset, Invoice, Journal, ManualJournal,
-  PaymentAllocation, Payout, TaxExtra,
+  Account, Cents, Employee, EntityModel, FixedAsset, Invoice, Journal, ManualJournal,
+  PayRun, PaymentAllocation, Payout, TaxExtra,
 } from "@nzosa/core";
+
+export interface PayrollData {
+  employerIrd?: string | undefined;
+  employees: Employee[];
+  payRuns: PayRun[];
+}
 import type {
   FiledReturn,
   OpeningBalances,
@@ -204,6 +210,7 @@ export interface StoredLedger {
   aiEnabled?: boolean;
   /** What these books are, for the briefing that goes with every question. */
   booksAbout?: string;
+  payroll?: PayrollData;
 }
 
 export function emptyLedger(): StoredLedger {
@@ -331,6 +338,7 @@ const PARTS = [
   "transfers",
   "reference",
   "taxExtras",
+  "payroll",
 ] as const;
 
 
@@ -476,6 +484,7 @@ const FOLDER_PARTS = [
   "reference",
   "filed",
   "events",
+  "payroll",
 ] as const;
 
 /** The decisions file: everything a person chose, kept together and small. */
@@ -513,6 +522,7 @@ function partValue(ledger: StoredLedger, part: string): unknown {
   if (part === "transactions") return ledger.transactions;
   if (part === "decisions") return decisionsOf(ledger);
   if (part === "filed") return ledger.filedReturns ?? [];
+  if (part === "payroll") return ledger.payroll ?? { employerIrd: "", employees: [], payRuns: [] };
   if (part === "rules" || part === "rulesarchive" || part === "events") return undefined;
   return (ledger as unknown as Record<string, unknown>)[part];
 }
@@ -604,6 +614,10 @@ function ledgerFromParts(
     }
     if (part === "filed") {
       ledger["filedReturns"] = held.data ?? [];
+      continue;
+    }
+    if (part === "payroll") {
+      ledger["payroll"] = held.data ?? { employerIrd: "", employees: [], payRuns: [] };
       continue;
     }
     if (part === "rules" || part === "rulesarchive" || part === "events") continue;

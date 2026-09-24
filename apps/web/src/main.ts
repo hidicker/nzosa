@@ -60,6 +60,10 @@ import {
   wireInvoices,
 } from "./daily/invoices.js";
 import {
+  renderPayrollPage,
+  wirePayroll,
+} from "./daily/payroll.js";
+import {
   renderEntities,
 } from "./daily/entities.js";
 import {
@@ -137,6 +141,7 @@ async function init(): Promise<void> {
     aiCheck: renderAiCheck,
     openBooks: renderOpenBooks,
     openingBalances: renderOpeningBalances,
+    payroll: renderPayrollPage,
     reconcile: renderReconcile,
     reports: renderReportsPage,
     rules: renderRules,
@@ -293,6 +298,7 @@ function wireUp(): void {
   wireInvoices();
   wireReports();
   wireAssets();
+  wirePayroll();
   wireOpeningBalances();
   wireBooksPage();
 }

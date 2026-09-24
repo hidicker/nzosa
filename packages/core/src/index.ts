@@ -348,3 +348,4 @@ export * from "./gst-return-report.js";
 export * from "./ai-coding.js";
 export * from "./mcp.js";
 export * from "./ai-providers.js";
+export * from "./payroll.js";

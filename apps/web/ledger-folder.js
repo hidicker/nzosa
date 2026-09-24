@@ -48,6 +48,7 @@ export const PARTS = [
   "rulesarchive",
   "filed",
   "events",
+  "payroll",
 ];
 
 const META = "ledger.json";
@@ -60,6 +61,7 @@ function emptyPart(part) {
   // Not {}: the app iterates `entities`, and an object without it is a
   // plausible-looking value that fails at the point of use rather than here.
   if (part === "entities") return { entities: [], accounts: {}, banks: {} };
+  if (part === "payroll") return { employerIrd: "", employees: [], payRuns: [] };
   return {};
 }
 

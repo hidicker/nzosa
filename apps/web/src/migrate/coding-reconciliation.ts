@@ -2151,39 +2151,58 @@ function wireAiButton(): void {
     withPrompt.textContent = "Copy a prompt for any AI model";
   };
 
-  void aiStatus().then((status) => {
-    if (!aiAllowed()) return;
-    ownKey = status?.configured === true;
-    // A shared key counts: somebody with none of their own can still ask
-    // automatically, up to what the site allows.
-    haveKey = ownKey || status?.sharedKey === true;
-    if (!ownKey && status?.sharedKey === true) {
-      shared = {
-        model: status.sharedModel ?? "",
-        left: Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0)),
-      };
-      // Said on the page where the asking happens, not only on the page where
-      // it is set up: somebody here has not necessarily been there.
-      notice.hidden = false;
-      notice.textContent = "";
-      notice.append(
-        document.createTextNode(
-          "You can try this without a key of your own. This site offers a shared one — " +
-            `${shared.model || "a flash model"}, ${shared.left} transactions left on your ` +
-            "account — asked twenty at a time. What you send goes to Google under the " +
-            "site owner's account, so add a key of your own for a client's books. ",
-        ),
-      );
-      const where = document.createElement("button");
-      where.type = "button";
-      where.className = "link-button";
-      where.textContent = "Add your own key";
-      where.addEventListener("click", () => showPage("ai"));
-      notice.append(where);
-    }
-    group.hidden = false;
-    say();
-  });
+  /**
+   * What can be asked, and on whose key, said again after every ask.
+   *
+   * Once, at load, was enough when the count only mattered to one person. The
+   * demo's allowance is shared by every visitor, so the figure moves under the
+   * page as well as because of it, and a count that never updates is a count
+   * that is wrong after the first press.
+   */
+  const learn = (): void => {
+    void aiStatus().then((status) => {
+      if (!aiAllowed()) return;
+      ownKey = status?.configured === true;
+      // A shared key counts: somebody with none of their own can still ask
+      // automatically, up to what the site allows.
+      haveKey = ownKey || status?.sharedKey === true;
+      shared = null;
+      notice.hidden = true;
+      if (!ownKey && status?.sharedKey === true) {
+        shared = {
+          model: status.sharedModel ?? "",
+          left: Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0)),
+        };
+        // Said on the page where the asking happens, not only on the page
+        // where it is set up: somebody here has not necessarily been there.
+        notice.hidden = false;
+        notice.textContent = "";
+        notice.append(
+          document.createTextNode(
+            aiRoute() === "demo"
+              ? // No sign-in in the demo, so one allowance for everybody rather
+                // than one each, and it refills only when the owner says.
+                "You can try this without a key of your own. The demo offers a shared one — " +
+                  `${shared.model || "a flash model"}, with ${shared.left} transactions left ` +
+                  "in one allowance shared by every visitor, asked twenty at a time. "
+              : "You can try this without a key of your own. This site offers a shared one — " +
+                  `${shared.model || "a flash model"}, ${shared.left} transactions left on ` +
+                  "your account — asked twenty at a time. What you send goes to Google under " +
+                  "the site owner's account, so add a key of your own for a client's books. ",
+          ),
+        );
+        const where = document.createElement("button");
+        where.type = "button";
+        where.className = "link-button";
+        where.textContent = "Add your own key";
+        where.addEventListener("click", () => showPage("ai"));
+        notice.append(where);
+      }
+      group.hidden = false;
+      say();
+    });
+  };
+  learn();
 
   button.addEventListener("click", () => {
     if (button.disabled) return;
@@ -2266,8 +2285,10 @@ function wireAiButton(): void {
       .finally(() => {
         button.classList.remove("working");
         button.removeAttribute("aria-busy");
-        // Puts the label and the count back, whatever happened.
+        // Puts the label and the count back, whatever happened -- and the
+        // allowance, which that ask has just spent from.
         say();
+        learn();
       });
   };
 

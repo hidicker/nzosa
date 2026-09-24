@@ -1,5 +1,7 @@
 import { callFunction } from "./cloud.js";
 import { backendKind, openCloudBookId } from "./store.js";
+import { isDemoBuild } from "./ai-consent.js";
+import { demoClearKey, demoSetKey, demoSetModel, demoStatus, demoSuggest } from "./ai-demo.js";
 
 /**
  * Where the asking is done, which depends on where the books are.
@@ -83,14 +85,19 @@ async function hosted<T>(
 }
 
 /** Whether this copy can ask at all, and by which route. */
-export function aiRoute(): "folder" | "cloud" | "none" {
+export function aiRoute(): "folder" | "cloud" | "demo" | "none" {
   const kind = backendKind();
   if (kind === "folder") return "folder";
   if (kind === "cloud" && openCloudBookId() !== "") return "cloud";
+  // The online demo has neither a folder nor books on the server, but it has
+  // its own way: a visitor's key asked from the page, or the demo's shared
+  // allowance. See ai-demo.ts.
+  if (isDemoBuild()) return "demo";
   return "none";
 }
 
 export async function aiStatus(): Promise<AiStatus | null> {
+  if (aiRoute() === "demo") return demoStatus();
   if (aiRoute() === "folder") {
     const response = await local("/api/ai");
     if (response === null || !response.ok) return null;
@@ -119,6 +126,7 @@ export async function aiStatus(): Promise<AiStatus | null> {
 }
 
 export async function aiSetKey(key: string): Promise<{ ok: boolean; error: string }> {
+  if (aiRoute() === "demo") return demoSetKey(key);
   if (aiRoute() === "cloud") {
     const answer = await hosted("set-key", { key });
     return answer.ok ? { ok: true, error: "" } : { ok: false, error: answer.error };
@@ -134,6 +142,10 @@ export async function aiSetKey(key: string): Promise<{ ok: boolean; error: strin
 }
 
 export async function aiSetModel(model: string): Promise<void> {
+  if (aiRoute() === "demo") {
+    demoSetModel(model);
+    return;
+  }
   if (aiRoute() === "folder") {
     await local("/api/ai", {
       method: "PUT",
@@ -146,6 +158,10 @@ export async function aiSetModel(model: string): Promise<void> {
 }
 
 export async function aiClearKey(): Promise<void> {
+  if (aiRoute() === "demo") {
+    demoClearKey();
+    return;
+  }
   if (aiRoute() === "folder") {
     await local("/api/ai", { method: "DELETE" });
     return;
@@ -167,6 +183,7 @@ export async function aiConverse(
   tools: readonly unknown[],
 ): Promise<AiTurn> {
   const empty = { parts: [] as AiPart[], finishReason: "" };
+  if (aiRoute() === "demo") return { ...empty, error: "Not offered in the demo." };
   if (aiRoute() === "cloud") {
     const answer = await hosted<AiTurn>("converse", { contents, tools });
     return answer.ok ? answer.body : { ...empty, error: answer.error };
@@ -185,6 +202,7 @@ export async function aiConverse(
 }
 
 export async function aiSuggest(prompt: string, asking: number): Promise<AiAnswer> {
+  if (aiRoute() === "demo") return demoSuggest(prompt, asking);
   if (aiRoute() === "cloud") {
     const answer = await hosted<AiAnswer>("suggest", { prompt, asking });
     return answer.ok ? answer.body : { error: answer.error };

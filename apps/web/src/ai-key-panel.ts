@@ -47,7 +47,11 @@ export async function refreshAiStatus(from: PageName): Promise<void> {
     status.configured !== next.configured ||
     status.usedToday !== next.usedToday ||
     status.model !== next.model ||
-    status.key !== next.key;
+    status.key !== next.key ||
+    // The shared allowance moves too -- in the demo, with every visitor's ask.
+    status.sharedKey !== next.sharedKey ||
+    status.demoLimit !== next.demoLimit ||
+    status.demoUsed !== next.demoUsed;
   status = next;
   if (changed) for (const page of watching) redraw(page);
 }
@@ -95,10 +99,17 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
     const left = Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0));
     inner.append(
       note(
-        "You can try this without a key of your own. This site offers a shared one -- " +
-          `${status.sharedModel || "a flash model"}, ${left} ${counted} left on your ` +
-          "account, ever, not per day -- paid for by whoever runs the site. What you send " +
-          "goes to Google under their account, so use a key of your own for a client's books.",
+        aiRoute() === "demo"
+          ? // One allowance for every visitor to the demo, not one each: there is
+            // no sign-in here to count a person by.
+            "You can try this without a key of your own. The demo offers a shared one -- " +
+              `${status.sharedModel || "a flash model"}, with ${left} ${counted} left in one ` +
+              "allowance shared by every visitor, until the site owner resets it. Or add a " +
+              "key of your own below."
+          : "You can try this without a key of your own. This site offers a shared one -- " +
+              `${status.sharedModel || "a flash model"}, ${left} ${counted} left on your ` +
+              "account, ever, not per day -- paid for by whoever runs the site. What you send " +
+              "goes to Google under their account, so use a key of your own for a client's books.",
       ),
     );
   }
@@ -107,13 +118,16 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
     inner.append(
       note(
         `Set: ${status.key}. ` +
-          (aiRoute() === "cloud"
-            ? "It is kept in the server's vault, which only the function that asks Google " +
-              "can open, beside the bank feed's tokens."
-            : "It is kept in a file on this computer that only your user account can read, " +
-              "beside the bank feed's tokens.") +
-          " It is never sent back to this page, and it serves every page here that asks a " +
-          "model anything.",
+          (aiRoute() === "demo"
+            ? "It is kept in this browser tab only and forgotten when the tab closes. It is " +
+              "sent from this page straight to Google and never to this site's server."
+            : (aiRoute() === "cloud"
+                ? "It is kept in the server's vault, which only the function that asks Google " +
+                  "can open, beside the bank feed's tokens."
+                : "It is kept in a file on this computer that only your user account can read, " +
+                  "beside the bank feed's tokens.") +
+              " It is never sent back to this page, and it serves every page here that asks a " +
+              "model anything."),
       ),
     );
 

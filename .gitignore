@@ -62,6 +62,9 @@ nzosa-log.txt
 # one place, and a copy taken anywhere else is still a credential.
 .akahu.json
 *.akahu.json
+# The same for AI keys, which the app keeps beside the books in .ai.json.
+.ai.json
+*.ai.json
 
 # Ledger folders: the books themselves. The folder is the truth now, so this
 # is the real data and must never be committed. The demo ships as a template

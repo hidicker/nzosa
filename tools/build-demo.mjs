@@ -33,6 +33,10 @@ demoHtml = demoHtml.replace('id="demo-import-privacy-notice" class="demo-privacy
 writeFileSync(join(demoDir, "index.html"), demoHtml, "utf-8");
 cpSync(join(webDist, "styles.css"), join(demoDir, "styles.css"));
 cpSync(join(webDist, "app.js"), join(demoDir, "app.js"));
+// Images the page shows, such as the OpenAccountants logo on the AI check.
+for (const file of readdirSync(webDist)) {
+  if (/\.(png|svg|jpg)$/i.test(file)) cpSync(join(webDist, file), join(demoDir, file));
+}
 if (existsSync(join(webDist, "app.js.map"))) {
   cpSync(join(webDist, "app.js.map"), join(demoDir, "app.js.map"));
 }

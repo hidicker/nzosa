@@ -2,8 +2,6 @@ import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import {
   accountsForEditing,
-  unregisteredCode,
-  accountsFor,
   bankLabel,
   codingProgress,
   invoiceAssignments,
@@ -18,7 +16,7 @@ import {
   transfersAlsoCoded,
   clearingWithoutInvoice,
 } from "../books.js";
-import { compareCodings, inferAccountMapping } from "../check-ui.js";
+import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
 import {
   GST_OPTIONS,
@@ -27,7 +25,6 @@ import {
   knownCodes,
   rateLabel,
   rateToClassification,
-  suggest,
   transferCandidates,
 } from "../reconcile.js";
 import type { GstRate, Suggestion } from "../reconcile.js";
@@ -52,7 +49,6 @@ import {
 import type {
   CategoryRule,
   Cents,
-  CodingRow,
   GstClassification,
   GstSide,
   GstTreatment,
@@ -60,7 +56,6 @@ import type {
   InvoiceKind,
   Payout,
   PayoutTransfer,
-  ReferenceLine,
   RuleSet,
   SplitPart,
   Transaction,
@@ -1963,92 +1958,11 @@ function codedNow(): number {
   return codingProgress().coded;
 }
 
-/** Check if there are outstanding action items on the Coding reconciliation page. */
-function codingReconciliationOutstanding(): { total: number } | null {
-  if (state.reference.length === 0 || state.ledger.transactions.length === 0)
-    return null;
-  const suggestions = suggest(
-    state.ledger.transactions,
-    state.rules,
-    state.ledger.overrides ?? {},
-    accountsFor(state.checkAccounts),
-    unregisteredCode(),
-  );
-  const suggestionMap = new Map(
-    suggestions.map((one) => [one.transaction.id, one]),
-  );
-  const coded = suggestions.map((one) => ({
-    transaction: one.transaction,
-    code: one.code,
-  }));
-  const accountMap = inferAccountMapping(coded, state.reference);
-  const sameAcct = (ours: Transaction, theirs: ReferenceLine): boolean => {
-    if (theirs.account === undefined) return true;
-    const expected = accountMap.get(ours.account);
-    if (expected !== undefined) return expected === theirs.account;
-    return accountMap.size === 0;
-  };
-  const gstRate = (transaction: Transaction): string | null => {
-    const one = suggestionMap.get(transaction.id);
-    if (!one) return null;
-    return rateLabel(one.classification);
-  };
-  const result = compareCodings(coded, state.reference, {
-    chart: state.chart,
-    accountMatches: sameAcct,
-    gstRateOf: gstRate,
-  });
-
-  const ourSplits = state.ledger.splits ?? {};
-  const isSplit = (r: CodingRow): boolean => (r.theirs?.parts?.length ?? 0) > 1;
-  const splitRows = [
-    ...result.agreed,
-    ...result.differed,
-    ...result.uncoded,
-  ].filter(isSplit);
-  const sameParts = (row: CodingRow): boolean => {
-    const held = ourSplits[row.transaction.id];
-    const theirs = row.theirs?.parts;
-    if (held === undefined || theirs === undefined) return false;
-    if (held.length !== theirs.length) return false;
-    const sorted = (amounts: readonly number[]): string =>
-      [...amounts].sort((a, b) => a - b).join(",");
-    return (
-      sorted(held.map((p) => p.amount)) === sorted(theirs.map((p) => p.amount))
-    );
-  };
-  const splitsToDo = splitRows.filter((row) => !sameParts(row));
-
-  const assigned = invoiceAssignments();
-  const ourTransfers = state.ledger.transfers ?? {};
-  const settledElsewhere = (row: CodingRow): boolean =>
-    assigned.has(row.transaction.id) ||
-    ourTransfers[row.transaction.id] !== undefined;
-
-  const comparable = result.uncoded.filter(
-    (r) => r.theirs !== null && !isSplit(r),
-  );
-  const adoptable = comparable.filter((r) => !settledElsewhere(r));
-  const differed = result.differed.filter((r) => !isSplit(r));
-  const gstFlags = [...result.agreed, ...result.differed].filter(
-    (r) => r.gstDiffers && !isSplit(r),
-  );
-
-  const outstandingIds = new Set<string>([
-    ...splitsToDo.map((r) => r.transaction.id),
-    ...differed.map((r) => r.transaction.id),
-    ...adoptable.map((r) => r.transaction.id),
-    ...gstFlags.map((r) => r.transaction.id),
-  ]);
-
-  if (outstandingIds.size === 0) return null;
-  return { total: outstandingIds.size };
-}
-
 /** Warning banner displayed on Reconcile page when Coding reconciliation has pending items. */
 function codingReconciliationWarning(): HTMLElement | null {
-  const outstanding = codingReconciliationOutstanding();
-  if (!outstanding || outstanding.total === 0) return null;
+  // The Coding reconciliation page's own count, so the two cannot disagree.
+  const waiting = codingReconciliationWaiting();
+  if (waiting === 0) return null;
 
   const wrap = document.createElement("div");
   wrap.className = "coding-reconciliation-warning";
@@ -2060,7 +1974,7 @@ function codingReconciliationWarning(): HTMLElement | null {
   const go = document.createElement("button");
   go.type = "button";
   go.className = "link-button";
-  go.textContent = `Go to Coding reconciliation (${outstanding.total} waiting)`;
+  go.textContent = `Go to Coding reconciliation (${waiting} waiting)`;
   go.addEventListener("click", () => showPage("check"));
 
   wrap.append(msg, " ", go);

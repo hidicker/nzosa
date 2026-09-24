@@ -581,34 +581,17 @@ function columnPicker(file: {
   return wrap;
 }
 
-export function renderCheck(): void {
-  fillAccounts("check-accounts", state.checkAccounts, renderCheck);
-  const body = $("check-body");
-  body.textContent = "";
-
-  for (const problem of state.checkProblems) {
-    const line = document.createElement("p");
-    line.className = "variance-problems";
-    line.textContent = problem;
-    body.append(line);
-  }
-
-  for (const file of state.checkUnreadable) body.append(columnPicker(file));
-
-  if (state.ledger.transactions.length === 0) {
-    body.append(note("No transactions yet. Import a bank file first."));
-    return;
-  }
-  if (state.reference.length === 0) {
-    body.append(
-      note(
-        "Load a Xero Account Transactions export (.xlsx) or the workbook (.xlsx) to check against. " +
-          "A chart of accounts (.csv) helps too: it lets a code and a name be recognised as the same account.",
-      ),
-    );
-    return;
-  }
-
+/**
+ * Our coding against the imported coding, and what is still asking for a
+ * decision.
+ *
+ * One calculation for the page and for anything that reports on it. The
+ * Reconcile page's "items outstanding" banner kept a copy of its own, which
+ * drifted: it missed invoice-settled payments posting to receivables, the
+ * account aliases, and differences already kept -- so it counted items this
+ * page no longer showed.
+ */
+export function compareWithReference() {
   const suggestions = suggest(
     state.ledger.transactions,
     state.rules,
@@ -664,44 +647,6 @@ export function renderCheck(): void {
     aliases: (state.rules as { aliases?: Record<string, string> } | undefined)?.aliases ?? {},
     gstRateOf: ourGstRate,
   });
-
-  const checked = result.agreed.length + result.differed.length;
-  const rate = checked === 0 ? 0 : (result.agreed.length / checked) * 100;
-
-  // Nothing coded on our side means nothing to compare, and a row of zeros
-  // reads as "the file matched nothing" rather than "there is nothing here
-  // yet to match it against". Which is backwards: the reference is what
-  // teaches the rules in the first place, so this is the beginning of the
-  // loop rather than a failure of it.
-  const nothingCoded =
-    checked === 0 && coded.every((one) => one.code === null || one.code === "(uncoded)");
-  if (nothingCoded) {
-    const why = document.createElement("div");
-    why.className = "check-nothing";
-    const said = document.createElement("p");
-    said.textContent =
-      `${state.reference.length} reference lines loaded, and ${state.ledger.transactions.length} ` +
-      "transactions — but none of them is coded yet, so there is nothing to compare. " +
-      "That is the right way round: the coding in this file is what writes the rules, " +
-      "and they are below.";
-    why.append(said);
-    body.append(why);
-  }
-
-  // The rules this file can write, on the page the file lands on.
-  //
-  // They used to be on Setup, because Setup was once the only place a coded
-  // history could be loaded -- and they stayed there after the loading moved,
-  // so the answer to "nothing is coded yet" lived on a different page from the
-  // question, reached by a button whose only purpose was to bridge the two.
-  //
-  // Above the comparison while there is nothing to compare, because then they
-  // are the whole point of the page. Folded away below it once there are
-  // codings, because then the comparison is what somebody came for and a table
-  // of eighteen proposals is in the way of it.
-  if (nothingCoded) {
-    renderRuleSuggestions(body);
-  }
 
   /**
    * Every payment the other system split, whether or not we have split it too.
@@ -790,6 +735,113 @@ export function renderCheck(): void {
     "Checked against the imported coding and kept, on the Coding reconciliation page.";
   const differed = result.differed.filter((r) => !isSplit(r) && !settled(r));
   const kept = result.differed.filter((r) => !isSplit(r) && settled(r)).length;
+
+  return {
+    suggestions,
+    proposedBy,
+    coded,
+    result,
+    splitRows,
+    splitsToDo,
+    adoptable,
+    alreadySettled,
+    gstFlags,
+    differed,
+    kept,
+  };
+}
+
+/** How many lines the page is still asking about, or 0 with nothing to compare. */
+export function codingReconciliationWaiting(): number {
+  if (state.reference.length === 0 || state.ledger.transactions.length === 0) return 0;
+  const { splitsToDo, differed, adoptable, gstFlags } = compareWithReference();
+  return new Set<string>([
+    ...splitsToDo.map((r) => r.transaction.id),
+    ...differed.map((r) => r.transaction.id),
+    ...adoptable.map((r) => r.transaction.id),
+    ...gstFlags.map((r) => r.transaction.id),
+  ]).size;
+}
+
+export function renderCheck(): void {
+  fillAccounts("check-accounts", state.checkAccounts, renderCheck);
+  const body = $("check-body");
+  body.textContent = "";
+
+  for (const problem of state.checkProblems) {
+    const line = document.createElement("p");
+    line.className = "variance-problems";
+    line.textContent = problem;
+    body.append(line);
+  }
+
+  for (const file of state.checkUnreadable) body.append(columnPicker(file));
+
+  if (state.ledger.transactions.length === 0) {
+    body.append(note("No transactions yet. Import a bank file first."));
+    return;
+  }
+  if (state.reference.length === 0) {
+    body.append(
+      note(
+        "Load a Xero Account Transactions export (.xlsx) or the workbook (.xlsx) to check against. " +
+          "A chart of accounts (.csv) helps too: it lets a code and a name be recognised as the same account.",
+      ),
+    );
+    return;
+  }
+
+  const {
+    proposedBy,
+    coded,
+    result,
+    splitRows,
+    splitsToDo,
+    adoptable,
+    alreadySettled,
+    gstFlags,
+    differed,
+    kept,
+  } = compareWithReference();
+
+  const checked = result.agreed.length + result.differed.length;
+  const rate = checked === 0 ? 0 : (result.agreed.length / checked) * 100;
+
+  // Nothing coded on our side means nothing to compare, and a row of zeros
+  // reads as "the file matched nothing" rather than "there is nothing here
+  // yet to match it against". Which is backwards: the reference is what
+  // teaches the rules in the first place, so this is the beginning of the
+  // loop rather than a failure of it.
+  const nothingCoded =
+    checked === 0 && coded.every((one) => one.code === null || one.code === "(uncoded)");
+  if (nothingCoded) {
+    const why = document.createElement("div");
+    why.className = "check-nothing";
+    const said = document.createElement("p");
+    said.textContent =
+      `${state.reference.length} reference lines loaded, and ${state.ledger.transactions.length} ` +
+      "transactions — but none of them is coded yet, so there is nothing to compare. " +
+      "That is the right way round: the coding in this file is what writes the rules, " +
+      "and they are below.";
+    why.append(said);
+    body.append(why);
+  }
+
+  // The rules this file can write, on the page the file lands on.
+  //
+  // They used to be on Setup, because Setup was once the only place a coded
+  // history could be loaded -- and they stayed there after the loading moved,
+  // so the answer to "nothing is coded yet" lived on a different page from the
+  // question, reached by a button whose only purpose was to bridge the two.
+  //
+  // Above the comparison while there is nothing to compare, because then they
+  // are the whole point of the page. Folded away below it once there are
+  // codings, because then the comparison is what somebody came for and a table
+  // of eighteen proposals is in the way of it.
+  if (nothingCoded) {
+    renderRuleSuggestions(body);
+  }
+
 
   const summary = document.createElement("div");
   summary.className = "check-summary";

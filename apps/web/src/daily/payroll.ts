@@ -20,8 +20,10 @@ import type {
   Account,
   Cents,
   Employee,
+  ExtraPayKind,
   IsoDate,
   PayFrequency,
+  PayLine,
   PayLineInput,
   TaxCode,
 } from "@nzosa/core";
@@ -51,10 +53,7 @@ let payRunDraft = {
   periodStart: "",
   periodEnd: "",
   payDate: "",
-  inputs: new Map<
-    string,
-    { hoursWorked?: number | undefined; grossOverride?: Cents | undefined; childSupport?: Cents | undefined }
-  >(),
+  inputs: new Map<string, Omit<PayLineInput, "employeeId">>(),
 };
 
 const TAX_CODE_OPTIONS: Array<{ code: TaxCode; label: string }> = [
@@ -410,7 +409,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
   const rateOfTaxField = createField(
     "Tax rate %",
     rateOfTax,
-    "WT: the rate on their IR330C (45% if none). STC: the rate on IR's certificate; the ACC earners' levy is added.",
+    "WT: the rate on their IR330C (45% if none). STC: the rate on IR's certificate, which already includes the ACC earners' levy.",
   );
   const syncRate = () => {
     rateOfTaxField.style.display = taxCodeSelect.value === "WT" || taxCodeSelect.value === "STC" ? "" : "none";
@@ -418,6 +417,43 @@ function renderEmployeeEditor(container: HTMLElement): void {
   taxCodeSelect.addEventListener("change", syncRate);
   syncRate();
   grid.append(rateOfTaxField);
+
+  // Student loan certificates and choices, and a higher rate for extra pays.
+  const percentBox = (value: number | undefined): HTMLInputElement => {
+    const box = document.createElement("input");
+    box.type = "number";
+    box.step = "0.5";
+    box.min = "0";
+    box.max = "100";
+    box.value = value !== undefined ? String(Math.round(value * 1000) / 10) : "";
+    return box;
+  };
+  const sdr = percentBox(existing?.studentLoanRate);
+  const slcir = percentBox(existing?.slcirRate);
+  const slbor = document.createElement("input");
+  slbor.type = "text";
+  slbor.placeholder = "0.00";
+  slbor.value = existing?.slborAmount ? (existing.slborAmount / 100).toFixed(2) : "";
+  const electedRate = document.createElement("select");
+  for (const [value, caption] of [
+    ["", "The rate its pay falls in"],
+    ["0.175", "17.5%"],
+    ["0.3", "30%"],
+    ["0.33", "33%"],
+    ["0.39", "39%"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = caption;
+    option.selected = String(existing?.extraPayRate ?? "") === value;
+    electedRate.append(option);
+  }
+  grid.append(
+    createField("Student loan special rate %", sdr, "From an SDR certificate; empty for the standard 12%, 0 for an exemption"),
+    createField("Commissioner deductions %", slcir, "If IR has asked for extra (SLCIR), at most 5%"),
+    createField("Voluntary extra student loan", slbor, "An amount each pay (SLBOR)"),
+    createField("Extra pays taxed at", electedRate, "An employee can choose a higher rate for bonuses"),
+  );
 
   // Pay Frequency
   const freqSelect = document.createElement("select");
@@ -639,6 +675,10 @@ function renderEmployeeEditor(container: HTMLElement): void {
       kiwiSaverEmployerRate: Number(ksEmployerSelect.value),
       esctRate: Number(esctSelect.value),
       ...(taxRate !== undefined ? { taxRate } : {}),
+      ...(sdr.value.trim() !== "" ? { studentLoanRate: Number(sdr.value) / 100 } : {}),
+      ...(slcir.value.trim() !== "" && Number(slcir.value) > 0 ? { slcirRate: Math.min(5, Number(slcir.value)) / 100 } : {}),
+      ...(slbor.value.trim() !== "" ? { slborAmount: parseAmount(slbor.value.trim()) ?? 0 } : {}),
+      ...(electedRate.value !== "" ? { extraPayRate: Number(electedRate.value) } : {}),
       bankAccount: bankInput.value.trim(),
       startDate: (startInput.value || undefined) as IsoDate | undefined,
       finishDate: (finishInput.value || undefined) as IsoDate | undefined,
@@ -770,6 +810,99 @@ function renderEmployeesTable(container: HTMLElement): void {
   container.append(tableWrap);
 }
 
+/** Rows open for extras, by employee. */
+const extrasOpen = new Set<string>();
+
+/**
+ * The less common parts of one employee's pay: an extra pay, payroll giving,
+ * a share scheme benefit, corrections to an earlier pay -- and what the
+ * figures say about them.
+ */
+function extrasRow(employeeId: string, line: PayLine, refresh: () => void): HTMLTableRowElement {
+  const tr = document.createElement("tr");
+  tr.className = "payroll-extras-row";
+  const td = document.createElement("td");
+  td.colSpan = 9;
+  tr.append(td);
+  const held = payRunDraft.inputs.get(employeeId) ?? {};
+  const set = (patch: Partial<Omit<PayLineInput, "employeeId">>): void => {
+    payRunDraft.inputs.set(employeeId, { ...(payRunDraft.inputs.get(employeeId) ?? {}), ...patch });
+    refresh();
+  };
+
+  const said: string[] = [];
+  if (line.extraPay) {
+    said.push(`Extra pay ${formatAmount(line.extraPay)} included in gross${line.lumpSumLowRate ? ", taxed at the lowest rate (flagged on the EI)" : ""}.`);
+  }
+  if (line.childSupportCode === "P") said.push("Child support cut to protect 60% of net pay (code P on the EI).");
+  if (line.donationCredit) said.push(`Payroll giving credit ${formatAmount(line.donationCredit)} comes off what IR is paid.`);
+  if (line.slcir || line.slbor) said.push(`Extra student loan: ${formatAmount((line.slcir ?? 0) + (line.slbor ?? 0))}.`);
+
+  const toggle = document.createElement("button");
+  toggle.type = "button";
+  toggle.className = "payroll-btn";
+  const open = extrasOpen.has(employeeId);
+  toggle.textContent = open ? "Hide extras" : "Extras: bonus, redundancy, giving, corrections…";
+  toggle.addEventListener("click", () => {
+    if (open) extrasOpen.delete(employeeId);
+    else extrasOpen.add(employeeId);
+    refresh();
+  });
+  td.append(toggle);
+  if (said.length > 0) {
+    const small = document.createElement("small");
+    small.textContent = ` ${said.join(" ")}`;
+    td.append(small);
+  }
+  if (!open) return tr;
+
+  const money = (label: string, value: Cents | undefined, onSet: (c: Cents | undefined) => void): HTMLLabelElement => {
+    const wrap = document.createElement("label");
+    wrap.className = "year-end-field";
+    const box = document.createElement("input");
+    box.type = "text";
+    box.className = "payroll-tiny-input";
+    box.placeholder = "0.00";
+    box.value = value ? (value / 100).toFixed(2) : "";
+    box.addEventListener("change", () => onSet(parseAmount(box.value.trim()) ?? undefined));
+    wrap.append(`${label} `, box);
+    return wrap;
+  };
+  const kind = document.createElement("select");
+  for (const [value, caption] of [
+    ["bonus", "Bonus or other lump sum"],
+    ["termination", "Paid on leaving (e.g. final holiday pay)"],
+    ["redundancy", "Redundancy or retiring payment"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = caption;
+    option.selected = (held.extraPayKind ?? "bonus") === value;
+    kind.append(option);
+  }
+  kind.addEventListener("change", () => set({ extraPayKind: kind.value as ExtraPayKind }));
+  const kindWrap = document.createElement("label");
+  kindWrap.className = "year-end-field";
+  kindWrap.append("Kind ", kind);
+
+  const box = document.createElement("div");
+  box.append(
+    money("Extra pay", held.extraPay, (c) => set({ extraPay: c })),
+    kindWrap,
+    money("Payroll giving donation", held.payrollDonation, (c) => set({ payrollDonation: c })),
+    money("Share scheme benefit", held.ess, (c) => set({ ess: c })),
+    money("Earlier pay: gross correction", held.priorGross, (c) => set({ priorGross: c })),
+    money("PAYE correction", held.priorPaye, (c) => set({ priorPaye: c })),
+    note(
+      "An extra pay is taxed at the rate its annualised pay falls in: the last four weeks times 13 " +
+        "for a bonus, the last two pay periods for one paid on leaving. Redundancy carries no ACC " +
+        "levy or KiwiSaver. Share scheme benefits are reported only; no PAYE is withheld on them here.",
+    ),
+  );
+  td.append(box);
+  return tr;
+}
+
 /** Render Pay Run Creation Form with Live Calculations. */
 function renderPayRunCreator(container: HTMLElement): void {
   container.textContent = "";
@@ -873,13 +1006,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
     const inputs: PayLineInput[] = [];
     for (const emp of activeEmployees) {
-      const held = payRunDraft.inputs.get(emp.id) ?? {};
-      inputs.push({
-        employeeId: emp.id,
-        hoursWorked: held.hoursWorked,
-        grossOverride: held.grossOverride,
-        childSupport: held.childSupport,
-      });
+      inputs.push({ ...(payRunDraft.inputs.get(emp.id) ?? {}), employeeId: emp.id });
     }
 
     const previewRun = buildPayRun({
@@ -889,6 +1016,7 @@ function renderPayRunCreator(container: HTMLElement): void {
       payDate: payRunDraft.payDate as IsoDate,
       employees: activeEmployees,
       inputs,
+      history: payroll.payRuns,
     });
 
     for (let i = 0; i < activeEmployees.length; i++) {
@@ -963,6 +1091,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
       tr.append(nameTd, codeTd, hoursTd, csTd, grossTd, payeTd, ksTd, slTd, netTd);
       tbody.append(tr);
+      tbody.append(extrasRow(emp.id, line, recalculateAndRenderRows));
     }
 
     // Totals row
@@ -1004,13 +1133,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
     const inputs: PayLineInput[] = [];
     for (const emp of activeEmployees) {
-      const held = payRunDraft.inputs.get(emp.id) ?? {};
-      inputs.push({
-        employeeId: emp.id,
-        hoursWorked: held.hoursWorked,
-        grossOverride: held.grossOverride,
-        childSupport: held.childSupport,
-      });
+      inputs.push({ ...(payRunDraft.inputs.get(emp.id) ?? {}), employeeId: emp.id });
     }
 
     const payRun = buildPayRun({
@@ -1020,6 +1143,7 @@ function renderPayRunCreator(container: HTMLElement): void {
       payDate: payRunDraft.payDate as IsoDate,
       employees: activeEmployees,
       inputs,
+      history: payroll.payRuns,
     });
 
     payroll.payRuns.unshift(payRun);

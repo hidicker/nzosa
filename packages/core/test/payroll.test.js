@@ -267,3 +267,142 @@ test("without separate KiwiSaver accounts the journal still balances", () => {
   assert.equal(journal.lines.length, 3);
   assert.equal(journal.lines.reduce((s, l) => s + l.amount, 0), 0);
 });
+
+// --- extra pays and the other deductions (spec sections 3, 5.11-5.16) --------
+
+import { annualisedForExtraPay, extraPayTax } from "../dist/index.js";
+
+test("casebook 3.6: redundancy taxed at 39% on top of ordinary pay, no levy, not liable for ACC", () => {
+  const gladys = { ...employee("M", "monthly"), id: "g", kiwiSaverRate: 0, kiwiSaverEmployerRate: 0 };
+  const prior = (payDate) => ({
+    id: payDate, employerIrd: "", periodStart: payDate, periodEnd: payDate, payDate, lines: [
+      { employeeId: "g", gross: 2_154_857, paye: 0, studentLoan: 0, kiwiSaverEmployee: 0, kiwiSaverEmployer: 0, esct: 0, childSupport: 0, netPay: 0, earningsNotLiableAcc: 0, employeeName: "", irdNumber: "", taxCode: "M" },
+    ],
+    totalGross: 0, totalPaye: 0, totalStudentLoan: 0, totalKiwiSaverEmployee: 0, totalKiwiSaverEmployer: 0, totalEsct: 0, totalChildSupport: 0, totalNetPay: 0,
+  });
+  const r = buildPayRun({
+    employerIrd: "49091850", periodStart: "2026-04-01", periodEnd: "2026-04-30", payDate: "2026-04-22",
+    employees: [gladys],
+    inputs: [{ employeeId: "g", grossOverride: 2_154_857, extraPay: 4_309_714, extraPayKind: "redundancy" }],
+    history: [prior("2026-02-22"), prior("2026-03-22")],
+  });
+  const line = r.lines[0];
+  assert.equal(line.gross, 6_464_571);
+  assert.equal(line.paye, 2_369_666);
+  assert.equal(line.earningsNotLiableAcc, 4_309_714);
+  assert.equal(line.lumpSumLowRate, false);
+});
+
+test("casebook 3.6: 4% KiwiSaver with ESCT at 33% on whole dollars", () => {
+  const stacy = { ...employee("M", "monthly"), kiwiSaverRate: 0.04, kiwiSaverEmployerRate: 0.04, esctRate: 0.33 };
+  const line = calculatePayLine(stacy, 2_154_857, 2027);
+  assert.equal(line.paye, 688_878);
+  assert.equal(line.kiwiSaverEmployee, 86_194);
+  assert.equal(line.esct, 28_413);
+  assert.equal(line.kiwiSaverEmployerNet, 57_781);
+});
+
+test("spec 5.11.1 example 2: annualised over the levy ceiling, 39% and no levy", () => {
+  const t = extraPayTax({ code: "M", extraPay: 1_500_000, kind: "bonus", annualised: 19_500_000, year: 2027 });
+  assert.equal(t.rate, 0.39);
+  assert.equal(t.tax, 585_000);
+});
+
+test("spec 5.11.1 example 1: the levy only on the part under the ceiling", () => {
+  const t = extraPayTax({ code: "M", extraPay: 3_000_056, kind: "bonus", annualised: 13_000_000, year: 2027 });
+  assert.equal(t.rate, 0.33);
+  // 30,000.56 x 33% + (156,641 - 130,000) x 1.75%, truncated once at the end
+  // as the steps say (the example's text truncates each part, a cent lower).
+  assert.equal(t.tax, 1_036_640);
+});
+
+test("spec 5.11.1 example 3: a signing bonus with no pay before it is 10.5%, flagged", () => {
+  const t = extraPayTax({ code: "M", extraPay: 1_000_000, kind: "bonus", annualised: 0, year: 2027 });
+  assert.equal(t.rate, 0.105);
+  assert.equal(t.lowRate, true);
+  assert.equal(t.tax, 105_000 + 17_500);
+});
+
+test("spec 5.11.2 example 1: a secondary code starts from the bottom of its band", () => {
+  const t = extraPayTax({ code: "SH", extraPay: 100_000, kind: "bonus", annualised: 650_000, year: 2027 });
+  assert.equal(t.rate, 0.3);
+  assert.equal(t.tax, 30_000 + 1_750);
+});
+
+test("an elected higher rate wins", () => {
+  const t = extraPayTax({ code: "M", extraPay: 100_000, kind: "bonus", annualised: 0, electedRate: 0.33, year: 2027 });
+  assert.equal(t.rate, 0.33);
+});
+
+test("annualising: four weeks times 13 for a bonus, last two periods for leaving (spec 5.12 example)", () => {
+  const run = (payDate, pay) => ({ payDate, lines: [{ employeeId: "x", gross: pay }] });
+  const history = [run("2026-05-01", 350_000), run("2026-05-15", 350_000), run("2026-04-17", 999_999)];
+  assert.equal(
+    annualisedForExtraPay({ employeeId: "x", frequency: "fortnightly", kind: "termination", payDate: "2026-05-29", thisPay: 350_000, history }),
+    9_100_000,
+  );
+  // Weekly: this pay plus three before it in the four weeks.
+  const weekly = [run("2026-05-08", 100_000), run("2026-05-15", 100_000), run("2026-05-22", 100_000), run("2026-04-30", 555)];
+  assert.equal(
+    annualisedForExtraPay({ employeeId: "x", frequency: "weekly", kind: "bonus", payDate: "2026-05-29", thisPay: 100_000, history: weekly }),
+    5_200_000,
+  );
+});
+
+test("spec 3: Commissioner deductions at 5% over the threshold, and voluntary ones", () => {
+  const e = employee("M SL", "weekly", { slcirRate: 0.05, slborAmount: 2_000 });
+  assert.equal(calculatePayLine(e, 87_590, 2027).slcir, 2_055);
+  assert.equal(calculatePayLine(e, 42_535, 2027).slcir ?? 0, 0);
+  assert.equal(calculatePayLine(e, 42_535, 2027).slbor, 2_000);
+});
+
+test("a special deduction rate replaces 12%", () => {
+  const e = employee("S SL", "weekly", { studentLoanRate: 0.08 });
+  assert.equal(calculatePayLine(e, 92_628, 2027).studentLoan, 7_408);
+});
+
+test("casebook 3.1: payroll giving credit is a third, truncated, and comes off what IR is paid", () => {
+  const line = calculatePayLine(employee("M", "weekly"), 92_628, 2027, { payrollDonation: 2_381 });
+  assert.equal(line.donationCredit, 793);
+  assert.equal(line.paye, 15_730);
+  const plain = calculatePayLine(employee("M", "weekly"), 92_628, 2027);
+  assert.equal(line.netPay, plain.netPay - 2_381 + 793);
+});
+
+test("child support is held to 40% of net pay, and says so with code P", () => {
+  const line = calculatePayLine(employee("M", "weekly"), 50_000, 2027, { childSupport: 40_000 });
+  assert.ok(line.childSupport < 40_000);
+  assert.equal(line.childSupportCode, "P");
+});
+
+test("a tailored tax code's rate already includes the levy", () => {
+  const e = employee("STC", "weekly", { taxRate: 0.24 });
+  assert.equal(calculatePayLine(e, 100_000, 2027).paye, 24_000);
+  // Redundancy: the levy comes out of the certificate rate.
+  const r = calculatePayLine(e, 100_000, 2027, { extraPay: 100_000, extraPayKind: "redundancy" });
+  assert.equal(r.paye - 24_000, Math.floor(100_000 * (0.24 - 0.0175) + 1e-6));
+});
+
+test("extras reach the file and the journal still balances", () => {
+  const r = buildPayRun({
+    id: "x", employerIrd: "49091850", periodStart: "2026-09-14", periodEnd: "2026-09-20", payDate: "2026-09-22",
+    employees: [employee("M SL", "weekly", { slborAmount: 1_000 })],
+    inputs: [{ employeeId: "M SL", grossOverride: 92_628, extraPay: 50_000, payrollDonation: 3_000, priorGross: 10_000, priorPaye: 1_750, ess: 20_000 }],
+  });
+  const csv = generatePaydayFilingCsv(r, { name: "P", phone: "1", email: "a@b.co" }).trimEnd().split("\r\n");
+  const header = csv[0].split(",");
+  const line = csv[1].split(",");
+  assert.equal(line[11], "10000");
+  assert.equal(line[15], "1750");
+  assert.equal(line[20], "1000");
+  // $30 x 0.333333, truncated: $9.99, as the spec has it.
+  assert.equal(line[24], "999");
+  assert.equal(line[26], "20000");
+  assert.equal(header[11], "10000");
+  assert.equal(header[23], "999");
+  assert.equal(header[25], "20000");
+  const journal = payrollJournal(r, {
+    wages: { code: "477", name: "W" }, wagesPayable: { code: "804", name: "WP" }, payePayable: { code: "825", name: "P" },
+  });
+  assert.equal(journal.lines.reduce((s, l) => s + l.amount, 0), 0);
+});

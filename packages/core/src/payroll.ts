@@ -64,20 +64,50 @@ export interface Employee {
   esctRate: number;
   /**
    * The rate for a WT (schedular payment) or STC (tailored tax code) payee:
-   * the rate they elected on their IR330C, or the one on the certificate.
+   * the rate they elected on their IR330C, or the one on the certificate --
+   * which, for STC, already includes the ACC earners' levy.
    */
   taxRate?: number | undefined;
+  /**
+   * A student loan special deduction rate from IR's certificate, in place of
+   * the standard 12% (0 under a repayment deduction exemption).
+   */
+  studentLoanRate?: number | undefined;
+  /** Commissioner deductions (SLCIR) IR has asked for: a rate, at most 5%. */
+  slcirRate?: number | undefined;
+  /** Voluntary extra student loan deductions (SLBOR), an amount each pay. */
+  slborAmount?: Cents | undefined;
+  /** A higher rate the employee has chosen for extra pays (RD 10(2)). */
+  extraPayRate?: number | undefined;
   bankAccount: string;
   startDate?: IsoDate | undefined;
   finishDate?: IsoDate | undefined;
 }
+
+/**
+ * What kind of extra pay: a bonus or other lump sum; one arising from the end
+ * of employment (final holiday pay, say); or a redundancy or retiring payment,
+ * which also ends employment and carries no ACC earners' levy or KiwiSaver.
+ */
+export type ExtraPayKind = "bonus" | "termination" | "redundancy";
 
 export interface PayLineInput {
   employeeId: string;
   hoursWorked?: number | undefined;
   grossOverride?: Cents | undefined;
   earningsNotLiableAcc?: Cents | undefined;
+  /** What IR's deduction notice asks for; capped at 40% of net pay. */
   childSupport?: Cents | undefined;
+  /** A lump sum paid with this pay, taxed as an extra pay. */
+  extraPay?: Cents | undefined;
+  extraPayKind?: ExtraPayKind | undefined;
+  /** Donations through a payroll giving scheme. */
+  payrollDonation?: Cents | undefined;
+  /** An employee share scheme benefit, reported only; no PAYE is withheld on it here. */
+  ess?: Cents | undefined;
+  /** Corrections to an earlier pay, reported in the prior period fields. */
+  priorGross?: Cents | undefined;
+  priorPaye?: Cents | undefined;
 }
 
 export interface PayLine {
@@ -99,6 +129,19 @@ export interface PayLine {
   kiwiSaverEmployerNet?: Cents | undefined;
   esct: Cents;
   childSupport: Cents;
+  /** "P" when child support was cut to protect 60% of net pay. */
+  childSupportCode?: string | undefined;
+  /** The extra pay within `gross`, and whether it was taxed at the lowest rate. */
+  extraPay?: Cents | undefined;
+  lumpSumLowRate?: boolean | undefined;
+  slcir?: Cents | undefined;
+  slbor?: Cents | undefined;
+  payrollDonation?: Cents | undefined;
+  /** Tax credit for the donation, a third of it, taken off PAYE paid to IR. */
+  donationCredit?: Cents | undefined;
+  ess?: Cents | undefined;
+  priorGross?: Cents | undefined;
+  priorPaye?: Cents | undefined;
   netPay: Cents;
   startDate?: IsoDate | undefined;
   finishDate?: IsoDate | undefined;
@@ -121,6 +164,13 @@ export interface PayRun {
   totalKiwiSaverEmployerNet?: Cents | undefined;
   totalEsct: Cents;
   totalChildSupport: Cents;
+  totalSlcir?: Cents | undefined;
+  totalSlbor?: Cents | undefined;
+  totalDonations?: Cents | undefined;
+  totalDonationCredits?: Cents | undefined;
+  totalEss?: Cents | undefined;
+  totalPriorGross?: Cents | undefined;
+  totalPriorPaye?: Cents | undefined;
   totalNetPay: Cents;
   /** Anything about the rates used that somebody should know. */
   notes?: string[] | undefined;
@@ -324,11 +374,105 @@ export function esctRateFor(thresholdAmount: Cents): number {
   return 0.39;
 }
 
+/** The lowest dollar of each secondary code's band, for an extra pay (5.11.2). */
+const LOW_THRESHOLD: Partial<Record<TaxCode, number>> = {
+  SB: 0, "SB SL": 0, S: 15_601, "S SL": 15_601, SH: 53_501, "SH SL": 53_501,
+  ST: 78_101, "ST SL": 78_101, SA: 180_001, "SA SL": 180_001,
+};
+
+/** The band rate for an extra pay's grossed-up amount, in whole dollars. */
+function extraPayBand(grossed: number): number {
+  if (grossed > 180_000) return 0.39;
+  if (grossed > 78_100) return 0.33;
+  if (grossed > 53_500) return 0.3;
+  if (grossed > 15_600) return 0.175;
+  return 0.105;
+}
+
+/**
+ * Tax on an extra pay (sections 5.11 and 5.12).
+ *
+ * The rate comes from the employee's pay annualised, plus the extra pay (plus
+ * the bottom of their secondary band, for a secondary code); the tax is that
+ * rate on the extra pay alone, plus the earners' levy on as much of it as
+ * falls under the levy's ceiling.
+ */
+export function extraPayTax(options: {
+  code: TaxCode;
+  extraPay: Cents;
+  kind: ExtraPayKind;
+  /** The employee's pay annualised as the section says, in cents. */
+  annualised: Cents;
+  electedRate?: number | undefined;
+  year: number;
+}): { tax: Cents; rate: number; lowRate: boolean } {
+  const { rates } = ratesFor(options.year);
+  const extra = options.extraPay;
+  const low = LOW_THRESHOLD[options.code] ?? 0;
+  const base = options.annualised / 100 + low;
+  const grossed = Math.floor(base + extra / 100 + 1e-9);
+  const band = extraPayBand(grossed);
+  const rate = Math.max(band, options.electedRate ?? 0);
+  let levy = 0;
+  if (options.kind !== "redundancy" && base < rates.levyCap) {
+    const liable = grossed <= rates.levyCap ? extra : (rates.levyCap - base) * 100;
+    levy = liable * rates.levy;
+  }
+  return { tax: truncCents(extra * rate + levy), rate, lowRate: rate === 0.105 };
+}
+
+/**
+ * The pay an extra pay is annualised from.
+ *
+ * A bonus: this employee's pay in the four weeks up to and including payday,
+ * times 13 (or one monthly pay times 12). An extra pay when employment ends:
+ * the last two pay periods before this one, times 26, 13, 6.5 or 6 by how
+ * often they are paid -- or the one period there is, annualised. Other extra
+ * pays in those periods are left out.
+ */
+export function annualisedForExtraPay(options: {
+  employeeId: string;
+  frequency: PayFrequency;
+  kind: ExtraPayKind;
+  payDate: IsoDate;
+  /** This pay's ordinary pay, without the extra pay. */
+  thisPay: Cents;
+  history: readonly PayRun[];
+}): Cents {
+  const ordinary = (line: PayLine): Cents => line.gross - (line.extraPay ?? 0);
+  const past = options.history
+    .filter((run) => run.payDate < options.payDate)
+    .flatMap((run) =>
+      run.lines.filter((l) => l.employeeId === options.employeeId).map((l) => ({ date: run.payDate, pay: ordinary(l) })),
+    )
+    .sort((a, b) => b.date.localeCompare(a.date));
+
+  if (options.kind === "bonus") {
+    const start = addDaysIso(options.payDate, -27);
+    const window = past.filter((p) => p.date >= start).reduce((sum, p) => sum + p.pay, 0) + options.thisPay;
+    return options.frequency === "monthly" ? window * 12 : window * 13;
+  }
+  const lastTwo = past.slice(0, 2);
+  if (lastTwo.length === 2) {
+    const factor = { weekly: 26, fortnightly: 13, "four-weekly": 6.5, monthly: 6 }[options.frequency];
+    return Math.round((lastTwo[0]!.pay + lastTwo[1]!.pay) * factor);
+  }
+  if (lastTwo.length === 1) return lastTwo[0]!.pay * paysPerYear(options.frequency);
+  return 0;
+}
+
+function addDaysIso(date: IsoDate, days: number): IsoDate {
+  const [y, m, d] = date.split("-").map(Number) as [number, number, number];
+  const t = new Date(Date.UTC(y, m - 1, d + days));
+  return t.toISOString().slice(0, 10);
+}
+
 /**
  * Work out one employee's pay.
  *
  * `year` is the tax year, named by the 31 March it ends on; a pay run takes
- * it from the payday.
+ * it from the payday. `gross` is the ordinary pay; an extra pay comes in
+ * `options`, with the annualised pay its rate is found from.
  */
 export function calculatePayLine(
   employee: Employee,
@@ -338,6 +482,13 @@ export function calculatePayLine(
     earningsNotLiableAcc?: Cents | undefined;
     childSupport?: Cents | undefined;
     hours?: number | undefined;
+    extraPay?: Cents | undefined;
+    extraPayKind?: ExtraPayKind | undefined;
+    annualised?: Cents | undefined;
+    payrollDonation?: Cents | undefined;
+    ess?: Cents | undefined;
+    priorGross?: Cents | undefined;
+    priorPaye?: Cents | undefined;
   },
 ): PayLine {
   const { rates } = ratesFor(year);
@@ -345,9 +496,12 @@ export function calculatePayLine(
   // Nobody is taxed at M without having said so: no IRD number is the
   // no-notification rate, whatever code was typed in.
   const code: TaxCode = employee.irdNumber.trim() === "" && employee.taxCode !== "NSW" ? "ND" : employee.taxCode;
-  const childSupport = options?.childSupport ?? 0;
+  const extra = options?.extraPay ?? 0;
+  const kind = options?.extraPayKind ?? "bonus";
+  const total = gross + extra;
   const payDollars = wholeDollars(gross);
 
+  // PAYE on the ordinary pay.
   let paye = 0;
   let earningsNotLiableAcc = options?.earningsNotLiableAcc ?? 0;
   if (PRIMARY.has(code)) {
@@ -355,33 +509,86 @@ export function calculatePayLine(
   } else if (code === "WT") {
     // Schedular payments: the elected (or standard) rate on the payment, no
     // earners' levy, and all of it reported as not liable for the levy.
-    paye = truncCents(gross * (employee.taxRate ?? 0.45));
-    earningsNotLiableAcc = gross;
+    paye = truncCents(total * (employee.taxRate ?? 0.45));
+    earningsNotLiableAcc = total;
   } else if (code === "STC") {
-    paye = truncCents(payDollars * ((employee.taxRate ?? 0) + rates.levy));
+    // The certificate's rate includes the levy (section 5.11.1, 2.3.1).
+    paye = truncCents(payDollars * (employee.taxRate ?? 0));
   } else {
     paye = truncCents(payDollars * ((FLAT_RATES[code] ?? 0.45) + rates.levy));
   }
 
-  let studentLoan = 0;
-  if (code === "M SL" || code === "ME SL") {
-    const over = payDollars - SL_THRESHOLD[frequency];
-    studentLoan = over > 0 ? truncCents(over * 0.12) : 0;
-  } else if (SECONDARY_SL.has(code)) {
-    studentLoan = truncCents(payDollars * 0.12);
+  // PAYE on an extra pay.
+  let lumpSumLowRate = false;
+  if (extra > 0 && code !== "WT") {
+    if (code === "ND" || code === "NSW") {
+      paye += truncCents(extra * ((FLAT_RATES[code] ?? 0.45) + rates.levy));
+    } else if (code === "STC") {
+      const rate = (employee.taxRate ?? 0) - (kind === "redundancy" ? rates.levy : 0);
+      paye += truncCents(extra * rate);
+    } else {
+      const worked = extraPayTax({
+        code,
+        extraPay: extra,
+        kind,
+        annualised: options?.annualised ?? 0,
+        electedRate: employee.extraPayRate,
+        year,
+      });
+      paye += worked.tax;
+      lumpSumLowRate = worked.lowRate;
+    }
+    // A redundancy or retiring payment is not liable for the earners' levy.
+    if (kind === "redundancy") earningsNotLiableAcc += extra;
   }
 
+  // Student loan, on the pay for the period including any extra pay.
+  const slRate = employee.studentLoanRate ?? 0.12;
+  const slDollars = wholeDollars(total);
+  let studentLoan = 0;
+  let slcir = 0;
+  if (code === "M SL" || code === "ME SL") {
+    const over = slDollars - SL_THRESHOLD[frequency];
+    studentLoan = over > 0 ? truncCents(over * slRate) : 0;
+    if (over > 0 && employee.slcirRate) slcir = truncCents(over * employee.slcirRate);
+  } else if (SECONDARY_SL.has(code)) {
+    studentLoan = truncCents(slDollars * slRate);
+    if (employee.slcirRate) slcir = truncCents(slDollars * employee.slcirRate);
+  }
+  const hasLoan = code.endsWith("SL") || code === "STC";
+  const slbor = hasLoan ? employee.slborAmount ?? 0 : 0;
+
+  // KiwiSaver: bonuses count; redundancy and share schemes do not (4.5.1).
   // Not for a non-resident seasonal worker, who cannot join, or a schedular
   // payee, who is not an employee.
   const kiwiSaverApplies = code !== "NSW" && code !== "WT";
-  const kiwiSaverEmployee = kiwiSaverApplies ? truncCents(gross * employee.kiwiSaverRate) : 0;
-  const kiwiSaverEmployer = kiwiSaverApplies ? truncCents(gross * employee.kiwiSaverEmployerRate) : 0;
+  const kiwiSaverBase = gross + (kind === "redundancy" ? 0 : extra);
+  const kiwiSaverEmployee = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverRate) : 0;
+  const kiwiSaverEmployer = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverEmployerRate) : 0;
   const esctRate =
     employee.esctRate > 0
       ? employee.esctRate
       : esctRateFor((gross + kiwiSaverEmployer) * paysPerYear(frequency));
   // ESCT is worked on the contribution in whole dollars (section 5.20.6).
   const esct = kiwiSaverEmployer > 0 ? truncCents(wholeDollars(kiwiSaverEmployer) * esctRate) : 0;
+
+  // The levy inside PAYE, near enough, for the two rules that need the tax
+  // part alone: protected earnings and the payroll giving credit's ceiling.
+  const levyPart = code === "WT" ? 0 : truncCents(Math.min(total, (rates.levyCap * 100) / paysPerYear(frequency)) * rates.levy);
+  const taxPart = Math.max(0, paye - levyPart);
+
+  // Child support, cut so the employee keeps 60% of net pay (5.15.1).
+  const asked = options?.childSupport ?? 0;
+  const ceiling = truncCents((total - taxPart) * 0.4);
+  const childSupport = Math.min(asked, Math.max(0, ceiling));
+  const childSupportCode = asked > childSupport ? "P" : undefined;
+
+  // Payroll giving: a third of the donation back, no more than the tax (5.16).
+  const donation = options?.payrollDonation ?? 0;
+  const donationCredit = Math.min(truncCents(donation * 0.333333), taxPart);
+
+  const priorGross = options?.priorGross ?? 0;
+  const priorPaye = options?.priorPaye ?? 0;
 
   return {
     employeeId: employee.id,
@@ -390,8 +597,8 @@ export function calculatePayLine(
     taxCode: code,
     frequency,
     ...(options?.hours !== undefined ? { hours: options.hours } : {}),
-    gross,
-    earningsNotLiableAcc,
+    gross: total,
+    earningsNotLiableAcc: earningsNotLiableAcc + (options?.ess ?? 0),
     paye,
     studentLoan,
     kiwiSaverEmployee,
@@ -399,13 +606,27 @@ export function calculatePayLine(
     kiwiSaverEmployerNet: kiwiSaverEmployer - esct,
     esct,
     childSupport,
-    netPay: gross - paye - studentLoan - kiwiSaverEmployee - childSupport,
+    ...(childSupportCode !== undefined ? { childSupportCode } : {}),
+    ...(extra > 0 ? { extraPay: extra, lumpSumLowRate } : {}),
+    ...(slcir > 0 ? { slcir } : {}),
+    ...(slbor > 0 ? { slbor } : {}),
+    ...(donation > 0 ? { payrollDonation: donation, donationCredit } : {}),
+    ...((options?.ess ?? 0) > 0 ? { ess: options?.ess } : {}),
+    ...(priorGross !== 0 ? { priorGross } : {}),
+    ...(priorPaye !== 0 ? { priorPaye } : {}),
+    netPay:
+      total + priorGross - (paye - donationCredit) - priorPaye - studentLoan - slcir - slbor -
+      kiwiSaverEmployee - childSupport - donation,
     startDate: employee.startDate,
     finishDate: employee.finishDate,
   };
 }
 
-/** Assemble a pay run: each employee's line, at the rates for the payday's tax year. */
+/**
+ * Assemble a pay run: each employee's line, at the rates for the payday's
+ * tax year. `history` is the pay runs already made, which an extra pay is
+ * annualised from.
+ */
 export function buildPayRun(params: {
   id?: string | undefined;
   employerIrd: string;
@@ -414,6 +635,7 @@ export function buildPayRun(params: {
   payDate: IsoDate;
   employees: Employee[];
   inputs: PayLineInput[];
+  history?: readonly PayRun[] | undefined;
 }): PayRun {
   const id = params.id ?? `payrun-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
   const year = payrollTaxYear(params.payDate);
@@ -433,12 +655,32 @@ export function buildPayRun(params: {
       hours = input.hoursWorked ?? emp.standardHours ?? 0;
       gross = Math.round(hours * emp.hourlyRate);
     }
+    const extra = input.extraPay ?? 0;
+    const kind = input.extraPayKind ?? "bonus";
 
     lines.push(
       calculatePayLine(emp, gross, year, {
         earningsNotLiableAcc: input.earningsNotLiableAcc,
         childSupport: input.childSupport,
         hours,
+        ...(extra > 0
+          ? {
+              extraPay: extra,
+              extraPayKind: kind,
+              annualised: annualisedForExtraPay({
+                employeeId: emp.id,
+                frequency: emp.payFrequency,
+                kind,
+                payDate: params.payDate,
+                thisPay: gross,
+                history: params.history ?? [],
+              }),
+            }
+          : {}),
+        payrollDonation: input.payrollDonation,
+        ess: input.ess,
+        priorGross: input.priorGross,
+        priorPaye: input.priorPaye,
       }),
     );
   }
@@ -461,6 +703,13 @@ export function buildPayRun(params: {
     totalKiwiSaverEmployerNet: sum((l) => l.kiwiSaverEmployerNet ?? l.kiwiSaverEmployer - l.esct),
     totalEsct: sum((l) => l.esct),
     totalChildSupport: sum((l) => l.childSupport),
+    totalSlcir: sum((l) => l.slcir ?? 0),
+    totalSlbor: sum((l) => l.slbor ?? 0),
+    totalDonations: sum((l) => l.payrollDonation ?? 0),
+    totalDonationCredits: sum((l) => l.donationCredit ?? 0),
+    totalEss: sum((l) => l.ess ?? 0),
+    totalPriorGross: sum((l) => l.priorGross ?? 0),
+    totalPriorPaye: sum((l) => l.priorPaye ?? 0),
     totalNetPay: sum((l) => l.netPay),
     ...(note !== null ? { notes: [note] } : {}),
   };
@@ -515,9 +764,8 @@ export function paydayFilingProblems(run: PayRun, contact: PayrollContact): stri
  * The Employment Information return for a payday, in the HEI2/DEI layout.
  *
  * One header, then one line per employee. Money is in cents with no point,
- * dates are CCYYMMDD, and the header carries the totals of the lines. Prior
- * period adjustments, SLCIR/SLBOR, payroll giving, family tax credits and
- * employee share schemes are not handled here and go as zero.
+ * dates are CCYYMMDD, and the header carries the totals of the lines. Family
+ * tax credits are Work and Income's alone and always go as zero.
  */
 export function generatePaydayFilingCsv(
   run: PayRun,
@@ -539,9 +787,17 @@ export function generatePaydayFilingCsv(
     kiwiSaver: sum((l) => l.kiwiSaverEmployee),
     employerNet: sum(net),
     esct: sum((l) => l.esct),
+    slcir: sum((l) => l.slcir ?? 0),
+    slbor: sum((l) => l.slbor ?? 0),
+    credits: sum((l) => l.donationCredit ?? 0),
+    ess: sum((l) => l.ess ?? 0),
+    priorGross: sum((l) => l.priorGross ?? 0),
+    priorPaye: sum((l) => l.priorPaye ?? 0),
   };
+  // PAYE less payroll giving credits, and every other amount paid to IR.
   const deducted =
-    totals.paye + totals.childSupport + totals.studentLoan + totals.kiwiSaver + totals.employerNet + totals.esct;
+    totals.paye - totals.credits + totals.childSupport + totals.studentLoan + totals.kiwiSaver +
+    totals.employerNet + totals.esct + totals.slcir + totals.slbor;
 
   const rows: string[] = [];
   rows.push(
@@ -557,21 +813,21 @@ export function generatePaydayFilingCsv(
       plain(contact.email, 60),
       String(run.lines.length),
       n(totals.gross),
-      "0",
+      n(totals.priorGross),
       n(totals.notLiable),
       n(totals.paye),
-      "0",
+      n(totals.priorPaye),
       n(totals.childSupport),
       n(totals.studentLoan),
-      "0",
-      "0",
+      n(totals.slcir),
+      n(totals.slbor),
       n(totals.kiwiSaver),
       n(totals.employerNet),
       n(totals.esct),
       n(deducted),
+      n(totals.credits),
       "0",
-      "0",
-      "0",
+      n(totals.ess),
       PAYROLL_PACKAGE,
       "0001",
     ].join(","),
@@ -591,22 +847,22 @@ export function generatePaydayFilingCsv(
         CYCLE[line.frequency ?? "fortnightly"],
         String(Math.round((line.hours ?? 0) * 100)),
         n(line.gross),
-        "0",
+        n(line.priorGross ?? 0),
         n(line.earningsNotLiableAcc),
-        "0",
+        line.lumpSumLowRate === true ? "1" : "0",
         n(line.paye),
-        "0",
+        n(line.priorPaye ?? 0),
         n(line.childSupport),
-        "",
+        line.childSupportCode ?? "",
         n(line.studentLoan),
-        "0",
-        "0",
+        n(line.slcir ?? 0),
+        n(line.slbor ?? 0),
         n(line.kiwiSaverEmployee),
         n(net(line)),
         n(line.esct),
+        n(line.donationCredit ?? 0),
         "0",
-        "0",
-        "0",
+        n(line.ess ?? 0),
       ].join(","),
     );
   }
@@ -649,15 +905,18 @@ export function payrollJournal(run: PayRun, accounts: PayrollAccounts): PostedJo
   const ksExpense = accounts.kiwiSaverExpense ?? accounts.wages;
   const ksPayable = accounts.kiwiSaverPayable ?? accounts.payePayable;
   const employerNet = run.totalKiwiSaverEmployerNet ?? run.totalKiwiSaverEmployer - run.totalEsct;
-  const toIr = run.totalPaye + run.totalStudentLoan + run.totalChildSupport + run.totalEsct;
+  const toIr =
+    run.totalPaye - (run.totalDonationCredits ?? 0) + (run.totalPriorPaye ?? 0) + run.totalStudentLoan +
+    (run.totalSlcir ?? 0) + (run.totalSlbor ?? 0) + run.totalChildSupport + run.totalEsct;
   const kiwiSaver = run.totalKiwiSaverEmployee + employerNet;
 
   const raw: [PayrollAccount, Cents, string][] = [
-    [accounts.wages, run.totalGross, "Gross pay"],
+    [accounts.wages, run.totalGross + (run.totalPriorGross ?? 0), "Gross pay"],
     [ksExpense, run.totalKiwiSaverEmployer, "KiwiSaver employer contributions"],
     [accounts.payePayable, -toIr, "PAYE, student loan, child support and ESCT"],
     [ksPayable, -kiwiSaver, "KiwiSaver deductions and employer contributions"],
-    [accounts.wagesPayable, -run.totalNetPay, "Net pay"],
+    // Payroll donations are passed on to the charity, so they sit with net pay.
+    [accounts.wagesPayable, -(run.totalNetPay + (run.totalDonations ?? 0)), "Net pay and payroll donations"],
   ];
   // One line per account, so a fallback to the same account nets rather than
   // showing a debit and a credit to one place.

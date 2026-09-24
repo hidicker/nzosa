@@ -406,3 +406,63 @@ test("extras reach the file and the journal still balances", () => {
   });
   assert.equal(journal.lines.reduce((s, l) => s + l.amount, 0), 0);
 });
+
+// --- employer KiwiSaver paid as salary (spec 5.20.2) ---------------------------
+//
+// IR's example: $500.03 a week, KiwiSaver 4% employee and 3% employer. Its
+// PAYE figures ($74.85 on $500.03, $77.72 on $515.03) are the 2025-26 levy's.
+
+const rachel = (asSalary) =>
+  employee("M", "weekly", {
+    kiwiSaverRate: 0.04,
+    kiwiSaverEmployerRate: 0.03,
+    ...(asSalary ? { employerKiwiSaverAsSalary: asSalary } : {}),
+  });
+
+test("usual way: the contribution is the employer's, taxed by ESCT", () => {
+  const line = calculatePayLine(rachel(), 50_003, 2026);
+  assert.equal(line.gross, 50_003);
+  assert.equal(line.paye, 7_485);
+  assert.equal(line.kiwiSaverEmployer, 1_500);
+  assert.ok(line.esct > 0);
+});
+
+test("paid as salary, gross: PAYE on $515.03, the full $15 to the fund out of pay, no ESCT", () => {
+  const line = calculatePayLine(rachel("gross"), 50_003, 2026);
+  assert.equal(line.gross, 51_503);
+  assert.equal(line.paye, 7_772);
+  assert.equal(line.kiwiSaverEmployee, 2_000);
+  assert.equal(line.esct, 0);
+  assert.equal(line.kiwiSaverEmployer, 0);
+  assert.equal(line.kiwiSaverEmployerNet, 1_500);
+  assert.equal(line.netPay, 40_231); // IR: $402.31
+});
+
+test("paid as salary, net: the income tax on the contribution comes out of it", () => {
+  const line = calculatePayLine(rachel("net"), 50_003, 2026);
+  // Tax on it $2.87 (77.72 - 74.85), less its levy (15 x 1.67% = 0.25): $2.62.
+  // IR's example takes the levy at 1.75% ($0.26) for $12.39; at this year's
+  // levy it is $12.38.
+  assert.equal(line.kiwiSaverEmployerNet, 1_500 - (287 - 25));
+  assert.equal(line.netPay, 51_503 - 7_772 - 2_000 - line.kiwiSaverEmployerNet);
+});
+
+test("paid as salary, the pay run's journal still balances with no employer KiwiSaver cost", () => {
+  const r = buildPayRun({
+    id: "k", employerIrd: "49091850", periodStart: "2026-03-16", periodEnd: "2026-03-22", payDate: "2026-03-24",
+    employees: [rachel("gross")], inputs: [{ employeeId: "M", grossOverride: 50_003 }],
+  });
+  const journal = payrollJournal(r, {
+    wages: { code: "477", name: "W" }, kiwiSaverExpense: { code: "478", name: "KE" },
+    wagesPayable: { code: "804", name: "WP" }, payePayable: { code: "825", name: "P" }, kiwiSaverPayable: { code: "826", name: "KP" },
+  });
+  assert.equal(journal.lines.reduce((s, l) => s + l.amount, 0), 0);
+  const by = Object.fromEntries(journal.lines.map((l) => [l.accountCode, l.amount]));
+  assert.equal(by["477"], 51_503);
+  assert.equal(by["478"], undefined);
+  assert.equal(by["826"], -(2_000 + 1_500));
+  const dei = generatePaydayFilingCsv(r, { name: "P", phone: "1", email: "a@b.co" }).split("\r\n")[1].split(",");
+  assert.equal(dei[10], "51503");
+  assert.equal(dei[22], "1500");
+  assert.equal(dei[23], "0");
+});

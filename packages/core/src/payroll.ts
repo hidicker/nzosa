@@ -79,6 +79,15 @@ export interface Employee {
   slborAmount?: Cents | undefined;
   /** A higher rate the employee has chosen for extra pays (RD 10(2)). */
   extraPayRate?: number | undefined;
+  /**
+   * The employer's KiwiSaver contribution paid as salary under PAYE (section
+   * RD 68) rather than taxed by ESCT, where the employment agreement says so
+   * (spec 5.20.2). "gross": the contribution is added to pay, PAYE is worked
+   * on the total, and the whole contribution goes to the fund out of pay.
+   * "net": the same, but the income tax on the contribution comes out of it,
+   * so the fund receives it net and the employee keeps the tax back.
+   */
+  employerKiwiSaverAsSalary?: "gross" | "net" | undefined;
   bankAccount: string;
   startDate?: IsoDate | undefined;
   finishDate?: IsoDate | undefined;
@@ -127,6 +136,8 @@ export interface PayLine {
   kiwiSaverEmployer: Cents;
   /** The employer's contribution after ESCT -- what reaches the fund. */
   kiwiSaverEmployerNet?: Cents | undefined;
+  /** The employer's contribution was paid as salary (5.20.2); it is inside `gross`. */
+  employerKiwiSaverAsSalary?: "gross" | "net" | undefined;
   esct: Cents;
   childSupport: Cents;
   /** "P" when child support was cut to protect 60% of net pay. */
@@ -507,24 +518,59 @@ export function calculatePayLine(
   const code: TaxCode = employee.irdNumber.trim() === "" && employee.taxCode !== "NSW" ? "ND" : employee.taxCode;
   const extra = options?.extraPay ?? 0;
   const kind = options?.extraPayKind ?? "bonus";
-  const total = gross + extra;
-  const payDollars = wholeDollars(gross);
+
+  // KiwiSaver: bonuses count; redundancy and share schemes do not (4.5.1).
+  // Not for a non-resident seasonal worker, who cannot join, or a schedular
+  // payee, who is not an employee. Worked on the pay before any employer
+  // contribution is added to it (5.20.2).
+  const kiwiSaverApplies = code !== "NSW" && code !== "WT";
+  const kiwiSaverBase = gross + (kind === "redundancy" ? 0 : extra);
+  const kiwiSaverEmployee = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverRate) : 0;
+  const contribution = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverEmployerRate) : 0;
+  const asSalary = contribution > 0 ? employee.employerKiwiSaverAsSalary : undefined;
+
+  // Paid as salary, the contribution is part of the ordinary pay: PAYE,
+  // student loan and child support are all worked on the larger figure.
+  const ordinary = gross + (asSalary !== undefined ? contribution : 0);
+  const total = ordinary + extra;
 
   // PAYE on the ordinary pay.
-  let paye = 0;
-  let earningsNotLiableAcc = options?.earningsNotLiableAcc ?? 0;
-  if (PRIMARY.has(code)) {
-    paye = primaryPaye(gross, frequency, code, rates);
-  } else if (code === "WT") {
+  const payeOn = (pay: Cents): Cents => {
+    if (PRIMARY.has(code)) return primaryPaye(pay, frequency, code, rates);
     // Schedular payments: the elected (or standard) rate on the payment, no
-    // earners' levy, and all of it reported as not liable for the levy.
-    paye = truncCents(total * (employee.taxRate ?? 0.45));
-    earningsNotLiableAcc = total;
-  } else if (code === "STC") {
+    // earners' levy.
+    if (code === "WT") return truncCents((pay + extra) * (employee.taxRate ?? 0.45));
     // The certificate's rate includes the levy (section 5.11.1, 2.3.1).
-    paye = truncCents(payDollars * (employee.taxRate ?? 0));
-  } else {
-    paye = truncCents(payDollars * ((FLAT_RATES[code] ?? 0.45) + rates.levy));
+    if (code === "STC") return truncCents(wholeDollars(pay) * (employee.taxRate ?? 0));
+    return truncCents(wholeDollars(pay) * ((FLAT_RATES[code] ?? 0.45) + rates.levy));
+  };
+  let paye = payeOn(ordinary);
+  let earningsNotLiableAcc = options?.earningsNotLiableAcc ?? 0;
+  // All of a schedular payment is reported as not liable for the levy.
+  if (code === "WT") earningsNotLiableAcc = total;
+
+  // What reaches the fund, and what the employer pays for it separately.
+  let kiwiSaverEmployer = contribution;
+  let fund = contribution;
+  let esct = 0;
+  if (asSalary !== undefined) {
+    // Part of wages now, so no separate employer cost and no ESCT.
+    kiwiSaverEmployer = 0;
+    if (asSalary === "net") {
+      // The income tax on the contribution comes out of it: the PAYE it
+      // added, less the earners' levy on it, which stays PAYE.
+      const taxOnIt = paye - payeOn(gross);
+      const levyOnIt = code === "WT" ? 0 : truncCents(contribution * rates.levy);
+      fund = contribution - Math.max(0, taxOnIt - levyOnIt);
+    }
+  } else if (contribution > 0) {
+    const esctRate =
+      employee.esctRate > 0
+        ? employee.esctRate
+        : esctRateFor((gross + contribution) * paysPerYear(frequency));
+    // ESCT is worked on the contribution in whole dollars (section 5.20.6).
+    esct = truncCents(wholeDollars(contribution) * esctRate);
+    fund = contribution - esct;
   }
 
   // PAYE on an extra pay.
@@ -567,19 +613,6 @@ export function calculatePayLine(
   const hasLoan = code.endsWith("SL") || code === "STC";
   const slbor = hasLoan ? employee.slborAmount ?? 0 : 0;
 
-  // KiwiSaver: bonuses count; redundancy and share schemes do not (4.5.1).
-  // Not for a non-resident seasonal worker, who cannot join, or a schedular
-  // payee, who is not an employee.
-  const kiwiSaverApplies = code !== "NSW" && code !== "WT";
-  const kiwiSaverBase = gross + (kind === "redundancy" ? 0 : extra);
-  const kiwiSaverEmployee = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverRate) : 0;
-  const kiwiSaverEmployer = kiwiSaverApplies ? truncCents(kiwiSaverBase * employee.kiwiSaverEmployerRate) : 0;
-  const esctRate =
-    employee.esctRate > 0
-      ? employee.esctRate
-      : esctRateFor((gross + kiwiSaverEmployer) * paysPerYear(frequency));
-  // ESCT is worked on the contribution in whole dollars (section 5.20.6).
-  const esct = kiwiSaverEmployer > 0 ? truncCents(wholeDollars(kiwiSaverEmployer) * esctRate) : 0;
 
   // The levy inside PAYE, near enough, for the two rules that need the tax
   // part alone: protected earnings and the payroll giving credit's ceiling.
@@ -612,8 +645,9 @@ export function calculatePayLine(
     studentLoan,
     kiwiSaverEmployee,
     kiwiSaverEmployer,
-    kiwiSaverEmployerNet: kiwiSaverEmployer - esct,
+    kiwiSaverEmployerNet: fund,
     esct,
+    ...(asSalary !== undefined ? { employerKiwiSaverAsSalary: asSalary } : {}),
     childSupport,
     ...(childSupportCode !== undefined ? { childSupportCode } : {}),
     ...(extra > 0 ? { extraPay: extra, lumpSumLowRate } : {}),
@@ -625,7 +659,9 @@ export function calculatePayLine(
     ...(priorPaye !== 0 ? { priorPaye } : {}),
     netPay:
       total + priorGross - (paye - donationCredit) - priorPaye - studentLoan - slcir - slbor -
-      kiwiSaverEmployee - childSupport - donation,
+      kiwiSaverEmployee - childSupport - donation -
+      // Paid as salary, the contribution goes to the fund out of pay.
+      (asSalary !== undefined ? fund : 0),
     startDate: employee.startDate,
     finishDate: employee.finishDate,
   };

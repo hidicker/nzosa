@@ -594,6 +594,29 @@ function renderEmployeeEditor(container: HTMLElement): void {
     ),
   );
 
+  // Section RD 68: the employer's contribution paid as salary instead.
+  const asSalary = document.createElement("select");
+  for (const [value, caption] of [
+    ["", "Employer's cost, taxed by ESCT (usual)"],
+    ["gross", "Paid as salary under PAYE: full contribution to the fund"],
+    ["net", "Paid as salary under PAYE: tax on it taken out of it"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = caption;
+    option.selected = (existing?.employerKiwiSaverAsSalary ?? "") === value;
+    asSalary.append(option);
+  }
+  grid.append(
+    createField(
+      "Employer KiwiSaver",
+      asSalary,
+      "Only where the employment agreement pays the contribution as part of salary. It is then " +
+        "added to pay and taxed by PAYE, with no ESCT, and sent to the fund out of pay.",
+      2,
+    ),
+  );
+
   // Bank Account
   const bankInput = document.createElement("input");
   bankInput.type = "text";
@@ -679,6 +702,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       ...(slcir.value.trim() !== "" && Number(slcir.value) > 0 ? { slcirRate: Math.min(5, Number(slcir.value)) / 100 } : {}),
       ...(slbor.value.trim() !== "" ? { slborAmount: parseAmount(slbor.value.trim()) ?? 0 } : {}),
       ...(electedRate.value !== "" ? { extraPayRate: Number(electedRate.value) } : {}),
+      ...(asSalary.value !== "" ? { employerKiwiSaverAsSalary: asSalary.value as "gross" | "net" } : {}),
       bankAccount: bankInput.value.trim(),
       startDate: (startInput.value || undefined) as IsoDate | undefined,
       finishDate: (finishInput.value || undefined) as IsoDate | undefined,
@@ -1208,7 +1232,7 @@ function renderPayRunsList(container: HTMLElement): void {
       <div class="payroll-run-totals-summary">
         <span class="summary-pill">Gross: <strong>${formatAmount(run.totalGross)}</strong></span>
         <span class="summary-pill">PAYE: <strong>${formatAmount(run.totalPaye)}</strong></span>
-        <span class="summary-pill">KiwiSaver: <strong>${formatAmount(run.totalKiwiSaverEmployee + run.totalKiwiSaverEmployer)}</strong></span>
+        <span class="summary-pill">KiwiSaver: <strong>${formatAmount(run.totalKiwiSaverEmployee + (run.totalKiwiSaverEmployerNet ?? run.totalKiwiSaverEmployer - run.totalEsct))}</strong></span>
         <span class="summary-pill accent">Net Pay: <strong>${formatAmount(run.totalNetPay)}</strong></span>
       </div>
     `;
@@ -1306,7 +1330,7 @@ function renderPayRunsList(container: HTMLElement): void {
           <td style="text-align: right;">${formatAmount(line.paye)}</td>
           <td style="text-align: right;">${formatAmount(line.studentLoan)}</td>
           <td style="text-align: right;">${formatAmount(line.kiwiSaverEmployee)}</td>
-          <td style="text-align: right;">${formatAmount(line.kiwiSaverEmployer)}</td>
+          <td style="text-align: right;">${formatAmount(line.employerKiwiSaverAsSalary ? (line.kiwiSaverEmployerNet ?? 0) : line.kiwiSaverEmployer)}${line.employerKiwiSaverAsSalary ? " (as salary)" : ""}</td>
           <td style="text-align: right;">${formatAmount(line.esct)}</td>
           <td style="text-align: right;">${formatAmount(line.childSupport)}</td>
           <td style="text-align: right;"><strong>${formatAmount(line.netPay)}</strong></td>

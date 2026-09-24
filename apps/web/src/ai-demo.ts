@@ -1,5 +1,9 @@
 import { CLOUD } from "./cloud-config.js";
 import type { AiAnswer, AiModel, AiStatus } from "./ai-backend.js";
+import { askModel, detectProvider, listModels, pickModel } from "@nzosa/core";
+import type { AiFetcher } from "@nzosa/core";
+
+const byFetch: AiFetcher = (url, init) => fetch(url, init);
 
 /**
  * AI suggestions in the online demo, which has no server of its own.
@@ -44,53 +48,6 @@ function keep(value: Kept | null): void {
     // Storage refused. The key simply is not kept, and the page says so by
     // showing none set -- better than pretending it was.
   }
-}
-
-// --- the models a key may use, as the server functions work them out -------
-
-const NOT_FOR_THIS =
-  /image|tts|audio|video|robotics|computer-use|transcribe|lyria|deep-research|antigravity|nano-banana|omni|embedding|aqa/i;
-const PREFERRED = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.6-pro"];
-
-function order(models: AiModel[]): AiModel[] {
-  const rank = (model: AiModel): number => {
-    const preferred = PREFERRED.indexOf(model.name);
-    if (preferred >= 0) return preferred;
-    const family = /^gemini/.test(model.name) ? 10 : 1000;
-    const version = /latest/.test(model.name)
-      ? 99
-      : Number((model.name.match(/\d+(\.\d+)?/) ?? ["0"])[0]);
-    return family + (100 - version);
-  };
-  return [...models].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
-}
-
-function pick(models: AiModel[], wanted: string): string {
-  const has = (name: string): boolean => models.some((model) => model.name === name);
-  if (wanted !== "" && has(wanted)) return wanted;
-  for (const name of PREFERRED) if (has(name)) return name;
-  return models.find((model) => /flash/i.test(model.name))?.name ?? models[0]?.name ?? "";
-}
-
-async function listModels(key: string): Promise<AiModel[]> {
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
-    { headers: { "x-goog-api-key": key } },
-  );
-  const body = (await response.json().catch(() => null)) as {
-    models?: { name?: string; displayName?: string; supportedGenerationMethods?: string[] }[];
-    error?: { message?: string };
-  } | null;
-  if (!response.ok) throw new Error(body?.error?.message ?? `Google said ${response.status}`);
-  return order(
-    (body?.models ?? [])
-      .filter((model) => (model.supportedGenerationMethods ?? []).includes("generateContent"))
-      .map((model) => ({
-        name: String(model.name ?? "").replace(/^models\//, ""),
-        label: String(model.displayName ?? model.name ?? ""),
-      }))
-      .filter((model) => model.name !== "" && !NOT_FOR_THIS.test(model.name)),
-  );
 }
 
 // --- the shared pool --------------------------------------------------------
@@ -157,9 +114,12 @@ export async function demoSetKey(key: string): Promise<{ ok: boolean; error: str
   try {
     // Checked before it is kept, by listing what it may use: a mistyped key
     // is said to be wrong now rather than the first time somebody presses.
-    const models = await listModels(key);
-    if (models.length === 0) return { ok: false, error: "That key can reach Google but has no models on it." };
-    keep({ key, model: pick(models, ""), models });
+    // From this page, so Anthropic is told the key is the visitor's own and
+    // visible here -- which, in their own tab, it is.
+    const provider = detectProvider(key);
+    const models = await listModels(provider, key, byFetch, { browser: true });
+    if (models.length === 0) return { ok: false, error: "That key works but has no models this can use." };
+    keep({ key, model: pickModel(provider, models, ""), models });
     return { ok: true, error: "" };
   } catch (error) {
     return { ok: false, error: (error as Error).message };
@@ -180,24 +140,12 @@ export async function demoSuggest(prompt: string, asking: number): Promise<AiAns
   const own = kept();
   if (own === null) return sharedPoolSuggest(prompt, asking);
   try {
-    const response = await fetch(
-      `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(own.model)}:generateContent`,
-      {
-        method: "POST",
-        headers: { "content-type": "application/json", "x-goog-api-key": own.key },
-        body: JSON.stringify({
-          contents: [{ role: "user", parts: [{ text: prompt }] }],
-          generationConfig: { responseMimeType: "application/json", temperature: 0 },
-        }),
-      },
-    );
-    const body = (await response.json().catch(() => null)) as {
-      candidates?: { content?: { parts?: { text?: string }[] } }[];
-      error?: { message?: string };
-    } | null;
-    if (!response.ok) return { error: body?.error?.message ?? `Google said ${response.status}` };
-    return { text: (body?.candidates?.[0]?.content?.parts ?? []).map((part) => part.text ?? "").join("") };
-  } catch {
-    return { error: "Could not reach Google from this page." };
+    return {
+      text: await askModel(detectProvider(own.key), own.key, own.model, prompt, byFetch, {
+        browser: true,
+      }),
+    };
+  } catch (error) {
+    return { error: (error as Error).message };
   }
 }

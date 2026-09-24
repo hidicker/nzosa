@@ -47,10 +47,8 @@ export function carrySection(options: {
     note(
       waiting.length === 0
         ? "Nothing is waiting: every line has a rule, a default or your own answer."
-        : `${waiting.length} line${waiting.length === 1 ? "" : "s"} nothing recognises. ` +
-          "Copy the prompt, paste it into ChatGPT, Claude, Gemini or anything else, and " +
-          "paste the answer back below. No key needed, and nothing is charged to anybody " +
-          "but whoever you pasted it into.",
+        : "Copy the prompt, paste it into ChatGPT, Claude, Gemini or anything else, and " +
+          "paste the answer back below. No key needed.",
     ),
   );
   if (waiting.length === 0) return wrap;
@@ -60,7 +58,8 @@ export function carrySection(options: {
     if (size > waiting.length) continue;
     const option = document.createElement("option");
     option.value = String(size);
-    option.textContent = size === waiting.length ? `All ${size}` : `${size} lines`;
+    option.textContent =
+      size === waiting.length ? `All ${size}` : size === 50 ? "50 lines (recommended)" : `${size} lines`;
     option.selected = size === Math.min(50, waiting.length);
     howMany.append(option);
   }
@@ -68,6 +67,13 @@ export function carrySection(options: {
   label.className = "ai-model";
   label.append("How many ", howMany);
   wrap.append(label);
+  // Why not all of them: the answers are what the next rules are made from.
+  wrap.append(
+    note(
+      "20 to 50 lines is best to start. Checking and confirming those builds rules, so " +
+        "the next set is smaller and better answered.",
+    ),
+  );
 
   const said = document.createElement("p");
   said.className = "cloud-said";

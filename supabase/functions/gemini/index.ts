@@ -26,6 +26,15 @@
  * says about them.
  */
 
+import {
+  askModel,
+  detectProvider,
+  listModels,
+  pickModel,
+  type AiFetcher,
+  type ProviderModel,
+} from "../_shared/ai-providers.ts";
+
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 /** The installation's own key. Absent, there is simply no shared key on offer. */
@@ -90,83 +99,13 @@ async function asService(fn: string, args: unknown): Promise<unknown> {
   return await response.json().catch(() => null);
 }
 
-interface Model {
-  name: string;
-  label: string;
-}
-
-const NOT_FOR_THIS =
-  /image|tts|audio|video|robotics|computer-use|transcribe|lyria|deep-research|antigravity|nano-banana|omni|embedding|aqa/i;
-
-const PREFERRED = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.6-pro"];
-
-function order(models: Model[]): Model[] {
-  const rank = (model: Model): number => {
-    const preferred = PREFERRED.indexOf(model.name);
-    if (preferred >= 0) return preferred;
-    const family = /^gemini/.test(model.name) ? 10 : 1000;
-    const version = /latest/.test(model.name)
-      ? 99
-      : Number((model.name.match(/\d+(\.\d+)?/) ?? ["0"])[0]);
-    return family + (100 - version);
-  };
-  return [...models].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
-}
-
-/**
- * Every model this key may use that can answer this kind of question.
- *
- * Also how a key is checked. Listing costs nothing and says more than a test
- * question would: a key that cannot list cannot do anything, and one that can
- * gives us names to offer rather than a guess.
+/*
+ * Listing a key's models, choosing one and asking it: the shared module, an
+ * exact copy of packages/core/src/ai-providers.ts (a test keeps them equal).
+ * A key from Google, Anthropic, OpenAI or OpenRouter works the same way, and
+ * which it is is read from the key. The site's shared key is Google's.
  */
-async function listModels(key: string): Promise<Model[]> {
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
-    { headers: { "x-goog-api-key": key } },
-  );
-  const body = (await response.json().catch(() => null)) as {
-    models?: { name?: string; displayName?: string; supportedGenerationMethods?: string[] }[];
-    error?: { message?: string };
-  } | null;
-  if (!response.ok) throw new Error(body?.error?.message ?? `Google said ${response.status}`);
-  return order(
-    (body?.models ?? [])
-      .filter((model) => (model.supportedGenerationMethods ?? []).includes("generateContent"))
-      .map((model) => ({
-        name: String(model.name ?? "").replace(/^models\//, ""),
-        label: String(model.displayName ?? model.name ?? ""),
-      }))
-      .filter((model) => model.name !== "" && !NOT_FOR_THIS.test(model.name)),
-  );
-}
-
-function pick(models: Model[], wanted: string): string {
-  const has = (name: string): boolean => models.some((model) => model.name === name);
-  if (wanted !== "" && has(wanted)) return wanted;
-  for (const name of PREFERRED) if (has(name)) return name;
-  return models.find((model) => /flash/i.test(model.name))?.name ?? models[0]?.name ?? "";
-}
-
-async function ask(key: string, model: string, prompt: string): Promise<string> {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0 },
-      }),
-    },
-  );
-  const body = (await response.json().catch(() => null)) as {
-    candidates?: { content?: { parts?: { text?: string }[] } }[];
-    error?: { message?: string };
-  } | null;
-  if (!response.ok) throw new Error(body?.error?.message ?? `Google said ${response.status}`);
-  return (body?.candidates?.[0]?.content?.parts ?? []).map((part) => part.text ?? "").join("");
-}
+const byFetch: AiFetcher = (url, init) => fetch(url, init);
 
 /**
  * The same model, asked to hold a conversation it may use tools in.
@@ -263,17 +202,17 @@ Deno.serve(async (request: Request) => {
     if (action === "set-key") {
       const key = String(body.key ?? "").trim();
       if (key === "") return reply({ error: "no key given" }, 400);
-      let models: Model[];
+      let models: ProviderModel[];
       try {
-        models = await listModels(key);
+        models = await listModels(detectProvider(key), key, byFetch);
       } catch (error) {
-        // Google's own words, which tell somebody what to do about it.
+        // The provider's own words, which tell somebody what to do about it.
         return reply({ error: (error as Error).message }, 400);
       }
       if (models.length === 0) {
-        return reply({ error: "that key can reach Google but has no models on it" }, 400);
+        return reply({ error: "that key works but has no models this can use" }, 400);
       }
-      const model = pick(models, String(body.model ?? ""));
+      const model = pickModel(detectProvider(key), models, String(body.model ?? ""));
       await asCaller(jwt, "set_ai_key", { book, key, model });
       await asCaller(jwt, "set_ai_model", { book, model, models });
       return reply({ configured: true, model, models });
@@ -317,7 +256,7 @@ Deno.serve(async (request: Request) => {
       const key = theirs?.key ?? SHARED_KEY;
       const model = theirs?.model ?? SHARED_MODEL;
       try {
-        const text = await ask(key, model, prompt);
+        const text = await askModel(detectProvider(key), key, model, prompt, byFetch);
         return reply({ text, demo });
       } catch (error) {
         return reply({ error: (error as Error).message }, 502);
@@ -349,6 +288,9 @@ Deno.serve(async (request: Request) => {
         return reply({ error: (error as Error).message }, 429);
       }
 
+      if (detectProvider(theirs?.key ?? SHARED_KEY) !== "gemini") {
+        return reply({ error: "This runs on a Google Gemini key only." }, 400);
+      }
       try {
         const turn = await talk(
           theirs?.key ?? SHARED_KEY,

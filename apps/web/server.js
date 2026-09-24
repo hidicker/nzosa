@@ -46,6 +46,12 @@ import {
   writeMeta,
   writePart,
 } from "./ledger-folder.js";
+import {
+  askModel as askAiModel,
+  detectProvider,
+  listModels as listAiModels,
+  pickModel as pickAiModel,
+} from "@nzosa/core";
 
 const root = dirname(fileURLToPath(import.meta.url));
 const outdir = join(root, "dist");
@@ -248,118 +254,17 @@ const AI_DAILY_LIMIT = 200;
 // lines rather than each of a thousand.
 const AI_MOST_AT_ONCE = 100;
 
-/**
- * Which model, when nobody has said.
- *
- * In preference order, and only ever a name this key's own account offers:
- * models are retired, and one hard-coded here becomes an error message months
- * after it was written. The list comes from Google, the choice comes from the
- * person, and this is only what to reach for first.
+/*
+ * Listing a key's models, choosing one and asking it live in @nzosa/core
+ * (ai-providers.ts) now, shared with the online demo and -- as an exact copy --
+ * with the Supabase function. They were Gemini's alone and written here; a key
+ * from Anthropic, OpenAI or OpenRouter works the same way through the same
+ * three calls, and which company it is from is read from the key.
  */
-const AI_PREFERRED = ["gemini-3.6-flash", "gemini-flash-latest", "gemini-3.6-pro"];
-
-/**
- * Models that answer questions, out of everything on the key.
- *
- * A key lists forty-odd, and most of them draw pictures, read text aloud,
- * transcribe speech or write music. Offering those for coding a bank
- * transaction is offering somebody a choice they cannot evaluate, so the list
- * is cut to what could sensibly do this job.
- */
-const AI_NOT_FOR_THIS =
-  /image|tts|audio|video|robotics|computer-use|transcribe|lyria|deep-research|antigravity|nano-banana|omni|embedding|aqa/i;
-
-/** Newest first, and the one we would reach for at the top. */
-function orderModels(models) {
-  const rank = (model) => {
-    const preferred = AI_PREFERRED.indexOf(model.name);
-    if (preferred >= 0) return preferred;
-    // Then Gemini before anything else, and within that by version
-    // descending: 3.8 before 3.6 before 2.5. A model named "latest" carries no
-    // number and belongs with the newest rather than with the oldest.
-    const family = /^gemini/.test(model.name) ? 10 : 1000;
-    const version = /latest/.test(model.name)
-      ? 99
-      : Number((model.name.match(/\d+(\.\d+)?/) ?? ["0"])[0]);
-    return family + (100 - version);
-  };
-  return [...models].sort((a, b) => rank(a) - rank(b) || a.name.localeCompare(b.name));
-}
-
-/**
- * Every model this key may use that can answer this kind of question.
- *
- * Also how a key is checked. Listing costs nothing and says more than a test
- * question would: a key that cannot list is a key that cannot do anything,
- * and a key that can gives us the names to offer rather than a guess.
- */
-async function geminiModels(key) {
-  const response = await fetch(
-    "https://generativelanguage.googleapis.com/v1beta/models?pageSize=200",
-    { headers: { "x-goog-api-key": key } },
-  );
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    const said =
-      body && body.error && typeof body.error.message === "string"
-        ? body.error.message
-        : `HTTP ${response.status}`;
-    throw new Error(said);
-  }
-  const usable = (body?.models ?? [])
-    .filter((model) => (model.supportedGenerationMethods ?? []).includes("generateContent"))
-    .map((model) => ({
-      name: String(model.name ?? "").replace(/^models\//, ""),
-      label: String(model.displayName ?? model.name ?? ""),
-    }))
-    .filter((model) => model.name !== "" && !AI_NOT_FOR_THIS.test(model.name));
-  return orderModels(usable);
-}
-
-/** The one to start on: a preference if this key has it, else a flash, else any. */
-function pickModel(models, wanted) {
-  const has = (name) => models.some((model) => model.name === name);
-  if (wanted && has(wanted)) return wanted;
-  for (const name of AI_PREFERRED) if (has(name)) return name;
-  const flash = models.find((model) => /flash/i.test(model.name));
-  return flash?.name ?? models[0]?.name ?? "";
-}
 
 /** How many transactions have been asked about today, out of how many allowed. */
 function aiUsedToday(ai) {
   return ai?.used?.[today()] ?? 0;
-}
-
-/**
- * Ask the model, and say plainly when it will not answer.
- *
- * A key that has expired, a project with no billing, a model name that is not
- * a model: all of these come back as an HTTP error with Google's own words in
- * it, and those words are more use to somebody than "could not get
- * suggestions" would be. They are passed through rather than swallowed.
- */
-async function askGemini(key, model, prompt) {
-  const response = await fetch(
-    `https://generativelanguage.googleapis.com/v1beta/models/${encodeURIComponent(model)}:generateContent`,
-    {
-      method: "POST",
-      headers: { "content-type": "application/json", "x-goog-api-key": key },
-      body: JSON.stringify({
-        contents: [{ role: "user", parts: [{ text: prompt }] }],
-        generationConfig: { responseMimeType: "application/json", temperature: 0 },
-      }),
-    },
-  );
-  const body = await response.json().catch(() => null);
-  if (!response.ok) {
-    const said =
-      body && body.error && typeof body.error.message === "string"
-        ? body.error.message
-        : `HTTP ${response.status}`;
-    throw new Error(said);
-  }
-  const parts = body?.candidates?.[0]?.content?.parts ?? [];
-  return parts.map((part) => part.text ?? "").join("");
 }
 
 /**
@@ -784,16 +689,16 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         // wanted anyway.
         let models;
         try {
-          models = await geminiModels(key);
+          models = await listAiModels(detectProvider(key), key, fetch);
         } catch (error) {
           send(response, 400, { error: String(error.message ?? error) });
           return;
         }
         if (models.length === 0) {
-          send(response, 400, { error: "that key can reach Google but has no models on it" });
+          send(response, 400, { error: "that key works but has no models this can use" });
           return;
         }
-        const model = pickModel(models, wanted);
+        const model = pickAiModel(detectProvider(key), models, wanted);
         writeAi(ledgerRoot, current, { key, model, models, used: existing?.used ?? {} });
         send(response, 200, { configured: true, model, models });
         return;
@@ -821,7 +726,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         // not choose it in the first place.
         const offered = ai.models ?? [];
         if (offered.length > 0 && !offered.some((model) => model.name === ai.model)) {
-          ai.model = pickModel(offered, "");
+          ai.model = pickAiModel(detectProvider(ai.key), offered, "");
           writeAi(ledgerRoot, current, ai);
         }
         const body = JSON.parse(await readBody(request));
@@ -853,7 +758,14 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 
         let said;
         try {
-          said = await askGemini(ai.key, ai.model ?? pickModel(ai.models ?? [], ""), prompt);
+          const provider = detectProvider(ai.key);
+          said = await askAiModel(
+            provider,
+            ai.key,
+            ai.model ?? pickAiModel(provider, ai.models ?? [], ""),
+            prompt,
+            fetch,
+          );
         } catch (error) {
           send(response, 502, { error: String(error.message ?? error) });
           return;
@@ -881,6 +793,10 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         const body = JSON.parse(await readBody(request));
         const contents = Array.isArray(body.contents) ? body.contents : [];
         const tools = Array.isArray(body.tools) ? body.tools : [];
+        if (detectProvider(ai.key) !== "gemini") {
+          send(response, 400, { error: "This runs on a Google Gemini key only." });
+          return;
+        }
         if (contents.length === 0) {
           send(response, 400, { error: "nothing to say" });
           return;
@@ -902,7 +818,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         try {
           turn = await talkToGemini(
             ai.key,
-            ai.model ?? pickModel(ai.models ?? [], ""),
+            ai.model ?? pickAiModel("gemini", ai.models ?? [], ""),
             contents,
             tools,
           );

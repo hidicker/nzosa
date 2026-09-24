@@ -386,16 +386,6 @@ const ledger = {
   // anyway, so the only thing it turns on is the prompt somebody copies and
   // carries themselves, which sends nothing anywhere until they paste it.
   aiEnabled: true,
-  // What the prompt tells a model about the business, which is the difference
-  // between "a supermarket, probably groceries" and knowing this one roasts
-  // coffee and rents out two buildings. Named generically on purpose: the
-  // privacy audit caught a real payee here, quoted inside the comment that
-  // explains the field -- the same way a real bank account number once got
-  // into the comment explaining a bank-number leak.
-  booksAbout:
-    "A small coffee roastery in Nelson, owned by a couple, alongside two rental " +
-    "properties they own together: a house let to a tenant and a shop unit leased to a " +
-    "florist. Each is its own entity, kept in one set of books.",
 };
 writeFileSync(join(out, "ledger.json"), JSON.stringify(ledger, null, 2));
 

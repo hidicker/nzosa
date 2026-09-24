@@ -3,6 +3,7 @@ import type { PageName } from "./app.js";
 import { aiClearKey, aiRoute, aiSetKey, aiSetModel, aiStatus } from "./ai-backend.js";
 import type { AiStatus } from "./ai-backend.js";
 import { note } from "./ui.js";
+import { PROVIDER_NAMES, detectProvider } from "@nzosa/core";
 
 /**
  * Connecting a key, in one place, for every page that needs one.
@@ -98,34 +99,28 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
   if (status?.configured !== true && status?.sharedKey === true) {
     const left = Math.max(0, (status.demoLimit ?? 0) - (status.demoUsed ?? 0));
     inner.append(
+      // The shared key first, then how to bring your own: that is the order
+      // somebody meets them in, and what they can do today before what they
+      // could do instead.
       note(
-        aiRoute() === "demo"
-          ? // One allowance for every visitor to the demo, not one each: there is
-            // no sign-in here to count a person by.
-            "You can try this without a key of your own. The demo offers a shared one -- " +
-              `${status.sharedModel || "a flash model"}, with ${left} ${counted} left in one ` +
-              "allowance shared by every visitor, until the site owner resets it. Or add a " +
-              "key of your own below."
-          : aiRoute() === "folder"
-            ? // A downloaded copy with no key: the same pool as the demo, and its
-              // transactions are real, so whose key it is gets said first.
-              "No key on these books, so this uses a shared key belonging to whoever runs " +
-                `nbparagliding.nz -- ${status.sharedModel || "a flash model"}, with ${left} ` +
-                `${counted} left in one allowance shared by everybody without a key of their ` +
-                "own. What you send goes to Google through their account. For a client's " +
-                "books, or to keep it on your own account, add a key of your own below."
-            : "You can try this without a key of your own. This site offers a shared one -- " +
-                `${status.sharedModel || "a flash model"}, ${left} ${counted} left on your ` +
-                "account, ever, not per day -- paid for by whoever runs the site. What you send " +
-                "goes to Google under their account, so use a key of your own for a client's books.",
+        "A demo AI key is provided so you can try this, with a limited number of " +
+          "suggestions: " +
+          (aiRoute() === "cloud"
+            ? `${left} ${counted} left on your account.`
+            : `${left} ${counted} left, shared by everybody without a key of their own.`) +
+          (aiRoute() === "folder"
+            ? " It belongs to whoever runs nbparagliding.nz, so what you send goes to Google " +
+              "through their account."
+            : ""),
       ),
     );
   }
-
   if (status?.configured === true) {
     inner.append(
       note(
-        `Set: ${status.key}. ` +
+        // Whose key it is, read from how it starts: the page never holds the
+        // key itself, only its first and last few characters.
+        `Set: ${status.key} (${PROVIDER_NAMES[detectProvider(status.key)]}). ` +
           (aiRoute() === "demo"
             ? "It is kept in this browser tab only and forgotten when the tab closes. It is " +
               "sent from this page straight to Google and never to this site's server."
@@ -166,9 +161,8 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
       inner.append(label);
       inner.append(
         note(
-          `${models.length} models on this key. A flash model is the cheap one and is what ` +
-            "this asks for; a pro model costs more and is worth trying where the answers " +
-            "are poor.",
+          `${models.length} models on this key. The cheap fast one is chosen to start; a ` +
+            "bigger one costs more and is worth trying where the answers are poor.",
         ),
       );
     }
@@ -194,10 +188,10 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
 
   inner.append(
     note(
-      "A Google AI key, from aistudio.google.com — the automatic route asks Google and " +
-        "nobody else, so a key from OpenAI or Anthropic will not work here. To use one of " +
-        "those, copy a prompt instead: that goes to any model you like. You pay Google for " +
-        "what you use, and NZOSA ships with no key in it.",
+      "To use your own key instead, paste it below and press Check it and keep it. A key " +
+        "from Google Gemini, Anthropic Claude, OpenAI (ChatGPT) or OpenRouter all work, " +
+        "and the app works out which it is. OpenRouter reaches most other models too. You " +
+        "pay that company for what you use.",
     ),
   );
 
@@ -218,7 +212,7 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
     const key = input.value.trim();
     if (key === "") return;
     save.disabled = true;
-    trouble.textContent = "Checking it with Google…";
+    trouble.textContent = "Checking the key…";
     void aiSetKey(key).then((answer) => {
       save.disabled = false;
       if (!answer.ok) {

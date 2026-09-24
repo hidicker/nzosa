@@ -2117,6 +2117,15 @@ function wireAiButton(): void {
   let haveKey = false;
   let ownKey = false;
   let shared: { model: string; left: number } | null = null;
+  /**
+   * Whether these books have AI turned off.
+   *
+   * The button is there either way now, from the moment the books open. It
+   * used to appear only once AI had been turned on, which meant nobody who had
+   * not already found the AI page ever learned there was anything to turn on.
+   * Off, it says so when pressed and points at where to change that.
+   */
+  let aiOff = !aiAllowed();
 
   const openMenu = (open: boolean): void => {
     menu.hidden = !open;
@@ -2125,6 +2134,12 @@ function wireAiButton(): void {
 
   const say = (): void => {
     const left = waitingForAnswers().length;
+    if (aiOff) {
+      // Pressable while off: pressing it is how somebody finds out why.
+      button.textContent = "AI suggestions";
+      button.disabled = false;
+      return;
+    }
     button.textContent = left === 0 ? "Nothing to ask about" : `AI suggestions (${left})`;
     button.disabled = left === 0;
     withKey.textContent = ownKey
@@ -2161,9 +2176,14 @@ function wireAiButton(): void {
    * page as well as because of it, and a count that never updates is a count
    * that is wrong after the first press.
    */
-  const learn = (): void => {
-    void aiStatus().then((status) => {
-      if (!aiAllowed()) return;
+  const learn = (): Promise<void> =>
+    aiStatus().then((status) => {
+      aiOff = !aiAllowed();
+      if (aiOff) {
+        group.hidden = false;
+        say();
+        return;
+      }
       ownKey = status?.configured === true;
       // A shared key counts: somebody with none of their own can still ask
       // automatically, up to what the site allows.
@@ -2209,10 +2229,38 @@ function wireAiButton(): void {
       group.hidden = false;
       say();
     });
+  void learn();
+
+  /** Off: say so where the button is, with the way to turn it on. */
+  const sayItIsOff = (): void => {
+    notice.hidden = false;
+    notice.textContent = "";
+    notice.append(
+      document.createTextNode(
+        "AI suggestions are turned off for these books. They suggest an account for the " +
+          "lines your rules do not recognise. ",
+      ),
+    );
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "link-button";
+    go.textContent = "Turn on AI suggestions";
+    go.addEventListener("click", () => showPage("ai"));
+    notice.append(go);
   };
-  learn();
 
   button.addEventListener("click", () => {
+    if (!aiAllowed()) {
+      sayItIsOff();
+      return;
+    }
+    // Turned on since this page was drawn: find out what can be asked, then
+    // open the menu as though it had been on all along.
+    if (aiOff) {
+      notice.hidden = true;
+      void learn().then(() => openMenu(true));
+      return;
+    }
     if (button.disabled) return;
     say();
     openMenu(menu.hidden);
@@ -2296,7 +2344,7 @@ function wireAiButton(): void {
         // Puts the label and the count back, whatever happened -- and the
         // allowance, which that ask has just spent from.
         say();
-        learn();
+        void learn();
       });
   };
 

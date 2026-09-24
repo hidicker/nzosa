@@ -3,7 +3,7 @@ import { saveEntities } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { note } from "../ui.js";
-import { AI_BATCH, aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
+import { aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
 import { aiRoute } from "../ai-backend.js";
 import { aiAllowed } from "../ai-consent.js";
@@ -46,13 +46,13 @@ export function renderAi(): void {
   }
 
   // What both ways need, first and once.
-  body.append(step("Set up", "What these books are"), briefingPanel());
+  body.append(step("Set up", "Tell us about the business"), briefingPanel());
 
   // Then the choice. Neither is better everywhere: one needs no key and can
   // use a model somebody already pays for, the other is a button on the page
   // where the coding is done.
   body.append(
-    step("Then, either way", "Two ways to ask"),
+    step("Then, either way", "Two ways to ask AI"),
     note(
       "The same question, the same checks on the answer, and the same place the answers " +
         "land. What differs is who carries it.",
@@ -75,7 +75,7 @@ export function renderAi(): void {
   body.append(
     aiKeyPanel({
       page: "ai",
-      title: "Or: a Google AI key, asked automatically",
+      title: "Or ask automatically: add any AI key",
       countedIn: "transactions",
       whenSet: aboutAsking,
     }),
@@ -124,13 +124,9 @@ function aboutAsking(): HTMLElement[] {
   const out: HTMLElement[] = [];
   const waiting = waitingForAnswers().length;
   const ready = aiSuggestionCount();
-  out.push(
-    note(
-      `${waiting} line${waiting === 1 ? "" : "s"} nothing recognises, asked about ` +
-        `${AI_BATCH} at a time.` +
-        (ready === 0 ? "" : ` ${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read.`),
-    ),
-  );
+  if (ready > 0) {
+    out.push(note(`${ready} suggestion${ready === 1 ? "" : "s"} waiting to be read on Reconcile.`));
+  }
 
   if (waiting > 0) {
     const details = document.createElement("details");
@@ -284,59 +280,109 @@ function entitiesOf(): Entity[] {
  * with before it is ever sent, rather than something a model was told once in
  * a session nobody kept.
  */
+/**
+ * An example for each kind of entity, shown greyed in its box.
+ *
+ * The coffee roastery is the example the page has always had, and it goes on
+ * the first business, where it fits. The rest say what a rental or a person's
+ * own affairs look like to somebody coding them -- which is the whole of what
+ * these boxes are for.
+ */
+function exampleFor(entity: Entity, firstBusiness: boolean): string {
+  if (entity.kind === "residential") {
+    return "A house let to long-term tenants. Rent in; rates, insurance, mortgage interest " +
+      "and repairs out.";
+  }
+  if (entity.kind === "commercial") {
+    return "A shop unit leased to a business tenant, who pays rent plus GST and repays the " +
+      "outgoings.";
+  }
+  if (entity.kind === "personal") {
+    return "Personal spending: household bills, groceries, a car, and money moved to and " +
+      "from the business.";
+  }
+  return firstBusiness
+    ? "A coffee roastery in Nelson. Buys green beans by the sack, sells wholesale to cafes " +
+        "and retail online. Two vans."
+    : "What it does, who it sells to, and what it buys most of.";
+}
+
+/**
+ * What each entity does, which goes with every question to a model.
+ *
+ * One box per entity and no box for the books as a whole. The books box asked
+ * the same question again one level up, and with the entities listed beneath
+ * it, somebody had to decide which of two places a sentence belonged in.
+ *
+ * Anything written in the old books box is moved into the first business, once,
+ * rather than dropped or left sending text nobody can see any more.
+ */
 function briefingPanel(): HTMLElement {
   const [box, inner] = panel("");
   inner.append(
     note(
-      "Sent with every question. A chart of accounts does not say whether “supplies” " +
-        "means green beans or gib board, and that is what decides where a payment to a " +
-        "wholesaler belongs.",
+      "This goes with every question to the AI and makes its suggestions better. A chart " +
+        "of accounts does not say whether “supplies” means green beans or gib board.",
     ),
   );
 
-  const about = document.createElement("textarea");
-  about.className = "ai-about";
-  about.rows = 3;
-  about.placeholder =
-    "A coffee roastery in Nelson. Buys green beans by the sack, sells wholesale to cafes " +
-    "and retail online. Two vans.";
-  about.value = state.ledger.booksAbout ?? "";
-  about.addEventListener("change", () => {
-    state.ledger.booksAbout = about.value.trim();
-    void save(state.ledger);
-  });
-  inner.append(about);
-
   const entities = entitiesOf();
-  if (entities.length > 0) {
-    const heading = document.createElement("h4");
-    heading.textContent = entities.length === 1 ? "The entity" : "Each entity";
-    inner.append(heading);
-    for (const entity of entities) {
-      const row = document.createElement("div");
-      row.className = "ai-entity";
-      const name = document.createElement("span");
-      name.className = "ai-entity-name";
-      name.textContent = entity.name;
-      const what = document.createElement("input");
-      what.type = "text";
-      what.placeholder = "What it does";
-      what.value = entity.about ?? "";
-      what.addEventListener("change", () => {
+  const legacy = (state.ledger.booksAbout ?? "").trim();
+  if (legacy !== "" && entities.length > 0) {
+    const target = entities.find((one) => (one.kind ?? "business") === "business") ?? entities[0];
+    if (target !== undefined) {
+      const had = (target.about ?? "").trim();
+      const merged = had.includes(legacy) ? had : [had, legacy].filter((t) => t !== "").join(" ");
+      state.ledger.booksAbout = "";
+      void save(state.ledger);
+      if (merged !== had) {
         const live = state.ledger.entities ?? emptyEntityModel();
         void saveEntities(
           {
             ...live,
             entities: live.entities.map((one) =>
-              one.id === entity.id ? { ...one, about: what.value.trim() } : one,
+              one.id === target.id ? { ...one, about: merged } : one,
             ),
           },
-          `What ${entity.name} does`,
+          `What ${target.name} does, moved from the books' description`,
         );
-      });
-      row.append(name, what);
-      inner.append(row);
+        target.about = merged;
+      }
     }
+  }
+
+  let businessSeen = false;
+  for (const entity of entities) {
+    const isBusiness = (entity.kind ?? "business") === "business";
+    const firstBusiness = isBusiness && !businessSeen;
+    if (isBusiness) businessSeen = true;
+
+    const row = document.createElement("div");
+    row.className = "ai-entity";
+    const name = document.createElement("span");
+    name.className = "ai-entity-name";
+    name.textContent = entity.name;
+    // Two lines rather than one: a sentence about a business does not fit in
+    // a single-line box, and one cut off at the edge reads as one unfinished.
+    const what = document.createElement("textarea");
+    what.className = "ai-about";
+    what.rows = 2;
+    what.placeholder = exampleFor(entity, firstBusiness);
+    what.value = entity.about ?? "";
+    what.addEventListener("change", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      void saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((one) =>
+            one.id === entity.id ? { ...one, about: what.value.trim() } : one,
+          ),
+        },
+        `What ${entity.name} does`,
+      );
+    });
+    row.append(name, what);
+    inner.append(row);
   }
   return box;
 }

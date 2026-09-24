@@ -372,8 +372,12 @@ export function parseSuggestions(
     // about it. Kept as an unanswered line rather than dropped, so the count
     // of what came back matches the count of what was asked.
     const real = known.has(code) ? code : "";
+    // A number, or a number written as text -- Gemini wrote "0.95" in quotes on a
+    // real run, which read as no confidence at all.
     const raw = one["confidence"];
-    const confidence = typeof raw === "number" && raw >= 0 && raw <= 1 ? raw : 0;
+    const asNumber =
+      typeof raw === "number" ? raw : typeof raw === "string" && raw.trim() !== "" ? Number(raw) : NaN;
+    const confidence = Number.isFinite(asNumber) && asNumber >= 0 && asNumber <= 1 ? asNumber : 0;
     const because = typeof one["because"] === "string" ? one["because"].trim() : "";
 
     answered.add(id);

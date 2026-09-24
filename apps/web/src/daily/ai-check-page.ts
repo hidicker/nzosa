@@ -86,7 +86,8 @@ export function renderAiCheck(): void {
   const pickYear = yearPicker();
   body.append(step("Choose", "Which year"), pickYear.box);
   body.append(
-    step("Take it to an assistant", "Download, copy, paste back"),
+    step("Take it to OpenAccountants", "Download, copy, paste back"),
+    openAccountantsLogo(),
     carryPanel(pickYear.pick),
   );
 
@@ -95,6 +96,23 @@ export function renderAiCheck(): void {
 }
 
 // --- small builders, kept here so the page reads top to bottom -------------
+
+/** OpenAccountants' logo, linking to them: the review is done with their rules. */
+function openAccountantsLogo(): HTMLElement {
+  const link = document.createElement("a");
+  link.className = "oa-logo";
+  link.href = "https://www.openaccountants.com/";
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  link.title = "OpenAccountants";
+  const img = document.createElement("img");
+  img.src = "openaccountants.png";
+  img.alt = "OpenAccountants";
+  img.width = 176;
+  img.height = 46;
+  link.append(img);
+  return link;
+}
 
 function step(kicker: string, title: string): HTMLElement {
   const wrap = document.createElement("div");

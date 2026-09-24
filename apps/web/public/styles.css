@@ -3400,3 +3400,18 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   gap: 4px 16px;
   margin: 6px 0 12px;
 }
+
+/* OpenAccountants' logo on the AI check page: dark lettering, so it sits on
+   white in either theme. */
+.oa-logo {
+  display: inline-block;
+  margin: 4px 0 12px;
+  padding: 6px 12px;
+  background: #fff;
+  border-radius: 8px;
+  line-height: 0;
+}
+.oa-logo img {
+  height: 30px;
+  width: auto;
+}

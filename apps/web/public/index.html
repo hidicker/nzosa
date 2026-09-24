@@ -105,6 +105,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
                 <span>Payroll</span>
               </button>
+              <button type="button" data-page="tenancies" hidden>
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 9.5 10 4l7 5.5V16H3z"/><path d="M8 16v-4h4v4"/><circle cx="14.5" cy="6" r="1"/></svg>
+                <span>Rental information</span>
+              </button>
             </div>
           </div>
           <div class="sidebar-group" data-group="enter">
@@ -428,6 +432,16 @@
         </p>
         <div id="invoice-editor"></div>
         <div id="invoices-body"></div>
+      </section>
+
+      <section id="page-tenancies" class="page" hidden>
+        <div class="page-head">
+          <h2>Rental information</h2>
+        </div>
+        <p class="page-hint">
+          Each tenancy's rent, its changes and its bond, set against the rent the books show arriving -- so you can see whether the tenants are behind or ahead, and by how much. Nothing here changes the books.
+        </p>
+        <div id="tenancies-body"></div>
       </section>
 
       <section id="page-payroll" class="page" hidden>

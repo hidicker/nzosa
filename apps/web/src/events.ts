@@ -96,6 +96,8 @@ export type EventKind =
   | "agentStatements"
   /** Vehicles' business use and prepayments, whole. */
   | "yearEnd"
+  /** Tenancies and their rent, whole. */
+  | "tenancies"
   /** Payroll -- employer details, employees and pay runs -- whole. */
   | "payroll"
   /** The fixed asset register, whole. */
@@ -385,6 +387,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, assets: (event.before ?? []) as NonNullable<StoredLedger["assets"]> };
     case "payroll":
       return { ...ledger, payroll: (event.before ?? { employees: [], payRuns: [] }) as NonNullable<StoredLedger["payroll"]> };
+    case "tenancies":
+      return { ...ledger, tenancies: (event.before ?? []) as NonNullable<StoredLedger["tenancies"]> };
     case "yearEnd": {
       const before = (event.before ?? {}) as Pick<StoredLedger, "vehicleUse" | "prepayments">;
       return { ...ledger, vehicleUse: before.vehicleUse ?? [], prepayments: before.prepayments ?? [] };
@@ -442,6 +446,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   ir3Details: "IR3 details",
   agentStatements: "Property manager statement",
   yearEnd: "Year-end adjustments",
+  tenancies: "Tenancies",
   payroll: "Payroll",
   assets: "Fixed assets",
   varianceNote: "GST explanation",

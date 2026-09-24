@@ -352,3 +352,4 @@ export * from "./ai-providers.js";
 export * from "./payroll.js";
 export * from "./nz-holidays.js";
 export * from "./year-end-adjustments.js";
+export * from "./rent-tracker.js";

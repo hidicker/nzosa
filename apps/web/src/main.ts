@@ -59,6 +59,7 @@ import {
   renderInvoices,
   wireInvoices,
 } from "./daily/invoices.js";
+import { renderRentalsPage } from "./daily/rentals-page.js";
 import {
   renderPayrollPage,
   wirePayroll,
@@ -142,6 +143,7 @@ async function init(): Promise<void> {
     openBooks: renderOpenBooks,
     openingBalances: renderOpeningBalances,
     payroll: renderPayrollPage,
+    tenancies: renderRentalsPage,
     reconcile: renderReconcile,
     reports: renderReportsPage,
     rules: renderRules,

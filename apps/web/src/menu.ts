@@ -1,6 +1,7 @@
 import { showPage } from "./app.js";
 import { toggleNarrow } from "./chrome.js";
 import { $, state } from "./state.js";
+import { hasRentals } from "./daily/rentals-page.js";
 
 /**
  * The menu: which item is lit, which groups are open, and finding a page by
@@ -88,6 +89,9 @@ function setCollapsed(group: HTMLElement, collapsed: boolean): void {
  * inside a folded group is a menu hiding where you are.
  */
 export function markSidebar(page: string): void {
+  // Rental information is only for books with a rental property in them.
+  const rentalItem = document.querySelector<HTMLElement>('.sidebar-nav button[data-page="tenancies"]');
+  if (rentalItem) rentalItem.hidden = !hasRentals();
   const kind = page === "reports"
     ? (document.querySelector<HTMLSelectElement>("#report-kind")?.value ?? "")
     : "";
@@ -129,6 +133,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   reconcile: "code coding categorise transactions review",
   import: "bank feed akahu csv statements balances upload",
   invoices: "sales customers receivables owed allocations",
+  tenancies: "rent tenants bond overdue arrears tenancy rental information",
   payroll: "wages salaries paye kiwisaver payday filing ird employee employer esct student loan",
   manual: "journal entries adjustments year end accountant",
   assets: "depreciation register disposals purchases",

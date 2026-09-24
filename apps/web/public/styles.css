@@ -3415,3 +3415,9 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   height: 30px;
   width: auto;
 }
+
+/* Rental information: an up-to-date tenancy. */
+.rent-ok {
+  color: var(--ok, #2e7d32);
+  font-weight: 600;
+}

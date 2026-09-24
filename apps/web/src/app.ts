@@ -39,6 +39,7 @@ export type PageName =
   | "openBooks"
   | "openingBalances"
   | "payroll"
+  | "tenancies"
   | "reconcile"
   | "reports"
   | "rules"
@@ -131,6 +132,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "opening") redraw("openingBalances");
   if (page === "gst") redraw("variance");
   if (page === "payroll") redraw("payroll");
+  if (page === "tenancies") redraw("tenancies");
 
   if (scrollTo === "bottom") {
     let scrolled = false;

@@ -386,6 +386,23 @@ test("invoice basis places a transaction by its tax point", () => {
   assert.equal(gstReturn([paid], march, { resolve, basis: "invoice" }).boxes.box5, 115000);
 });
 
+test("hybrid basis dates sales by invoice and purchases by payment", () => {
+  const resolve = (t) => ({ treatment: "standard", side: t.amount > 0 ? "sales" : "purchases" });
+  // Both invoiced in March, both paid in April.
+  const sale = txn("2025-04-10", 115000, { extras: { taxPointDate: "2025-03-01" } });
+  const bill = txn("2025-04-12", -23000, { extras: { taxPointDate: "2025-03-05" } });
+  const march = { from: "2025-02-01", to: "2025-03-31", label: "2025-03", due: "2025-05-07" };
+
+  const inMarch = gstReturn([sale, bill], march, { resolve, basis: "hybrid" });
+  assert.equal(inMarch.boxes.box5, 115000, "the sale counts when invoiced");
+  assert.equal(inMarch.boxes.box11, 0, "the purchase does not count until paid");
+
+  const inApril = gstReturn([sale, bill], PERIOD, { resolve, basis: "hybrid" });
+  assert.equal(inApril.boxes.box5, 0);
+  assert.equal(inApril.boxes.box11, 23000, "the purchase counts when paid");
+  assert.equal(inApril.missingTaxPoint.length, 0, "a purchase needs no tax point on hybrid");
+});
+
 test("invoice basis reports transactions with no tax point instead of guessing", () => {
   // Silently falling back to the payment date would produce a payments-basis
   // return wearing an invoice-basis label, which is the worst outcome.

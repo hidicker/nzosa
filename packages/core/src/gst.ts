@@ -254,9 +254,16 @@ export function gstReturn(
   let perLinePurchaseGst = 0;
 
   for (const transaction of transactions) {
-    // Which date decides the period depends entirely on the basis.
+    const classification = options.resolve(transaction);
+
+    // Which date decides the period depends entirely on the basis. The hybrid
+    // basis counts sales when they
+    // are invoiced and purchases when they are paid, so only a sale takes its
+    // tax point there -- dating a purchase by its bill claimed it early.
+    const byTaxPoint =
+      usesTaxPoint && (options.basis !== "hybrid" || classification.side === "sales");
     let effective = transaction.date;
-    if (usesTaxPoint) {
+    if (byTaxPoint) {
       const taxPoint = transaction.extras[taxPointField];
       if (taxPoint === undefined || taxPoint === "") {
         if (inRange(transaction.date, period)) missingTaxPoint.push(transaction);
@@ -275,7 +282,6 @@ export function gstReturn(
       continue;
     }
 
-    const classification = options.resolve(transaction);
     const amount = applyShare(transaction.amount, sharePercent);
     const entry: GstReturnLine = { transaction, classification, amount };
 

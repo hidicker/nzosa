@@ -2,6 +2,8 @@ import test from "node:test";
 import assert from "node:assert/strict";
 import {
   E12_ROWS,
+  KILOMETRE_RATES,
+  kilometreClaim,
   prepaymentAdjustments,
   unexpiredAt,
   vehicleAdjustment,
@@ -199,4 +201,68 @@ test("rent running more than 6 months past balance date is not excused", () => {
   const p = [{ id: "r", transactionId: "rent", accountCode: "469", from: "2026-03-01", to: "2027-02-28", category: "a" }];
   const result = prepaymentAdjustments(p, [paid("rent", "2026-03-01", "469", 1_200_000)], 2026);
   assert.equal(result.lines[0].excusedBy, null);
+});
+
+// --- kilometre rates and the 20% rule -------------------------------------------
+
+test("kilometre claim: Tier 1 on the first 14,000 km, Tier 2 beyond, both by business share", () => {
+  const petrol = { tier1: 120, tier2: 37 };
+  // 20,000 km, 40% business: 5,600 km at $1.20 and 2,400 km at 37c.
+  assert.equal(kilometreClaim(8_000, 20_000, petrol), 5_600 * 120 + 2_400 * 37);
+  // Under 14,000 km it is all Tier 1.
+  assert.equal(kilometreClaim(3_000, 10_000, petrol), 3_000 * 120);
+  assert.equal(KILOMETRE_RATES[2026].diesel.tier1, 130);
+});
+
+test("with kilometre rates the actual costs and their GST come out and the rate goes in", () => {
+  const result = vehicleAdjustment(
+    {
+      entityId: "e1", year: 2026, businessPercent: 0, logbookFrom: "2025-05-01", accounts: ["449"],
+      counterCode: "980", method: "kilometre", businessKm: 6_000, totalKm: 10_000, fuel: "petrol",
+    },
+    [fuel("2025-06-01"), fuel("2025-09-01")],
+  );
+  assert.equal(result.businessPercent, 60);
+  assert.equal(result.byAccount[0].privateShare, 40_000); // all $400 of fuel out
+  assert.equal(result.privateGst, 6_000); // all $60 of GST back
+  const claim = result.journal.lines.find((l) => l.description === "Kilometre-rate claim");
+  assert.equal(claim.amount, 6_000 * 120);
+  assert.equal(balanced(result.journal), 0);
+});
+
+test("kilometre rates without a logbook are held to 25% business use", () => {
+  const result = vehicleAdjustment(
+    {
+      entityId: "e1", year: 2026, businessPercent: 0, accounts: ["449"], counterCode: "980",
+      method: "kilometre", businessKm: 6_000, totalKm: 10_000, fuel: "petrol",
+    },
+    [fuel("2025-06-01")],
+  );
+  assert.equal(result.businessPercent, 25);
+  const claim = result.journal.lines.find((l) => l.description === "Kilometre-rate claim");
+  assert.equal(claim.amount, 2_500 * 120);
+});
+
+test("a year with no kilometre rates held says so and claims nothing", () => {
+  const result = vehicleAdjustment(
+    {
+      entityId: "e1", year: 2027, businessPercent: 0, logbookFrom: "2025-05-01", accounts: ["449"],
+      counterCode: "980", method: "kilometre", businessKm: 6_000, totalKm: 10_000,
+    },
+    [fuel("2026-06-01")],
+  );
+  assert.match(result.notes.join(" "), /No kilometre rates are held/);
+  assert.ok(!result.journal.lines.some((l) => l.description === "Kilometre-rate claim"));
+});
+
+test("a change of more than 20% since the logbook ends it", () => {
+  const result = vehicleAdjustment(
+    {
+      entityId: "e1", year: 2026, businessPercent: 70, logbookFrom: "2025-05-01", accounts: ["449"],
+      counterCode: "980", changedSinceLogbook: true,
+    },
+    [fuel("2025-06-01")],
+  );
+  assert.equal(result.businessPercent, 25);
+  assert.match(result.notes.join(" "), /changed by more than 20%/);
 });

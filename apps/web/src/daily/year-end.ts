@@ -9,8 +9,8 @@ import {
 import { state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { E12_ROWS, NOT_IN_E12, NO_LOGBOOK_LIMIT, emptyEntityModel } from "@nzosa/core";
-import type { Cents, Entity, PostedJournal, Prepayment, VehicleUse } from "@nzosa/core";
+import { E12_ROWS, KILOMETRE_RATES, NOT_IN_E12, NO_LOGBOOK_LIMIT, emptyEntityModel } from "@nzosa/core";
+import type { Cents, Entity, PostedJournal, Prepayment, VehicleFuel, VehicleUse } from "@nzosa/core";
 
 /**
  * Year-end adjustments: the private use of a vehicle, and prepayments.
@@ -114,13 +114,75 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
     draft.counterCode,
   );
 
+  const method = select(
+    [
+      { value: "actual", label: "Actual costs (fuel, repairs, insurance, depreciation)" },
+      { value: "kilometre", label: "Inland Revenue's kilometre rates" },
+    ],
+    draft.method ?? "actual",
+  );
+  const businessKm = input("number", draft.businessKm !== undefined ? String(draft.businessKm) : "");
+  const totalKm = input("number", draft.totalKm !== undefined ? String(draft.totalKm) : "");
+  const fuelPick = select(
+    [
+      { value: "petrol", label: "Petrol" },
+      { value: "diesel", label: "Diesel" },
+      { value: "hybrid", label: "Petrol hybrid" },
+      { value: "electric", label: "Electric" },
+    ],
+    draft.fuel ?? "petrol",
+  );
+  const held = KILOMETRE_RATES[year];
+  const tier1 = input("number", draft.rates ? String(draft.rates.tier1) : "");
+  const tier2 = input("number", draft.rates ? String(draft.rates.tier2) : "");
+  const changed = input("checkbox", "");
+  changed.checked = draft.changedSinceLogbook === true;
+  const changedLabel = document.createElement("label");
+  changedLabel.className = "year-end-field";
+  changedLabel.append(changed, " Business use has changed by more than 20% since the logbook");
+
+  const kmBox = document.createElement("div");
+  kmBox.append(
+    field("Business km in the year", businessKm),
+    field("Total km in the year", totalKm),
+    field("Fuel", fuelPick),
+  );
+  if (held === undefined) {
+    kmBox.append(
+      note(
+        `Inland Revenue has not published kilometre rates for the year to 31 March ${year} ` +
+          "(they come out after the year ends). Enter them from its kilometre rates page, in cents.",
+      ),
+      field("Tier 1 c/km", tier1),
+      field("Tier 2 c/km", tier2),
+    );
+  }
+  kmBox.append(
+    note(
+      "With kilometre rates the rate is the whole claim: every actual vehicle cost for the year, " +
+        "its depreciation and the GST claimed on it come out, and no GST can be claimed. Business " +
+        "km still need a logbook; without one no more than 25% counts.",
+    ),
+  );
+  const percentField = field("Business use %", percent);
+  const syncMethod = (): void => {
+    const km = method.value === "kilometre";
+    kmBox.hidden = !km;
+    percentField.hidden = km;
+  };
+  method.addEventListener("change", syncMethod);
+  syncMethod();
+
   box.append(
     field("Entity", entity),
-    field("Business use %", percent),
+    field("Method", method),
+    percentField,
+    kmBox,
     field("Logbook started", logbook),
+    changedLabel,
     note(
       "A logbook kept for at least 90 days in a row sets the business use for three years, unless " +
-        `the use changes by more than a fifth. Without one, no more than ${NO_LOGBOOK_LIMIT}% can be ` +
+        `the use changes by more than 20%. Without one, no more than ${NO_LOGBOOK_LIMIT}% can be ` +
         "claimed (section DE 4).",
     ),
     field("Private share to", counter),
@@ -172,11 +234,26 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
   save.className = "primary";
   save.textContent = "Save";
   save.addEventListener("click", () => {
-    const business = Number(percent.value);
+    const km = method.value === "kilometre";
+    const business = km ? 0 : Number(percent.value);
+    const bKm = Number(businessKm.value);
+    const tKm = Number(totalKm.value);
     const next: VehicleUse = {
       entityId: entity.value,
       year,
       businessPercent: business,
+      ...(changed.checked ? { changedSinceLogbook: true } : {}),
+      ...(km
+        ? {
+            method: "kilometre" as const,
+            businessKm: bKm,
+            totalKm: tKm,
+            fuel: fuelPick.value as VehicleFuel,
+            ...(held === undefined && tier1.value !== "" && tier2.value !== ""
+              ? { rates: { tier1: Number(tier1.value), tier2: Number(tier2.value) } }
+              : {}),
+          }
+        : {}),
       accounts: checks.filter(([, t]) => t.checked).map(([code]) => code),
       counterCode: counter.value,
       ...(logbook.value !== "" ? { logbookFrom: logbook.value } : {}),
@@ -186,7 +263,10 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
     };
     const problems = [
       next.entityId === "" ? "choose the entity" : "",
-      !Number.isFinite(business) || business < 0 || business > 100 ? "business use is a percentage, 0 to 100" : "",
+      !km && (!Number.isFinite(business) || business < 0 || business > 100)
+        ? "business use is a percentage, 0 to 100"
+        : "",
+      km && !(tKm > 0 && bKm >= 0 && bKm <= tKm) ? "give business and total km, business no more than total" : "",
       next.accounts.length === 0 && (next.assetTypes ?? []).length === 0 ? "tick at least one account" : "",
       next.counterCode === "" ? "choose where the private share goes" : "",
     ].filter((p) => p !== "");
@@ -199,7 +279,12 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
     );
     vehicleDraft = null;
     const name = entities.find((e) => e.id === next.entityId)?.name ?? next.entityId;
-    void saveYearEnd({ vehicleUse: [...others, next] }, `${name}: vehicle ${business}% business, ${year}`);
+    void saveYearEnd(
+      { vehicleUse: [...others, next] },
+      km
+        ? `${name}: vehicle on kilometre rates, ${bKm} of ${tKm} km, ${year}`
+        : `${name}: vehicle ${business}% business, ${year}`,
+    );
   });
   const cancel = document.createElement("button");
   cancel.type = "button";
@@ -264,6 +349,7 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
     title.className = "journal-narration";
     title.textContent =
       `${entity?.name ?? use.entityId}: ${result.businessPercent}% business` +
+      (use.method === "kilometre" ? " on kilometre rates" : "") +
       (use.logbookFrom ? `, logbook from ${use.logbookFrom}` : ", no logbook");
     card.append(title);
     const company =

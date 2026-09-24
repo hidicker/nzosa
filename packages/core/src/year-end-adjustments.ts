@@ -69,6 +69,54 @@ export interface VehicleUse {
   /** Where the private share goes: the owner's drawings or current account. */
   counterCode: string;
   counterName?: string;
+  /**
+   * Business use has changed by more than 20% since the logbook was kept.
+   * Inland Revenue lets a logbook stand for three years only "if the
+   * proportion of business use doesn't change by more than 20%".
+   */
+  changedSinceLogbook?: boolean;
+  /**
+   * Actual costs (the default), or Inland Revenue's kilometre rates. With
+   * kilometre rates the rate is the whole claim: the year's actual costs and
+   * depreciation come out in full, and no GST can be claimed on them.
+   */
+  method?: "actual" | "kilometre";
+  /** For kilometre rates: the year's business and total kilometres. */
+  businessKm?: number;
+  totalKm?: number;
+  fuel?: VehicleFuel;
+  /** Tier 1 and Tier 2 rates in cents per km, for a year no rates are held for. */
+  rates?: { tier1: number; tier2: number };
+}
+
+export type VehicleFuel = "petrol" | "diesel" | "hybrid" | "electric";
+
+/**
+ * Inland Revenue's kilometre rates, cents per km, by income year. Tier 1 is
+ * the business share of the first 14,000 km the vehicle travels in the year;
+ * Tier 2 the business share of the rest. Published after each year ends
+ * ("Kilometre rates 2025-2026", set by OS 19/04 (KM 2026), 2 June 2026).
+ */
+export const KILOMETRE_RATES: Readonly<Record<number, Record<VehicleFuel, { tier1: number; tier2: number }>>> = {
+  2026: {
+    petrol: { tier1: 120, tier2: 37 },
+    diesel: { tier1: 130, tier2: 38 },
+    hybrid: { tier1: 90, tier2: 24 },
+    electric: { tier1: 122, tier2: 23 },
+  },
+};
+
+/** The kilometre-rate claim for a year's travel, in cents. */
+export function kilometreClaim(
+  businessKm: number,
+  totalKm: number,
+  rates: { tier1: number; tier2: number },
+): Cents {
+  if (totalKm <= 0 || businessKm <= 0) return 0;
+  const share = Math.min(1, businessKm / totalKm);
+  const tier1Km = Math.min(totalKm, 14_000) * share;
+  const tier2Km = Math.max(0, totalKm - 14_000) * share;
+  return Math.round(tier1Km * rates.tier1 + tier2Km * rates.tier2);
 }
 
 export interface VehicleAdjustment {
@@ -107,14 +155,24 @@ export function vehicleAdjustment(
   const end = yearEnd(use.year);
   const from = yearStart(use.year);
 
+  const kilometre = use.method === "kilometre";
   let percent = Math.min(100, Math.max(0, use.businessPercent));
+  if (kilometre && (use.totalKm ?? 0) > 0) {
+    percent = Math.min(100, Math.round(((use.businessKm ?? 0) / (use.totalKm ?? 1)) * 1000) / 10);
+  }
   const logbookValid =
     use.logbookFrom !== undefined &&
     use.logbookFrom <= end &&
     // Good for three years from the test period (IRD: "up to 3 years").
-    addYears(use.logbookFrom, 3) > from;
+    addYears(use.logbookFrom, 3) > from &&
+    use.changedSinceLogbook !== true;
   if (!logbookValid) {
-    if (use.logbookFrom !== undefined) {
+    if (use.logbookFrom !== undefined && use.changedSinceLogbook === true) {
+      notes.push(
+        "Business use has changed by more than 20% since the logbook, so it no longer sets " +
+          "the business use. A new 90-day logbook is needed; until then the no-logbook limit applies.",
+      );
+    } else if (use.logbookFrom !== undefined) {
       notes.push(
         "The logbook is more than three years old, so it no longer sets the business use. " +
           "A new 90-day logbook is needed; until then the no-logbook limit applies.",
@@ -128,7 +186,27 @@ export function vehicleAdjustment(
       percent = NO_LOGBOOK_LIMIT;
     }
   }
-  const privateShare = (100 - percent) / 100;
+  // With kilometre rates every actual cost is private: the rate is the claim.
+  const privateShare = kilometre ? 1 : (100 - percent) / 100;
+  let claim = 0;
+  if (kilometre) {
+    const rates = use.rates ?? KILOMETRE_RATES[use.year]?.[use.fuel ?? "petrol"];
+    if (rates === undefined) {
+      notes.push(
+        `No kilometre rates are held for the year to 31 March ${use.year}; Inland Revenue ` +
+          "publishes them after the year ends. Enter them to work out the claim.",
+      );
+    } else {
+      const total = use.totalKm ?? 0;
+      claim = kilometreClaim((percent / 100) * total, total, rates);
+      notes.push(
+        `Kilometre rates: ${percent}% of ${total.toLocaleString("en-NZ")} km at ` +
+          `${rates.tier1}c (first 14,000 km) and ${rates.tier2}c (beyond). The year's actual ` +
+          "vehicle costs, depreciation and the GST claimed on them come out in full, because " +
+          "the rate replaces them and no GST can be claimed when using it.",
+      );
+    }
+  }
 
   const accounts = new Set(use.accounts.map((c) => c.trim()));
   const assetTypes = (use.assetTypes ?? []).map((t) => t.trim().toLowerCase());
@@ -166,7 +244,7 @@ export function vehicleAdjustment(
     .sort((a, b) => a.code.localeCompare(b.code));
   const privateGst = Math.round(gstClaimed * privateShare);
 
-  if (byAccount.length === 0 && privateGst === 0) {
+  if (byAccount.length === 0 && privateGst === 0 && claim === 0) {
     return { businessPercent: percent, byAccount, privateGst, journal: null, notes };
   }
 
@@ -187,13 +265,23 @@ export function vehicleAdjustment(
       description: "GST on the private share, given back (Box 9)",
     });
   }
-  const toDrawings = byAccount.reduce((sum, a) => sum + a.privateShare, 0) + privateGst;
+  if (claim !== 0) {
+    const claimCode = use.accounts[0] ?? byAccount[0]?.code ?? "449";
+    lines.push({
+      accountCode: claimCode,
+      accountName: byAccount.find((a) => a.code === claimCode)?.name ?? "Motor Vehicle Expenses",
+      amount: claim,
+      taxType: "NONE",
+      description: "Kilometre-rate claim",
+    });
+  }
+  const toDrawings = byAccount.reduce((sum, a) => sum + a.privateShare, 0) + privateGst - claim;
   lines.push({
     accountCode: use.counterCode,
     accountName: use.counterName ?? "Drawings",
     amount: toDrawings,
     taxType: "NONE",
-    description: "Private share of vehicle costs",
+    description: kilometre ? "Vehicle costs out, kilometre claim in" : "Private share of vehicle costs",
   });
 
   return {
@@ -203,7 +291,9 @@ export function vehicleAdjustment(
     journal: {
       transactionId: `vehicle:${use.entityId}:${use.year}`,
       date: end,
-      narration: `Vehicle private use — ${percent}% business, year to ${end}`,
+      narration: kilometre
+        ? `Vehicle, kilometre rates — ${percent}% business, year to ${end}`
+        : `Vehicle private use — ${percent}% business, year to ${end}`,
       lines,
       source: "adjustment",
       taxBasis: "both",

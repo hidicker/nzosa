@@ -1,6 +1,7 @@
 import { redraw, showPage } from "../app.js";
-import { $, state } from "../state.js";
+import { $ } from "../state.js";
 import { note } from "../ui.js";
+import { aiAllowed } from "../ai-consent.js";
 import {
   OPENACCOUNTANTS_CONNECT,
   OPENACCOUNTANTS_MCP,
@@ -51,7 +52,7 @@ export function renderAiCheck(): void {
   const body = $("ai-check-body");
   body.textContent = "";
 
-  if (state.ledger.aiEnabled !== true) {
+  if (!aiAllowed()) {
     body.append(
       step("Not on yet", "AI accounts check"),
       note(

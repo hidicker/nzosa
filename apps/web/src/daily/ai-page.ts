@@ -6,6 +6,7 @@ import { note } from "../ui.js";
 import { AI_BATCH, aiSuggestionCount, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
 import { aiRoute } from "../ai-backend.js";
+import { aiAllowed } from "../ai-consent.js";
 import { aiKeyPanel, refreshAiStatus } from "../ai-key-panel.js";
 import { emptyEntityModel } from "@nzosa/core";
 import type { Entity } from "@nzosa/core";
@@ -39,7 +40,7 @@ export function renderAi(): void {
   const body = $("ai-body");
   body.textContent = "";
 
-  if (state.ledger.aiEnabled !== true) {
+  if (!aiAllowed()) {
     body.append(offerIt());
     return;
   }

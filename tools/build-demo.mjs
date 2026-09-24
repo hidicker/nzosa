@@ -21,6 +21,13 @@ mkdirSync(demoDir, { recursive: true });
 
 // Copy static web assets and demo dataset
 let demoHtml = readFileSync(join(webDist, "index.html"), "utf-8");
+// The page says it is the demo, so the app can ask the page rather than the
+// books a returning visitor saved under an older demo. See ai-consent.ts.
+demoHtml = demoHtml.replace(/<html(\s|>)/, '<html data-demo="yes"$1');
+if (!demoHtml.includes('data-demo="yes"')) {
+  console.error("Could not mark index.html as the demo.");
+  process.exit(1);
+}
 demoHtml = demoHtml.replace('id="demo-banner" class="demo-banner" hidden', 'id="demo-banner" class="demo-banner"');
 demoHtml = demoHtml.replace('id="demo-import-privacy-notice" class="demo-privacy-notice" hidden', 'id="demo-import-privacy-notice" class="demo-privacy-notice"');
 writeFileSync(join(demoDir, "index.html"), demoHtml, "utf-8");

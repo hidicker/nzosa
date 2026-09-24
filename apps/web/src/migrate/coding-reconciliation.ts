@@ -7,6 +7,7 @@ import {
   waitingForAnswers,
 } from "../ai.js";
 import { aiRoute, aiStatus } from "../ai-backend.js";
+import { aiAllowed } from "../ai-consent.js";
 import { carrySection } from "../ai-carry.js";
 import {
   unregisteredCode,
@@ -2151,7 +2152,7 @@ function wireAiButton(): void {
   };
 
   void aiStatus().then((status) => {
-    if (state.ledger.aiEnabled !== true) return;
+    if (!aiAllowed()) return;
     ownKey = status?.configured === true;
     // A shared key counts: somebody with none of their own can still ask
     // automatically, up to what the site allows.

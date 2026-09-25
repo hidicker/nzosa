@@ -2440,7 +2440,7 @@ function renderRentalSchedules(body: HTMLElement, year: number): void {
 }
 
 /** One owner's return for a year, from the books and what was entered for it. */
-function ir3For(owner: string, year: number): ReturnType<typeof ir3Return> {
+export function ir3For(owner: string, year: number): ReturnType<typeof ir3Return> {
   const shares: OwnerRentalSchedule[] = [];
   for (const { now } of rentalSchedulesFor(year, false)) {
     // The year goes with it, so a residential interest limit is applied as

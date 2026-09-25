@@ -11,6 +11,8 @@ import {
   yearsInBooks,
 } from "../ai-review.js";
 import { downloadExcelReport } from "./excel-export.js";
+import { IRD_FORMS_INDEX, IRD_GUIDES, guidePrompt, guidesForBooks } from "../ai-guides.js";
+import type { GuideId } from "../ai-guides.js";
 
 /**
  * A year-end check of the accounts, against New Zealand tax rules.
@@ -46,7 +48,9 @@ import { downloadExcelReport } from "./excel-export.js";
  * a year nobody had asked about.
  */
 let chosenYear = 0;
-let result: { text: string; year: number } | null = null;
+let result: { text: string; year: number; title: string } | null = null;
+/** Which of Inland Revenue's guides is chosen for the guide check. */
+let chosenGuide: GuideId | "" = "";
 
 export function renderAiCheck(): void {
   const body = $("ai-check-body");
@@ -89,6 +93,8 @@ export function renderAiCheck(): void {
     step("Take it to OpenAccountants", "Download, copy, paste back"),
     openAccountantsLogo(),
     carryPanel(pickYear.pick),
+    step("Or check against Inland Revenue's own guides", "Attach the guide, copy, paste back"),
+    guidePanel(pickYear.pick),
   );
 
   if (result !== null) body.append(answerPanel(result));
@@ -343,7 +349,7 @@ function carryPanel(pickYear: HTMLSelectElement): HTMLElement {
   read.addEventListener("click", () => {
     const text = answer.value.trim();
     if (text === "") return;
-    result = { text, year: Number(pickYear.value) };
+    result = { text, year: Number(pickYear.value), title: "Review" };
     answer.value = "";
     redraw("aiCheck");
   });
@@ -434,6 +440,162 @@ function connectSteps(): HTMLElement {
   return wrap;
 }
 
+// --- Inland Revenue's own guides -------------------------------------------
+
+/**
+ * The same round trip, with an IRD guide attached in place of a connector.
+ *
+ * Only the guides these books need are offered, each with why; one at a
+ * time, because a long PDF read well beats four read badly. The guide comes
+ * from IRD's own site, so it is always the edition IRD currently publishes.
+ */
+function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "ai-carry";
+  const offered = guidesForBooks();
+
+  wrap.append(
+    note(
+      "No connector and no account needed. Attach one of Inland Revenue's guides to your " +
+        "assistant beside the workbook, and the prompt asks it to check these books against that " +
+        "guide and cite its pages. The guides are long -- IR335 is 84 pages -- so a paid plan of " +
+        "Claude, ChatGPT or Gemini reads them best, and one guide at a time works better than several.",
+    ),
+  );
+
+  if (offered.length === 0) {
+    wrap.append(note("None of Inland Revenue's return guides is needed for these books yet."));
+    return wrap;
+  }
+  if (chosenGuide === "" || !offered.some((o) => o.guide.id === chosenGuide)) {
+    chosenGuide = offered[0]!.guide.id;
+  }
+
+  const list = document.createElement("div");
+  list.className = "ai-guide-list";
+  for (const { guide, why } of offered) {
+    const label = document.createElement("label");
+    label.className = "ai-guide";
+    const radio = document.createElement("input");
+    radio.type = "radio";
+    radio.name = "ird-guide";
+    radio.value = guide.id;
+    radio.checked = guide.id === chosenGuide;
+    radio.addEventListener("change", () => {
+      chosenGuide = guide.id;
+      redraw("aiCheck");
+    });
+    const text = document.createElement("span");
+    const strong = document.createElement("strong");
+    strong.textContent = guide.title;
+    text.append(strong, ` -- ${why}.`);
+    label.append(radio, " ", text);
+    list.append(label);
+  }
+  wrap.append(list);
+
+  const guide = IRD_GUIDES.find((g) => g.id === chosenGuide)!;
+  const year = Number(pickYear.value);
+
+  // 1. The guide, from IRD.
+  const getHeading = document.createElement("h4");
+  getHeading.textContent = `1. Download ${guide.id} from Inland Revenue`;
+  const url = guide.url(year);
+  const link = document.createElement("a");
+  link.target = "_blank";
+  link.rel = "noopener noreferrer";
+  if (url !== null) {
+    link.href = url;
+    link.textContent = `${guide.title}, ${guide.edition(year)}`;
+  } else {
+    link.href = IRD_FORMS_INDEX;
+    link.textContent = `Inland Revenue's forms and guides (the ${year} ${guide.id} is not out yet -- use the latest)`;
+  }
+  const linkLine = document.createElement("p");
+  linkLine.append(link);
+
+  // 2. The workbook.
+  const workbook = document.createElement("button");
+  workbook.type = "button";
+  workbook.textContent = "Download the workbook";
+  workbook.addEventListener("click", () => downloadExcelReport(Number(pickYear.value)));
+  const bookHeading = document.createElement("h4");
+  bookHeading.textContent = "2. Download the workbook";
+
+  // 3. The prompt.
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  const shown = document.createElement("pre");
+  shown.className = "ai-prompt";
+  shown.hidden = true;
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "primary";
+  copy.textContent = `Copy the ${guide.id} prompt`;
+  copy.addEventListener("click", () => {
+    const text = guidePrompt(guide, Number(pickYear.value));
+    void navigator.clipboard.writeText(text).then(
+      () => {
+        said.textContent =
+          `Copied. Attach ${guide.id} and the workbook to one message, paste this with them, and ` +
+          "paste the answer back below.";
+      },
+      () => {
+        shown.textContent = text;
+        shown.hidden = false;
+        said.textContent = "The browser would not let the page reach the clipboard, so copy it from here.";
+      },
+    );
+  });
+  const show = document.createElement("button");
+  show.type = "button";
+  show.textContent = "Show prompt";
+  show.addEventListener("click", () => {
+    shown.textContent = guidePrompt(guide, Number(pickYear.value));
+    shown.hidden = !shown.hidden;
+    show.textContent = shown.hidden ? "Show prompt" : "Hide prompt";
+  });
+  const promptHeading = document.createElement("h4");
+  promptHeading.textContent = "3. Copy the prompt and send all three together";
+
+  // 4. The answer back.
+  const backHeading = document.createElement("h4");
+  backHeading.textContent = "4. Paste what it said back";
+  const answer = document.createElement("textarea");
+  answer.className = "ai-about";
+  answer.rows = 4;
+  answer.placeholder = `The ${guide.id} check, as the assistant wrote it`;
+  const keep = document.createElement("button");
+  keep.type = "button";
+  keep.textContent = "Keep it on screen";
+  keep.addEventListener("click", () => {
+    const text = answer.value.trim();
+    if (text === "") return;
+    result = { text, year: Number(pickYear.value), title: `${guide.id} check` };
+    redraw("aiCheck");
+  });
+
+  wrap.append(
+    getHeading,
+    linkLine,
+    bookHeading,
+    note("The same workbook as above: attach it to the same message as the guide and the prompt."),
+    actions([workbook]),
+    promptHeading,
+    note(
+      `It tells the assistant to rely on the attached ${guide.id}, cite its pages, and say plainly ` +
+        "where the guide says nothing rather than answer from memory.",
+    ),
+    actions([copy, show]),
+    said,
+    shown,
+    backHeading,
+    answer,
+    actions([keep]),
+  );
+  return wrap;
+}
+
 // --- what came back --------------------------------------------------------
 
 /**
@@ -444,11 +606,11 @@ function connectSteps(): HTMLElement {
  * the books themselves say, so it is not written into the ledger. Closing the
  * page loses it, which is the right trade.
  */
-function answerPanel(got: { text: string; year: number }): HTMLElement {
+function answerPanel(got: { text: string; year: number; title: string }): HTMLElement {
   const [box, inner] = panel();
 
   const heading = document.createElement("h3");
-  heading.textContent = `Review of the year to 31 March ${got.year}`;
+  heading.textContent = `${got.title} of the year to 31 March ${got.year}`;
   inner.append(heading);
 
   const text = document.createElement("pre");

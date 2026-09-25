@@ -400,13 +400,15 @@ function invoicesBlock(period: Period): string[] {
 
 // --- the three prompts -----------------------------------------------------
 
-export function reviewPrompt(year: number): string {
+/**
+ * The facts of the year, as every review is given them: the entities, each GST
+ * period against what was filed, the IR10, the assets, what is outstanding, and
+ * every account's total with its GST treatment. Shared by the OpenAccountants
+ * review and the checks against Inland Revenue's own guides.
+ */
+export function reviewFacts(year: number): string[] {
   const period = periodOf(year);
-  const model = state.ledger.entities ?? emptyEntityModel();
-  const registered = model.entities.some((one) => one.gstRegistered !== false);
-
   return [
-    ...preamble(year),
     ...entitiesBlock(),
     "",
     ...gstBlock(period),
@@ -420,6 +422,16 @@ export function reviewPrompt(year: number): string {
     "Account totals for the year, with the GST treatment set on each:",
     ...accountTotals(period),
     ...uncodedBlock(period),
+  ];
+}
+
+export function reviewPrompt(year: number): string {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const registered = model.entities.some((one) => one.gstRegistered !== false);
+
+  return [
+    ...preamble(year),
+    ...reviewFacts(year),
     "",
     "WHAT TO CHECK. Work through these in order, and say which you could not answer and why.",
     "",

@@ -3421,3 +3421,15 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   color: var(--ok, #2e7d32);
   font-weight: 600;
 }
+
+/* The guide check: one IRD guide chosen at a time. */
+.ai-guide-list {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.ai-guide {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}

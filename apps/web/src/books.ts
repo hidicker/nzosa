@@ -172,11 +172,19 @@ export function transferSuggestions(): Set<string> {
   if (caches.transfer !== null && caches.transfer.ledger === state.ledger) {
     return caches.transfer.ids;
   }
+  // The same rules the row itself uses, so the "suggested" filter and the
+  // row cannot disagree: a line marked "not a transfer" suggests nothing, and
+  // a line already given an account is nobody's partner.
   const transfers = state.ledger.transfers ?? {};
-  const taken = new Set(Object.keys(transfers));
+  const refused = new Set(state.ledger.rejectedTransfers ?? []);
+  const decided = accountDecided();
+  const taken = new Set([
+    ...Object.keys(transfers),
+    ...state.ledger.transactions.filter((t) => decided(t.id)).map((t) => t.id),
+  ]);
   const ids = new Set<string>();
   for (const transaction of state.ledger.transactions) {
-    if (taken.has(transaction.id)) continue;
+    if (taken.has(transaction.id) || refused.has(transaction.id)) continue;
     const { accounts } = sameEntityBanks(transaction.account);
     const candidates = transferCandidates(transaction, state.ledger.transactions, {
       sameEntity: accounts,

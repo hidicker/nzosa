@@ -3465,3 +3465,11 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .account-add-field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
 .account-add-field > span { font-weight: 600; }
 .account-add-field .field-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.35; }
+
+/* Rules page: how a keyword matches, and a rule that fits no line. */
+.rules-table .rule-any-order { color: var(--muted); font-size: 0.72rem; }
+.rules-table .rule-dead { display: inline-block; margin-left: 0.4rem; padding: 0 0.35rem;
+  border-radius: 3px; background: var(--review-bg); color: var(--review);
+  font-size: 0.72rem; }
+.rule-editor .rule-check { flex-direction: row; align-items: center; gap: 0.4rem; }
+.rule-editor .rule-check input { width: auto; }

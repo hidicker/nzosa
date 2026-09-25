@@ -369,7 +369,7 @@ export async function acceptAllShown(): Promise<void> {
       // not survive the reload.
       note:
         said === undefined
-          ? "Suggestion accepted unchanged, with others"
+          ? (one.description ?? "Suggestion accepted unchanged, with others")
           : "AI suggestion accepted unchanged, with others" +
             (said.via === undefined ? "" : ` (${said.via})`) +
             ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,

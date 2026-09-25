@@ -1,4 +1,4 @@
-import { matchText, normaliseAccountNumber } from "@nzosa/core";
+import { keywordMatches, matchText, normaliseAccountNumber } from "@nzosa/core";
 import type { CategoryRule } from "@nzosa/core";
 
 /**
@@ -23,10 +23,14 @@ import type { CategoryRule } from "@nzosa/core";
 export interface RuleDraft {
   priority: string;
   keyword: string;
+  /** The keyword's words in any order, rather than as one run of text. */
+  anyOrder: boolean;
   account: string;
   code: string;
   contact: string;
   note: string;
+  /** Offered as the line's description when the rule codes it. */
+  description: string;
   /**
    * Words that must appear in one named field, rather than anywhere in the line.
    *
@@ -48,10 +52,12 @@ export function toDraft(rule: CategoryRule, index: number): RuleDraft {
   return {
     priority: String(rule.priority ?? 0),
     keyword: rule.keyword ?? "",
+    anyOrder: rule.anyOrder === true,
     account: rule.account ?? "",
     code: rule.code,
     contact: rule.contact ?? "",
     note: rule.note ?? "",
+    description: rule.description ?? "",
     wherePayee: rule.where?.otherParty ?? "",
     whereParticulars: rule.where?.particulars ?? "",
     whereCode: rule.where?.code ?? "",
@@ -63,7 +69,8 @@ export function toDraft(rule: CategoryRule, index: number): RuleDraft {
 
 export function blankDraft(): RuleDraft {
   return {
-    priority: "0", keyword: "", account: "", code: "", contact: "", note: "",
+    priority: "0", keyword: "", anyOrder: true, account: "", code: "", contact: "", note: "",
+    description: "",
     wherePayee: "", whereParticulars: "", whereCode: "", whereReference: "",
     whereOtherAccount: "",
     index: null,
@@ -115,10 +122,12 @@ export function fromDraft(draft: RuleDraft): CategoryRule {
   return {
     ...(Number.isFinite(priority) && priority !== 0 ? { priority } : {}),
     ...(draft.keyword.trim() !== "" ? { keyword: draft.keyword.trim() } : {}),
+    ...(draft.keyword.trim() !== "" && draft.anyOrder ? { anyOrder: true } : {}),
     ...(draft.account.trim() !== "" ? { account: draft.account.trim() } : {}),
     code: draft.code.trim(),
     ...(draft.contact.trim() !== "" ? { contact: draft.contact.trim() } : {}),
     ...(draft.note.trim() !== "" ? { note: draft.note.trim() } : {}),
+    ...(draft.description.trim() !== "" ? { description: draft.description.trim() } : {}),
     ...(where === undefined ? {} : { where }),
   };
 }
@@ -167,7 +176,7 @@ export function ruleImpact(
   transactions: readonly ImpactRow[],
   codeOf: (index: number) => string | null,
 ): RuleImpact {
-  const keyword = matchText(draft.keyword.trim());
+  const keyword = draft.keyword.trim();
   const account = draft.account.trim();
   const code = draft.code.trim();
   const where = whereOf(draft);
@@ -188,7 +197,7 @@ export function ruleImpact(
 
   transactions.forEach((transaction, index) => {
     if (account !== "" && transaction.account !== account) return;
-    if (keyword !== "" && !matchText(transaction.text).includes(keyword)) return;
+    if (keyword !== "" && !keywordMatches(matchText(transaction.text), keyword, draft.anyOrder)) return;
     if (
       where !== undefined &&
       !(

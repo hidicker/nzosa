@@ -32,6 +32,17 @@ export interface CategoryRule {
   /** Case-insensitive substring, matched against the transaction's text. */
   keyword?: string;
   /**
+   * Match the keyword's words in any order, with other text between them.
+   *
+   * A keyword is normally one unbroken run of text. That is wrong for a rule
+   * written from a bank line, whose keyword is the line's words with the
+   * references and single letters taken out: `HARGREAVES T 2/14a 190324 rent`
+   * gives `HARGREAVES RENT`, which never appears as one run, so the rule matched
+   * nothing -- not even the line it came from. With this set each word only
+   * has to begin a word somewhere in the line.
+   */
+  anyOrder?: boolean;
+  /**
    * Substrings that must appear in named fields, all of them.
    *
    * `keyword` searches everything the bank wrote as one run of text, which is
@@ -94,6 +105,14 @@ export interface CategoryRule {
   /** Why this rule exists. Carried into the result so a coding can be argued with. */
   note?: string;
   /**
+   * The description to offer for a line this rule codes.
+   *
+   * Filled into the line's description for a person to keep or change. It is
+   * only written into the books when the line is confirmed, like anything
+   * else typed there.
+   */
+  description?: string;
+  /**
    * A caution to show with the suggestion, for a payee whose single code is
    * only ever part of the answer.
    *
@@ -144,6 +163,8 @@ export interface Categorisation {
   warn?: string;
   /** The contact the matched rule names, or its keyword as a fallback. */
   contact?: string;
+  /** The description the matched rule offers for the line. */
+  description?: string;
 }
 
 export interface RuleSet {
@@ -171,8 +192,6 @@ export function categorise(transaction: Transaction, ruleSet: RuleSet): Categori
   }
   const confirmed = override?.confirmed ?? false;
 
-  const sign: Sign = transaction.amount < 0 ? "DR" : "CR";
-  const magnitude = Math.abs(transaction.amount);
   const haystack = searchText(transaction);
 
   const ordered = [...(ruleSet.rules ?? [])]
@@ -180,14 +199,10 @@ export function categorise(transaction: Transaction, ruleSet: RuleSet): Categori
     .sort((a, b) => (b.rule.priority ?? 0) - (a.rule.priority ?? 0) || a.index - b.index);
 
   for (const { rule } of ordered) {
-    if (rule.account !== undefined && rule.account !== transaction.account) continue;
-    if (rule.sign !== undefined && rule.sign !== sign) continue;
-    if (rule.minAmount !== undefined && magnitude < rule.minAmount) continue;
-    if (rule.maxAmount !== undefined && magnitude > rule.maxAmount) continue;
-    if (rule.keyword !== undefined && !haystack.includes(matchText(rule.keyword))) continue;
-    if (rule.where !== undefined && !fieldsMatch(transaction, rule.where)) continue;
+    if (!ruleMatches(transaction, rule, haystack)) continue;
 
     const contact = contactOf(rule);
+    const description = rule.description?.trim();
     return {
       code: rule.code,
       matchedBy: "rule",
@@ -195,9 +210,11 @@ export function categorise(transaction: Transaction, ruleSet: RuleSet): Categori
       reason: rule.note ?? `Matched rule ${describeRule(rule)}`,
       ...(rule.warn !== undefined ? { warn: rule.warn } : {}),
       ...(contact !== undefined ? { contact } : {}),
+      ...(description ? { description } : {}),
     };
   }
 
+  const sign: Sign = transaction.amount < 0 ? "DR" : "CR";
   for (const fallback of ruleSet.defaults ?? []) {
     if (fallback.account !== transaction.account || fallback.sign !== sign) continue;
 
@@ -237,6 +254,54 @@ export function categoriseAll(
     transaction,
     categorisation: categorise(transaction, ruleSet),
   }));
+}
+
+/**
+ * Whether one rule applies to one transaction, ignoring its priority.
+ *
+ * The engine's own test, exported so that anything promising what a rule
+ * does -- writing one from a coding, counting what it reaches -- asks the
+ * thing that will do the coding rather than guessing alongside it.
+ * `haystack` is the folded line, when the caller has it already.
+ */
+export function ruleMatches(
+  transaction: Transaction,
+  rule: CategoryRule,
+  haystack: string = searchText(transaction),
+): boolean {
+  if (rule.account !== undefined && rule.account !== transaction.account) return false;
+  const sign: Sign = transaction.amount < 0 ? "DR" : "CR";
+  if (rule.sign !== undefined && rule.sign !== sign) return false;
+  const magnitude = Math.abs(transaction.amount);
+  if (rule.minAmount !== undefined && magnitude < rule.minAmount) return false;
+  if (rule.maxAmount !== undefined && magnitude > rule.maxAmount) return false;
+  if (rule.keyword !== undefined && !keywordMatches(haystack, rule.keyword, rule.anyOrder === true)) {
+    return false;
+  }
+  if (rule.where !== undefined && !fieldsMatch(transaction, rule.where)) return false;
+  return true;
+}
+
+/**
+ * Whether a keyword is in a folded line.
+ *
+ * As one unbroken run by default. In any order, each word has to start a word
+ * of the line: `RENT` finds `RENT` and `RENTAL` but not `PARENT` or
+ * `CURRENT`, and `ADS` still finds the `ADS1752102256` a card feed prints.
+ */
+export function keywordMatches(haystack: string, keyword: string, anyOrder = false): boolean {
+  const wanted = matchText(keyword);
+  if (!anyOrder) return haystack.includes(wanted);
+  const words = haystack.split(" ");
+  return wanted
+    .split(" ")
+    .filter((w) => w !== "")
+    .every((w) => words.some((word) => word.startsWith(w)));
+}
+
+/** Everything a keyword is looked for in, folded the way the engine folds it. */
+export function ruleSearchText(transaction: Transaction): string {
+  return searchText(transaction);
 }
 
 /** A rule's contact, falling back to the keyword that identified it. */

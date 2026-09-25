@@ -41,9 +41,10 @@ import {
   canonicalCodeFor,
   formatAmount,
   invoiceCandidates as coreInvoiceCandidates,
-  keywordFor,
   matchAccountName,
   matchPayoutTransfers,
+  ruleForLine,
+  ruleMatches,
   splitAccountLabel,
   splitPartId,
 } from "@nzosa/core";
@@ -143,7 +144,8 @@ export function renderReconcile(): void {
     const said = document.createElement("p");
     said.className = "rule-made";
     said.textContent =
-      `Rule added from that coding: anything matching "${made.keyword}" now suggests ` +
+      `${made.fixed === true ? "Rule fixed" : "Rule added from that coding"}: ` +
+      `anything with the words "${made.keyword}" now suggests ` +
       `${made.code}. ` +
       (made.alsoCoded > 0
         ? `It suggests a code for ${made.alsoCoded} other line${made.alsoCoded === 1 ? "" : "s"}, ` +
@@ -152,6 +154,9 @@ export function renderReconcile(): void {
       "Change or remove it on the Rules page.";
     body.append(said);
   }
+
+  const notice = ruleNoticeBanner();
+  if (notice) body.append(notice);
 
   const { all, shown } = reconcileRows();
 
@@ -380,7 +385,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   description.type = "text";
   description.className = "code-description";
   description.placeholder = "Description";
-  description.value = draft.description ?? one.note ?? "";
+  description.value = draft.description ?? one.note ?? one.description ?? "";
   description.addEventListener("input", () => keep({ description: description.value }));
 
   const ok = document.createElement("button");
@@ -1854,6 +1859,7 @@ export async function confirmLine(
   contact: string,
 ): Promise<void> {
   drafts.delete(one.transaction.id);
+  state.ruleNotice = null;
   // An account is required, by whichever route. The button asks first and
   // says why; this is the rule itself, so no other caller can get round it.
   // A line confirmed with nothing on it posts nowhere and leaves the queue,
@@ -1909,7 +1915,7 @@ export async function confirmLine(
   // Nothing suggested a code and a person supplied one: that is a rule being
   // stated, not merely a line being coded.
   if ((one.code ?? "") === "" && code !== "")
-    await ruleFromDecision(one.transaction, code);
+    await ruleFromDecision(one.transaction, code, description.trim());
 
   // A purchase coded to a fixed asset account is an asset, and only the
   // register depreciates it. Offered here, where the date and the cost are in
@@ -1968,26 +1974,42 @@ export async function confirmLine(
 async function ruleFromDecision(
   transaction: Transaction,
   code: string,
+  description: string,
 ): Promise<void> {
-  const keyword = keywordFor(transaction);
-  if (keyword.length < 4 || GENERIC_PAYEES.has(keyword)) return;
+  // Built so that it matches the line it came from, which the first version
+  // of this did not promise: `HARGREAVES T 2/14a 190324 rent` gave `HARGREAVES RENT`,
+  // matched as one run of text, which that line does not contain.
+  const made = ruleForLine(transaction, code);
+  const keyword = made?.keyword ?? "";
+  if (made === null || keyword.length < 4 || GENERIC_PAYEES.has(keyword)) return;
 
   const file = (state.rules as RuleFileShape | undefined) ?? { rules: [] };
   const rules = [...(file.rules ?? [])];
-  if (
-    rules.some(
-      (r) =>
-        (r.keyword ?? "").toUpperCase() === keyword && r.account === undefined,
-    )
-  ) {
+  const existing = rules.findIndex(
+    (r) => (r.keyword ?? "").toUpperCase() === keyword && r.account === undefined,
+  );
+  if (existing !== -1) {
+    // Not a second rule -- the first one is a decision too. But this line had
+    // no suggestion, so that rule did not pick it up, and saying nothing left
+    // a rule that looked right and coded nothing. Offer to fix it instead.
+    const held = rules[existing];
+    if (held && !ruleMatches(transaction, held)) {
+      state.ruleNotice = {
+        index: existing,
+        keyword: held.keyword ?? keyword,
+        code: held.code,
+        newCode: code,
+        description,
+        transaction,
+      };
+    }
     return;
   }
 
   const rule: CategoryRule = {
-    priority: 100,
-    keyword,
-    code,
+    ...made,
     note: "From a coding decision",
+    ...(description !== "" ? { description } : {}),
   };
 
   // What it reaches, counted with the engine that will do the coding rather
@@ -2015,6 +2037,92 @@ async function ruleFromDecision(
   );
   await persistRules();
   state.lastRule = { keyword, code, alsoCoded };
+}
+
+/**
+ * A rule that should have suggested a code for the line just coded, and did
+ * not, with the offer to fix it.
+ *
+ * Usually one written before rules were checked against their own line, whose
+ * keyword never appears as one run of text. The fix matches its words in any
+ * order -- or, if that is still not enough, takes the keyword this line gives
+ * -- and uses the code just chosen, since that is the latest decision.
+ */
+function ruleNoticeBanner(): HTMLElement | null {
+  const notice = state.ruleNotice;
+  if (notice === null) return null;
+  const box = document.createElement("div");
+  box.className = "rule-made";
+  const text = document.createElement("p");
+  text.textContent =
+    `The rule for "${notice.keyword}" did not pick that line up, so no new rule was added. ` +
+    (notice.code !== notice.newCode
+      ? `It codes to ${notice.code}; you chose ${notice.newCode}. `
+      : "");
+  const fix = document.createElement("button");
+  fix.type = "button";
+  fix.className = "primary";
+  fix.textContent = `Fix the rule to match lines like this, coded to ${notice.newCode}`;
+  fix.addEventListener("click", () => void fixRule());
+  const leave = document.createElement("button");
+  leave.type = "button";
+  leave.textContent = "Leave it";
+  leave.addEventListener("click", () => {
+    state.ruleNotice = null;
+    redraw("reconcile");
+  });
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  actions.append(fix, leave);
+  box.append(text, actions);
+  return box;
+}
+
+async function fixRule(): Promise<void> {
+  const notice = state.ruleNotice;
+  state.ruleNotice = null;
+  const file = state.rules as RuleFileShape | undefined;
+  const before = file?.rules?.[notice?.index ?? -1];
+  if (!notice || !file || !before) {
+    redraw("reconcile");
+    return;
+  }
+  let fixed: CategoryRule = {
+    ...before,
+    anyOrder: true,
+    code: notice.newCode,
+    ...(notice.description !== "" && !before.description
+      ? { description: notice.description }
+      : {}),
+  };
+  if (!ruleMatches(notice.transaction, fixed)) {
+    const made = ruleForLine(notice.transaction, notice.newCode);
+    if (made?.keyword === undefined) {
+      redraw("reconcile");
+      return;
+    }
+    fixed = { ...fixed, keyword: made.keyword };
+  }
+  const rules = [...(file.rules ?? [])];
+  rules[notice.index] = fixed;
+
+  const coded = codedNow();
+  state.rules = { ...file, rules } as RuleSet;
+  reclassify();
+  const alsoCoded = Math.max(0, codedNow() - coded);
+  await record(
+    "rule",
+    `Fixed rule: ${fixed.keyword} → ${fixed.code}, words in any order` +
+      (alsoCoded > 0
+        ? `; it now suggests a code for ${alsoCoded} more line${alsoCoded === 1 ? "" : "s"}`
+        : ""),
+    before,
+    fixed,
+    String(notice.index),
+  );
+  await persistRules();
+  state.lastRule = { keyword: fixed.keyword ?? "", code: fixed.code, alsoCoded, fixed: true };
+  redraw("reconcile");
 }
 
 /**

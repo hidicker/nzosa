@@ -2,7 +2,7 @@ import type { Cents } from "./money.js";
 import type { Transaction } from "./types.js";
 import { normaliseAccountNumber } from "./accounts.js";
 import type { CategoryRule, RuleSet } from "./rules.js";
-import { categorise } from "./rules.js";
+import { categorise, ruleMatches } from "./rules.js";
 
 /**
  * Learning coding rules from books that already exist.
@@ -68,6 +68,28 @@ export interface InferenceOptions {
   minAccountSightings?: number;
   /** Priority to put on the proposed rules. Default 100. */
   priority?: number;
+}
+
+/**
+ * A rule for one bank line that is sure to match that line.
+ *
+ * Built from `keywordFor`, matched in any order, and then tried on the line
+ * it came from, dropping words from the end until it fits. A rule written from
+ * a line that does not match that line is worse than no rule: it looks right
+ * in the rules table and codes nothing. Null when nothing is left.
+ */
+export function ruleForLine(
+  transaction: Transaction,
+  code: string,
+  priority = 100,
+): CategoryRule | null {
+  const words = keywordFor(transaction).split(" ").filter((w) => w !== "");
+  while (words.length > 0) {
+    const rule: CategoryRule = { priority, keyword: words.join(" "), anyOrder: true, code };
+    if (ruleMatches(transaction, rule)) return rule;
+    words.pop();
+  }
+  return null;
 }
 
 /**
@@ -205,7 +227,7 @@ export function inferRules(
     // Strong agreement across every account: one unrestricted rule.
     if (total >= minSightings && bestCount / total >= minAgreement) {
       proposals.push({
-        rule: { priority, keyword, code: bestCode },
+        rule: { priority, keyword, anyOrder: true, code: bestCode },
         seen: total,
         agreed: bestCount,
         competing: ranked.slice(1).map(([code, count]) => ({ code, count })),
@@ -229,7 +251,7 @@ export function inferRules(
       proposals.push({
         // Restricted by account **id**, never by its label: a rule keyed on a
         // display name silently matches nothing.
-        rule: { priority: priority + 100, keyword, account, code: accountBest[0] },
+        rule: { priority: priority + 100, keyword, anyOrder: true, account, code: accountBest[0] },
         seen: accountTotal,
         agreed: accountBest[1],
         competing: accountRanked.slice(1).map(([code, count]) => ({ code, count })),

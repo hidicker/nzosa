@@ -75,6 +75,7 @@ export {
   inferRules,
   inferAccountUsage,
   keywordFor,
+  ruleForLine,
   coverage,
 } from "./rule-inference.js";
 export type {
@@ -257,7 +258,14 @@ export type {
 export { gstResolver, DEFAULT_GST_RULES } from "./gst-rules.js";
 export type { GstRule, GstRulesOptions } from "./gst-rules.js";
 
-export { categorise, categoriseAll, matchText } from "./rules.js";
+export {
+  categorise,
+  categoriseAll,
+  keywordMatches,
+  matchText,
+  ruleMatches,
+  ruleSearchText,
+} from "./rules.js";
 export type {
   Sign,
   CategoryRule,

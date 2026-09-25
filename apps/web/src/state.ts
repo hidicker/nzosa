@@ -108,7 +108,20 @@ export const state = {
    * doing something they did not press a button for, so it is said once on
    * the page it happened on and then cleared.
    */
-  lastRule: null as { keyword: string; code: string; alsoCoded: number } | null,
+  lastRule: null as { keyword: string; code: string; alsoCoded: number; fixed?: boolean } | null,
+  /**
+   * A rule with the keyword a coding would have written, which did not pick
+   * that line up. Said on the page with the offer to fix it, until the next
+   * coding or until it is acted on.
+   */
+  ruleNotice: null as {
+    index: number;
+    keyword: string;
+    code: string;
+    newCode: string;
+    description: string;
+    transaction: import("@nzosa/core").Transaction;
+  } | null,
   /** A rule being edited or added, or null when the table is just a table. */
   /**
    * The entity every page is looking at, or "" for all of them.

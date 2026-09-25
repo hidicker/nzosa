@@ -32,6 +32,8 @@ export interface Suggestion {
   confirmed: boolean;
   /** Present when a person changed something. */
   note: string | undefined;
+  /** The description the matched rule offers, until a person has written one. */
+  description: string | undefined;
   /** A caution from the matched rule: this line needs more than one code. */
   warn: string | undefined;
   /**
@@ -84,6 +86,7 @@ export function suggest(
         classification: resolve(transaction),
         confirmed: override?.confirmed === true,
         note: override?.note,
+        description: override?.note === undefined ? coded.description : undefined,
         // A caution is about the suggestion, so it goes once a person has
         // decided: they have seen it and answered it.
         warn: override?.confirmed === true ? undefined : coded.warn,

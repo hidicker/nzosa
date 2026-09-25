@@ -7,7 +7,35 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { saveRulesArchive } from "../store.js";
 import { download, note } from "../ui.js";
+import { ruleMatches, ruleSearchText } from "@nzosa/core";
 import type { CategoryRule } from "@nzosa/core";
+
+/**
+ * Which rules no line in the books fits, worked out once per rule set and
+ * set of transactions rather than on every keystroke in the search box.
+ *
+ * A rule that matches nothing looks exactly like one that works. Rules
+ * written from a coding before they were checked against their own line are
+ * the usual case: `HARGREAVES RENT`, looked for as one run of text in lines that
+ * read `HARGREAVES T 2/14a 190324 rent`.
+ */
+let deadCache: { rules: unknown; transactions: unknown; dead: Set<number> } | null = null;
+
+function deadRules(rules: readonly CategoryRule[]): Set<number> {
+  const transactions = state.ledger.transactions;
+  if (deadCache?.rules === rules && deadCache.transactions === transactions) {
+    return deadCache.dead;
+  }
+  const lines = transactions.map((t) => ({ t, text: ruleSearchText(t) }));
+  const dead = new Set<number>();
+  if (lines.length > 0) {
+    rules.forEach((rule, index) => {
+      if (!lines.some(({ t, text }) => ruleMatches(t, rule, text))) dead.add(index);
+    });
+  }
+  deadCache = { rules, transactions, dead };
+  return dead;
+}
 
 /**
  * The coding rules, and editing them.
@@ -167,10 +195,12 @@ export function renderRules(): void {
     .map((rule, index) => ({ rule, index }))
     .filter(({ rule }) =>
       matches(
-        `${rule.keyword ?? ""} ${rule.code} ${rule.account ?? ""} ${rule.contact ?? ""} ${rule.note ?? ""}`,
+        `${rule.keyword ?? ""} ${rule.code} ${rule.account ?? ""} ${rule.contact ?? ""} ${rule.note ?? ""} ${rule.description ?? ""}`,
       ),
     )
     .sort((a, b) => (b.rule.priority ?? 0) - (a.rule.priority ?? 0) || a.index - b.index);
+
+  const dead = deadRules(all);
 
   const summary = document.createElement("div");
   summary.className = "rules-summary";
@@ -179,6 +209,9 @@ export function renderRules(): void {
     `${shown.length} of ${all.length} rules, ` +
     `${(file.defaults ?? []).length} defaults, ` +
     `${Object.keys(file.codeTreatments ?? {}).length} code treatments. ` +
+    (dead.size > 0
+      ? `${dead.size} match no line in these books — marked below. `
+      : "") +
     "Changes are kept in this browser as you make them.";
 
   const addButton = document.createElement("button");
@@ -208,14 +241,14 @@ export function renderRules(): void {
   const head = document.createElement("thead");
   head.innerHTML =
     "<tr><th>Priority</th><th>Keyword</th><th>Account</th><th>Code</th>" +
-    "<th>To (contact)</th><th>Note</th><th></th></tr>";
+    "<th>To (contact)</th><th>Description</th><th>Note</th><th></th></tr>";
   const tbody = document.createElement("tbody");
 
   for (const { rule, index } of shown.slice(0, limit)) {
     if (state.ruleDraft && state.ruleDraft.index === index) {
       const editing = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 7;
+      cell.colSpan = 8;
       cell.append(ruleEditor(state.ruleDraft, "Save this rule"));
       editing.append(cell);
       tbody.append(editing);
@@ -229,12 +262,29 @@ export function renderRules(): void {
       rule.account ?? "",
       rule.code,
       rule.contact ?? "",
+      rule.description ?? "",
       rule.note ?? "",
     ];
     cells.forEach((text, column) => {
       const td = document.createElement("td");
       td.textContent = text;
       if (column > 0) td.className = "rules-left";
+      if (column === 1 && rule.anyOrder === true && text !== "") {
+        const how = document.createElement("span");
+        how.className = "rule-any-order";
+        how.textContent = " any order";
+        how.title = "Its words can come in any order, with other text between them.";
+        td.append(how);
+      }
+      if (column === 1 && dead.has(index)) {
+        const flag = document.createElement("span");
+        flag.className = "rule-dead";
+        flag.textContent = "Matches nothing";
+        flag.title =
+          "No line in these books fits this rule. Compare the keyword with a bank line, " +
+          "or tick “Words in any order”.";
+        td.append(flag);
+      }
       tr.append(td);
     });
 
@@ -285,6 +335,7 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
     ["account", "Account", "Bank account id, or blank for any"],
     ["code", "Code", "Account to code it to"],
     ["contact", "To (contact)", "Defaults to the keyword"],
+    ["description", "Description", "Filled in on the lines it codes"],
     ["note", "Note", "Why this rule exists"],
     // Narrower than a keyword: these look in one field each, and all of them
     // have to hold. The payee is the same on every payment to Inland Revenue;
@@ -332,13 +383,32 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
   };
 
   for (const [key, label, placeholder] of fields) {
+    if (key === "contact") {
+      // Straight after the keyword it qualifies.
+      const order = document.createElement("label");
+      order.className = "rule-field rule-check";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = draft.anyOrder;
+      box.addEventListener("change", () => {
+        draft.anyOrder = box.checked;
+        refresh();
+      });
+      const caption = document.createElement("span");
+      caption.textContent = "Words in any order";
+      caption.title =
+        "Each word of the keyword has to begin a word of the bank line, anywhere in it. " +
+        "Untick to look for the keyword as one run of text.";
+      order.append(box, caption);
+      wrap.append(order);
+    }
     const wrapper = document.createElement("label");
     wrapper.className = "rule-field";
     const caption = document.createElement("span");
     caption.textContent = label;
     const input = document.createElement("input");
     input.type = "text";
-    input.value = String(draft[key]);
+    input.value = String(draft[key] ?? "");
     input.placeholder = placeholder;
     input.addEventListener("input", () => {
       (draft[key] as string) = input.value;
@@ -386,10 +456,17 @@ function commitRule(draft: RuleDraft): void {
   const file = state.rules as RuleFileShape | undefined;
   if (!file) return;
   const rules = [...(file.rules ?? [])];
-  const rule = fromDraft(draft);
-
   const index = draft.index ?? rules.length;
   const before = draft.index === null ? null : (rules[draft.index] ?? null);
+  // The form does not show direction, amount limits or a caution, so an edit
+  // keeps them rather than quietly dropping them.
+  const rule: CategoryRule = {
+    ...(before?.sign !== undefined ? { sign: before.sign } : {}),
+    ...(before?.minAmount !== undefined ? { minAmount: before.minAmount } : {}),
+    ...(before?.maxAmount !== undefined ? { maxAmount: before.maxAmount } : {}),
+    ...(before?.warn !== undefined ? { warn: before.warn } : {}),
+    ...fromDraft(draft),
+  };
   if (draft.index === null) rules.push(rule);
   else rules[draft.index] = rule;
   void record(

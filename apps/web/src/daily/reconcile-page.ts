@@ -31,6 +31,7 @@ import type { GstRate, Suggestion } from "../reconcile.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { splitEditor } from "../split-ui.js";
 import { $, state } from "../state.js";
+import { startNewAccount } from "./entities.js";
 import { aiSuggestionFor } from "../ai.js";
 import { save, savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -333,6 +334,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     draft.code ?? one.code ?? fromModel?.code ?? null,
     "Search accounts…",
     () => keep({ code: codeSelect.value }),
+    { label: "+ Add new account…", onPick: (typed) => startNewAccount(typed) },
   );
 
   /**

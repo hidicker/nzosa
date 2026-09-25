@@ -36,6 +36,11 @@ export function combobox(
    * another, and both are wrong until the box says what was picked.
    */
   onChange: () => void = () => {},
+  /**
+   * A last entry that is an action rather than a choice -- "Add new account"
+   * -- handed what was typed. One extra row, drawn after the matches.
+   */
+  extra?: { label: string; onPick: (typed: string) => void },
 ): Combobox {
   let chosen = initial ?? "";
   let active = -1;
@@ -111,6 +116,20 @@ export function combobox(
       });
       list.append(row);
     });
+    if (extra !== undefined) {
+      const row = document.createElement("div");
+      row.className = "combo-option combo-extra";
+      row.setAttribute("role", "option");
+      row.textContent = extra.label;
+      row.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        const typed = input.value === chosen ? "" : input.value.trim();
+        input.value = chosen;
+        close();
+        extra.onPick(typed);
+      });
+      list.append(row);
+    }
     list.hidden = false;
     input.setAttribute("aria-expanded", "true");
   }

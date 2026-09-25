@@ -3440,3 +3440,10 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 #import-table th:last-child,
 #import-table td:last-child { min-width: 20rem; }
 #import-table .reason { max-width: 52ch; }
+
+/* The account picker's last entry, an action rather than an account. */
+.combo-option.combo-extra {
+  border-top: 1px solid var(--border);
+  color: var(--accent, #1d4f91);
+  font-weight: 600;
+}

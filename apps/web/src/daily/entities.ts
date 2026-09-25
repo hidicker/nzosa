@@ -1,4 +1,4 @@
-import { redraw } from "../app.js";
+import { redraw, showPage } from "../app.js";
 import {
   NOT_IN_LEDGER,
   accountsForEditing,
@@ -73,6 +73,15 @@ const ACCOUNT_TYPES: readonly (readonly [string, string])[] = [
  */
 
 /** The form for starting another entity, under the ones that already exist. */
+/** A new account asked for from elsewhere, to start the add row with. */
+let pendingNewAccount: string | null = null;
+
+/** Open the chart of accounts ready to add an account, named as typed. */
+export function startNewAccount(name: string): void {
+  pendingNewAccount = name;
+  showPage("entities");
+}
+
 export function addEntityForm(): HTMLElement {
   const row = document.createElement("div");
   row.className = "entity-add-row";
@@ -708,6 +717,16 @@ export function renderEntities(): void {
   const newName = document.createElement("input");
   newName.type = "text";
   newName.placeholder = "Name, e.g. Entertainment - Non deductible";
+  // Arrived from an account picker's "Add new account": the name typed there,
+  // and the cursor in the code, which is what is still wanted.
+  if (pendingNewAccount !== null) {
+    newName.value = pendingNewAccount;
+    pendingNewAccount = null;
+    requestAnimationFrame(() => {
+      addRow.scrollIntoView({ block: "center" });
+      newCode.focus();
+    });
+  }
   const addAccount = document.createElement("button");
   addAccount.type = "button";
   addAccount.textContent = "Add account";

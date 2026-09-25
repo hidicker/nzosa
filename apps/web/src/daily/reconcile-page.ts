@@ -15,6 +15,7 @@ import {
   codingRefusedForTransfer,
   transfersAlsoCoded,
   clearingWithoutInvoice,
+  ruleCaution,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -37,14 +38,17 @@ import { save, savePart } from "../store.js";
 import { note } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
 import {
+  accountEntityKey,
   accountLabel,
   canonicalCodeFor,
+  emptyEntityModel,
   formatAmount,
   invoiceCandidates as coreInvoiceCandidates,
   matchAccountName,
   matchPayoutTransfers,
   ruleForLine,
   ruleMatches,
+  winningRule,
   splitAccountLabel,
   splitPartId,
 } from "@nzosa/core";
@@ -145,7 +149,9 @@ export function renderReconcile(): void {
     said.className = "rule-made";
     said.textContent =
       `${made.fixed === true ? "Rule fixed" : "Rule added from that coding"}: ` +
-      `anything with the words "${made.keyword}" now suggests ` +
+      `anything with the words "${made.keyword}"` +
+      (made.account !== undefined ? ` on ${bankLabel(made.account)}` : "") +
+      " now suggests " +
       `${made.code}. ` +
       (made.alsoCoded > 0
         ? `It suggests a code for ${made.alsoCoded} other line${made.alsoCoded === 1 ? "" : "s"}, ` +
@@ -157,6 +163,10 @@ export function renderReconcile(): void {
 
   const notice = ruleNoticeBanner();
   if (notice) body.append(notice);
+  const offer = ruleOfferBanner();
+  if (offer) body.append(offer);
+  const stale = ruleStaleBanner();
+  if (stale) body.append(stale);
 
   const { all, shown } = reconcileRows();
 
@@ -218,7 +228,10 @@ export function renderReconcile(): void {
     state.ledger.overrides ?? {},
     state.chart,
   );
-  for (const one of shown.slice(0, 200)) body.append(renderLine(one, codes));
+  const codesFor = codesByBank(codes);
+  for (const one of shown.slice(0, 200)) {
+    body.append(renderLine(one, codesFor(one.transaction.account)));
+  }
   if (shown.length > 200) {
     body.append(note(`Showing the first 200 of ${shown.length}.`));
   }
@@ -259,6 +272,35 @@ function rawFields(transaction: Transaction): HTMLElement {
   }
   table.append(body);
   return table;
+}
+
+/**
+ * The account list for each bank account's lines, with the accounts of the
+ * entities that bank account serves first.
+ *
+ * A line on the rental's account is nearly always coded to one of the
+ * rental's accounts, and with several entities in one ledger those were
+ * scattered through a list sorted only by code. Nothing is left out -- a
+ * rental account can still pay a personal bill -- the rest simply follows.
+ * Worked out once per bank account, not once per line.
+ */
+function codesByBank(codes: readonly string[]): (bank: string) => readonly string[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  if (model.entities.length === 0) return () => codes;
+  const entityOf = new Map(
+    codes.map((label) => [label, model.accounts[accountEntityKey(splitAccountLabel(label))] ?? ""]),
+  );
+  const cache = new Map<string, readonly string[]>();
+  return (bank) => {
+    const known = cache.get(bank);
+    if (known !== undefined) return known;
+    const serves = new Set(model.banks[bank] ?? []);
+    const own = (label: string): boolean => serves.has(entityOf.get(label) ?? "");
+    const ordered =
+      serves.size === 0 ? codes : [...codes.filter(own), ...codes.filter((c) => !own(c))];
+    cache.set(bank, ordered);
+    return ordered;
+  };
 }
 
 function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
@@ -611,6 +653,13 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     const caution = document.createElement("div");
     caution.className = "code-warn";
     caution.textContent = one.warn;
+    row.append(caution);
+  }
+  const against = ruleCaution(one);
+  if (against !== undefined) {
+    const caution = document.createElement("div");
+    caution.className = "code-warn";
+    caution.textContent = `${against} Not included in Accept all.`;
     row.append(caution);
   }
 
@@ -1860,6 +1909,8 @@ export async function confirmLine(
 ): Promise<void> {
   drafts.delete(one.transaction.id);
   state.ruleNotice = null;
+  state.ruleOffer = null;
+  state.ruleStale = null;
   // An account is required, by whichever route. The button asks first and
   // says why; this is the rule itself, so no other caller can get round it.
   // A line confirmed with nothing on it posts nowhere and leaves the queue,
@@ -1916,6 +1967,21 @@ export async function confirmLine(
   // stated, not merely a line being coded.
   if ((one.code ?? "") === "" && code !== "")
     await ruleFromDecision(one.transaction, code, description.trim());
+
+  // Coded away from what its rule says. Left alone, the rule goes on
+  // suggesting the old account for every line like this one -- a council
+  // rates rule kept offering an account nothing used any more.
+  const ruleList = (state.rules as RuleFileShape | undefined)?.rules ?? [];
+  const winner = winningRule(one.transaction, ruleList);
+  const said = ruleList[winner];
+  if (said !== undefined && code !== "" && said.code !== code && (one.code ?? "") === said.code) {
+    state.ruleStale = {
+      index: winner,
+      keyword: said.keyword ?? said.account ?? "",
+      from: said.code,
+      to: code,
+    };
+  }
 
   // A purchase coded to a fixed asset account is an asset, and only the
   // register depreciates it. Offered here, where the date and the cost are in
@@ -1986,7 +2052,9 @@ async function ruleFromDecision(
   const file = (state.rules as RuleFileShape | undefined) ?? { rules: [] };
   const rules = [...(file.rules ?? [])];
   const existing = rules.findIndex(
-    (r) => (r.keyword ?? "").toUpperCase() === keyword && r.account === undefined,
+    (r) =>
+      (r.keyword ?? "").toUpperCase() === keyword &&
+      (r.account === undefined || r.account === transaction.account),
   );
   if (existing !== -1) {
     // Not a second rule -- the first one is a decision too. But this line had
@@ -2006,11 +2074,32 @@ async function ruleFromDecision(
     return;
   }
 
+  // For the account it came from. A rates payment from the rental's account
+  // says what rates are for that property; unrestricted, the same rule put a
+  // parking charge on a shared card under the rental's rates. Clearing the
+  // account on the Rules page widens it for anyone who wants that.
   const rule: CategoryRule = {
     ...made,
+    account: transaction.account,
     note: "From a coding decision",
     ...(description !== "" ? { description } : {}),
   };
+
+  // A card or account several entities share: one purchase coded to a rental
+  // says little about the next one at the same shop. Written anyway, a single
+  // hardware-store receipt made every purchase there a rental repair -- 65
+  // personal lines one Accept all away from a return. So it is offered, for
+  // this account only, with what it would reach.
+  const serves = (state.ledger.entities?.banks ?? {})[transaction.account] ?? [];
+  if (serves.length > 1) {
+    const offered: CategoryRule = rule;
+    const decided = accountDecided();
+    const reach = state.ledger.transactions.filter(
+      (t) => t.id !== transaction.id && !decided(t.id) && ruleMatches(t, offered),
+    ).length;
+    state.ruleOffer = { rule: offered, reach };
+    return;
+  }
 
   // What it reaches, counted with the engine that will do the coding rather
   // than by re-matching the keyword here -- the two disagree, and a promise
@@ -2036,7 +2125,128 @@ async function ruleFromDecision(
     String(rules.length),
   );
   await persistRules();
-  state.lastRule = { keyword, code, alsoCoded };
+  state.lastRule = { keyword, code, alsoCoded, account: transaction.account };
+}
+
+/** Add a rule, count what it now suggests, and say so. */
+async function addRule(rule: CategoryRule, why: string): Promise<void> {
+  const file = (state.rules as RuleFileShape | undefined) ?? { rules: [] };
+  const rules = [...(file.rules ?? [])];
+  const before = codedNow();
+  state.rules = { ...file, rules: [...rules, rule] } as RuleSet;
+  if (state.rulesName === "") state.rulesName = "rules.json";
+  reclassify();
+  const alsoCoded = Math.max(0, codedNow() - before);
+  await record(
+    "rule",
+    `${rule.keyword} → ${rule.code}, ${why}` +
+      (alsoCoded > 0
+        ? `; it also suggests a code for ${alsoCoded} other line${alsoCoded === 1 ? "" : "s"}`
+        : ""),
+    null,
+    rule,
+    String(rules.length),
+  );
+  await persistRules();
+  state.lastRule = {
+    keyword: rule.keyword ?? "",
+    code: rule.code,
+    alsoCoded,
+    ...(rule.account !== undefined ? { account: rule.account } : {}),
+  };
+}
+
+/** The offer of a rule on a shared account, with what it would reach. */
+function ruleOfferBanner(): HTMLElement | null {
+  const offer = state.ruleOffer;
+  if (offer === null) return null;
+  const box = document.createElement("div");
+  box.className = "rule-made";
+  const text = document.createElement("p");
+  text.textContent =
+    `${bankLabel(offer.rule.account ?? "")} is used by more than one entity, so no rule was made ` +
+    `from that line. A rule would suggest ${offer.rule.code} for every line on it with the ` +
+    `words "${offer.rule.keyword}"` +
+    (offer.reach > 0
+      ? ` — ${offer.reach} more line${offer.reach === 1 ? "" : "s"} now.`
+      : ", none others yet.");
+  const make = document.createElement("button");
+  make.type = "button";
+  make.textContent = "Make the rule";
+  make.addEventListener("click", () => {
+    state.ruleOffer = null;
+    void addRule(offer.rule, "from coding one line on a shared account").then(() =>
+      redraw("reconcile"),
+    );
+  });
+  const leave = document.createElement("button");
+  leave.type = "button";
+  leave.textContent = "Just this line";
+  leave.addEventListener("click", () => {
+    state.ruleOffer = null;
+    redraw("reconcile");
+  });
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  actions.append(make, leave);
+  box.append(text, actions);
+  return box;
+}
+
+/** The offer to move a rule to the account a line was just recoded to. */
+function ruleStaleBanner(): HTMLElement | null {
+  const stale = state.ruleStale;
+  if (stale === null) return null;
+  const box = document.createElement("div");
+  box.className = "rule-made";
+  const text = document.createElement("p");
+  text.textContent =
+    `The rule for "${stale.keyword}" suggests ${stale.from}; that line is now ${stale.to}. ` +
+    `Change the rule so lines like it are suggested as ${stale.to}?`;
+  const change = document.createElement("button");
+  change.type = "button";
+  change.textContent = "Change the rule";
+  change.addEventListener("click", () => {
+    state.ruleStale = null;
+    void changeRuleCode(stale.index, stale.from, stale.to);
+  });
+  const leave = document.createElement("button");
+  leave.type = "button";
+  leave.textContent = "Leave the rule";
+  leave.addEventListener("click", () => {
+    state.ruleStale = null;
+    redraw("reconcile");
+  });
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  actions.append(change, leave);
+  box.append(text, actions);
+  return box;
+}
+
+async function changeRuleCode(index: number, from: string, to: string): Promise<void> {
+  const file = state.rules as RuleFileShape | undefined;
+  const before = file?.rules?.[index];
+  // Only if it still says what it said when offered: another screen may have
+  // changed it since.
+  if (!file || !before || before.code !== from) {
+    redraw("reconcile");
+    return;
+  }
+  const rules = [...(file.rules ?? [])];
+  const after: CategoryRule = { ...before, code: to };
+  rules[index] = after;
+  state.rules = { ...file, rules } as RuleSet;
+  reclassify();
+  await record(
+    "rule",
+    `Changed rule: ${before.keyword ?? before.account ?? "everything"} → ${to} (was ${from})`,
+    before,
+    after,
+    String(index),
+  );
+  await persistRules();
+  redraw("reconcile");
 }
 
 /**
@@ -2121,7 +2331,13 @@ async function fixRule(): Promise<void> {
     String(notice.index),
   );
   await persistRules();
-  state.lastRule = { keyword: fixed.keyword ?? "", code: fixed.code, alsoCoded, fixed: true };
+  state.lastRule = {
+    keyword: fixed.keyword ?? "",
+    code: fixed.code,
+    alsoCoded,
+    fixed: true,
+    ...(fixed.account !== undefined ? { account: fixed.account } : {}),
+  };
   redraw("reconcile");
 }
 

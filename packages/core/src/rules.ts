@@ -285,9 +285,11 @@ export function ruleMatches(
 /**
  * Whether a keyword is in a folded line.
  *
- * As one unbroken run by default. In any order, each word has to start a word
- * of the line: `RENT` finds `RENT` and `RENTAL` but not `PARENT` or
- * `CURRENT`, and `ADS` still finds the `ADS1752102256` a card feed prints.
+ * As one unbroken run by default. In any order, each word has to be a word of
+ * the line -- or the start of one that goes on in digits, since a card feed
+ * glues its reference on: `ADS` finds `ADS1752102256`. Never the start of a
+ * longer word. `LOAN` once found `LOANACCOUNT` that way, and a loan's
+ * interest *received* was suggested as a rental's interest *paid*.
  */
 export function keywordMatches(haystack: string, keyword: string, anyOrder = false): boolean {
   const wanted = matchText(keyword);
@@ -296,7 +298,25 @@ export function keywordMatches(haystack: string, keyword: string, anyOrder = fal
   return wanted
     .split(" ")
     .filter((w) => w !== "")
-    .every((w) => words.some((word) => word.startsWith(w)));
+    .every((w) => words.some((word) => word === w || (word.startsWith(w) && /^\d/.test(word.slice(w.length)))));
+}
+
+/**
+ * The index of the rule that decides a transaction's suggestion, or -1.
+ *
+ * The same order `categorise` uses -- priority, then declaration -- without
+ * the overrides, so it answers "which rule would say this" even for a line a
+ * person has already decided.
+ */
+export function winningRule(transaction: Transaction, rules: readonly CategoryRule[]): number {
+  const haystack = searchText(transaction);
+  let best = -1;
+  rules.forEach((rule, index) => {
+    if (!ruleMatches(transaction, rule, haystack)) return;
+    const current = best === -1 ? undefined : rules[best];
+    if (current === undefined || (rule.priority ?? 0) > (current.priority ?? 0)) best = index;
+  });
+  return best;
 }
 
 /** Everything a keyword is looked for in, folded the way the engine folds it. */

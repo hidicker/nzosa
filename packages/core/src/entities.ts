@@ -74,6 +74,12 @@ export interface Entity {
    */
   gstRegistered?: boolean;
   /**
+   * One to three capital letters added to this entity's account codes --
+   * `420MS` -- so that two entities in one set of books can each have an
+   * account at 420. Absent while an entity's codes are plain.
+   */
+  codeSuffix?: string;
+  /**
    * How often the GST return is filed: every month, two months or six.
    * Undefined is two-monthly, Inland Revenue's default. Six-monthly is only
    * open to sales under $500,000 in any 12 months; with a 31 March balance

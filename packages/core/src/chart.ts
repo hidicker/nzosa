@@ -1,3 +1,4 @@
+import { ACCOUNT_CODE } from "./account-code.js";
 import { findHeaderRow, parseCsvRecords } from "./csv.js";
 import { ColumnReader } from "./importers/shared.js";
 import type { GstSide, GstTreatment } from "./gst.js";
@@ -143,7 +144,8 @@ export function resolveAccount(text: string, accounts: readonly Account[]): Acco
   if (trimmed === "") return null;
 
   const byCode = new Map(accounts.filter((a) => a.code !== "").map((a) => [a.code, a]));
-  for (const digits of trimmed.match(/\d{3,4}/g) ?? []) {
+  // A suffixed code first and whole: `420MS` is not the account at 420.
+  for (const digits of trimmed.match(new RegExp(ACCOUNT_CODE, "g")) ?? []) {
     const hit = byCode.get(digits);
     if (hit) return hit;
   }

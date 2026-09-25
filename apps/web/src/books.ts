@@ -36,6 +36,7 @@ import {
   formatAmount,
   labelForChartAccount,
   splitAccountLabel,
+  directionCaution,
   invoiceAssignments as coreInvoiceAssignments,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
@@ -166,6 +167,23 @@ export function sameEntityBanks(account: string): { accounts: Set<string>; scope
     model: state.ledger.entities ?? emptyEntityModel(),
     allBanks: banks().accounts,
   });
+}
+
+/**
+ * A caution on a rule's suggestion that runs against the money.
+ *
+ * Money in suggested to an expense, or out to income. Right for a refund and
+ * wrong for nearly anything else -- a loan's interest received, suggested as
+ * a rental's interest paid, is how it was found. Said on the row, and the
+ * line is left out of Accept all so that somebody reads it first. Nothing
+ * once the line is confirmed: then a person has answered it.
+ */
+export function ruleCaution(one: Suggestion): string | undefined {
+  if (one.confirmed || one.code === null || one.code === "") return undefined;
+  const code = splitAccountLabel(one.code).code;
+  const account = state.chart.find((a) => a.code.trim() === code);
+  if (account === undefined) return undefined;
+  return directionCaution(one.transaction.amount > 0 ? "money in" : "money out", account.type);
 }
 
 export function transferSuggestions(): Set<string> {

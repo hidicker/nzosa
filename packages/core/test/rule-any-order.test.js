@@ -1,6 +1,6 @@
 import test from "node:test";
 import assert from "node:assert/strict";
-import { categorise, keywordMatches, matchText, ruleForLine } from "../dist/index.js";
+import { categorise, keywordMatches, matchText, ruleForLine, winningRule } from "../dist/index.js";
 
 function txn(amount, fields = {}) {
   return {
@@ -51,7 +51,13 @@ test("in any order, each word has to start a word of the line", () => {
   assert.equal(keywordMatches(line, "GOOGLE ADS", true), true);
   assert.equal(keywordMatches(line, "HARGREAVES RENT", false), false);
   assert.equal(keywordMatches(matchText("PARENT CURRENT"), "RENT", true), false);
-  assert.equal(keywordMatches(matchText("RENTAL"), "RENT", true), true);
+  // A whole word, not the start of a longer one.
+  assert.equal(keywordMatches(matchText("RENTAL"), "RENT", true), false);
+  assert.equal(
+    keywordMatches(matchText("Kereru Holdings Interest LoanAccount"), "LOAN INTEREST", true),
+    false,
+  );
+  assert.equal(keywordMatches(matchText("Loan Interest - processed on"), "LOAN INTEREST", true), true);
 });
 
 test("a rule written from a line matches that line and its siblings, not the water", () => {
@@ -76,4 +82,16 @@ test("a rule's description comes back with its code", () => {
   const set = { rules: [{ keyword: "HARGREAVES", code: "201", description: "Rent 2/14a Kowhai St" }] };
   assert.equal(categorise(rent, set).description, "Rent 2/14a Kowhai St");
   assert.equal(categorise(rent, { rules: [{ keyword: "HARGREAVES", code: "201" }] }).description, undefined);
+});
+
+test("the winning rule is found by priority, then order, ignoring overrides", () => {
+  const rules = [
+    { keyword: "HARGREAVES", code: "A" },
+    { keyword: "HARGREAVES RENT", anyOrder: true, code: "B", priority: 50 },
+    { keyword: "HARGREAVES", code: "C", priority: 50 },
+    { keyword: "NOBODY", code: "D", priority: 99 },
+  ];
+  assert.equal(winningRule(rent, rules), 1);
+  assert.equal(winningRule(water, rules), 2);
+  assert.equal(winningRule(txn(1, { otherParty: "SOMEONE" }), rules), -1);
 });

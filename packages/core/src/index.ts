@@ -89,6 +89,8 @@ export type {
 export { canonicalCodeFor, matchAccountName, bareAccountName } from "./coding-names.js";
 export { knownCodes, labelForChartAccount, chartTreatments, accountLabel, splitAccountLabel } from "./chart-codes.js";
 export { starterChart } from "./starter-chart.js";
+export { isSuffix, standardAccounts, suggestSuffix, suffixedCode } from "./standard-accounts.js";
+export { ACCOUNT_CODE, codeIn, isAccountCode } from "./account-code.js";
 export { identifyExport } from "./identify-export.js";
 export type { ExportKind, Identified } from "./identify-export.js";
 export { invoiceDocument } from "./invoice-document.js";
@@ -265,6 +267,7 @@ export {
   matchText,
   ruleMatches,
   ruleSearchText,
+  winningRule,
 } from "./rules.js";
 export type {
   Sign,

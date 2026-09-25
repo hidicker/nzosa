@@ -3473,3 +3473,16 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   font-size: 0.72rem; }
 .rule-editor .rule-check { flex-direction: row; align-items: center; gap: 0.4rem; }
 .rule-editor .rule-check input { width: auto; }
+
+/* Chart of accounts grouped by entity. */
+.accounts-table tr.account-group th { text-align: left; padding: 0.9rem 0.5rem 0.3rem;
+  border-bottom: 2px solid var(--border); font-size: 0.85rem; background: transparent; }
+.accounts-table tr.account-group th span { color: var(--muted); font-weight: normal; }
+
+/* Standard accounts for an entity. */
+.standard-accounts .suffix-field { max-width: 26rem; }
+.standard-accounts .suffix-input { width: 5rem; text-transform: uppercase; }
+.standard-accounts .standard-replace { display: block; margin: 0.6rem 0; font-size: 0.88rem; }
+.standard-accounts .standard-table { margin: 0.6rem 0; }
+.standard-accounts tr.standard-there td { color: var(--muted); }
+.standard-accounts .suffix-offer { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); font-size: 0.88rem; }

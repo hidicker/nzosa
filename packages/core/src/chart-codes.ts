@@ -1,3 +1,4 @@
+import { ACCOUNT_CODE, codeIn, isAccountCode } from "./account-code.js";
 import type { Account } from "./chart.js";
 import { accountTreatment } from "./chart.js";
 import type { GstSide, GstTreatment } from "./gst.js";
@@ -133,7 +134,15 @@ export function labelForChartAccount(
   // Both together beat either alone: the number says which account, the name
   // confirms it is not a stray alias carrying the same number.
   const byNumber = canonicalCodeFor(code, known);
-  const byName = known.find((candidate) => bareAccountName(candidate) === name);
+  // By name only where the name cannot belong to another account: a label
+  // carrying a different code is that other account. Several entities each
+  // have a "Rent received", and matching on the name alone filed one
+  // rental's 200RS under another's 200TS -- and its GST with it.
+  const byName = known.find((candidate) => {
+    if (bareAccountName(candidate) !== name) return false;
+    const other = splitAccountLabel(candidate).code;
+    return code === "" || other === "" || other === code;
+  });
   const best = byNumber ?? byName ?? null;
   if (best !== null) return best;
 
@@ -189,7 +198,7 @@ export function chartTreatments(
   }
   for (const label of known) {
     if (map.has(label)) continue;
-    const digits = /\b(\d{3,4})\b/.exec(label)?.[1];
+    const digits = codeIn(label);
     const implied = digits === undefined ? undefined : byCode.get(digits);
     if (implied !== undefined) map.set(label, implied);
   }
@@ -221,17 +230,17 @@ export function chartTreatments(
 export function splitAccountLabel(label: string): { code: string; name: string } {
   const text = label.replace(/^NB\s+/i, "").trim();
 
-  const trailing = /^(.*?)\s*[-–]?\s*(\d{3,4})$/.exec(text);
+  const trailing = new RegExp(String.raw`^(.*?)\s*[-–]?\s*(${ACCOUNT_CODE})$`).exec(text);
   if (trailing && (trailing[1] ?? "").trim() !== "") {
     return { code: trailing[2] ?? "", name: (trailing[1] ?? "").trim() };
   }
 
-  const leading = /^(\d{3,4})\s*[-–]?\s*(.*)$/.exec(text);
+  const leading = new RegExp(String.raw`^(${ACCOUNT_CODE})\s*[-–]?\s*(.*)$`).exec(text);
   if (leading && (leading[2] ?? "").trim() !== "") {
     return { code: leading[1] ?? "", name: (leading[2] ?? "").trim() };
   }
 
   // A bare number is a code with no name; anything else is a name with no code.
-  if (/^\d{3,4}$/.test(text)) return { code: text, name: text };
+  if (isAccountCode(text)) return { code: text, name: text };
   return { code: "", name: text };
 }

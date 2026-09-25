@@ -1,3 +1,4 @@
+import { ACCOUNT_CODE, codeIn } from "./account-code.js";
 /**
  * Choosing between several names for the same account.
  *
@@ -26,7 +27,7 @@ const HOUSE_PREFIX = /^NB\s+/i;
 export function bareAccountName(candidate: string): string {
   return candidate
     .replace(HOUSE_PREFIX, "")
-    .replace(/\s*-\s*\d{3,4}\s*$/, "")
+    .replace(new RegExp(String.raw`\s*-\s*${ACCOUNT_CODE}\s*$`), "")
     .trim()
     .toLowerCase();
 }
@@ -74,7 +75,7 @@ export function matchAccountName(
   label: string,
   known: readonly string[],
 ): string | null {
-  const digits = /\b(\d{3,4})\b/.exec(label)?.[1];
+  const digits = codeIn(label);
   if (digits !== undefined) {
     const byNumber = canonicalCodeFor(digits, known);
     if (byNumber !== null) return byNumber;
@@ -83,7 +84,9 @@ export function matchAccountName(
   // carry the prefix just as a candidate can, and stripping it from only one
   // of them stopped an account whose name really does begin with those
   // letters from matching itself.
-  const wanted = bareAccountName(label.replace(/^\d{3,4}\s*[-\u2013]?\s*/, ""));
+  const wanted = bareAccountName(
+    label.replace(new RegExp(String.raw`^${ACCOUNT_CODE}\s*[-\u2013]?\s*`), ""),
+  );
   const byName = known.find((candidate) => bareAccountName(candidate) === wanted);
   if (byName !== undefined) return byName;
 

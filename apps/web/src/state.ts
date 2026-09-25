@@ -108,12 +108,31 @@ export const state = {
    * doing something they did not press a button for, so it is said once on
    * the page it happened on and then cleared.
    */
-  lastRule: null as { keyword: string; code: string; alsoCoded: number; fixed?: boolean } | null,
+  lastRule: null as {
+    keyword: string;
+    code: string;
+    alsoCoded: number;
+    fixed?: boolean;
+    account?: string;
+  } | null,
   /**
    * A rule with the keyword a coding would have written, which did not pick
    * that line up. Said on the page with the offer to fix it, until the next
    * coding or until it is acted on.
    */
+  /**
+   * A rule offered rather than written: the line was coded on a bank account
+   * several entities share, where one purchase says little about the next.
+   */
+  ruleOffer: null as {
+    rule: import("@nzosa/core").CategoryRule;
+    reach: number;
+  } | null,
+  /**
+   * A line coded away from what its rule suggests, with the offer to change
+   * the rule so the next one is suggested the same way.
+   */
+  ruleStale: null as { index: number; keyword: string; from: string; to: string } | null,
   ruleNotice: null as {
     index: number;
     keyword: string;

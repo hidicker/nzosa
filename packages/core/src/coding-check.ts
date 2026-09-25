@@ -1,3 +1,4 @@
+import { ACCOUNT_CODE, codeIn, isAccountCode } from "./account-code.js";
 import type { Cents } from "./money.js";
 import { bareAccountName } from "./coding-names.js";
 import { parseAmount } from "./money.js";
@@ -92,8 +93,8 @@ export interface ReferencePart {
 /** Normalise an account to something two systems can be compared on. */
 export function accountKey(text: string, chart: readonly Account[] = []): string | null {
   if (text.trim() === "") return null;
-  const digits = /\b(\d{3,4})\b/.exec(text);
-  if (digits?.[1]) return digits[1];
+  const digits = codeIn(text);
+  if (digits !== undefined) return digits;
 
   // The workbook writes `Sales` where Xero writes `200 Sales`, so a name has to
   // be resolvable to the same thing as a number or every one of those pairs is
@@ -115,7 +116,7 @@ export function accountKey(text: string, chart: readonly Account[] = []): string
   // wrong, so the label is resolved through the chart in either arrangement.
   for (const account of chart) {
     const code = account.code.trim();
-    if (code === "" || /^\d{3,4}$/.test(code)) continue;
+    if (code === "" || isAccountCode(code)) continue;
     const forms = [
       `${account.name} - ${code}`,
       `${code} ${account.name}`,
@@ -685,7 +686,7 @@ export function parseAccountTransactionsSheet(
 
 /** `820 - GST` -> `GST`, so a name test works on either form. */
 function stripCode(text: string): string {
-  return text.replace(/^\d{3,4}\s*-\s*/, "").trim();
+  return text.replace(new RegExp(String.raw`^${ACCOUNT_CODE}\s*-\s*`), "").trim();
 }
 
 export interface CodedTransaction {

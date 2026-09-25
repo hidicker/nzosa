@@ -12,6 +12,7 @@ import {
   saveEntities,
 } from "../books.js";
 import { GST_OPTIONS } from "../reconcile.js";
+import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
@@ -128,6 +129,8 @@ export function addEntityForm(): HTMLElement {
       return;
     }
     name.value = "";
+    // Straight to its accounts: an entity with none is the next thing to fix.
+    openStandardAccounts(id);
     void saveEntities({
       ...model,
       entities: [
@@ -569,7 +572,16 @@ export function renderEntities(): void {
       });
     });
 
-    row.append(name, ownersWrap, kind, gstWrap, exemptWrap, rename, remove);
+    const standard = document.createElement("button");
+    standard.type = "button";
+    standard.textContent = "Standard accounts…";
+    standard.title = "Add the accounts this kind of entity usually needs.";
+    standard.addEventListener("click", () => {
+      openStandardAccounts(entity.id);
+      redraw("entities");
+    });
+
+    row.append(name, ownersWrap, kind, gstWrap, exemptWrap, standard, rename, remove);
 
     // What goes at the top of an invoice you send somebody. Nothing else in
     // these books knows any of it, and without it an invoice cannot be sent:
@@ -633,6 +645,11 @@ export function renderEntities(): void {
     list.append(row);
   }
   body.append(list);
+  const standardAccounts = standardPanel(model);
+  if (standardAccounts) {
+    body.append(standardAccounts);
+    requestAnimationFrame(() => standardAccounts.scrollIntoView({ block: "nearest" }));
+  }
   // Built here rather than moved here. It used to live in the markup and be
   // moved into this container, which worked exactly once: the next render
   // begins by emptying the container, so the element was destroyed and every
@@ -722,7 +739,21 @@ export function renderEntities(): void {
     "<th>Entity, or which account</th><th></th></tr>";
   const chartBody = document.createElement("tbody");
 
-  for (const { account, label } of accountRows) {
+  for (const item of groupedAccounts(model, accountRows)) {
+    if ("heading" in item) {
+      const group = document.createElement("tr");
+      group.className = "account-group";
+      const th = document.createElement("th");
+      th.colSpan = 6;
+      th.textContent = item.heading;
+      const count = document.createElement("span");
+      count.textContent = ` ${item.count}`;
+      th.append(count);
+      group.append(th);
+      chartBody.append(group);
+      continue;
+    }
+    const { account, label } = item;
     const tr = document.createElement("tr");
 
     // Code and name are editable in place. A dialog would be tidier to build
@@ -905,6 +936,49 @@ export function renderEntities(): void {
   chartTable.append(chartHead, chartBody);
   body.append(chartTable);
   body.append(addAccountForm(model, accountRows));
+}
+
+/**
+ * The chart in groups: accounts not yet given an entity, then each entity's
+ * own, then the bank accounts, by code within each.
+ *
+ * With several entities in one ledger a chart sorted only by code interleaves
+ * a rental's rates with a person's donations, and reading one set of books
+ * means reading all of them. Grouped, each entity reads as its own small
+ * chart. Unassigned comes first because those are the ones still to do; bank
+ * accounts come last because they may serve several entities and are set in
+ * the list above. With an entity chosen at the top, only its accounts show,
+ * with any still unassigned. With no entities, the plain list as before.
+ */
+function groupedAccounts<Row extends { account: Account }>(
+  model: EntityModel,
+  rows: readonly Row[],
+): (Row | { heading: string; count: number })[] {
+  if (model.entities.length === 0) return [...rows];
+  const isBank = (row: Row): boolean => row.account.type.trim().toLowerCase() === "bank";
+  const known = new Set(model.entities.map((e) => e.id));
+  const entityOf = (row: Row): string => {
+    const id = model.accounts[accountEntityKey(row.account)] ?? "";
+    return known.has(id) ? id : "";
+  };
+  const only = state.entityFilter;
+  const banks = rows.filter((row) => {
+    if (!isBank(row)) return false;
+    if (only === "") return true;
+    const id = ledgerAccountFor(row.account.name, row.account);
+    return id !== null && (model.banks[id] ?? []).includes(only);
+  });
+
+  const groups: { heading: string; rows: Row[] }[] = [
+    { heading: "Not yet given an entity", rows: rows.filter((r) => !isBank(r) && entityOf(r) === "") },
+    ...model.entities
+      .filter((e) => only === "" || e.id === only)
+      .map((e) => ({ heading: e.name, rows: rows.filter((r) => !isBank(r) && entityOf(r) === e.id) })),
+    { heading: "Bank accounts", rows: banks },
+  ];
+  return groups
+    .filter((g) => g.rows.length > 0)
+    .flatMap((g) => [{ heading: g.heading, count: g.rows.length }, ...g.rows]);
 }
 
 /**

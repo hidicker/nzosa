@@ -25,6 +25,7 @@ import {
   sameEntityBanks,
   shownSuggestions,
   tidyChart,
+  ruleCaution,
 } from "../books.js";
 import {
   compareCodings,
@@ -163,8 +164,9 @@ export async function acceptAllShown(): Promise<void> {
    */
   const modelSaid = (one: Suggestion): AiSuggestion | undefined =>
     one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
+  // A rule's suggestion running against the money is held back the same way.
   const codeFor = (one: Suggestion): string | null => {
-    if (one.code !== null) return one.code;
+    if (one.code !== null) return ruleCaution(one) === undefined ? one.code : null;
     const said = modelSaid(one);
     return said === undefined || said.caution !== undefined || said.code === ""
       ? null
@@ -176,6 +178,9 @@ export async function acceptAllShown(): Promise<void> {
   );
   const cautioned = shownSuggestions().filter(
     (one) => !one.confirmed && modelSaid(one)?.caution !== undefined,
+  ).length;
+  const ruleCautioned = shownSuggestions().filter(
+    (one) => ruleCaution(one) !== undefined && !settledElsewhere(one),
   ).length;
 
   /**
@@ -343,6 +348,11 @@ export async function acceptAllShown(): Promise<void> {
           ? `${cautioned} AI suggestion${cautioned === 1 ? " is" : "s are"} left alone: the ` +
             `money goes the opposite way to the account ${cautioned === 1 ? "it names" : "they name"}, ` +
             "which is the one thing worth reading before agreeing to it.\n\n"
+          : "") +
+        (ruleCautioned > 0
+          ? `${ruleCautioned} rule suggestion${ruleCautioned === 1 ? " is" : "s are"} left alone: ` +
+            "money in to an expense or out to income. Right for a refund, wrong for anything " +
+            "else, so each is for a person to confirm.\n\n"
           : "") +
         "This confirms them exactly as shown. The change log can undo the whole batch.",
     )

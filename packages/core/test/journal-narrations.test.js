@@ -48,10 +48,10 @@ test("a journal nothing was held for is taken as it stands", () => {
 });
 
 test("who posted it, and when, are carried on the same rule", () => {
-  const held = [journal("3463", "YE26", { postedBy: "Hamish", postedDate: "2026-04-02" })];
+  const held = [journal("3463", "YE26", { postedBy: "Ana", postedDate: "2026-04-02" })];
   const incoming = [journal("3463", "")];
   const { journals } = mergeJournalNarrations(incoming, held);
-  assert.equal(journals[0].postedBy, "Hamish");
+  assert.equal(journals[0].postedBy, "Ana");
   assert.equal(journals[0].postedDate, "2026-04-02");
 });
 

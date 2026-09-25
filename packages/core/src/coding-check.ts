@@ -37,8 +37,8 @@ export interface ReferenceLine {
   /**
    * The bank account the posting sat on.
    *
-   * Without it a comparison will happily marry a Rimu Lane transfer to an Arrow
-   * Rock loan of the same amount a few days apart, and report the coding as
+   * Without it a comparison will happily marry a Rimu Lane transfer to a Kea
+   * Coffee loan of the same amount a few days apart, and report the coding as
    * wrong. Xero holds one entity; the ledger holds nine accounts.
    */
   account?: string;

@@ -242,7 +242,7 @@ export function entitiesOfBank(model: EntityModel, account: string): Entity[] {
  *
  * Semicolons, commas and the word "and" all separate, because people write all
  * three and only one of them used to work. A comma did not split, so
- * `Hamish 50%, Jaehee 50%` became a single owner named `Hamish 50%, Jaehee`
+ * `Ana 50%, Tom 50%` became a single owner named `Ana 50%, Tom`
  * holding 50% -- no error, no warning, and a wrong share on somebody's return.
  *
  * A comma inside a name is the thing this cannot have both ways. `Whitcombe,

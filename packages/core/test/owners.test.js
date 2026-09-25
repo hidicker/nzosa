@@ -4,16 +4,16 @@ import { parseOwners, formatOwners, ownersTotal } from "../dist/index.js";
 
 test("semicolons, commas and 'and' all separate owners", () => {
   // A comma used not to split at all, so this became one owner named
-  // "Hamish 50%, Jaehee" holding 50% -- silently, and onto a return.
+  // "Ana 50%, Tom" holding 50% -- silently, and onto a return.
   for (const written of [
-    "Hamish 50%; Jaehee 50%",
-    "Hamish 50%, Jaehee 50%",
-    "Hamish 50% and Jaehee 50%",
-    "Hamish 50%,Jaehee 50%",
+    "Ana 50%; Tom 50%",
+    "Ana 50%, Tom 50%",
+    "Ana 50% and Tom 50%",
+    "Ana 50%,Tom 50%",
   ]) {
     assert.deepEqual(
       parseOwners(written),
-      [{ name: "Hamish", percent: 50 }, { name: "Jaehee", percent: 50 }],
+      [{ name: "Ana", percent: 50 }, { name: "Tom", percent: 50 }],
       written,
     );
   }
@@ -49,17 +49,17 @@ test("what it wrote, it reads back", () => {
 });
 
 test("shares are added up and said out loud", () => {
-  const ok = ownersTotal(parseOwners("Hamish 50%; Jaehee 50%"));
+  const ok = ownersTotal(parseOwners("Ana 50%; Tom 50%"));
   assert.equal(ok.ok, true);
-  assert.equal(ok.said, "Hamish 50%, Jaehee 50%");
+  assert.equal(ok.said, "Ana 50%, Tom 50%");
 
   // Somebody's income unreported, which is the whole reason for tracking it.
-  const short = ownersTotal(parseOwners("Hamish 50%; Jaehee 40%"));
+  const short = ownersTotal(parseOwners("Ana 50%; Tom 40%"));
   assert.equal(short.ok, false);
   assert.match(short.said, /totals 90%, not 100%/);
 
   // And the case the old comma bug produced: one owner at half.
-  const half = ownersTotal(parseOwners("Hamish 50%"));
+  const half = ownersTotal(parseOwners("Ana 50%"));
   assert.equal(half.ok, false);
   assert.match(half.said, /totals 50%, not 100%/);
 });

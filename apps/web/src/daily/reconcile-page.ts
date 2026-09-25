@@ -61,6 +61,16 @@ import type {
   Transaction,
 } from "@nzosa/core";
 
+
+/** An unconfirmed edit to one line: kept across redraws until the line is confirmed. */
+interface Draft {
+  code?: string;
+  gst?: string;
+  contact?: string;
+  description?: string;
+}
+const drafts = new Map<string, Draft>();
+
 /**
  * Payees that identify nobody.
  *
@@ -312,7 +322,18 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   // thing -- something to agree with or change -- and refusing to put it there
   // would mean retyping an answer that is already on screen.
   const fromModel = one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
-  const codeSelect = combobox(codes, one.code ?? fromModel?.code ?? null, "Search accounts…");
+  // What was typed on this line and not yet confirmed, so confirming another
+  // line -- which redraws the list -- does not throw it away.
+  const draft = drafts.get(one.transaction.id) ?? {};
+  const keep = (patch: Draft): void => {
+    drafts.set(one.transaction.id, { ...(drafts.get(one.transaction.id) ?? {}), ...patch });
+  };
+  const codeSelect = combobox(
+    codes,
+    draft.code ?? one.code ?? fromModel?.code ?? null,
+    "Search accounts…",
+    () => keep({ code: codeSelect.value }),
+  );
 
   /**
    * What is standing in for the account, said where the account would be.
@@ -336,9 +357,10 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     option.value = rate.value;
     option.textContent = rate.label;
     option.title = rate.hint;
-    option.selected = rate.value === currentRate;
+    option.selected = rate.value === (draft.gst ?? currentRate);
     gstSelect.append(option);
   }
+  gstSelect.addEventListener("change", () => keep({ gst: gstSelect.value }));
 
   // Who it was to or from, in readable words rather than the bank's shouting.
   // Editable per line, because a rule cannot know that one payment to a builder
@@ -347,7 +369,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   to.type = "text";
   to.className = "code-contact";
   to.placeholder = "To";
-  to.value = one.contact;
+  to.value = draft.contact ?? one.contact;
+  to.addEventListener("input", () => keep({ contact: to.value }));
   to.title =
     "Who this was to or from. Set it for every matching line on the Rules page.";
 
@@ -355,7 +378,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   description.type = "text";
   description.className = "code-description";
   description.placeholder = "Description";
-  description.value = one.note ?? "";
+  description.value = draft.description ?? one.note ?? "";
+  description.addEventListener("input", () => keep({ description: description.value }));
 
   const ok = document.createElement("button");
   ok.type = "button";
@@ -1783,6 +1807,7 @@ export async function confirmLine(
   description: string,
   contact: string,
 ): Promise<void> {
+  drafts.delete(one.transaction.id);
   // An account is required, by whichever route. The button asks first and
   // says why; this is the rule itself, so no other caller can get round it.
   // A line confirmed with nothing on it posts nowhere and leaves the queue,

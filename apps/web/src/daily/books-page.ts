@@ -3,6 +3,7 @@ import { $ } from "../state.js";
 import {
   archiveOther,
   backendKind,
+  copyLedger,
   currentLedger,
   ledgerName,
   ledgers,
@@ -156,6 +157,28 @@ export async function chooseLedger(value: string): Promise<void> {
   location.reload();
 }
 
+/** Ask for a name, copy the books under it, and show the list with the copy in it. */
+async function copyBooks(id: string, name: string): Promise<void> {
+  const wanted = prompt(
+    `Name for the copy of ${name}.\n\nIt becomes a set of books of its own: changing ` +
+      "one never changes the other.",
+    `${name} copy`,
+  );
+  if (wanted === null || wanted.trim() === "") return;
+  const label = wanted.trim();
+  const to = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (to === "") {
+    alert("That name has nothing in it a folder can be called.");
+    return;
+  }
+  const result = await copyLedger(id, to, label);
+  if (!result.ok) {
+    alert(result.why);
+    return;
+  }
+  await renderBooks();
+}
+
 /**
  * Every set of books in the folder, and the way to empty one.
  *
@@ -236,6 +259,13 @@ export async function renderBooks(): Promise<void> {
       openIt.addEventListener("click", () => void chooseLedger(book.id));
       actions.append(openIt);
     }
+
+    // A copy to try things on, so the real books never have to be the test.
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.textContent = "Make a copy…";
+    copy.addEventListener("click", () => void copyBooks(book.id, book.name));
+    actions.append(copy);
 
     const clear = document.createElement("button");
     clear.type = "button";

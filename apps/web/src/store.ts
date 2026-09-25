@@ -868,6 +868,27 @@ export async function switchLedger(id: string, name?: string): Promise<boolean> 
   }
 }
 
+/** Copy a set of books into a new folder, leaving the original as it was. */
+export async function copyLedger(
+  from: string,
+  to: string,
+  name: string,
+): Promise<{ ok: boolean; why: string }> {
+  if (backend !== "folder") return { ok: false, why: "These books have no folder to copy." };
+  try {
+    const response = await api("ledger/copy", {
+      method: "POST",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ from, ledger: to, name }),
+    });
+    if (response.ok) return { ok: true, why: "" };
+    const said = (await response.json().catch(() => ({}))) as { error?: string };
+    return { ok: false, why: said.error ?? "Could not copy those books." };
+  } catch {
+    return { ok: false, why: "Could not reach the app's server to copy the books." };
+  }
+}
+
 /** Which folder this browser is a working copy of, for the app to show. */
 export function ledgerName(): string {
   return folderName;

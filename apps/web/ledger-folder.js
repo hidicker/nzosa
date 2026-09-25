@@ -194,6 +194,33 @@ export function archiveLedger(folder) {
   return { archived: join("archive", stamp), moved };
 }
 
+/**
+ * Copy one set of books into a new folder beside it.
+ *
+ * For trying something without risk -- a sandbox of this year's books, or a
+ * set to test a new chart on. Only the books themselves are copied: not the
+ * lock (the copy is open nowhere), not the dated archives (they belong to the
+ * books they were taken from), and a fresh name so the two are never
+ * confused. Refuses a folder that already holds books rather than mixing two
+ * sets together.
+ */
+export function copyLedger(from, to, name) {
+  if (!existsSync(from)) throw new Error("Those books do not exist.");
+  if (existsSync(to) && readdirSync(to).some((file) => file.endsWith(".json"))) {
+    throw new Error("A set of books with that name already exists.");
+  }
+  mkdirSync(to, { recursive: true });
+  let copied = 0;
+  for (const file of readdirSync(from)) {
+    if (file === "archive" || file.startsWith(".") || file === META) continue;
+    if (!file.endsWith(".json")) continue;
+    copyFileSync(join(from, file), join(to, file));
+    copied += 1;
+  }
+  writeMeta(to, { name, created: new Date().toISOString(), copiedFrom: readMeta(from).name || "" });
+  return { copied };
+}
+
 /** Ledger folders side by side, so switching books is a list rather than a path. */
 export function listLedgers(root) {
   if (!existsSync(root)) return [];

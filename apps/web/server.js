@@ -35,6 +35,7 @@ import { fileURLToPath } from "node:url";
 import {
   PARTS,
   archiveLedger,
+  copyLedger,
   heldBy,
   listArchives,
   listLedgers,
@@ -864,6 +865,24 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         }
         const result = restoreArchive(folderOf(target), String(body.stamp ?? ""));
         send(response, result.ok ? 200 : 400, result);
+        return;
+      }
+
+      if (path === "/api/ledger/copy" && request.method === "POST") {
+        const body = JSON.parse((await readBody(request)) || "{}");
+        const from = String(body.from ?? "").trim() || current;
+        const to = String(body.ledger ?? "").trim();
+        const name = typeof body.name === "string" && body.name.trim() !== "" ? body.name.trim() : to;
+        if (!isLedgerName(from) || !isLedgerName(to)) {
+          send(response, 400, { error: "a ledger name may hold letters, digits, dot, dash and underscore" });
+          return;
+        }
+        try {
+          const result = copyLedger(folderOf(from), folderOf(to), name);
+          send(response, 200, { ...result, ledger: to, name });
+        } catch (error) {
+          send(response, 409, { error: error.message });
+        }
         return;
       }
 

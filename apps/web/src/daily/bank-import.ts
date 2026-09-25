@@ -1111,12 +1111,34 @@ export function renderTable(): void {
 
   for (const button of body.querySelectorAll<HTMLButtonElement>("button[data-action]")) {
     button.addEventListener("click", () => {
-      const entry = shown[Number(button.dataset.index)];
+      const index = Number(button.dataset.index);
+      const entry = shown[index];
       if (!entry) return;
-      if (button.dataset.action === "keep") void allow(entry.transaction);
-      else void remove(entry.transaction);
+      // The row answered leaves the list and the page redraws. Hold the next
+      // row where this one was, so the place being worked through stays put.
+      const row = button.closest("tr");
+      const top = row?.getBoundingClientRect().top ?? null;
+      const done = button.dataset.action === "keep" ? allow(entry.transaction) : remove(entry.transaction);
+      void Promise.resolve(done).then(() => keepPlace(body, index, top));
     });
   }
+}
+
+/** Scroll so the row now at `index` sits where the answered row was. */
+function keepPlace(body: HTMLElement, index: number, top: number | null): void {
+  if (top === null) return;
+  requestAnimationFrame(() => {
+    const rows = body.querySelectorAll("tr");
+    const next = rows[Math.min(index, rows.length - 1)];
+    if (next === undefined) return;
+    const shift = next.getBoundingClientRect().top - top;
+    let box: HTMLElement | null = body.parentElement;
+    while (box !== null && !(box.scrollHeight > box.clientHeight && /auto|scroll/.test(getComputedStyle(box).overflowY))) {
+      box = box.parentElement;
+    }
+    if (box !== null) box.scrollTop += shift;
+    else window.scrollBy(0, shift);
+  });
 }
 
 function matches(transaction: Transaction, needle: string): boolean {

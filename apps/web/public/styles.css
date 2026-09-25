@@ -3447,3 +3447,21 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   color: var(--accent, #1d4f91);
   font-weight: 600;
 }
+
+/* Add an account, below the chart: each field labelled, with its guidance. */
+.account-add-form {
+  margin-top: 1.4rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 64rem;
+}
+.account-add-form h3 { margin: 0 0 0.7rem; font-size: 1rem; }
+.account-add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.8rem 1rem;
+}
+.account-add-field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
+.account-add-field > span { font-weight: 600; }
+.account-add-field .field-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.35; }

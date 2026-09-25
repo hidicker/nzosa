@@ -708,64 +708,11 @@ export function renderEntities(): void {
     );
   }
 
-  const addRow = document.createElement("div");
-  addRow.className = "account-add";
-  const newCode = document.createElement("input");
-  newCode.type = "text";
-  newCode.placeholder = "Code, e.g. 424";
-  newCode.required = true;
-  const newName = document.createElement("input");
-  newName.type = "text";
-  newName.placeholder = "Name, e.g. Entertainment - Non deductible";
-  // Arrived from an account picker's "Add new account": the name typed there,
-  // and the cursor in the code, which is what is still wanted.
-  if (pendingNewAccount !== null) {
-    newName.value = pendingNewAccount;
-    pendingNewAccount = null;
-    requestAnimationFrame(() => {
-      addRow.scrollIntoView({ block: "center" });
-      newCode.focus();
-    });
-  }
-  const addAccount = document.createElement("button");
-  addAccount.type = "button";
-  addAccount.textContent = "Add account";
-  addAccount.addEventListener("click", () => {
-    const code = newCode.value.trim();
-    const name = newName.value.trim();
-    if (name === "") return;
-    // A code, the same as when one is edited. It is what survives a rename:
-    // the entity assignment, the reports and the chart's own tax code all find
-    // an account again by its number, and an account with only a name can be
-    // found only by the thing most likely to change.
-    const wrong = renameProblem(state.chart, { code: "", name: "" }, { code, name });
-    if (wrong !== null) {
-      alert(wrong);
-      return;
-    }
-    // Named the way this ledger already names accounts, so a code chosen here
-    // is the same string the coding picker offers.
-    //
-    // Which is not one fixed way. One chart puts "NB" in front of every
-    // account name -- a house convention of that chart's, nothing to do with
-    // accounting -- and this wrote it into every account anybody added, so a
-    // person starting from their own bank data got a stranger's prefix on
-    // their books with no way to know where it came from. Followed where the
-    // ledger already uses it, and not invented where it does not.
-    const housePrefixed = accountRows.some((r) => /^NB\s+/i.test(r.label));
-    const label = accountLabel(code, name, housePrefixed);
-    if (accountRows.some((r) => r.label === label)) {
-      alert(`"${label}" already exists.`);
-      return;
-    }
-    newCode.value = "";
-    newName.value = "";
-    setTreatment(label, "15");
-  });
-  addRow.append(newCode, newName, addAccount);
-  body.append(addRow);
 
-  if (accountRows.length === 0) return;
+  if (accountRows.length === 0) {
+    body.append(addAccountForm(model, accountRows));
+    return;
+  }
 
   const chartTable = document.createElement("table");
   chartTable.className = "entity-table accounts-table";
@@ -957,6 +904,213 @@ export function renderEntities(): void {
   }
   chartTable.append(chartHead, chartBody);
   body.append(chartTable);
+  body.append(addAccountForm(model, accountRows));
+}
+
+/**
+ * What each account type means, said where the choice is made. Three of them
+ * are the ones people mix up: all three are costs on the profit and loss, but
+ * they land in different places on it.
+ */
+const TYPE_GUIDE: Readonly<Record<string, { help: string; codes: string; gst: string }>> = {
+  Revenue: { help: "Income from what the business sells.", codes: "200–299, e.g. 200 Sales", gst: "15" },
+  "Other Income": { help: "Income outside normal trading: interest received, a grant, an insurance payout.", codes: "200–299, e.g. 260 Other income", gst: "15" },
+  "Direct Costs": { help: "Costs of making or buying what you sell — stock, materials, subcontractors. Taken off sales to give gross profit.", codes: "300–399, e.g. 310 Cost of goods sold", gst: "15" },
+  Overhead: { help: "Running costs of the business whatever the sales: rent, power, insurance, phone, accounting fees. Xero's usual type for everyday expenses.", codes: "400–499, e.g. 429 General expenses", gst: "15" },
+  Expense: { help: "The same place as Overhead on the profit and loss; either suits an everyday cost. Use the one your chart already uses.", codes: "400–499, e.g. 453 Office expenses", gst: "15" },
+  Depreciation: { help: "The year's depreciation on fixed assets. Posted from the asset register rather than coded.", codes: "400–499, e.g. 416 Depreciation", gst: "0" },
+  Bank: { help: "A bank, card or loan account. Link it to its account number in the table once added.", codes: "090–099, e.g. 090 Business cheque", gst: "0" },
+  "Current Asset": { help: "Owned and used up or collected within a year: prepayments, money owed to you, bonds held.", codes: "600–699, e.g. 620 Prepayments", gst: "0" },
+  "Fixed Asset": { help: "Kept and used for more than a year: vehicles, equipment, computers. Depreciated through the asset register.", codes: "700–799, e.g. 710 Plant and equipment", gst: "15" },
+  "Current Liability": { help: "Owed and due within a year: GST, PAYE, credit cards, money owed to suppliers.", codes: "800–899, e.g. 820 GST", gst: "0" },
+  "Non-current Liability": { help: "Owed over more than a year: a mortgage or term loan.", codes: "900–959, e.g. 900 Loan", gst: "0" },
+  Equity: { help: "The owners' stake: capital put in, drawings, retained earnings.", codes: "960–999, e.g. 980 Drawings", gst: "0" },
+};
+
+/**
+ * Add an account, asking everything an account needs at once: what it is,
+ * its number, its name, its GST and whose it is.
+ */
+function addAccountForm(model: EntityModel, accountRows: readonly { label: string }[]): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "account-add-form";
+  const heading = document.createElement("h3");
+  heading.textContent = "Add an account";
+  box.append(heading);
+
+  const grid = document.createElement("div");
+  grid.className = "account-add-grid";
+  const field = (label: string, control: HTMLElement, hint?: HTMLElement): HTMLElement => {
+    const wrap = document.createElement("label");
+    wrap.className = "account-add-field";
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    wrap.append(caption, control);
+    if (hint) wrap.append(hint);
+    return wrap;
+  };
+  const hintEl = (): HTMLElement => {
+    const h = document.createElement("small");
+    h.className = "field-hint";
+    return h;
+  };
+
+  const type = document.createElement("select");
+  const blank = document.createElement("option");
+  blank.value = "";
+  blank.textContent = "Choose…";
+  type.append(blank);
+  for (const t of Object.keys(TYPE_GUIDE)) {
+    const option = document.createElement("option");
+    option.value = t;
+    option.textContent = t;
+    type.append(option);
+  }
+  const typeHint = hintEl();
+
+  const code = document.createElement("input");
+  code.type = "text";
+  code.placeholder = "e.g. 429";
+  const codeHint = hintEl();
+  codeHint.textContent = "Usually 2xx income, 3xx direct costs, 4xx expenses, 6xx–7xx assets, 8xx–9xx liabilities and equity.";
+
+  const name = document.createElement("input");
+  name.type = "text";
+  name.placeholder = "e.g. Entertainment - Non deductible";
+
+  const gst = document.createElement("select");
+  for (const [value, caption] of [
+    ["15", "15% — GST charged or claimed"],
+    ["0", "No GST — exempt, zero-rated or not a supply"],
+    ["100", "All GST — e.g. GST on imports"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = caption;
+    gst.append(option);
+  }
+  const gstField = field("GST", gst);
+
+  const entity = document.createElement("select");
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = model.entities.length === 0 ? "— no entities —" : "— unassigned —";
+  entity.append(none);
+  for (const e of model.entities) {
+    const option = document.createElement("option");
+    option.value = e.id;
+    option.textContent = e.name;
+    option.selected = e.id === state.entityFilter;
+    entity.append(option);
+  }
+  const entityField = field("Entity", entity);
+
+  // Arrived from an account picker's "Add new account": the name typed there.
+  if (pendingNewAccount !== null) {
+    name.value = pendingNewAccount;
+    pendingNewAccount = null;
+    requestAnimationFrame(() => {
+      box.scrollIntoView({ block: "center" });
+      type.focus();
+    });
+  }
+
+  const onType = (): void => {
+    const guide = TYPE_GUIDE[type.value];
+    typeHint.textContent = guide?.help ?? "Choose what kind of account this is.";
+    if (guide) {
+      code.placeholder = `e.g. ${guide.codes.split("e.g. ")[1]?.split(" ")[0] ?? ""}`;
+      codeHint.textContent = `Usually ${guide.codes}.`;
+      gst.value = guide.gst;
+    }
+    // A bank account has no GST, and its entities are set in the list above.
+    const bank = type.value === "Bank";
+    gstField.hidden = bank;
+    entityField.hidden = bank || model.entities.length === 0;
+  };
+  // An entity not registered for GST charges and claims none, whatever the type.
+  const onEntity = (): void => {
+    const chosen = model.entities.find((e) => e.id === entity.value);
+    if (chosen?.gstRegistered === false) gst.value = "0";
+    else gst.value = TYPE_GUIDE[type.value]?.gst ?? gst.value;
+  };
+  type.addEventListener("change", () => {
+    onType();
+    onEntity();
+  });
+  entity.addEventListener("change", onEntity);
+  onType();
+  onEntity();
+
+  grid.append(
+    field("Type", type, typeHint),
+    field("Code", code, codeHint),
+    field("Name", name),
+    gstField,
+    entityField,
+  );
+  box.append(grid);
+
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "primary";
+  add.textContent = "Add account";
+  add.addEventListener("click", () => {
+    if (type.value === "") {
+      said.textContent = "Choose the type first.";
+      return;
+    }
+    const wrong = renameProblem(state.chart, { code: "", name: "" }, { code: code.value, name: name.value });
+    if (wrong !== null) {
+      said.textContent = wrong;
+      return;
+    }
+    const housePrefixed = accountRows.some((r) => /^NB\s+/i.test(r.label));
+    const label = accountLabel(code.value, name.value, housePrefixed);
+    if (accountRows.some((r) => r.label === label)) {
+      said.textContent = `"${label}" already exists.`;
+      return;
+    }
+    add.disabled = true;
+    void addChartAccount(
+      { code: code.value.trim(), name: name.value.trim(), type: type.value, label },
+      type.value === "Bank" ? "" : gst.value,
+      type.value === "Bank" ? "" : entity.value,
+    );
+  });
+  box.append(actionsRow(add), said);
+  return box;
+}
+
+function actionsRow(...buttons: HTMLElement[]): HTMLElement {
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(...buttons);
+  return row;
+}
+
+/** Put a new account in the chart with its GST treatment and entity, as one change. */
+async function addChartAccount(
+  made: { code: string; name: string; type: string; label: string },
+  rate: string,
+  entityId: string,
+): Promise<void> {
+  const account: Account = { code: made.code, name: made.name, type: made.type, taxCode: "", description: "" };
+  const chart = [...state.chart, account];
+  state.chart = chart;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const accounts = { ...model.accounts };
+  if (entityId !== "") accounts[accountEntityKey(account)] = entityId;
+  state.ledger = { ...state.ledger, chart, entities: { ...model, accounts } };
+  state.persistent = await savePart(state.ledger, "chart", "entities");
+  await record("chart", `${made.label} added (${made.type})`, null, account, `${account.code}|${account.name}`);
+  if (rate !== "") setTreatment(made.label, rate);
+  else {
+    reclassify();
+    redraw("entities");
+  }
 }
 
 /**

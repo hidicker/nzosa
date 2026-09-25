@@ -24,7 +24,9 @@ import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
 import { downloadExcelReport } from "./excel-export.js";
 import { unresolvedNote } from "../widgets.js";
+import { allLines } from "../ai.js";
 import {
+  accountEntityKey,
   filedReturnFromOurs,
   formatGstReturn,
   gstOutcomeLabel,
@@ -2580,6 +2582,49 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
   renderTaxExtras(body, owner, year);
 }
 
+/**
+ * What a person's books show as income tax paid in the year, or null when
+ * they have no such account.
+ *
+ * Confirmed lines only: a suggestion is not a payment anybody has said is
+ * theirs. And their own personal entity only -- one owned wholly by them -- since a
+ * payment from a joint account is not obviously either person's.
+ */
+function incomeTaxCoded(owner: string, year: number): Cents | null {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const mine = new Set(
+    model.entities
+      .filter(
+        (e) =>
+          e.kind === "personal" &&
+          (e.owners ?? []).length === 1 &&
+          (e.owners ?? [])[0]?.name === owner,
+      )
+      .map((e) => e.id),
+  );
+  const labels = new Set(
+    state.chart
+      .filter(
+        (a) =>
+          /income tax paid/i.test(a.name) && mine.has(model.accounts[accountEntityKey(a)] ?? ""),
+      )
+      .map((a) => a.code.trim()),
+  );
+  if (labels.size === 0) return null;
+  const from = `${year - 1}-04-01`;
+  const to = `${year}-03-31`;
+  return allLines()
+    .filter(
+      (one) =>
+        one.code !== null &&
+        one.confirmed &&
+        labels.has(splitAccountLabel(one.code).code) &&
+        one.transaction.date >= from &&
+        one.transaction.date <= to,
+    )
+    .reduce((sum, one) => sum - one.transaction.amount, 0);
+}
+
 /** The return's facts from outside the books, entered by hand. */
 function renderIr3Details(body: HTMLElement, owner: string, year: number): void {
   const heading = document.createElement("h3");
@@ -2668,6 +2713,20 @@ function renderIr3Details(body: HTMLElement, owner: string, year: number): void 
 
   form.append(paid, carried, ietc, monthsOut, save);
   body.append(form);
+
+  // What the books hold, beside the figure the return wants. Shown rather
+  // than filled in: a year's last instalment is paid in May, after the year
+  // ends, so the bank lines in the year are not the tax paid for it.
+  const coded = incomeTaxCoded(owner, year);
+  if (coded !== null) {
+    body.append(
+      note(
+        `Coded to Income tax paid between 1 April ${year - 1} and 31 March ${year}: ` +
+          `$${centsSaid(coded)}. Provisional tax for a year can be paid after it ends, ` +
+          "so check the figure against the Inland Revenue account.",
+      ),
+    );
+  }
 }
 
 async function saveIr3Details(details: Ir3Details): Promise<void> {
@@ -3327,6 +3386,50 @@ function reportingEntity(): Entity | undefined {
   return entities.length === 1 ? entities[0] : undefined;
 }
 
+/**
+ * Lines in the year coded only by a suggestion nobody has confirmed, and
+ * the note saying the figures that include them are provisional.
+ *
+ * For the chosen entity when there is one: a suggestion belongs to the
+ * entity whose account it names.
+ */
+function provisionalNote(year: number): HTMLElement | null {
+  const from = `${year - 1}-04-01`;
+  const to = `${year}-03-31`;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const entity = state.entityFilter;
+  const transfers = state.ledger.transfers ?? {};
+  const waiting = allLines().filter(
+    (one) =>
+      !one.confirmed &&
+      one.code !== null &&
+      one.code !== "" &&
+      transfers[one.transaction.id] === undefined &&
+      one.transaction.date >= from &&
+      one.transaction.date <= to &&
+      (entity === "" ||
+        model.accounts[accountEntityKey(splitAccountLabel(one.code))] === entity),
+  );
+  if (waiting.length === 0) return null;
+  const total = waiting.reduce((sum, one) => sum + Math.abs(one.transaction.amount), 0);
+  const box = document.createElement("div");
+  box.className = "provisional-note";
+  const text = document.createElement("p");
+  text.textContent =
+    `Provisional: ${waiting.length} line${waiting.length === 1 ? "" : "s"} in FY${year}, ` +
+    `$${centsSaid(total)} in all, ${waiting.length === 1 ? "is" : "are"} coded by a suggestion ` +
+    "nobody has confirmed yet. They are included in these figures.";
+  const review = document.createElement("button");
+  review.type = "button";
+  review.textContent = "Review them";
+  review.addEventListener("click", () => {
+    state.reconcileFilter = "suggested";
+    showPage("reconcile");
+  });
+  box.append(text, review);
+  return box;
+}
+
 export function renderReportsPage(): void {
   const body = $("reports-body");
   body.textContent = "";
@@ -3422,6 +3525,14 @@ export function renderReportsPage(): void {
   ownerSelect.hidden = kind !== "owner" && kind !== "ir3";
 
   const chosenYearNow = Number($<HTMLSelectElement>("report-year").value) || years[0];
+
+  // Built from the coding, so said plainly when some of it is still only a
+  // suggestion. Not held back: the figures are more useful with the likely
+  // answer in them than without it, as long as nobody mistakes them for final.
+  if (basisNow !== "accrual" && chosenYearNow !== undefined) {
+    const provisional = provisionalNote(chosenYearNow);
+    if (provisional) body.append(provisional);
+  }
 
   if (kind === "balancesheet") {
     ownerSelect.hidden = true;

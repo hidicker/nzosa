@@ -79,10 +79,10 @@ test("a registered commercial rental charges and claims GST, and keeps interest 
   assert.ok(!standardAccounts("commercial", { gstRegistered: false }).some((a) => a.name === "GST"));
 });
 
-test("a person gets one income and one spending account; a business the standard chart", () => {
+test("a person gets income, spending and income tax paid; a business the standard chart", () => {
   assert.deepEqual(
     standardAccounts("personal").map((a) => `${a.code} ${a.name}`),
-    ["200 Personal income", "400 Personal spending"],
+    ["200 Personal income", "400 Personal spending", "830 Income tax paid"],
   );
   assert.equal(standardAccounts("business").length, starterChart().length);
   assert.ok(standardAccounts("business", { suffix: "AR" }).every((a) => a.code.endsWith("AR")));

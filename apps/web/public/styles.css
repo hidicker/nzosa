@@ -3486,3 +3486,9 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .standard-accounts .standard-table { margin: 0.6rem 0; }
 .standard-accounts tr.standard-there td { color: var(--muted); }
 .standard-accounts .suffix-offer { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); font-size: 0.88rem; }
+
+/* Reports built partly from unconfirmed suggestions. */
+.provisional-note { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  background: var(--review-bg); border-left: 3px solid var(--review);
+  padding: 0.5rem 0.8rem; margin: 0.6rem 0 0.9rem; font-size: 0.88rem; border-radius: 0 3px 3px 0; }
+.provisional-note p { margin: 0; flex: 1 1 24rem; }

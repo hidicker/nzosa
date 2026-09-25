@@ -7,6 +7,8 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { saveRulesArchive } from "../store.js";
 import { download, note } from "../ui.js";
+import { combobox } from "../combobox.js";
+import { knownCodes } from "../reconcile.js";
 import { ruleMatches, ruleSearchText } from "@nzosa/core";
 import type { CategoryRule } from "@nzosa/core";
 
@@ -397,10 +399,26 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
       const caption = document.createElement("span");
       caption.textContent = "Words in any order";
       caption.title =
-        "Each word of the keyword has to begin a word of the bank line, anywhere in it. " +
+        "Each word of the keyword has to be a word of the bank line, anywhere in it. " +
         "Untick to look for the keyword as one run of text.";
       order.append(box, caption);
       wrap.append(order);
+    }
+    // The account is chosen, not typed: a rule naming an account that does
+    // not exist codes lines to nothing anybody can see.
+    if (key === "code") {
+      const wrapper = document.createElement("div");
+      wrapper.className = "rule-field";
+      const caption = document.createElement("span");
+      caption.textContent = label;
+      const codes = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+      const picker = combobox(codes, draft.code === "" ? null : draft.code, "Search accounts…", () => {
+        draft.code = picker.value;
+        refresh();
+      });
+      wrapper.append(caption, picker.element);
+      wrap.append(wrapper);
+      continue;
     }
     const wrapper = document.createElement("label");
     wrapper.className = "rule-field";

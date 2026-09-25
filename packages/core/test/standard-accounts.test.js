@@ -64,6 +64,9 @@ test("rental expenses land under the schedule's headings by name", () => {
   assert.equal(heading("Property management fees"), "agent");
   assert.equal(heading("Repairs and maintenance"), "repairs");
   assert.equal(heading("Legal fees"), "other");
+  assert.equal(heading("Travel"), "other");
+  const pm = standardAccounts("residential").find((a) => a.name === "Held by property manager");
+  assert.equal(pm.type, "Current Asset");
 });
 
 test("a registered commercial rental charges and claims GST, and keeps interest out of it", () => {

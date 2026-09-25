@@ -42,9 +42,11 @@ const RENTAL_EXPENSES: readonly StandardRow[] = [
   { code: "441", name: "Legal fees", type: "Expense", gst: "expense", description: "Tenancy and property legal costs" },
   { code: "450", name: "Property management fees", type: "Expense", gst: "expense", description: "Letting agent's collection and management fees" },
   { code: "473", name: "Repairs and maintenance", type: "Expense", gst: "expense", description: "Restoring the property to its condition; not improvements" },
+  { code: "493", name: "Travel", type: "Expense", gst: "expense", description: "Travel to inspect or look after the property, including mileage" },
 ];
 
 const RENTAL_BALANCES: readonly StandardRow[] = [
+  { code: "615", name: "Held by property manager", type: "Current Asset", gst: "none", description: "Rent a property manager has collected and not yet paid out; their payments to you are coded here" },
   { code: "740", name: "Chattels and fit-out", type: "Fixed Asset", gst: "expense", description: "Depreciable items bought for the property" },
   { code: "802", name: "Tenant bonds held", type: "Current Liability", gst: "none", description: "Bond received from a tenant and paid to Tenancy Services" },
   { code: "970", name: "Funds introduced", type: "Equity", gst: "none", description: "Owner's money paid into the property's accounts" },

@@ -1,5 +1,5 @@
 import { aiSuggest } from "./ai-backend.js";
-import { accountsFor, nothingHasAnswered, unregisteredCode } from "./books.js";
+import { accountsFor, gstLookups, nothingHasAnswered, unregisteredCode } from "./books.js";
 import { knownCodes, suggest } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
@@ -70,6 +70,7 @@ export function allLines(): Suggestion[] {
     state.ledger.overrides ?? {},
     accountsFor([]),
     unregisteredCode(),
+    gstLookups(),
   );
 }
 

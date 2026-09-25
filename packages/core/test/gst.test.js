@@ -6,6 +6,7 @@ import {
   gstPeriods,
   gstReturn,
   gstResolver,
+  gstSideForType,
 } from "../dist/index.js";
 
 function txn(date, amount, fields = {}) {
@@ -553,6 +554,43 @@ test("a refund sits on the side of the return its account is on, not the side it
   // refund shows as the tax it carries: 4.79 off Box 12, and Box 11 down with it.
   assert.equal(result.boxes.box12, -479, "a refund from a supplier reduces the tax claimed");
   assert.ok(result.boxes.box11 < 0, "and reduces purchases, not sales");
+});
+
+test("a refund takes its account's side however the line was resolved", () => {
+  // Money back from a supplier, coded to an expense account added in the app:
+  // it has a GST setting but no tax code, so only its type says which side.
+  const refund = txn("2025-04-08", 6593, { id: "hardware-refund" });
+  const spend = txn("2025-04-08", -9964, { id: "hardware" });
+  const credit = txn("2025-04-09", -23000, { id: "customer-refund" });
+  const codes = { "hardware-refund": "Repairs - 473", hardware: "Repairs - 473", "customer-refund": "Rent - 200" };
+  const types = { "Repairs - 473": "Expense", "Rent - 200": "Revenue" };
+  const resolve = gstResolver({
+    codeTreatments: { "Repairs - 473": "standard", "Rent - 200": "standard" },
+    codeOf: (t) => codes[t.id] ?? null,
+    sideOf: (code) => gstSideForType(types[code] ?? ""),
+  });
+  assert.equal(resolve(refund).side, "purchases", "money in, but a purchase that went the other way");
+  assert.equal(resolve(spend).side, "purchases");
+  assert.equal(resolve(credit).side, "sales", "money out, but a sale that went the other way");
+
+  const result = gstReturn([refund, spend], { from: "2025-04-01", to: "2025-05-31" }, { resolve, basis: "payments" });
+  assert.equal(result.boxes.box5, 0, "nothing reaches sales");
+  assert.equal(result.boxes.box12, -(Math.round(-9964 * 3 / 23) + Math.round(6593 * 3 / 23)), "the refund reduces the tax claimed");
+
+  // A rule that states its side keeps it; one that does not follows the account.
+  const ruled = gstResolver({
+    rules: [
+      { keyword: "ALPHA", treatment: "standard", side: "sales", note: "said so" },
+      { keyword: "BRAVO", treatment: "standard", note: "by sign" },
+    ],
+    codeOf: () => "Repairs - 473",
+    sideOf: (code) => gstSideForType(types[code] ?? ""),
+  });
+  assert.equal(ruled(txn("2025-04-08", 100, { otherParty: "ALPHA" })).side, "sales");
+  assert.equal(ruled(txn("2025-04-08", 100, { otherParty: "BRAVO" })).side, "purchases");
+  assert.equal(gstSideForType("Overhead"), "purchases");
+  assert.equal(gstSideForType("Other Income"), "sales");
+  assert.equal(gstSideForType("Current Liability"), undefined);
 });
 
 test("a line with no account side keeps the side it was given", () => {

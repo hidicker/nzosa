@@ -46,6 +46,8 @@ export interface VarianceInput {
    * and the difference looked like a disagreement with what was filed.
    */
   chartTreatment?: (code: string) => unknown | null;
+  /** The side of the return an account is on by its type. */
+  sideOf?: (code: string) => "sales" | "purchases" | undefined;
   /**
    * The transfers recorded between your own accounts.
    *
@@ -134,6 +136,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     ...(ruleFile?.gstRules ? { rules: ruleFile.gstRules } : {}),
     ...(ruleFile?.codeTreatments ? { codeTreatments: ruleFile.codeTreatments } : {}),
     ...(input.chartTreatment ? { chartTreatment: input.chartTreatment as never } : {}),
+    ...(input.sideOf ? { sideOf: input.sideOf } : {}),
     codeOf: (t) => categorise(t, codingRules).code,
     overrides: expanded.overrides,
     ...(input.transfers ? { transfers: input.transfers } : {}),

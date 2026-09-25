@@ -114,6 +114,13 @@ export interface GstRulesOptions {
    */
   chartTreatment?: (code: string) => CodeTreatment | null;
   /**
+   * Which side of the return an account is on, from what kind of account it
+   * is -- an expense is purchases, income is sales -- for an account whose
+   * tax code does not say. An account added here rather than loaded from a
+   * chart has no tax code, and without this a refund to it went by its sign.
+   */
+  sideOf?: (code: string) => GstSide | undefined;
+  /**
    * How to find a transaction's code, for `codeTreatments`.
    *
    * Supplied by the caller because coding is a separate stage; GST should not
@@ -272,7 +279,7 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
     if (code === null) return classification;
     const entry = options.codeTreatments?.[code];
     const stated = entry !== undefined && typeof entry !== "string" ? entry.side : undefined;
-    const side = stated ?? options.chartTreatment?.(code)?.side;
+    const side = stated ?? options.chartTreatment?.(code)?.side ?? options.sideOf?.(code);
     if ((side !== "sales" && side !== "purchases") || side === classification.side) {
       return classification;
     }
@@ -325,11 +332,14 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
       }
       if (rule.keyword !== undefined && !haystack.includes(matchText(rule.keyword))) continue;
 
-      return {
+      const byRule: GstClassification = {
         treatment: rule.treatment,
         side: rule.side ?? defaultSide(sign),
         reason: rule.note,
       };
+      // A side the rule states is a decision; one worked out from the sign is
+      // a guess, and the account the line is coded to knows better.
+      return rule.side !== undefined ? byRule : onAccountSide(byRule, transaction);
     }
 
     // Then the treatment that follows from what the transaction was coded to.
@@ -341,11 +351,14 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
         // needs nothing more than "standard" still reads as one word.
         const detail: CodeTreatment = typeof entry === "string" ? { treatment: entry } : entry;
         const taxable = detail.treatment === "standard" || detail.treatment === "zero-rated";
-        return {
-          treatment: detail.treatment,
-          side: detail.side ?? (taxable ? defaultSide(sign) : "none"),
-          reason: `Code ${code} is treated as ${detail.treatment}`,
-        };
+        return onAccountSide(
+          {
+            treatment: detail.treatment,
+            side: detail.side ?? (taxable ? defaultSide(sign) : "none"),
+            reason: `Code ${code} is treated as ${detail.treatment}`,
+          },
+          transaction,
+        );
       }
     }
 
@@ -354,24 +367,43 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
       const implied = options.chartTreatment?.(code) ?? null;
       if (implied !== null) {
         const taxable = implied.treatment === "standard" || implied.treatment === "zero-rated";
-        return {
-          treatment: implied.treatment,
-          side: implied.side ?? (taxable ? defaultSide(sign) : "none"),
-          reason: `Chart of accounts treats ${code} as ${implied.treatment}`,
-        };
+        return onAccountSide(
+          {
+            treatment: implied.treatment,
+            side: implied.side ?? (taxable ? defaultSide(sign) : "none"),
+            reason: `Chart of accounts treats ${code} as ${implied.treatment}`,
+          },
+          transaction,
+        );
       }
     }
 
-    return {
-      treatment: "standard",
-      side: defaultSide(sign),
-      assumed: true,
-      reason:
-        code === null
-          ? "No rule matched and no code assigned; assumed standard-rated"
-          : `No rule matched and code ${code} has no treatment; assumed standard-rated`,
-    };
+    return onAccountSide(
+      {
+        treatment: "standard",
+        side: defaultSide(sign),
+        assumed: true,
+        reason:
+          code === null
+            ? "No rule matched and no code assigned; assumed standard-rated"
+            : `No rule matched and code ${code} has no treatment; assumed standard-rated`,
+      },
+      transaction,
+    );
   };
+}
+
+/**
+ * The side of the return an account type belongs on, if it has one.
+ *
+ * Income is sales; anything spent -- an expense, a direct cost, an asset
+ * bought -- is purchases. Everything else says nothing, and the sign decides.
+ */
+export function gstSideForType(type: string): GstSide | undefined {
+  const t = type.trim().toLowerCase();
+  if (/revenue|income|sales/.test(t)) return "sales";
+  if (/expense|overhead|direct cost|cost of sales|fixed asset|depreciation/.test(t)) return "purchases";
+  return undefined;
 }
 
 function defaultSide(sign: "CR" | "DR"): GstSide {

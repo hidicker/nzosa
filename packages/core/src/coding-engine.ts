@@ -1,4 +1,5 @@
 import { categorise } from "./rules.js";
+import type { GstSide } from "./gst.js";
 import type { CategoryDefault, CategoryRule, RuleSet } from "./rules.js";
 import { gstResolver } from "./gst-rules.js";
 import type { CodeTreatment } from "./gst-rules.js";
@@ -38,6 +39,8 @@ export interface CodingEngineOptions {
   };
   /** What the chart says about an account code, or null where it says nothing. */
   chartTreatment?: (code: string) => CodeTreatment | string | null;
+  /** The side of the return an account is on by its type, when its tax code does not say. */
+  sideOf?: (code: string) => GstSide | undefined;
   /** Whether a code belongs to an entity not registered for GST. */
   unregistered?: (code: string) => boolean;
 }
@@ -71,6 +74,7 @@ export function codingEngine(options: CodingEngineOptions): CodingEngine | null 
     ...(options.chartTreatment
       ? { chartTreatment: options.chartTreatment as never }
       : {}),
+    ...(options.sideOf ? { sideOf: options.sideOf } : {}),
     codeOf,
     overrides: expanded.overrides,
     ...(options.unregistered ? { unregistered: options.unregistered } : {}),

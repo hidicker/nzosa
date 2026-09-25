@@ -26,6 +26,7 @@ import {
   shownSuggestions,
   tidyChart,
   ruleCaution,
+  gstLookups,
 } from "../books.js";
 import {
   compareCodings,
@@ -608,6 +609,7 @@ export function compareWithReference() {
     state.ledger.overrides ?? {},
     accountsFor(state.checkAccounts),
     unregisteredCode(),
+    gstLookups(),
   );
   state.suggestions = new Map(suggestions.map((one) => [one.transaction.id, one]));
 
@@ -618,6 +620,7 @@ export function compareWithReference() {
     {},
     accountsFor(state.checkAccounts),
     unregisteredCode(),
+    gstLookups(),
   );
   const proposedBy = new Map(proposals.map((one) => [one.transaction.id, one.code]));
 

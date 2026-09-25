@@ -59,6 +59,14 @@ export function suggest(
   accounts: readonly string[],
   /** Whether a code belongs to an entity not registered for GST. */
   unregistered?: (code: string) => boolean,
+  /**
+   * What the chart says about GST, so a line shows the treatment -- and the
+   * side of the return -- that the reports will give it.
+   */
+  gst: {
+    chartTreatment?: (code: string) => unknown | null;
+    sideOf?: (code: string) => "sales" | "purchases" | undefined;
+  } = {},
 ): Suggestion[] {
   const ruleFile = rules as RuleFile | undefined;
   const selected =
@@ -73,6 +81,8 @@ export function suggest(
     codeOf: (t) => categorise(t, codingRules).code,
     overrides,
     ...(unregistered ? { unregistered } : {}),
+    ...(gst.chartTreatment ? { chartTreatment: gst.chartTreatment as never } : {}),
+    ...(gst.sideOf ? { sideOf: gst.sideOf } : {}),
   });
 
   return selected

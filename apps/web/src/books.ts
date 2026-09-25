@@ -37,6 +37,7 @@ import {
   labelForChartAccount,
   splitAccountLabel,
   directionCaution,
+  gstSideForType,
   invoiceAssignments as coreInvoiceAssignments,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
@@ -390,6 +391,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     state.ledger.overrides ?? {},
     accountsFor(state.reconcileAccounts),
     unregisteredCode(),
+    gstLookups(),
   );
   // Collapsed, because the search is matched against what the row shows and
    // the row shows collapsed whitespace. A bank pads its fields -- the payee is
@@ -752,6 +754,7 @@ export function varianceInput(): VarianceInput {
     // The same fallback the profit and loss uses, so an account treated by the
     // chart is treated the same way in both.
     chartTreatment: (code: string) => chartTreatmentOf(code),
+    sideOf: accountSideOf,
     // A line of an entity not registered for GST is on no return.
     unregistered: unregisteredCode(),
     // Narrowed by the chosen entity, as every other page's selection is.
@@ -867,6 +870,30 @@ export function unregisteredCode(): (code: string) => boolean {
   return (code) => codes.has(code);
 }
 
+/**
+ * Which side of the GST return an account is on, from its type.
+ *
+ * For an account whose tax code does not say -- one added here rather than
+ * loaded from a chart -- so that a refund to it lands on the side its
+ * account is on, not the side its sign suggests.
+ */
+export function accountSideOf(label: string): "sales" | "purchases" | undefined {
+  const { code, name } = splitAccountLabel(label);
+  const account =
+    (code !== "" ? state.chart.find((a) => a.code.trim() === code) : undefined) ??
+    state.chart.find((a) => a.name.trim().toLowerCase() === name.trim().toLowerCase());
+  const side = account === undefined ? undefined : gstSideForType(account.type);
+  return side === "sales" || side === "purchases" ? side : undefined;
+}
+
+/** What every GST resolver in the app is told about the chart. */
+export function gstLookups(): {
+  chartTreatment: (code: string) => unknown | null;
+  sideOf: (code: string) => "sales" | "purchases" | undefined;
+} {
+  return { chartTreatment: (code) => chartTreatmentOf(code), sideOf: accountSideOf };
+}
+
 export function chartTreatmentOf(label: string): unknown | null {
   return cachedChartTreatments().get(label) ?? null;
 }
@@ -888,6 +915,7 @@ export function reportEngine(): CodingEngine | null {
     overrides: state.ledger.overrides ?? {},
     ...(state.rules ? { rules: state.rules as RuleFileShape } : {}),
     chartTreatment: (code: string) => chartTreatmentOf(code) as never,
+    sideOf: accountSideOf,
     unregistered: unregisteredCode(),
   });
 }

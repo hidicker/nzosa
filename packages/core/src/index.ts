@@ -257,7 +257,7 @@ export type {
   GstReturnResult,
 } from "./gst.js";
 
-export { gstResolver, DEFAULT_GST_RULES } from "./gst-rules.js";
+export { gstResolver, gstSideForType, DEFAULT_GST_RULES } from "./gst-rules.js";
 export type { GstRule, GstRulesOptions } from "./gst-rules.js";
 
 export {

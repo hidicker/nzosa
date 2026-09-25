@@ -444,6 +444,10 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     return collapse(hay).includes(needle);
   });
 
+  // By date, oldest first unless asked otherwise, so the lines are worked
+  // through in the order they happened. Same-day lines keep their order.
+  const direction = state.reconcileSort === "newest" ? -1 : 1;
+  shown.sort((a, b) => direction * a.transaction.date.localeCompare(b.transaction.date));
   return { all, shown };
 }
 

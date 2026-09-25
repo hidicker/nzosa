@@ -2063,4 +2063,20 @@ export function wireReconcile(): void {
       .value as typeof state.reconcileFilter;
     redraw("reconcile");
   });
+  const sort = $<HTMLButtonElement>("reconcile-sort");
+  const sayOrder = (): void => {
+    sort.textContent = state.reconcileSort === "oldest" ? "Oldest first ↑" : "Newest first ↓";
+    sort.title = "Change the order of the lines";
+  };
+  sayOrder();
+  sort.addEventListener("click", () => {
+    state.reconcileSort = state.reconcileSort === "oldest" ? "newest" : "oldest";
+    try {
+      localStorage.setItem("nzosa:reconcile-sort", state.reconcileSort);
+    } catch {
+      // Not remembered; still applied until the page is reloaded.
+    }
+    sayOrder();
+    redraw("reconcile");
+  });
 }

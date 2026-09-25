@@ -60,6 +60,14 @@ export const state = {
   page: "reconcile",
   reconcileAccounts: [] as string[],
   reconcileSearch: "",
+  /** Reconcile's order: oldest first unless the person chose otherwise (kept in this browser). */
+  reconcileSort: ((): "oldest" | "newest" => {
+    try {
+      return localStorage.getItem("nzosa:reconcile-sort") === "newest" ? "newest" : "oldest";
+    } catch {
+      return "oldest";
+    }
+  })() as "oldest" | "newest",
   /** What the feed said last time it was asked, when it went wrong. */
   feedProblem: "",
   /** Loaded files whose columns nothing could name, awaiting a person. */

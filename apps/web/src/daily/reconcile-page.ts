@@ -918,6 +918,33 @@ function splitLineFor(
 }
 
 /**
+ * The account earlier lines like this one were transfers to, where most were.
+ *
+ * Same bank account, same payee words, same direction: a fortnightly payment
+ * to your own ANZ account looks the same every time, and its history says
+ * where it goes even before this one's other side has arrived.
+ */
+function usualTransferPartner(
+  transaction: Transaction,
+  transfers: Readonly<Record<string, string>>,
+): string | null {
+  const who = (transaction.otherParty ?? "").trim().toLowerCase();
+  if (who === "") return null;
+  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
+  const counts = new Map<string, number>();
+  for (const t of state.ledger.transactions) {
+    if (t.id === transaction.id || t.account !== transaction.account) continue;
+    if (Math.sign(t.amount) !== Math.sign(transaction.amount)) continue;
+    if ((t.otherParty ?? "").trim().toLowerCase() !== who) continue;
+    const partner = byId.get(transfers[t.id] ?? "");
+    if (partner === undefined) continue;
+    counts.set(partner.account, (counts.get(partner.account) ?? 0) + 1);
+  }
+  const best = [...counts.entries()].sort((x, y) => y[1] - x[1])[0];
+  return best !== undefined && best[1] >= 2 ? best[0] : null;
+}
+
+/**
  * The transfer row under a bank line: the leg it pairs with, or which it might.
  *
  * Only offered where there is something to offer, so an ordinary payment is not
@@ -978,7 +1005,24 @@ function transferLineFor(
       : undefined;
   const partnerId = recorded ?? found;
 
-  if (partnerId === undefined && candidates.length === 0) return null;
+  if (partnerId === undefined && candidates.length === 0) {
+    // Nothing to pair with yet. Where earlier lines like this one -- same
+    // payee, same direction, same account -- were transfers, say where this
+    // one usually goes: its other side has simply not been imported yet, and
+    // it pairs on its own once it is.
+    const usual = usualTransferPartner(transaction, transfers);
+    if (usual === null || refused) return null;
+    const wrap = document.createElement("div");
+    wrap.className = "code-transfer";
+    const label = document.createElement("span");
+    label.className = "transfer-auto";
+    label.textContent =
+      `Usually a transfer ${transaction.amount < 0 ? "to" : "from"} ${bankLabel(usual)}. ` +
+      `That account has no matching line yet — once its transactions are imported, ` +
+      "this pairs automatically. Leave it uncoded until then.";
+    wrap.append(label);
+    return wrap;
+  }
 
   const wrap = document.createElement("div");
   wrap.className = "code-transfer";

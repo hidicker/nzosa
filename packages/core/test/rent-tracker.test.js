@@ -92,3 +92,16 @@ test("bond: a residential bond not lodged within 23 working days is flagged", ()
   assert.match(bondStatus({ amount: 200_000, paidOn: "2026-01-05", lodgedOn: "2026-01-20", reference: "123" }, true, "2026-03-01"), /lodged 2026-01-20/);
   assert.match(bondStatus({ amount: 200_000, paidOn: "2026-01-05" }, false, "2026-06-01"), /held by the landlord/);
 });
+
+test("rent paid in advance before the tenancy starts counts toward the first weeks", () => {
+  // Two weeks paid on 18 November for a tenancy starting 21 November.
+  const t = { ...weekly, start: "2024-11-21", rents: [{ from: "2024-11-21", amount: 56_000 }] };
+  const p = rentPosition(t, [receipt("2024-11-18", 112_000)], "2024-11-22");
+  assert.equal(p.totalPaid, 112_000);
+  assert.equal(p.balance, -56_000);
+  assert.equal(p.paidTo, "2024-12-04");
+});
+
+test("the first rent runs from the start even if entered with a later date", () => {
+  assert.equal(rentOn([{ from: "2024-11-25", amount: 56_000 }], "2024-11-21"), 56_000);
+});

@@ -88,9 +88,12 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
     frequency.append(option);
   }
 
-  // Rent, and each change: a row per amount with the day it starts.
+  // The rent from the start of the tenancy, then each change with the day it
+  // starts. The first has no date of its own: it runs from the tenancy start.
   const rentRows = document.createElement("div");
-  const rents = draft.rents.length > 0 ? [...draft.rents] : [{ from: draft.start, amount: 0 }];
+  const rents = draft.rents.length > 0
+    ? [...draft.rents].sort((a, b) => a.from.localeCompare(b.from))
+    : [{ from: draft.start, amount: 0 }];
   const rentInputs: [HTMLInputElement, HTMLInputElement][] = [];
   const drawRents = (): void => {
     rentRows.textContent = "";
@@ -102,7 +105,8 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
       amount.className = "payroll-tiny-input";
       rentInputs.push([from, amount]);
       const row = document.createElement("div");
-      row.append(field(i === 0 ? "Rent from" : "Changed from", from), field("per period $", amount));
+      if (i === 0) row.append(field("Rent per period $", amount));
+      else row.append(field("Changed from", from), field("to $", amount));
       rentRows.append(row);
     });
   };
@@ -140,15 +144,15 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   box.append(
     field("Property", entity),
     field("Tenant", tenant),
-    field("Tenancy started", start),
+    field("Tenancy starts", start),
     field("Ended", end),
     field("Rent paid", frequency),
     rentRows,
     addChange,
     document.createElement("hr"),
     field("Bond $", bondAmount),
-    field("Paid", bondPaid),
-    field("Lodged", bondLodged),
+    field("Bond paid", bondPaid),
+    field("Bond lodged", bondLodged),
     field("Bond number", bondRef),
     document.createElement("hr"),
     field("Rent is coded to", accounts),
@@ -156,7 +160,8 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
     note(
       "Rent is read from the account the rent is coded to, including rent a property manager " +
         "collected. If one account holds more than one tenant, give words from this tenant's " +
-        "payments (a name or reference); separate several with commas.",
+        "payments (a name or reference); separate several with commas. Rent paid in advance up to " +
+        "90 days before the tenancy starts is counted toward the first weeks.",
     ),
   );
 
@@ -170,7 +175,7 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   save.textContent = "Save";
   save.addEventListener("click", () => {
     const changes = rentInputs
-      .map(([f, a]) => ({ from: f.value as IsoDate, amount: parseAmount(a.value) ?? 0 }))
+      .map(([f, a], i) => ({ from: (i === 0 ? start.value : f.value) as IsoDate, amount: parseAmount(a.value) ?? 0 }))
       .filter((r) => r.from !== "" && r.amount > 0);
     const chosen = [...accounts.selectedOptions].map((o) => o.value);
     const problems = [
@@ -244,7 +249,7 @@ function card(t: Tenancy, entities: Entity[], asAt: IsoDate): HTMLElement {
   verdict.className = b > 0 ? "journal-out" : "rent-ok";
   verdict.textContent =
     b > 0
-      ? `Behind by $${money(b)} — about ${position.periodsBehind} ${word}${position.periodsBehind === 1 ? "" : "s"}' rent.`
+      ? `Behind by $${money(b)} — about ${position.periodsBehind} ${position.periodsBehind === 1 ? `${word}'s` : `${word}s'`} rent.`
       : b < 0
         ? `In advance by $${money(-b)} — about ${-position.periodsBehind} ${word}${position.periodsBehind === -1 ? "" : "s"}.`
         : "Up to date.";

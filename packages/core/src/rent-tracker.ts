@@ -106,18 +106,20 @@ export function rentDueDate(start: IsoDate, frequency: RentFrequency, n: number)
   return iso(year, mm, Math.min(d, last));
 }
 
-/** The rent that applies on a date: the latest change on or before it. */
+/**
+ * The rent that applies on a date: the latest change on or before it. Before
+ * any change, the first rent -- which runs from the start of the tenancy,
+ * whatever date it was entered with.
+ */
 export function rentOn(rents: readonly RentChange[], date: IsoDate): Cents {
-  let amount = 0;
-  let latest = "";
-  for (const r of rents) {
-    if (r.from <= date && r.from >= latest) {
-      latest = r.from;
-      amount = r.amount;
-    }
-  }
+  const sorted = [...rents].sort((a, b) => a.from.localeCompare(b.from));
+  let amount = sorted[0]?.amount ?? 0;
+  for (const r of sorted) if (r.from <= date) amount = r.amount;
   return amount;
 }
+
+/** How far before the start a payment still counts: rent paid in advance, or on signing. */
+export const PAID_BEFORE_START_DAYS = 90;
 
 /** Rent received for a tenancy, from what the books posted to its accounts. */
 export function rentReceipts(
@@ -128,7 +130,8 @@ export function rentReceipts(
   const words = (tenancy.payer ?? "").toLowerCase().split(/[,;]/).map((w) => w.trim()).filter((w) => w !== "");
   const out: { date: IsoDate; amount: Cents; narration: string }[] = [];
   for (const journal of journals) {
-    if (journal.date < tenancy.start) continue;
+    // Rent is paid in advance, often before the tenancy starts.
+    if (journal.date < addDays(tenancy.start, -PAID_BEFORE_START_DAYS)) continue;
     if (tenancy.end !== undefined && journal.date > addDays(tenancy.end, 31)) continue;
     let amount = 0;
     const said: string[] = [journal.narration];

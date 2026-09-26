@@ -193,7 +193,8 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
     note(
       "To use your own key, paste it below and press Check it and keep it. Keys from Google " +
         "Gemini, Anthropic Claude, OpenAI (ChatGPT) or OpenRouter work; OpenRouter also " +
-        "reaches most other models. You pay that provider for what you use.",
+        "reaches most other models. A Jev (TypeSafe AI) key works for coding suggestions on " +
+        "Reconcile only. You pay that provider for what you use.",
     ),
   );
 

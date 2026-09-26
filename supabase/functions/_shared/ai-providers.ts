@@ -19,14 +19,19 @@
  * today is a generation out of date within the year.
  */
 
-export type AiProvider = "gemini" | "anthropic" | "openai" | "openrouter";
+export type AiProvider = "gemini" | "anthropic" | "openai" | "openrouter" | "jev";
 
 export const PROVIDER_NAMES: Record<AiProvider, string> = {
   gemini: "Google Gemini",
   anthropic: "Anthropic Claude",
   openai: "OpenAI",
   openrouter: "OpenRouter",
+  jev: "Jev (TypeSafe AI)",
 };
+
+/** Where Jev answers, and the model it answers with unless told otherwise. */
+export const JEV_DECIDE_URL = "https://jevtypesafeai.com/api/v1/decide";
+export const JEV_MODEL = "jev-latest";
 
 /**
  * Which company a key is from, by how it starts.
@@ -37,6 +42,7 @@ export const PROVIDER_NAMES: Record<AiProvider, string> = {
  */
 export function detectProvider(key: string): AiProvider {
   const k = key.trim();
+  if (k.startsWith("jv_")) return "jev";
   if (k.startsWith("sk-ant")) return "anthropic";
   if (k.startsWith("sk-or-")) return "openrouter";
   if (k.startsWith("sk-")) return "openai";
@@ -166,6 +172,24 @@ export async function listModels(
   fetcher: AiFetcher,
   options: CallOptions = {},
 ): Promise<ProviderModel[]> {
+  if (provider === "jev") {
+    // Jev lists no models, so the key is checked by asking it one small
+    // yes-or-no question: a fraction of a cent, and proof the key works.
+    await readJson(
+      await fetcher(JEV_DECIDE_URL, {
+        method: "POST",
+        headers: { "content-type": "application/json", authorization: `Bearer ${key}` },
+        body: JSON.stringify({
+          model: JEV_MODEL,
+          state: "A key check.",
+          questions: { ok: { type: "noul", instructions: "Is this a key check?" } },
+        }),
+      }),
+      "Jev",
+    );
+    return [{ name: JEV_MODEL, label: "jev-latest" }];
+  }
+
   if (provider === "anthropic") {
     const headers: Record<string, string> = {
       "x-api-key": key,
@@ -286,6 +310,16 @@ export async function askModel(
   fetcher: AiFetcher,
   options: CallOptions = {},
 ): Promise<string> {
+  if (provider === "jev") {
+    // Jev answers typed questions about one thing at a time, not a written
+    // prompt. It codes lines on Reconcile through its own adapter; anything
+    // asked in prose needs one of the others.
+    throw new Error(
+      "A Jev key answers coding suggestions on Reconcile only. For this, use a Gemini, " +
+        "Claude, OpenAI or OpenRouter key.",
+    );
+  }
+
   if (provider === "anthropic") {
     const headers: Record<string, string> = {
       "content-type": "application/json",

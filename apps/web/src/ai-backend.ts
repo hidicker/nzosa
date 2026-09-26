@@ -216,7 +216,17 @@ export async function aiConverse(
   return { parts: said.parts ?? [], finishReason: said.finishReason ?? "" };
 }
 
-export async function aiSuggest(prompt: string, asking: number): Promise<AiAnswer> {
+/**
+ * The lines themselves, for a provider that is asked about each one rather
+ * than given the prompt (Jev). The same fields the prompt describes.
+ */
+export interface AskedLines {
+  lines: readonly unknown[];
+  codes: readonly string[];
+  about: string;
+}
+
+export async function aiSuggest(prompt: string, asking: number, asked?: AskedLines): Promise<AiAnswer> {
   if (aiRoute() === "demo") return demoSuggest(prompt, asking);
   if (aiRoute() === "folder") {
     // Asked of this computer's app first, which knows whether these books
@@ -234,7 +244,7 @@ export async function aiSuggest(prompt: string, asking: number): Promise<AiAnswe
   const response = await local("/api/ai/suggest", {
     method: "POST",
     headers: { "content-type": "application/json" },
-    body: JSON.stringify({ prompt, asking }),
+    body: JSON.stringify({ prompt, asking, ...(asked ?? {}) }),
   });
   if (response === null) return { error: "Could not reach the app." };
   const said = (await response.json().catch(() => ({}))) as AiAnswer;

@@ -50,6 +50,7 @@ import {
 import {
   askModel as askAiModel,
   detectProvider,
+  jevSuggest,
   listModels as listAiModels,
   pickModel as pickAiModel,
 } from "@nzosa/core";
@@ -760,13 +761,42 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         let said;
         try {
           const provider = detectProvider(ai.key);
-          said = await askAiModel(
-            provider,
-            ai.key,
-            ai.model ?? pickAiModel(provider, ai.models ?? [], ""),
-            prompt,
-            fetch,
-          );
+          if (provider === "jev") {
+            // Jev is asked about each line itself rather than given the prompt,
+            // so it needs the lines the prompt describes -- the same fields,
+            // nothing more -- and the chart's account labels to choose from.
+            const lines = Array.isArray(body.lines) ? body.lines : [];
+            const codes = Array.isArray(body.codes) ? body.codes.map(String) : [];
+            if (lines.length !== asking) {
+              send(response, 400, { error: "Reload the page and ask again: Jev needs the lines themselves." });
+              return;
+            }
+            const text = (value) => String(value ?? "");
+            said = await jevSuggest({
+              key: ai.key,
+              model: ai.model ?? "jev-latest",
+              lines: lines.map((line) => ({
+                id: text(line.id),
+                date: text(line.date),
+                direction: line.direction === "money in" ? "money in" : "money out",
+                amount: text(line.amount),
+                payee: text(line.payee),
+                details: text(line.details),
+                paidFrom: text(line.paidFrom),
+              })),
+              codes,
+              about: text(body.about),
+              fetcher: fetch,
+            });
+          } else {
+            said = await askAiModel(
+              provider,
+              ai.key,
+              ai.model ?? pickAiModel(provider, ai.models ?? [], ""),
+              prompt,
+              fetch,
+            );
+          }
         } catch (error) {
           send(response, 502, { error: String(error.message ?? error) });
           return;

@@ -171,7 +171,11 @@ export async function askAboutLines(
   const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
-  const answer = await aiSuggest(prompt, asked.length);
+  const answer = await aiSuggest(prompt, asked.length, {
+    lines: asked,
+    codes,
+    about: state.ledger.booksAbout ?? "",
+  });
   if (answer.error !== undefined) return { got: 0, said: answer.error };
   // Where the answer came from matters a year later: a suggestion made on the
   // shared key was made on a model somebody else chose and paid for.

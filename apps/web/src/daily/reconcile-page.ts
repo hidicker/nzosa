@@ -149,16 +149,13 @@ export function renderReconcile(): void {
     const said = document.createElement("p");
     said.className = "rule-made";
     said.textContent =
-      `${made.fixed === true ? "Rule fixed" : "Rule added from that coding"}: ` +
-      `anything with the words "${made.keyword}"` +
+      `${made.fixed === true ? "Rule updated" : "Rule added"}: lines with "${made.keyword}"` +
       (made.account !== undefined ? ` on ${bankLabel(made.account)}` : "") +
-      " now suggests " +
-      `${made.code}. ` +
+      ` are now suggested as ${made.code}` +
       (made.alsoCoded > 0
-        ? `It suggests a code for ${made.alsoCoded} other line${made.alsoCoded === 1 ? "" : "s"}, ` +
-          "still yours to confirm. "
+        ? ` (${made.alsoCoded} more line${made.alsoCoded === 1 ? "" : "s"}, still to confirm)`
         : "") +
-      "Change or remove it on the Rules page.";
+      ". Change it on the Rules page.";
     body.append(said);
   }
 
@@ -187,8 +184,8 @@ export function renderReconcile(): void {
     all: `${shown.length} lines`,
   };
   $("reconcile-hint").textContent =
-    `${showing[state.reconcileFilter]}. ${done} of ${all.length} coded in all. ` +
-    "Accept the suggestion or change it; either way the line is coded and stays that way.";
+    `${showing[state.reconcileFilter]}. ${done} of ${all.length} coded. ` +
+    "Accept or change each suggestion to code the line.";
 
   // Any made before a line could not be both. Said at the top, because the
   // account they were coded to is short by exactly these.
@@ -196,10 +193,10 @@ export function renderReconcile(): void {
   if (clashes.length > 0) {
     body.append(
       note(
-        `${clashes.length} line${clashes.length === 1 ? " is" : "s are"} recorded as a transfer and ` +
-          "coded to an account as well. Only the transfer posts, so the account is short: " +
+        `${clashes.length} line${clashes.length === 1 ? " is" : "s are"} both a transfer and coded ` +
+          "to an account; only the transfer posts: " +
           clashes.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
-          '. Set the filter to All, find each one, and press "not a transfer" on any that is not.',
+          '. Show All, find each one, and choose "not a transfer" where it is not one.',
       ),
     );
   }
@@ -211,10 +208,9 @@ export function renderReconcile(): void {
     body.append(
       note(
         `${unsettled.length} line${unsettled.length === 1 ? " is" : "s are"} coded to Accounts ` +
-          "Receivable or Payable without being matched to an invoice, so no invoice is marked " +
-          "paid: " +
+          "Receivable or Payable but not matched to an invoice: " +
           unsettled.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
-          '. Set the filter to All, find each one, and match it under "Settles which invoice?".',
+          '. Show All, find each one, and match it under "Settles which invoice?".',
       ),
     );
   }
@@ -319,7 +315,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   date.textContent = one.transaction.date;
   const who = document.createElement("div");
   who.className = "code-who";
-  who.textContent = one.transaction.otherParty || "--";
+  who.textContent = one.transaction.otherParty || "—";
   const flow = describeFlow(one.transaction, state.ledger.transactions);
   const flowLine = document.createElement("div");
   flowLine.className = flow.internal ? "code-flow internal" : "code-flow";
@@ -333,9 +329,9 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   flowLine.title =
     `Money ${arrow} ${flow.counterparty}` +
     (flow.bothLegs
-      ? ". Both sides of this transfer are in the ledger, so it is a movement between your own accounts."
+      ? ". Both sides are in these books: a transfer between your own accounts."
       : flow.internal
-        ? ". That account is in the ledger but the matching opposite entry was not found."
+        ? ". That account is in these books, but its matching entry was not found."
         : ".");
 
   const what = document.createElement("div");
@@ -432,7 +428,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   to.value = draft.contact ?? one.contact;
   to.addEventListener("input", () => keep({ contact: to.value }));
   to.title =
-    "Who this was to or from. Set it for every matching line on the Rules page.";
+    "Who the money went to or came from. Set it for all matching lines on the Rules page.";
 
   const description = document.createElement("input");
   description.type = "text";
@@ -478,9 +474,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     const hasInvoice = invoiceAssignments().has(one.transaction.id);
     if (codeSelect.value.trim() === "" && !hasSplit && !hasInvoice) {
       alert(
-        "This line needs an account before it can be confirmed.\n\n" +
-          "Pick one, split it into parts, or match it to an invoice. Confirming " +
-          "with nothing on it would take it off the list and post it nowhere.",
+        "Choose an account, split the line, or match it to an invoice before confirming.",
       );
 
       return;
@@ -510,7 +504,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   reason.textContent = one.confirmed
     ? (one.note ?? "Confirmed")
     : (state.ledger.splits ?? {})[one.transaction.id]
-      ? "Coded by its split, below. The tick agrees to it."
+      ? "Coded by the split below. Tick to confirm."
       : fromModel !== undefined
         ? // Named as a model's, and never as a rule's. Somebody deciding whether
           // to press the tick is owed the difference between "your own rule says
@@ -586,7 +580,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         ? "Pays an invoice"
         : pendingTransfer === null
           ? "Transfer between your own accounts"
-          : "Transfer — agree to it with the tick";
+          : "Transfer — tick to confirm";
     insteadOfAccount.classList.toggle(
       "code-instead-ready",
       off && (pendingTransfer !== null || invoiceChosen || splitChosen),
@@ -670,7 +664,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   if (against !== undefined) {
     const caution = document.createElement("div");
     caution.className = "code-warn";
-    caution.textContent = `${against} Not included in Accept all.`;
+    caution.textContent = `${against} Left out of Accept all.`;
     row.append(caution);
   }
 
@@ -879,10 +873,10 @@ function payoutBanner(): HTMLElement | null {
     0,
   );
   said.textContent =
-    `${waiting.length} bank line${waiting.length === 1 ? " is" : "s are"} a payment-processor ` +
-    `payout, ${formatAmount(total)} in all. Each is really an invoice payment, the customer's ` +
-    "surcharge and the processor's fee, and coding it as one figure overstates sales, leaves " +
-    "the invoice outstanding and loses the fee.";
+    `${waiting.length} line${waiting.length === 1 ? " is a" : "s are"} payment-processor ` +
+    `payout${waiting.length === 1 ? "" : "s"} (${formatAmount(total)}). Split ` +
+    `${waiting.length === 1 ? "it" : "them"} into the invoice payment, surcharge and fee so ` +
+    "sales, invoices and fees are recorded correctly.";
   wrap.append(said);
 
   const button = document.createElement("button");
@@ -903,12 +897,12 @@ async function applyAllPayouts(): Promise<void> {
   const shared = waiting.filter((w) => w.payouts.length > 1).length;
   const ok = confirm(
     `Split ${waiting.length} payout${waiting.length === 1 ? "" : "s"} into their parts?\n\n` +
-      `${invoices} of them name the invoice they settle, which will be closed.\n` +
+      `${invoices} name the invoice they settle; those invoices will be closed.\n` +
       (shared > 0
         ? `${shared} arrived as one transfer covering several charges.\n`
         : "") +
-      "The processor's fee goes to the fee account the export names, and the surcharge to sales.\n\n" +
-      "Each bank line keeps its total; only what it is made of changes.",
+      "Fees go to the fee account named in the export and surcharges to sales.\n\n" +
+      "Each bank line keeps its total.",
   );
   if (!ok) return;
   for (const { payouts, transaction } of waiting)
@@ -1085,8 +1079,8 @@ function transferLineFor(
     label.className = "transfer-auto";
     label.textContent =
       `Usually a transfer ${transaction.amount < 0 ? "to" : "from"} ${bankLabel(usual)}. ` +
-      `That account has no matching line yet — once its transactions are imported, ` +
-      "this pairs automatically. Leave it uncoded until then.";
+      "No matching line there yet; it pairs automatically once those transactions are " +
+      "imported. Leave this line until then.";
     wrap.append(label);
     return wrap;
   }
@@ -1132,7 +1126,7 @@ function transferLineFor(
       how.textContent = "found automatically";
       label.append(" · ", how);
       label.title =
-        "Found by matching your own accounts. Press the tick to record it.";
+        "Found automatically. Tick to record it.";
     }
 
     // One sentence either way, because it is one thing to the person reading
@@ -1170,7 +1164,7 @@ function transferLineFor(
   const select = document.createElement("select");
   const none = document.createElement("option");
   none.value = "";
-  none.textContent = "-- not a transfer --";
+  none.textContent = "— not a transfer —";
   select.append(none);
   for (const candidate of candidates.slice(0, 8)) {
     const option = document.createElement("option");
@@ -1236,8 +1230,8 @@ async function linkTransfer(
   if (involved.length > 0) {
     alert(
       involved.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("\n") +
-        "\n\nThis is split or settles an invoice, so it cannot be a transfer as well. " +
-        "Remove the split or the invoice match first.",
+        "\n\nThis line is split or settles an invoice, so it cannot also be a transfer. " +
+        "Remove the split or invoice match first.",
     );
     return;
   }
@@ -2012,8 +2006,8 @@ export async function confirmLine(
     if (
       !held &&
       confirm(
-        `Coded to ${account.name}. Add this purchase to the fixed asset register, at ` +
-          `${formatAmount(cost)}${rate === "15" ? " excluding GST" : ""}, so it is depreciated?`,
+        `Coded to ${account.name}. Add it to the fixed asset register at ` +
+          `${formatAmount(cost)}${rate === "15" ? " excluding GST" : ""} so it is depreciated?`,
       )
     ) {
       offerAsset({
@@ -2175,12 +2169,11 @@ function ruleOfferBanner(): HTMLElement | null {
   box.className = "rule-made";
   const text = document.createElement("p");
   text.textContent =
-    `${bankLabel(offer.rule.account ?? "")} is used by more than one entity, so no rule was made ` +
-    `from that line. A rule would suggest ${offer.rule.code} for every line on it with the ` +
-    `words "${offer.rule.keyword}"` +
+    `${bankLabel(offer.rule.account ?? "")} is shared by several entities, so no rule was made. ` +
+    `Make one to suggest ${offer.rule.code} for every line on it with "${offer.rule.keyword}"? ` +
     (offer.reach > 0
-      ? ` — ${offer.reach} more line${offer.reach === 1 ? "" : "s"} now.`
-      : ", none others yet.");
+      ? `It would apply to ${offer.reach} more line${offer.reach === 1 ? "" : "s"} now.`
+      : "No other lines yet.");
   const make = document.createElement("button");
   make.type = "button";
   make.textContent = "Make the rule";
@@ -2212,8 +2205,8 @@ function ruleStaleBanner(): HTMLElement | null {
   box.className = "rule-made";
   const text = document.createElement("p");
   text.textContent =
-    `The rule for "${stale.keyword}" suggests ${stale.from}; that line is now ${stale.to}. ` +
-    `Change the rule so lines like it are suggested as ${stale.to}?`;
+    `The rule for "${stale.keyword}" suggests ${stale.from}, but this line is now ${stale.to}. ` +
+    `Change the rule to ${stale.to}?`;
   const change = document.createElement("button");
   change.type = "button";
   change.textContent = "Change the rule";
@@ -2276,14 +2269,14 @@ function ruleNoticeBanner(): HTMLElement | null {
   box.className = "rule-made";
   const text = document.createElement("p");
   text.textContent =
-    `The rule for "${notice.keyword}" did not pick that line up, so no new rule was added. ` +
+    `The rule for "${notice.keyword}" did not match this line, so no new rule was made. ` +
     (notice.code !== notice.newCode
       ? `It codes to ${notice.code}; you chose ${notice.newCode}. `
       : "");
   const fix = document.createElement("button");
   fix.type = "button";
   fix.className = "primary";
-  fix.textContent = `Fix the rule to match lines like this, coded to ${notice.newCode}`;
+  fix.textContent = `Fix the rule (code to ${notice.newCode})`;
   fix.addEventListener("click", () => void fixRule());
   const leave = document.createElement("button");
   leave.type = "button";
@@ -2375,7 +2368,7 @@ function codingReconciliationWarning(): HTMLElement | null {
 
   const msg = document.createElement("span");
   msg.textContent =
-    "You have coding reconciliation items outstanding, complete those before starting reconciliation.";
+    "Coding reconciliation has items to resolve. Complete these before reconciling.";
 
   const go = document.createElement("button");
   go.type = "button";

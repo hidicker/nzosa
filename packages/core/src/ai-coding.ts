@@ -322,10 +322,10 @@ export function directionCaution(
   const spending = /expense|overhead|direct costs|cost of sales/.test(type);
   const earning = /revenue|income|sales/.test(type);
   if (direction === "money in" && spending) {
-    return "Money in, coded to an account money normally goes out of. Right for a refund, wrong for anything else.";
+    return "Money in to an expense account: correct only for a refund.";
   }
   if (direction === "money out" && earning) {
-    return "Money out, coded to an income account. Right for a refund to a customer, wrong for anything else.";
+    return "Money out of an income account: correct only for a refund to a customer.";
   }
   return undefined;
 }

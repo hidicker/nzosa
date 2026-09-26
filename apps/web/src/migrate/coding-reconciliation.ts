@@ -294,10 +294,8 @@ export async function acceptAllShown(): Promise<void> {
             )
             .join("\n") +
           (pairs.length > 6 ? `\n  ...and ${pairs.length - 6} more` : "") +
-          "\n\nEach is the same amount the other way, between two of your own accounts, " +
-          "within four days, and each has exactly one match. None of them is coded to " +
-          "anything, so nothing is being replaced. Any of them can be undone with \"not a " +
-          "transfer\", and the change log has them one by one.",
+          "\n\nEach is the same amount the other way between two of your own accounts, within " +
+          "four days, with exactly one match. None is coded yet. Undo any with \"not a transfer\".",
       )
     ) {
       return;
@@ -324,38 +322,35 @@ export async function acceptAllShown(): Promise<void> {
       `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?` +
         "\n\n" +
         (held.size > 0
-          ? `${held.size} line${held.size === 1 ? " matches" : "s match"} a line of the same amount in ` +
-            `another of your accounts and could be a transfer. ${held.size === 1 ? "It is" : "They are"} ` +
-            "left unconfirmed -- neither coded nor paired -- to check one at a time.\n\n"
+          ? `${held.size} line${held.size === 1 ? " matches" : "s match"} the same amount in another ` +
+            `of your accounts and could be a transfer; ${held.size === 1 ? "it is" : "they are"} ` +
+            "left for you to check one at a time.\n\n"
           : "") +
         (elsewhere > 0
-          ? `${elsewhere} of them ${elsewhere === 1 ? "is" : "are"} settled by a split or by ` +
-            "the invoice it pays rather than by an account, and is confirmed as that.\n\n"
+          ? `${elsewhere} ${elsewhere === 1 ? "is" : "are"} settled by a split or an invoice ` +
+            "and confirmed as that.\n\n"
           : "") +
         (pairs.length > 0
-          ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} also on ` +
-            "this screen. Pairing is not coding, so it is asked separately: press Accept all " +
-            "again afterwards.\n\n"
+          ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} also shown. ` +
+            "Press Accept all again afterwards to pair them.\n\n"
           : "") +
         // Said out loud, and counted apart from the rules. A rule is
         // something these books were told; a model's answer is something
         // guessed, and agreeing to a screen of them without being told which
         // is which is not agreeing to the same thing.
         (guessed > 0
-          ? `${guessed} of them ${guessed === 1 ? "was" : "were"} suggested by the model ` +
-            "rather than by a rule, and each is recorded as that with what it said.\n\n"
+          ? `${guessed} ${guessed === 1 ? "was" : "were"} suggested by AI rather than a rule, ` +
+            "and will be recorded as such.\n\n"
           : "") +
         (cautioned > 0
-          ? `${cautioned} AI suggestion${cautioned === 1 ? " is" : "s are"} left alone: the ` +
-            `money goes the opposite way to the account ${cautioned === 1 ? "it names" : "they name"}, ` +
-            "which is the one thing worth reading before agreeing to it.\n\n"
+          ? `${cautioned} AI suggestion${cautioned === 1 ? " is" : "s are"} left out: the ` +
+            "money goes the opposite way to the account suggested.\n\n"
           : "") +
         (ruleCautioned > 0
-          ? `${ruleCautioned} rule suggestion${ruleCautioned === 1 ? " is" : "s are"} left alone: ` +
-            "money in to an expense or out to income. Right for a refund, wrong for anything " +
-            "else, so each is for a person to confirm.\n\n"
+          ? `${ruleCautioned} rule suggestion${ruleCautioned === 1 ? " is" : "s are"} left out: ` +
+            "money in to an expense or out of income, correct only for a refund.\n\n"
           : "") +
-        "This confirms them exactly as shown. The change log can undo the whole batch.",
+        "They are confirmed exactly as shown. History can undo the whole batch.",
     )
   ) {
     return;

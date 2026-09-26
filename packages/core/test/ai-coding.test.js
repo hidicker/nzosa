@@ -232,8 +232,8 @@ test("a real payee is left alone", () => {
 });
 
 test("money in coded to spending is flagged, not refused", () => {
-  assert.match(directionCaution("money in", "Overhead"), /Right for a refund/);
-  assert.match(directionCaution("money in", "Direct Costs"), /Right for a refund/);
+  assert.match(directionCaution("money in", "Overhead"), /correct only for a refund/);
+  assert.match(directionCaution("money in", "Direct Costs"), /correct only for a refund/);
   assert.match(directionCaution("money out", "Revenue"), /income account/);
   // The ordinary cases say nothing at all.
   assert.equal(directionCaution("money out", "Overhead"), undefined);

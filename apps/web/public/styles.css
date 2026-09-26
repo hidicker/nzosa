@@ -3528,3 +3528,7 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 
 /* Whose account an option is, beside it in the account picker. */
 .combo-option .combo-note { color: var(--muted); font-size: 0.85em; }
+
+/* A picker in a label laid out top to bottom: its grow-to-15rem is meant
+   across, and in a column it grew down instead, opening its list far below. */
+.account-add-field > .combo, .rule-field > .combo { flex: 0 0 auto; }

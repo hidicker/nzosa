@@ -6,7 +6,7 @@ import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { chosenStartDate, startOfFinancialYear } from "../migrate/onboarding-state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { financialYearBalances, financialYearOf, parseAmount } from "@nzosa/core";
+import { accountEntityKey, emptyEntityModel, financialYearBalances, financialYearOf, parseAmount } from "@nzosa/core";
 import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
 import { asCsvText } from "../books.js";
 import { dayAfter, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
@@ -374,13 +374,51 @@ export function renderOpeningBalances(): void {
 /** Starting bank balances being entered: one amount per bank account. */
 interface BankDraft {
   asAt: string;
-  rows: { id: string; label: string; amount: string; owing: boolean; working?: string }[];
-  balanceTo: string;
+  /** Each bank account, and the equity account of the entity it belongs to. */
+  rows: { id: string; label: string; amount: string; owing: boolean; balanceTo: string; working?: string }[];
 }
 
 let bankDraft: BankDraft | null = null;
 
-/** The bank accounts, with anything already held for them, and the usual balancing account. */
+/** The equity accounts a starting balance can be balanced to, with whose each is. */
+function equityChoices(): { code: string; label: string; entityId: string | undefined; name: string }[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  return state.chart
+    .filter((a) => a.type.trim().toLowerCase() === "equity" && a.code.trim() !== "")
+    .map((a) => {
+      const entityId = model.accounts[accountEntityKey(a)];
+      const entity = model.entities.find((e) => e.id === entityId);
+      return {
+        code: a.code.trim(),
+        label: `${a.code.trim()} ${a.name}${entity === undefined ? "" : ` · ${entity.name}`}`,
+        entityId,
+        name: a.name,
+      };
+    });
+}
+
+/**
+ * The equity account a bank account's starting balance goes against: the
+ * owner's equity of the entity the bank account belongs to. Each entity's
+ * opening position balances to its own equity, so one entity's balance sheet
+ * never carries another's money. A shared account defaults to its personal
+ * owner, where a shared card's balance usually belongs, and can be changed.
+ */
+function equityFor(bank: string): string {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const choices = equityChoices();
+  const owner = (ids: readonly string[]): string | undefined => {
+    if (ids.length <= 1) return ids[0];
+    return ids.find((id) => model.entities.find((e) => e.id === id)?.kind === "personal") ?? ids[0];
+  };
+  const entityId = owner(model.banks[bank] ?? []);
+  const theirs = choices.filter((c) => entityId !== undefined && c.entityId === entityId);
+  const pick = (list: typeof choices) =>
+    list.find((c) => /funds introduced|owner.*funds|owner.*equity|capital/i.test(c.name)) ?? list[0];
+  return (pick(theirs) ?? pick(choices))?.code ?? "";
+}
+
+/** The bank accounts, with anything already held for them, and each one's balancing account. */
 function startBankDraft(): BankDraft {
   const held = state.ledger.openingBalances;
   const asAt = draftFromHeld().asAt;
@@ -393,23 +431,19 @@ function startBankDraft(): BankDraft {
       label: name === id ? id : `${id} ${name}`,
       amount: cents === 0 ? "" : (Math.abs(cents) / 100).toFixed(2),
       owing: cents < 0,
+      balanceTo: equityFor(id),
     };
   });
-  // Owner's equity: what a person's or a rental's starting position is
-  // balanced to. A funds-introduced account first, then any equity account.
-  const equity = state.chart.filter((a) => a.type.trim().toLowerCase() === "equity" && a.code.trim() !== "");
-  const preferred =
-    equity.find((a) => /funds introduced|owner.*funds|owner.*equity|capital/i.test(a.name)) ?? equity[0];
-  return { asAt, rows, balanceTo: preferred === undefined ? "" : preferred.code.trim() };
+  return { asAt, rows };
 }
 
 /**
  * Bank balances at the start, one box each.
  *
  * In credit or owing rather than debit or credit, which is the same thing in
- * the words a bank statement uses. Any other opening balances already held
- * for the same date are kept, and the difference goes to one balancing
- * account -- usually the owner's equity.
+ * the words a bank statement uses. Each account balances to its own entity's
+ * equity, and any other opening balances already held for the same date are
+ * kept as they are.
  */
 function bankBalancesForm(draft: BankDraft): HTMLElement {
   const wrap = document.createElement("div");
@@ -440,7 +474,9 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
 
   const table = document.createElement("table");
   table.className = "report-table opening-table";
-  table.innerHTML = "<thead><tr><th>Bank account</th><th>Balance</th><th></th></tr></thead>";
+  table.innerHTML =
+    "<thead><tr><th>Bank account</th><th>Balance</th><th></th><th>Balance to</th></tr></thead>";
+  const equity = equityChoices();
   const tbody = document.createElement("tbody");
   for (const row of draft.rows) {
     const tr = document.createElement("tr");
@@ -479,7 +515,22 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
       row.owing = side.value === "owing";
     });
     sideTd.append(side);
-    tr.append(amountTd, sideTd);
+    // A plain list: only equity accounts belong here, and there are few.
+    const toTd = document.createElement("td");
+    const to = document.createElement("select");
+    for (const choice of equity) {
+      const option = document.createElement("option");
+      option.value = choice.code;
+      option.textContent = choice.label;
+      option.selected = choice.code === row.balanceTo;
+      to.append(option);
+    }
+    to.title = "The owner's equity of the entity this bank account belongs to.";
+    to.addEventListener("change", () => {
+      row.balanceTo = to.value;
+    });
+    toTd.append(to);
+    tr.append(amountTd, sideTd, toTd);
     tbody.append(tr);
   }
   table.append(tbody);
@@ -508,23 +559,6 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   feedRow.className = "page-actions";
   feedRow.append(fromFeed);
   wrap.append(feedRow, feedSaid);
-
-  const options = openingAccountOptions().filter((o) => !draft.rows.some((r) => r.id === o.key));
-  const balanceLabel = document.createElement("label");
-  balanceLabel.className = "account-add-field";
-  const balanceCaption = document.createElement("span");
-  balanceCaption.textContent = "Balance the difference to";
-  const current = options.find((o) => o.key === draft.balanceTo)?.label ?? null;
-  const balanceTo = combobox(
-    options.map((o) => o.label),
-    current,
-    "Usually owner's equity",
-    () => {
-      draft.balanceTo = options.find((o) => o.label === balanceTo.value)?.key ?? "";
-    },
-  );
-  balanceLabel.append(balanceCaption, balanceTo.element);
-  wrap.append(balanceLabel);
 
   const said = document.createElement("p");
   said.className = "split-balance";
@@ -604,16 +638,16 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void>
     said.textContent = "Choose the date the books start.";
     return;
   }
-  if (draft.balanceTo === "") {
-    said.textContent = "Choose the account to balance the difference to.";
-    return;
-  }
   const accounts: Record<string, Cents> = {};
   for (const row of draft.rows) {
     if (row.amount.trim() === "") continue;
     const cents = parseAmount(row.amount.trim());
     if (cents === null) {
       said.textContent = `"${row.amount}" for ${row.label} is not an amount.`;
+      return;
+    }
+    if (cents !== 0 && row.balanceTo === "") {
+      said.textContent = `Choose the equity account ${row.label} balances to.`;
       return;
     }
     if (cents !== 0) accounts[row.id] = row.owing ? -Math.abs(cents) : Math.abs(cents);
@@ -623,10 +657,10 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void>
     return;
   }
 
-  // Kept: whatever else is held for the same date. Replaced: the banks, and
-  // the balancing account, which is worked out again.
+  // Everything else held for the same date is kept. Each bank balance that
+  // changes moves its own entity's equity by the same amount, so balances
+  // that balanced before still do, and nothing else is touched.
   const held = state.ledger.openingBalances;
-  const banks = new Set(draft.rows.map((row) => row.id));
   if (held !== undefined && held.asAt !== draft.asAt && Object.keys(held.accounts).length > 0) {
     if (
       !confirm(
@@ -637,15 +671,20 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void>
       return;
     }
   }
-  const kept =
-    held !== undefined && held.asAt === draft.asAt
-      ? Object.fromEntries(
-          Object.entries(held.accounts).filter(([key]) => !banks.has(key) && key !== draft.balanceTo),
-        )
-      : {};
-  const merged: Record<string, Cents> = { ...kept, ...accounts };
-  const total = Object.values(merged).reduce((sum, cents) => sum + cents, 0);
-  if (total !== 0) merged[draft.balanceTo] = -total;
+  const merged: Record<string, Cents> =
+    held !== undefined && held.asAt === draft.asAt ? { ...held.accounts } : {};
+  const move = (key: string, by: Cents): void => {
+    const next = (merged[key] ?? 0) + by;
+    if (next === 0) delete merged[key];
+    else merged[key] = next;
+  };
+  for (const row of draft.rows) {
+    const now = accounts[row.id] ?? 0;
+    const before = merged[row.id] ?? 0;
+    if (now === before) continue;
+    move(row.id, now - before);
+    move(row.balanceTo, before - now);
+  }
 
   const options = openingAccountOptions();
   const labelOf = (key: string): string => options.find((o) => o.key === key)?.label ?? key;

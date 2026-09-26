@@ -4,15 +4,18 @@ import { knownCodes, suggest } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
 import {
+  accountEntityKey,
   askAbout,
   briefing,
   directionCaution,
   emptyEntityModel,
+  keywordFor,
+  splitAccountLabel,
   labelForCode,
   parseSuggestions,
   wholePrompt,
 } from "@nzosa/core";
-import type { AiSuggestion, AskedAbout } from "@nzosa/core";
+import type { AiSuggestion, AskedAbout, EntityKind, JevOption } from "@nzosa/core";
 
 /**
  * Suggestions from a model, and the asking for them.
@@ -171,8 +174,9 @@ export async function askAboutLines(
   const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
+  const detail = perLineDetail(lines.slice(0, Math.max(1, howMany)), codes);
   const answer = await aiSuggest(prompt, asked.length, {
-    lines: asked,
+    lines: asked.map((one, index) => ({ ...one, ...detail[index] })),
     codes,
     about: state.ledger.booksAbout ?? "",
   });
@@ -180,6 +184,89 @@ export async function askAboutLines(
   // Where the answer came from matters a year later: a suggestion made on the
   // shared key was made on a model somebody else chose and paid for.
   return keepWhatIsUsable(answer.text ?? "", asked, codes, answer.demo === true ? "shared key" : undefined);
+}
+
+const KIND_WORDS: Record<EntityKind, string> = {
+  business: "business",
+  residential: "residential rental",
+  commercial: "commercial rental",
+  personal: "personal",
+};
+
+/**
+ * What a provider asked about each line on its own (Jev) is told beyond the
+ * prompt's fields.
+ *
+ * Its choices: the accounts of the entities the line's bank account serves,
+ * each with its type and entity -- a rental's line chooses among the
+ * rental's accounts, not between three identically named "Rates and water".
+ * Whose account it is, with what each entity does in the owner's words. And
+ * how the same payee was coded before, which is the strongest evidence
+ * there is. A provider given the whole prompt ignores all of this.
+ */
+function perLineDetail(
+  picked: readonly Suggestion[],
+  codes: readonly string[],
+): { options: JevOption[]; context: string; examples: string[] }[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const byId = new Map(model.entities.map((entity) => [entity.id, entity]));
+  // The chart's own name and type for each code: the list asked about may be
+  // bare codes, and a choice between "489" and "493" is no choice at all.
+  const chartOf = new Map(state.chart.map((account) => [account.code.trim(), account]));
+  const accounts = codes.map((label) => {
+    const { code, name } = splitAccountLabel(label);
+    const entityId = model.accounts[accountEntityKey({ code, name })];
+    const entity = entityId === undefined ? undefined : byId.get(entityId);
+    const account = chartOf.get(code);
+    const named = account?.name ?? (name !== code ? name : "");
+    const about = [
+      [named, account?.type ?? ""].filter((part) => part !== "").join(" — "),
+      entity === undefined ? "" : `${entity.name}, ${KIND_WORDS[entity.kind ?? "business"]}`,
+    ]
+      .filter((part) => part !== "")
+      .join("; ");
+    return { label, entityId, about };
+  });
+  // The first two words of the payee: one word ("PAYMENT") pairs strangers.
+  const lead = (words: string): string => words.split(" ").slice(0, 2).join(" ");
+  const history = allLines()
+    .filter((one) => one.confirmed && (one.code ?? "") !== "")
+    .map((one) => ({ key: lead(keywordFor(one.transaction)), payee: one.transaction.otherParty.trim(), code: one.code ?? "" }));
+
+  return picked.map((one) => {
+    const serves = model.banks[one.transaction.account] ?? [];
+    const own = accounts.filter((a) => a.entityId !== undefined && serves.includes(a.entityId));
+    const options = (own.length >= 2 ? own : accounts).map(({ label, about }) => ({ label, about }));
+    // By code: a coding is stored as "Rates and water - 420", the choices may
+    // be bare codes, and the two have to be recognised as the same account.
+    const codeOf = (label: string): string => splitAccountLabel(label).code || label;
+    const allowed = new Set(options.map((option) => codeOf(option.label)));
+    const owners = serves.map((id) => byId.get(id)).filter((entity) => entity !== undefined);
+    const context =
+      owners.length === 0
+        ? ""
+        : "This bank account belongs to " +
+          owners
+            .map(
+              (entity) =>
+                `${entity.name} (${KIND_WORDS[entity.kind ?? "business"]})` +
+                ((entity.about ?? "").trim() !== "" ? `: ${(entity.about ?? "").trim()}` : ""),
+            )
+            .join("; ") +
+          ".";
+    const key = lead(keywordFor(one.transaction));
+    const examples =
+      key.length < 6 || !key.includes(" ")
+        ? []
+        : [
+            ...new Map(
+              history
+                .filter((h) => h.key === key && allowed.has(splitAccountLabel(h.code).code || h.code))
+                .map((h) => [h.code, `${h.payee} was coded to ${h.code}`]),
+            ).values(),
+          ].slice(0, 5);
+    return { options, context, examples };
+  });
 }
 
 /**

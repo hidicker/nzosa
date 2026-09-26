@@ -783,6 +783,11 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
                 payee: text(line.payee),
                 details: text(line.details),
                 paidFrom: text(line.paidFrom),
+                options: Array.isArray(line.options)
+                  ? line.options.map((option) => ({ label: text(option.label), about: text(option.about) }))
+                  : [],
+                context: text(line.context),
+                examples: Array.isArray(line.examples) ? line.examples.slice(0, 5).map(text) : [],
               })),
               codes,
               about: text(body.about),

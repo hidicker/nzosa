@@ -70,3 +70,41 @@ test("a Jev key is checked with one small question, and refuses prose", async ()
   assert.equal(sent[0].body.questions.ok.type, "noul");
   await assert.rejects(() => askModel("jev", "jv_x", "jev-latest", "hello", fetcher), /coding suggestions on Reconcile only/);
 });
+
+test("a line chooses only among its own entity's accounts, described, with its history", async () => {
+  const { fetcher, sent } = fakeJev(() => ({
+    json: { answers: { account: { type: "choice", choice: "a1", confidence: 0.97, probabilities: { a1: 0.97 } } } },
+  }));
+  const chart = ["Repairs - 473TS", "Rates and water - 420TS", "Rates and water - 420RS"];
+  const line = {
+    ...lines[0],
+    options: [
+      { label: "Repairs - 473TS", about: "Expense; Totara Street, residential rental" },
+      { label: "Rates and water - 420TS", about: "Expense; Totara Street, residential rental" },
+      { label: "Invented - 999", about: "not in the chart" },
+    ],
+    context: "This bank account belongs to Totara Street (residential rental).",
+    examples: ["KEA HARDWARE was coded to Repairs - 473TS"],
+  };
+  const text = await jevSuggest({ key: "jv_x", lines: [line], codes: chart, fetcher });
+  const criteria = sent[0].body.questions.account.criteria;
+  // Only the entity's own, only what is in the chart, each described.
+  assert.deepEqual(criteria, {
+    a0: "Repairs - 473TS: Expense; Totara Street, residential rental",
+    a1: "Rates and water - 420TS: Expense; Totara Street, residential rental",
+  });
+  assert.match(sent[0].body.state, /belongs to Totara Street/);
+  assert.match(sent[0].body.state, /- KEA HARDWARE was coded to Repairs - 473TS/);
+  assert.equal(JSON.parse(text)[0].code, "Rates and water - 420TS");
+});
+
+test("fewer than two usable choices falls back to the whole chart", async () => {
+  const { fetcher, sent } = fakeJev(() => ({ json: { answers: { account: { choice: "a0", confidence: 0.5 } } } }));
+  await jevSuggest({
+    key: "jv_x",
+    lines: [{ ...lines[0], options: [{ label: codes[0], about: "Expense" }] }],
+    codes,
+    fetcher,
+  });
+  assert.deepEqual(sent[0].body.questions.account.criteria, { a0: codes[0], a1: codes[1] });
+});

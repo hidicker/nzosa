@@ -17,7 +17,14 @@ import { JEV_DECIDE_URL, JEV_MODEL } from "./ai-providers.js";
  * books, so a separate GST guess could only disagree with it.
  */
 
-/** A line as it is described to any model: the same fields, nothing more. */
+/** An account Jev may choose for a line, and what it is. */
+export interface JevOption {
+  label: string;
+  /** Its type and entity, e.g. "Expense; Totara Street, residential rental". */
+  about: string;
+}
+
+/** A line as it is described to any model, and what Jev is to choose between. */
 export interface JevLine {
   id: string;
   date: string;
@@ -26,6 +33,15 @@ export interface JevLine {
   payee: string;
   details: string;
   paidFrom: string;
+  /**
+   * The accounts this line may go to: the entity's own, where the bank
+   * account says whose it is. Absent, the whole chart. Each must be in it.
+   */
+  options?: readonly JevOption[];
+  /** Whose bank account it is and what that entity does, in words. */
+  context?: string;
+  /** How this payee was coded before, e.g. "KEA HARDWARE was coded to Repairs - 473". */
+  examples?: readonly string[];
 }
 
 export interface JevRequest {
@@ -59,14 +75,20 @@ export async function jevSuggest(request: JevRequest): Promise<string> {
       `Jev chooses from at most ${JEV_MOST_OPTIONS} accounts; this chart has ${codes.length}.`,
     );
   }
-  // Short keys for the options, since account labels carry punctuation;
-  // mapped back to the label when the answer arrives.
-  const criteria: Record<string, string> = {};
-  codes.forEach((code, index) => {
-    criteria[`a${index}`] = code;
-  });
+  const inChart = new Set(codes);
 
   const ask = async (line: JevLine): Promise<{ id: string; code: string; confidence: number; because: string }> => {
+    // The line's own choices where it has them, and only ones in the chart;
+    // the whole chart otherwise. Short keys, since labels carry punctuation,
+    // mapped back to the label when the answer arrives.
+    const own = (line.options ?? []).filter((option) => inChart.has(option.label));
+    const choices: JevOption[] = own.length >= 2 ? own : codes.map((label) => ({ label, about: "" }));
+    const criteria: Record<string, string> = {};
+    const labelOf: Record<string, string> = {};
+    choices.forEach((option, index) => {
+      criteria[`a${index}`] = option.about === "" ? option.label : `${option.label}: ${option.about}`;
+      labelOf[`a${index}`] = option.label;
+    });
     const response = await request.fetcher(JEV_DECIDE_URL, {
       method: "POST",
       headers: { "content-type": "application/json", authorization: `Bearer ${request.key}` },
@@ -90,13 +112,15 @@ export async function jevSuggest(request: JevRequest): Promise<string> {
       | null;
     if (!response.ok) throw new Error(jevError(response.status, body));
     const answer = body?.answers?.account;
-    const code = answer?.choice !== undefined ? (criteria[answer.choice] ?? "") : "";
+    const code = answer?.choice !== undefined ? (labelOf[answer.choice] ?? "") : "";
     const confidence = typeof answer?.confidence === "number" ? answer.confidence : 0;
-    return { id: line.id, code, confidence, because: reason(answer, criteria) };
+    return { id: line.id, code, confidence, because: reason(answer, labelOf) };
   };
 
   const answers: { id: string; code: string; confidence: number; because: string }[] = [];
-  const width = Math.max(1, request.concurrency ?? 5);
+  // All at once by default: each answer takes well under a second, and a
+  // batch is small.
+  const width = Math.max(1, request.concurrency ?? 20);
   for (let start = 0; start < lines.length; start += width) {
     answers.push(...(await Promise.all(lines.slice(start, start + width).map(ask))));
   }
@@ -114,6 +138,10 @@ function describe(line: JevLine, about: string): string {
     `Payee: ${line.payee}`,
     ...(line.details.trim() !== "" ? [`Details: ${line.details}`] : []),
     ...(line.paidFrom.trim() !== "" ? [`Bank account: ${line.paidFrom}`] : []),
+    ...(line.context !== undefined && line.context.trim() !== "" ? [line.context.trim()] : []),
+    ...((line.examples ?? []).length > 0
+      ? ["How this payee was coded before:", ...(line.examples ?? []).map((e) => `- ${e}`)]
+      : []),
   ].join("\n");
 }
 

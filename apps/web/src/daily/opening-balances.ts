@@ -1,4 +1,5 @@
 import { redraw, showPage } from "../app.js";
+import { feedStatus } from "../feed-route.js";
 import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record } from "../books.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
@@ -373,7 +374,7 @@ export function renderOpeningBalances(): void {
 /** Starting bank balances being entered: one amount per bank account. */
 interface BankDraft {
   asAt: string;
-  rows: { id: string; label: string; amount: string; owing: boolean }[];
+  rows: { id: string; label: string; amount: string; owing: boolean; working?: string }[];
   balanceTo: string;
 }
 
@@ -443,7 +444,14 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   const tbody = document.createElement("tbody");
   for (const row of draft.rows) {
     const tr = document.createElement("tr");
-    tr.append(nameCell(row.label));
+    const labelCell = nameCell(row.label);
+    if (row.working !== undefined) {
+      const how = document.createElement("small");
+      how.className = "field-hint opening-working";
+      how.textContent = row.working;
+      labelCell.append(how);
+    }
+    tr.append(labelCell);
     const amountTd = document.createElement("td");
     const amount = document.createElement("input");
     amount.type = "text";
@@ -476,6 +484,30 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   }
   table.append(tbody);
   wrap.append(table);
+
+  // From the feed: today's balance less what has happened since the start.
+  const fromFeed = document.createElement("button");
+  fromFeed.type = "button";
+  fromFeed.textContent = "Work out from the bank feed";
+  fromFeed.title =
+    "The feed's latest balance less every transaction since the start date. Only right if " +
+    "every transaction since then has been imported, once.";
+  const feedSaid = document.createElement("p");
+  feedSaid.className = "field-hint";
+  fromFeed.addEventListener("click", () => {
+    fromFeed.disabled = true;
+    void workOutFromFeed(draft).then((said) => {
+      if (said === "") redraw("openingBalances");
+      else {
+        feedSaid.textContent = said;
+        fromFeed.disabled = false;
+      }
+    });
+  });
+  const feedRow = document.createElement("div");
+  feedRow.className = "page-actions";
+  feedRow.append(fromFeed);
+  wrap.append(feedRow, feedSaid);
 
   const options = openingAccountOptions().filter((o) => !draft.rows.some((r) => r.id === o.key));
   const balanceLabel = document.createElement("label");
@@ -513,6 +545,57 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   buttons.append(save, cancel);
   wrap.append(buttons, said);
   return wrap;
+}
+
+/**
+ * Starting balances from the bank feed: each account's latest feed balance,
+ * less every transaction since the start date up to that balance's day.
+ *
+ * Akahu gives only the balance now, so this is the one way to reach back to
+ * a start date from it. It is exactly right when every transaction since
+ * then is imported once and wrong by any gap, so the working is shown on each
+ * account for a person to check before saving. Returns what went wrong, or
+ * nothing when the draft was filled in.
+ */
+async function workOutFromFeed(draft: BankDraft): Promise<string> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) return "Choose the date the books start first.";
+  const status = await feedStatus();
+  const latest = status?.balances?.[status.balances.length - 1];
+  if (status === null || !status.configured || latest === undefined) {
+    return "No bank feed balances yet. Connect the feed and fetch it on the Bank import page first.";
+  }
+  // The feed's time, as a New Zealand date, which is how transactions are dated.
+  const on = new Date(latest.at).toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
+  const byAccount = new Map(
+    Object.entries(status.accounts ?? {})
+      .filter(([, ours]) => ours !== "")
+      .map(([akahuId, ours]) => [ours, akahuId]),
+  );
+  let filled = 0;
+  for (const row of draft.rows) {
+    const akahuId = byAccount.get(row.id);
+    const balance = akahuId === undefined ? undefined : latest.balances[akahuId];
+    if (balance === undefined) {
+      row.working = "No feed balance for this account.";
+      continue;
+    }
+    const since = state.ledger.transactions
+      .filter((t) => t.account === row.id && t.date >= draft.asAt && t.date <= on)
+      .reduce((sum, t) => sum + t.amount, 0);
+    const opening = balance - since;
+    row.amount = opening === 0 ? "" : (Math.abs(opening) / 100).toFixed(2);
+    row.owing = opening < 0;
+    const dollars = (cents: Cents): string =>
+      `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString("en-NZ", {
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2,
+      })}`;
+    row.working =
+      `Feed balance ${dollars(balance)} on ${on}; transactions since ${draft.asAt} came to ` +
+      `${dollars(since)}; so it started at ${dollars(opening)}.`;
+    filled += 1;
+  }
+  return filled === 0 ? "None of these accounts has a feed balance." : "";
 }
 
 /** Merge the bank balances into what is held for that date, balance, and save. */

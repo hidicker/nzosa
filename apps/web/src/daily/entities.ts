@@ -3,6 +3,7 @@ import {
   NOT_IN_LEDGER,
   accountsForEditing,
   banks,
+  chartBalances,
   chartTreatmentOf,
   codingProgress,
   ledgerAccountFor,
@@ -34,8 +35,9 @@ import {
   renameAccount,
   renameProblem,
   reportsNetOfGst,
+  sectionForType,
 } from "@nzosa/core";
-import type { Account, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
+import type { Account, Cents, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
 
 /**
  * Account types offered on the accounts page.
@@ -76,6 +78,28 @@ const ACCOUNT_TYPES: readonly (readonly [string, string])[] = [
 /** The form for starting another entity, under the ones that already exist. */
 /** A new account asked for from elsewhere, to start the add row with. */
 let pendingNewAccount: string | null = null;
+
+/** Entities whose settings are showing, kept across redraws. */
+const openEntitySettings = new Set<string>();
+
+/** A menu closes when somebody clicks anywhere else, as menus do. Installed once. */
+let menusWatched = false;
+function closeMenusOnOutsideClick(): void {
+  if (menusWatched) return;
+  menusWatched = true;
+  document.addEventListener("click", (event) => {
+    for (const menu of document.querySelectorAll<HTMLDetailsElement>("details.entity-menu[open]")) {
+      if (!menu.contains(event.target as Node)) menu.open = false;
+    }
+  });
+}
+
+const KIND_CAPTION: Record<EntityKind, string> = {
+  business: "Business",
+  residential: "Residential rental",
+  commercial: "Commercial rental",
+  personal: "Personal",
+};
 
 /** Open the chart of accounts ready to add an account, named as typed. */
 export function startNewAccount(name: string): void {
@@ -581,7 +605,57 @@ export function renderEntities(): void {
       redraw("entities");
     });
 
-    row.append(name, ownersWrap, kind, gstWrap, exemptWrap, standard, rename, remove);
+    // One line per entity. What is set once -- owners, kind, GST, invoice
+    // details -- is behind Settings, and the actions used now and then are in
+    // a menu: six entities used to take 1,200 pixels before the chart began.
+    const summary = document.createElement("span");
+    summary.className = "entity-summary";
+    summary.textContent = [
+      KIND_CAPTION[entity.kind ?? "business"],
+      reportsNetOfGst(entity) ? "GST registered" : "not GST registered",
+      formatOwners(entity.owners ?? []),
+    ]
+      .filter((part) => part !== "")
+      .join(" · ");
+
+    const settings = document.createElement("div");
+    settings.className = "entity-settings";
+    settings.hidden = !(unnamed || openEntitySettings.has(entity.id));
+    const settingsButton = document.createElement("button");
+    settingsButton.type = "button";
+    settingsButton.textContent = settings.hidden ? "Settings" : "Hide settings";
+    settingsButton.setAttribute("aria-expanded", String(!settings.hidden));
+    settingsButton.addEventListener("click", () => {
+      settings.hidden = !settings.hidden;
+      if (settings.hidden) openEntitySettings.delete(entity.id);
+      else openEntitySettings.add(entity.id);
+      settingsButton.textContent = settings.hidden ? "Settings" : "Hide settings";
+      settingsButton.setAttribute("aria-expanded", String(!settings.hidden));
+    });
+
+    const menu = document.createElement("details");
+    menu.className = "entity-menu";
+    const menuLabel = document.createElement("summary");
+    menuLabel.textContent = "Options ▾";
+    const items = document.createElement("div");
+    items.className = "entity-menu-items";
+    standard.textContent = "Standard accounts…";
+    rename.textContent = "Rename…";
+    remove.textContent = "Delete…";
+    for (const item of [standard, rename, remove]) {
+      item.addEventListener("click", () => {
+        menu.open = false;
+      });
+    }
+    items.append(standard, rename, remove);
+    menu.append(menuLabel, items);
+    closeMenusOnOutsideClick();
+
+    const head = document.createElement("div");
+    head.className = "entity-head";
+    head.append(name, summary, settingsButton, menu);
+    settings.append(ownersWrap, kind, gstWrap, exemptWrap);
+    row.append(head, settings);
 
     // What goes at the top of an invoice you send somebody. Nothing else in
     // these books knows any of it, and without it an invoice cannot be sent:
@@ -641,7 +715,7 @@ export function renderEntities(): void {
       billing.append(wrap);
     }
     billingDetails.append(billing);
-    row.append(billingDetails);
+    settings.append(billingDetails);
     list.append(row);
   }
   body.append(list);
@@ -737,6 +811,17 @@ export function renderEntities(): void {
   chartHead.innerHTML =
     "<tr><th>Code</th><th>Name</th><th>Type</th><th>GST</th>" +
     "<th>Entity, or which account</th><th></th></tr>";
+  // YTD after the name, where an accounting system's chart has it.
+  const yearly = chartHead.querySelector("th:nth-child(2)");
+  if (yearly) {
+    const ytd = document.createElement("th");
+    ytd.textContent = "YTD";
+    ytd.title =
+      "Income and expenses: this financial year to date. Assets, liabilities and equity: " +
+      "the balance today. Shown as each account normally runs; brackets mean the other way.";
+    yearly.after(ytd);
+  }
+  const balances = chartBalances();
   const chartBody = document.createElement("tbody");
 
   for (const item of groupedAccounts(model, accountRows)) {
@@ -744,7 +829,7 @@ export function renderEntities(): void {
       const group = document.createElement("tr");
       group.className = "account-group";
       const th = document.createElement("th");
-      th.colSpan = 6;
+      th.colSpan = 7;
       th.textContent = item.heading;
       const count = document.createElement("span");
       count.textContent = ` ${item.count}`;
@@ -765,7 +850,7 @@ export function renderEntities(): void {
     nameCell.className = "entity-left";
     codeCell.textContent = account.code;
     nameCell.textContent = account.name;
-    tr.append(codeCell, nameCell);
+    tr.append(codeCell, nameCell, balanceCell(account, balances));
 
     // The type decides whether an account is income, an expense, or neither.
     // Chart accounts arrive with Xero's; accounts that exist only as a rule
@@ -979,6 +1064,35 @@ function groupedAccounts<Row extends { account: Account }>(
   return groups
     .filter((g) => g.rows.length > 0)
     .flatMap((g) => [{ heading: g.heading, count: g.rows.length }, ...g.rows]);
+}
+
+/**
+ * An account's YTD figure, the way it normally runs: income, liabilities and
+ * equity are credits and shown positive as credits, everything else as
+ * debits. The other way round is in brackets. Bank rows are left blank: their
+ * figure belongs to the bank feed and its reconciliation, not to a code.
+ */
+function balanceCell(
+  account: Account,
+  balances: { yearToDate: Map<string, Cents>; today: Map<string, Cents> },
+): HTMLTableCellElement {
+  const cell = document.createElement("td");
+  cell.className = "account-ytd";
+  const code = account.code.trim();
+  const type = account.type.trim().toLowerCase();
+  if (code === "" || type === "bank") return cell;
+  const profitAndLoss = sectionForType(account.type) !== null;
+  const raw = (profitAndLoss ? balances.yearToDate : balances.today).get(code) ?? 0;
+  if (raw === 0) return cell;
+  const creditNormal = /revenue|income|sales|liabilit|equity|payable|retained|gst|historical|rounding|tracking|unpaid/.test(type);
+  const shown = creditNormal ? -raw : raw;
+  const text = (Math.abs(shown) / 100).toLocaleString("en-NZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  });
+  cell.textContent = shown < 0 ? `(${text})` : text;
+  cell.title = profitAndLoss ? "This financial year to date" : "Balance today";
+  return cell;
 }
 
 /**

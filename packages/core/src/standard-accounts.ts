@@ -72,7 +72,7 @@ const STANDARD: Readonly<Record<Exclude<EntityKind, "business">, readonly Standa
   personal: [
     { code: "200", name: "Personal income", type: "Revenue", gst: "none", description: "Wages, interest and any other money received" },
     { code: "400", name: "Personal spending", type: "Expense", gst: "none", description: "Everyday spending; not deductible" },
-    { code: "830", name: "Income tax paid", type: "Current Liability", gst: "none", description: "Provisional and terminal tax paid to Inland Revenue; not an expense" },
+    { code: "625", name: "Income tax paid", type: "Current Asset", gst: "none", description: "Provisional and terminal tax paid to Inland Revenue, set against the tax on the return; not an expense" },
   ],
 };
 

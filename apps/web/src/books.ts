@@ -1097,6 +1097,53 @@ export function gstFrequency(): 1 | 2 | 6 {
  * adjustment or a hand journal and no bank lines yet had no year to show it
  * in -- the figures were posted and no report could reach them.
  */
+/**
+ * Each account's figure for the chart of accounts, keyed by account code:
+ * for income and expenses the year to date, for everything else the balance
+ * today -- the way an accounting system's chart shows it.
+ *
+ * Both are worked out here and the page picks by type. Built once per set of
+ * books and chart, since the page redraws on every edit.
+ */
+let balancesCache: {
+  ledger: unknown;
+  rules: unknown;
+  chart: unknown;
+  yearToDate: Map<string, Cents>;
+  today: Map<string, Cents>;
+} | null = null;
+
+export function chartBalances(): { yearToDate: Map<string, Cents>; today: Map<string, Cents> } {
+  if (
+    balancesCache !== null &&
+    balancesCache.ledger === state.ledger &&
+    balancesCache.rules === state.rules &&
+    balancesCache.chart === state.chart
+  ) {
+    return balancesCache;
+  }
+  const now = new Date().toISOString().slice(0, 10);
+  const yearStart = `${financialYearOf(now) - 1}-04-01`;
+  const opening = state.ledger.openingBalances;
+  const yearToDate = new Map<string, Cents>();
+  const today = new Map<string, Cents>();
+  const add = (map: Map<string, Cents>, code: string, amount: Cents): void => {
+    map.set(code, (map.get(code) ?? 0) + amount);
+  };
+  for (const [code, amount] of Object.entries(opening?.accounts ?? {})) add(today, code.trim(), amount);
+  for (const journal of postedJournals()) {
+    if (journal.date > now) continue;
+    for (const line of journal.lines) {
+      const code = line.accountCode.trim();
+      if (code === "") continue;
+      if (journal.date >= yearStart) add(yearToDate, code, line.amount);
+      if (opening === undefined || journal.date > opening.asAt) add(today, code, line.amount);
+    }
+  }
+  balancesCache = { ledger: state.ledger, rules: state.rules, chart: state.chart, yearToDate, today };
+  return balancesCache;
+}
+
 export function bookYears(): number[] {
   const dates: string[] = [
     ...state.ledger.transactions.map((t) => t.date),

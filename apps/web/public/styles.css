@@ -3492,3 +3492,36 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   background: var(--review-bg); border-left: 3px solid var(--review);
   padding: 0.5rem 0.8rem; margin: 0.6rem 0 0.9rem; font-size: 0.88rem; border-radius: 0 3px 3px 0; }
 .provisional-note p { margin: 0; flex: 1 1 24rem; }
+
+/* Entities: one line each, settings and actions tucked away. */
+.entity-chip { flex-direction: column; align-items: stretch; gap: 0; padding: 0.35rem 0.6rem; }
+.entity-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.entity-head > span:first-child { flex: 0 1 auto; font-weight: 600; }
+.entity-head .entity-summary { flex: 1 1 12rem; color: var(--muted); font-size: 0.8rem; }
+.entity-head > button { font-size: 0.75rem; padding: 0.15rem 0.5rem; }
+.entity-settings { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin-top: 0.4rem; padding-top: 0.5rem; border-top: 1px dashed rgba(128,128,128,0.3); }
+.entity-settings[hidden] { display: none; }
+.entity-settings > select { font-size: 0.8rem; }
+.entity-menu { position: relative; }
+.entity-menu > summary { list-style: none; cursor: pointer; font-size: 0.75rem;
+  padding: 0.15rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; user-select: none; }
+.entity-menu > summary::-webkit-details-marker { display: none; }
+.entity-menu-items { position: absolute; right: 0; top: calc(100% + 3px); z-index: 30;
+  display: flex; flex-direction: column; min-width: 11rem; padding: 0.25rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+.entity-menu-items button { text-align: left; font-size: 0.8rem; border: none; background: none;
+  padding: 0.35rem 0.6rem; border-radius: 3px; }
+.entity-menu-items button:hover { background: var(--accent-soft); }
+.entity-menu-items button.danger { color: var(--danger); }
+/* The chart's YTD column. */
+.accounts-table td.account-ytd { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.entity-head { flex-wrap: nowrap; }
+.entity-head > span:first-child { white-space: nowrap; }
+.entity-head .entity-summary { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entity-head > button, .entity-menu > summary { flex: 0 0 auto; min-height: 0; line-height: 1.4; }
+.entity-menu { flex: 0 0 auto; display: inline-block; }
+.entity-head > span:first-child { flex: 0 1 auto; min-width: 6rem; overflow: hidden; text-overflow: ellipsis; }
+.entity-head .entity-summary { flex: 1 1 0; }
+.entity-chip > .entity-head { min-width: 0; width: 100%; }

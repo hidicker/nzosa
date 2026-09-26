@@ -268,11 +268,7 @@
           </div>
         </div>
         <p class="page-hint">
-          Load what your accounting system or spreadsheet already recorded, and every coding
-          this app proposes is lined up against it. Where the two agree, that coding can
-          become a rule you keep; where they differ, you can see which one is wrong. This is
-          how a year gets coded back through without doing it line by line. Matching is on
-          amount and nearest date.
+          Load the coding from your previous system to compare it with NZOSA's. Where they agree, the coding can become a rule; where they differ, choose which is right. Lines are matched on amount and nearest date.
         </p>
         <details class="how-to">
           <summary>How to get the file out of Xero</summary>
@@ -338,8 +334,7 @@
           </div>
         </div>
         <p class="page-hint">
-          Rules suggest a code; they never decide one. Higher priority wins, and an account
-          restriction makes a rule apply only on that account.
+          Rules suggest an account; you confirm it. Higher priority wins, and an account restriction limits a rule to that bank account.
         </p>
         <div id="rules-status"></div>
         <div id="rules-body"></div>
@@ -351,16 +346,14 @@
 
       <section id="page-ai" class="page" hidden>
         <p class="page-hint">
-          For the lines your rules do not recognise. Off until you turn it on, and it says
-          what it would send before it sends anything.
+          Suggestions for lines no rule recognises. Off until you turn it on, and it shows what it will send before sending anything.
         </p>
         <div id="ai-body"></div>
       </section>
 
       <section id="page-aicheck" class="page" hidden>
         <p class="page-hint">
-          A read of the finished year against New Zealand tax rules, with the guide library
-          connected. A draft for a qualified person, never a filing.
+          Checks the finished year against New Zealand tax rules, using the IRD guides. A draft for a qualified person to review, not for filing.
         </p>
         <div id="ai-check-body"></div>
       </section>
@@ -377,10 +370,7 @@
           </div>
         </div>
         <p class="page-hint">
-          Nobody starts with rules. If you have transactions somebody has already coded,
-          the quickest way in is to read that work rather than retype it: load what you
-          have, and the coding you already did becomes the rules. Starting from new, the
-          rules come from the first few decisions you make instead.
+          Already have coded transactions? Load them and your existing coding becomes the rules. Starting fresh, rules are made from your first coding decisions.
         </p>
         <div id="setup-intro"></div>
         <div id="setup-body"></div>
@@ -404,10 +394,7 @@
           </div>
         </div>
         <p class="page-hint">
-          Every change, most recent first, and how to put it back. The name is recorded with
-          each change but nothing verifies it &mdash; this is attribution between people who
-          trust each other, not an audit trail. The log stays on this machine and is not
-          carried by an exported ledger.
+          Every change, most recent first, and how to undo it. Changes are recorded with the name entered; names are not verified. The history stays on this computer and is not included in exports.
         </p>
         <div id="history-body"></div>
       </section>
@@ -425,10 +412,7 @@
           </div>
         </div>
         <p class="page-hint">
-          Which money settled which invoice. An invoice number on the bank line is believed
-          outright; a recorded allocation is next; amount and date only when they are exact.
-          Anything less is proposed rather than matched, because closing the gap means writing
-          money off.
+          Invoice payments are matched by invoice number, then recorded allocations, then exact amount and date. Anything less certain is suggested for you to confirm.
         </p>
         <div id="invoice-editor"></div>
         <div id="invoices-body"></div>
@@ -439,7 +423,7 @@
           <h2>Rental information</h2>
         </div>
         <p class="page-hint">
-          Each tenancy's rent, its changes and its bond, set against the rent the books show arriving -- so you can see whether the tenants are behind or ahead, and by how much. Nothing here changes the books.
+          Each tenancy's rent, rent changes and bond, compared with the rent received, showing whether the tenant is behind or ahead and by how much. This page does not change the books.
         </p>
         <div id="tenancies-body"></div>
       </section>
@@ -457,7 +441,7 @@
           </div>
         </div>
         <p class="page-hint" id="payroll-hint">
-          Employees, pay runs and payday filing. PAYE, student loan, KiwiSaver and ESCT are worked out the way Inland Revenue's payroll specification does for the year of each payday, and each pay run makes the Employment Information file to upload in myIR within two working days of payday.
+          Employees, pay runs and payday filing. PAYE, student loan, KiwiSaver and ESCT follow Inland Revenue's payroll specification for each payday's tax year, and each pay run produces the Employment Information file to upload in myIR within two working days of payday.
         </p>
         <div id="payroll-employer-bar"></div>
         <div id="payroll-editor"></div>
@@ -523,10 +507,7 @@
           <h2>Fixed assets</h2>
         </div>
         <p class="page-hint">
-          The asset register is the one thing bank data can never produce: a payment for a
-          vehicle is a payment, and only the register says it is a vehicle being written off
-          over five years. Depreciation, and the disposal figures that go with it, are
-          computed from what is loaded here.
+          Record assets to calculate depreciation, and gains or losses on disposal.
         </p>
         <div id="assets-drop" class="dropzone dropzone-slim">
           <p class="dropzone-title">Load a register from a file</p>
@@ -562,10 +543,7 @@
           </div>
         </div>
         <p class="page-hint">
-          An account belongs to exactly one entity. A bank account may serve several, because
-          one current account often pays for all of them. The GST treatment set here is what
-          the returns use for anything coded to that account, so an account with none is an
-          account whose GST would only be assumed.
+          Each account belongs to one entity; a bank account can serve several. The GST treatment set here is used on the GST returns for anything coded to the account.
         </p>
         <div id="entities-body"></div>
       </section>
@@ -581,10 +559,7 @@
           </div>
         </div>
         <p class="page-hint">
-          What each account stood at before this ledger begins. Without them a balance sheet
-          shows only the movement since the first bank line, which is a wrong balance sheet
-          rather than a short one. Take them from a trial balance at the previous year end:
-          it carries the cents and every account, so the figures balance on their own.
+          Account balances at the date these books start. Load a trial balance from the previous year end, so every account and cent is included and the figures balance.
         </p>
         <div id="opening-body"></div>
       </section>
@@ -606,10 +581,8 @@
             <h3>Bank feed – Akahu</h3>
           </div>
           <p class="page-hint">
-            A live connection instead of dropping files: transactions arrive on their own.
-            Either way in produces the same ledger, and using both is fine &mdash; a line that
-            arrives twice is caught as a duplicate.
-          </p>
+            Import transactions automatically from your bank. You can also import files; lines that arrive twice are detected as duplicates.
+        </p>
           <div id="feed-body"></div>
         </section>
 
@@ -621,13 +594,8 @@
             <input id="balances-input" type="file" accept=".csv,text/csv" hidden />
           </div>
           <p class="page-hint">
-            An import can be missing a transaction, or hold the same one twice, and no
-            total will show it &mdash; the total is made of exactly the rows that are
-            there. The bank's daily balance is the outside witness. Export it from
-            internet banking for the same period as the transactions, or type a few statement
-            balances in below: a start and an end for an account are enough to show whether
-            anything between them is missing.
-          </p>
+            Import or enter bank balances to confirm no transactions are missing or duplicated. Export them from internet banking for the same period, or type a start and end balance for each account.
+        </p>
           <div id="balances-entry"></div>
           <div id="balances-body"></div>
         </section>

@@ -274,8 +274,8 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     balance.className = difference === 0 && undecided === 0 ? "split-balance ok" : "split-balance off";
     if (undecided > 0) {
       balance.textContent =
-        `${undecided} part${undecided === 1 ? "" : "s"} coded to GST: say whether it settles ` +
-        "the GST bill or is GST you paid at the border. They claim nothing and all of it.";
+        `${undecided} part${undecided === 1 ? "" : "s"} coded to GST: choose whether it pays ` +
+        "the GST bill (claims nothing) or is GST paid at the border (claimed in full).";
       return;
     }
     balance.textContent =

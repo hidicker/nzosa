@@ -159,7 +159,7 @@ export async function handleFiles(files: File[]): Promise<void> {
 
   for (const file of files) {
     if (file.size > 50 * 1024 * 1024) {
-      alert(`"${file.name}" is over 50MB. Bank export files are normally much smaller. Skipped to prevent memory exhaustion.`);
+      alert(`"${file.name}" is over 50 MB and was skipped. Bank exports are normally much smaller.`);
       continue;
     }
     const text = await file.text();
@@ -376,7 +376,7 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
       const select = document.createElement("select");
       const none = document.createElement("option");
       none.value = "";
-      none.textContent = "-- do not import --";
+      none.textContent = "— do not import —";
       select.append(none);
 
       // The account this already is, when these books have it. The two systems
@@ -481,8 +481,7 @@ async function pullFromFeed(
       problems: read.problems,
     });
     said.textContent =
-      `${read.transactions.length} read from the feed. They are on the Bank import page ` +
-      "with anything that needs a decision.";
+      `${read.transactions.length} read from the feed. Review them on the Bank import page.`;
   } catch (error) {
     said.textContent = (error as Error).message;
   } finally {
@@ -510,9 +509,8 @@ export async function renderFeed(): Promise<void> {
   if (!feedPossible()) {
     body.append(
       note(
-        "A bank feed needs somewhere to keep the connection that is not this browser: " +
-          "the app running with a folder behind it, or a set of books on the server, " +
-          "opened from the Books page. Start it from the NZOSA shortcut, or sign in.",
+        "A bank feed needs the app running on your own computer, or books on the server. " +
+          "Start NZOSA from its shortcut, or sign in.",
       ),
     );
     return;

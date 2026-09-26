@@ -54,8 +54,7 @@ export function renderAi(): void {
   body.append(
     step("Then, either way", "Two ways to ask AI"),
     note(
-      "The same question, the same checks on the answer, and the same place the answers " +
-        "land. What differs is who carries it.",
+      "Both ways ask the same question and check the answers the same way.",
     ),
     carryPanel(),
   );
@@ -63,10 +62,8 @@ export function renderAi(): void {
   if (aiRoute() === "none") {
     body.append(
       note(
-        "The other way -- a key asked automatically -- needs somewhere to keep it that is " +
-          "not this browser, and somewhere to ask from that is not this page. That is the " +
-          "app running on your own computer, or a set of books on the server. A copy running " +
-          "in a browser alone has neither, so only the way above is offered here.",
+        "Asking automatically with a key needs the app running on your own computer, or " +
+          "books on the server, so only the way above is available here.",
       ),
     );
     return;
@@ -96,12 +93,9 @@ function checkPointer(): HTMLElement {
   const [box, inner] = panel("");
   inner.append(
     note(
-      "The AI accounts check reads the finished year rather than one line: whether each " +
-        "account holds what belongs in it, whether the GST treatments match the " +
-        "registration, and what is missing. It uses this same key, and it connects to " +
-        "OpenAccountants — tax guides written from the Acts and Inland Revenue's own " +
-        "material — so the answer cites what it relied on and how far that guide has been " +
-        "checked.",
+      "The AI accounts check reviews the finished year: whether each account holds what " +
+        "belongs in it, whether GST treatments match the registration, and what is missing. " +
+        "It uses this key and OpenAccountants' tax guides, so answers cite their sources.",
     ),
   );
   const go = button("Go to the AI accounts check", () => showPage("aicheck"));
@@ -143,8 +137,8 @@ function aboutAsking(): HTMLElement[] {
 
   out.push(
     note(
-      "The button is on Reconcile, beside the filter: press AI suggestions and choose " +
-        "“Ask with my key”. What comes back appears on the lines themselves.",
+      "On Reconcile, press AI suggestions beside the filter and choose “Ask with my key”. " +
+        "Suggestions appear on the lines.",
     ),
   );
   const go = button("Go to Reconcile", () => showPage("reconcile"));
@@ -175,9 +169,8 @@ function offerIt(): HTMLElement {
 
   const what = document.createElement("p");
   what.textContent =
-    "Your rules code most of a bank feed on their own. For what is left -- a payee that " +
-    "has not been seen before -- a model can propose an account, with its reasons, for you " +
-    "to accept or throw away.";
+    "Rules code most lines. For the rest, such as a new payee, AI can suggest an account " +
+    "with its reasons, for you to accept or reject.";
   wrap.append(what);
 
   const careful = document.createElement("p");
@@ -187,7 +180,7 @@ function offerIt(): HTMLElement {
 
   const list = document.createElement("ul");
   for (const line of [
-    "The payee, date, amount and reference of each unrecognised transaction -- and only " +
+    "The payee, date, amount and reference of each unrecognised transaction, and only " +
       "those. Never a bank account number, and never a transaction a rule already coded.",
     "Your chart of accounts: the codes and names, so it has something to choose from.",
     "How you coded similar payees before, as examples.",
@@ -202,11 +195,9 @@ function offerIt(): HTMLElement {
   const whose = document.createElement("p");
   whose.className = "ai-careful";
   whose.textContent =
-    "Asked on a key of your own, it goes to Google on your account. Without one, it can " +
-    "go through a shared key belonging to whoever runs nbparagliding.nz, and so through " +
-    "their account. If these are a client's books rather than your own, that is their " +
-    "data and their decision. It is off until you turn it on, and it is off separately " +
-    "for every set of books.";
+    "With your own key, data goes to the AI provider under your account. Without one, it " +
+    "uses the NZOSA demo key, through that account. For a client's books, get their consent " +
+    "first. It is off until you turn it on, separately for each set of books.";
   wrap.append(whose);
 
   const on = document.createElement("button");
@@ -321,8 +312,8 @@ function briefingPanel(): HTMLElement {
   const [box, inner] = panel("");
   inner.append(
     note(
-      "This goes with every question to the AI and makes its suggestions better. A chart " +
-        "of accounts does not say whether “supplies” means green beans or gib board.",
+      "Sent with every AI question to improve its suggestions, for example whether " +
+        "“supplies” means green beans or gib board.",
     ),
   );
 

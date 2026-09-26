@@ -230,7 +230,7 @@ export async function loadJournals(file: File): Promise<void> {
     const ok = confirm(
       `${file.name} holds ${parsed.journals.length} journals, and does not include ` +
         `${lost.length} that carry a narration:\n\n${listed}${more}\n\n` +
-        "Those are year-end entries nothing can work out again. Load this report anyway?",
+        "These year-end entries cannot be recreated. Load this report anyway?",
     );
     if (!ok) return;
   }

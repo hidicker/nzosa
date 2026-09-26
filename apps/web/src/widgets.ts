@@ -94,7 +94,7 @@ export function unresolvedNote(): HTMLElement | null {
   note.className = "unresolved-note";
   note.textContent =
     `${waiting.length} transaction${waiting.length === 1 ? " is" : "s are"} still in question ` +
-    `— possibly the same thing counted twice, worth ${formatAmount(worth)} in total. ` +
+    `— possibly counted twice, ${formatAmount(worth)} in total. ` +
     // Not "the figures below": this line appears on the reconcile queue as well,
     // where there are no figures below it, and a warning that describes the
     // wrong page is one somebody learns to skip.

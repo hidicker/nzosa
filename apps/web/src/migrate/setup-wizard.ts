@@ -511,8 +511,7 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
       detail:
         led.transactions.length > 0
           ? `${led.transactions.length} imported`
-          : "Connect a bank feed (best), or drop your bank CSVs, on the Bank import page. " +
-            "Everything else hangs off these.",
+          : "Connect a bank feed (recommended), or import bank CSV files, on the Bank import page.",
       unlocks: "",
       links: [{ label: "Bank import", page: "import" }],
     },
@@ -587,9 +586,9 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
         bankLinks.total > 0 && bankLinks.unlinked.length === 0
           ? `${bankLinks.total} bank account${bankLinks.total === 1 ? "" : "s"} mapped to accounts from bank import`
           : bankLinks.unlinked.length > 0
-            ? "The bank import pulls in account numbers directly, on the chart of account look at your existing bank accounts and make sure mapped to the accounts from bank import. " +
-              `(${bankLinks.unlinked.length} of ${bankLinks.total} not yet mapped: ${bankLinks.unlinked.join(", ")})`
-            : "The bank import pulls in account numbers directly, on the chart of account look at your existing bank accounts and make sure mapped to the accounts from bank import.",
+            ? "On the chart of accounts, link each bank account to the account imported from the bank. " +
+              `(${bankLinks.unlinked.length} of ${bankLinks.total} not yet linked: ${bankLinks.unlinked.join(", ")})`
+            : "On the chart of accounts, link each bank account to the account imported from the bank.",
       unlocks: "Helps correctly allocate transfers between your own accounts",
       links: [
         {
@@ -615,12 +614,10 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
           ? `${Object.keys(led.openingBalances.accounts).length} accounts as at ` +
             led.openingBalances.asAt
           : fromNew
-            ? "Nothing to bring in when the ledger starts at the beginning of the company: " +
-              "everything it has ever done is in the transactions."
+            ? "Not needed if these books start when the business started."
             : xero
               ? "Xero: Accounting → Reports → Trial Balance, at your previous year end"
-              : "A trial balance at the previous year end, which carries every account " +
-                "and the cents, so the figures balance on their own",
+              : "A trial balance at the previous year end, so every account and cent is included",
       unlocks: "A balance sheet that is a position rather than a movement, and the IR10",
       page: "opening",
     },
@@ -633,8 +630,7 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
         state.reference.length > 0
           ? `${state.reference.length} coded lines loaded`
           : fromNew
-            ? "Nothing to load when you are starting from new. Your rules will come " +
-              "from the first few codings you make instead."
+            ? "Not needed when starting fresh; rules are made from your first coding decisions."
             : xero
               ? XERO_ACCOUNT_TRANSACTIONS
               : "Your spreadsheet, with a column saying what each line was coded to",
@@ -649,16 +645,13 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
         ((state.rules as RuleFileShape | undefined)?.rules ?? []).length > 0
           ? `${((state.rules as RuleFileShape | undefined)?.rules ?? []).length} rules`
           : fromNew
-            ? "Written for you as you code. Coding a transaction by hand offers to " +
-              "make a rule from it."
+            ? "Made as you code: coding a line by hand can create a rule."
             : state.reference.length > 0
               // The proposals themselves are on the Check page, where the file
               // that produces them is loaded. This says they are waiting and
               // sends you there, rather than repeating the whole table here.
-              ? "Optional: your coded history can write these for you. The proposals " +
-                "are on the Coding reconciliation page, under the file they came from."
-              : "Optional: load a coded history on the Coding reconciliation page and the coding " +
-                "you have already done becomes the rules.",
+              ? "Optional: suggested rules from your coded history are on the Coding reconciliation page."
+              : "Optional: load your coded history on the Coding reconciliation page to turn it into rules.",
       unlocks: "",
       links:
         state.reference.length > 0 &&
@@ -680,8 +673,7 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
             ? entities[0] !== undefined && entities[0].name !== DEFAULT_ENTITY_NAME
               ? `Only one entity: ${entities[0].name}.`
               : "Only one entity."
-            : "Only if one set of books holds several things — a company and two " +
-              "rentals, say. One company or one person needs none of this.",
+            : "Only if one set of books covers several, such as a company and two rentals.",
       unlocks: "Per-entity reports, and owner shares on a return",
       links: led.singleEntityConfirmed === true
         ? [
@@ -746,9 +738,9 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
         (led.journals ?? []).length > 0
           ? `${(led.journals ?? []).length} journals`
           : fromNew
-            ? "Nothing to load when you are starting from new."
+            ? "Not needed when starting fresh."
             : "Xero: Accounting → Reports → Journal Report, all columns, exported as " +
-            "CSV or Excel. Load it on the Fixed assets page's neighbour, Reports.",
+            "CSV or Excel. Load it on the Reports page.",
       unlocks: "Accrual reports that reproduce a signed set of accounts exactly",
       page: "reports",
     },
@@ -822,8 +814,8 @@ export function setupNameField(): HTMLElement {
     model.entities.length > 1
       ? `${model.entities.length} entities. This renames the first; the rest are on ` +
         "Entities & accounts."
-      : "Only needed once. If one set of books holds several things -- a company and two " +
-        "rentals, say -- add the others on Entities & accounts.";
+      : "If these books cover several, such as a company and two rentals, add the others " +
+        "on Entities & accounts.";
 
   const commit = async (): Promise<void> => {
     const wanted = input.value.trim();
@@ -938,11 +930,9 @@ export function renderSetupBody(): void {
   body.append(
     note(
       done === needed.length
-        ? "Everything needed is set up. The optional steps below each say what they " +
-          "add; come back here whenever you load something new."
-        : "Work down the list. Each step opens the page that does it — come back here " +
-          "afterwards and it will have ticked itself off. Nothing has to be done in " +
-          "one sitting.",
+        ? "Everything needed is set up. The optional steps below each say what they add."
+        : "Work down the list. Each step opens its page and is ticked off when done; " +
+          "it does not need to be done in one sitting.",
     ),
   );
 
@@ -952,10 +942,8 @@ export function renderSetupBody(): void {
     const demo = document.createElement("p");
     demo.className = "setup-demo";
     demo.textContent =
-      "Not ready to load your own? There is a complete invented set of books — a " +
-      "coffee roastery and a rental, part way through a year, with codings, splits, " +
-      "invoices and a transfer. It opens in books of its own, so nothing here is " +
-      "touched.";
+      "Not ready to load your own? Try the sample books: a coffee roaster and a rental " +
+      "property part way through a year. They open separately, so nothing here is changed.";
     const open = document.createElement("button");
     open.type = "button";
     open.textContent = writesToFolder() ? "Open the demo books" : "Load demo data";
@@ -1064,13 +1052,12 @@ function renderSetupTools(body: HTMLElement): void {
 
   body.append(
     note(
-      "An invented coffee roastery and a rental, part-way through a year: " +
-        "88 bank lines with 35 still to code, two splits, three matched " +
-        "invoices and a transfer. Nothing in it is real." +
+      "Sample books for a coffee roaster and a rental property, part way through a year: " +
+        "88 bank lines with 35 still to code, two splits, three matched invoices and a " +
+        "transfer." +
         (writesToFolder()
-          ? " It opens in a set of books of its own called Demo, so whatever you " +
-            "are working on is left exactly as it is."
-          : " Loading it replaces what is in this browser."),
+          ? " They open as a separate set of books called Demo; your own books are unchanged."
+          : " Loading them replaces what is in this browser."),
     ),
   );
 
@@ -1091,8 +1078,7 @@ function renderSetupTools(body: HTMLElement): void {
   if (!writesToFolder()) {
     body.append(
       note(
-        "There is one set of books here: whatever is in this browser. Clearing it " +
-          "cannot be undone, and no copy is kept.",
+        "This browser holds one set of books. Clearing it cannot be undone.",
       ),
     );
     body.append(clearHereControl());
@@ -1142,10 +1128,8 @@ function clearHereControl(): HTMLElement {
     const what = document.createElement("p");
     const count = state.ledger.transactions.length;
     what.textContent =
-      `This removes ${count} transaction${count === 1 ? "" : "s"} and every coding, ` +
-      "rule, invoice, entity and asset with them. Nothing is kept: with no folder " +
-      "behind this app there is nowhere to keep a dated copy, so export first if " +
-      "you want one.";
+      `This removes ${count} transaction${count === 1 ? "" : "s"} and all coding, rules, ` +
+      "invoices, entities and assets. No copy is kept; download a backup first if you want one.";
 
     const label = document.createElement("label");
     const says = document.createElement("span");

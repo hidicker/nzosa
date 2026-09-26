@@ -545,9 +545,9 @@ export function renderInvoices(): void {
   if (invoices.length === 0) {
     body.append(
       note(
-        "No invoices loaded. Export them from Xero as Business > Invoices > Export, and " +
-          "optionally an Account Transactions CSV for the payment allocations — those say " +
-          "exactly which receipts settled which invoice.",
+        "No invoices loaded. Export them from Xero: Business > Invoices > Export. Optionally " +
+          "add an Account Transactions CSV for payment allocations, which show exactly which " +
+          "receipts settled which invoice.",
       ),
     );
     return;
@@ -619,8 +619,8 @@ export function renderInvoices(): void {
     body.append(heading);
     body.append(
       note(
-        "The amounts do not agree exactly. Accepting one records the match and leaves the " +
-          "difference as a write-off to code yourself — nothing is adjusted automatically.",
+        "The amounts differ. Accepting records the match; code the difference yourself as a " +
+          "write-off.",
       ),
     );
 
@@ -690,9 +690,9 @@ export function renderInvoices(): void {
     body.append(heading);
     body.append(
       note(
-        "What is owed is the invoice less the bank lines assigned to it. Where the imported " +
-          "file disagrees, its figure is shown beside ours: usually a receipt that has not been " +
-          "found yet, settled through a processor net of its fee, or banked outside these accounts.",
+        "Owing is the invoice less the payments assigned to it. Where the imported file differs, " +
+          "its figure is shown too: usually a receipt not yet found, one paid through a processor " +
+          "net of its fee, or one banked elsewhere.",
       ),
     );
     const table = document.createElement("table");
@@ -886,9 +886,8 @@ function creditNoteSection(
   body.append(heading);
   body.append(
     note(
-      "A credit note reverses a sale. Say which invoice each one credits and it comes off " +
-        "what that invoice is owed, dated on the credit note. Until then it is counted " +
-        "against nothing, and the invoice it belongs to still reads as outstanding.",
+      "Choose the invoice each credit note applies to; it then reduces what that invoice " +
+        "owes, dated on the credit note.",
     ),
   );
 

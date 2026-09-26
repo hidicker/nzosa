@@ -73,9 +73,7 @@ export function renderHistory(): void {
   if (state.events.length === 0) {
     body.append(
       note(
-        "Nothing recorded yet. From here on, every coding, split, chart edit, entity " +
-          "assignment, invoice match and rule change is logged with your name and can be " +
-          "undone.",
+        "Nothing recorded yet. Every change is recorded here with your name and can be undone.",
       ),
     );
     return;
@@ -182,11 +180,11 @@ function todaySection(body: HTMLElement): void {
         `journal${work.journals.length === 1 ? "" : "s"}: ` +
         `${formatAmount(work.debits)} of debits and ${formatAmount(work.credits)} of credits.` +
         (work.debits !== work.credits
-          ? " These do not agree, which means something is posting wrongly -- worth reporting."
+          ? " These should agree; report this as a fault."
           : "") +
         (work.missing.length > 0
           ? ` ${work.missing.length} decision${work.missing.length === 1 ? " names a line" : "s name lines"}` +
-            " the ledger no longer holds, usually because the books were cleared and loaded again."
+            " no longer in the books, usually because they were cleared and reloaded."
           : ""),
     ),
   );

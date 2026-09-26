@@ -481,10 +481,9 @@ export function reviewPrompt(year: number): string {
 /** The words this library asks to travel with anything made from it. */
 export function reviewDisclaimer(): HTMLElement {
   return note(
-    "Whatever comes back is a draft for a qualified person to review — not tax, legal or " +
-      "accounting advice. It may be incomplete, out of date or wrong, and nothing should be " +
-      "filed, paid or amended on the strength of it. That is OpenAccountants' own condition " +
-      "on its guides, and it is this app's position too.",
+    "The result is a draft for a qualified person to review, not tax, legal or accounting " +
+      "advice. It may be incomplete, out of date or wrong; do not file, pay or amend anything " +
+      "based on it.",
   );
 }
 

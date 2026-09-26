@@ -143,9 +143,8 @@ function haveALook(): HTMLElement {
   wrap.className = "migration-look";
   const text = document.createElement("p");
   text.textContent =
-    "Never seen it work? There is a complete invented set of books -- a coffee roastery " +
-    "and a rental, part way through a year, with codings, splits, invoices and a transfer. " +
-    "It opens in books of its own, so nothing of yours is touched.";
+    "Try the sample books: a coffee roaster and a rental property part way through a year, " +
+    "with coding, splits, invoices and a transfer. They open separately from your own.";
   wrap.append(text);
 
   const row = document.createElement("div");
@@ -347,8 +346,7 @@ function sourceQuestion(number: number): HTMLElement {
   const [box, inner] = card(number, "Where are these books starting from?");
   inner.append(
     note(
-      "This decides what Setup asks you for. It is about this set of books, so if you end " +
-        "up with more than one set, each can be answered differently.",
+      "This decides what Setup asks for. Each set of books can be answered differently.",
     ),
   );
 
@@ -480,14 +478,11 @@ function sharedQuestion(number: number): HTMLElement {
   inner.append(
     advice(
       "A set of books has one ledger, and it balances to $0.",
-      "Best practice is one set of books for each entity -- a business, your personal " +
-        "affairs, a residential rental, a commercial rental. Each one's accounts, reports " +
-        "and returns then stand on their own: nothing from one can reach another's figures, " +
-        "and each can go to its accountant, or to its other owners, without the rest.",
-      "But if you have cards or accounts used by more than one entity, it is easier to have " +
-        "more than one entity in one set of books. The shared account's transactions then " +
-        "exist once, instead of being copied into two sets -- which is how a payment ends up " +
-        "counted twice, or in neither.",
+      "Best practice is one set of books per entity (a business, personal affairs, a " +
+        "residential or commercial rental), so each one's accounts, reports and returns stand " +
+        "alone and can be shared separately.",
+      "If cards or accounts are shared between entities, keep those entities in one set of " +
+        "books, so shared transactions are recorded once, not counted twice or missed.",
     ),
   );
   inner.append(
@@ -582,10 +577,9 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
     inner.append(
       note(
         one
-          ? "One at a time. This one gets a set of books of its own, and the next one gets " +
-            "its own when you come back for it -- there is nothing to arrange between them."
-          : "Name each one that shares those accounts. They all go in one set of books, and " +
-            "each still gets its own profit and loss and its own GST return.",
+          ? "One at a time: this one gets its own set of books, and so will the next."
+          : "Name each one that shares these accounts. They share one set of books; each " +
+            "has its own profit and loss and GST return.",
       ),
     );
   }
@@ -859,9 +853,8 @@ function planQuestion(number: number, held: Onboarding): HTMLElement {
     if (planned.length > 1) {
       inner.append(
         note(
-          "The balance sheet is for the set of books as a whole, which is what balances to " +
-            "$0. Nothing is posted between entities, so one entity's balance sheet on its " +
-            "own would be short the cash another entity's account paid out.",
+          "The balance sheet covers the whole set of books. Nothing is posted between " +
+            "entities, so a single entity's balance sheet would not balance on its own.",
         ),
       );
     }
@@ -991,9 +984,8 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
   if (backendKind() === "browser") {
     wrap.append(
       note(
-        `The books open now are ${theirs}'s, and this copy runs in a browser, which holds ` +
-          "one set. To keep a set for each entity, run NZOSA on your own computer, where " +
-          "each set is a folder of its own, or sign in to keep them on the server.",
+        `These books are ${theirs}'s. A browser holds one set of books; to keep one per ` +
+          "entity, run NZOSA on your own computer or sign in to keep them on the server.",
       ),
     );
     return wrap;
@@ -1401,10 +1393,8 @@ function codedHistory(held: Onboarding): HTMLElement {
   const wrap = document.createElement("div");
   wrap.append(
     advice(
-      "Transactions somebody has already coded -- in Xero, or in a spreadsheet. Each coding " +
-        "this app proposes is lined up against what you did before: where the two agree, " +
-        "that coding becomes a rule you keep; where they differ, both are shown and you " +
-        "decide. It is how a year gets coded back through without going line by line.",
+      "Transactions already coded, in Xero or a spreadsheet. NZOSA compares its coding with " +
+        "yours: where they agree, the coding becomes a rule; where they differ, you choose.",
     ),
   );
 
@@ -1413,17 +1403,15 @@ function codedHistory(held: Onboarding): HTMLElement {
   } else if (held.source === "sheet") {
     wrap.append(
       advice(
-        "Your spreadsheet, with a column saying what each line was coded to. Anything the " +
-          "column names that the chart does not have is listed rather than guessed at.",
+        "Your spreadsheet, with a column showing what each line was coded to. Accounts not " +
+          "in the chart are listed for you to resolve.",
       ),
     );
   } else {
     wrap.append(
       advice(
-        "You chose to start with empty books, so there is nothing here you have to load. " +
-          "But if you do have a spreadsheet of transactions that were already coded -- a " +
-          "year kept by hand, or an export from something you are leaving -- load it here " +
-          "and that work becomes the rules.",
+        "Not needed when starting with empty books. If you have a spreadsheet of coded " +
+          "transactions, load it here to turn that coding into rules.",
       ),
     );
   }
@@ -1691,8 +1679,8 @@ function xeroGuide(held: Onboarding): HTMLElement {
   );
   add(
     "p",
-    "Part way through a year works too. Choose the first day of a GST period, so no return " +
-      "is split between two systems, and bring the year so far across as coded history.",
+    "You can also start part way through a year. Choose the first day of a GST period, so " +
+      "no return is split between two systems, and load the year so far as coded history.",
   );
 
   add("h4", "2. Export from Xero");

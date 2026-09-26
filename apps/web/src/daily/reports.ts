@@ -403,9 +403,8 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   if (held.length === 0) {
     body.append(
       note(
-        "None in this year. These are the year-end judgements: an expense reclassified because " +
-          "the loan turned out to be personal, a GST balance corrected to what Inland Revenue " +
-          "actually holds. Nothing in the bank data implies them, so they have to be written.",
+        "None this year. Use journals for year-end adjustments the bank data cannot show, such " +
+          "as reclassifying a personal expense or correcting the GST balance to Inland Revenue's.",
       ),
     );
     return;
@@ -430,8 +429,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
       bad.className = "journal-out";
       bad.textContent =
         `Not posted: ${problems.map((p) => p.message).join("; ")}. ` +
-        "An unbalanced journal is a broken one, so it is left out of the reports rather than " +
-        "put in with the difference hidden inside them.";
+        "Unbalanced journals are left out of the reports.";
       card.append(bad);
     }
 
@@ -524,7 +522,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   const narration = document.createElement("input");
   narration.type = "text";
   narration.placeholder =
-    "Why this journal exists, in your own words -- a year from now the figures will be obvious and the reason will not";
+    "Why this journal is needed, e.g. year-end GST correction";
   narration.value = draft.narration;
   narration.addEventListener("input", () => {
     draft.narration = narration.value;
@@ -647,7 +645,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
         return;
       }
       if (!knownAccount.has(code)) {
-        problems.push(`line ${n}: "${code}" is not an account in the chart -- pick one from the list`);
+        problems.push(`line ${n}: "${code}" is not an account in the chart; choose one from the list`);
         return;
       }
       lines.push({
@@ -889,9 +887,8 @@ function renderShareholders(body: HTMLElement, year: number): void {
     body.append(split);
     body.append(
       note(
-        "Split by shareholding, which is right when the shareholders put money in and take it " +
-          "out in proportion to their shares. If one draws more than the other, keep a current " +
-          "account for each instead, so the IR4 shows what each actually owes or is owed.",
+        "Split by shareholding. If shareholders draw unequally, keep a current account for " +
+          "each so the IR4 shows what each owes or is owed.",
       ),
     );
   }
@@ -899,11 +896,10 @@ function renderShareholders(body: HTMLElement, year: number): void {
   body.append(
     note(
       schedule.overdrawn
-        ? "A credit balance is simply money the company owes and nothing follows from it. This " +
-          "one is the other way round, which is why it is flagged above."
-        : "A credit balance is money the company owes the shareholder, which is the ordinary " +
-          "state of the account and needs nothing done about it. An overdrawn balance would be " +
-          "flagged here, because Inland Revenue expects interest or fringe benefit tax on it.",
+        ? "This account is overdrawn, as flagged above: Inland Revenue expects interest or " +
+          "fringe benefit tax on an overdrawn shareholder account."
+        : "A credit balance is money the company owes the shareholder and needs no action. An " +
+          "overdrawn balance would be flagged, as Inland Revenue expects interest or FBT on it.",
     ),
   );
 }
@@ -1044,13 +1040,12 @@ function renderIr10(body: HTMLElement, year: number): void {
 
   body.append(
     note(
-      "Whole dollars, as filed. Total income and total expenses are rounded from their exact " +
-        "figures and other income and other expenses take the rounding, so every total adds up. " +
+      "Whole dollars, as filed; rounding is taken in other income and other expenses. " +
         (company
-          ? "Shareholder current accounts are a current liability (box 47), as a company owes them. "
+          ? "Shareholder current accounts are a current liability (box 47). "
           : "Owner current accounts are counted in owners equity. ") +
-        "Box 28 adds back non-deductible expenses, and box 52 takes tax depreciation to equal " +
-        "accounting depreciation. Losses brought forward and the tax on the result are on the IR4.",
+        "Box 28 adds back non-deductible expenses; box 52 treats tax depreciation as equal to " +
+        "accounting depreciation. Losses brought forward and tax are on the IR4.",
     ),
   );
 }
@@ -1094,9 +1089,8 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
     const warn = document.createElement("p");
     warn.className = "journal-out";
     warn.textContent =
-      "No opening balances, so this is the movement since the first transaction rather than " +
-      "what the company owns and owes. Set them on the Entities and accounts page — a trial " +
-      "balance from the previous year end can be loaded there.";
+      "No opening balances, so this shows movement since the first transaction, not the " +
+      "full position. Load a trial balance from the previous year end on the Opening balances page.";
     body.append(warn);
   }
 
@@ -1107,8 +1101,8 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   proof.textContent =
     sheet.imbalance === 0
       ? "Balanced. Net assets equal total equity."
-      : `Out of balance by ${money(sheet.imbalance)}. Either the opening balances do not ` +
-        "balance or a journal does not; this is a bug, not a figure.";
+      : `Out of balance by ${money(sheet.imbalance)}. The opening balances or a journal do ` +
+        "not balance; report this as a fault.";
   body.append(proof);
 
   // Scope, said plainly. Opening balances are held for the ledger rather than
@@ -1117,8 +1111,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   if (entities.length > 1) {
     body.append(
       note(
-        "This covers the whole ledger. Opening balances are held once for the books rather " +
-          "than per entity, so a balance sheet cannot be split between them.",
+        "This covers all entities: opening balances are held for the whole set of books.",
       ),
     );
   }
@@ -1245,7 +1238,7 @@ function renderJournal(body: HTMLElement, year: number): void {
       ? `Balanced. ${journals.length} journals, ` +
         `${journals.reduce((n, j) => n + j.lines.length, 0)} lines, debits equal credits.`
       : `Out of balance by ${money(balance.imbalance)} across ${journals.length} journals — ` +
-        `${balance.unbalanced.length} do not balance on their own. This is a bug, not a figure.`;
+        `${balance.unbalanced.length} do not balance on their own. Report this as a fault.`;
   body.append(proof);
 
   const summary = document.createElement("div");
@@ -1271,9 +1264,8 @@ function renderJournal(body: HTMLElement, year: number): void {
   body.append(summary);
   body.append(
     note(
-      "These come from the tax tag on each line, not from the balance of the GST account. " +
-        "They are different numbers: a line posted to the GST account with no tax type moves " +
-        "the account and reaches no box at all.",
+      "Taken from each line's GST treatment, not the GST account balance; a line posted to " +
+        "the GST account with no tax type reaches no box.",
     ),
   );
 
@@ -1325,9 +1317,7 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   if (assets.length === 0) {
     body.append(
       note(
-        "No fixed assets yet. Depreciation is the one figure bank data cannot produce — " +
-          "it depends on each asset's cost, method and rate. Add them, or load a register, " +
-          "on the Fixed assets page.",
+        "No fixed assets yet. Add them, or load a register, on the Fixed assets page.",
       ),
     );
     return;
@@ -1343,10 +1333,9 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Each asset on its own method, straight line or diminishing value, with full month " +
-        "averaging. An asset disposed of during the year takes no " +
-        "depreciation that year: its book value goes to the disposal instead, so the same " +
-        "value is not counted twice.",
+      "Each asset uses its own method (straight line or diminishing value) with full-month " +
+        "averaging. An asset disposed of in the year has no depreciation that year; its book " +
+        "value goes to the disposal.",
     ),
   );
 
@@ -1410,8 +1399,8 @@ function renderDepreciation(body: HTMLElement, year: number): void {
     body.append(
       note(
         `Assets disposed of in the year carried ${money(schedule.disposedBookValue)} of book ` +
-          "value. Whether that is a loss on sale, depreciation recovered or a capital gain " +
-          "depends on what each sold for, which the asset register does not record.",
+          "value. Enter each sale price on the Fixed assets page to work out the loss, " +
+          "depreciation recovered or capital gain.",
       ),
     );
   }
@@ -1494,7 +1483,7 @@ function statementFromDraft(draft: AgentDraft): { statement: AgentStatement; pro
   };
   const known = new Set(accountsForEditing().map((a) => a.label));
   for (const code of [statement.heldCode, ...statement.income.map((l) => l.code), ...statement.expenses.map((l) => l.code)]) {
-    if (code !== "" && !known.has(code)) problems.push(`"${code}" is not an account -- pick one from the list`);
+    if (code !== "" && !known.has(code)) problems.push(`"${code}" is not an account; choose one from the list`);
   }
   return { statement, problems: [...problems, ...agentStatementProblems(statement)] };
 }
@@ -1545,10 +1534,9 @@ function renderAgentStatements(body: HTMLElement, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Code the manager's payments to you to a property manager account -- a current asset " +
-        "belonging to the property -- then enter each statement here. It posts the rent the " +
-        "manager collected and what they paid out of it, and leaves the account holding what the " +
-        "manager holds, so the two can be checked against each other.",
+      "Code the property manager's payments to a property manager account (a current asset " +
+        "of the property), then enter each statement here. It posts the rent collected and the " +
+        "costs paid from it, and the account then shows what the manager holds.",
     ),
   );
 
@@ -1661,14 +1649,14 @@ function agentCard(
       check.textContent =
         `${account} holds ${centsSaid(books)} at ${statement.to} and the statement says ` +
         `${centsSaid(statement.heldAtEnd)}. The ${centsSaid(difference)} between them reached your ` +
-        "bank within two weeks of the period ending: paid out at the end of the period, banked after it.";
+        "bank within two weeks of the period end.";
     } else {
       check.className = "journal-out";
       check.textContent =
         `${account} holds ${centsSaid(books)} at ${statement.to}, but the statement says ` +
-        `${centsSaid(statement.heldAtEnd)} -- ${centsSaid(difference)} apart. Check that every payment ` +
-        "from this manager is coded to this account, that the account's opening balance is what the " +
-        "manager held when the books start, and that the earlier statements are entered.";
+        `${centsSaid(statement.heldAtEnd)} (${centsSaid(difference)} apart). Check that every ` +
+        "payment from this manager is coded to this account, its opening balance is what the " +
+        "manager held, and earlier statements are entered.";
     }
     card.append(check);
   }
@@ -1705,8 +1693,8 @@ function agentEditor(draft: AgentDraft, rentals: readonly Entity[]): HTMLElement
   const status = document.createElement("p");
   status.className = "split-balance";
   const gstNote = note(
-    "This rental is registered for GST, and the form posts amounts as entered with no GST split " +
-      "out. Enter them excluding GST, and put the GST on the manager's fees through a manual journal.",
+    "This rental is GST registered. Enter amounts excluding GST, and record the GST on the " +
+      "manager's fees with a manual journal.",
   );
   const save = document.createElement("button");
   save.type = "button";
@@ -1743,7 +1731,7 @@ function agentEditor(draft: AgentDraft, rentals: readonly Entity[]): HTMLElement
   if (draft.entity === "") {
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = "-- choose the property --";
+    blank.textContent = "— choose the property —";
     property.append(blank);
   }
   for (const entity of rentals) {
@@ -2149,9 +2137,8 @@ function renderGstBoxes(body: HTMLElement, result: GstReturnResult, money: (cent
   if (b.box7 !== b.box5 - b.box6 || (b.box11 !== purchasesGross && Math.abs(b.box11 - purchasesGross) < 100)) {
     body.append(
       note(
-        "Box 8 and Box 12 add up the GST on each line, rounded to the cent, as Xero does. Box 7 and " +
-          "Box 11 are worked back from them, so they can differ by a few cents from Box 5 less Box 6, " +
-          "or from the total of the transactions behind them.",
+        "Box 8 and Box 12 total the GST on each line, rounded to the cent, as Xero does. Box 7 " +
+          "and Box 11 are worked back from them, so they can differ by a few cents.",
       ),
     );
   }
@@ -2211,8 +2198,7 @@ function renderGstTransactions(body: HTMLElement, result: GstReturnResult, money
   if (shown > 0) {
     body.append(
       note(
-        "Totals here are the lines added up. The return's Box 7 and Box 11 are worked back from the " +
-          "GST on each line, rounded to the cent, so they can differ from these totals by a few cents.",
+        "Totals here add up the lines; the return's Box 7 and Box 11 can differ by a few cents.",
       ),
     );
   }
@@ -2367,8 +2353,8 @@ function renderRentalSchedules(body: HTMLElement, year: number): void {
   if (built.length === 0) {
     body.append(
       note(
-        "No rental properties yet. On Entities & accounts, give each property an entity of " +
-          "kind Residential rental or Commercial rental, with its owners and its accounts.",
+        "No rental properties yet. On Entities & accounts, add each property as a Residential " +
+          "or Commercial rental, with its owners and accounts.",
       ),
     );
     return;
@@ -2547,7 +2533,7 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
     body.append(
       note(
         `${year + 1} provisional tax of ${centsSaid(result.nextYearProvisional)} on the standard ` +
-          `option -- this year's residual income tax plus 5% -- in instalments of ` +
+          `option (this year's residual income tax plus 5%), in instalments of ` +
           `${centsSaid(first)}, ${centsSaid(second)} and ${centsSaid(third)}.`,
       ),
     );
@@ -2565,8 +2551,8 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
       body.append(
         note(
           `Residential deductions of ${centsSaid(result.residential.carriedForward)} are more than ` +
-            "the residential income can use. They are ring-fenced and carried forward to next " +
-            "year, not set against other income.",
+            "the residential income. They are ring-fenced and carried forward, not set against " +
+            "other income.",
         ),
       );
     }
@@ -2645,7 +2631,7 @@ function renderIr3Details(body: HTMLElement, owner: string, year: number): void 
   const paid = field(
     "Provisional tax paid",
     details?.provisionalTaxPaid,
-    "Provisional tax paid for the year, as the Inland Revenue account shows it -- including anything transferred in.",
+    "Provisional tax paid for the year, as shown in the Inland Revenue account, including any transfers in.",
   );
   const carried = field(
     "Residential deductions brought forward",
@@ -2849,9 +2835,8 @@ function renderOwnerReport(body: HTMLElement, owner: string, year: number): void
   body.append(table);
   body.append(
     note(
-      "Shares are applied to income and expenses separately, not to the net, because a return " +
-        "asks for both — and deductions are what carry forward when a residential property " +
-        "makes a loss.",
+      "Shares apply to income and expenses separately, as the return asks for both and " +
+        "residential losses carry forward as deductions.",
     ),
   );
 
@@ -2873,8 +2858,8 @@ function renderTaxExtras(body: HTMLElement, owner: string, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Entered by hand, because it never passes through these accounts: bank interest, " +
-        "dividends, and PIE income from KiwiSaver or managed funds. Nothing here is derived.",
+      "Income that does not pass through these accounts, entered by hand: bank interest, " +
+        "dividends, and PIE income from KiwiSaver or managed funds.",
     ),
   );
 
@@ -3244,9 +3229,8 @@ function renderReportsHome(body: HTMLElement): void {
     const about = document.createElement("span");
     about.className = "reports-about";
     about.textContent =
-      "One workbook: the general ledger, bank coding, revenue and expenses, unusual " +
-      "transactions, the depreciation schedule, trial balance and GST returns, and behind " +
-      "them every table these books are made of.";
+      "One workbook with the general ledger, bank coding, revenue and expenses, unusual " +
+      "transactions, depreciation schedule, trial balance, GST returns and all underlying tables.";
 
     const controls = document.createElement("div");
     controls.className = "excel-extract-controls";
@@ -3351,24 +3335,21 @@ function reportsHint(basis: string, kind: string): string {
   }
   if (basis === "accrual") {
     return (
-      "Read from the general ledger file you loaded, not computed here. This " +
-      "is your accounting system's own answer, shown with your account names " +
-      "so it can sit beside ours."
+      "Read from the general ledger file you loaded, with your account names, " +
+      "for comparison with these books."
     );
   }
   if (basis === "posted") {
     return (
-      "Built here, from your coding: every coded bank line posted as double " +
-      "entry, invoices counted when raised rather than when paid, and " +
-      "depreciation from the asset register. Where this differs from the " +
-      "imported file, the difference is what is still to be accounted for."
+      "Built from your coding: bank lines posted as double entry, invoices when " +
+      "raised, and depreciation from the asset register. Differences from the " +
+      "imported file are what is still to be accounted for."
     );
   }
   return (
-    "Built from the bank data, on a cash basis and excluding GST. It has no " +
-    "depreciation, no accruals and no year-end journals, because none of " +
-    "those are payments \u2014 so it will not equal a signed statement, and " +
-    "the gap is listed rather than hidden."
+    "Built from the bank data on a cash basis, excluding GST. It has no " +
+    "depreciation, accruals or year-end journals, so it will not equal a signed " +
+    "statement; the gap is listed."
   );
 }
 
@@ -3492,8 +3473,8 @@ export function renderReportsPage(): void {
       ? basisNow === "accrual"
         ? " Figures exclude GST."
         : gstSelect.value === "gross"
-          ? " Figures include GST, so they are what moved rather than what reaches profit."
-          : " Figures exclude GST, which is the basis a return is filed on."
+          ? " Figures include GST."
+          : " Figures exclude GST, as filed on a return."
       : "");
 
   const years = bookYears();
@@ -3529,7 +3510,8 @@ export function renderReportsPage(): void {
   // Built from the coding, so said plainly when some of it is still only a
   // suggestion. Not held back: the figures are more useful with the likely
   // answer in them than without it, as long as nobody mistakes them for final.
-  if (basisNow !== "accrual" && chosenYearNow !== undefined) {
+  const entryPage = kind === "manual" || kind === "agents" || kind === "yearend";
+  if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage) {
     const provisional = provisionalNote(chosenYearNow);
     if (provisional) body.append(provisional);
   }
@@ -3667,9 +3649,8 @@ export function renderReportsPage(): void {
   if (!usingAccrual && basisChoice === "accrual") {
     body.append(
       note(
-        "No general ledger loaded, so this is the cash figure from bank data. " +
-          "Accrual needs invoices and year-end journals, which a bank statement does not " +
-          "carry — load a Xero Journal Report with the button above.",
+        "No general ledger loaded, so this shows cash from bank data. For accrual, load a " +
+          "Xero Journal Report with the button above.",
       ),
     );
   }
@@ -3758,10 +3739,8 @@ export function renderReportsPage(): void {
     body.append(h);
     body.append(
       note(
-        "Accounts that belong on the balance sheet, not the profit: each figure is the year's " +
-          "movement on it, and the second column says what it is. One reading \"No account type " +
-          "set\" can be given a type on Entities & accounts, and moves onto the report if it is " +
-          "income or an expense.",
+        "Balance sheet accounts, showing the year's movement. Set a type on Entities & accounts " +
+          "for any marked \"No account type set\".",
       ),
     );
     const other = document.createElement("table");
@@ -3850,9 +3829,8 @@ function renderExtract(body: HTMLElement, year: number): void {
       `${built.length} lines for the year to ${to}` +
         (scope.length > 0 ? `, on ${scope.length} account${scope.length === 1 ? "" : "s"}` : "") +
         (uncoded > 0
-          ? `. ${uncoded} of them have no coding and are written as "(not coded)" rather than ` +
-            `left looking coded to nothing.`
-          : ". Every one of them is coded."),
+          ? `. ${uncoded} have no coding and show as "(not coded)".`
+          : ". All are coded."),
     ),
   );
 
@@ -3964,9 +3942,8 @@ function renderCharts(body: HTMLElement, year: number): void {
     const empty = document.createElement("p");
     empty.className = "variance-note warn";
     empty.textContent =
-      "Every figure here is zero because nothing in this year has been coded yet. " +
-      "Code some transactions on the Reconcile page and these fill in; until then " +
-      "there is nothing for a chart to show.";
+      "Nothing in this year is coded yet. Code transactions on the Reconcile page to fill " +
+      "these charts.";
     body.append(empty);
   }
 
@@ -3977,8 +3954,7 @@ function renderCharts(body: HTMLElement, year: number): void {
     warn.className = "variance-note warn";
     warn.textContent =
       `${whole.report.uncoded.count} transactions this year have no code, worth ` +
-      `${formatAmount(Math.abs(whole.report.uncoded.gross))}. They are in neither ` +
-      `figure below, so both charts understate.`;
+      `${formatAmount(Math.abs(whole.report.uncoded.gross))}, and are not in the charts below.`;
     body.append(warn);
   }
 
@@ -4074,8 +4050,7 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
     off.className = "variance-note warn";
     off.textContent =
       `These entries do not balance: debits exceed credits by ` +
-      `${formatAmount(totals.difference)}. Every entry should come to nothing, so ` +
-      "this is a fault in the books rather than a rounding.";
+      `${formatAmount(totals.difference)}. This is a fault in the books, not rounding.`;
     body.append(off);
   }
 
@@ -4323,9 +4298,8 @@ function behindRow(
   if (unnamed > 0) {
     cell.append(
       note(
-        `${unnamed} entr${unnamed === 1 ? "y" : "ies"} could not be named — neither a bank ` +
-          "line nor a journal this ledger still holds. Loading the journal report again " +
-          "usually settles it.",
+        `${unnamed} entr${unnamed === 1 ? "y" : "ies"} could not be matched to a bank line or ` +
+          "journal. Loading the journal report again usually fixes this.",
       ),
     );
   }

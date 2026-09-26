@@ -196,8 +196,7 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
     list.append(add);
     list.append(
       note(
-        "An accountant who only reads cannot change a figure, which is what makes it safe " +
-          "to hand over a year while you carry on working.",
+        "Read-only access lets an accountant review the books without changing anything.",
       ),
     );
 

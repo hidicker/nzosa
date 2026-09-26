@@ -60,10 +60,8 @@ export function renderAiCheck(): void {
     body.append(
       step("Not on yet", "AI accounts check"),
       note(
-        "Sending anything about these books to a model is off until it is turned on, and " +
-          "that is done on the AI suggestions page, where what would be sent is set out in " +
-          "full. Turn it on there and this page works too — it is the same decision, and " +
-          "this page needs no key at all.",
+        "Sending anything about these books to AI is off. Turn it on from the AI suggestions " +
+          "page, which shows exactly what would be sent; this page then works too, without a key.",
       ),
       actions([primary("Go to AI suggestions", () => showPage("ai"))]),
     );
@@ -73,11 +71,9 @@ export function renderAiCheck(): void {
   body.append(
     step("What this is", "Year-end review against New Zealand tax rules"),
     note(
-      "A review of the finished year rather than of one line: whether each account holds " +
-        "what belongs in it, whether the GST treatments match what each entity is " +
-        "registered for, which deductions need a record the books do not show, and what a " +
-        "business of this kind usually has that these books do not. It reads the year's " +
-        "totals, not its transactions.",
+      "Reviews the finished year: whether each account holds what belongs in it, whether " +
+        "GST treatments match each entity's registration, which deductions need records, and " +
+        "what is usually present but missing. It reads the year's totals, not its transactions.",
     ),
     sourceNote(),
   );
@@ -236,16 +232,14 @@ function carryPanel(pickYear: HTMLSelectElement): HTMLElement {
 
   wrap.append(
     note(
-      "Nothing is set up and nothing is charged here. The work happens in an assistant you " +
-        "already use — it reads the guides, checks them against the figures below, and you " +
-        "can ask it follow-up questions afterwards, which is most of the value.",
+      "Use an AI assistant you already have. It checks the guides against the figures below, " +
+        "and you can ask it follow-up questions.",
     ),
     // The setup is one-off and the reason for it is not obvious, so it is
     // said before the steps rather than after them.
     note(
-      "It needs OpenAccountants connected to that assistant, once. That is what lets it " +
-        "look the rules up rather than answering from memory, and it is what gets you past " +
-        "the three free lookups.",
+      "Connect OpenAccountants to that assistant once, so it looks rules up rather than " +
+        "answering from memory, beyond the three free lookups.",
     ),
     connectSteps(),
   );
@@ -311,12 +305,10 @@ function carryPanel(pickYear: HTMLSelectElement): HTMLElement {
   wrap.append(
     fileHeading,
     note(
-      "Attach it to the same message as the prompt. It holds the working the prompt only " +
-        "summarises: trial balance, general ledger, every transaction and how it was coded, " +
-        "the depreciation schedule, each GST return and the filed ones beside them. Without " +
-        "it the assistant is checking your totals; with it, it can check the transactions " +
-        "behind them. It is your books in full, so send it only where you would send the " +
-        "books.",
+      "Attach it to the same message as the prompt. It holds the trial balance, general " +
+        "ledger, every transaction and its coding, the depreciation schedule and the GST " +
+        "returns, so the assistant can check the transactions, not just the totals. It is " +
+        "your books in full: send it only where you would send the books.",
     ),
     actions([workbook]),
   );
@@ -326,10 +318,7 @@ function carryPanel(pickYear: HTMLSelectElement): HTMLElement {
   wrap.append(
     promptHeading,
     note(
-      "It already opens with “Using OpenAccountants”. An assistant with the connector " +
-        "installed will still answer from memory unless the question reaches for it by " +
-        "name, which is the library's own advice. Send it in the same message as the " +
-        "workbook.",
+      "Send the prompt in the same message as the workbook.",
     ),
     actions([copy, show]),
     said,
@@ -456,10 +445,10 @@ function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
 
   wrap.append(
     note(
-      "No connector and no account needed. Attach one of Inland Revenue's guides to your " +
-        "assistant beside the workbook, and the prompt asks it to check these books against that " +
-        "guide and cite its pages. The guides are long -- IR335 is 84 pages -- so a paid plan of " +
-        "Claude, ChatGPT or Gemini reads them best, and one guide at a time works better than several.",
+      "No connector or account needed. Attach an Inland Revenue guide with the workbook; the " +
+        "prompt asks the assistant to check these books against it and cite its pages. The " +
+        "guides are long (IR335 is 84 pages), so a paid plan of Claude, ChatGPT or Gemini " +
+        "works best, one guide at a time.",
     ),
   );
 
@@ -488,7 +477,7 @@ function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
     const text = document.createElement("span");
     const strong = document.createElement("strong");
     strong.textContent = guide.title;
-    text.append(strong, ` -- ${why}.`);
+    text.append(strong, ` — ${why}.`);
     label.append(radio, " ", text);
     list.append(label);
   }
@@ -509,7 +498,7 @@ function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
     link.textContent = `${guide.title}, ${guide.edition(year)}`;
   } else {
     link.href = IRD_FORMS_INDEX;
-    link.textContent = `Inland Revenue's forms and guides (the ${year} ${guide.id} is not out yet -- use the latest)`;
+    link.textContent = `Inland Revenue's forms and guides (the ${year} ${guide.id} is not out yet; use the latest)`;
   }
   const linkLine = document.createElement("p");
   linkLine.append(link);
@@ -537,8 +526,8 @@ function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
     void navigator.clipboard.writeText(text).then(
       () => {
         said.textContent =
-          `Copied. Attach ${guide.id} and the workbook to one message, paste this with them, and ` +
-          "paste the answer back below.";
+          `Copied. Attach ${guide.id} and the workbook to one message, paste this, and paste ` +
+          "the answer back below.";
       },
       () => {
         shown.textContent = text;
@@ -583,8 +572,8 @@ function guidePanel(pickYear: HTMLSelectElement): HTMLElement {
     actions([workbook]),
     promptHeading,
     note(
-      `It tells the assistant to rely on the attached ${guide.id}, cite its pages, and say plainly ` +
-        "where the guide says nothing rather than answer from memory.",
+      `It asks the assistant to rely on the attached ${guide.id}, cite its pages, and say where ` +
+        "the guide is silent rather than answer from memory.",
     ),
     actions([copy, show]),
     said,

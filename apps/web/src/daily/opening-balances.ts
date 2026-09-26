@@ -63,16 +63,15 @@ export function renderOpeningBalances(): void {
   if (held === undefined) {
     status.className = "journal-out";
     status.textContent =
-      "No opening balances loaded. The figures below are worked out from the bank data, " +
-      "so they are the movement since your first statement rather than the position before " +
-      "it. Load a trial balance at your previous year end to set the real ones.";
+      "No opening balances loaded; the figures below show only movement since your first " +
+      "statement. Load a trial balance at your previous year end.";
   } else {
     status.className = "journal-balanced";
     const count = Object.keys(held.accounts).length;
     status.textContent =
       `${count} opening balance${count === 1 ? "" : "s"} loaded as at ${held.asAt}` +
       (held.source ? `, from ${held.source}` : "") +
-      ". The figures below start from those rather than from nothing.";
+      ". The figures below start from these.";
   }
   body.append(status);
   const money = (cents: Cents): string =>
@@ -99,9 +98,7 @@ export function renderOpeningBalances(): void {
     yearSelect.style.display = "none";
     body.append(
       note(
-        "None set. That is right for a ledger starting at the beginning of the company: " +
-          "everything it has ever done is in the transactions. It is wrong for one starting " +
-          "partway through, and the balance sheet will say so.",
+        "None set. Not needed if these books start when the business started.",
       ),
     );
     body.append(add);
@@ -150,7 +147,7 @@ export function renderOpeningBalances(): void {
       summary.textContent = `Balanced across all ${years.length} financial years. Debits equal credits for each year.`;
     } else {
       summary.className = "journal-out";
-      summary.textContent = `Out of balance in ${outOfBalance.map((y) => `FY${y.year}`).join(", ")}. These are not opening balances until they sum to nothing.`;
+      summary.textContent = `Out of balance in ${outOfBalance.map((y) => `FY${y.year}`).join(", ")}. Debits must equal credits.`;
     }
     body.append(summary);
 
@@ -269,8 +266,8 @@ export function renderOpeningBalances(): void {
     summary.textContent =
       total === 0
         ? `Balanced. ${entries.length} accounts as at ${selected.asAt}, debits equal credits.`
-        : `Out of balance by ${money(total)}. These are not opening balances until they sum ` +
-          "to nothing, and every report built on them carries the difference.";
+        : `Out of balance by ${money(total)}. Debits must equal credits, or every report ` +
+          "carries the difference.";
     body.append(summary);
 
     if (selected.source) body.append(note(selected.source));
@@ -433,7 +430,7 @@ export function balanceMovementSection(
       note(
         snapshots.length === 0
           ? "Nothing to compare yet. A balance is recorded each time the feed is fetched."
-          : "One balance recorded so far. The next fetch gives something to compare it against.",
+          : "One balance recorded so far; the next fetch can be compared with it.",
       ),
     );
     return wrap;
@@ -446,8 +443,8 @@ export function balanceMovementSection(
   wrap.append(
     note(
       `Between ${new Date(first.at).toLocaleString("en-NZ")} and ` +
-        `${new Date(last.at).toLocaleString("en-NZ")}, how far the bank's balance moved ` +
-        "against what the transactions in that window come to.",
+        `${new Date(last.at).toLocaleString("en-NZ")}: the bank's balance movement compared ` +
+        "with the transactions in that time.",
     ),
   );
 
@@ -683,11 +680,9 @@ export function renderBalanceChecks(
 
   body.append(
     note(
-      "A negative figure is money the bank saw leave that we have no transaction " +
-        "for. A positive one is movement we hold and the bank does not — usually " +
-        "the same transaction imported twice. A steady difference before the first " +
-        "date is just the balance the account held before the data starts, and is " +
-        "not an error." +
+      "Negative: money left the bank with no matching transaction here. Positive: a " +
+        "transaction here the bank does not have, usually imported twice. A steady " +
+        "difference before the first date is the balance before your data starts." +
         (tied > 0 ? ` ${tied} account(s) tie exactly.` : "") +
         (missing.length > 0
           ? ` ${missing.length} account(s) in the file have nothing imported.`
@@ -821,9 +816,9 @@ function openingEditor(draft: OpeningDraft): HTMLElement {
   wrap.append(title);
   wrap.append(
     note(
-      "The position at the start of the books: every account's balance on that day, a debit for " +
-        "what is owned and a credit for what is owed or held as equity. They must balance, and " +
-        "the balancing line usually goes to retained earnings or owner's equity.",
+      "Every account's balance on the day the books start: debits for what is owned, credits " +
+        "for what is owed or held as equity. They must balance; the balancing line usually " +
+        "goes to retained earnings or owner's equity.",
     ),
   );
 
@@ -959,9 +954,9 @@ function openingEditor(draft: OpeningDraft): HTMLElement {
     const first = state.ledger.transactions.map((t) => t.date).sort()[0];
     later.textContent =
       first !== undefined && draft.asAt > first
-        ? `The books have transactions from ${first}, before this date. They are taken to be ` +
-          "inside these balances already and left out of the balance sheet, so the date is " +
-          "normally the first of April on or before the first transaction."
+        ? `The books have transactions from ${first}, before this date; those are treated as ` +
+          "already included in these balances. The date is normally 1 April on or before the " +
+          "first transaction."
         : "";
     later.hidden = later.textContent === "";
   }

@@ -158,10 +158,10 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
     field("Rent is coded to", accounts),
     field("Only payments mentioning", payer),
     note(
-      "Rent is read from the account the rent is coded to, including rent a property manager " +
-        "collected. If one account holds more than one tenant, give words from this tenant's " +
-        "payments (a name or reference); separate several with commas. Rent paid in advance up to " +
-        "90 days before the tenancy starts is counted toward the first weeks.",
+      "Rent is read from the account it is coded to, including rent a property manager " +
+        "collected. If the account holds more than one tenant, enter words from this tenant's " +
+        "payments (a name or reference), separated by commas. Rent paid up to 90 days before " +
+        "the tenancy starts counts toward the first weeks.",
     ),
   );
 
@@ -352,9 +352,8 @@ export function renderRentalsPage(): void {
   }
   body.append(
     note(
-      "Rent is due on the first day of each period, as it is paid in advance. A property " +
-        "manager's statement posts its rent on the statement's last day, so a managed property is " +
-        "only as current as its latest statement.",
+      "Rent is due in advance on the first day of each period. A managed property is only as " +
+        "current as its latest property manager statement.",
     ),
   );
 }

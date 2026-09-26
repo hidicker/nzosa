@@ -37,8 +37,8 @@ export function carrySection(options: {
   // one has no idea where the answer came from and does not need to.
   wrap.append(
     note(
-      "ChatGPT, Claude, Gemini, Copilot, a local model — anything that can read a " +
-        "question and write JSON. Nothing is set up and nothing is charged here.",
+      "Works with ChatGPT, Claude, Gemini, Copilot or a local model: any assistant that " +
+        "can answer in JSON. No set-up or charge here.",
     ),
   );
 
@@ -70,8 +70,7 @@ export function carrySection(options: {
   // Why not all of them: the answers are what the next rules are made from.
   wrap.append(
     note(
-      "20 to 50 lines is best to start. Checking and confirming those builds rules, so " +
-        "the next set is smaller and better answered.",
+      "Start with 20 to 50 lines. Confirming them builds rules, so the next set is smaller.",
     ),
   );
 

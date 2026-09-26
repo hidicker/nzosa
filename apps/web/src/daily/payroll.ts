@@ -301,11 +301,10 @@ function renderAccounts(container: HTMLElement, payroll: PayrollData): void {
 
   details.append(
     note(
-      "Each pay run posts on its payday: gross pay and the employer's KiwiSaver as expenses, " +
-        "net pay to wages payable, and PAYE, student loan, child support, ESCT and KiwiSaver to " +
-        "the payables. Then code the bank payment of net pay to wages payable, and the payment " +
-        "to Inland Revenue to PAYE payable (and KiwiSaver payable). Coding either to wages " +
-        "would count the wages twice.",
+      "Each pay run posts on its payday: gross pay and employer KiwiSaver as expenses, net pay " +
+        "to wages payable, and deductions to the payables. Code the bank payment of net pay to " +
+        "wages payable, and the Inland Revenue payment to PAYE payable (and KiwiSaver payable); " +
+        "coding either to wages would count the wages twice.",
     ),
   );
   container.append(details);
@@ -658,7 +657,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
     const ird = cleanIrdNumber(irdInput.value.trim());
 
     if (!name) {
-      errorMsg.textContent = "Please provide the employee's full name.";
+      errorMsg.textContent = "Enter the employee's full name.";
       errorMsg.hidden = false;
       return;
     }
@@ -820,7 +819,7 @@ function renderEmployeesTable(container: HTMLElement): void {
     });
 
     tr.querySelector(".del-emp")?.addEventListener("click", async () => {
-      if (confirm(`Are you sure you want to remove employee "${emp.name}"?`)) {
+      if (confirm(`Remove employee "${emp.name}"?`)) {
         payroll.employees = payroll.employees.filter((e) => e.id !== emp.id);
         await commitPayroll(payroll, `${emp.name}: employee removed`);
       }
@@ -918,9 +917,9 @@ function extrasRow(employeeId: string, line: PayLine, refresh: () => void): HTML
     money("Earlier pay: gross correction", held.priorGross, (c) => set({ priorGross: c })),
     money("PAYE correction", held.priorPaye, (c) => set({ priorPaye: c })),
     note(
-      "An extra pay is taxed at the rate its annualised pay falls in: the last four weeks times 13 " +
-        "for a bonus, the last two pay periods for one paid on leaving. Redundancy carries no ACC " +
-        "levy or KiwiSaver. Share scheme benefits are reported only; no PAYE is withheld on them here.",
+      "Extra pays are taxed on annualised pay: the last four weeks × 13 for a bonus, the last " +
+        "two pay periods for one paid on leaving. Redundancy has no ACC levy or KiwiSaver. Share " +
+        "scheme benefits are reported only, with no PAYE withheld.",
     ),
   );
   td.append(box);
@@ -934,7 +933,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
   const payroll = getPayroll();
   if (payroll.employees.length === 0) {
-    alert("Please add at least one employee before running payroll.");
+    alert("Add at least one employee before running payroll.");
     creatingPayRun = false;
     return;
   }
@@ -1147,11 +1146,11 @@ function renderPayRunCreator(container: HTMLElement): void {
 
   confirmBtn.addEventListener("click", async () => {
     if (!payroll.employerIrd || !isValidIrdNumber(payroll.employerIrd)) {
-      alert("Please configure a valid Employer IRD Number at the top of the page before saving a pay run.");
+      alert("Enter a valid employer IRD number at the top of the page before saving the pay run.");
       return;
     }
     if (!payRunDraft.periodStart || !payRunDraft.periodEnd || !payRunDraft.payDate) {
-      alert("Please ensure period start, period end, and pay date are all specified.");
+      alert("Enter the period start, period end and pay date.");
       return;
     }
 
@@ -1283,7 +1282,7 @@ function renderPayRunsList(container: HTMLElement): void {
     delBtn.textContent = "Delete";
     delBtn.title = "Delete this pay run";
     delBtn.addEventListener("click", async () => {
-      if (confirm(`Are you sure you want to delete the pay run for ${run.payDate}?`)) {
+      if (confirm(`Delete the pay run for ${run.payDate}?`)) {
         // Its journal goes with it: journals are derived from the pay runs kept.
         payroll.payRuns = payroll.payRuns.filter((r) => r.id !== run.id);
         await commitPayroll(payroll, `Pay run for ${run.payDate} removed`);

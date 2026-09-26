@@ -41,10 +41,9 @@ async function renderArchives(body: HTMLElement, whose = ""): Promise<void> {
 
   body.append(
     note(
-      "Taken whenever " +
+      "Saved whenever " +
         (whose === "" ? "these books were" : `${whose} was`) +
-        " cleared or restored over. Putting one back keeps a copy of what it " +
-        "replaces, so this is reversible too.",
+        " cleared or restored. Putting one back first saves a copy of what it replaces.",
     ),
   );
 
@@ -90,8 +89,8 @@ async function renderArchives(body: HTMLElement, whose = ""): Promise<void> {
           `Put back the copy of ${whose || "these books"} from ${when.textContent}?
 
 ` +
-            `${archive.transactions} transactions and their coding. What is open now is ` +
-            `kept as another copy first, so this can be undone.`,
+            `${archive.transactions} transactions and their coding. The current books are ` +
+            `saved as a copy first, so this can be undone.`,
         )
       ) {
         return;
@@ -203,13 +202,12 @@ export async function renderBooks(): Promise<void> {
     if (renderCloudBooks(body)) return;
     if (hint !== null) {
       hint.textContent =
-        "These books are held by this browser alone. Download a backup to keep a copy, " +
-        "and to move them to another computer.";
+        "These books are held in this browser only. Download a backup to keep a copy or " +
+        "move them to another computer.";
     }
     body.append(
       note(
-        "This copy has no folder behind it, so there is only one set of books: " +
-          "whatever is in this browser. Clearing it is on the Setup page.",
+        "This browser holds one set of books. Clear it from the Setup page.",
       ),
     );
     return;
@@ -217,8 +215,8 @@ export async function renderBooks(): Promise<void> {
 
   if (hint !== null) {
     hint.textContent =
-      "Every set of books in your ledgers folder. Clearing one empties it and keeps a " +
-      "dated copy beside it, so it can be put back: nothing here deletes a folder.";
+      "Every set of books in your ledgers folder. Clearing a set keeps a dated copy that " +
+      "can be put back.";
   }
 
   const books = await ledgers();
@@ -294,9 +292,8 @@ export async function renderBooks(): Promise<void> {
 
       const what = document.createElement("p");
       what.textContent =
-        `Clearing ${book.name} removes its ${book.transactions} transactions and ` +
-        "every coding, rule, invoice, entity and asset with them. A dated copy is " +
-        "kept beside it first" +
+        `Clearing ${book.name} removes its ${book.transactions} transactions and all ` +
+        "coding, rules, invoices, entities and assets. A dated copy is kept first" +
         (isOpen ? " and can be put back below." : ", and can be put back by opening those books.");
 
       const label = document.createElement("label");

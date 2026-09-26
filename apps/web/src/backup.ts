@@ -221,13 +221,10 @@ export function backupTools(body: HTMLElement, books: string, hosted: boolean): 
   body.append(
     note(
       hosted
-        ? "One file with everything in these books: the transactions and every coding, " +
-          "the chart, entities, invoices, assets, the rules and the history. It saves to " +
-          "this computer, and opens in any copy of NZOSA — including one running from a " +
-          "folder of your own. Take one whenever you have done a solid piece of work."
-        : "One file with everything in these books, the rules and the history included. " +
-          "The folder itself is the truth here, so this is for keeping a copy somewhere " +
-          "else: another disk, or another computer.",
+        ? "One file with everything in these books, including rules and history. It saves to " +
+          "this computer and opens in any copy of NZOSA. Take one after any significant work."
+        : "One file with everything in these books, including rules and history, for keeping " +
+          "a copy elsewhere: another disk or computer.",
     ),
   );
 

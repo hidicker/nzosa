@@ -301,8 +301,8 @@ export function codingRefusedForTransfer(transaction: Transaction): boolean {
   if ((state.ledger.transfers ?? {})[transaction.id] === undefined) return false;
   alert(
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} is recorded as a ` +
-      "transfer between your own accounts, so it cannot be coded to an account as well.\n\n" +
-      'If it is not a transfer, press "not a transfer" on it on the Reconcile page, then code it.',
+      "transfer between your own accounts, so it cannot also be coded to an account.\n\n" +
+      'If it is not a transfer, choose "not a transfer" on the Reconcile page, then code it.',
   );
   return true;
 }

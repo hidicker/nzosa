@@ -82,9 +82,8 @@ function renderDisposals(body: HTMLElement): void {
   if (missing > 0) {
     body.append(
       note(
-        `${missing} of these have no sale proceeds recorded, so nothing is posted for them: ` +
-          "the asset is still on the balance sheet at book value and the profit is short " +
-          "whatever it fetched. Enter what each sold for, excluding GST.",
+        `${missing} of these have no sale proceeds recorded, so nothing is posted for them. ` +
+          "Enter what each sold for, excluding GST.",
       ),
     );
   }
@@ -95,9 +94,8 @@ function renderDisposals(body: HTMLElement): void {
   if (read > 0) {
     body.append(
       note(
-        `Proceeds for ${read} disposal${read === 1 ? " are" : "s are"} read from the disposal ` +
-          "journals in the journal report, so nothing needs entering. An amount entered by " +
-          "hand is used instead.",
+        `Proceeds for ${read} disposal${read === 1 ? " are" : "s are"} taken from the journal ` +
+          "report. An amount entered by hand overrides it.",
       ),
     );
   }
@@ -215,10 +213,8 @@ function renderDisposals(body: HTMLElement): void {
   body.append(table);
   body.append(
     note(
-      "Depreciation recovered is assessable income: the part of the depreciation claimed that " +
-        "the sale showed was too generous. A capital gain is not assessable, and is anything " +
-        "above what the asset cost. A loss on sale is deductible. At most two of the three are " +
-        "ever more than nothing.",
+      "Depreciation recovered is taxable income. A capital gain (above original cost) is not " +
+        "taxable. A loss on sale is deductible.",
     ),
   );
 }
@@ -226,7 +222,7 @@ function renderDisposals(body: HTMLElement): void {
 function askProceeds(number: string, name: string, current: Cents): void {
   const amount = window.prompt(
     `What did ${number} ${name} sell for, excluding GST?\n\n` +
-      "Nothing at all, if it was scrapped: the whole book value is then a loss on sale.",
+      "Enter 0 if it was scrapped; the book value is then a loss on sale.",
     (current / 100).toFixed(2),
   );
   if (amount === null) return;
@@ -589,9 +585,8 @@ export function renderAssetsPage(): void {
   if (assets.length === 0) {
     body.append(
       note(
-        "No assets yet. Without them the accounts are short exactly one figure: " +
-          "depreciation, and any gain or loss on something sold. Add each one, or fill in the " +
-          "template and load it below.",
+        "No assets yet. Add them to calculate depreciation and gains or losses on sale, or " +
+          "fill in the template and load it below.",
       ),
     );
     return;

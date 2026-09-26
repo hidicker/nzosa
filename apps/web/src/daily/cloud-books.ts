@@ -40,9 +40,8 @@ function say(box: HTMLElement, message: string, bad = false): void {
 function signInForm(body: HTMLElement): void {
   body.append(
     note(
-      "Books kept on the server can be reached from any computer you sign in " +
-        "from, and shared with whoever you invite, once they accept. Nothing on " +
-        "this page touches the books already in this browser.",
+      "Books on the server can be opened from any computer you sign in on, and shared " +
+        "with people you invite. The books in this browser are not affected.",
     ),
   );
 
@@ -221,8 +220,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   if (books.length === 0) {
     body.append(
       note(
-        "No books on the server yet. Start one below: it is yours, nobody else " +
-          "can see it, and you decide who else ever does.",
+        "No books on the server yet. Start one below; only you can see it unless you invite others.",
       ),
     );
   } else {

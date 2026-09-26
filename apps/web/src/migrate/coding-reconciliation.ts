@@ -271,9 +271,8 @@ export async function acceptAllShown(): Promise<void> {
     alert(
       held.size > 0
         ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
-            "transfer between your own accounts, and more than one line matches. Check each " +
-            "one on its own."
-        : "Nothing on screen to accept: every line here is settled already, or has no suggestion to accept.",
+            "transfer with more than one possible match. Check each one individually."
+        : "Nothing to accept: every line shown is already settled or has no suggestion.",
     );
     return;
   }
@@ -522,8 +521,7 @@ function columnPicker(file: {
 
   wrap.append(
     note(
-      "This looks like a table, but not one of the shapes read automatically. " +
-        "Point out the three columns that matter and it will be read as it is.",
+      "This table's layout was not recognised. Choose the three columns below to read it.",
     ),
   );
 
@@ -792,8 +790,8 @@ export function renderCheck(): void {
   if (state.reference.length === 0) {
     body.append(
       note(
-        "Load a Xero Account Transactions export (.xlsx) or the workbook (.xlsx) to check against. " +
-          "A chart of accounts (.csv) helps too: it lets a code and a name be recognised as the same account.",
+        "Load a Xero Account Transactions export (.xlsx) or the workbook (.xlsx) to compare against. " +
+          "A chart of accounts (.csv) also helps match account codes to names.",
       ),
     );
     return;
@@ -827,10 +825,9 @@ export function renderCheck(): void {
     why.className = "check-nothing";
     const said = document.createElement("p");
     said.textContent =
-      `${state.reference.length} reference lines loaded, and ${state.ledger.transactions.length} ` +
-      "transactions — but none of them is coded yet, so there is nothing to compare. " +
-      "That is the right way round: the coding in this file is what writes the rules, " +
-      "and they are below.";
+      `${state.reference.length} reference lines and ${state.ledger.transactions.length} ` +
+      "transactions loaded. No transactions are coded yet; use the suggested rules below " +
+      "to code them from this file.";
     why.append(said);
     body.append(why);
   }
@@ -888,8 +885,8 @@ export function renderCheck(): void {
 
   body.append(
     note(
-      `${state.reference.length} reference lines loaded. Only lines that exist on both sides ` +
-        "can be checked; the rest are shown so the coverage is visible rather than assumed.",
+      `${state.reference.length} reference lines loaded. Only lines in both can be compared; ` +
+        "the rest are listed so you can see what is not covered.",
     ),
   );
 
@@ -902,8 +899,8 @@ export function renderCheck(): void {
     body.append(section("Xero/Imported splits these", splitsToDo, proposedBy, false));
     body.append(
       note(
-        "A split payment cannot be compared on one code, so these are kept out of the counts " +
-          "above. Open one to see its parts; loading them replaces whatever split is held here.",
+        "Split payments are not included in the counts above. Open one to see its parts; " +
+          "loading them replaces any split held here.",
       ),
     );
   }
@@ -940,10 +937,8 @@ export function renderCheck(): void {
     body.append(section("Not coded here, coded in the file", adoptable, proposedBy, false));
     body.append(
       note(
-        "These have a coding in the file and none here. “Use Xero/Imported” takes it, one " +
-          "line at a time -- which is the way through the ones no rule can gather: a " +
-          "supplier whose payee changes with every payment, or one coded to a " +
-          "different account each time.",
+        "Coded in the file but not here. “Use Xero/Imported” takes the file's coding for " +
+          "one line; useful where no rule fits, such as a payee that changes each time.",
       ),
     );
   }
@@ -953,11 +948,9 @@ export function renderCheck(): void {
   if (alreadySettled > 0) {
     body.append(
       note(
-        `${alreadySettled} more ${alreadySettled === 1 ? "line is" : "lines are"} coded in the ` +
-          "file and left off that list, because they are already posted here the same way: " +
-          "a receipt against an invoice clears Accounts Receivable, a payment on a bill " +
-          "clears Accounts Payable, and a transfer is posted as one movement across both " +
-          "legs. Nothing is missing on these, so there is nothing to adopt.",
+        `${alreadySettled} more ${alreadySettled === 1 ? "line is" : "lines are"} not listed ` +
+          "because they are already posted the same way here: invoice receipts, bill " +
+          "payments and transfers. Nothing needs adopting.",
       ),
     );
   }
@@ -982,10 +975,9 @@ export function renderCheck(): void {
     body.append(heading);
     body.append(
       note(
-        "Nothing here matched one of your transactions, so none of it could be checked. " +
-          "That means either these are missing from what you imported, or the other " +
-          "system holds them and your bank never saw them -- a journal, an adjustment, " +
-          "or an account you have not imported.",
+        "These match none of your transactions. Either they are missing from your import, " +
+          "or they never went through the bank: a journal, an adjustment, or an account " +
+          "not imported.",
       ),
     );
 
@@ -1562,7 +1554,7 @@ async function acceptCodesBulk(
       `Nothing in your chart of accounts matches: "${[...unmapped].join('", "')}". ` +
         (applied > 0
           ? `${applied} other line${applied === 1 ? " was" : "s were"} updated.`
-          : "No lines were updated. Add those accounts with their tax codes to find them."),
+          : "No lines were updated. Add those accounts, with their tax codes, first."),
     );
   }
 
@@ -1677,7 +1669,7 @@ async function acceptSplitsBulk(
   if (unmappedAll.size > 0) {
     alert(
       `No account in your rules matches: ${[...unmappedAll].join(", ")}. ` +
-        "Add a code treatment first, otherwise the GST on those parts would only be assumed.",
+        "Set a GST treatment for it first so the GST is not assumed.",
     );
   }
 
@@ -1727,8 +1719,7 @@ async function acceptCode(
       // the only way to answer this since the chart's own tax code started
       // being read. What is actually missing is the account.
       alert(
-        `Nothing here matches "${code}". Add that account to your chart of ` +
-          "accounts -- with its tax code -- and this will find it.",
+        `No account matches "${code}". Add it to your chart of accounts, with its tax code.`,
       );
       return;
     }
@@ -1823,7 +1814,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   if (unmapped.length > 0) {
     alert(
       `No account in your rules matches ${unmapped.join(", ")}. ` +
-        "Add a code treatment first, otherwise the GST on those parts would only be assumed.",
+        "Set a GST treatment for it first so the GST is not assumed.",
     );
     return;
   }
@@ -2059,8 +2050,8 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
     note(
       `${examples.length} of your transactions have a coding in that file. ` +
         `${proposals.length} new rules can be drawn from them, which would code ` +
-        `${cover.covered} of ${cover.total} transactions. The rest are one-offs — ` +
-        "individual customers and suppliers that no keyword should try to capture.",
+        `${cover.covered} of ${cover.total} transactions. The rest are one-off customers and ` +
+        "suppliers, better coded individually.",
     ),
   );
 
@@ -2218,11 +2209,11 @@ function wireAiButton(): void {
       ? "Asked automatically, and charged to your key."
       : shared !== null
         ? aiRoute() === "folder"
-          ? "Asked automatically, on a shared key belonging to whoever runs nbparagliding.nz."
-          : "Asked automatically, on this site's key rather than one of yours."
+          ? "Asked automatically, using the NZOSA demo key."
+          : "Asked automatically, using this site's key."
         : aiRoute() === "none"
           ? "Needs the app on your own computer, or books on the server. Copy a prompt " +
-            "instead: that works anywhere and needs no key."
+            "instead; it works anywhere without a key."
           : "No key set for these books. Set one on the AI suggestions page.";
     // No count: how many is chosen in the section this opens, so naming one
     // here would be promising a number the next screen then asks about.
@@ -2432,8 +2423,8 @@ function wireAiButton(): void {
     const said = document.createElement("p");
     said.className = "cloud-said";
     said.textContent =
-      `${waiting.length} lines are waiting. Charged to your key, so how many is yours to ` +
-      `say -- up to ${AI_OWN_BATCH} in one go.`;
+      `${waiting.length} lines are waiting. Choose how many to send (up to ${AI_OWN_BATCH}); ` +
+      "they are charged to your key.";
 
     const howMany = document.createElement("select");
     for (const size of [20, 50, AI_OWN_BATCH, waiting.length]) {

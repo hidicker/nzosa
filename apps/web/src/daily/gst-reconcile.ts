@@ -87,10 +87,9 @@ export function renderVariance(): void {
     const warning = document.createElement("p");
     warning.className = "variance-note warn";
     warning.textContent =
-      `${assumedLines} line${assumedLines === 1 ? "" : "s"} in these periods have no coding and no ` +
-      `GST treatment, so they were assumed to be standard-rated. That is ${formatAmount(assumedTax)} ` +
-      `of GST claimed or charged on an assumption. Code them, or set a treatment on their account, ` +
-      `before treating the differences below as disagreements.`;
+      `${assumedLines} line${assumedLines === 1 ? "" : "s"} in these periods have no coding or ` +
+      `GST treatment and were assumed standard-rated (${formatAmount(assumedTax)} of GST). Code ` +
+      `them, or set a GST treatment on their account, before relying on the differences below.`;
     body.append(warning);
   }
 
@@ -361,9 +360,9 @@ function filedReturnTools(): HTMLElement {
     const hint = document.createElement("p");
     hint.className = "variance-note";
     hint.textContent =
-      "The return these books produce for each period. If that is what you filed, mark it as filed: " +
-      "it is kept as it stands today, and anything changed later shows against it. If you filed " +
-      "different figures, record the return as filed instead.";
+      "The return these books produce for each period. If it matches what you filed, mark it " +
+      "as filed; later changes then show against it. If you filed different figures, record " +
+      "the return as filed instead.";
     wrap.append(hint);
 
     const table = document.createElement("table");

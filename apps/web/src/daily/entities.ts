@@ -47,7 +47,7 @@ import type { Account, Cents, EntityKind, EntityModel, RuleSet } from "@nzosa/co
  * answer for a bank account, a loan or drawings.
  */
 const ACCOUNT_TYPES: readonly (readonly [string, string])[] = [
-  ["", "-- not on the P&L --"],
+  ["", "— not on the P&L —"],
   ["Revenue", "Revenue (income)"],
   ["Other Income", "Other Income"],
   ["Direct Costs", "Direct Costs (expense)"],
@@ -263,8 +263,7 @@ export function bankLinkSelect(account: Account): HTMLSelectElement {
   link.append(none);
 
   link.title =
-    "The account in this ledger that this chart row is. Set it and the two stop " +
-    "being two accounts; say it is not in this ledger and it stops being asked about.";
+    "Link this chart account to its bank account in these books, or mark it as not used.";
   link.addEventListener("change", () => {
     void setLedgerAccount(account, link.value);
   });
@@ -322,10 +321,8 @@ export function renderEntities(): void {
   if (model.entities.length === 0) {
     list.append(
       note(
-        "No entities, which is right for one company or one set of books: leave this " +
-          "empty and every report covers everything. Add one above only if you keep " +
-          "several things in one ledger -- a company and two rental properties, say -- " +
-          "and want a separate profit figure for each.",
+        "No entities are needed for a single business. Add entities to report separately " +
+          "on, for example, a company and its rental properties.",
       ),
     );
   }
@@ -354,8 +351,7 @@ export function renderEntities(): void {
       const hint = document.createElement("span");
       hint.className = "entity-rename-hint";
       hint.textContent =
-        "Rename this to your company, trust or your own name — it is the one " +
-        "thing these books cannot work out for themselves.";
+        "Rename this to your company, trust or personal name.";
       name.append(hint);
     }
 
@@ -414,8 +410,8 @@ export function renderEntities(): void {
     holders.value = formatOwners(entity.shareholders ?? []);
     holders.hidden = (entity.kind ?? "business") !== "business";
     holders.title =
-      "Only for a company. The shareholder current account is split between them on " +
-      "the IR4. Leave empty for a sole trader, partnership or trust.";
+      "Companies only: the shareholder current account is split between them on the IR4. " +
+      "Leave empty for a sole trader, partnership or trust.";
     const holdersSaid = document.createElement("span");
     holdersSaid.className = "entity-owners-said";
     const sayHolders = (text: string): void => {
@@ -480,9 +476,8 @@ export function renderEntities(): void {
     gstBox.type = "checkbox";
     gstBox.checked = reportsNetOfGst(entity);
     gstWrap.title =
-      "Registered: GST is collected for Inland Revenue, so it belongs in neither " +
-      "income nor expenses and reports are net of it. Not registered: the GST paid " +
-      "is part of what things cost, and reports include it.";
+      "Registered: reports exclude GST. Not registered: GST paid is part of the cost, " +
+      "and reports include it.";
     gstWrap.append(gstBox, document.createTextNode(" GST registered"));
     gstBox.addEventListener("change", () => {
       const live = state.ledger.entities ?? emptyEntityModel();
@@ -538,9 +533,8 @@ export function renderEntities(): void {
     exemptBox.type = "checkbox";
     exemptBox.checked = entity.interestExempt === true;
     exemptWrap.title =
-      "A new build, or another property Inland Revenue exempts from the interest " +
-      "limitation rules. Its mortgage interest is then claimed in full on the rental " +
-      "schedule in every year.";
+      "A new build, or another property exempt from the interest limitation rules. " +
+      "Mortgage interest is then claimed in full every year.";
     exemptWrap.append(exemptBox, document.createTextNode(" Interest exempt (new build)"));
     exemptBox.addEventListener("change", () => {
       const live = state.ledger.entities ?? emptyEntityModel();
@@ -677,8 +671,8 @@ export function renderEntities(): void {
     billingSummary.textContent =
       missing === 0 ? "Invoice details" : `Invoice details — ${missing} of 3 not filled in`;
     billingSummary.title =
-      "The GST number, address and bank account that go at the top of an invoice you " +
-      "send. An invoice over $200 has to carry the GST number.";
+      "The GST number, address and bank account shown on invoices you send. Invoices " +
+      "over $200 must show the GST number.";
     billingDetails.append(billingSummary);
 
     const billing = document.createElement("div");
@@ -760,10 +754,9 @@ export function renderEntities(): void {
     say.className = "needs-linking";
     say.textContent =
       `${unlinked.length} bank account${unlinked.length === 1 ? "" : "s"} in the chart ` +
-      `${unlinked.length === 1 ? "is" : "are"} not yet linked to an account in this ` +
-      "ledger: " +
+      `${unlinked.length === 1 ? "is" : "are"} not linked yet: ` +
       unlinked.map(({ account }) => account.name).join(", ") +
-      ". Set each one under “Entity, or which account” in the table below.";
+      ". Link each one under “Entity, or which account” below.";
     body.append(say);
   }
 
@@ -776,8 +769,7 @@ export function renderEntities(): void {
   if (accountRows.length === 0) {
     body.append(
       note(
-        "No accounts yet. Load a chart of accounts with the button above, or add one below. " +
-          "Accounts also appear here once a rule or a GST treatment names them.",
+        "No accounts yet. Load a chart of accounts above, or add accounts below.",
       ),
     );
   } else {
@@ -912,7 +904,7 @@ export function renderEntities(): void {
       ((state.rules as RuleFileShape | undefined)?.codeTreatments ?? {})[label] === undefined;
     const unset = document.createElement("option");
     unset.value = "";
-    unset.textContent = "-- not set --";
+    unset.textContent = "— not set —";
     unset.selected = current === null;
     gst.append(unset);
     for (const rate of GST_OPTIONS) {
@@ -989,7 +981,7 @@ export function renderEntities(): void {
     const select = document.createElement("select");
     const blank = document.createElement("option");
     blank.value = "";
-    blank.textContent = "-- unassigned --";
+    blank.textContent = "— unassigned —";
     select.append(blank);
     for (const entity of model.entities) {
       const option = document.createElement("option");
@@ -1427,7 +1419,7 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
     button.disabled = true;
     button.title =
       `${coded} transaction${coded === 1 ? " is" : "s are"} coded to this account. ` +
-      "Recode them first, or it would leave them pointing at nothing.";
+      "Recode them before deleting it.";
   } else {
     button.title = "Take this account out of the chart.";
     button.addEventListener("click", () => {
@@ -1509,8 +1501,8 @@ async function renameChartAccount(
   if (existing !== undefined) {
     const ok = confirm(
       `"${existing.label}" already exists. Merge "${label}" into it?\n\n` +
-        "Every coding, split and rule moves across, and the account keeps its own GST " +
-        `treatment and entity. A file that still says "${label}" will read as ${existing.label}.`,
+        "All coding, splits and rules move across; the account keeps its own GST treatment " +
+        `and entity. Files that still say "${label}" will read as ${existing.label}.`,
     );
     if (ok) await mergeChartAccount(account, label, existing.account, existing.label);
     return;

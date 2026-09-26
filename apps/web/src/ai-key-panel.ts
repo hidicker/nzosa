@@ -111,14 +111,12 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
       // somebody meets them in, and what they can do today before what they
       // could do instead.
       note(
-        "A demo AI key is provided so you can try this, with a limited number of " +
-          "suggestions: " +
+        "A demo AI key is provided to try this, with a limited number of suggestions: " +
           (aiRoute() === "cloud"
             ? `${left} ${counted} left on your account.`
             : `${left} ${counted} left, shared by everybody without a key of their own.`) +
           (aiRoute() === "folder"
-            ? " It belongs to whoever runs nbparagliding.nz, so what you send goes to Google " +
-              "through their account."
+            ? " It belongs to the NZOSA site, so what you send goes to Google through that account."
             : ""),
       ),
     );
@@ -131,14 +129,11 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
         `Set: ${status.key} (${PROVIDER_NAMES[detectProvider(status.key)]}). ` +
           (aiRoute() === "demo"
             ? "It is kept in this browser tab only and forgotten when the tab closes. It is " +
-              "sent from this page straight to Google and never to this site's server."
+              "sent straight to Google, never to this site's server."
             : (aiRoute() === "cloud"
-                ? "It is kept in the server's vault, which only the function that asks Google " +
-                  "can open, beside the bank feed's tokens."
-                : "It is kept in a file on this computer that only your user account can read, " +
-                  "beside the bank feed's tokens.") +
-              " It is never sent back to this page, and it serves every page here that asks a " +
-              "model anything."),
+                ? "It is kept in the server's vault, readable only by the function that asks Google."
+                : "It is kept in a file on this computer that only your user account can read.") +
+              " It is never sent back to this page, and is used by every AI feature here."),
       ),
     );
 
@@ -169,8 +164,8 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
       inner.append(label);
       inner.append(
         note(
-          `${models.length} models on this key. The cheap fast one is chosen to start; a ` +
-            "bigger one costs more and is worth trying where the answers are poor.",
+          `${models.length} models on this key. A fast, low-cost one is chosen to start; a ` +
+            "larger one costs more but may answer better.",
         ),
       );
     }
@@ -196,10 +191,9 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
 
   inner.append(
     note(
-      "To use your own key instead, paste it below and press Check it and keep it. A key " +
-        "from Google Gemini, Anthropic Claude, OpenAI (ChatGPT) or OpenRouter all work, " +
-        "and the app works out which it is. OpenRouter reaches most other models too. You " +
-        "pay that company for what you use.",
+      "To use your own key, paste it below and press Check it and keep it. Keys from Google " +
+        "Gemini, Anthropic Claude, OpenAI (ChatGPT) or OpenRouter work; OpenRouter also " +
+        "reaches most other models. You pay that provider for what you use.",
     ),
   );
 

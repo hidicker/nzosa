@@ -93,9 +93,9 @@ export function standardPanel(model: EntityModel): HTMLElement | null {
   intro.textContent =
     `The accounts a ${KIND_NAME[kind]} usually needs` +
     (kind === "residential" || kind === "commercial"
-      ? ", named for the headings of the rental schedule."
+      ? ", matching the rental schedule's headings."
       : kind === "personal"
-        ? ": one for money received and one for spending. Add more as you need them."
+        ? ". Add more as you need them."
         : ".") +
     " Untick any you don't want.";
   box.append(heading, intro);
@@ -113,10 +113,10 @@ export function standardPanel(model: EntityModel): HTMLElement | null {
   const suffixHint = document.createElement("small");
   suffixHint.className = "field-hint";
   suffixHint.textContent = several
-    ? "Added to each code, so this entity's accounts stay separate: 420 becomes 420" +
+    ? "Added to each code to keep this entity's accounts separate: 420 becomes 420" +
       (suffix.value || "MS") +
       ". One to three capital letters."
-    : "Only needed once there is more than one entity. Leave blank for plain codes.";
+    : "Needed only with more than one entity. Leave blank for plain codes.";
   suffixRow.append(suffixCaption, suffix, suffixHint);
   box.append(suffixRow);
 
@@ -321,15 +321,15 @@ function suffixOffer(model: EntityModel, other: Entity, taken: Set<string>): HTM
     text.textContent =
       `${other.name}'s ${rows.length} account${rows.length === 1 ? "" : "s"} have plain codes. ` +
       `${elsewhere.slice(0, 3).join(", ")}${elsewhere.length > 3 ? " and others" : ""} ` +
-      "are used in journals, opening balances, invoices or tenancies, so rename those one at a time.";
+      "are used in journals, opening balances, invoices or tenancies; rename those individually.";
     box.append(text);
     return box;
   }
 
   text.textContent =
     `${other.name}'s ${rows.length} account${rows.length === 1 ? "" : "s"} have plain codes. ` +
-    `Give them the suffix ${suffix} too (${sample} → ${sample}${suffix}), so every entity's codes are marked? ` +
-    "Codings, rules and GST settings move with them.";
+    `Add the suffix ${suffix} to them too (${sample} → ${sample}${suffix})? ` +
+    "Coding, rules and GST settings move with them.";
   const go = document.createElement("button");
   go.type = "button";
   go.textContent = `Add ${suffix} to ${other.name}'s codes`;

@@ -150,8 +150,8 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
   if (held === undefined) {
     kmBox.append(
       note(
-        `Inland Revenue has not published kilometre rates for the year to 31 March ${year} ` +
-          "(they come out after the year ends). Enter them from its kilometre rates page, in cents.",
+        `Kilometre rates for the year to 31 March ${year} are not held yet (Inland Revenue ` +
+          "publishes them after the year ends). Enter them in cents from its kilometre rates page.",
       ),
       field("Tier 1 c/km", tier1),
       field("Tier 2 c/km", tier2),
@@ -159,9 +159,9 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
   }
   kmBox.append(
     note(
-      "With kilometre rates the rate is the whole claim: every actual vehicle cost for the year, " +
-        "its depreciation and the GST claimed on it come out, and no GST can be claimed. Business " +
-        "km still need a logbook; without one no more than 25% counts.",
+      "With kilometre rates, the rate is the whole claim: actual vehicle costs, depreciation and " +
+        "GST claimed on them are removed, and no GST can be claimed. Business km still need a " +
+        "logbook; without one, no more than 25% counts.",
     ),
   );
   const percentField = field("Business use %", percent);
@@ -181,8 +181,8 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
     field("Logbook started", logbook),
     changedLabel,
     note(
-      "A logbook kept for at least 90 days in a row sets the business use for three years, unless " +
-        `the use changes by more than 20%. Without one, no more than ${NO_LOGBOOK_LIMIT}% can be ` +
+      "A logbook kept for at least 90 consecutive days sets business use for three years, unless " +
+        `use changes by more than 20%. Without one, no more than ${NO_LOGBOOK_LIMIT}% can be ` +
         "claimed (section DE 4).",
     ),
     field("Private share to", counter),
@@ -307,9 +307,9 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
   body.append(heading);
   body.append(
     note(
-      "A vehicle used partly privately: its costs are coded in full through the year, and at the " +
-        "balance date the private share comes out -- off the vehicle accounts and into drawings, " +
-        "with the GST claimed on that share given back in Box 9 of the return covering 31 March.",
+      "For a vehicle used partly privately, code its costs in full through the year. At balance " +
+        "date the private share moves to drawings, and the GST claimed on it is returned in Box 9 " +
+        "of the return covering 31 March.",
     ),
   );
 
@@ -359,14 +359,11 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
     if (company) {
       card.append(
         note(
-          "This entity looks like a company (it has shareholders, or no owners). A company's vehicle used privately " +
-            "by a shareholder-employee is normally a fringe benefit, taxed through FBT, and then " +
-            "this adjustment is not made. A close company with only one or two vehicles available " +
-            "to shareholder-employees, and no other fringe benefits, can opt out of FBT for them " +
-            "instead -- by a written note with the income tax return for the year the vehicle was " +
-            "bought or first used for business, and no later than that return's due date. Then " +
-            "this adjustment is exactly what Inland Revenue expects, for income tax and GST. Use " +
-            "it only if that election was made.",
+          "This entity appears to be a company. Private use of a company vehicle by a " +
+            "shareholder-employee is normally taxed through FBT, and this adjustment is not made. " +
+            "Use it only if the company opted out of FBT: a close company with one or two such " +
+            "vehicles and no other fringe benefits, electing in writing with the income tax return " +
+            "for the year the vehicle was bought or first used for business, by that return's due date.",
         ),
       );
     }
@@ -503,11 +500,10 @@ function renderPrepayments(body: HTMLElement, year: number, posted: readonly Pos
   body.append(heading);
   body.append(
     note(
-      "A payment that buys something running past 31 March -- a year's insurance paid in " +
-        "January, say. The part not yet used is added back this year and claimed next year " +
-        "(section EA 3), unless Determination E12 excuses it: most small or short prepayments " +
-        "are simply claimed when paid. Choose the payment, the period it covers and its kind, " +
-        "and the adjustment is worked out, or shown as not needed.",
+      "For payments covering a period past 31 March, such as a year's insurance paid in " +
+        "January. The unused part is carried to next year (section EA 3) unless Determination " +
+        "E12 exempts it; most small or short prepayments are claimed when paid. Choose the " +
+        "payment, period and kind to work out the adjustment.",
     ),
   );
   const actions = document.createElement("div");

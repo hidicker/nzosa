@@ -132,7 +132,7 @@ function renderRulesStatus(): void {
     const question = document.createElement("p");
     question.textContent =
       `${pending.name} holds ${describeRules(pending.rules)}. ` +
-      "Add it to what is already loaded, or replace? The set being replaced is kept.";
+      "Add it to the current rules, or replace them? Replaced rules are kept.";
     choice.append(question);
 
     const add = document.createElement("button");
@@ -376,10 +376,10 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
     });
     impact.textContent =
       result.matches === 0
-        ? "Matches nothing in the ledger as it stands."
+        ? "Matches no transactions."
         : `Matches ${result.matches} transaction${result.matches === 1 ? "" : "s"}` +
           (result.stolen > 0
-            ? `, ${result.stolen} of which another rule currently codes differently.`
+            ? `, ${result.stolen} currently coded differently by another rule.`
             : ".") +
           " Lines already confirmed keep their coding.";
   };
@@ -505,7 +505,7 @@ function deleteRule(index: number, rule: CategoryRule): void {
   if (
     !confirm(
       `Delete the rule coding "${rule.keyword ?? rule.account ?? "everything"}" to ${rule.code}?` +
-        " Lines already confirmed keep their coding; unconfirmed ones lose this suggestion.",
+        " Confirmed lines keep their coding.",
     )
   ) {
     return;

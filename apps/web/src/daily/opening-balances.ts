@@ -92,15 +92,7 @@ export function renderOpeningBalances(): void {
   elsewhere.append(toImport, ". It compares them with your transactions and changes nothing.");
   body.append(elsewhere);
 
-  const bankButton = document.createElement("button");
-  bankButton.type = "button";
-  bankButton.textContent = "Enter starting bank balances";
-  bankButton.addEventListener("click", () => {
-    bankDraft = startBankDraft();
-    redraw("openingBalances");
-  });
   if (bankDraft !== null) body.append(bankBalancesForm(bankDraft));
-  else body.append(bankButton);
 
   if (held !== undefined) body.append(enteredBalances(held));
 
@@ -371,14 +363,27 @@ export function renderOpeningBalances(): void {
   }
 }
 
-/** Starting bank balances being entered: one amount per bank account. */
+/**
+ * Bank balances being entered: each account's balance on a date of the
+ * person's choosing -- usually a recent statement -- and the equity account of
+ * the entity it belongs to.
+ */
 interface BankDraft {
+  /** The day the books start, which the balances are worked back to. */
   asAt: string;
-  /** Each bank account, and the equity account of the entity it belongs to. */
-  rows: { id: string; label: string; amount: string; owing: boolean; balanceTo: string; working?: string }[];
+  /** The day the balances entered are at: the end of that day. */
+  on: string;
+  rows: { id: string; label: string; amount: string; owing: boolean; balanceTo: string }[];
+  /** Said after the feed was used, or why it could not be. */
+  feedSaid?: string;
 }
 
 let bankDraft: BankDraft | null = null;
+
+/** Today, as a New Zealand date, which is how transactions are dated. */
+function todayInNz(): string {
+  return new Date().toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
+}
 
 /** The equity accounts a starting balance can be balanced to, with whose each is. */
 function equityChoices(): { code: string; label: string; entityId: string | undefined; name: string }[] {
@@ -418,59 +423,144 @@ function equityFor(bank: string): string {
   return (pick(theirs) ?? pick(choices))?.code ?? "";
 }
 
-/** The bank accounts, with anything already held for them, and each one's balancing account. */
+/** Every bank account, empty, balanced to its own entity's equity. */
 function startBankDraft(): BankDraft {
-  const held = state.ledger.openingBalances;
   const asAt = draftFromHeld().asAt;
   const ids = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
   const rows = ids.map((id) => {
-    const cents = held?.asAt === asAt ? (held.accounts[id] ?? 0) : 0;
     const name = bankLabel(id);
     return {
       id,
       label: name === id ? id : `${id} ${name}`,
-      amount: cents === 0 ? "" : (Math.abs(cents) / 100).toFixed(2),
-      owing: cents < 0,
+      amount: "",
+      owing: false,
       balanceTo: equityFor(id),
     };
   });
-  return { asAt, rows };
+  return { asAt, on: todayInNz(), rows };
 }
 
 /**
- * Bank balances at the start, one box each.
+ * A balance at the end of one day, carried to the start of the day the books
+ * begin, using the transactions in between.
  *
- * In credit or owing rather than debit or credit, which is the same thing in
- * the words a bank statement uses. Each account balances to its own entity's
- * equity, and any other opening balances already held for the same date are
- * kept as they are.
+ * Every imported transaction counts, coded or not and reconciled or not: the
+ * bank's balance moves with each one either way. So the answer is exactly right
+ * when every transaction in between is imported once, and wrong by whatever is
+ * missing or doubled -- which is what the checks against the bank's own
+ * balance are for.
+ */
+function balanceAtStart(bank: string, balance: Cents, on: string, start: string): { start: Cents; between: Cents } {
+  const lines = state.ledger.transactions.filter((t) => t.account === bank);
+  if (on >= start) {
+    const between = lines.filter((t) => t.date >= start && t.date <= on).reduce((s, t) => s + t.amount, 0);
+    return { start: balance - between, between };
+  }
+  // A balance from before the books start is carried forward instead.
+  const between = lines.filter((t) => t.date > on && t.date < start).reduce((s, t) => s + t.amount, 0);
+  return { start: balance + between, between: -between };
+}
+
+function dollars(cents: Cents): string {
+  return `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString("en-NZ", {
+    minimumFractionDigits: 2,
+    maximumFractionDigits: 2,
+  })}`;
+}
+
+/** The working for one row, in words, or "" when there is nothing to work. */
+function workingFor(draft: BankDraft, row: BankDraft["rows"][number]): string {
+  if (row.amount.trim() === "" || !/^\d{4}-\d{2}-\d{2}$/.test(draft.on) || !/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) {
+    return "";
+  }
+  const entered = parseAmount(row.amount.trim());
+  if (entered === null) return "Not an amount.";
+  const balance = row.owing ? -Math.abs(entered) : Math.abs(entered);
+  if (draft.on === draft.asAt) return "";
+  const { start, between } = balanceAtStart(row.id, balance, draft.on, draft.asAt);
+  return draft.on > draft.asAt
+    ? `${dollars(balance)} on ${draft.on}; transactions from ${draft.asAt} came to ` +
+        `${dollars(between)}; so ${dollars(start)} when the books start.`
+    : `${dollars(balance)} on ${draft.on}; transactions after it, to ${draft.asAt}, came to ` +
+        `${dollars(-between)}; so ${dollars(start)} when the books start.`;
+}
+
+/**
+ * Bank balances on any date, one box each, worked back to the start.
+ *
+ * A person has a recent statement to hand far more often than one from the
+ * day the books began, so the date is theirs to choose and the app does the
+ * arithmetic back to the start, showing it on each account. In credit or
+ * owing rather than debit or credit, in the words a statement uses. Each
+ * account balances to its own entity's equity, and any other opening balances
+ * already held are kept as they are.
  */
 function bankBalancesForm(draft: BankDraft): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "split-editor journal-editor";
   const title = document.createElement("h4");
-  title.textContent = "Starting bank balances";
+  title.textContent = "Bank balances";
+  wrap.append(title);
+
+  // The feed first: when it is there, it is the quickest and surest source.
+  const fromFeed = document.createElement("button");
+  fromFeed.type = "button";
+  fromFeed.textContent = "Use the bank feed's balances";
+  fromFeed.title = "Fill in the date and balances from the latest bank feed fetch.";
+  fromFeed.addEventListener("click", () => {
+    fromFeed.disabled = true;
+    void fillFromFeed(draft).then(() => redraw("openingBalances"));
+  });
+  const feedRow = document.createElement("div");
+  feedRow.className = "page-actions";
+  feedRow.append(fromFeed);
+  wrap.append(feedRow);
+  if (draft.feedSaid !== undefined) {
+    const feedSaid = document.createElement("p");
+    feedSaid.className = "field-hint";
+    feedSaid.textContent = draft.feedSaid;
+    wrap.append(feedSaid);
+  }
+
   wrap.append(
-    title,
     note(
-      "Each bank account's balance at the start of the day the books begin: the closing " +
-        "balance on the day before, from the bank statement. Leave an account blank if it " +
-        "had nothing in it or was opened later.",
+      "Enter each account's balance at the end of a day, from a statement or internet " +
+        "banking; a recent date is fine. Each is worked back to the day the books start, using " +
+        "the transactions in between, so check the working before saving: a missing or " +
+        "doubled transaction changes the result by its amount.",
     ),
   );
 
-  const dateLabel = document.createElement("label");
-  dateLabel.className = "account-add-field";
-  const dateCaption = document.createElement("span");
-  dateCaption.textContent = "Books start on";
-  const date = document.createElement("input");
-  date.type = "date";
-  date.value = draft.asAt;
-  date.addEventListener("change", () => {
-    draft.asAt = date.value;
-  });
-  dateLabel.append(dateCaption, date);
-  wrap.append(dateLabel);
+  const dates = document.createElement("div");
+  dates.className = "account-add-grid";
+  const dateField = (caption: string, value: string, set: (v: string) => void, hint: string): HTMLElement => {
+    const label = document.createElement("label");
+    label.className = "account-add-field";
+    const span = document.createElement("span");
+    span.textContent = caption;
+    const input = document.createElement("input");
+    input.type = "date";
+    input.value = value;
+    input.addEventListener("change", () => {
+      set(input.value);
+      redraw("openingBalances");
+    });
+    const small = document.createElement("small");
+    small.className = "field-hint";
+    small.textContent = hint;
+    label.append(span, input, small);
+    return label;
+  };
+  dates.append(
+    dateField("Balances at the end of", draft.on, (v) => (draft.on = v), "The date on the statement."),
+    dateField(
+      "Books start on",
+      draft.asAt,
+      (v) => (draft.asAt = v),
+      "Normally 1 April on or before your first transaction.",
+    ),
+  );
+  wrap.append(dates);
 
   const table = document.createElement("table");
   table.className = "report-table opening-table";
@@ -481,13 +571,15 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   for (const row of draft.rows) {
     const tr = document.createElement("tr");
     const labelCell = nameCell(row.label);
-    if (row.working !== undefined) {
-      const how = document.createElement("small");
-      how.className = "field-hint opening-working";
-      how.textContent = row.working;
-      labelCell.append(how);
-    }
+    const how = document.createElement("small");
+    how.className = "field-hint opening-working";
+    const showWorking = (): void => {
+      how.textContent = workingFor(draft, row);
+    };
+    showWorking();
+    labelCell.append(how);
     tr.append(labelCell);
+
     const amountTd = document.createElement("td");
     const amount = document.createElement("input");
     amount.type = "text";
@@ -496,8 +588,10 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
     amount.value = row.amount;
     amount.addEventListener("input", () => {
       row.amount = amount.value;
+      showWorking();
     });
     amountTd.append(amount);
+
     const sideTd = document.createElement("td");
     const side = document.createElement("select");
     for (const [value, caption] of [
@@ -513,8 +607,10 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
     side.title = "In credit: money in the account. Owing: a credit card, overdraft or loan balance.";
     side.addEventListener("change", () => {
       row.owing = side.value === "owing";
+      showWorking();
     });
     sideTd.append(side);
+
     // A plain list: only equity accounts belong here, and there are few.
     const toTd = document.createElement("td");
     const to = document.createElement("select");
@@ -536,36 +632,12 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   table.append(tbody);
   wrap.append(table);
 
-  // From the feed: today's balance less what has happened since the start.
-  const fromFeed = document.createElement("button");
-  fromFeed.type = "button";
-  fromFeed.textContent = "Work out from the bank feed";
-  fromFeed.title =
-    "The feed's latest balance less every transaction since the start date. Only right if " +
-    "every transaction since then has been imported, once.";
-  const feedSaid = document.createElement("p");
-  feedSaid.className = "field-hint";
-  fromFeed.addEventListener("click", () => {
-    fromFeed.disabled = true;
-    void workOutFromFeed(draft).then((said) => {
-      if (said === "") redraw("openingBalances");
-      else {
-        feedSaid.textContent = said;
-        fromFeed.disabled = false;
-      }
-    });
-  });
-  const feedRow = document.createElement("div");
-  feedRow.className = "page-actions";
-  feedRow.append(fromFeed);
-  wrap.append(feedRow, feedSaid);
-
   const said = document.createElement("p");
   said.className = "split-balance";
   const save = document.createElement("button");
   save.type = "button";
   save.className = "primary";
-  save.textContent = "Save starting balances";
+  save.textContent = "Save bank balances";
   save.addEventListener("click", () => void saveBankDraft(draft, said));
   const cancel = document.createElement("button");
   cancel.type = "button";
@@ -582,24 +654,18 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
 }
 
 /**
- * Starting balances from the bank feed: each account's latest feed balance,
- * less every transaction since the start date up to that balance's day.
- *
- * Akahu gives only the balance now, so this is the one way to reach back to
- * a start date from it. It is exactly right when every transaction since
- * then is imported once and wrong by any gap, so the working is shown on each
- * account for a person to check before saving. Returns what went wrong, or
- * nothing when the draft was filled in.
+ * The feed's latest balances, and their date, into the form. Akahu gives
+ * only the balance now, and that is exactly what the form takes: the working
+ * back to the start is then the same as for a balance typed in.
  */
-async function workOutFromFeed(draft: BankDraft): Promise<string> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) return "Choose the date the books start first.";
+async function fillFromFeed(draft: BankDraft): Promise<void> {
   const status = await feedStatus();
   const latest = status?.balances?.[status.balances.length - 1];
   if (status === null || !status.configured || latest === undefined) {
-    return "No bank feed balances yet. Connect the feed and fetch it on the Bank import page first.";
+    draft.feedSaid = "No bank feed balances yet. Connect the feed and fetch it on the Bank import page first.";
+    return;
   }
-  // The feed's time, as a New Zealand date, which is how transactions are dated.
-  const on = new Date(latest.at).toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
+  draft.on = new Date(latest.at).toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
   const byAccount = new Map(
     Object.entries(status.accounts ?? {})
       .filter(([, ours]) => ours !== "")
@@ -609,36 +675,26 @@ async function workOutFromFeed(draft: BankDraft): Promise<string> {
   for (const row of draft.rows) {
     const akahuId = byAccount.get(row.id);
     const balance = akahuId === undefined ? undefined : latest.balances[akahuId];
-    if (balance === undefined) {
-      row.working = "No feed balance for this account.";
-      continue;
-    }
-    const since = state.ledger.transactions
-      .filter((t) => t.account === row.id && t.date >= draft.asAt && t.date <= on)
-      .reduce((sum, t) => sum + t.amount, 0);
-    const opening = balance - since;
-    row.amount = opening === 0 ? "" : (Math.abs(opening) / 100).toFixed(2);
-    row.owing = opening < 0;
-    const dollars = (cents: Cents): string =>
-      `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString("en-NZ", {
-        minimumFractionDigits: 2,
-        maximumFractionDigits: 2,
-      })}`;
-    row.working =
-      `Feed balance ${dollars(balance)} on ${on}; transactions since ${draft.asAt} came to ` +
-      `${dollars(since)}; so it started at ${dollars(opening)}.`;
+    if (balance === undefined) continue;
+    row.amount = balance === 0 ? "0.00" : (Math.abs(balance) / 100).toFixed(2);
+    row.owing = balance < 0;
     filled += 1;
   }
-  return filled === 0 ? "None of these accounts has a feed balance." : "";
+  draft.feedSaid =
+    filled === 0
+      ? "None of these accounts has a feed balance."
+      : `Filled from the feed as at ${draft.on}: ${filled} account${filled === 1 ? "" : "s"}. ` +
+        "Accounts without a feed balance are left blank.";
 }
 
-/** Merge the bank balances into what is held for that date, balance, and save. */
+/** Work each balance back to the start, merge into what is held, balance, and save. */
 async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void> {
-  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) {
-    said.textContent = "Choose the date the books start.";
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt) || !/^\d{4}-\d{2}-\d{2}$/.test(draft.on)) {
+    said.textContent = "Choose both dates.";
     return;
   }
   const accounts: Record<string, Cents> = {};
+  const entered = new Set<string>();
   for (const row of draft.rows) {
     if (row.amount.trim() === "") continue;
     const cents = parseAmount(row.amount.trim());
@@ -646,19 +702,21 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void>
       said.textContent = `"${row.amount}" for ${row.label} is not an amount.`;
       return;
     }
-    if (cents !== 0 && row.balanceTo === "") {
+    if (row.balanceTo === "") {
       said.textContent = `Choose the equity account ${row.label} balances to.`;
       return;
     }
-    if (cents !== 0) accounts[row.id] = row.owing ? -Math.abs(cents) : Math.abs(cents);
+    const balance = row.owing ? -Math.abs(cents) : Math.abs(cents);
+    accounts[row.id] = balanceAtStart(row.id, balance, draft.on, draft.asAt).start;
+    entered.add(row.id);
   }
-  if (Object.keys(accounts).length === 0) {
+  if (entered.size === 0) {
     said.textContent = "Enter at least one balance.";
     return;
   }
 
-  // Everything else held for the same date is kept. Each bank balance that
-  // changes moves its own entity's equity by the same amount, so balances
+  // Everything else held for the same start date is kept. Each bank balance
+  // that changes moves its own entity's equity by the same amount, so balances
   // that balanced before still do, and nothing else is touched.
   const held = state.ledger.openingBalances;
   if (held !== undefined && held.asAt !== draft.asAt && Object.keys(held.accounts).length > 0) {
@@ -679,6 +737,7 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void>
     else merged[key] = next;
   };
   for (const row of draft.rows) {
+    if (!entered.has(row.id)) continue;
     const now = accounts[row.id] ?? 0;
     const before = merged[row.id] ?? 0;
     if (now === before) continue;
@@ -1107,7 +1166,13 @@ export function renderBalanceChecks(
 
 /** Loading an opening position, and choosing which year is being edited. */
 export function wireOpeningBalances(): void {
+  $("opening-bank").addEventListener("click", () => {
+    bankDraft = startBankDraft();
+    openingDraft = null;
+    redraw("openingBalances");
+  });
   $("opening-enter").addEventListener("click", () => {
+    bankDraft = null;
     openingDraft = draftFromHeld();
     redraw("openingBalances");
   });

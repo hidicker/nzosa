@@ -1,4 +1,4 @@
-import { redraw } from "../app.js";
+import { redraw, showPage } from "../app.js";
 import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record } from "../books.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
@@ -74,6 +74,35 @@ export function renderOpeningBalances(): void {
       ". The figures below start from these.";
   }
   body.append(status);
+
+  // Checking the bank's balance at other dates is a different job, on another
+  // page; said here because this is where somebody looks for it first.
+  const elsewhere = document.createElement("p");
+  elsewhere.className = "page-hint";
+  elsewhere.append("To check the bank's own balance at other dates, use ");
+  const toImport = document.createElement("button");
+  toImport.type = "button";
+  toImport.className = "link-button";
+  toImport.textContent = "Bank import → Import bank balances";
+  toImport.addEventListener("click", () => {
+    showPage("import");
+    requestAnimationFrame(() => document.getElementById("import-balances")?.scrollIntoView({ block: "start" }));
+  });
+  elsewhere.append(toImport, ". It compares them with your transactions and changes nothing.");
+  body.append(elsewhere);
+
+  const bankButton = document.createElement("button");
+  bankButton.type = "button";
+  bankButton.textContent = "Enter starting bank balances";
+  bankButton.addEventListener("click", () => {
+    bankDraft = startBankDraft();
+    redraw("openingBalances");
+  });
+  if (bankDraft !== null) body.append(bankBalancesForm(bankDraft));
+  else body.append(bankButton);
+
+  if (held !== undefined) body.append(enteredBalances(held));
+
   const money = (cents: Cents): string =>
     (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
@@ -121,6 +150,19 @@ export function renderOpeningBalances(): void {
     opt.textContent = `FY${y.year} (as at 31 Mar ${y.year})`;
     yearSelect.append(opt);
   }
+
+  // What follows is worked out, not entered: each year's closing balances,
+  // which are also the next year's opening ones. Said, because a table of
+  // balances on a page called Opening balances reads as the ones entered.
+  const worked = document.createElement("h3");
+  worked.textContent = "Year-end balances (worked out from the books)";
+  body.append(worked);
+  body.append(
+    note(
+      "Each financial year's closing balances, from the opening balances above and every " +
+        "transaction and journal since. Choose a year at the top to see one on its own.",
+    ),
+  );
 
   if (!years.some((y) => String(y.year) === state.openingYear) && state.openingYear !== "all") {
     state.openingYear = years.length > 1 ? "all" : String(firstYear.year);
@@ -326,6 +368,256 @@ export function renderOpeningBalances(): void {
       body.append(addThisYear);
     }
   }
+}
+
+/** Starting bank balances being entered: one amount per bank account. */
+interface BankDraft {
+  asAt: string;
+  rows: { id: string; label: string; amount: string; owing: boolean }[];
+  balanceTo: string;
+}
+
+let bankDraft: BankDraft | null = null;
+
+/** The bank accounts, with anything already held for them, and the usual balancing account. */
+function startBankDraft(): BankDraft {
+  const held = state.ledger.openingBalances;
+  const asAt = draftFromHeld().asAt;
+  const ids = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
+  const rows = ids.map((id) => {
+    const cents = held?.asAt === asAt ? (held.accounts[id] ?? 0) : 0;
+    const name = bankLabel(id);
+    return {
+      id,
+      label: name === id ? id : `${id} ${name}`,
+      amount: cents === 0 ? "" : (Math.abs(cents) / 100).toFixed(2),
+      owing: cents < 0,
+    };
+  });
+  // Owner's equity: what a person's or a rental's starting position is
+  // balanced to. A funds-introduced account first, then any equity account.
+  const equity = state.chart.filter((a) => a.type.trim().toLowerCase() === "equity" && a.code.trim() !== "");
+  const preferred =
+    equity.find((a) => /funds introduced|owner.*funds|owner.*equity|capital/i.test(a.name)) ?? equity[0];
+  return { asAt, rows, balanceTo: preferred === undefined ? "" : preferred.code.trim() };
+}
+
+/**
+ * Bank balances at the start, one box each.
+ *
+ * In credit or owing rather than debit or credit, which is the same thing in
+ * the words a bank statement uses. Any other opening balances already held
+ * for the same date are kept, and the difference goes to one balancing
+ * account -- usually the owner's equity.
+ */
+function bankBalancesForm(draft: BankDraft): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "split-editor journal-editor";
+  const title = document.createElement("h4");
+  title.textContent = "Starting bank balances";
+  wrap.append(
+    title,
+    note(
+      "Each bank account's balance at the start of the day the books begin: the closing " +
+        "balance on the day before, from the bank statement. Leave an account blank if it " +
+        "had nothing in it or was opened later.",
+    ),
+  );
+
+  const dateLabel = document.createElement("label");
+  dateLabel.className = "account-add-field";
+  const dateCaption = document.createElement("span");
+  dateCaption.textContent = "Books start on";
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = draft.asAt;
+  date.addEventListener("change", () => {
+    draft.asAt = date.value;
+  });
+  dateLabel.append(dateCaption, date);
+  wrap.append(dateLabel);
+
+  const table = document.createElement("table");
+  table.className = "report-table opening-table";
+  table.innerHTML = "<thead><tr><th>Bank account</th><th>Balance</th><th></th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const row of draft.rows) {
+    const tr = document.createElement("tr");
+    tr.append(nameCell(row.label));
+    const amountTd = document.createElement("td");
+    const amount = document.createElement("input");
+    amount.type = "text";
+    amount.inputMode = "decimal";
+    amount.placeholder = "0.00";
+    amount.value = row.amount;
+    amount.addEventListener("input", () => {
+      row.amount = amount.value;
+    });
+    amountTd.append(amount);
+    const sideTd = document.createElement("td");
+    const side = document.createElement("select");
+    for (const [value, caption] of [
+      ["credit", "In credit"],
+      ["owing", "Owing"],
+    ] as const) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = caption;
+      option.selected = (value === "owing") === row.owing;
+      side.append(option);
+    }
+    side.title = "In credit: money in the account. Owing: a credit card, overdraft or loan balance.";
+    side.addEventListener("change", () => {
+      row.owing = side.value === "owing";
+    });
+    sideTd.append(side);
+    tr.append(amountTd, sideTd);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  wrap.append(table);
+
+  const options = openingAccountOptions().filter((o) => !draft.rows.some((r) => r.id === o.key));
+  const balanceLabel = document.createElement("label");
+  balanceLabel.className = "account-add-field";
+  const balanceCaption = document.createElement("span");
+  balanceCaption.textContent = "Balance the difference to";
+  const current = options.find((o) => o.key === draft.balanceTo)?.label ?? null;
+  const balanceTo = combobox(
+    options.map((o) => o.label),
+    current,
+    "Usually owner's equity",
+    () => {
+      draft.balanceTo = options.find((o) => o.label === balanceTo.value)?.key ?? "";
+    },
+  );
+  balanceLabel.append(balanceCaption, balanceTo.element);
+  wrap.append(balanceLabel);
+
+  const said = document.createElement("p");
+  said.className = "split-balance";
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = "Save starting balances";
+  save.addEventListener("click", () => void saveBankDraft(draft, said));
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    bankDraft = null;
+    redraw("openingBalances");
+  });
+  const buttons = document.createElement("div");
+  buttons.className = "page-actions";
+  buttons.append(save, cancel);
+  wrap.append(buttons, said);
+  return wrap;
+}
+
+/** Merge the bank balances into what is held for that date, balance, and save. */
+async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<void> {
+  if (!/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) {
+    said.textContent = "Choose the date the books start.";
+    return;
+  }
+  if (draft.balanceTo === "") {
+    said.textContent = "Choose the account to balance the difference to.";
+    return;
+  }
+  const accounts: Record<string, Cents> = {};
+  for (const row of draft.rows) {
+    if (row.amount.trim() === "") continue;
+    const cents = parseAmount(row.amount.trim());
+    if (cents === null) {
+      said.textContent = `"${row.amount}" for ${row.label} is not an amount.`;
+      return;
+    }
+    if (cents !== 0) accounts[row.id] = row.owing ? -Math.abs(cents) : Math.abs(cents);
+  }
+  if (Object.keys(accounts).length === 0) {
+    said.textContent = "Enter at least one balance.";
+    return;
+  }
+
+  // Kept: whatever else is held for the same date. Replaced: the banks, and
+  // the balancing account, which is worked out again.
+  const held = state.ledger.openingBalances;
+  const banks = new Set(draft.rows.map((row) => row.id));
+  if (held !== undefined && held.asAt !== draft.asAt && Object.keys(held.accounts).length > 0) {
+    if (
+      !confirm(
+        `Opening balances are already held as at ${held.asAt}. Replace them with these ` +
+          `bank balances as at ${draft.asAt}?`,
+      )
+    ) {
+      return;
+    }
+  }
+  const kept =
+    held !== undefined && held.asAt === draft.asAt
+      ? Object.fromEntries(
+          Object.entries(held.accounts).filter(([key]) => !banks.has(key) && key !== draft.balanceTo),
+        )
+      : {};
+  const merged: Record<string, Cents> = { ...kept, ...accounts };
+  const total = Object.values(merged).reduce((sum, cents) => sum + cents, 0);
+  if (total !== 0) merged[draft.balanceTo] = -total;
+
+  const options = openingAccountOptions();
+  const labelOf = (key: string): string => options.find((o) => o.key === key)?.label ?? key;
+  await saveOpeningDraft({
+    asAt: draft.asAt,
+    lines: Object.entries(merged).map(([key, cents]) => ({
+      key,
+      label: labelOf(key),
+      debit: cents > 0 ? (cents / 100).toFixed(2) : "",
+      credit: cents < 0 ? (-cents / 100).toFixed(2) : "",
+    })),
+  });
+  bankDraft = null;
+  redraw("openingBalances");
+}
+
+/**
+ * The opening balances as entered, apart from the worked-out table below
+ * them: the date, where they came from, and each balance in plain words.
+ */
+function enteredBalances(held: OpeningBalances): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "opening-entered";
+  const title = document.createElement("h3");
+  title.textContent = `Opening balances entered, as at ${held.asAt}`;
+  wrap.append(title);
+  if (held.source) wrap.append(note(`From: ${held.source}.`));
+
+  const options = openingAccountOptions();
+  const labelOf = (key: string): string => options.find((o) => o.key === key)?.label ?? key;
+  const table = document.createElement("table");
+  table.className = "report-table opening-table";
+  table.innerHTML = "<thead><tr><th>Account</th><th>In credit / owned</th><th>Owing / equity</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  const shown = (cents: Cents): string =>
+    (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  for (const [key, cents] of Object.entries(held.accounts).sort(([a], [b]) => a.localeCompare(b))) {
+    const tr = document.createElement("tr");
+    tr.append(nameCell(labelOf(key)));
+    tr.append(amountCell(cents > 0 ? shown(cents) : ""));
+    tr.append(amountCell(cents < 0 ? shown(cents) : ""));
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  wrap.append(table);
+
+  const edit = document.createElement("button");
+  edit.type = "button";
+  edit.textContent = "Edit opening balances";
+  edit.addEventListener("click", () => {
+    openingDraft = draftFromHeld();
+    redraw("openingBalances");
+  });
+  wrap.append(edit);
+  return wrap;
 }
 
 /** Add or change one opening balance. */

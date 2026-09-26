@@ -623,6 +623,27 @@ test("a line coded to an entity not registered for GST carries none, whatever el
   assert.equal(result.boxes.box12, 1500, "only the registered entity's purchase is claimed");
 });
 
+test("an uncoded line on an unregistered entity's bank account carries no GST", () => {
+  // A household's groceries showed 15% until coded, and the year-end balances
+  // carried the GST. The bank account says whose money it is before any code does.
+  const groceries = txn("2025-06-03", -6311, { id: "g", account: "household" });
+  const shop = txn("2025-06-03", -6311, { id: "s", account: "shop" });
+  const resolve = gstResolver({
+    codeOf: () => null,
+    unregisteredBank: (account) => account === "household",
+  });
+  assert.equal(resolve(groceries).treatment, "out-of-scope");
+  assert.equal(resolve(groceries).side, "none");
+  assert.equal(resolve(shop).treatment, "standard", "a registered entity's line keeps the default");
+
+  // Once coded, the code decides: a registered entity's account on a shared card claims.
+  const coded = gstResolver({
+    codeOf: () => "Repairs - 473",
+    unregisteredBank: () => true,
+  });
+  assert.equal(coded(groceries).treatment, "standard");
+});
+
 test("a transfer stays a transfer on an unregistered entity's account", () => {
   const leg = txn("2025-06-03", -10000, { id: "leg" });
   const resolve = gstResolver({

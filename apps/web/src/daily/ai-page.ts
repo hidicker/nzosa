@@ -175,13 +175,18 @@ function offerIt(): HTMLElement {
 
   const careful = document.createElement("p");
   careful.className = "ai-careful";
-  careful.textContent = "This sends some of what is in these books to Google. Exactly this:";
+  // Not a provider's name: which one it goes to depends on the key, and this
+  // said Google to somebody whose key was Anthropic's.
+  careful.textContent =
+    "This sends some of what is in these books to an AI provider: the one your own key is " +
+    "for, or Google's on the NZOSA demo key. Exactly this:";
   wrap.append(careful);
 
   const list = document.createElement("ul");
   for (const line of [
     "The payee, date, amount and reference of each unrecognised transaction, and only " +
-      "those. Never a bank account number, and never a transaction a rule already coded.",
+      "those, with whose bank account it came from and that account's last few digits. " +
+      "Never a whole bank account number, and never a transaction a rule already coded.",
     "Your chart of accounts: the codes and names, so it has something to choose from.",
     "How you coded similar payees before, as examples.",
     "What you write below about what these books are for.",

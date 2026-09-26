@@ -18,7 +18,12 @@ import { starterChart } from "./starter-chart.js";
  * usually registered for GST where a residential one never is.
  *
  * A person's set is deliberately small: money received, spending, and the
- * income tax paid, which is not spending and which the return asks for.
+ * income tax paid, which is not spending and which the return asks for. Two
+ * more because the IR3 asks for them apart -- interest received, gross, and
+ * the resident withholding tax the bank took from it, which is a credit
+ * against the tax rather than a cost -- and owner's equity, which is where a
+ * person's opening bank and loan balances are balanced to. Without it the
+ * household's starting position had nowhere of its own to go.
  * Personal spending is not deductible, so detail there is a budget rather
  * than a tax figure, and anybody who wants the detail can add it.
  */
@@ -70,9 +75,12 @@ const STANDARD: Readonly<Record<Exclude<EntityKind, "business">, readonly Standa
     { code: "820", name: "GST", type: "Current Liability", gst: "none", description: "GST owing to or from Inland Revenue" },
   ],
   personal: [
-    { code: "200", name: "Personal income", type: "Revenue", gst: "none", description: "Wages, interest and any other money received" },
+    { code: "200", name: "Personal income", type: "Revenue", gst: "none", description: "Wages and any other money received" },
+    { code: "270", name: "Interest received", type: "Other Income", gst: "none", description: "Bank interest, before the withholding tax taken from it" },
     { code: "400", name: "Personal spending", type: "Expense", gst: "none", description: "Everyday spending; not deductible" },
     { code: "625", name: "Income tax paid", type: "Current Asset", gst: "none", description: "Provisional and terminal tax paid to Inland Revenue, set against the tax on the return; not an expense" },
+    { code: "626", name: "Resident withholding tax deducted", type: "Current Asset", gst: "none", description: "RWT the bank took from interest, claimed as a credit on the return" },
+    { code: "970", name: "Owner's equity", type: "Equity", gst: "none", description: "What is owned less what is owed; opening balances are balanced here" },
   ],
 };
 

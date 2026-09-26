@@ -43,6 +43,8 @@ export interface CodingEngineOptions {
   sideOf?: (code: string) => GstSide | undefined;
   /** Whether a code belongs to an entity not registered for GST. */
   unregistered?: (code: string) => boolean;
+  /** Whether a bank account is used only by entities not registered for GST. */
+  unregisteredBank?: (account: string) => boolean;
 }
 
 export interface CodingEngine {
@@ -78,6 +80,7 @@ export function codingEngine(options: CodingEngineOptions): CodingEngine | null 
     codeOf,
     overrides: expanded.overrides,
     ...(options.unregistered ? { unregistered: options.unregistered } : {}),
+    ...(options.unregisteredBank ? { unregisteredBank: options.unregisteredBank } : {}),
   });
 
   return { transactions: expanded.transactions, overrides: expanded.overrides, codeOf, classify };

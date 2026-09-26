@@ -9,6 +9,7 @@ import {
   ledgerAccountFor,
   persistRules,
   reclassify,
+  gstUsually,
   record,
   saveEntities,
 } from "../books.js";
@@ -139,6 +140,12 @@ export function addEntityForm(): HTMLElement {
   gst.type = "checkbox";
   gst.checked = true;
   gstWrap.append(gst, document.createTextNode(" GST registered"));
+  // The usual answer for the kind chosen, still a tick to change: a household
+  // is never registered and a residential rental almost never is, and a tick
+  // left on from "Business" claimed GST on the groceries.
+  kind.addEventListener("change", () => {
+    gst.checked = gstUsually(kind.value);
+  });
 
   const add = document.createElement("button");
   add.type = "button";

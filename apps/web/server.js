@@ -618,22 +618,30 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           //
           // So the app builds the history the bank will not give it, a fetch
           // at a time, and it costs one extra call.
-          let balances = feed.balances ?? [];
+          let taken = null;
           try {
             const now = await akahu(feed, "/accounts");
-            const taken = {};
+            taken = {};
             for (const account of now.items ?? []) {
               if (account.balance?.current !== undefined) {
                 taken[account._id] = Math.round(account.balance.current * 100);
               }
             }
-            balances = [...balances, { at: new Date().toISOString(), balances: taken }].slice(-60);
           } catch {
             // A fetch that worked should not fail because the balances did.
           }
 
+          // Read again before writing. The fetch can take a while, and the
+          // settings read when it began were written back whole at the end --
+          // so an account set to "do not import" in the meantime came back
+          // linked, and its lines with it on the next fetch.
+          const latest = readFeed(ledgerRoot, current) ?? feed;
+          const balances =
+            taken === null
+              ? (latest.balances ?? [])
+              : [...(latest.balances ?? []), { at: new Date().toISOString(), balances: taken }].slice(-60);
           writeFeed(ledgerRoot, current, {
-            ...feed,
+            ...latest,
             lastFetch: new Date().toISOString(),
             balances,
           });

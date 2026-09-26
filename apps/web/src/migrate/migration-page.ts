@@ -1,5 +1,5 @@
 import { showPage } from "../app.js";
-import { saveEntities } from "../books.js";
+import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
 import { backendKind, openCloudBook, save, switchLedger, writesToFolder } from "../store.js";
@@ -536,8 +536,13 @@ function entityRow(
   const gstLabel = document.createElement("label");
   const gst = document.createElement("input");
   gst.type = "checkbox";
-  gst.checked = entity?.gst ?? true;
+  gst.checked = entity?.gst ?? gstUsually(entity?.kind ?? "business");
   gst.addEventListener("change", onChange);
+  // The usual answer for the kind, still a tick to change.
+  kind.addEventListener("change", () => {
+    gst.checked = gstUsually(kind.value);
+    onChange();
+  });
   gstLabel.append(gst, " GST registered");
 
   row.append(name, kind, gstLabel);
@@ -837,6 +842,81 @@ function applyPanel(
   return wrap;
 }
 
+/**
+ * Putting a changed list into books that already hold named entities.
+ *
+ * Matched by name: one of the same name has its kind and registration
+ * brought up to date, and a new name is added. Nothing is removed. An entity
+ * missing from the list may own accounts and bank accounts, and dropping it
+ * would leave them pointing at nobody -- so it is kept and named, for the
+ * person to rename or delete where its accounts can be seen.
+ */
+async function mergeEntities(planned: readonly PlannedEntity[]): Promise<void> {
+  const live: EntityModel = state.ledger.entities ?? emptyEntityModel();
+  const entities = [...live.entities];
+  const same = (a: string, b: string): boolean => a.trim().toLowerCase() === b.trim().toLowerCase();
+  for (const entity of planned) {
+    const at = entities.findIndex((e) => same(e.name, entity.name));
+    if (at >= 0) {
+      const was = entities[at];
+      if (was !== undefined) entities[at] = { ...was, kind: entity.kind, gstRegistered: entity.gst };
+      continue;
+    }
+    let id = entityId(entity.name);
+    for (let n = 2; entities.some((e) => e.id === id); n += 1) id = `${entityId(entity.name)}-${n}`;
+    entities.push({ id, name: entity.name, kind: entity.kind, gstRegistered: entity.gst });
+  }
+  await saveEntities({ ...live, entities }, `${planned.length} entities saved from the guided start`);
+}
+
+function mergePanel(
+  planned: readonly PlannedEntity[],
+  held: Onboarding,
+  record: Onboarding,
+  /** The whole list, the ones already in these books among them. */
+  listed: readonly PlannedEntity[] = planned,
+): HTMLElement {
+  const wrap = document.createElement("div");
+  const live = state.ledger.entities ?? emptyEntityModel();
+  const same = (a: string, b: string): boolean => a.trim().toLowerCase() === b.trim().toLowerCase();
+  wrap.append(entityList(planned));
+
+  const left = live.entities.filter((e) => !listed.some((p) => same(p.name, e.name)));
+  if (left.length > 0) {
+    wrap.append(
+      note(
+        `Also in these books, and kept: ${left.map((e) => e.name).join(", ")}. If one of them ` +
+          "is on the list under a new name, rename it on Entities & accounts instead, so its " +
+          "accounts go with it; delete it there if it does not belong.",
+      ),
+    );
+  }
+
+  const trouble = document.createElement("p");
+  trouble.className = "cloud-said";
+  const apply = button(
+    "Save this list to these books",
+    () => {
+      apply.disabled = true;
+      trouble.textContent = "Saving\u2026";
+      void mergeEntities(planned).then(
+        () => {
+          if (held.source !== undefined) tellSetup(held.source);
+          rememberOnboarding(record);
+          renderMigration();
+        },
+        () => {
+          apply.disabled = false;
+          trouble.textContent = "Could not save that. Try again, or change them on Entities & accounts.";
+        },
+      );
+    },
+    true,
+  );
+  wrap.append(actions(apply), trouble);
+  return wrap;
+}
+
 function planQuestion(number: number, held: Onboarding): HTMLElement {
   const shared = held.onlyOne === false && held.shared === true;
   const planned = (held.entities ?? []).filter((e) => e.name.trim() !== "");
@@ -980,6 +1060,29 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
   }
 
   const theirs = (state.ledger.entities ?? emptyEntityModel()).entities[0]?.name ?? "somebody else";
+
+  // Entities that share their accounts belong in one set of books, and the
+  // open one may well be it: the list saved a moment ago and then changed --
+  // a name corrected, a rental added -- came back here as "these get a new
+  // set", with no way to put the change into the books it was meant for.
+  // Which books are meant is the person's to say, so both are offered.
+  if (shared) {
+    const live = state.ledger.entities ?? emptyEntityModel();
+    const record = { entities: [...placed, ...group.map((e) => ({ ...e, book: open }))] };
+    wrap.append(
+      advice(
+        `The books open now hold ${live.entities.map((e) => e.name).join(", ")}. ` +
+          "Save this list to them if it is the same household or group, changed; or start a new set.",
+      ),
+      mergePanel(group, held, record, all),
+    );
+    if (backendKind() !== "browser") {
+      wrap.append(
+        actions(button("Start a new set instead", () => void startBooksFor(group, all))),
+      );
+    }
+    return wrap;
+  }
 
   if (backendKind() === "browser") {
     wrap.append(

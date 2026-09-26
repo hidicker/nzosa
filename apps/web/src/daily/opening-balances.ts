@@ -417,10 +417,30 @@ function equityFor(bank: string): string {
     return ids.find((id) => model.entities.find((e) => e.id === id)?.kind === "personal") ?? ids[0];
   };
   const entityId = owner(model.banks[bank] ?? []);
+  // Nothing rather than somebody else's: where the bank account is not yet
+  // ticked to an entity, or its entity has no equity account, the first
+  // equity account in the chart belongs to another entity, and a balance
+  // defaulted there moves one entity's money onto another's balance sheet.
+  // Blank makes it a choice, which saving insists on.
   const theirs = choices.filter((c) => entityId !== undefined && c.entityId === entityId);
   const pick = (list: typeof choices) =>
     list.find((c) => /funds introduced|owner.*funds|owner.*equity|capital/i.test(c.name)) ?? list[0];
-  return (pick(theirs) ?? pick(choices))?.code ?? "";
+  return pick(theirs)?.code ?? "";
+}
+
+/** Why a bank account has no equity account chosen for it, in words to act on. */
+function noEquityReason(bank: string): string {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const ids = model.banks[bank] ?? [];
+  if (model.entities.length > 1 && ids.length === 0) {
+    return "Not ticked to an entity yet: tick whose it is under Entities & accounts \u2192 Bank accounts.";
+  }
+  const names = ids.map((id) => model.entities.find((e) => e.id === id)?.name ?? id);
+  if (names.length === 0) return "";
+  return (
+    `${names.join(" / ")} has no equity account: add one under Entities & accounts ` +
+    "(Standard accounts\u2026 adds Funds introduced), or choose one here."
+  );
 }
 
 /** Every bank account, empty, balanced to its own entity's equity. */
@@ -641,6 +661,11 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
     // A plain list: only equity accounts belong here, and there are few.
     const toTd = document.createElement("td");
     const to = document.createElement("select");
+    const choose = document.createElement("option");
+    choose.value = "";
+    choose.textContent = "\u2014 choose \u2014";
+    choose.selected = row.balanceTo === "";
+    to.append(choose);
     for (const choice of equity) {
       const option = document.createElement("option");
       option.value = choice.code;
@@ -653,6 +678,15 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
       row.balanceTo = to.value;
     });
     toTd.append(to);
+    if (row.balanceTo === "") {
+      const why = noEquityReason(row.id);
+      if (why !== "") {
+        const hint = document.createElement("div");
+        hint.className = "field-hint";
+        hint.textContent = why;
+        toTd.append(hint);
+      }
+    }
     tr.append(amountTd, sideTd, toTd);
     tbody.append(tr);
   }

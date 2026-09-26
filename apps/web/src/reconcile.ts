@@ -66,6 +66,7 @@ export function suggest(
   gst: {
     chartTreatment?: (code: string) => unknown | null;
     sideOf?: (code: string) => "sales" | "purchases" | undefined;
+    unregisteredBank?: (account: string) => boolean;
   } = {},
 ): Suggestion[] {
   const ruleFile = rules as RuleFile | undefined;
@@ -83,6 +84,7 @@ export function suggest(
     ...(unregistered ? { unregistered } : {}),
     ...(gst.chartTreatment ? { chartTreatment: gst.chartTreatment as never } : {}),
     ...(gst.sideOf ? { sideOf: gst.sideOf } : {}),
+    ...(gst.unregisteredBank ? { unregisteredBank: gst.unregisteredBank } : {}),
   });
 
   return selected

@@ -516,6 +516,17 @@ export async function record(
   await saveEvents(state.events);
 }
 
+/**
+ * Whether an entity of this kind is usually registered for GST.
+ *
+ * A starting answer for a tick box, not a rule: a household never is, a
+ * residential rental almost never is (its rent is exempt), and a business or a
+ * commercial rental usually is.
+ */
+export function gstUsually(kind: string): boolean {
+  return kind === "business" || kind === "commercial";
+}
+
 export async function saveEntities(model: EntityModel, what = "Entities changed"): Promise<void> {
   const before = state.ledger.entities;
   state.ledger = { ...state.ledger, entities: model };
@@ -523,6 +534,9 @@ export async function saveEntities(model: EntityModel, what = "Entities changed"
   await record("entities", what, before ?? null, model);
   redraw("entities");
   redraw("migration");
+  // The picker at the top of every page lists them too, and went on offering
+  // the placeholder the guided start had just replaced.
+  redraw("entityFilter");
 }
 
 /**
@@ -760,6 +774,7 @@ export function varianceInput(): VarianceInput {
     sideOf: accountSideOf,
     // A line of an entity not registered for GST is on no return.
     unregistered: unregisteredCode(),
+    unregisteredBank: unregisteredBank(),
     // Narrowed by the chosen entity, as every other page's selection is.
     // Choosing an entity narrowed the account chips here and left the figures
     // alone, so a page headed by one company's name compared everybody's bank
@@ -906,8 +921,34 @@ export function accountSideOf(label: string): "sales" | "purchases" | undefined 
 export function gstLookups(): {
   chartTreatment: (code: string) => unknown | null;
   sideOf: (code: string) => "sales" | "purchases" | undefined;
+  unregisteredBank: (account: string) => boolean;
 } {
-  return { chartTreatment: (code) => chartTreatmentOf(code), sideOf: accountSideOf };
+  return {
+    chartTreatment: (code) => chartTreatmentOf(code),
+    sideOf: accountSideOf,
+    unregisteredBank: unregisteredBank(),
+  };
+}
+
+/**
+ * Whether a bank account is used only by entities not registered for GST.
+ *
+ * Ticked to at least one entity and to none that is registered; in books of
+ * one entity, every bank account is that entity's. A bank account ticked to
+ * nobody in books of several says nothing either way, and is left to the
+ * defaults.
+ */
+export function unregisteredBank(): (account: string) => boolean {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const registered = new Set(
+    model.entities.filter((e) => e.gstRegistered !== false).map((e) => e.id),
+  );
+  const only = model.entities.length === 1 ? model.entities[0]?.id : undefined;
+  return (account) => {
+    const ticked = model.banks[account] ?? [];
+    const ids = ticked.length === 0 && only !== undefined ? [only] : ticked;
+    return ids.length > 0 && ids.every((id) => !registered.has(id));
+  };
 }
 
 export function chartTreatmentOf(label: string): unknown | null {
@@ -933,6 +974,7 @@ export function reportEngine(): CodingEngine | null {
     chartTreatment: (code: string) => chartTreatmentOf(code) as never,
     sideOf: accountSideOf,
     unregistered: unregisteredCode(),
+    unregisteredBank: unregisteredBank(),
   });
 }
 

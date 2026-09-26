@@ -3532,3 +3532,7 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 /* A picker in a label laid out top to bottom: its grow-to-15rem is meant
    across, and in a column it grew down instead, opening its list far below. */
 .account-add-field > .combo, .rule-field > .combo { flex: 0 0 auto; }
+
+/* Bank import: taking one account's lines out. */
+.remove-account { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.5rem 0; }
+.remove-account .field-hint { flex-basis: 100%; margin: 0; }

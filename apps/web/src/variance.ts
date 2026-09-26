@@ -58,6 +58,8 @@ export interface VarianceInput {
   transfers?: Readonly<Record<string, string>>;
   /** Whether a code belongs to an entity not registered for GST. */
   unregistered?: (code: string) => boolean;
+  /** Whether a bank account is used only by entities not registered for GST. */
+  unregisteredBank?: (account: string) => boolean;
   /** Months in a GST period: 1, 2 (the default) or 6. */
   months?: 1 | 2 | 6;
   /** Box 9 debit adjustments for a period: the private use of a vehicle. */
@@ -141,6 +143,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     overrides: expanded.overrides,
     ...(input.transfers ? { transfers: input.transfers } : {}),
     ...(input.unregistered ? { unregistered: input.unregistered } : {}),
+    ...(input.unregisteredBank ? { unregisteredBank: input.unregisteredBank } : {}),
   });
 
   // Every cycle for a 31 March balance date ends in March: monthly, the

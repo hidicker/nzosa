@@ -101,7 +101,17 @@ export function feedResumeDate(options: {
     }
   }
 
-  if (mapped.some((account) => !latestFor.has(account))) return undefined;
+  // An account mapped but with nothing in it yet -- a zero-balance account
+  // that has had no lines -- has no point to resume from. It used to mean
+  // "from the beginning" for every account at once, so each opening of the
+  // books re-fetched the bank's whole history, a year and a half of it before
+  // the day the books start. Where the books already hold lines, they start
+  // where their first line is, and that is as far back as a new account
+  // needs to go. With no lines at all, the first fetch says how far back.
+  if (mapped.some((account) => !latestFor.has(account))) {
+    const first = options.transactions.map((t) => t.date).sort()[0];
+    return first;
+  }
 
   const earliest = mapped.map((account) => latestFor.get(account) as string).sort()[0];
   if (earliest === undefined) return undefined;

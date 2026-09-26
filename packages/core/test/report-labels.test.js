@@ -101,6 +101,16 @@ test("a mapped account with no transactions yet gives no date at all", () => {
   );
 });
 
+test("an empty mapped account goes back to where the books start, not the beginning", () => {
+  // A zero-balance account with no lines made every opening re-fetch the
+  // bank's whole history, before the date the books start.
+  const found = feedResumeDate({
+    mapping: { a: "BNZ 01", b: "BNZ Savings" },
+    transactions: [txn("BNZ 01", "2025-04-01"), txn("BNZ 01", "2026-03-20")],
+  });
+  assert.equal(found, "2025-04-01");
+});
+
 test("it resumes a week before the earliest-ending account", () => {
   // One fetch covers every account, so starting where the furthest-ahead one
   // ends would skip whatever the others are missing.

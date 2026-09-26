@@ -15,10 +15,11 @@ import {
 import { note } from "../ui.js";
 import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
-import { reclassify } from "../books.js";
+import { bankLabel, reclassify } from "../books.js";
 import { render } from "../daily/bank-import.js";
 import { state } from "../state.js";
-import { clear, emptyLedger } from "../store.js";
+import { save } from "../store.js";
+import { feedMapping, feedPossible, feedStatus } from "../feed-route.js";
 
 /**
  * The dated copies kept beside these books.
@@ -398,18 +399,92 @@ export async function renderOpenBooks(): Promise<void> {
 /** Clearing these books and starting again. */
 export function wireBooksPage(): void {
 
+  // One bank account's lines, and nothing else. This button used to clear the
+  // whole ledger in memory -- entities, codings, opening balances with the
+  // transactions -- while its warning spoke only of transactions "from this
+  // browser"; on books kept in a folder the next save wrote that emptiness
+  // over them. What somebody reaches for here is almost always one account
+  // that should not have come in: a business card on the same bank login as
+  // the household's. Starting again from nothing is on the Books page, behind
+  // the phrase that says so.
   $("clear-button").addEventListener("click", () => {
-    const count = state.ledger.transactions.length;
-    if (count === 0) return;
-    if (!confirm(`Delete all ${count} transactions from this browser? This cannot be undone.`)) {
+    const panel = $("remove-account");
+    if (!panel.hidden) {
+      panel.hidden = true;
       return;
     }
-    void (async () => {
-      await clear();
-      state.ledger = emptyLedger();
-      state.reports = [];
-      reclassify();
-      render();
-    })();
+    panel.textContent = "";
+    const counts = new Map<string, number>();
+    for (const t of state.ledger.transactions) counts.set(t.account, (counts.get(t.account) ?? 0) + 1);
+    if (counts.size === 0) return;
+
+    const pick = document.createElement("select");
+    for (const [account, count] of [...counts].sort(([a], [b]) => a.localeCompare(b))) {
+      const option = document.createElement("option");
+      option.value = account;
+      const name = bankLabel(account);
+      option.textContent = `${name === account ? account : `${account} ${name}`} (${count} lines)`;
+      pick.append(option);
+    }
+    const said = document.createElement("p");
+    said.className = "field-hint";
+    said.textContent =
+      "Takes this account's lines out of these books; everything else stays. If it comes " +
+      "from the bank feed, it is set to \u201cdo not import\u201d there as well.";
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "danger";
+    go.textContent = "Remove its lines";
+    go.addEventListener("click", () => {
+      const account = pick.value;
+      const gone = new Set(state.ledger.transactions.filter((t) => t.account === account).map((t) => t.id));
+      if (gone.size === 0) return;
+      if (!confirm(`Remove ${gone.size} lines of ${account} from these books?`)) return;
+      void (async () => {
+        // A transfer half of which is gone is not a transfer any more: its
+        // other half would post against a line that no longer exists.
+        const transfers = Object.fromEntries(
+          Object.entries(state.ledger.transfers ?? {}).filter(([id, other]) => !gone.has(id) && !gone.has(other)),
+        );
+        state.ledger = {
+          ...state.ledger,
+          transactions: state.ledger.transactions.filter((t) => !gone.has(t.id)),
+          transfers,
+        };
+        state.persistent = await save(state.ledger);
+        // And not fetched again. Left linked, the next fetch -- on opening,
+        // without anybody asking -- put every line straight back.
+        if (feedPossible()) {
+          try {
+            const status = await feedStatus();
+            const mapping = { ...(status?.accounts ?? {}) };
+            let unlinked = false;
+            for (const [feedId, to] of Object.entries(mapping)) {
+              if (to === account) {
+                mapping[feedId] = "";
+                unlinked = true;
+              }
+            }
+            if (unlinked) await feedMapping(mapping);
+          } catch {
+            alert(
+              "The lines are removed, but the bank feed could not be changed. Set this account " +
+                "to \u201cdo not import\u201d on the feed, or the next fetch brings them back.",
+            );
+          }
+        }
+        panel.hidden = true;
+        reclassify();
+        render();
+      })();
+    });
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancel";
+    cancel.addEventListener("click", () => {
+      panel.hidden = true;
+    });
+    panel.append(pick, go, cancel, said);
+    panel.hidden = false;
   });
 }

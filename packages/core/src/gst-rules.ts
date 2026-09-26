@@ -152,6 +152,16 @@ export interface GstRulesOptions {
    * groceries, and a return built from the ledger claimed GST on them.
    */
   unregistered?: (code: string) => boolean;
+  /**
+   * Whether a bank account is used only by entities not registered for GST.
+   *
+   * For a line nobody has coded yet: the account it will be coded to is not
+   * known, but whose money it is already is. A household's grocery line was
+   * shown at 15% until it was coded, and every total that counted uncoded
+   * lines -- the year-end balances among them -- carried GST nobody in the
+   * household can claim.
+   */
+  unregisteredBank?: (account: string) => boolean;
 }
 
 /**
@@ -311,6 +321,13 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
         treatment: "out-of-scope",
         side: "none",
         reason: `Coded to ${owner}, an account of an entity not registered for GST`,
+      };
+    }
+    if (owner === null && options.unregisteredBank?.(transaction.account) === true) {
+      return {
+        treatment: "out-of-scope",
+        side: "none",
+        reason: "Not coded yet, on a bank account of an entity not registered for GST",
       };
     }
 

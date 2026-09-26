@@ -82,7 +82,14 @@ test("a registered commercial rental charges and claims GST, and keeps interest 
 test("a person gets income, spending and income tax paid; a business the standard chart", () => {
   assert.deepEqual(
     standardAccounts("personal").map((a) => `${a.code} ${a.name}`),
-    ["200 Personal income", "400 Personal spending", "625 Income tax paid"],
+    [
+      "200 Personal income",
+      "270 Interest received",
+      "400 Personal spending",
+      "625 Income tax paid",
+      "626 Resident withholding tax deducted",
+      "970 Owner's equity",
+    ],
   );
   assert.equal(standardAccounts("business").length, starterChart().length);
   assert.ok(standardAccounts("business", { suffix: "AR" }).every((a) => a.code.endsWith("AR")));

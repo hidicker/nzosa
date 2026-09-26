@@ -106,17 +106,39 @@ interface Asking {
 
 /** What would be sent about these lines, in full, so it can be read first. */
 export function whatWouldBeAsked(lines: readonly Suggestion[], howMany = AI_BATCH): Asking {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  // Whose money it is, beside the account it came from. The bank account's
+  // number told the model nothing, so a grocery line on the household's card
+  // could have been anybody's -- and it said so, by answering nothing, on
+  // seventeen lines of twenty. The owner is what narrows the chart to the
+  // accounts that could be right.
+  const owners = (account: string): string => {
+    const names = (model.banks[account] ?? [])
+      .map((id) => model.entities.find((e) => e.id === id)?.name)
+      .filter((name): name is string => name !== undefined);
+    if (names.length === 0 && model.entities.length === 1) return model.entities[0]?.name ?? "";
+    return names.length === 1 ? `${names[0]}'s account` : names.length > 1 ? `shared by ${names.join(" and ")}` : "";
+  };
+  // The consent screen promises never a bank account number, and the account
+  // a line came from is usually one. Its last digits are enough to tell two
+  // of them apart; the owner beside it says what matters.
+  const masked = (label: string): string => {
+    const digits = label.replace(/[^0-9]/g, "");
+    return /^\d{2}-?\d{4}-?\d{7}-?\d{2,3}$/.test(label.trim()) || digits.length >= 12
+      ? `account \u2026${label.trim().slice(-6)}`
+      : label;
+  };
   const labels = new Map(
-    state.ledger.transactions.map((t) => [
-      t.id,
-      String(t.extras?.["accountLabel"] ?? t.account),
-    ]),
+    state.ledger.transactions.map((t) => {
+      const label = masked(String(t.extras?.["accountLabel"] ?? t.account));
+      const whose = model.entities.length > 1 ? owners(t.account) : "";
+      return [t.id, whose === "" ? label : `${label} (${whose})`];
+    }),
   );
   const asked = lines
     .slice(0, Math.max(1, howMany))
     .map((one) => askAbout(one.transaction, labels.get(one.transaction.id) ?? ""));
 
-  const model = state.ledger.entities ?? emptyEntityModel();
   const books = {
     ...briefing(model, state.chart, (entity) => entity.about ?? ""),
     about: state.ledger.booksAbout ?? "",
@@ -301,10 +323,14 @@ export function keepWhatIsUsable(
 
   let got = 0;
   let invented = 0;
+  let blank = 0;
   for (const one of back) {
     // A blank is the model saying it does not know, which is worth nothing on
     // a queue of things to decide, and is not an invented account either.
-    if (one.code === "") continue;
+    if (one.code === "") {
+      blank += 1;
+      continue;
+    }
     const label = labelForCode(one.code, labels);
     if (label === null) {
       invented += 1;
@@ -322,16 +348,28 @@ export function keepWhatIsUsable(
     });
     got += 1;
   }
+  // Said, because silence read as a fault: twenty asked, three shown, and
+  // nothing to say the other seventeen were the model declining to guess.
+  const unsure =
+    blank === 0
+      ? ""
+      : `${blank} of ${back.length} came back without an account: the model was not sure ` +
+        "enough to name one. Those lines are still waiting, for you or for a later ask.";
   return {
     got,
     said:
       back.length === 0
         ? "Nothing there could be read as an answer. Nothing has changed."
-        : got === 0
+        : got === 0 && blank === 0
           ? `Read ${back.length}, and none of them named an account these books have.`
-          : invented === 0
-            ? ""
-            : `${invented} of ${back.length} named an account these books do not have, and ` +
-              "were thrown away. The rest are on the lines they belong to.",
+          : [
+              invented === 0
+                ? ""
+                : `${invented} of ${back.length} named an account these books do not have, and ` +
+                  "were thrown away. The rest are on the lines they belong to.",
+              unsure,
+            ]
+              .filter((part) => part !== "")
+              .join(" "),
   };
 }

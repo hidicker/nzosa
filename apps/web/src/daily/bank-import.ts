@@ -110,9 +110,14 @@ export async function autoFetchFromFeed(): Promise<void> {
     const start = feedStartDate(mapping);
     const items = await feedTransactions(start === undefined ? "" : `${start}T00:00:00.000Z`);
 
+    // The links as they are now, not as they were when the fetch set out. A
+    // bank can take a while to answer, and an account set to "do not import"
+    // -- its lines removed -- in the meantime had every one of them put back
+    // by the fetch that was already under way.
+    const now = (await feedStatus())?.accounts ?? mapping;
     const read = fromAkahu(items, {
       accountFor: (id) => {
-        const to = mapping[id];
+        const to = now[id];
         return to === undefined || to === "" ? null : to;
       },
     });

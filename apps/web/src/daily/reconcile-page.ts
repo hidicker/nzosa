@@ -387,6 +387,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         gstSelect.value = rate;
         keep({ gst: rate });
       }
+      sayChosen();
     },
     { label: "+ Add new account…", onPick: (typed) => startNewAccount(typed) },
   );
@@ -407,7 +408,11 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
 
   const gstSelect = document.createElement("select");
   gstSelect.className = "gst-select";
-  const currentRate = classificationToRate(one.classification);
+  // A model's account says nothing to the GST resolver, which knows only the
+  // rules' codes -- so a suggestion of a rental's no-GST Rent received sat at
+  // 15%. The suggested account's own rate, as picking it by hand would give.
+  const suggestedRate = fromModel !== undefined ? accountRate(fromModel.code) : null;
+  const currentRate = suggestedRate ?? classificationToRate(one.classification);
   for (const rate of GST_OPTIONS) {
     const option = document.createElement("option");
     option.value = rate.value;
@@ -416,7 +421,10 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     option.selected = rate.value === (draft.gst ?? currentRate);
     gstSelect.append(option);
   }
-  gstSelect.addEventListener("change", () => keep({ gst: gstSelect.value }));
+  gstSelect.addEventListener("change", () => {
+    keep({ gst: gstSelect.value });
+    sayChosen();
+  });
 
   // Who it was to or from, in readable words rather than the bank's shouting.
   // Editable per line, because a rule cannot know that one payment to a builder
@@ -514,6 +522,28 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`)
         : `${rateLabel(one.classification)} · ${one.reason}`;
   if (fromModel !== undefined) reason.classList.add("code-reason-ai");
+
+  /**
+   * What the row now says, once something on it has been changed by hand.
+   *
+   * The line under the row described the suggestion it was drawn with, so
+   * choosing Rent received -- which moved the rate to 0% -- left it reading
+   * "15% GST on Income" beneath a row that no longer said so.
+   */
+  function sayChosen(): void {
+    if (one.confirmed) return;
+    const rate = gstSelect.value as GstRate;
+    const words =
+      rate === "0"
+        ? "No GST"
+        : rate === "100"
+          ? "GST on Imports"
+          : one.transaction.amount < 0
+            ? "15% GST on Expenses"
+            : "15% GST on Income";
+    reason.textContent = `${words} · Chosen here, not yet confirmed`;
+    reason.classList.remove("code-reason-ai", "code-reason-caution");
+  }
   // A suggestion that does not sit right is not the same colour as one that
   // does: money in coded to an account money goes out of wants reading twice.
   if (fromModel?.caution !== undefined) reason.classList.add("code-reason-caution");

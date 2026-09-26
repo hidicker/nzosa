@@ -39,6 +39,7 @@ import {
   labelForChartAccount,
   splitAccountLabel,
   directionCaution,
+  rateForTreatment,
   gstSideForType,
   invoiceAssignments as coreInvoiceAssignments,
   mapToOurVocabulary as coreMapToOurVocabulary,
@@ -858,6 +859,19 @@ export function cachedChartTreatments(): Map<string, unknown> {
  * with no entity is not in the set, so books that have never been divided
  * into entities are treated exactly as before.
  */
+/**
+ * The GST rate an account's own setting gives, for the Reconcile row to
+ * follow when the account is picked; null where it says nothing the row can
+ * show. An account of an entity not registered for GST is always 0%.
+ */
+export function accountRate(label: string): "0" | "15" | "100" | null {
+  if (label === "") return null;
+  if (unregisteredCode()(label)) return "0";
+  const file = state.rules as RuleFileShape | undefined;
+  const rate = rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));
+  return rate === "0" || rate === "15" || rate === "100" ? rate : null;
+}
+
 export function unregisteredCode(): (code: string) => boolean {
   const model = state.ledger.entities ?? emptyEntityModel();
   const unregistered = new Set(

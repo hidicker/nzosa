@@ -16,6 +16,7 @@ import {
   transfersAlsoCoded,
   clearingWithoutInvoice,
   ruleCaution,
+  accountRate,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -380,7 +381,17 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     codes,
     draft.code ?? one.code ?? fromModel?.code ?? null,
     "Search accounts…",
-    () => keep({ code: codeSelect.value }),
+    () => {
+      keep({ code: codeSelect.value });
+      // The rate follows the account chosen, as it would in an accounting
+      // system: Personal spending is 0%, Repairs 15%. Still a choice -- it
+      // can be changed after -- but the account's own setting is the start.
+      const rate = accountRate(codeSelect.value);
+      if (rate !== null && gstSelect.value !== rate) {
+        gstSelect.value = rate;
+        keep({ gst: rate });
+      }
+    },
     { label: "+ Add new account…", onPick: (typed) => startNewAccount(typed) },
   );
 

@@ -1090,7 +1090,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
     warn.className = "journal-out";
     warn.textContent =
       "No opening balances, so this shows movement since the first transaction, not the " +
-      "full position. Load a trial balance from the previous year end on the Opening balances page.";
+      "full position. Enter bank balances, or import a trial balance, on the Opening balances page.";
     body.append(warn);
   }
 

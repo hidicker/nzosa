@@ -64,8 +64,10 @@ export function renderOpeningBalances(): void {
   if (held === undefined) {
     status.className = "journal-out";
     status.textContent =
-      "No opening balances loaded; the figures below show only movement since your first " +
-      "statement. Load a trial balance at your previous year end.";
+      "No opening balances yet, so the figures below are only the movement since the first " +
+      "transaction. Enter bank balances gives each bank account and loan its starting " +
+      "balance, from a statement on any date or from the bank feed. Where there is more " +
+      "than that -- debtors, assets, GST owing -- import a trial balance at the previous year end.";
   } else {
     status.className = "journal-balanced";
     const count = Object.keys(held.accounts).length;
@@ -120,7 +122,8 @@ export function renderOpeningBalances(): void {
     yearSelect.style.display = "none";
     body.append(
       note(
-        "None set. Not needed if these books start when the business started.",
+        "None set. Needed unless every account started at nothing: Enter bank balances, above, " +
+          "takes them from a statement on any date or from the bank feed.",
       ),
     );
     body.append(add);

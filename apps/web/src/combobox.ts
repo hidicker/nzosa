@@ -79,7 +79,9 @@ export function combobox(
    * Every word typed has to be found -- in the option or in what it belongs
    * to -- in any order: "totara rates" finds Rates and water - 420TS, whose
    * entity is Totara Street. Word-start matches first: typing "sal" wants
-   * Salaries before Loss on sale.
+   * Salaries before Loss on sale. And a name that begins with what was typed
+   * before one that only has a word beginning with it: "rent" wants Rent
+   * received before Other rental income.
    */
   function ranked(query: string): string[] {
     const q = query.trim().toLowerCase();
@@ -90,6 +92,7 @@ export function combobox(
       // A code is "470 - Salaries", so a word start counts as a prefix.
       return at === 0 || (at > 0 && /[^a-z0-9]/.test(text[at - 1] ?? ""));
     };
+    const first: string[] = [];
     const starts: string[] = [];
     const within: string[] = [];
     for (const option of options) {
@@ -98,10 +101,11 @@ export function combobox(
       const haystack = more === "" ? lower : `${lower} ${more}`;
       if (!words.every((word) => haystack.includes(word))) continue;
       const lead = words.find((word) => lower.includes(word)) ?? words[0] ?? "";
-      if (startsWord(lower, q) || startsWord(lower, lead)) starts.push(option);
+      if (lower.startsWith(q)) first.push(option);
+      else if (startsWord(lower, q) || startsWord(lower, lead)) starts.push(option);
       else within.push(option);
     }
-    return [...starts, ...within];
+    return [...first, ...starts, ...within];
   }
 
   function close(): void {

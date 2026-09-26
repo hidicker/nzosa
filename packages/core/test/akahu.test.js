@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { fromAkahu, akahuAccountId, matchLedgerAccount } from "../dist/akahu.js";
+import { fromAkahu, akahuAccountId, akahuLabels, matchLedgerAccount } from "../dist/akahu.js";
 import { dedupeKey, looseKey } from "../dist/dedupe.js";
 
 const item = (extra = {}) => ({
@@ -138,4 +138,19 @@ test("an account nothing matches, or two that do, is left for a person", () => {
     "nothing matches",
   );
   assert.equal(matchLedgerAccount({ _id: "a", name: "x" }, ours), null, "no number at all");
+});
+
+test("the bank's names travel with the lines, told apart where two share one", () => {
+  const labels = akahuLabels([
+    { _id: "a", name: "Everyday", formatted_account: "01-0001-0000001-00" },
+    { _id: "b", name: "Term Loan", formatted_account: "0000000001-00005" },
+    { _id: "c", name: "Term Loan", formatted_account: "0000000001-00011" },
+  ]);
+  assert.deepEqual(labels, { a: "Everyday", b: "Term Loan 0005", c: "Term Loan 0011" });
+
+  const read = fromAkahu(
+    [{ _id: "t1", _account: "a", date: "2025-04-02T00:00:00Z", description: "Kowhai Cafe", amount: -4.5 }],
+    { accountFor: () => "01-0001-0000001-000", labelFor: (id) => labels[id] },
+  );
+  assert.equal(read.transactions[0].extras.accountLabel, "Everyday");
 });

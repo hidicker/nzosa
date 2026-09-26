@@ -69,6 +69,35 @@ export interface AkahuImportOptions {
    * company's books.
    */
   accountFor: (akahuAccountId: string) => string | null;
+  /**
+   * What the bank calls the account, to show beside the ledger's own id.
+   *
+   * The ledger names an account by its number -- `02-1234-0056789-000` -- which
+   * is right for matching and wrong for reading: a new set of books showed
+   * fifteen of them on Reconcile and Opening balances with nothing to say
+   * which was the household's everyday account and which the rental's.
+   */
+  labelFor?: (akahuAccountId: string) => string | undefined;
+}
+
+/**
+ * The bank's names for its accounts, told apart where two share one.
+ *
+ * Two "TotalMoney Term Loan"s are two loans, so a repeated name carries the
+ * last four digits of its number.
+ */
+export function akahuLabels(accounts: readonly AkahuAccount[]): Record<string, string> {
+  const seen = new Map<string, number>();
+  for (const account of accounts) seen.set(account.name, (seen.get(account.name) ?? 0) + 1);
+  const out: Record<string, string> = {};
+  for (const account of accounts) {
+    const name = account.name.trim();
+    if (name === "") continue;
+    const digits = (account.formatted_account ?? "").replace(/[^0-9]/g, "");
+    out[account._id] =
+      (seen.get(account.name) ?? 0) > 1 && digits !== "" ? `${name} ${digits.slice(-4)}` : name;
+  }
+  return out;
 }
 
 export interface AkahuImportResult {
@@ -205,7 +234,10 @@ export function fromAkahu(
       batch: "",
       otherPartyAccount: meta.other_account ?? "",
       occurrence: 1,
-      extras: { akahuId: item._id },
+      extras: {
+        akahuId: item._id,
+        ...(options.labelFor?.(item._account) ? { accountLabel: options.labelFor(item._account) } : {}),
+      },
       source: { importer: "akahu", file: "feed", line },
     } as Transaction);
   });

@@ -11,6 +11,8 @@ import {
   wipe,
 } from "../books.js";
 import { applyChartColumns } from "../migrate/coding-reconciliation.js";
+import { bankEntityTable } from "../daily/entities.js";
+import { openStandardAccounts } from "../daily/standard-accounts-panel.js";
 import { describeRules } from "../rules-ui.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
@@ -303,6 +305,27 @@ export const XERO_ACCOUNT_TRANSACTIONS =
  * and a comparison against the accounting system has nothing to line the
  * accounts up by.
  */
+/**
+ * A way to each entity's usual accounts, from the step that says they are
+ * missing. The panel is on Entities & accounts, where the code suffix and
+ * the list can be seen before anything is added.
+ */
+function standardAccountButtons(entities: readonly { id: string; name: string }[]): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "migration-actions";
+  for (const entity of entities) {
+    const go = document.createElement("button");
+    go.type = "button";
+    go.textContent = `Standard accounts for ${entity.name}…`;
+    go.addEventListener("click", () => {
+      openStandardAccounts(entity.id);
+      showPage("entities");
+    });
+    wrap.append(go);
+  }
+  return wrap;
+}
+
 function bankLinkState(): { total: number; unlinked: string[] } {
   const rows = accountsForEditing().filter(
     ({ account }) => account.type.trim().toLowerCase() === "bank",
@@ -504,6 +527,21 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
   const named =
     entities.length > 0 && !entities.some((entity) => entity.name === DEFAULT_ENTITY_NAME);
 
+  // In books of several entities, a chart is only there when each of them
+  // has accounts of its own. New books start with the business starter chart,
+  // all of it given to the first entity -- so a household and two rentals had
+  // Sales and Cost of Goods Sold, the rentals had nothing, and this step said
+  // done because sixty-six accounts existed.
+  const model = led.entities ?? emptyEntityModel();
+  const several = model.entities.length > 1;
+  const owning = new Set(Object.values(model.accounts));
+  const withoutAccounts = several ? model.entities.filter((e) => !owning.has(e.id)) : [];
+
+  // And which of them each bank account is for, without which a line cannot
+  // be placed: its GST, its opening balance and its suggestions all start there.
+  const heldBanks = [...new Set(led.transactions.map((t) => t.account))];
+  const unticked = several ? heldBanks.filter((bank) => (model.banks[bank] ?? []).length === 0) : [];
+
   const steps: SetupStep[] = [
     {
       what: "Bank transactions",
@@ -569,17 +607,43 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
     },
     {
       what: "Chart of accounts",
-      takesFiles: true,
-      done: chartLoaded,
-      detail: chartLoaded
-        ? `${state.chart.length} accounts, ${typed} with a type set`
-        : xero
-          ? "Standard starter chart active (66 accounts). Export and drop your Xero chart to use your own."
-          : "Standard starter chart active (66 accounts). Load your chart of accounts.",
+      takesFiles: !(fromNew && several),
+      done: chartLoaded && withoutAccounts.length === 0,
+      detail:
+        withoutAccounts.length > 0
+          ? `${withoutAccounts.map((e) => e.name).join(", ")} ` +
+            `${withoutAccounts.length === 1 ? "has" : "have"} no accounts yet. Standard accounts adds ` +
+            "the usual set for a person, a rental or a business, each with its own code suffix."
+          : chartLoaded
+            ? `${state.chart.length} accounts, ${typed} with a type set`
+            : xero
+              ? "Standard starter chart active (66 accounts). Export and drop your Xero chart to use your own."
+              : "Standard starter chart active (66 accounts). Load your chart of accounts.",
       unlocks: "Names accounts consistently, and carries entities and GST treatments",
       page: "entities",
+      ...(withContent && withoutAccounts.length > 0
+        ? { extra: standardAccountButtons(withoutAccounts) }
+        : {}),
     },
-    {
+    ...(several && heldBanks.length > 0
+      ? [
+          {
+            what: "Which entity each bank account is for",
+            done: unticked.length === 0,
+            detail:
+              unticked.length === 0
+                ? `${heldBanks.length} bank account${heldBanks.length === 1 ? "" : "s"}, each ticked to its entity`
+                : `${unticked.length} of ${heldBanks.length} not ticked yet. Tick every entity an ` +
+                  "account pays for; a shared card is ticked for each.",
+            unlocks: "GST, opening balances and suggestions that know whose money a line is",
+            page: "entities",
+            ...(withContent ? { extra: bankEntityTable() } : {}),
+          },
+        ]
+      : []),
+    ...(bankLinks.total === 0
+      ? []
+      : [{
       what: "Link bank accounts on chart of accounts",
       done: bankLinks.total > 0 && bankLinks.unlinked.length === 0,
       detail:
@@ -598,7 +662,7 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
           },
         },
       ],
-    },
+    }]),
     {
       // Required for a ledger that starts partway through a company's life,
       // and meaningless for one that starts at the beginning -- so it is only
@@ -606,7 +670,9 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
       // produce a short balance sheet, it produces a wrong one, which is the
       // reason this is its own step rather than a note on the reports page.
       what: "Opening balances",
-      takesFiles: true,
+      // A new set of books has no trial balance to drop; what it has is bank
+      // and loan balances, which are entered on the page rather than loaded.
+      takesFiles: !fromNew,
       done: led.openingBalances !== undefined,
       optional: fromNew,
       detail:
@@ -614,7 +680,9 @@ export function setupSteps(options: { withContent?: boolean } = {}): SetupStep[]
           ? `${Object.keys(led.openingBalances.accounts).length} accounts as at ` +
             led.openingBalances.asAt
           : fromNew
-            ? "Not needed if these books start when the business started."
+            ? "What each bank account and loan held on the day the books start. Enter bank " +
+              "balances takes them from a statement on any date, or from the bank feed. Only " +
+              "not needed if every account started at nothing."
             : xero
               ? "Xero: Accounting → Reports → Trial Balance, at your previous year end"
               : "A trial balance at the previous year end, so every account and cent is included",

@@ -181,6 +181,11 @@ export function addEntityForm(): HTMLElement {
  * A column per entity, so with none defined there is no grid to draw -- which
  * is why the caller skips it rather than rendering an empty one.
  */
+/** Which entities each bank account pays for, as ticks: here and in the guided start. */
+export function bankEntityTable(): HTMLElement {
+  return bankTable(state.ledger.entities ?? emptyEntityModel());
+}
+
 function bankTable(model: EntityModel): HTMLElement {
   const accounts = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
   const bankTable = document.createElement("table");

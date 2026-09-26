@@ -1,5 +1,5 @@
 import { redraw, showPage } from "../app.js";
-import { accountsForEditing, ensureDefaultEntity, reclassify, } from "../books.js";
+import { accountsForEditing, bankLabel, ensureDefaultEntity, reclassify, } from "../books.js";
 import { balanceMovementSection, renderBalanceChecks } from "../daily/opening-balances.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
@@ -20,6 +20,7 @@ import {
   accountEntityKey,
   accountsAtExportLimit,
   akahuAccountId,
+  akahuLabels,
   checkDailyBalances,
   dedupe,
   dedupeKey,
@@ -115,13 +116,22 @@ export async function autoFetchFromFeed(): Promise<void> {
     // -- its lines removed -- in the meantime had every one of them put back
     // by the fetch that was already under way.
     const now = (await feedStatus())?.accounts ?? mapping;
+    // The bank's names, only while an account in these books has none: one
+    // more question to the bank, asked once rather than on every opening.
+    const unnamed = Object.values(now).some((to) => to !== "" && bankLabel(to) === to);
+    const labels = unnamed ? akahuLabels(await feedAccounts().catch(() => [])) : {};
     const read = fromAkahu(items, {
       accountFor: (id) => {
         const to = now[id];
         return to === undefined || to === "" ? null : to;
       },
+      labelFor: (id) => labels[id],
     });
-    if (read.transactions.length === 0) return;
+    const named = nameHeldAccounts(labels, now);
+    if (read.transactions.length === 0) {
+      if (named) state.persistent = await save(state.ledger);
+      return;
+    }
 
     const before = state.ledger.transactions.length;
     await addTransactions(read.transactions, {
@@ -232,6 +242,32 @@ export async function handleFiles(files: File[]): Promise<void> {
  * centrally -- from the transaction's own content, so the same transaction gets
  * the same id however it arrived, and a coding survives a change of route.
  */
+/**
+ * Give the lines already held the bank's name for their account, where they
+ * have none.
+ *
+ * A name arrives with each new line, so an account with nothing new would
+ * have stayed a bare number for good. Only the label is written: nothing an
+ * id is made from, and nothing that posts.
+ */
+function nameHeldAccounts(labels: Record<string, string>, mapping: Record<string, string>): boolean {
+  const names = new Map<string, string>();
+  for (const [feedId, to] of Object.entries(mapping)) {
+    const label = labels[feedId];
+    if (to !== "" && label !== undefined) names.set(to, label);
+  }
+  if (names.size === 0) return false;
+  let changed = false;
+  const transactions = state.ledger.transactions.map((t) => {
+    const label = names.get(t.account);
+    if (label === undefined || t.extras?.["accountLabel"] !== undefined) return t;
+    changed = true;
+    return { ...t, extras: { ...(t.extras ?? {}), accountLabel: label } };
+  });
+  if (changed) state.ledger = { ...state.ledger, transactions };
+  return changed;
+}
+
 async function addTransactions(
   incoming: Transaction[],
   report: { importer: string; file: string; problems: ImportProblem[] },
@@ -429,7 +465,7 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
     fetchButton.className = "primary";
     fetchButton.textContent = "Fetch transactions";
     fetchButton.addEventListener("click", () => {
-      void pullFromFeed(chosen, from.value, fetchButton, said);
+      void pullFromFeed(chosen, from.value, fetchButton, said, akahuLabels(accounts));
     });
 
     const actions = document.createElement("div");
@@ -448,6 +484,8 @@ async function pullFromFeed(
   from: string,
   button: HTMLButtonElement,
   said: HTMLElement,
+  /** The bank's names for its accounts, kept on the lines for reading by. */
+  labels: Record<string, string> = {},
 ): Promise<void> {
   // The button itself says so, not only the line of text beside it.
   //
@@ -470,9 +508,12 @@ async function pullFromFeed(
         const to = mapping[id];
         return to === undefined || to === "" ? null : to;
       },
+      labelFor: (id) => labels[id],
     });
+    const named = nameHeldAccounts(labels, mapping);
 
     if (read.transactions.length === 0) {
+      if (named) state.persistent = await save(state.ledger);
       said.textContent =
         read.unmappedAccounts.length > 0
           ? "Nothing to import: every account it returned is set to be left alone."

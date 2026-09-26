@@ -562,6 +562,33 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   );
   wrap.append(dates);
 
+  // Starting after the first transaction is allowed but rarely meant: the
+  // earlier lines leave the balance sheet and stay everywhere else.
+  const earlier = state.ledger.transactions.filter((t) => t.date < draft.asAt);
+  if (earlier.length > 0) {
+    const first = earlier.map((t) => t.date).sort()[0] ?? "";
+    const firstYear = Number(first.slice(5, 7)) >= 4 ? Number(first.slice(0, 4)) : Number(first.slice(0, 4)) - 1;
+    const usual = `${firstYear}-04-01`;
+    const warn = document.createElement("div");
+    warn.className = "variance-note warn";
+    const text = document.createElement("p");
+    text.textContent =
+      `${earlier.length} transaction${earlier.length === 1 ? " is" : "s are"} dated before ` +
+      `${draft.asAt}, from ${first}. Starting the books on ${draft.asAt} leaves ` +
+      `${earlier.length === 1 ? "it" : "them"} out of the balance sheet, but ` +
+      `${earlier.length === 1 ? "it stays" : "they stay"} on Reconcile and in earlier years' ` +
+      `profit and loss and GST reports. The books normally start on ${usual}.`;
+    const fix = document.createElement("button");
+    fix.type = "button";
+    fix.textContent = `Start the books on ${usual}`;
+    fix.addEventListener("click", () => {
+      draft.asAt = usual;
+      redraw("openingBalances");
+    });
+    warn.append(text, fix);
+    wrap.append(warn);
+  }
+
   const table = document.createElement("table");
   table.className = "report-table opening-table";
   table.innerHTML =

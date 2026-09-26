@@ -3525,3 +3525,6 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
 .entity-head > span:first-child { flex: 0 1 auto; min-width: 6rem; overflow: hidden; text-overflow: ellipsis; }
 .entity-head .entity-summary { flex: 1 1 0; }
 .entity-chip > .entity-head { min-width: 0; width: 100%; }
+
+/* Whose account an option is, beside it in the account picker. */
+.combo-option .combo-note { color: var(--muted); font-size: 0.85em; }

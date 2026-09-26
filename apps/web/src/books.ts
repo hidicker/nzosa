@@ -4,6 +4,8 @@ import type { EventKind } from "./events.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { describeRules } from "./rules-ui.js";
+import { setOptionDescriber } from "./combobox.js";
+import type { OptionInfo } from "./combobox.js";
 import { buildRows } from "./variance.js";
 import type { VarianceInput } from "./variance.js";
 import type { RuleFileShape } from "./rules-ui.js";
@@ -1143,6 +1145,34 @@ export function chartBalances(): { yearToDate: Map<string, Cents>; today: Map<st
   balancesCache = { ledger: state.ledger, rules: state.rules, chart: state.chart, yearToDate, today };
   return balancesCache;
 }
+
+/**
+ * An account label's entity, for the account pickers: shown beside it, and
+ * searchable by its name and code suffix, so "totara rates" still finds the
+ * rental's rates now that the name alone is "Rates and water". Only with
+ * more than one entity; with one it would say the same thing on every line.
+ */
+let accountInfoCache: { entities: unknown; chart: unknown; info: Map<string, OptionInfo | undefined> } | null = null;
+
+export function accountSearchInfo(label: string): OptionInfo | undefined {
+  const model = state.ledger.entities;
+  if (model === undefined || model.entities.length < 2) return undefined;
+  if (accountInfoCache === null || accountInfoCache.entities !== model || accountInfoCache.chart !== state.chart) {
+    accountInfoCache = { entities: model, chart: state.chart, info: new Map() };
+  }
+  const cached = accountInfoCache.info;
+  if (cached.has(label)) return cached.get(label);
+  const { code, name } = splitAccountLabel(label);
+  const id = model.accounts[accountEntityKey({ code, name })];
+  const entity = id === undefined ? undefined : model.entities.find((e) => e.id === id);
+  const info =
+    entity === undefined
+      ? undefined
+      : { note: entity.name, words: `${entity.name} ${entity.codeSuffix ?? ""}` };
+  cached.set(label, info);
+  return info;
+}
+setOptionDescriber(accountSearchInfo);
 
 export function bookYears(): number[] {
   const dates: string[] = [

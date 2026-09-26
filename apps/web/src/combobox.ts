@@ -24,6 +24,18 @@ export interface Combobox {
   clear(): void;
 }
 
+/**
+ * What an option is, beyond its own text: a note shown beside it and words it
+ * can also be found by. Set once by whoever knows -- for an account, the
+ * entity it belongs to -- so every picker gets it without each being told.
+ * An option it knows nothing about is shown and matched as before.
+ */
+export type OptionInfo = { note?: string; words?: string };
+let describe: (option: string) => OptionInfo | undefined = () => undefined;
+export function setOptionDescriber(fn: (option: string) => OptionInfo | undefined): void {
+  describe = fn;
+}
+
 export function combobox(
   options: readonly string[],
   initial: string | null,
@@ -63,18 +75,30 @@ export function combobox(
   list.setAttribute("role", "listbox");
   list.hidden = true;
 
-  /** Prefix matches first: typing "sal" wants Salaries before Loss on sale. */
+  /**
+   * Every word typed has to be found -- in the option or in what it belongs
+   * to -- in any order: "totara rates" finds Rates and water - 420TS, whose
+   * entity is Totara Street. Word-start matches first: typing "sal" wants
+   * Salaries before Loss on sale.
+   */
   function ranked(query: string): string[] {
     const q = query.trim().toLowerCase();
     if (q === "") return [...options];
+    const words = q.split(/\s+/);
+    const startsWord = (text: string, word: string): boolean => {
+      const at = text.indexOf(word);
+      // A code is "470 - Salaries", so a word start counts as a prefix.
+      return at === 0 || (at > 0 && /[^a-z0-9]/.test(text[at - 1] ?? ""));
+    };
     const starts: string[] = [];
     const within: string[] = [];
     for (const option of options) {
       const lower = option.toLowerCase();
-      const at = lower.indexOf(q);
-      if (at < 0) continue;
-      // A code is "470 - Salaries", so a word start counts as a prefix.
-      if (at === 0 || /[^a-z0-9]/.test(lower[at - 1] ?? "")) starts.push(option);
+      const more = describe(option)?.words?.toLowerCase() ?? "";
+      const haystack = more === "" ? lower : `${lower} ${more}`;
+      if (!words.every((word) => haystack.includes(word))) continue;
+      const lead = words.find((word) => lower.includes(word)) ?? words[0] ?? "";
+      if (startsWord(lower, q) || startsWord(lower, lead)) starts.push(option);
       else within.push(option);
     }
     return [...starts, ...within];
@@ -108,6 +132,13 @@ export function combobox(
       row.setAttribute("role", "option");
       row.setAttribute("aria-selected", String(option === chosen));
       row.textContent = option;
+      const note = describe(option)?.note;
+      if (note !== undefined && note !== "") {
+        const said = document.createElement("span");
+        said.className = "combo-note";
+        said.textContent = ` · ${note}`;
+        row.append(said);
+      }
       // mousedown, not click: blur fires first on click and closes the list
       // before the click lands, so nothing would ever be selected.
       row.addEventListener("mousedown", (event) => {

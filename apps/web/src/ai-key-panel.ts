@@ -127,6 +127,10 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
         // Whose key it is, read from how it starts: the page never holds the
         // key itself, only its first and last few characters.
         `Set: ${status.key} (${PROVIDER_NAMES[detectProvider(status.key)]}). ` +
+          (detectProvider(status.key) === "jev"
+            ? "Jev codes lines on Reconcile only, and its suggestions are less accurate than " +
+              "those of the main models, such as Claude Haiku or Gemini Flash. "
+            : "") +
           (aiRoute() === "demo"
             ? "It is kept in this browser tab only and forgotten when the tab closes. It is " +
               "sent straight to Google, never to this site's server."
@@ -193,8 +197,9 @@ export function aiKeyPanel(options: KeyPanelOptions): HTMLElement {
     note(
       "To use your own key, paste it below and press Check it and keep it. Keys from Google " +
         "Gemini, Anthropic Claude, OpenAI (ChatGPT) or OpenRouter work; OpenRouter also " +
-        "reaches most other models. A Jev (TypeSafe AI) key works for coding suggestions on " +
-        "Reconcile only. You pay that provider for what you use.",
+        "reaches most other models. A Jev (TypeSafe AI) key also works, for coding suggestions " +
+        "on Reconcile only; in testing its suggestions were noticeably less accurate than the " +
+        "main models'. You pay that provider for what you use.",
     ),
   );
 

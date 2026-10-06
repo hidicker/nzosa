@@ -354,7 +354,28 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   if (openNow !== undefined) {
     renderMembers(body, openNow);
     backupTools(body, openNow.name, true);
+  } else {
+    browserBackup(body);
   }
+}
+
+/**
+ * Backup for the books in this browser, when no set on the server is open.
+ *
+ * Those are the books on screen until somebody signs in and opens a set, and
+ * the server panel used to replace the whole page, so they had no backup at
+ * all here. It is also how books come up from a copy on somebody's own
+ * computer: restore its backup into a new set on the server.
+ */
+function browserBackup(body: HTMLElement): void {
+  backupTools(body, "the books in this browser", false);
+  body.append(
+    note(
+      "No set of books on the server is open, so this backs up and restores the books held in " +
+        "this browser. To move books up from NZOSA on your own computer, download a backup " +
+        "there, start a set here, open it, and restore the backup into it.",
+    ),
+  );
 }
 
 /**
@@ -375,7 +396,9 @@ export function renderCloudBooks(body: HTMLElement): boolean {
 
   body.append(heading("Books on the server"));
   const session = currentSession();
-  if (session === null) signInForm(body);
-  else void booksList(body, session.email);
+  if (session === null) {
+    signInForm(body);
+    browserBackup(body);
+  } else void booksList(body, session.email);
   return true;
 }

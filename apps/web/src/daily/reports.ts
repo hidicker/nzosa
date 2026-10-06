@@ -115,6 +115,7 @@ import type {
   TaxExtraCategory,
   Transaction,
 } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * The entity and registration last applied to the GST control.
@@ -244,7 +245,7 @@ export function currentReport(
   // separate lines with nothing tying them to the cost, so there is no gross
   // to report and pretending otherwise would just show the net twice.
   const includeGst = $<HTMLSelectElement>("report-gst").value === "gross" && basis !== "accrual";
-  const period = over ?? { from: `${chosenYear - 1}-04-01`, to: `${chosenYear}-03-31` };
+  const period = over ?? { from: taxYearStart(chosenYear), to: taxYearEnd(chosenYear) };
 
   if (basis === "posted") {
     const ours = ourAccrualJournals();
@@ -322,7 +323,7 @@ function entityReports(year: number): {
   return model.entities.map((entity) => ({
     entity,
     report: profitAndLoss(engine.transactions, {
-      period: { from: `${year - 1}-04-01`, to: `${year}-03-31` },
+      period: { from: taxYearStart(year), to: taxYearEnd(year) },
       codeOf: engine.codeOf,
       classify: engine.classify,
       sectionOf,
@@ -372,8 +373,8 @@ function ourAccrualJournals(): Journal[] {
  * out of interest and into drawings will not.
  */
 function renderManualJournals(body: HTMLElement, year: number): void {
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const all = state.ledger.manualJournals ?? [];
   const held = all.filter((j) => j.date >= from && j.date <= to);
 
@@ -802,8 +803,8 @@ async function importManualJournals(): Promise<void> {
  */
 function renderShareholders(body: HTMLElement, year: number): void {
   const schedule = shareholderSchedule({
-    from: `${year - 1}-04-01`,
-    to: `${year}-03-31`,
+    from: taxYearStart(year),
+    to: taxYearEnd(year),
     journals: postedJournals(),
     ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
     chart: state.chart,
@@ -987,8 +988,8 @@ export function booksIr10(yearEnding: string): Record<number, Cents> {
   const year = Number(yearEnding.slice(0, 4));
   const { journals } = positionJournals();
   const summary = ir10Summary({
-    yearEnding: `${year}-03-31`,
-    yearStarting: `${year - 1}-04-01`,
+    yearEnding: taxYearEnd(year),
+    yearStarting: taxYearStart(year),
     journals,
     ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
     chart: state.chart,
@@ -1004,8 +1005,8 @@ function renderIr10(body: HTMLElement, year: number): void {
   const entity = reportingEntity();
   const company = companyBooks();
   const summary = ir10Summary({
-    yearEnding: `${year}-03-31`,
-    yearStarting: `${year - 1}-04-01`,
+    yearEnding: taxYearEnd(year),
+    yearStarting: taxYearStart(year),
     journals,
     ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
     chart: state.chart,
@@ -1116,7 +1117,7 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
   const heading = document.createElement("h3");
   heading.textContent = "Company income tax";
   wrap.append(heading);
-  const last = heldReturn("IR4", `${year - 1}-03-31`);
+  const last = heldReturn("IR4", taxYearEnd(year - 1));
   const lastIr4 = last !== undefined && last.form === "IR4" ? last : undefined;
 
   // Tax already paid on the year's income: resident withholding tax taken
@@ -1124,8 +1125,8 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
   // its own. Not non-resident withholding tax -- that is tax the company
   // took from somebody else and owes on, not a credit of its own.
   const rwtAccount = /resident withholding|withholding tax|\brwt\b/i;
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const rwtLines = positionJournals()
     .journals.filter((j) => j.date >= from && j.date <= to)
     .flatMap((j) => j.lines)
@@ -1200,7 +1201,7 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
  * sheet, it is a wrong one, and it is said rather than left to be discovered.
  */
 function renderBalanceSheet(body: HTMLElement, year: number): void {
-  const asAt = `${year}-03-31`;
+  const asAt = taxYearEnd(year);
   const opening = state.ledger.openingBalances;
   const { journals, basis, fromImport } = positionJournals();
   // Set out as signed statements are: a company's shareholder current accounts
@@ -1345,8 +1346,8 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 }
 
 function renderJournal(body: HTMLElement, year: number): void {
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const accounts = entityBankAccounts();
   const journals = postedJournals().filter((j) => {
     if (j.date < from || j.date > to) return false;
@@ -1463,8 +1464,8 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   }
 
   const schedule = depreciationSchedule(assets, {
-    from: `${year - 1}-04-01`,
-    to: `${year}-03-31`,
+    from: taxYearStart(year),
+    to: taxYearEnd(year),
   });
 
   const heading = document.createElement("h3");
@@ -1700,8 +1701,8 @@ export function renderAgentStatements(
   options: { entity?: string; redraw?: () => void } = {},
 ): void {
   agentRedraw = options.redraw ?? (() => redraw("reports"));
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const model = state.ledger.entities ?? emptyEntityModel();
   const rentals = model.entities.filter(isRental).filter((e) => options.entity === undefined || e.id === options.entity);
   const inYear = (state.ledger.agentStatements ?? [])
@@ -2078,8 +2079,8 @@ let gstBoxFocus: "sales" | "purchases" | "late" | null = null;
 /** Every return a financial year holds, from the coding, at the filing frequency. */
 function gstReturnsFor(year: number): GstReturnResult[] {
   try {
-    return computeOurReturns(varianceInput(), `${year - 1}-04-01`, `${year}-03-31`).filter(
-      (r) => r.period.to >= `${year - 1}-04-01` && r.period.to <= `${year}-03-31`,
+    return computeOurReturns(varianceInput(), taxYearStart(year), taxYearEnd(year)).filter(
+      (r) => r.period.to >= taxYearStart(year) && r.period.to <= taxYearEnd(year),
     );
   } catch {
     return [];
@@ -2441,7 +2442,7 @@ function renderGstTransactions(body: HTMLElement, result: GstReturnResult, money
 
 /** A financial year as a date range, labelled by the year it ends in. */
 function yearPeriod(year: number): DateRange {
-  return { from: `${year - 1}-04-01`, to: `${year}-03-31` };
+  return { from: taxYearStart(year), to: taxYearEnd(year) };
 }
 
 /**
@@ -2681,7 +2682,7 @@ export function ir3For(owner: string, year: number): ReturnType<typeof ir3Return
   const details = (state.ledger.ir3Details ?? []).find((d) => d.owner === owner && d.year === year);
   // Last year's ring-fenced rental losses, from last year's filed IR3 where
   // one is held and nobody has typed the figure in for this year.
-  const lastIr3 = heldReturn("IR3", `${year - 1}-03-31`, owner);
+  const lastIr3 = heldReturn("IR3", taxYearEnd(year - 1), owner);
   const fencedFromReturn =
     lastIr3 !== undefined && lastIr3.form === "IR3"
       ? lastIr3.rentals.reduce((sum, r) => sum + (r.ringFencedLossCarriedForward ?? 0), 0)
@@ -2782,7 +2783,7 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
 
   // This year's provisional tax: set by last year's residual income tax, which
   // last year's filed return gives where it is held.
-  const lastIr3 = heldReturn("IR3", `${year - 1}-03-31`, owner);
+  const lastIr3 = heldReturn("IR3", taxYearEnd(year - 1), owner);
   if (lastIr3 !== undefined) {
     const due = provisionalStandardOption({ lastYear: lastIr3.residualIncomeTax });
     const [a = 0, b = 0, c = 0] = due.instalments;
@@ -2870,8 +2871,8 @@ function incomeTaxCoded(owner: string, year: number): Cents | null {
       .map((a) => a.code.trim()),
   );
   if (labels.size === 0) return null;
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   return allLines()
     .filter(
       (one) =>
@@ -3654,8 +3655,8 @@ function reportingEntity(): Entity | undefined {
  * entity whose account it names.
  */
 function provisionalNote(year: number): HTMLElement | null {
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const model = state.ledger.entities ?? emptyEntityModel();
   const entity = state.entityFilter;
   const transfers = state.ledger.transfers ?? {};
@@ -4095,8 +4096,8 @@ function renderExtract(body: HTMLElement, year: number): void {
     return;
   }
 
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const scope = accountsFor(state.varianceAccounts);
   const rows = engine.transactions.filter(
     (t) => t.date >= from && t.date <= to && (scope.length === 0 || scope.includes(t.account)),
@@ -4234,7 +4235,7 @@ function renderCharts(body: HTMLElement, year: number): void {
     whole.report.totalIncome === 0 &&
     whole.report.totalExpenses === 0 &&
     state.ledger.transactions.some(
-      (line) => line.date >= `${year - 1}-04-01` && line.date <= `${year}-03-31`,
+      (line) => line.date >= taxYearStart(year) && line.date <= taxYearEnd(year),
     );
   if (nothingYet) {
     const empty = document.createElement("p");
@@ -4312,8 +4313,8 @@ function renderCharts(body: HTMLElement, year: number): void {
  * books, which is the only way a listing like this is worth reading.
  */
 function renderGeneralLedger(body: HTMLElement, year: number): void {
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const scope = entityBankAccounts();
   const journals = postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
@@ -4402,7 +4403,7 @@ export function downloadReport(): void {
     if (assets.length === 0 || year === undefined) return;
     download(
       formatDepreciationSchedule(
-        depreciationSchedule(assets, { from: `${year - 1}-04-01`, to: `${year}-03-31` }),
+        depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) }),
         `Depreciation schedule, FY${year}`,
       ),
       `depreciation-schedule-fy${year}.csv`,

@@ -1,6 +1,7 @@
 import { backendKind, ledgerId, openCloudBookId } from "../store.js";
 import { state } from "../state.js";
 import type { BusinessStructure, EntityKind } from "@nzosa/core";
+import { taxYearStart } from "../tax-year.js";
 
 /**
  * What the guided start has been told so far.
@@ -188,7 +189,7 @@ export function rememberSource(source: Source): void {
  */
 export function startOfFinancialYear(today = new Date()): string {
   const year = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
-  return `${year}-04-01`;
+  return taxYearStart(year + 1);
 }
 
 /**

@@ -6,12 +6,13 @@ import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { chosenStartDate, startOfFinancialYear } from "../migrate/onboarding-state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { accountEntityKey, emptyEntityModel, financialYearBalances, financialYearOf, parseAmount } from "@nzosa/core";
+import { accountEntityKey, emptyEntityModel, financialYearBalances, parseAmount } from "@nzosa/core";
 import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
 import { asCsvText } from "../books.js";
 import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, openBankReconcileReport } from "./balance-diagnostics.js";
+import { taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Where each year started.
@@ -609,7 +610,7 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   if (earlier.length > 0) {
     const first = earlier.map((t) => t.date).sort()[0] ?? "";
     const firstYear = Number(first.slice(5, 7)) >= 4 ? Number(first.slice(0, 4)) : Number(first.slice(0, 4)) - 1;
-    const usual = `${firstYear}-04-01`;
+    const usual = taxYearStart(firstYear + 1);
     const warn = document.createElement("div");
     warn.className = "variance-note warn";
     const text = document.createElement("p");
@@ -1118,7 +1119,7 @@ async function saveOpeningBalance(
 
   const fyFromDate = (date: IsoDate): number => {
     if (date.endsWith("-04-01")) return Number(date.slice(0, 4));
-    return financialYearOf(date);
+    return taxYearOf(date);
   };
 
   const asAt = targetAsAt ?? held?.asAt ?? chosenStartDate() ?? startOfFinancialYear();
@@ -1653,7 +1654,7 @@ function draftFromHeld(): OpeningDraft {
     credit: cents < 0 ? (-cents / 100).toFixed(2) : "",
   }));
   return {
-    asAt: held?.asAt ?? chosenStartDate() ?? `${startYear}-04-01`,
+    asAt: held?.asAt ?? chosenStartDate() ?? taxYearStart(startYear + 1),
     lines: lines.length > 0 ? lines : [blankOpeningLine(), blankOpeningLine()],
   };
 }

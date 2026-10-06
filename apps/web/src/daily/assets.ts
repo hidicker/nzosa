@@ -8,7 +8,6 @@ import {
   DEPRECIATION_METHODS,
   depreciationSchedule,
   disposalOf,
-  financialYearOf,
   fixedAssetProblems,
   fixedAssetTemplate,
   formatAmount,
@@ -19,6 +18,7 @@ import {
 } from "@nzosa/core";
 import type { Cents, FixedAsset, IsoDate } from "@nzosa/core";
 import { loadAssets } from "../migrate/file-intake.js";
+import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Fixed assets, their depreciation, and what happens when one is sold.
@@ -58,15 +58,15 @@ function renderDisposals(body: HTMLElement): void {
   heading.textContent = `Disposals (${disposed.length})`;
   body.append(heading);
 
-  const years = [...new Set(state.ledger.transactions.map((t) => financialYearOf(t.date)))];
+  const years = [...new Set(state.ledger.transactions.map((t) => taxYearOf(t.date)))];
   // Book value at disposal comes from the schedule for the year it went, since
   // that is where the convention lives: an asset disposed of during a year
   // takes no depreciation that year, and its book value goes to the disposal.
   const bookValues = new Map<string, Cents>();
   for (const year of years) {
     const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
+      from: taxYearStart(year),
+      to: taxYearEnd(year),
     });
     for (const row of schedule.rows) {
       if (row.disposedInPeriod) bookValues.set(row.asset.number, row.bookValueAtDisposal);
@@ -593,9 +593,9 @@ export function renderAssetsPage(): void {
   }
 
   // This year's figures beside each asset: the latest year the books reach.
-  const years = state.ledger.transactions.map((t) => financialYearOf(t.date));
-  const year = years.length > 0 ? Math.max(...years) : financialYearOf(today());
-  const schedule = depreciationSchedule(assets, { from: `${year - 1}-04-01`, to: `${year}-03-31` });
+  const years = state.ledger.transactions.map((t) => taxYearOf(t.date));
+  const year = years.length > 0 ? Math.max(...years) : taxYearOf(today());
+  const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) });
   const rowOf = new Map(schedule.rows.map((row) => [row.asset.number, row]));
 
   const total = assets.reduce((sum, a) => sum + a.cost, 0);

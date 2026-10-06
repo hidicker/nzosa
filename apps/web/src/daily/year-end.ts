@@ -12,6 +12,7 @@ import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { E12_ROWS, KILOMETRE_RATES, NOT_IN_E12, NO_LOGBOOK_LIMIT, emptyEntityModel } from "@nzosa/core";
 import type { Cents, Entity, PostedJournal, Prepayment, VehicleFuel, VehicleUse } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * Year-end adjustments: the private use of a vehicle, and prepayments.
@@ -409,8 +410,8 @@ let prepaymentDraft: boolean = false;
 
 /** Lines coded to an expense in the year, largest first -- the payments that could be prepaid. */
 function candidates(posted: readonly PostedJournal[], year: number) {
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const expense = new Set(state.chart.filter((a) => isExpense(a.type)).map((a) => a.code));
   const out: { transactionId: string; code: string; label: string; amount: Cents }[] = [];
   for (const journal of posted) {

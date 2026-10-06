@@ -6,6 +6,7 @@ import { emptyEntityModel, isRental } from "@nzosa/core";
 import type { Cents, Entity } from "@nzosa/core";
 import { renderAgentStatements, rentalSchedulesFor } from "./reports.js";
 import { tripsPanel, tripsStatus, vehiclesPanel } from "./vehicle-trips-panel.js";
+import { taxYearEnd } from "../tax-year.js";
 
 /**
  * Each rental's year end, property by property.
@@ -118,7 +119,7 @@ export function renderRentalYearEnd(): void {
   }
   // The latest year that has ended, by default: the one whose returns are due.
   const today = new Date().toISOString().slice(0, 10);
-  const ended = years.filter((y) => `${y}-03-31` < today);
+  const ended = years.filter((y) => taxYearEnd(y) < today);
   if (chosenYear === undefined || !years.includes(chosenYear)) chosenYear = ended[0] ?? years[0];
   const year = chosenYear ?? years[0] ?? 0;
 

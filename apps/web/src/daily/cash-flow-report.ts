@@ -3,6 +3,7 @@ import { state } from "../state.js";
 import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * The statement of cash flows, for the entity the page is filtered to.
@@ -77,7 +78,7 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
     );
     return;
   }
-  const period = { from: `${year - 1}-04-01`, to: `${year}-03-31` };
+  const period = { from: taxYearStart(year), to: taxYearEnd(year) };
   const statement = statementFor(period, banks);
   if (statement === null) {
     body.append(note("No transactions yet."));

@@ -4,6 +4,7 @@ import { ir3For } from "./daily/reports.js";
 import { state } from "./state.js";
 import { emptyEntityModel, formatAmount, shareholderSchedule, splitByShareholding } from "@nzosa/core";
 import type { Cents } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "./tax-year.js";
 
 /**
  * Checking the books against Inland Revenue's own guides.
@@ -149,8 +150,8 @@ export const IRD_GUIDES: readonly IrdGuide[] = [
     },
     facts: (year) => {
       const schedule = shareholderSchedule({
-        from: `${year - 1}-04-01`,
-        to: `${year}-03-31`,
+        from: taxYearStart(year),
+        to: taxYearEnd(year),
         journals: postedJournals(),
         ...(state.ledger.openingBalances ? { openingBalances: state.ledger.openingBalances } : {}),
         chart: state.chart,
@@ -188,8 +189,8 @@ export const IRD_GUIDES: readonly IrdGuide[] = [
       return runs.length > 0 ? `${runs.length} pay run${runs.length === 1 ? " is" : "s are"} recorded` : null;
     },
     facts: (year) => {
-      const from = `${year - 1}-04-01`;
-      const to = `${year}-03-31`;
+      const from = taxYearStart(year);
+      const to = taxYearEnd(year);
       const runs = (state.ledger.payroll?.payRuns ?? []).filter((r) => r.payDate >= from && r.payDate <= to);
       const lines = [`Pay runs in the year: ${runs.length}.`];
       for (const run of runs.slice(0, 60)) {

@@ -13,6 +13,7 @@ import {
   ownersOf,
 } from "@nzosa/core";
 import type { GstReturnResult } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "./tax-year.js";
 
 /**
  * A year-end review of the accounts, in one prompt.
@@ -81,7 +82,7 @@ interface Period {
   to: string;
 }
 
-const periodOf = (year: number): Period => ({ from: `${year - 1}-04-01`, to: `${year}-03-31` });
+const periodOf = (year: number): Period => ({ from: taxYearStart(year), to: taxYearEnd(year) });
 
 /**
  * Chart accounts only, and never a bank one.
@@ -497,8 +498,8 @@ function ir10Block(year: number): string[] {
   let summary;
   try {
     summary = ir10Summary({
-      yearEnding: `${year}-03-31`,
-      yearStarting: `${year - 1}-04-01`,
+      yearEnding: taxYearEnd(year),
+      yearStarting: taxYearStart(year),
       journals: postedJournals(),
       ...(state.ledger.openingBalances
         ? { openingBalances: state.ledger.openingBalances }

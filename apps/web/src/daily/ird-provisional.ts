@@ -1,6 +1,7 @@
 import type { Cents } from "@nzosa/core";
 import { emptyEntityModel } from "@nzosa/core";
 import { state } from "../state.js";
+import { taxYearEnd } from "../tax-year.js";
 
 /**
  * Provisional tax a person paid for a year, from their income tax account's
@@ -28,7 +29,7 @@ export function provisionalPaidFromIrd(
     const said = name.toLowerCase();
     return words.length > 0 && words.every((w) => said.includes(w));
   };
-  const periodEnd = `${year}-03-31`;
+  const periodEnd = taxYearEnd(year);
   let paid = 0;
   let payments = 0;
   let account = "";

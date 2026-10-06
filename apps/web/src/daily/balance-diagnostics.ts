@@ -4,6 +4,7 @@ import { dayBefore, matchBalanceAccount } from "@nzosa/core";
 import { state } from "../state.js";
 import { dollars } from "../ui.js";
 import { booksStartDate } from "../migrate/onboarding-state.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * The day these books start: the opening balances' date, or failing that the
@@ -280,8 +281,8 @@ export function checkFinancialYearMilestones(): FinancialYearMilestone[] {
   // Every 31 March from the day before the start to the latest transaction,
   // and any year end a figure was loaded for within that span.
   const datesSet = new Set<IsoDate>();
-  for (let year = Number(before.slice(0, 4)); `${year}-03-31` <= last; year++) {
-    const date = `${year}-03-31` as IsoDate;
+  for (let year = Number(before.slice(0, 4)); taxYearEnd(year) <= last; year++) {
+    const date = taxYearEnd(year) as IsoDate;
     if (date >= before) datesSet.add(date);
   }
   for (const d of Object.keys(openingHeld?.byDate ?? {})) {
@@ -290,7 +291,7 @@ export function checkFinancialYearMilestones(): FinancialYearMilestone[] {
 
   for (const date of [...datesSet].sort()) {
     const year = parseInt(date.slice(0, 4), 10);
-    const openDate = `${year}-04-01` as IsoDate;
+    const openDate = taxYearStart(year + 1) as IsoDate;
 
     for (const acc of accounts) {
       if (acc.txCount === 0 && !openingHeld?.byDate?.[date]?.[acc.id] && !openingHeld?.accounts?.[acc.id]) {

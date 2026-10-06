@@ -21,7 +21,6 @@ import {
   chartTreatments,
   codingCounts,
   codingEngine,
-  financialYearOf,
   depreciationJournals as coreDepreciationJournals,
   disposalJournals as coreDisposalJournals,
   proceedsFromDisposalJournals,
@@ -79,6 +78,7 @@ import type {
   TripAccounts,
   TripClaim,
 } from "@nzosa/core";
+import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -1431,7 +1431,7 @@ export function chartBalances(): { yearToDate: Map<string, Cents>; today: Map<st
     return balancesCache;
   }
   const now = new Date().toISOString().slice(0, 10);
-  const yearStart = `${financialYearOf(now) - 1}-04-01`;
+  const yearStart = taxYearStart(taxYearOf(now));
   const opening = state.ledger.openingBalances;
   const yearToDate = new Map<string, Cents>();
   const today = new Map<string, Cents>();
@@ -1489,7 +1489,7 @@ export function bookYears(): number[] {
     ...(state.ledger.agentStatements ?? []).map((a) => a.to),
     ...(state.ledger.prepayments ?? []).map((p) => p.from),
   ];
-  const years = new Set(dates.filter((d) => d !== "").map((d) => financialYearOf(d)));
+  const years = new Set(dates.filter((d) => d !== "").map((d) => taxYearOf(d)));
   for (const use of state.ledger.vehicleUse ?? []) years.add(use.year);
   return [...years].sort((a, b) => b - a);
 }
@@ -1588,7 +1588,7 @@ export function vehicleAdjustments(
 /** The fiscal years any prepayment runs across, oldest first. */
 export function prepaymentYears(): number[] {
   const years = new Set<number>();
-  const fiscal = (date: string): number => Number(date.slice(0, 4)) + (date.slice(5) > "03-31" ? 1 : 0);
+  const fiscal = (date: string): number => taxYearOf(date);
   for (const p of state.ledger.prepayments ?? []) {
     for (let y = fiscal(p.from); y <= fiscal(p.to); y += 1) years.add(y);
   }
@@ -1658,7 +1658,7 @@ function yearEndJournals(posted: readonly PostedJournal[]): PostedJournal[] {
 function vehicleBox9(accounts: readonly string[]): (period: { from: string; to: string }) => Cents {
   return (period) => {
     const uses = (state.ledger.vehicleUse ?? []).filter((use) => {
-      const end = `${use.year}-03-31`;
+      const end = taxYearEnd(use.year);
       return end >= period.from && end <= period.to;
     });
     if (uses.length === 0) return 0;

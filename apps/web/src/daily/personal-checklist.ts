@@ -7,6 +7,7 @@ import type { Entity } from "@nzosa/core";
 import { balanceChecksNow } from "./bank-import.js";
 import { dailyFileBalances } from "./opening-balances.js";
 import { rentalSchedulesFor } from "./reports.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * The year-end questions an accountant asks, for a person and their rentals.
@@ -53,8 +54,8 @@ function rentalsOf(owner: string): Entity[] {
 
 /** The questions for one person and year, with what the books show for each. */
 export function checklistQuestions(owner: string, year: number): ChecklistQuestion[] {
-  const end = `${year}-03-31`;
-  const from = `${year - 1}-04-01`;
+  const end = taxYearEnd(year);
+  const from = taxYearStart(year);
   const out: ChecklistQuestion[] = [];
 
   // 1. Bank and loan balances at 31 March.

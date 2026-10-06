@@ -8,6 +8,7 @@ import {
   varianceInput,
 } from "../books.js";
 import { state } from "../state.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
 import { ir3For, rentalSchedulesFor } from "./reports.js";
@@ -371,7 +372,7 @@ function buildSummaryTrialBalanceSheet(ctx: SheetContext): string {
   const openingMap = new Map<string, number>();
   const openingObj = state.ledger.openingBalances;
   if (openingObj) {
-    const priorEnd = `${startYear - 1}-03-31`;
+    const priorEnd = taxYearEnd(startYear - 1);
     const accounts = (openingObj.byDate && openingObj.byDate[priorEnd]) || openingObj.accounts || {};
     for (const [key, cents] of Object.entries(accounts)) {
       openingMap.set(key, cents);
@@ -2877,8 +2878,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
 
   const startYear = year === "all" ? Math.min(...years) : year;
   const endYear = year === "all" ? Math.max(...years) : year;
-  const from = `${startYear - 1}-04-01`;
-  const to = `${endYear}-03-31`;
+  const from = taxYearStart(startYear);
+  const to = taxYearEnd(endYear);
   const yearLabel =
     year === "all"
       ? (years.length > 1

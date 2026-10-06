@@ -29,6 +29,7 @@ import type {
   IsoDate,
   PayrollMonth,
 } from "@nzosa/core";
+import { taxYearEnd } from "../tax-year.js";
 
 /**
  * IRD records: what Inland Revenue holds, beside what these books say.
@@ -577,7 +578,7 @@ export async function keepIrdRecord(
   // provisional tax.
   let alsoKept = "";
   if (held.record.kind === "ir3" && owner !== undefined) {
-    const balanceDate = `${held.record.year}-03-31` as IsoDate;
+    const balanceDate = taxYearEnd(held.record.year) as IsoDate;
     const returns = state.ledger.incomeReturns ?? [];
     if (!returns.some((r) => r.form === "IR3" && r.owner === owner && r.balanceDate === balanceDate)) {
       const filed = filedIr3From(held.record, balanceDate);

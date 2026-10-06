@@ -2,6 +2,7 @@ import { note } from "../ui.js";
 import { NZ_REGIONS, formatAmount, leaveBalance, ordinaryWeeklyPayOf, workingDaysBetween } from "@nzosa/core";
 import type { Cents, IsoDate, LeaveKind, LeaveSettings, LeaveTaken } from "@nzosa/core";
 import type { PayrollData } from "../store.js";
+import { taxYearEnd } from "../tax-year.js";
 
 /**
  * Leave on the Payroll page: each employee's balances, what they are worth,
@@ -36,7 +37,7 @@ function defaultAsAt(): IsoDate {
   // The last 31 March that has passed: the balance date an accountant asks about.
   const today = new Date().toISOString().slice(0, 10);
   const year = Number(today.slice(0, 4));
-  return (today >= `${year}-03-31` ? `${year}-03-31` : `${year - 1}-03-31`) as IsoDate;
+  return (today >= taxYearEnd(year) ? taxYearEnd(year) : taxYearEnd(year - 1)) as IsoDate;
 }
 
 export function renderLeave(

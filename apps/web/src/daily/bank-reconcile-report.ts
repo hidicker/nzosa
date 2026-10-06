@@ -20,6 +20,7 @@ import { amountCell, dollars, nameCell, note, download } from "../ui.js";
 import { booksStart } from "./balance-diagnostics.js";
 import { feedStatus, lastFeedStatus } from "../feed-route.js";
 import type { FeedStatus } from "../feed-route.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * Bank transactions reconciliation report.
@@ -302,7 +303,7 @@ export function buildReconcileModel(accountId: string, year?: number): Reconcile
         .sort((a, b) => a.date.localeCompare(b.date))
     : [];
 
-  const priorBalanceDate = year !== undefined ? `${year - 1}-03-31` : dayBeforeStart;
+  const priorBalanceDate = year !== undefined ? taxYearEnd(year - 1) : dayBeforeStart;
   const hasXeroOpening =
     openingHeld?.byDate?.[priorBalanceDate]?.[accountId] !== undefined ||
     openingHeld?.byDate?.[dayBeforeStart]?.[accountId] !== undefined ||
@@ -361,8 +362,8 @@ export function buildReconcileModel(accountId: string, year?: number): Reconcile
 
   // Date filtering if year specified
   if (year !== undefined) {
-    const from = `${year - 1}-04-01`;
-    const to = `${year}-03-31`;
+    const from = taxYearStart(year);
+    const to = taxYearEnd(year);
     sortedDates = sortedDates.filter((d) => d >= from && d <= to);
   } else {
     // Only show dates from when our ledger or opening begins
@@ -408,7 +409,7 @@ export function buildReconcileModel(accountId: string, year?: number): Reconcile
   let periodOpeningSource = openingSource;
 
   if (year !== undefined) {
-    const priorDate = `${year - 1}-03-31`;
+    const priorDate = taxYearEnd(year - 1);
     if (openingHeld?.byDate?.[priorDate]?.[accountId] !== undefined) {
       periodOpeningBalance = openingHeld.byDate[priorDate]![accountId]!;
       periodOpeningDate = priorDate;

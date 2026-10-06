@@ -7,6 +7,7 @@ import type { IrdRecord } from "@nzosa/core";
 import { guessEntity, keepIrdRecord } from "./ird-records.js";
 import { incomeReturnPanel } from "./income-returns.js";
 import { myirIncomePanel } from "./myir-income-panel.js";
+import { taxYearEnd, taxYearOf } from "../tax-year.js";
 
 /**
  * Everything myIR can give these books, as cards to load it from wherever
@@ -108,14 +109,14 @@ export interface MyirContext {
 }
 
 function fyOf(date: string): number {
-  return Number(date.slice(0, 4)) + (date.slice(5) > "03-31" ? 1 : 0);
+  return taxYearOf(date);
 }
 
 /** The years of these books that have ended: the ones a file could be missing for. */
 export function bookYearsEnded(): number[] {
   const today = new Date().toISOString().slice(0, 10);
   const years = new Set(state.ledger.transactions.map((t) => fyOf(t.date)));
-  return [...years].filter((y) => `${y}-03-31` < today).sort();
+  return [...years].filter((y) => taxYearEnd(y) < today).sort();
 }
 
 /** The person's own entity: a personal one they alone own. */

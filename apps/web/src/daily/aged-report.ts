@@ -24,6 +24,7 @@ import {
 } from "@nzosa/core";
 import type { Cents } from "@nzosa/core";
 import type { AgedReport, Invoice, InvoiceKind } from "@nzosa/core";
+import { taxYearEnd } from "../tax-year.js";
 
 /**
  * Aged payables and aged receivables.
@@ -40,7 +41,7 @@ import type { AgedReport, Invoice, InvoiceKind } from "@nzosa/core";
 let asAtChosen: string | null = null;
 
 function defaultAsAt(year: number): string {
-  const end = `${year}-03-31`;
+  const end = taxYearEnd(year);
   const today = new Date().toISOString().slice(0, 10);
   return today < end ? today : end;
 }

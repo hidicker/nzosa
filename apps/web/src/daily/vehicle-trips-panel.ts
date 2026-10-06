@@ -4,6 +4,7 @@ import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { KILOMETRE_RATES, emptyEntityModel, emptyTripLog, isRental, ownersOf, totalKmFor, tripKm } from "@nzosa/core";
 import type { Cents, Trip, TripLog, VehicleFuel } from "@nzosa/core";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * Trips to the rentals in the owners' own cars, and the year's claim for them.
@@ -184,8 +185,8 @@ export function tripsPanel(year: number, rerender: () => void, only?: string): H
   const model = state.ledger.entities ?? emptyEntityModel();
   const rentals = model.entities.filter(isRental).filter((e) => only === undefined || e.id === only);
   const nameOf = (entityId: string): string => model.entities.find((e) => e.id === entityId)?.name ?? entityId;
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
 
   if (only === undefined) box.append(vehiclesPanel(year, rerender));
   if (log.vehicles.length === 0) {
@@ -389,7 +390,7 @@ export function tripsPanel(year: number, rerender: () => void, only?: string): H
 /** Whether the year's trips are all there is to say: entered, with each vehicle's odometer. */
 export function tripsStatus(year: number): { trips: number; missingOdometer: number } {
   const log = state.ledger.tripLog ?? emptyTripLog();
-  const trips = log.trips.filter((t) => t.date >= `${year - 1}-04-01` && t.date <= `${year}-03-31`);
+  const trips = log.trips.filter((t) => t.date >= taxYearStart(year) && t.date <= taxYearEnd(year));
   const used = new Set(trips.map((t) => t.vehicleId));
   const missingOdometer = [...used].filter((id) => totalKmFor(log, id, year) === null).length;
   return { trips: trips.length, missingOdometer };

@@ -10,6 +10,7 @@ import { ir3PackHtml } from "./ir3-pack.js";
 import { provisionalPaidFromIrd } from "./ird-provisional.js";
 import { checklistHtml, checklistOpen, checklistPanel } from "./personal-checklist.js";
 import { tripsStatus } from "./vehicle-trips-panel.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * A person's year end: what their return needs, and the return.
@@ -91,7 +92,7 @@ export function renderPersonalYearEnd(): void {
   }
   // The latest year that has ended, by default: the one whose return is due.
   const today = new Date().toISOString().slice(0, 10);
-  const ended = years.filter((y) => `${y}-03-31` < today);
+  const ended = years.filter((y) => taxYearEnd(y) < today);
   if (chosenYear === undefined || !years.includes(chosenYear)) chosenYear = ended[0] ?? years[0];
   if (!owners.includes(chosenOwner)) chosenOwner = owners[0] ?? "";
   const year = chosenYear ?? years[0] ?? 0;
@@ -140,8 +141,8 @@ export function renderPersonalYearEnd(): void {
   list.className = "setup-steps";
 
   // The books' part: every line of the year coded.
-  const from = `${year - 1}-04-01`;
-  const to = `${year}-03-31`;
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   const decided = accountDecided();
   const transfers = state.ledger.transfers ?? {};
   const open = state.ledger.transactions.filter(
@@ -221,7 +222,7 @@ export function renderPersonalYearEnd(): void {
     myirCard("ir3-confirmation", { owner, year }, [year], renderPersonalYearEnd),
   );
   const lastYear = (state.ledger.incomeReturns ?? []).some(
-    (r) => r.form === "IR3" && r.owner === owner && r.balanceDate === `${year - 1}-03-31`,
+    (r) => r.form === "IR3" && r.owner === owner && r.balanceDate === taxYearEnd(year - 1),
   );
   list.append(
     item(

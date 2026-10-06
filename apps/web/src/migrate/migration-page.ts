@@ -38,6 +38,7 @@ import {
   sourceForTheseBooks,
 } from "./onboarding-state.js";
 import type { Onboarding, PlannedEntity, Source, Step } from "./onboarding-state.js";
+import { taxYearEnd, taxYearStart } from "../tax-year.js";
 
 /**
  * Migration: the guided start.
@@ -1323,7 +1324,7 @@ function financialYearBefore(start: string | undefined): { from: string; to: str
   const day = new Date(`${start}T00:00:00Z`);
   day.setUTCDate(day.getUTCDate() - 1);
   const year = day.getUTCMonth() >= 3 ? day.getUTCFullYear() : day.getUTCFullYear() - 1;
-  return { from: `${year}-04-01`, to: `${year + 1}-03-31` };
+  return { from: taxYearStart(year + 1), to: taxYearEnd(year + 1) };
 }
 
 /** A handful of things to do, with a heading, inside a step. */

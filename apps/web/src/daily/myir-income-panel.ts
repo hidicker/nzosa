@@ -6,6 +6,7 @@ import { note } from "../ui.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
 import { MYIR_NOTE, myirIncomePrompt, myirTaxExtras, readMyirIncome } from "@nzosa/core";
 import { booksLocale } from "../country.js";
+import { taxYearEndSaid } from "../tax-year.js";
 
 /**
  * Reading myIR's income details for a person's year, by way of a model.
@@ -115,7 +116,7 @@ export function myirIncomePanel(owner: string, year: number, redraw: () => void)
       if (income.year !== year) {
         wrap.append(
           note(
-            `That is the year to 31 March ${income.year}, and this page is on the year to 31 March ` +
+            `That is the year to ${taxYearEndSaid(income.year)}, and this page is on the year to 31 March ` +
               `${year}. Change the year above to keep it.`,
           ),
         );
@@ -134,7 +135,7 @@ export function myirIncomePanel(owner: string, year: number, redraw: () => void)
         const keepIt = document.createElement("button");
         keepIt.type = "button";
         keepIt.className = "primary";
-        keepIt.textContent = `Keep as ${owner}'s income for the year to 31 March ${year}`;
+        keepIt.textContent = `Keep as ${owner}'s income for the year to ${taxYearEndSaid(year)}`;
         keepIt.addEventListener("click", () => {
           keepIt.disabled = true;
           void keep(owner, year).then(redraw);

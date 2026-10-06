@@ -8,7 +8,7 @@ import {
   varianceInput,
 } from "../books.js";
 import { state } from "../state.js";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
 import { booksCurrency } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
@@ -2770,7 +2770,7 @@ function buildRentalSchedulesSheet(ctx: SheetContext): string {
   const schedules = rentalSchedulesFor(year, false);
   const widths = [34, 30, 16, 16];
   const rows: string[] = [];
-  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `Rental schedules — year to 31 March ${year}`, 13)}</row>`);
+  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `Rental schedules — year to ${taxYearEndSaid(year)}`, 13)}</row>`);
   rows.push(
     `<row r="2" ht="18" customHeight="1">${textCell("A2", "Each property's income and expenses, as Rental year end sets them out. GST-exclusive where the property is registered, inclusive where it is not.", 14)}</row>`,
   );
@@ -2817,7 +2817,7 @@ function buildIr3Sheet(ctx: SheetContext): string {
   const owners = ownersOf(state.ledger.entities ?? emptyEntityModel());
   const widths = [24, 8, 52, 18];
   const rows: string[] = [];
-  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `IR3 returns — year to 31 March ${year}`, 13)}</row>`);
+  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `IR3 returns — year to ${taxYearEndSaid(year)}`, 13)}</row>`);
   rows.push(
     `<row r="2" ht="18" customHeight="1">${textCell("A2", "Each owner's return as these books fill it in: their share of each rental, income entered separately (salary, interest, dividends), the tax and next year's provisional tax.", 14)}</row>`,
   );

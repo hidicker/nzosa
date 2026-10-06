@@ -4,7 +4,7 @@ import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { KILOMETRE_RATES, emptyEntityModel, emptyTripLog, isRental, ownersOf, totalKmFor, tripKm } from "@nzosa/core";
 import type { Cents, Trip, TripLog, VehicleFuel } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -160,8 +160,8 @@ export function vehiclesPanel(year: number, rerender: () => void): HTMLElement {
     tr.append(
       nameCell(vehicle.name + (vehicle.owner ? ` (${vehicle.owner})` : "")),
       nameCell(FUELS.find((f) => f.value === vehicle.fuel)?.label ?? vehicle.fuel),
-      reading("odometerStart", `${vehicle.name} odometer at 1 April ${year - 1}`),
-      reading("odometerEnd", `${vehicle.name} odometer at 31 March ${year}`),
+      reading("odometerStart", `${vehicle.name} odometer at ${taxYearStartSaid(year)}`),
+      reading("odometerEnd", `${vehicle.name} odometer at ${taxYearEndSaid(year)}`),
       amountCell(total === null ? "not entered" : km(total)),
     );
     odoBody.append(tr);
@@ -311,14 +311,14 @@ export function tripsPanel(year: number, rerender: () => void, only?: string): H
   // --- the claim ----------------------------------------------------------------------
   const { claims, journals, notes } = tripsFor(year);
   if (claims.length === 0) {
-    box.append(note(`No trips entered for the year to 31 March ${year}.`));
+    box.append(note(`No trips entered for the year to ${taxYearEndSaid(year)}.`));
     return box;
   }
   if (only !== undefined) {
     // This property's share of each vehicle's claim, and its journal.
     const mine = claims.flatMap((c) => c.byEntity.filter((e) => e.entityId === only).map((e) => ({ claim: c, part: e })));
     if (mine.length === 0) {
-      box.append(note(`No trips to ${nameOf(only)} entered for the year to 31 March ${year}.`));
+      box.append(note(`No trips to ${nameOf(only)} entered for the year to ${taxYearEndSaid(year)}.`));
       return box;
     }
     for (const { claim, part } of mine) {

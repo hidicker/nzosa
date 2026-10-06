@@ -115,7 +115,7 @@ import type {
   TaxExtraCategory,
   Transaction,
 } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -380,7 +380,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   const held = all.filter((j) => j.date >= from && j.date <= to);
 
   const heading = document.createElement("h3");
-  heading.textContent = `Manual journals, year ended 31 March ${year}`;
+  heading.textContent = `Manual journals, year ended ${taxYearEndSaid(year)}`;
   body.append(heading);
 
   const actions = document.createElement("div");
@@ -812,7 +812,7 @@ function renderShareholders(body: HTMLElement, year: number): void {
   });
 
   const heading = document.createElement("h3");
-  heading.textContent = `Shareholder current account, year ended 31 March ${year}`;
+  heading.textContent = `Shareholder current account, year ended ${taxYearEndSaid(year)}`;
   body.append(heading);
 
   const money = (cents: Cents): string =>
@@ -840,10 +840,10 @@ function renderShareholders(body: HTMLElement, year: number): void {
     tbody.append(row);
   };
 
-  line(`Balance at 1 April ${year - 1}`, schedule.opening, "bs-total");
+  line(`Balance at ${taxYearStartSaid(year)}`, schedule.opening, "bs-total");
   line("Funds introduced", schedule.introduced);
   line("Drawings", -schedule.drawings);
-  line(`Balance at 31 March ${year}`, schedule.closing, "bs-grand");
+  line(`Balance at ${taxYearEndSaid(year)}`, schedule.closing, "bs-grand");
 
   if (schedule.movements.length > 0) {
     const header = document.createElement("tr");
@@ -1023,7 +1023,7 @@ function renderIr10(body: HTMLElement, year: number): void {
   heading.textContent = "Financial Statement - IR10";
   body.append(heading);
   body.append(
-    note(`1 April ${year - 1} to 31 March ${year}${entity !== undefined ? ` · ${entity.name}` : ""}`),
+    note(`${taxYearStartSaid(year)} to ${taxYearEndSaid(year)}${entity !== undefined ? ` · ${entity.name}` : ""}`),
   );
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
@@ -1145,7 +1145,7 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
   if (lastIr4 === undefined) {
     wrap.append(
       note(
-        `No return for the year to 31 March ${year - 1} is held, so no loss is brought forward and ` +
+        `No return for the year to ${taxYearEndSaid(year - 1)} is held, so no loss is brought forward and ` +
           "this year's provisional tax is not known. Read last year's IR4 in under Setup, Last " +
           "year's income tax return.",
       ),
@@ -1218,7 +1218,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   });
 
   const heading = document.createElement("h3");
-  heading.textContent = `Balance sheet as at 31 March ${year}`;
+  heading.textContent = `Balance sheet as at ${taxYearEndSaid(year)}`;
   body.append(heading);
 
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
@@ -1261,7 +1261,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   table.className = "report-table balance-sheet";
   const head = document.createElement("thead");
   head.innerHTML =
-    `<tr><th>Account</th><th>Opening</th><th>Movement</th><th>As at 31 Mar ${year}</th></tr>`;
+    `<tr><th>Account</th><th>Opening</th><th>Movement</th><th>As at ${taxYearEndShort(year)}</th></tr>`;
   const tbody = document.createElement("tbody");
 
   // A section's own total is left off where a grand total below says the same.
@@ -1714,7 +1714,7 @@ export function renderAgentStatements(
   const heading = document.createElement(options.entity === undefined ? "h3" : "h4");
   heading.textContent =
     options.entity === undefined
-      ? `Property manager statements, year ended 31 March ${year}`
+      ? `Property manager statements, year ended ${taxYearEndSaid(year)}`
       : "Property manager statements";
   body.append(heading);
   body.append(
@@ -2758,7 +2758,7 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
   const result = ir3For(owner, year);
 
   const heading = document.createElement("h3");
-  heading.textContent = `${owner} — Individual income tax return (IR3), 1 April ${year - 1} to 31 March ${year}`;
+  heading.textContent = `${owner} — Individual income tax return (IR3), ${taxYearStartSaid(year)} to ${taxYearEndSaid(year)}`;
   body.append(heading);
   for (const said of result.notes) body.append(note(said));
 
@@ -2982,7 +2982,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
   if (coded !== null) {
     body.append(
       note(
-        `Coded to Income tax paid between 1 April ${year - 1} and 31 March ${year}: ` +
+        `Coded to Income tax paid between ${taxYearStartSaid(year)} and ${taxYearEndSaid(year)}: ` +
           `$${centsSaid(coded)}. Provisional tax for a year can be paid after it ends, ` +
           "so check the figure against the Inland Revenue account.",
       ),
@@ -3514,7 +3514,7 @@ function renderReportsHome(body: HTMLElement): void {
     for (const y of years) {
       const opt = document.createElement("option");
       opt.value = String(y);
-      opt.textContent = `FY${y} (year to 31 Mar ${y})`;
+      opt.textContent = `FY${y} (year to ${taxYearEndShort(y)})`;
       yearSelect.append(opt);
     }
 
@@ -3765,7 +3765,7 @@ export function renderReportsPage(): void {
   for (const year of years) {
     const option = document.createElement("option");
     option.value = String(year);
-    option.textContent = `FY${year} (year to 31 Mar ${year})`;
+    option.textContent = `FY${year} (year to ${taxYearEndShort(year)})`;
     option.selected = String(year) === chosenYear;
     yearSelect.append(option);
   }

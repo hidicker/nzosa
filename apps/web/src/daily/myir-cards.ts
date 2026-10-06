@@ -7,7 +7,7 @@ import type { IrdRecord } from "@nzosa/core";
 import { guessEntity, keepIrdRecord } from "./ird-records.js";
 import { incomeReturnPanel } from "./income-returns.js";
 import { myirIncomePanel } from "./myir-income-panel.js";
-import { taxYearEnd, taxYearOf } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearOf } from "../tax-year.js";
 
 /**
  * Everything myIR can give these books, as cards to load it from wherever
@@ -197,8 +197,8 @@ export function myirStatus(id: MyirFileId, ctx: MyirContext, years: readonly num
   const said = !loaded
     ? "Not loaded."
     : missing.length === 0
-      ? `Loaded${wanted.length > 0 ? `: ${wanted.map((y) => `year to 31 March ${y}`).join(", ")}` : ""}.`
-      : `Loaded, but missing for ${missing.map((y) => `the year to 31 March ${y}`).join(", ")}.`;
+      ? `Loaded${wanted.length > 0 ? `: ${wanted.map((y) => `year to ${taxYearEndSaid(y)}`).join(", ")}` : ""}.`
+      : `Loaded, but missing for ${missing.map((y) => `the year to ${taxYearEndSaid(y)}`).join(", ")}.`;
   return { missing, loaded, said };
 }
 

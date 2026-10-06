@@ -29,7 +29,7 @@ import type {
   IsoDate,
   PayrollMonth,
 } from "@nzosa/core";
-import { taxYearEnd } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -92,7 +92,7 @@ function describe(one: IrdRecord): string {
     case "employer":
       return `Employer summary, ${one.months.length} month${one.months.length === 1 ? "" : "s"}`;
     case "ir3":
-      return `IR3 confirmation for the year to 31 March ${one.year}`;
+      return `IR3 confirmation for the year to ${taxYearEndSaid(one.year)}`;
   }
 }
 

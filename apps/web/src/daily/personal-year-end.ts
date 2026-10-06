@@ -10,7 +10,7 @@ import { ir3PackHtml } from "./ir3-pack.js";
 import { provisionalPaidFromIrd } from "./ird-provisional.js";
 import { checklistHtml, checklistOpen, checklistPanel } from "./personal-checklist.js";
 import { tripsStatus } from "./vehicle-trips-panel.js";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -106,7 +106,7 @@ export function renderPersonalYearEnd(): void {
   for (const y of years) {
     const option = document.createElement("option");
     option.value = String(y);
-    option.textContent = `Year to 31 March ${y}`;
+    option.textContent = `Year to ${taxYearEndSaid(y)}`;
     option.selected = y === year;
     yearSelect.append(option);
   }
@@ -286,7 +286,7 @@ export function renderPersonalYearEnd(): void {
 
   // --- the return ---------------------------------------------------------------
   const done = document.createElement("h3");
-  done.textContent = `${owner}'s return for the year to 31 March ${year}`;
+  done.textContent = `${owner}'s return for the year to ${taxYearEndSaid(year)}`;
   body.append(done);
 
   const figures = document.createElement("table");

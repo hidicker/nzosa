@@ -3,6 +3,7 @@ import { emptyEntityModel } from "@nzosa/core";
 import { ledgerName } from "../store.js";
 import { state } from "../state.js";
 import { booksLocale } from "../country.js";
+import { taxYearEndSaid, taxYearStartSaid } from "../tax-year.js";
 
 /**
  * A person's year-end pack: the IR3 laid out the way an accountant's
@@ -94,7 +95,7 @@ function scheduleSection(schedule: OwnerRentalSchedule, year: number): string {
   lines.push(row("Net rents", schedule.netRents, "total"));
   lines.push("</tbody></table>");
   for (const said of schedule.notes ?? []) lines.push(`<p class="note">${esc(said)}</p>`);
-  lines.push(`<p class="note">Year to 31 March ${year}.</p>`);
+  lines.push(`<p class="note">Year to ${taxYearEndSaid(year)}.</p>`);
   return `<section class="page">${lines.join("")}</section>`;
 }
 
@@ -108,7 +109,7 @@ export function ir3PackHtml(
   const { owner, year } = result;
   const mine = extras.filter((e) => e.owner === owner && e.year === year);
   const of = (category: TaxExtra["category"]) => mine.filter((e) => e.category === category);
-  const period = `1 April ${year - 1} - 31 March ${year}`;
+  const period = `${taxYearStartSaid(year)} - ${taxYearEndSaid(year)}`;
   const made = new Date().toLocaleDateString(booksLocale(), { day: "2-digit", month: "short", year: "numeric" });
   const header =
     `<header><div class="who">${esc(owner)}</div><div class="what">${year} Individual taxpayer summary (IR3)<br>${esc(period)}</div></header>`;

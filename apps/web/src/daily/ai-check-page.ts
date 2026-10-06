@@ -13,6 +13,7 @@ import {
 import { downloadExcelReport } from "./excel-export.js";
 import { IRD_FORMS_INDEX, IRD_GUIDES, guidePrompt, guidesForBooks } from "../ai-guides.js";
 import type { GuideId } from "../ai-guides.js";
+import { taxYearEndSaid } from "../tax-year.js";
 
 /**
  * A year-end check of the accounts, against New Zealand tax rules.
@@ -192,7 +193,7 @@ function yearPicker(): { box: HTMLElement; pick: HTMLSelectElement } {
   for (const year of years) {
     const option = document.createElement("option");
     option.value = String(year);
-    option.textContent = `Year to 31 March ${year}`;
+    option.textContent = `Year to ${taxYearEndSaid(year)}`;
     option.selected = year === chosenYear;
     pickYear.append(option);
   }
@@ -599,7 +600,7 @@ function answerPanel(got: { text: string; year: number; title: string }): HTMLEl
   const [box, inner] = panel();
 
   const heading = document.createElement("h3");
-  heading.textContent = `${got.title} of the year to 31 March ${got.year}`;
+  heading.textContent = `${got.title} of the year to ${taxYearEndSaid(got.year)}`;
   inner.append(heading);
 
   const text = document.createElement("pre");

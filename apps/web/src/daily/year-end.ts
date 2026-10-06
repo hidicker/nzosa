@@ -12,7 +12,7 @@ import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { E12_ROWS, KILOMETRE_RATES, NOT_IN_E12, NO_LOGBOOK_LIMIT, emptyEntityModel } from "@nzosa/core";
 import type { Cents, Entity, PostedJournal, Prepayment, VehicleFuel, VehicleUse } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -153,7 +153,7 @@ function vehicleEditor(draft: VehicleUse, entities: Entity[], year: number): HTM
   if (held === undefined) {
     kmBox.append(
       note(
-        `Kilometre rates for the year to 31 March ${year} are not held yet (Inland Revenue ` +
+        `Kilometre rates for the year to ${taxYearEndSaid(year)} are not held yet (Inland Revenue ` +
           "publishes them after the year ends). Enter them in cents from its kilometre rates page.",
       ),
       field("Tier 1 c/km", tier1),
@@ -585,7 +585,7 @@ function appliesTo(who: string): HTMLElement {
 /** The page, for one income year. */
 export function renderYearEnd(body: HTMLElement, year: number): void {
   const heading = document.createElement("h3");
-  heading.textContent = `Year-end adjustments, year ended 31 March ${year}`;
+  heading.textContent = `Year-end adjustments, year ended ${taxYearEndSaid(year)}`;
   body.append(heading);
   body.append(
     note(

@@ -3,7 +3,7 @@ import { state } from "../state.js";
 import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -68,7 +68,7 @@ let byMonth = false;
 export function renderCashFlow(body: HTMLElement, year: number): void {
   const { banks, title } = banksNow();
   const heading = document.createElement("h3");
-  heading.textContent = `${title} — Statement of cash flows, year to 31 March ${year}`;
+  heading.textContent = `${title} — Statement of cash flows, year to ${taxYearEndSaid(year)}`;
   body.append(heading);
   if (banks.size === 0) {
     body.append(
@@ -125,8 +125,8 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
       row(`Net cash from ${section.activity} activities`, section.total, "report-total");
     }
     row("Net increase (decrease) in cash", statement.netChange, "report-total");
-    row(`Cash at 1 April ${year - 1}`, statement.openingCash);
-    row(`Cash at 31 March ${year}`, statement.closingCash, "report-total");
+    row(`Cash at ${taxYearStartSaid(year)}`, statement.openingCash);
+    row(`Cash at ${taxYearEndSaid(year)}`, statement.closingCash, "report-total");
     table.append(tbody);
     body.append(table);
   }

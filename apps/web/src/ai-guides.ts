@@ -4,7 +4,7 @@ import { ir3For } from "./daily/reports.js";
 import { state } from "./state.js";
 import { emptyEntityModel, formatAmount, shareholderSchedule, splitByShareholding } from "@nzosa/core";
 import type { Cents } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "./tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "./tax-year.js";
 
 /**
  * Checking the books against Inland Revenue's own guides.
@@ -55,7 +55,7 @@ function yearly(folder: string, name: string) {
       yearlyPublished(year) ? `${IRD}/ir1---ir99/${folder}/${name}-${year}.pdf` : null,
     edition: (year: number): string =>
       yearlyPublished(year)
-        ? `the ${year} edition, for the year to 31 March ${year}`
+        ? `the ${year} edition, for the year to ${taxYearEndSaid(year)}`
         : `the ${year} edition, which IRD publishes when the year ends -- until then use the latest and say so`,
   };
 }
@@ -243,7 +243,7 @@ export function guidePrompt(guide: IrdGuide, year: number): string {
     `- If no ${guide.id} is attached, or you cannot read it, say so first and stop.`,
     "- The figures below and in the workbook are the facts. Do not assume others; say what you would",
     "  need to see.",
-    `- The books are for the year 1 April ${year - 1} to 31 March ${year}. Use ${guide.edition(year)}.`,
+    `- The books are for the year ${taxYearStartSaid(year)} to ${taxYearEndSaid(year)}. Use ${guide.edition(year)}.`,
     ...(published ? [] : ["  Say at the top which edition you were given."]),
     "",
     "Answer in plain English in three groups, most serious first in each:",

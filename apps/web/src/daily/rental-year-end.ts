@@ -6,7 +6,7 @@ import { emptyEntityModel, isRental } from "@nzosa/core";
 import type { Cents, Entity } from "@nzosa/core";
 import { renderAgentStatements, rentalSchedulesFor } from "./reports.js";
 import { tripsPanel, tripsStatus, vehiclesPanel } from "./vehicle-trips-panel.js";
-import { taxYearEnd } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -131,7 +131,7 @@ export function renderRentalYearEnd(): void {
   for (const y of years) {
     const option = document.createElement("option");
     option.value = String(y);
-    option.textContent = `Year to 31 March ${y}`;
+    option.textContent = `Year to ${taxYearEndSaid(y)}`;
     option.selected = y === year;
     yearSelect.append(option);
   }

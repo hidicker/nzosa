@@ -13,7 +13,7 @@ import {
   ownersOf,
 } from "@nzosa/core";
 import type { GstReturnResult } from "@nzosa/core";
-import { taxYearEnd, taxYearStart } from "./tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "./tax-year.js";
 
 /**
  * A year-end review of the accounts, in one prompt.
@@ -254,7 +254,7 @@ function filingBlock(year: number): string[] {
   if (filing.taxAgent) {
     return [
       `Who files the returns: a tax agent${filing.agentName ? ` (${filing.agentName})` : ""}, so the`,
-      `owners have an extension of time: each ${year} IR3 is due by 31 March ${year + 1} and`,
+      `owners have an extension of time: each ${year} IR3 is due by ${taxYearEndSaid(year + 1)} and`,
       `terminal tax by 7 April ${year + 1}. Do not call a return late before then.`,
     ];
   }
@@ -397,7 +397,7 @@ function preamble(year: number): string[] {
     "Say what you are unsure of, and say what you would need to see to be sure. This is a",
     "draft for a qualified person to review, not advice, and you should say so at the end.",
     "",
-    `Financial year: 1 April ${year - 1} to 31 March ${year}.`,
+    `Financial year: ${taxYearStartSaid(year)} to ${taxYearEndSaid(year)}.`,
     "",
   ];
 }

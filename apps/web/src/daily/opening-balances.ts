@@ -12,7 +12,7 @@ import { asCsvText } from "../books.js";
 import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, openBankReconcileReport } from "./balance-diagnostics.js";
-import { taxYearOf, taxYearStart } from "../tax-year.js";
+import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
 import { booksLocale } from "../country.js";
 
 /**
@@ -149,7 +149,7 @@ export function renderOpeningBalances(): void {
   for (const y of descYears) {
     const opt = document.createElement("option");
     opt.value = String(y.year);
-    opt.textContent = `FY${y.year} (as at 31 Mar ${y.year})`;
+    opt.textContent = `FY${y.year} (as at ${taxYearEndShort(y.year)})`;
     yearSelect.append(opt);
   }
 
@@ -221,7 +221,7 @@ export function renderOpeningBalances(): void {
 
     for (const y of years) {
       const th = document.createElement("th");
-      th.innerHTML = `FY${y.year}<span class="opening-col-sub">31 Mar ${y.year}</span>`;
+      th.innerHTML = `FY${y.year}<span class="opening-col-sub">${taxYearEndShort(y.year)}</span>`;
       headRow.append(th);
     }
     thead.append(headRow);
@@ -317,7 +317,7 @@ export function renderOpeningBalances(): void {
     if (selected.source) body.append(note(selected.source));
     if (!selected.isOpening) {
       body.append(
-        note(`Balances as at 31 March ${selected.year} rolled forward from opening balances and transactions.`),
+        note(`Balances as at ${taxYearEndSaid(selected.year)} rolled forward from opening balances and transactions.`),
       );
     }
 

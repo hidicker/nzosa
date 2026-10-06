@@ -25,6 +25,42 @@ export function taxYearEnd(year: number): IsoDate {
   return financialYear(year, yearEnd()).to;
 }
 
+const MONTHS = [
+  "January",
+  "February",
+  "March",
+  "April",
+  "May",
+  "June",
+  "July",
+  "August",
+  "September",
+  "October",
+  "November",
+  "December",
+];
+
+/** "31 March 2026", or with `short`, "31 Mar 2026": a date as the year's words say it. */
+function said(date: IsoDate, short = false): string {
+  const month = MONTHS[Number(date.slice(5, 7)) - 1] ?? "";
+  return `${Number(date.slice(8, 10))} ${short ? month.slice(0, 3) : month} ${date.slice(0, 4)}`;
+}
+
+/** The year's last day in words: "31 March 2026" for the 2026 year, in New Zealand. */
+export function taxYearEndSaid(year: number): string {
+  return said(taxYearEnd(year));
+}
+
+/** The same, short: "31 Mar 2026". */
+export function taxYearEndShort(year: number): string {
+  return said(taxYearEnd(year), true);
+}
+
+/** The year's first day in words: "1 April 2025" for the 2026 year, in New Zealand. */
+export function taxYearStartSaid(year: number): string {
+  return said(taxYearStart(year));
+}
+
 /** Which tax year a date falls in, by the year it ends in. */
 export function taxYearOf(date: string): number {
   return financialYearOf(date as IsoDate, yearEnd());

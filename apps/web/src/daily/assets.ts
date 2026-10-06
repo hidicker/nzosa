@@ -18,7 +18,7 @@ import {
 } from "@nzosa/core";
 import type { Cents, FixedAsset, IsoDate } from "@nzosa/core";
 import { loadAssets } from "../migrate/file-intake.js";
-import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Fixed assets, their depreciation, and what happens when one is sold.
@@ -611,7 +611,7 @@ export function renderAssetsPage(): void {
   const head = document.createElement("thead");
   head.innerHTML =
     "<tr><th>Number</th><th>Asset</th><th>Type</th><th>Purchased</th><th>Cost</th>" +
-    `<th>Method</th><th>Depreciation FY${year}</th><th>Book value 31 Mar ${year}</th>` +
+    `<th>Method</th><th>Depreciation FY${year}</th><th>Book value ${taxYearEndShort(year)}</th>` +
     "<th>Status</th><th></th></tr>";
   const tbody = document.createElement("tbody");
 

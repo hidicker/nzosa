@@ -1,0 +1,8 @@
+ANZ Home Loan statement
+Account 01-0100-0100000-00
+
+Date,Details,Amount,PrincipalBalance
+01/06/2024,Loan Drawdown,-100000.00,100000.00
+10/06/2024,Loan Interest,-137.83,100137.83
+15/06/2024,Loan Payment,500.53,99637.30
+10/07/2024,Loan Interest,-137.83,99775.13

@@ -1,0 +1,54 @@
+# Put the web app and the online demo on the website.
+#
+# Started by hand only (Actions tab, "Deploy website", "Run workflow"): the
+# site changes when somebody decides it should, never as a side effect of a
+# push. The tests run first, and nothing is uploaded if they fail.
+name: Deploy website
+
+on:
+  workflow_dispatch:
+    inputs:
+      target:
+        description: What to put online
+        type: choice
+        options: [both, app, demo]
+        default: both
+
+# One deploy at a time: two uploading at once could leave the site half of each.
+concurrency:
+  group: deploy-website
+  cancel-in-progress: false
+
+permissions:
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+
+      - run: npm ci
+
+      - name: Test
+        run: npm test
+
+      - name: Build the demo, then the app
+        # The demo build builds the app first and copies it; the app is built
+        # again after so its folder holds the app alone.
+        run: |
+          npm run build:demo
+          npm run build -w @nzosa/web
+
+      - name: Upload and check
+        env:
+          WEBDISK_PASSWORD: ${{ secrets.NZOSA_WEBDISK_PASSWORD }}
+          WEBDISK_APP_USER: ${{ secrets.NZOSA_WEBDISK_APP_USER }}
+          WEBDISK_DEMO_USER: ${{ secrets.NZOSA_WEBDISK_DEMO_USER }}
+          TARGET: ${{ inputs.target }}
+        run: bash tools/deploy-webdisk.sh

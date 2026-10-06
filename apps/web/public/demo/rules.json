@@ -1,0 +1,166 @@
+{
+  "_readme": "Demo coding rules for an invented business. Rules only ever suggest -- every line still has to be confirmed by a person.",
+  "rules": [
+    {
+      "priority": 60,
+      "keyword": "HIGHLAND BEAN",
+      "code": "Cost of Goods Sold - 310KC",
+      "note": "Green beans"
+    },
+    {
+      "priority": 60,
+      "keyword": "RIMU PROPERTY",
+      "code": "Rent - 469KC",
+      "note": "Roastery unit rent"
+    },
+    {
+      "priority": 60,
+      "keyword": "TRUSTPOWER",
+      "code": "Light, Power, Heating - 445KC",
+      "note": "Power"
+    },
+    {
+      "priority": 60,
+      "keyword": "PACK IT",
+      "code": "Cost of Goods Sold - 310KC",
+      "note": "Bags and boxes"
+    },
+    {
+      "priority": 60,
+      "keyword": "NZ POST",
+      "code": "Freight & Courier - 425KC",
+      "note": "Courier"
+    },
+    {
+      "priority": 60,
+      "keyword": "FERN ADVISORY",
+      "code": "Consulting & Accounting - 412KC",
+      "note": "Accountant"
+    },
+    {
+      "priority": 60,
+      "keyword": "XERO SUBSCRIPTION",
+      "code": "Subscriptions - 485KC",
+      "note": "Software"
+    },
+    {
+      "priority": 60,
+      "keyword": "SOUTHERN MACHINERY",
+      "code": "Repairs and Maintenance - 473KC",
+      "note": "Roaster servicing"
+    },
+    {
+      "priority": 60,
+      "keyword": "NELSON MARKETS",
+      "code": "Advertising - 400KC",
+      "note": "Market stall"
+    },
+    {
+      "priority": 60,
+      "keyword": "TRADE SHOW",
+      "code": "Advertising - 400KC",
+      "note": "Trade shows"
+    },
+    {
+      "priority": 60,
+      "keyword": "FUEL",
+      "code": "Motor Vehicle Expenses - 449KC",
+      "note": "Van fuel"
+    },
+    {
+      "priority": 60,
+      "keyword": "STATIONERY",
+      "code": "Office Expenses - 453KC",
+      "note": "Office"
+    },
+    {
+      "priority": 60,
+      "keyword": "AIRLINE TICKET",
+      "code": "Travel - National - 493KC",
+      "note": "Travel"
+    },
+    {
+      "priority": 60,
+      "keyword": "CAFE SUPPLIES",
+      "code": "General Expenses - 429KC",
+      "note": "Sundries"
+    },
+    {
+      "priority": 70,
+      "keyword": "BEATTIE TENANCY",
+      "code": "Rent received - 200RL",
+      "note": "Residential rent"
+    },
+    {
+      "priority": 70,
+      "keyword": "NELSON CITY COUNCIL",
+      "code": "Rates and water - 420RL",
+      "note": "Rental rates"
+    },
+    {
+      "priority": 70,
+      "keyword": "KAHU PLUMBING",
+      "code": "Repairs and maintenance - 473RL",
+      "note": "Rental plumbing"
+    },
+    {
+      "priority": 70,
+      "keyword": "TOPLINE ROOFING",
+      "code": "Repairs and maintenance - 473RL",
+      "note": "Rental gutters"
+    },
+    {
+      "priority": 70,
+      "keyword": "KIWI HOME LOANS",
+      "code": "Interest - 437RL",
+      "note": "Rental mortgage interest"
+    },
+    {
+      "priority": 70,
+      "keyword": "HARAKEKE FLORIST",
+      "code": "Rent received - 200MS",
+      "note": "Commercial rent"
+    },
+    {
+      "priority": 70,
+      "keyword": "SOUTHERN DOORS",
+      "code": "Repairs and maintenance - 473MS",
+      "note": "Commercial repairs"
+    },
+    {
+      "priority": 70,
+      "keyword": "KOWHAI PROPERTY",
+      "code": "Property management fees - 450MS",
+      "note": "Letting fees"
+    },
+    {
+      "priority": 80,
+      "keyword": "TASMAN INSURANCE",
+      "account": "02-1234-0056789-001",
+      "code": "Insurance - 433RL",
+      "note": "Rental policy"
+    },
+    {
+      "priority": 80,
+      "keyword": "TASMAN INSURANCE",
+      "account": "02-1234-0056789-002",
+      "code": "Insurance - 433MS",
+      "note": "Commercial property policy"
+    },
+    {
+      "priority": 60,
+      "keyword": "TASMAN INSURANCE",
+      "code": "Insurance - 433KC",
+      "note": "Business policy"
+    }
+  ],
+  "defaults": [],
+  "codeTreatments": {
+    "Rent received - 200RL": "exempt",
+    "Rates and water - 420RL": "exempt",
+    "Repairs and maintenance - 473RL": "exempt",
+    "Insurance - 433RL": "exempt",
+    "Interest - 437RL": "exempt",
+    "Owner Drawings - 980KC": "out-of-scope"
+  }
+}

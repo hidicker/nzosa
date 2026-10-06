@@ -1,0 +1,45 @@
+NZOSA -- free accounting for New Zealand
+Copyright (C) 2026 hidicker
+
+This program is free software: you can redistribute it and/or modify it under
+the terms of the GNU Affero General Public License as published by the Free
+Software Foundation, either version 3 of the License, or (at your option) any
+later version, with the additional term below.
+
+This program is distributed in the hope that it will be useful, but WITHOUT
+ANY WARRANTY; without even the implied warranty of MERCHANTABILITY or FITNESS
+FOR A PARTICULAR PURPOSE. See the GNU Affero General Public License, in the
+file LICENSE, for more details. You remain responsible for what you file.
+
+Versions 2026-10-04 to 2026-10-06, released under the NZOSA (later "Nil
+Books") free-to-use licence, are released under these terms too.
+
+
+ADDITIONAL TERMS (section 7(b), (c) and (e) of the GNU Affero General Public License)
+
+Every copy and every modified version of NZOSA, including one run for other
+people over a network, must keep this author attribution in the notices its
+user interface shows (in NZOSA, the footer of every page):
+
+    NZOSA, by hidicker -- https://nbparagliding.nz/nzosa/home/
+
+with the address as a working link where the interface can show one.
+
+A modified version may add its own name and credits beside that attribution.
+It must be marked as changed from the original, and must not present itself
+as the original NZOSA or as made or endorsed by hidicker.
+
+No right is granted to use the name "NZOSA" for a modified version offered to
+other people: it should go by a name of its own, while keeping the
+attribution above.
+
+
+A REQUEST (not a condition of the licence)
+
+NZOSA is free, and is kept going by donations. If you pass it on or build on
+it, please leave the "Donate a coffee" button and the donation link in place:
+
+    https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00
+
+Donations are voluntary and buy no extra rights.
+

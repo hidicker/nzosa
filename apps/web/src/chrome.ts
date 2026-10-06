@@ -1,0 +1,154 @@
+import { $ } from "./state.js";
+import { THEME_KEY, currentTheme } from "./ui.js";
+import type { Theme } from "./ui.js";
+import { backendKind } from "./store.js";
+import { isDemoBuild } from "./ai-consent.js";
+import { loadDemoData } from "./migrate/setup-wizard.js";
+
+/**
+ * The frame around the pages: theme, sidebar width, and the loading screen.
+ *
+ * None of it is about accounting and none of it touches the ledger. It is here
+ * rather than in `ui.ts` because each of these remembers a choice -- which
+ * theme, how wide -- and reading that back from the browser's own storage is
+ * state, even when it is nobody's books.
+ *
+ * Both are applied before anything is drawn rather than after. A page that
+ * renders light and then turns dark, or renders wide and then narrows, looks
+ * like a fault even though it settles correctly.
+ */
+
+export function dismissLoading(): void {
+  const el = document.getElementById("app-loading");
+  if (!el) return;
+  el.classList.add("dismissed");
+  setTimeout(() => el.remove(), 400);
+}
+
+/**
+ * Whether the menu is narrowed to icons.
+ *
+ * Beside the theme in localStorage rather than with the books: how wide
+ * somebody likes their menu is a fact about them and this screen, and has no
+ * business travelling in a folder that gets copied to a colleague.
+ */
+export const NARROW_KEY = "nzosa:narrow";
+
+export function applyNarrow(narrow: boolean): void {
+  document.querySelector(".shell")?.classList.toggle("narrow", narrow);
+  const button = $("sidebar-toggle");
+  button.setAttribute("aria-expanded", String(!narrow));
+  button.title = narrow ? "Show the menu names" : "Narrow the menu to icons";
+}
+
+export function toggleNarrow(): void {
+  const narrow = !document.querySelector(".shell")?.classList.contains("narrow");
+  try {
+    localStorage.setItem(NARROW_KEY, narrow ? "yes" : "no");
+  } catch {
+    // Not remembered, but still applied for this session.
+  }
+  applyNarrow(narrow);
+}
+
+export function applyTheme(theme: Theme): void {
+  const root = document.documentElement;
+  if (theme === "system") root.removeAttribute("data-theme");
+  else root.setAttribute("data-theme", theme);
+
+  // The button says what pressing it does next, not what the theme is now.
+  const dark = theme === "dark" || (theme === "system" && matchMedia("(prefers-color-scheme: dark)").matches);
+  const button = $("theme-toggle");
+  button.textContent = dark ? "☀" : "☽";
+  button.title =
+    theme === "system"
+      ? `Following this computer (${dark ? "dark" : "light"}). Click for ${dark ? "light" : "dark"}.`
+      : `${theme[0]?.toUpperCase()}${theme.slice(1)}. Click to cycle light, dark, follow the computer.`;
+}
+
+export function cycleTheme(): void {
+  const order: Theme[] = ["system", "light", "dark"];
+  const next = order[(order.indexOf(currentTheme()) + 1) % order.length] as Theme;
+  try {
+    localStorage.setItem(THEME_KEY, next);
+  } catch {
+    // Not remembered, but still applied for this session.
+  }
+  applyTheme(next);
+}
+
+/** The frame: theme, sidebar width, and the demo banner. */
+/**
+ * Where these books actually are, said in the footer.
+ *
+ * It used to say one thing everywhere: that the ledger stays in this browser
+ * until you export it, and that NZOSA keeps running until you double-click Stop
+ * NZOSA in the folder you started it from. On the hosted copy none of that is
+ * true -- there is no folder and no local server to stop, and the books are on
+ * a server rather than in the browser -- so the footer told the people most
+ * likely to be strangers here something plainly wrong.
+ */
+function sayWhereBooksLive(): void {
+  const where = document.getElementById("footer-where");
+  if (where === null) return;
+  const kind = backendKind();
+  where.textContent =
+    kind === "folder"
+      ? "These books are the folder on this computer. NZOSA keeps running after you " +
+        "close this tab; to stop it, double-click Stop NZOSA in the folder you started it from."
+      : kind === "cloud"
+        ? "These books are kept on the server, under the account you are signed in to. " +
+          "Download a backup from the Books page to keep a copy of your own."
+        : "These books stay in this browser until you download a backup from the Books page.";
+}
+
+export function wireChrome(): void {
+  sayWhereBooksLive();
+  const demoBanner = document.getElementById("demo-banner");
+  if (demoBanner) {
+    // Shown only where the page itself says it is the demo: the demo build
+    // takes the hidden attribute off, and nothing else does. The app used to
+    // show it on any copy with no folder behind it, which put "this is a demo"
+    // across the top of books people keep for real on the hosted site.
+    if (backendKind() === "folder") demoBanner.hidden = true;
+    $("demo-banner-close")?.addEventListener("click", () => {
+      demoBanner.hidden = true;
+    });
+    // The demo seeds a browser once and then keeps what that visitor did with
+    // it, which is right for a visit and wrong for coming back: somebody who
+    // reconciled it last week found almost nothing left to reconcile, and a
+    // demo updated since never reached them. One press gives the fresh books.
+    if (isDemoBuild()) {
+      const again = document.createElement("button");
+      again.type = "button";
+      again.className = "demo-banner-again";
+      again.textContent = "Start the demo again";
+      again.addEventListener("click", () => {
+        void loadDemoData(again).finally(() => {
+          again.disabled = false;
+          again.textContent = "Start the demo again";
+        });
+      });
+      demoBanner.querySelector(".demo-banner-content")?.append(again);
+    }
+  }
+
+  const demoNotice = document.getElementById("demo-import-privacy-notice");
+  if (demoNotice) {
+    // The same rule: a warning not to import private data belongs on the demo,
+    // and is wrong on hosted books, where importing your own data is the point.
+    if (backendKind() === "folder") demoNotice.hidden = true;
+  }
+  $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
+  try {
+    applyNarrow(localStorage.getItem(NARROW_KEY) === "yes");
+  } catch {
+    applyNarrow(false);
+  }
+  $("theme-toggle").addEventListener("click", () => cycleTheme());
+  applyTheme(currentTheme());
+  // Following the computer means noticing when the computer changes its mind.
+  matchMedia("(prefers-color-scheme: dark)").addEventListener("change", () => {
+    if (currentTheme() === "system") applyTheme("system");
+  });
+}

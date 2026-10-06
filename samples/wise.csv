@@ -1,0 +1,7 @@
+ID,Status,Direction,Created on,Finished on,Source fee amount,Source fee currency,Target fee amount,Target fee currency,Source name,Source amount (after fees),Source currency,Target name,Target amount (after fees),Target currency,Exchange rate,Reference,Batch,Created by,Category,Note
+CARD_TRANSACTION-3600000001,COMPLETED,OUT,2024-07-02 07:41:51,2024-07-02 07:41:51,0.03,NZD,,,Sample User,12.10,NZD,FlixBus,5.98,EUR,0.494205,,,Sample User,Transport,
+CARD_TRANSACTION-3600000002,COMPLETED,OUT,2024-07-03 07:17:13,2024-07-03 07:17:13,0.20,NZD,,,Sample User,76.79,NZD,FlixBus,37.95,EUR,0.494205,,,Sample User,Transport,
+CARD_TRANSACTION-3600000002,COMPLETED,OUT,2024-07-03 07:17:13,2024-07-03 07:17:13,0.00,EUR,,,Sample User,20.00,EUR,FlixBus,20.00,EUR,1.0,,,Sample User,Transport,
+TRANSFER-2000000001,COMPLETED,IN,2024-07-05 09:06:11,2024-07-05 10:18:27,0.00,NZD,,,Sample User,2000.00,NZD,Sample User,2000.00,NZD,1.0,Top up,,Sample User,,
+TRANSFER-2000000002,COMPLETED,OUT,2024-07-08 23:59:26,2024-07-09 00:00:35,11.74,NZD,,,Sample User,4151.00,NZD,SAMPLE GLIDER GMBH,2120.00,EUR,0.510720,Invoice 4471,,Sample User,,
+CARD_TRANSACTION-3532658267,CANCELLED,OUT,2024-07-09 07:53:58,,,,,,Sample User,0.00,NZD,Airbnb,0.00,NZD,,,,Sample User,,

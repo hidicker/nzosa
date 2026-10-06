@@ -1,0 +1,232 @@
+/**
+ * A text box that filters a long list as you type, and refuses anything that is
+ * not on it.
+ *
+ * The chart runs to a hundred accounts, and picking one from a native select
+ * means scrolling a list ordered by code rather than by what you are looking
+ * for. Typing "sal" should offer Salaries and Sales.
+ *
+ * The typed text is never the answer. `value` returns only a code that was
+ * actually chosen, so a half-typed or misspelt entry codes nothing rather than
+ * inventing an account -- the same reason nothing here confirms a line on the
+ * user's behalf.
+ */
+export interface Combobox {
+  readonly element: HTMLElement;
+  readonly value: string;
+  /**
+   * Empty the box, keeping the options.
+   *
+   * For a picker that gathers rather than decides: one payment settling several
+   * invoices takes each choice in turn, and the box has to be ready for the
+   * next one without being rebuilt and losing focus.
+   */
+  clear(): void;
+}
+
+/**
+ * What an option is, beyond its own text: a note shown beside it and words it
+ * can also be found by. Set once by whoever knows -- for an account, the
+ * entity it belongs to -- so every picker gets it without each being told.
+ * An option it knows nothing about is shown and matched as before.
+ */
+export type OptionInfo = { note?: string; words?: string };
+let describe: (option: string) => OptionInfo | undefined = () => undefined;
+export function setOptionDescriber(fn: (option: string) => OptionInfo | undefined): void {
+  describe = fn;
+}
+
+export function combobox(
+  options: readonly string[],
+  initial: string | null,
+  placeholder: string,
+  /**
+   * Called whenever the chosen value changes.
+   *
+   * For a caller whose other controls depend on the choice -- gathering several
+   * invoices against one payment shows a running total and a way to add
+   * another, and both are wrong until the box says what was picked.
+   */
+  onChange: () => void = () => {},
+  /**
+   * A last entry that is an action rather than a choice -- "Add new account"
+   * -- handed what was typed. One extra row, drawn after the matches.
+   */
+  extra?: { label: string; onPick: (typed: string) => void },
+): Combobox {
+  let chosen = initial ?? "";
+  let active = -1;
+
+  const wrap = document.createElement("div");
+  wrap.className = "combo";
+
+  const input = document.createElement("input");
+  input.type = "text";
+  input.className = "combo-input";
+  input.placeholder = placeholder;
+  input.value = chosen;
+  input.autocomplete = "off";
+  input.setAttribute("role", "combobox");
+  input.setAttribute("aria-expanded", "false");
+  input.setAttribute("aria-autocomplete", "list");
+
+  const list = document.createElement("div");
+  list.className = "combo-list";
+  list.setAttribute("role", "listbox");
+  list.hidden = true;
+
+  /**
+   * Every word typed has to be found -- in the option or in what it belongs
+   * to -- in any order: "totara rates" finds Rates and water - 420TS, whose
+   * entity is Totara Street. Word-start matches first: typing "sal" wants
+   * Salaries before Loss on sale. And a name that begins with what was typed
+   * before one that only has a word beginning with it: "rent" wants Rent
+   * received before Other rental income.
+   */
+  function ranked(query: string): string[] {
+    const q = query.trim().toLowerCase();
+    if (q === "") return [...options];
+    const words = q.split(/\s+/);
+    const startsWord = (text: string, word: string): boolean => {
+      const at = text.indexOf(word);
+      // A code is "470 - Salaries", so a word start counts as a prefix.
+      return at === 0 || (at > 0 && /[^a-z0-9]/.test(text[at - 1] ?? ""));
+    };
+    const first: string[] = [];
+    const starts: string[] = [];
+    const within: string[] = [];
+    for (const option of options) {
+      const lower = option.toLowerCase();
+      const more = describe(option)?.words?.toLowerCase() ?? "";
+      const haystack = more === "" ? lower : `${lower} ${more}`;
+      if (!words.every((word) => haystack.includes(word))) continue;
+      const lead = words.find((word) => lower.includes(word)) ?? words[0] ?? "";
+      if (lower.startsWith(q)) first.push(option);
+      else if (startsWord(lower, q) || startsWord(lower, lead)) starts.push(option);
+      else within.push(option);
+    }
+    return [...first, ...starts, ...within];
+  }
+
+  function close(): void {
+    list.hidden = true;
+    input.setAttribute("aria-expanded", "false");
+    active = -1;
+  }
+
+  function pick(option: string): void {
+    chosen = option;
+    input.value = option;
+    close();
+    onChange();
+  }
+
+  function draw(query: string): void {
+    const matches = ranked(query);
+    list.textContent = "";
+    if (matches.length === 0) {
+      const empty = document.createElement("div");
+      empty.className = "combo-empty";
+      empty.textContent = "No account matches";
+      list.append(empty);
+    }
+    matches.forEach((option, index) => {
+      const row = document.createElement("div");
+      row.className = index === active ? "combo-option on" : "combo-option";
+      row.setAttribute("role", "option");
+      row.setAttribute("aria-selected", String(option === chosen));
+      row.textContent = option;
+      const note = describe(option)?.note;
+      if (note !== undefined && note !== "") {
+        const said = document.createElement("span");
+        said.className = "combo-note";
+        said.textContent = ` · ${note}`;
+        row.append(said);
+      }
+      // mousedown, not click: blur fires first on click and closes the list
+      // before the click lands, so nothing would ever be selected.
+      row.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        pick(option);
+      });
+      list.append(row);
+    });
+    if (extra !== undefined) {
+      const row = document.createElement("div");
+      row.className = "combo-option combo-extra";
+      row.setAttribute("role", "option");
+      row.textContent = extra.label;
+      row.addEventListener("mousedown", (event) => {
+        event.preventDefault();
+        const typed = input.value === chosen ? "" : input.value.trim();
+        input.value = chosen;
+        close();
+        extra.onPick(typed);
+      });
+      list.append(row);
+    }
+    list.hidden = false;
+    input.setAttribute("aria-expanded", "true");
+  }
+
+  input.addEventListener("focus", () => {
+    active = -1;
+    draw("");
+    input.select();
+  });
+  input.addEventListener("input", () => {
+    active = -1;
+    draw(input.value);
+  });
+  input.addEventListener("blur", () => {
+    // Leaving a half-typed account reverts to the last real choice rather than
+    // silently keeping text that means nothing.
+    input.value = chosen;
+    close();
+  });
+  input.addEventListener("keydown", (event) => {
+    const key = event.key;
+    const matches = ranked(list.hidden ? "" : input.value);
+    if (key === "ArrowDown" || key === "ArrowUp") {
+      event.preventDefault();
+      if (list.hidden) {
+        draw(input.value);
+        return;
+      }
+      active += key === "ArrowDown" ? 1 : -1;
+      if (active < 0) active = matches.length - 1;
+      if (active >= matches.length) active = 0;
+      draw(input.value);
+      list.querySelector(".combo-option.on")?.scrollIntoView({ block: "nearest" });
+      return;
+    }
+    if (key === "Enter") {
+      const match = matches[active] ?? (matches.length === 1 ? matches[0] : undefined);
+      if (match !== undefined) {
+        event.preventDefault();
+        pick(match);
+      }
+      return;
+    }
+    if (key === "Escape" && !list.hidden) {
+      event.preventDefault();
+      event.stopPropagation();
+      input.value = chosen;
+      close();
+    }
+  });
+
+  wrap.append(input, list);
+  return {
+    element: wrap,
+    get value() {
+      return chosen;
+    },
+    clear() {
+      chosen = "";
+      input.value = "";
+      close();
+      onChange();
+    },
+  };
+}

@@ -1,0 +1,588 @@
+import { redraw } from "../app.js";
+import { persistRules, reclassify, record, useRules } from "../books.js";
+import { blankDraft, fromDraft, ruleImpact, toDraft, validateDraft } from "../rules-editor.js";
+import type { RuleDraft } from "../rules-editor.js";
+import { describeRules, mergeRules } from "../rules-ui.js";
+import type { RuleFileShape } from "../rules-ui.js";
+import { $, state } from "../state.js";
+import { saveRulesArchive } from "../store.js";
+import { download, note } from "../ui.js";
+import { combobox } from "../combobox.js";
+import { knownCodes } from "../reconcile.js";
+import { ruleMatches, ruleSearchText } from "@nzosa/core";
+import type { CategoryRule } from "@nzosa/core";
+
+/**
+ * Which rules no line in the books fits, worked out once per rule set and
+ * set of transactions rather than on every keystroke in the search box.
+ *
+ * A rule that matches nothing looks exactly like one that works. Rules
+ * written from a coding before they were checked against their own line are
+ * the usual case: `HARGREAVES RENT`, looked for as one run of text in lines that
+ * read `HARGREAVES T 2/14a 190324 rent`.
+ */
+let deadCache: { rules: unknown; transactions: unknown; dead: Set<number> } | null = null;
+
+function deadRules(rules: readonly CategoryRule[]): Set<number> {
+  const transactions = state.ledger.transactions;
+  if (deadCache?.rules === rules && deadCache.transactions === transactions) {
+    return deadCache.dead;
+  }
+  const lines = transactions.map((t) => ({ t, text: ruleSearchText(t) }));
+  const dead = new Set<number>();
+  if (lines.length > 0) {
+    rules.forEach((rule, index) => {
+      if (!lines.some(({ t, text }) => ruleMatches(t, rule, text))) dead.add(index);
+    });
+  }
+  deadCache = { rules, transactions, dead };
+  return dead;
+}
+
+/**
+ * The coding rules, and editing them.
+ *
+ * A rule is a keyword and the code it implies. Together they are the reason a
+ * thousand-line statement does not have to be coded a line at a time, and they
+ * are worth reading as a document in their own right: the rule set is the
+ * policy, and the coding is what the policy produced.
+ *
+ * Which is why a rule is never silently overwritten. Adding a set that already
+ * holds a keyword keeps the existing answer, replacing one archives what it
+ * displaced, and both say how many were skipped -- because a duplicate rule
+ * makes which one wins depend on declaration order, and that is invisible.
+ */
+
+async function replaceRules(): Promise<void> {
+  const pending = state.pendingRules;
+  if (!pending) return;
+  // The set being displaced is kept: replacing changes every suggestion at
+  // once, and getting the old one back should not depend on still having the
+  // file it came from.
+  if (state.rules) {
+    state.rulesArchive = {
+      version: 1,
+      entries: [
+        {
+          name: state.rulesName,
+          replacedAt: new Date().toISOString().slice(0, 16).replace("T", " "),
+          rules: state.rules,
+        },
+        ...state.rulesArchive.entries,
+      ].slice(0, 10),
+    };
+    await saveRulesArchive(state.rulesArchive);
+  }
+  await useRules(pending.rules, pending.name, "Replaced with");
+}
+
+async function addRules(): Promise<void> {
+  const pending = state.pendingRules;
+  if (!pending || !state.rules) return;
+  const report = mergeRules(state.rules as RuleFileShape, pending.rules);
+  await useRules(report.merged, `${state.rulesName} + ${pending.name}`, "Added");
+  state.rulesMessage =
+    `Added ${report.addedRules} rules from ${pending.name}` +
+    (report.skippedRules > 0 ? `, skipping ${report.skippedRules} already present` : "") +
+    (report.addedTreatments > 0 ? `, and ${report.addedTreatments} code treatments` : "") +
+    ".";
+  if (report.conflictingTreatments.length > 0) {
+    state.rulesMessage +=
+      ` ${report.conflictingTreatments.length} code treatment(s) disagreed and the existing ones were kept: ` +
+      report.conflictingTreatments.map((c) => c.code).slice(0, 5).join(", ") +
+      ".";
+  }
+  redraw("rules");
+}
+
+async function restoreRules(index: number): Promise<void> {
+  const entry = state.rulesArchive.entries[index];
+  if (!entry) return;
+  state.rulesArchive = {
+    version: 1,
+    entries: state.rulesArchive.entries.filter((_, i) => i !== index),
+  };
+  await saveRulesArchive(state.rulesArchive);
+  await useRules(entry.rules as RuleFileShape, entry.name, "Restored");
+}
+
+function renderRulesStatus(): void {
+  const holder = $("rules-status");
+  holder.textContent = "";
+
+  const line = document.createElement("p");
+  line.className = "page-hint";
+  line.textContent =
+    state.rules === undefined
+      ? "No rules loaded. Load a rule file to get coding suggestions."
+      : `In use: ${state.rulesName} — ${describeRules(state.rules as RuleFileShape)}, loaded ${state.rulesLoadedAt}. Kept between sessions.`;
+  holder.append(line);
+
+  if (state.rulesMessage !== "") {
+    const message = document.createElement("p");
+    message.className = "rules-message";
+    message.textContent = state.rulesMessage;
+    holder.append(message);
+  }
+
+  const pending = state.pendingRules;
+  if (pending) {
+    const choice = document.createElement("div");
+    choice.className = "rules-choice";
+    const question = document.createElement("p");
+    question.textContent =
+      `${pending.name} holds ${describeRules(pending.rules)}. ` +
+      "Add it to the current rules, or replace them? Replaced rules are kept.";
+    choice.append(question);
+
+    const add = document.createElement("button");
+    add.type = "button";
+    add.className = "primary";
+    add.textContent = "Add to existing";
+    add.addEventListener("click", () => void addRules());
+
+    const replace = document.createElement("button");
+    replace.type = "button";
+    replace.textContent = "Replace";
+    replace.addEventListener("click", () => void replaceRules());
+
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancel";
+    cancel.addEventListener("click", () => {
+      state.pendingRules = null;
+      redraw("rules");
+    });
+
+    choice.append(add, replace, cancel);
+    holder.append(choice);
+  }
+
+  if (state.rulesArchive.entries.length > 0) {
+    const heading = document.createElement("h3");
+    heading.textContent = "Replaced rule sets";
+    holder.append(heading);
+    for (const [index, entry] of state.rulesArchive.entries.entries()) {
+      const row = document.createElement("p");
+      row.className = "rules-archive";
+      row.textContent = `${entry.name} — ${describeRules(entry.rules as RuleFileShape)}, replaced ${entry.replacedAt}. `;
+      const restore = document.createElement("button");
+      restore.type = "button";
+      restore.textContent = "Restore";
+      restore.addEventListener("click", () => void restoreRules(index));
+      row.append(restore);
+      holder.append(row);
+    }
+  }
+}
+
+export function renderRules(): void {
+  renderRulesStatus();
+  const body = $("rules-body");
+  body.textContent = "";
+  const file = state.rules as RuleFileShape | undefined;
+
+  if (!file) {
+    body.append(note("No rules loaded. Load a rule file with the button above."));
+    return;
+  }
+
+  const all = file.rules ?? [];
+  const needle = $<HTMLInputElement>("rules-search").value.trim().toLowerCase();
+  const matches = (text: string) => needle === "" || text.toLowerCase().includes(needle);
+
+  // Indexes are carried through the filter: editing row 3 of a search result
+  // has to write back to the rule it actually came from, not to rule 3.
+  const shown = all
+    .map((rule, index) => ({ rule, index }))
+    .filter(({ rule }) =>
+      matches(
+        `${rule.keyword ?? ""} ${rule.code} ${rule.account ?? ""} ${rule.contact ?? ""} ${rule.note ?? ""} ${rule.description ?? ""}`,
+      ),
+    )
+    .sort((a, b) => (b.rule.priority ?? 0) - (a.rule.priority ?? 0) || a.index - b.index);
+
+  const dead = deadRules(all);
+
+  const summary = document.createElement("div");
+  summary.className = "rules-summary";
+  const count = document.createElement("span");
+  count.textContent =
+    `${shown.length} of ${all.length} rules, ` +
+    `${(file.defaults ?? []).length} defaults, ` +
+    `${Object.keys(file.codeTreatments ?? {}).length} code treatments. ` +
+    (dead.size > 0
+      ? `${dead.size} match no line in these books — marked below. `
+      : "") +
+    "Changes are kept in this browser as you make them.";
+
+  const addButton = document.createElement("button");
+  addButton.type = "button";
+  addButton.textContent = "Add rule";
+  addButton.addEventListener("click", () => {
+    state.ruleDraft = blankDraft();
+    renderRules();
+  });
+
+  const downloadButton = document.createElement("button");
+  downloadButton.type = "button";
+  downloadButton.textContent = "Download JSON";
+  downloadButton.title = "Save the whole rule set to a file you can keep or share.";
+  downloadButton.addEventListener("click", () => downloadRules());
+
+  summary.append(count, addButton, downloadButton);
+  body.append(summary);
+
+  if (state.ruleDraft && state.ruleDraft.index === null) {
+    body.append(ruleEditor(state.ruleDraft, "Add this rule"));
+  }
+
+  const limit = 300;
+  const table = document.createElement("table");
+  table.className = "rules-table";
+  const head = document.createElement("thead");
+  head.innerHTML =
+    "<tr><th>Priority</th><th>Keyword</th><th>Account</th><th>Code</th>" +
+    "<th>To (contact)</th><th>Description</th><th>Note</th><th></th></tr>";
+  const tbody = document.createElement("tbody");
+
+  for (const { rule, index } of shown.slice(0, limit)) {
+    if (state.ruleDraft && state.ruleDraft.index === index) {
+      const editing = document.createElement("tr");
+      const cell = document.createElement("td");
+      cell.colSpan = 8;
+      cell.append(ruleEditor(state.ruleDraft, "Save this rule"));
+      editing.append(cell);
+      tbody.append(editing);
+      continue;
+    }
+
+    const tr = document.createElement("tr");
+    const cells = [
+      String(rule.priority ?? 0),
+      rule.keyword ?? "",
+      rule.account ?? "",
+      rule.code,
+      rule.contact ?? "",
+      rule.description ?? "",
+      rule.note ?? "",
+    ];
+    cells.forEach((text, column) => {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (column > 0) td.className = "rules-left";
+      if (column === 1 && rule.anyOrder === true && text !== "") {
+        const how = document.createElement("span");
+        how.className = "rule-any-order";
+        how.textContent = " any order";
+        how.title = "Its words can come in any order, with other text between them.";
+        td.append(how);
+      }
+      if (column === 1 && dead.has(index)) {
+        const flag = document.createElement("span");
+        flag.className = "rule-dead";
+        flag.textContent = "Matches nothing";
+        flag.title =
+          "No line in these books fits this rule. Compare the keyword with a bank line, " +
+          "or tick “Words in any order”.";
+        td.append(flag);
+      }
+      tr.append(td);
+    });
+
+    const actions = document.createElement("td");
+    actions.className = "rules-actions";
+    const edit = document.createElement("button");
+    edit.type = "button";
+    edit.textContent = "Edit";
+    edit.addEventListener("click", () => {
+      state.ruleDraft = toDraft(rule, index);
+      renderRules();
+    });
+    const remove = document.createElement("button");
+    remove.type = "button";
+    remove.className = "danger";
+    remove.textContent = "Delete";
+    remove.addEventListener("click", () => deleteRule(index, rule));
+    actions.append(edit, remove);
+    tr.append(actions);
+    tbody.append(tr);
+  }
+
+  table.append(head, tbody);
+  body.append(table);
+
+  if (shown.length > limit) {
+    body.append(
+      note(`Showing the first ${limit}. Search to narrow the list down to the rule you want.`),
+    );
+  }
+}
+
+/**
+ * The edit form for one rule.
+ *
+ * It reports how many transactions the rule would match before it is saved,
+ * because that is the only honest answer to what a rule actually does -- a
+ * keyword that reads as specific can match three hundred lines, and one that
+ * reads as broad can match none.
+ */
+function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "rule-editor";
+
+  const fields: [keyof RuleDraft, string, string][] = [
+    ["priority", "Priority", "0"],
+    ["keyword", "Keyword", "Text found anywhere in the bank line"],
+    ["account", "Account", "Bank account id, or blank for any"],
+    ["code", "Code", "Account to code it to"],
+    ["contact", "To (contact)", "Defaults to the keyword"],
+    ["description", "Description", "Filled in on the lines it codes"],
+    ["note", "Note", "Why this rule exists"],
+    // Narrower than a keyword: these look in one field each, and all of them
+    // have to hold. The payee is the same on every payment to Inland Revenue;
+    // which tax it was is in the particulars.
+    ["wherePayee", "Payee contains", "Narrower than a keyword — blank for any"],
+    ["whereParticulars", "Particulars contains", "e.g. GST"],
+    ["whereCode", "Bank code contains", "The bank's own code field"],
+    ["whereReference", "Reference contains", ""],
+    // The one field that identifies a counterparty when the payee will not.
+    // Some banks write the particulars into the payee, so every payment to one
+    // supplier arrives under a different name -- and all of them name the same
+    // account number.
+    ["whereOtherAccount", "Paid to/from account", "e.g. 12-3456-0012345-00"],
+  ];
+
+  const impact = document.createElement("p");
+  impact.className = "rule-impact";
+
+  const refresh = (): void => {
+    // The parts as well as the whole, because a rule may now name a field.
+    const text = state.ledger.transactions.map((t) => ({
+      account: t.account,
+      text: [t.otherParty, t.particulars, t.code, t.reference, t.otherPartyAccount]
+        .join(" ")
+        .toUpperCase(),
+      otherParty: t.otherParty,
+      particulars: t.particulars,
+      code: t.code,
+      reference: t.reference,
+      otherPartyAccount: t.otherPartyAccount,
+    }));
+    const codes = state.suggestions;
+    const result = ruleImpact(draft, text, (index) => {
+      const transaction = state.ledger.transactions[index];
+      return transaction ? (codes?.get(transaction.id)?.code ?? null) : null;
+    });
+    impact.textContent =
+      result.matches === 0
+        ? "Matches no transactions."
+        : `Matches ${result.matches} transaction${result.matches === 1 ? "" : "s"}` +
+          (result.stolen > 0
+            ? `, ${result.stolen} currently coded differently by another rule.`
+            : ".") +
+          " Lines already confirmed keep their coding.";
+  };
+
+  for (const [key, label, placeholder] of fields) {
+    if (key === "contact") {
+      // Straight after the keyword it qualifies.
+      const order = document.createElement("label");
+      order.className = "rule-field rule-check";
+      const box = document.createElement("input");
+      box.type = "checkbox";
+      box.checked = draft.anyOrder;
+      box.addEventListener("change", () => {
+        draft.anyOrder = box.checked;
+        refresh();
+      });
+      const caption = document.createElement("span");
+      caption.textContent = "Words in any order";
+      caption.title =
+        "Each word of the keyword has to be a word of the bank line, anywhere in it. " +
+        "Untick to look for the keyword as one run of text.";
+      order.append(box, caption);
+      wrap.append(order);
+    }
+    // The account is chosen, not typed: a rule naming an account that does
+    // not exist codes lines to nothing anybody can see.
+    if (key === "code") {
+      const wrapper = document.createElement("div");
+      wrapper.className = "rule-field";
+      const caption = document.createElement("span");
+      caption.textContent = label;
+      const codes = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+      const picker = combobox(codes, draft.code === "" ? null : draft.code, "Search accounts…", () => {
+        draft.code = picker.value;
+        refresh();
+      });
+      wrapper.append(caption, picker.element);
+      wrap.append(wrapper);
+      continue;
+    }
+    const wrapper = document.createElement("label");
+    wrapper.className = "rule-field";
+    const caption = document.createElement("span");
+    caption.textContent = label;
+    const input = document.createElement("input");
+    input.type = "text";
+    input.value = String(draft[key] ?? "");
+    input.placeholder = placeholder;
+    input.addEventListener("input", () => {
+      (draft[key] as string) = input.value;
+      refresh();
+    });
+    wrapper.append(caption, input);
+    wrap.append(wrapper);
+  }
+
+  const problems = document.createElement("p");
+  problems.className = "rule-problems";
+
+  const save = document.createElement("button");
+  save.type = "button";
+  save.className = "primary";
+  save.textContent = saveLabel;
+  save.addEventListener("click", () => {
+    const found = validateDraft(draft);
+    if (found.length > 0) {
+      problems.textContent = found.map((p) => p.message).join(" ");
+      return;
+    }
+    commitRule(draft);
+  });
+
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    state.ruleDraft = null;
+    redraw("rules");
+  });
+
+  const buttons = document.createElement("div");
+  buttons.className = "rule-editor-actions";
+  buttons.append(save, cancel);
+
+  refresh();
+  wrap.append(impact, problems, buttons);
+  return wrap;
+}
+
+/** Put an edited or new rule back into the set, in memory only. */
+function commitRule(draft: RuleDraft): void {
+  const file = state.rules as RuleFileShape | undefined;
+  if (!file) return;
+  const rules = [...(file.rules ?? [])];
+  const index = draft.index ?? rules.length;
+  const before = draft.index === null ? null : (rules[draft.index] ?? null);
+  // The form does not show direction, amount limits or a caution, so an edit
+  // keeps them rather than quietly dropping them.
+  const rule: CategoryRule = {
+    ...(before?.sign !== undefined ? { sign: before.sign } : {}),
+    ...(before?.minAmount !== undefined ? { minAmount: before.minAmount } : {}),
+    ...(before?.maxAmount !== undefined ? { maxAmount: before.maxAmount } : {}),
+    ...(before?.warn !== undefined ? { warn: before.warn } : {}),
+    ...fromDraft(draft),
+  };
+  if (draft.index === null) rules.push(rule);
+  else rules[draft.index] = rule;
+  void record(
+    "rule",
+    `${before === null ? "Added" : "Changed"} rule: ${rule.keyword ?? rule.account ?? "everything"} → ${rule.code}`,
+    before,
+    rule,
+    String(index),
+  );
+
+  state.rules = { ...file, rules };
+  state.ruleDraft = null;
+  reclassify();
+  void persistRules();
+}
+
+function deleteRule(index: number, rule: CategoryRule): void {
+  if (
+    !confirm(
+      `Delete the rule coding "${rule.keyword ?? rule.account ?? "everything"}" to ${rule.code}?` +
+        " Confirmed lines keep their coding.",
+    )
+  ) {
+    return;
+  }
+  const file = state.rules as RuleFileShape | undefined;
+  if (!file) return;
+  const rules = [...(file.rules ?? [])];
+  const removed = rules[index] ?? null;
+  rules.splice(index, 1);
+  void record(
+    "rule",
+    `Deleted rule: ${rule.keyword ?? rule.account ?? "everything"} → ${rule.code}`,
+    removed,
+    null,
+    String(index),
+  );
+  state.rules = { ...file, rules };
+  state.ruleDraft = null;
+  reclassify();
+  void persistRules();
+}
+
+/**
+ * Write the rule set out as JSON.
+ *
+ * Rules edited here would otherwise live only in one browser profile, where
+ * they cannot be backed up, reviewed in a diff, or moved to the command line.
+ */
+function downloadRules(): void {
+  const file = state.rules as RuleFileShape | undefined;
+  if (!file) return;
+  download(
+    `${JSON.stringify(file, null, 2)}\n`,
+    state.rulesName || "rules.json",
+    "application/json",
+  );
+}
+
+/**
+ * Loading a rule file.
+ *
+ * When one is already in use the choice is put to the user rather than
+ * guessed at: adding and replacing produce very different codings, and
+ * replacing silently would change every uncoded suggestion at once.
+ */
+export async function loadRulesFile(file: File): Promise<void> {
+  let incoming: RuleFileShape;
+  try {
+    incoming = JSON.parse(await file.text()) as RuleFileShape;
+  } catch (error) {
+    state.rulesMessage = `${file.name}: ${(error as Error).message}`;
+    redraw("rules");
+    return;
+  }
+  if (!Array.isArray(incoming.rules)) {
+    state.rulesMessage = `${file.name} has no rules array, so it is not a rule file.`;
+    redraw("rules");
+    return;
+  }
+
+  if (state.rules === undefined) {
+    await useRules(incoming, file.name, "Loaded");
+    return;
+  }
+
+  state.pendingRules = { rules: incoming, name: file.name };
+  redraw("rules");
+}
+
+/** Searching the rules, and loading a rule file. */
+export function wireRules(): void {
+  $<HTMLInputElement>("rules-search").addEventListener("input", () => redraw("rules"));
+
+  $("rules-pick").addEventListener("click", () => $<HTMLInputElement>("rules-input").click());
+  $<HTMLInputElement>("rules-input").addEventListener("change", (e) => {
+    const file = (e.target as HTMLInputElement).files?.[0];
+    if (file) void loadRulesFile(file);
+    (e.target as HTMLInputElement).value = "";
+  });
+}

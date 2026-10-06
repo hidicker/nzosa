@@ -1,0 +1,185 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Hosting NZOSA online yourself</title>
+<style>
+:root { --ink: #14171a; --quiet: #5b6570; --line: #e3e6ea; --page: #fff;
+  --soft: #f6f8fa; --link: #1a5fb4; }
+@media (prefers-color-scheme: dark) {
+  :root { --ink: #e6e9ec; --quiet: #9aa4af; --line: #2c3238; --page: #14171a;
+    --soft: #1c2126; --link: #7fb3ff; }
+}
+* { box-sizing: border-box; }
+body { margin: 0; background: var(--page); color: var(--ink);
+  font: 16px/1.65 -apple-system, "Segoe UI", system-ui, sans-serif; }
+.wrap { display: grid; grid-template-columns: 16rem minmax(0, 1fr);
+  gap: 3rem; max-width: 68rem; margin: 0 auto; padding: 2.5rem 1.5rem 6rem; }
+nav { position: sticky; top: 2.5rem; align-self: start; font-size: 0.87rem;
+  max-height: calc(100vh - 5rem); overflow-y: auto; }
+nav strong { display: block; margin-bottom: 0.6rem; font-size: 0.75rem;
+  text-transform: uppercase; letter-spacing: 0.08em; color: var(--quiet); }
+nav a { display: block; padding: 0.2rem 0; color: var(--quiet);
+  text-decoration: none; border-left: 2px solid transparent; padding-left: 0.7rem; }
+nav a:hover { color: var(--link); border-left-color: var(--link); }
+main { min-width: 0; }
+h1 { font-size: 2rem; line-height: 1.2; margin: 0 0 0.5rem; }
+h2 { font-size: 1.35rem; margin: 2.75rem 0 0.75rem; padding-top: 1.25rem;
+  border-top: 1px solid var(--line); }
+h3 { font-size: 1.05rem; margin: 1.75rem 0 0.5rem; }
+h4 { font-size: 0.95rem; margin: 1.25rem 0 0.4rem; color: var(--quiet); }
+p, li { margin: 0 0 0.85rem; }
+li { margin-bottom: 0.4rem; }
+ul, ol { padding-left: 1.35rem; margin: 0 0 1rem; }
+a { color: var(--link); }
+code { background: var(--soft); border: 1px solid var(--line); border-radius: 3px;
+  padding: 0.05em 0.35em; font-size: 0.88em;
+  font-family: ui-monospace, "Cascadia Code", Menlo, Consolas, monospace; }
+pre { background: var(--soft); border: 1px solid var(--line); border-radius: 6px;
+  padding: 0.9rem 1.1rem; overflow-x: auto; }
+pre code { background: none; border: 0; padding: 0; font-size: 0.85em; }
+.scroll { overflow-x: auto; margin: 0 0 1.25rem; }
+table { border-collapse: collapse; width: 100%; font-size: 0.92rem; }
+th { text-align: left; font-size: 0.75rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--quiet); border-bottom: 1px solid var(--quiet);
+  padding: 0 0.8rem 0.4rem 0; }
+td { padding: 0.5rem 0.8rem 0.5rem 0; border-bottom: 1px solid var(--line);
+  vertical-align: top; }
+hr { border: 0; border-top: 1px solid var(--line); margin: 2rem 0; }
+strong { font-weight: 650; }
+.foot { margin-top: 4rem; padding-top: 1.25rem; border-top: 1px solid var(--line);
+  font-size: 0.85rem; color: var(--quiet); }
+@media (max-width: 60rem) {
+  .wrap { grid-template-columns: 1fr; gap: 1.5rem; }
+  nav { position: static; max-height: none; border-bottom: 1px solid var(--line);
+    padding-bottom: 1rem; }
+}
+@media print {
+  .wrap { display: block; max-width: none; padding: 0; }
+  nav { display: none; }
+  h2 { break-before: auto; }
+  pre, table { break-inside: avoid; }
+}
+</style>
+</head>
+<body>
+  <div class="wrap">
+    <nav>
+      <strong>Contents</strong>
+      <a href="#1-what-you-end-up-with">1. What you end up with</a>
+      <a href="#2-before-you-start">2. Before you start</a>
+      <a href="#3-create-the-supabase-project">3. Create the Supabase project</a>
+      <a href="#4-set-up-the-database">4. Set up the database</a>
+      <a href="#5-deploy-the-edge-functions">5. Deploy the Edge Functions</a>
+      <a href="#6-sign-in-settings">6. Sign-in settings</a>
+      <a href="#7-point-the-web-app-at-your-project">7. Point the web app at your project</a>
+      <a href="#8-put-the-app-on-your-web-host">8. Put the app on your web host</a>
+      <a href="#9-your-first-books-online">9. Your first books online</a>
+      <a href="#10-working-through-this-with-your-ai-assistant">10. Working through this with your AI assistant</a>
+      <a href="#11-keeping-it-up-to-date">11. Keeping it up to date</a>
+      <a href="#12-security-in-short">12. Security, in short</a>
+    </nav>
+    <main>
+<h1 id="hosting-nzosa-online-yourself">Hosting NZOSA online yourself</h1>
+<p>NZOSA runs happily on your own computer with no server at all. This guide is for the other way: books kept online, reachable from any browser, shared with your bookkeeper or accountant — on <strong>your own</strong> Supabase project and <strong>your own</strong> web hosting, so nobody else holds your books.</p>
+<p>It is written to be worked through by a person, or by a person together with their own AI assistant (Claude, ChatGPT, Gemini, or similar). The steps say who does what: some things only you should do — creating accounts, typing passwords, pasting secret keys — and the AI should hand those back to you. There is a short section at the end for the AI itself.</p>
+<p><strong>Time:</strong> an hour or two the first time. <strong>Cost:</strong> Supabase's free tier and most web hosting are enough for one business's books.</p>
+<hr>
+<h2 id="1-what-you-end-up-with">1. What you end up with</h2>
+<div class="scroll"><table><thead><tr><th>Piece</th><th>What it does</th><th>Where it lives</th></tr></thead><tbody><tr><td>The web app</td><td>The NZOSA pages: plain files, no server of their own</td><td>Your web host (any static hosting)</td></tr><tr><td>Supabase: database</td><td>Your books, members and roles, locked down by row-level security</td><td>Your Supabase project</td></tr><tr><td>Supabase: auth</td><td>Sign-in with email and password, and the confirmation email</td><td>Your Supabase project</td></tr><tr><td>Supabase: Vault</td><td>Bank feed tokens, the Wise token, AI keys — encrypted, never readable by a browser</td><td>Your Supabase project</td></tr><tr><td>Supabase: Edge Functions</td><td><code>akahu</code> (bank feed), <code>wise</code> (Wise), <code>gemini</code> (AI suggestions), <code>gemini-demo</code> (an optional shared AI allowance)</td><td>Your Supabase project</td></tr><tr><td>Email (optional)</td><td>Sends sign-up confirmations from your own address</td><td>Your email provider's SMTP</td></tr></tbody></table></div>
+<p>The only keys that ever reach a browser are the Supabase <strong>project URL</strong> and <strong>publishable key</strong>. Both are public by design: they identify the project and carry no rights of their own. Everything else — the service role key, bank tokens, API keys — stays inside Supabase.</p>
+<hr>
+<h2 id="2-before-you-start">2. Before you start</h2>
+<p>You need:</p>
+<ul><li>[ ] <strong>Node.js</strong> (the LTS version) on your computer — <a href="https://nodejs.org">nodejs.org</a>.</li><li>[ ] <strong>A copy of NZOSA</strong>. The licence (GNU AGPL, with the terms in NOTICE) lets you host it for yourself or others; if you change it, offer your users its source and keep the "NZOSA, by hidicker" credit.</li><li>[ ] <strong>A Supabase account</strong> — <a href="https://supabase.com">supabase.com</a>. <em>You</em> sign up; an AI should not.</li><li>[ ] <strong>Somewhere to put the web app</strong> — any static host: GitHub Pages, Netlify, Cloudflare Pages, or ordinary shared hosting with FTP or WebDAV.</li><li>[ ] <em>Optional:</em> an email account whose SMTP details you know, to send the sign-up emails from your own address. Supabase's built-in email works for trying it out, but is limited to a few emails an hour.</li></ul>
+<p>Keep secrets out of chat and out of files you might share. If you work with an AI, keep secrets in environment variables on your computer and let the AI refer to them by name (section 10).</p>
+<hr>
+<h2 id="3-create-the-supabase-project">3. Create the Supabase project</h2>
+<p><em>You do this, in the Supabase dashboard.</em></p>
+<ol><li><strong>New project.</strong> Choose a region near you — <strong>Sydney (ap-southeast-2)</strong> for New Zealand — and a strong database password (keep it in your password manager; NZOSA never needs it).</li><li>From <strong>Project Settings → API</strong>, note: - the <strong>Project URL</strong> (<code>https://&lt;your-ref&gt;.supabase.co</code>) and <strong>project ref</strong> (<code>&lt;your-ref&gt;</code>); - the <strong>publishable key</strong> (<code>sb_publishable_…</code>) — public; - the <strong>service role / secret key</strong> — <em>secret</em>. You will not paste this anywhere in NZOSA; the Edge Functions get it from Supabase automatically.</li><li>From <strong>Account → Access Tokens</strong>, create a <strong>personal access token</strong> if you want to run the steps below from the command line (or let an AI run them). Store it as an environment variable, e.g. <code>SUPABASE_ACCESS_TOKEN</code>.</li></ol>
+<hr>
+<h2 id="4-set-up-the-database">4. Set up the database</h2>
+<p>The database is built by the files in <code>supabase/migrations/</code>, <strong>run in the order of their names</strong> (they start with a date). Each one is plain SQL.</p>
+<p><strong>Option A — the dashboard (no tools needed).</strong> Open <strong>SQL Editor</strong>, and for each file in <code>supabase/migrations/</code>, oldest first, paste its contents and run it.</p>
+<p><strong>Option B — the Supabase CLI.</strong></p>
+<pre><code>npx supabase link --project-ref &lt;your-ref&gt;</code></pre>
+<pre><code>npx supabase db push</code></pre>
+<p><strong>Check it worked.</strong> Run this in the SQL Editor. Every line should say what the comment beside it says:</p>
+<pre><code>select
+  (select count(*) from information_schema.tables
+     where table_schema = 'public'
+       and table_name in ('books','book_members','book_parts','bank_feeds','wise_feeds','ai_secrets'))
+    as tables_expected_6,
+  (select bool_and(relrowsecurity) from pg_class
+     where relname in ('books','book_parts','bank_feeds','wise_feeds'))
+    as row_security_on_expected_true,
+  has_function_privilege('authenticated', 'public.feed_secrets(uuid)', 'execute')
+    as users_can_read_bank_tokens_expected_false,
+  has_function_privilege('authenticated', 'public.wise_secret(uuid)', 'execute')
+    as users_can_read_wise_token_expected_false;</code></pre>
+<p>If the last two say <strong>true</strong>, stop: something went wrong and tokens would be readable by signed-in users. Re-run the migrations in order.</p>
+<hr>
+<h2 id="5-deploy-the-edge-functions">5. Deploy the Edge Functions</h2>
+<p>Four functions, in <code>supabase/functions/</code>. With the CLI (Docker is not needed with <code>--use-api</code>):</p>
+<pre><code>npx supabase functions deploy akahu --use-api --project-ref &lt;your-ref&gt;</code></pre>
+<pre><code>npx supabase functions deploy wise --use-api --project-ref &lt;your-ref&gt;</code></pre>
+<pre><code>npx supabase functions deploy gemini --use-api --project-ref &lt;your-ref&gt;</code></pre>
+<pre><code>npx supabase functions deploy gemini-demo --use-api --project-ref &lt;your-ref&gt;</code></pre>
+<p><code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code> are given to every function by Supabase itself — you set nothing for them.</p>
+<p><strong>Optional: a shared AI allowance.</strong> If you want people using your copy to try AI suggestions before they add a key of their own, set a Gemini API key as a function secret (<strong>Edge Functions → Secrets</strong>, or the CLI):</p>
+<pre><code>npx supabase secrets set GEMINI_API_KEY=&lt;your key&gt; --project-ref &lt;your-ref&gt;</code></pre>
+<p><code>GEMINI_MODEL</code> is optional (a current Flash model is the default). The allowance is one pool shared by everybody without a key, capped at 1,000 lines by default; change the cap in the <code>ai_demo_pool</code> table. Leave the key unset and there is simply no shared allowance — everybody uses their own key or copies prompts to an AI they already have.</p>
+<p><strong>Check it worked.</strong> A request with no sign-in should be refused, which proves the function is there and checking:</p>
+<pre><code>curl -s -X POST https://&lt;your-ref&gt;.supabase.co/functions/v1/wise -H "apikey: &lt;publishable key&gt;" -H "content-type: application/json" -d "{\"action\":\"status\",\"book\":\"x\"}"</code></pre>
+<p>It should answer <code>not signed in</code> (or a 401).</p>
+<hr>
+<h2 id="6-sign-in-settings">6. Sign-in settings</h2>
+<p><em>In the dashboard, <strong>Authentication</strong>.</em></p>
+<ol><li><strong>URL Configuration.</strong> Set <strong>Site URL</strong> to where the app will live, e.g. <code>https://books.example.co.nz/</code>, and add the same under <strong>Redirect URLs</strong>. The confirmation email links back here.</li><li><strong>Email.</strong> Keep <strong>Confirm email</strong> on: an account should belong to somebody who can read that inbox.</li><li><strong>SMTP (optional, recommended).</strong> Under <strong>SMTP Settings</strong>, enter your email provider's host, port (465 or 587), username and password, and the sender address. Two traps: the host name must match the server's certificate (your provider's own server name, which is not always <code>mail.yourdomain</code>), and if you set these through the Management API, send all the SMTP fields together and the port as text.</li></ol>
+<hr>
+<h2 id="7-point-the-web-app-at-your-project">7. Point the web app at your project</h2>
+<p>Edit <strong><code>apps/web/src/cloud-config.ts</code></strong> and put in your two public values:</p>
+<pre><code>export const CLOUD: CloudProject = {
+  url: "https://&lt;your-ref&gt;.supabase.co",
+  publishableKey: "sb_publishable_&lt;yours&gt;",
+};</code></pre>
+<p>Then build:</p>
+<pre><code>npm install</code></pre>
+<pre><code>npm run build --workspace @nzosa/web</code></pre>
+<p>The finished app is in <strong><code>apps/web/dist/</code></strong>.</p>
+<p>Leaving both values empty builds an app with no online option at all — books on the computer or in the browser only.</p>
+<hr>
+<h2 id="8-put-the-app-on-your-web-host">8. Put the app on your web host</h2>
+<p>Upload <strong>everything in <code>apps/web/dist/</code></strong>, including the hidden <code>.htaccess</code> file, to the folder your site serves — for example <code>public_html/books/</code>.</p>
+<ul><li><strong>Shared hosting (Apache):</strong> FTP, SFTP or WebDAV into the folder. The <code>.htaccess</code> sets sensible security headers and stops old copies being cached.</li><li><strong>Netlify / Cloudflare Pages / GitHub Pages:</strong> publish the <code>apps/web/dist</code> folder as the site.</li></ul>
+<p><strong>Check it worked.</strong> Open the address. Books online should offer <strong>Sign in</strong>. Create your account, confirm it from the email, and sign in.</p>
+<hr>
+<h2 id="9-your-first-books-online">9. Your first books online</h2>
+<ol><li><strong>Books → New set of books online.</strong> You are its owner.</li><li><strong>Start here</strong> walks you through the rest, the same as on the desktop: start date, entities, chart of accounts, opening balances.</li><li><strong>Invite</strong> your bookkeeper or accountant from the Books page. Roles: <em>owner</em> (everything), <em>bookkeeper</em> (codes and imports), <em>accountant</em> (reads, and can check the year).</li><li><strong>Bank feed:</strong> connect with your own Akahu personal app tokens (<a href="https://my.akahu.nz">my.akahu.nz</a> → Developers). They go into your Vault.</li><li><strong>Wise:</strong> a read-only API token from Wise (Settings → API tokens), on the Bank import page. It goes into your Vault.</li><li><strong>AI:</strong> your own key on the AI suggestions page, or the shared allowance if you set one up. It goes into your Vault.</li></ol>
+<p>Each set of books has its own tokens. Deleting a set of books deletes its tokens from the Vault too.</p>
+<hr>
+<h2 id="10-working-through-this-with-your-ai-assistant">10. Working through this with your AI assistant</h2>
+<p>Give the assistant this guide and the repository, and let it do the parts that are typing commands and checking results. Keep these for yourself:</p>
+<ul><li><strong>creating accounts</strong> (Supabase, email, hosting) and <strong>signing in</strong>;</li><li><strong>pasting any secret</strong> — store secrets as environment variables and tell the assistant their <em>names</em>, never their values;</li><li><strong>approving anything that deletes data</strong>.</li></ul>
+<p>A good way to start the conversation:</p>
+<p>&gt; I want to host NZOSA online on my own Supabase project and web host, using &gt; docs/self-hosting.md in the repository. My project ref is <code>&lt;ref&gt;</code>. My &gt; Supabase personal access token is in the environment variable &gt; <code>SUPABASE_ACCESS_TOKEN</code>; don't print it. Walk me through the guide one &gt; section at a time, run the commands you can, run each "Check it worked" &gt; step and show me the result, and stop and ask me whenever a step needs an &gt; account, a password, or a secret.</p>
+<h3 id="notes-for-the-ai-assistant">Notes for the AI assistant</h3>
+<ul><li>Work section by section and <strong>run every "Check it worked"</strong> before moving on. Report the actual output.</li><li><strong>Never ask for secrets in chat</strong> and never echo them. Read them from the environment variables the person names.</li><li><strong>Migrations run in filename order.</strong> Do not edit an old migration to fix something; add a new one.</li><li>The <strong>Management API</strong> runs SQL as the database owner: <code>POST https://api.supabase.com/v1/projects/&lt;ref&gt;/database/query</code> with <code>{"query": "…"}</code> and the personal access token as a bearer token. Send the body as UTF-8.</li><li>Supabase <strong>refuses secret API keys from requests that look like a browser</strong>; when calling with one from a script, set a plain user agent such as <code>nzosa-admin/1.0</code>.</li><li>The direct database host may be <strong>IPv6-only</strong>; if it cannot be reached, use the Management API instead of <code>psql</code>.</li><li>Edge Function <strong>CORS must allow the <code>apikey</code> header</strong>, or browsers never send the request (the functions in the repository already do).</li><li>A refusal the app reports on purpose uses <strong><code>PT4xx</code> error codes</strong> (passed through as that HTTP status). Never raise SQLSTATE <code>40001</code> for one: PostgREST retries it until the gateway times out.</li><li><strong>Inserting into <code>books</code> directly is refused</strong> by design; the app uses the <code>create_book</code> function.</li><li><strong>Do not create test users</strong> on the person's live project unless they ask you to. Prove database behaviour inside a transaction that is rolled back — for example a <code>do $$ … raise exception 'RESULT …' $$</code> block that reports what it found and undoes itself.</li><li>After any change, re-run the security check in section 4: signed-in users must not be able to execute <code>feed_secrets</code> or <code>wise_secret</code>.</li></ul>
+<hr>
+<h2 id="11-keeping-it-up-to-date">11. Keeping it up to date</h2>
+<p>When NZOSA changes:</p>
+<ol><li>Get the new code.</li><li>Run any <strong>new</strong> files in <code>supabase/migrations/</code> (by date, after the last one you ran).</li><li>Re-deploy any Edge Function whose folder changed.</li><li>Rebuild the app (section 7) and upload <code>apps/web/dist/</code> again (section 8).</li></ol>
+<p>Your books are in your database and are not touched by an update.</p>
+<hr>
+<h2 id="12-security-in-short">12. Security, in short</h2>
+<ul><li><strong>Row-level security</strong> decides every row a signed-in person can reach, by their membership and role in each set of books.</li><li><strong>Tokens and keys live in Vault</strong>, encrypted. Only the Edge Functions, using the service role, can read them — and only after checking the person asking has a role in those books.</li><li><strong>The service role key</strong> never leaves Supabase. If it ever appears in a browser, a file, or a chat, rotate it in the dashboard.</li><li><strong>Revoking</strong> is always yours: disconnect in NZOSA, and also revoke the token at Akahu, Wise or the AI provider if you want to be certain.</li><li><strong>Backups:</strong> Supabase's free tier keeps daily backups for a short time; the app's <strong>Download a backup</strong> on the Books page gives you a copy you hold.</li></ul>
+      <p class="foot">
+        NZOSA &mdash; free accounting for New Zealand. Free software under the
+        GNU AGPL v3 with the additional terms in NOTICE, provided as is and without warranty of any kind.
+        Built from <code>self-hosting.md</code>.
+      </p>
+    </main>
+  </div>
+</body>
+</html>

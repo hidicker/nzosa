@@ -1,0 +1,4042 @@
+.split-marker { font-size: 0.68rem; background: none; border: none; padding: 0; cursor: pointer;
+  color: #b45309; text-decoration: underline; }
+#check-body tr.split-detail > td { background: rgba(180,83,9,0.06); padding: 0.4rem 0.6rem 0.4rem 2rem; }
+#check-body tr.split-detail table { width: auto; font-size: 0.75rem; }
+#check-body tr.split-detail td { border: none; padding: 0.12rem 0.7rem 0.12rem 0; white-space: nowrap; }
+
+/* The three codings are the point of this table, so they get the room and the
+   headers are aligned the same way as their values. Natural column sizing, not
+   fixed widths: a fixed layout starved the coding columns to one word a line. */
+.check-scroll { overflow-x: visible; }
+.check-table { width: 100%; }
+.check-table th, .check-table td { vertical-align: top; }
+#check-body .check-table .col-date,
+#check-body .check-table .col-amount { white-space: nowrap; }
+#check-body .check-table .col-date   { text-align: left; }
+#check-body .check-table .col-amount { text-align: right; font-variant-numeric: tabular-nums; }
+#check-body .check-table .col-payee  { text-align: left; width: 10rem; max-width: 10rem;
+  white-space: normal; overflow-wrap: anywhere; }
+#check-body .check-table .col-proposed,
+#check-body .check-table .col-coded,
+#check-body .check-table .col-imported,
+#check-body .check-table .col-gst { text-align: left; padding-left: 0.55rem;
+  white-space: normal; overflow-wrap: anywhere; }
+#check-body .check-table .col-proposed { border-left: 2px solid rgba(106,75,156,0.4); }
+#check-body .check-table .col-coded    { border-left: 2px solid rgba(31,111,74,0.4); }
+#check-body .check-table .col-imported,
+#check-body .check-table .col-gst      { border-left: 2px solid rgba(180,83,9,0.4); }
+#check-body .check-table .col-use { text-align: right; white-space: normal; }
+.check-table td.col-coded:empty::after { content: "not coded"; color: rgba(128,128,128,0.65);
+  font-style: italic; }
+.check-table tbody tr:nth-child(even) { background: rgba(128,128,128,0.04); }
+
+#check-body .check-table .col-proposed { color: #6a4b9c; }
+#check-body .check-table .col-coded { color: #1f6f4a; font-weight: 600; }
+#check-body .check-table .col-imported { color: #b45309; }
+.check-table th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; }
+.check-actions { white-space: nowrap; }
+.use-button { font-size: 0.68rem; padding: 0.1rem 0.4rem; margin-left: 0.2rem; cursor: pointer;
+  border: 1px solid rgba(128,128,128,0.45); border-radius: 3px; background: transparent; color: inherit; }
+.use-button:hover { border-color: currentColor; }
+.use-button.use-recommended {
+  border-color: rgba(31, 111, 74, 0.45);
+  color: #1f6f4a;
+  background: rgba(31, 111, 74, 0.08);
+  font-weight: 600;
+}
+.use-button.use-recommended:hover {
+  border-color: #1f6f4a;
+  background: #1f6f4a;
+  color: #ffffff;
+}
+
+.check-section { margin-bottom: 2rem; }
+.check-section-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  margin: 0.4rem 0 0.75rem;
+}
+.check-select-all-label {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.35rem;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--muted);
+  cursor: pointer;
+  user-select: none;
+  padding: 0.2rem 0.45rem;
+  border-radius: 4px;
+}
+.check-select-all-label:hover {
+  color: var(--text);
+  background: rgba(128, 128, 128, 0.08);
+}
+.check-batch-btn {
+  font-size: 0.76rem;
+  padding: 0.28rem 0.65rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.12s ease;
+}
+.check-batch-btn:hover:not(:disabled) {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+  color: var(--accent);
+}
+.check-batch-btn.primary-batch {
+  border-color: rgba(31, 111, 74, 0.4);
+  background: rgba(31, 111, 74, 0.08);
+  color: #1f6f4a;
+  font-weight: 600;
+}
+.check-batch-btn.primary-batch:hover:not(:disabled) {
+  background: #1f6f4a;
+  color: #fff;
+  border-color: #1f6f4a;
+}
+.check-batch-btn:disabled {
+  opacity: 0.4;
+  cursor: not-allowed;
+}
+#check-body .check-table .col-check {
+  width: 2.2rem;
+  text-align: center;
+  vertical-align: middle;
+  padding-left: 0.3rem;
+  padding-right: 0.3rem;
+}
+#check-body .check-table .col-check input[type="checkbox"],
+.check-select-all-label input[type="checkbox"] {
+  cursor: pointer;
+  width: 14px;
+  height: 14px;
+}
+.check-table tbody tr { cursor: pointer; }
+
+.how-to { margin: 0 0 1rem; font-size: 0.82rem; }
+.how-to summary { cursor: pointer; color: #1f6f4a; font-weight: 600; }
+.how-to ol { margin: 0.5rem 0; padding-left: 1.3rem; }
+.how-to li { margin: 0.2rem 0; }
+.how-to code { background: rgba(128,128,128,0.15); padding: 0 0.2rem; border-radius: 3px; }
+
+.rules-message { font-size: 0.82rem; padding: 0.5rem 0.7rem; border-radius: 4px;
+  background: rgba(31,111,74,0.10); border-left: 3px solid #1f6f4a; margin: 0.4rem 0; }
+.rules-choice { padding: 0.7rem; border: 1px solid rgba(128,128,128,0.4); border-radius: 6px;
+  background: rgba(128,128,128,0.06); margin: 0.6rem 0; }
+.rules-choice p { margin: 0 0 0.5rem; font-size: 0.85rem; }
+.rules-choice button { margin-right: 0.4rem; font-size: 0.82rem; }
+.rules-archive { font-size: 0.8rem; margin: 0.2rem 0; color: var(--muted,#667); }
+.rules-archive button { font-size: 0.75rem; margin-left: 0.4rem; }
+
+.code-flow { font-size: 0.72rem; color: var(--muted, #667); margin-top: 0.15rem; }
+.code-flow.internal { color: #6a4b9c; }
+.code-details { font-size: 0.68rem; background: none; border: none; padding: 0.1rem 0; cursor: pointer;
+  color: var(--muted, #667); text-decoration: underline; }
+.code-raw { margin-top: 0.4rem; font-size: 0.7rem; border-collapse: collapse; }
+.code-raw th { text-align: left; font-weight: 500; color: var(--muted, #667); padding: 0.1rem 0.6rem 0.1rem 0;
+  vertical-align: top; white-space: nowrap; }
+.code-raw td { padding: 0.1rem 0; word-break: break-all; }
+
+.check-summary { display: flex; gap: 1.5rem; flex-wrap: wrap; margin: 0.5rem 0 1rem; }
+.check-stat { display: flex; flex-direction: column; }
+.check-value { font-size: 1.5rem; font-weight: 600; font-variant-numeric: tabular-nums; }
+.check-label { font-size: 0.75rem; color: var(--muted, #667); }
+#check-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin-bottom: 1rem; }
+#check-body th, #check-body td { padding: 0.3rem 0.5rem; text-align: right;
+  border-bottom: 1px solid rgba(128,128,128,0.18); }
+#check-body h3 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+.chips { display: flex; flex-wrap: wrap; gap: 0.3rem; max-width: 34rem; }
+.chip { font-size: 0.75rem; padding: 0.25rem 0.6rem; border-radius: 999px; cursor: pointer;
+  border: 1px solid rgba(128,128,128,0.45); background: transparent; color: inherit; }
+.chip:hover { border-color: currentColor; }
+.chip.on { background: #1f6f4a; border-color: #1f6f4a; color: #fff; font-weight: 600; }
+
+.gst-select { min-width: 5rem; }
+
+.split-editor { grid-column: 1 / -1; margin: 0.6rem 0 0.2rem; padding: 0.7rem;
+  border: 1px solid rgba(128,128,128,0.35); border-radius: 6px; background: rgba(128,128,128,0.05); }
+.split-rows { display: flex; flex-direction: column; gap: 0.35rem; }
+.split-row { display: grid; grid-template-columns: 7rem minmax(9rem, 1fr) 5.5rem minmax(9rem, 1.4fr) 2rem;
+  gap: 0.4rem; align-items: center; }
+.split-row input, .split-row select { font-size: 0.8rem; width: 100%; }
+.split-amount { text-align: right; font-variant-numeric: tabular-nums; }
+.journal-editor h4 { margin: 0 0 0.5rem; }
+.journal-editor-head { display: grid; grid-template-columns: 10rem 1fr; gap: 0.4rem; margin-bottom: 0.6rem; }
+.journal-editor-head input { font-size: 0.85rem; width: 100%; }
+.journal-row { display: grid; grid-template-columns: minmax(8rem, 2fr) minmax(4.5rem, 1fr) minmax(4.5rem, 1fr) minmax(6rem, 1.4fr) 2rem;
+  gap: 0.35rem; align-items: center; }
+.journal-row > * { min-width: 0; }
+.journal-row .combo { min-width: 0; max-width: none; width: 100%; }
+.journal-row .combo-input { width: 100%; }
+@media (max-width: 40rem) {
+  .journal-editor-head { grid-template-columns: 1fr; }
+  .journal-row { grid-template-columns: minmax(0, 1fr) 4.5rem 4.5rem 2rem; }
+  /* After the remove button, so each line reads account, debit, credit, remove
+     with its description underneath rather than the button on a line alone. */
+  .journal-row > input:not(.split-amount) { grid-column: 1 / -1; order: 1; }
+  .journal-columns > span:nth-child(4) { display: none; }
+}
+.journal-row input { font-size: 0.8rem; width: 100%; }
+.journal-columns { font-size: 0.75rem; opacity: 0.7; margin-bottom: 0.2rem; }
+.split-drop { border: none; background: none; cursor: pointer; font-size: 1rem; color: #c62828; }
+.split-drop:disabled { opacity: 0.3; cursor: default; }
+.split-footer { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap; margin-top: 0.6rem; }
+.split-footer button { font-size: 0.8rem; }
+.split-balance { font-size: 0.78rem; margin-left: auto; }
+.split-balance.ok { color: #2e7d32; }
+.split-balance.off { color: #c62828; font-weight: 600; }
+
+
+
+
+
+
+
+
+
+
+
+
+/* ---------- the shell: a sidebar, and everything else ---------- */
+
+/*
+ * Navigation down the side rather than across the top. Ten sections do not fit
+ * a tab strip, which is why six of them were hidden behind an "Other" menu; a
+ * column fits all ten, and can say which are daily work and which are setup.
+ */
+.shell {
+  display: flex;
+  min-height: 100vh;
+  align-items: stretch;
+}
+
+.sidebar {
+  width: 232px;
+  flex: 0 0 232px;
+  display: flex;
+  flex-direction: column;
+  background: var(--navy);
+  color: var(--on-navy);
+  padding: 18px 12px 14px;
+  position: sticky;
+  top: 0;
+  height: 100vh;
+  overflow-y: auto;
+}
+
+.sidebar-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 0 8px 18px;
+}
+
+.wordmark {
+  font-size: 17px;
+  font-weight: 650;
+  letter-spacing: 0.14em;
+  color: #fff;
+}
+
+.sidebar-nav {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  /* The list scrolls; the set of books at the foot does not. It is the only
+     way to the Books page from the menu now, and on a short window a long
+     list of sections used to push it off the bottom. */
+  flex: 1 1 auto;
+  min-height: 0;
+  overflow-y: auto;
+}
+
+.sidebar-heading {
+  margin: 18px 8px 6px;
+  font-size: 10.5px;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-navy-dim);
+}
+
+/* An author's display beats the browser's [hidden] rule, so menu items and
+   anything a module hides say so themselves -- or "hidden" shows anyway. */
+.sidebar-nav button[hidden],
+[data-module][hidden] { display: none !important; }
+
+.sidebar-nav button {
+  display: flex;
+  align-items: center;
+  gap: 11px;
+  width: 100%;
+  padding: 9px 10px;
+  border: none;
+  border-radius: 8px;
+  background: none;
+  color: var(--on-navy);
+  font-size: 13.5px;
+  font-weight: 500;
+  text-align: left;
+  cursor: pointer;
+  transition: background 0.12s, color 0.12s;
+}
+
+.sidebar-nav button svg {
+  width: 18px;
+  height: 18px;
+  flex: 0 0 18px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.5;
+  stroke-linecap: round;
+  stroke-linejoin: round;
+  opacity: 0.85;
+}
+
+.sidebar-nav button:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+.sidebar-nav button.active {
+  background: #fff;
+  color: var(--navy);
+  font-weight: 600;
+}
+
+.sidebar-nav button.active svg {
+  opacity: 1;
+}
+
+.sidebar-foot {
+  padding: 12px 8px 0;
+  border-top: 1px solid rgba(255, 255, 255, 0.09);
+  margin-top: 12px;
+  flex: 0 0 auto;
+}
+
+.sidebar .ledger-picker {
+  display: flex;
+  flex-direction: column;
+  align-items: stretch;
+  gap: 5px;
+  color: var(--on-navy-dim);
+  font-size: 11px;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+
+.sidebar .ledger-picker select {
+  width: 100%;
+  max-width: none;
+  font-size: 13px;
+  background-color: var(--navy-2);
+  border-color: rgba(255, 255, 255, 0.13);
+  color: #fff;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%238ba3bf' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+}
+
+.sidebar .theme-toggle {
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  background: transparent;
+  color: var(--on-navy-dim);
+}
+
+.sidebar .theme-toggle:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+/*
+ * Narrowed to icons rather than hidden. A menu that disappears has to be
+ * remembered; one that stays as a column of icons can still be pointed at, and
+ * each keeps its name as a tooltip.
+ */
+.shell.narrow .sidebar {
+  width: 62px;
+  flex: 0 0 62px;
+  padding-left: 8px;
+  padding-right: 8px;
+}
+
+.shell.narrow .wordmark,
+.shell.narrow .sidebar-heading,
+.shell.narrow .sidebar-foot,
+.shell.narrow .sidebar-nav button span {
+  display: none;
+}
+
+/* The theme button stays: narrowing the menu should not hide the way back to
+   a light or dark screen. It sits under the collapse button instead. */
+.shell.narrow .sidebar-head {
+  flex-direction: column;
+  gap: 8px;
+  justify-content: center;
+  padding: 0 0 14px;
+}
+
+.shell.narrow .sidebar-nav button {
+  justify-content: center;
+  padding: 10px 0;
+}
+
+.sidebar-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border: 1px solid rgba(255, 255, 255, 0.16);
+  border-radius: 8px;
+  background: transparent;
+  color: var(--on-navy-dim);
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+}
+
+.sidebar-toggle svg {
+  width: 16px;
+  height: 16px;
+  fill: none;
+  stroke: currentColor;
+  stroke-width: 1.6;
+  stroke-linecap: round;
+}
+
+.sidebar-toggle:hover {
+  background: var(--navy-2);
+  color: #fff;
+}
+
+.shell-body {
+  flex: 1;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+}
+
+/* The page name, and the one filter that qualifies every figure under it. */
+.topbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  flex-wrap: wrap;
+  padding: 20px 28px 14px;
+}
+
+.topbar h1 {
+  margin: 0;
+  font-size: 20px;
+  font-weight: 650;
+  letter-spacing: -0.01em;
+}
+
+/*
+ * Each page's own heading is now said by the topbar, so the one inside the
+ * page would say it twice.
+ */
+.page > .page-head > h2 {
+  display: none;
+}
+
+/* ---------- cards ---------- */
+
+/*
+ * The working areas sit on the page as cards rather than running edge to edge.
+ * With a tinted page behind them, a card is what makes a section look like a
+ * thing you are working on rather than a stretch of a longer document.
+ */
+.page-head,
+.toolbar,
+.dropzone,
+.balance-check,
+.summary,
+#reports-body,
+#invoices-body,
+#entities-body,
+#rules-body,
+#check-body,
+#variance-body,
+#history-body,
+#setup-body,
+.table-scroll {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+
+.page-head {
+  align-items: center;
+}
+
+/* The reconcile list is its own card, and each line a row within it. */
+#reconcile-body {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 12px;
+  padding: 4px 18px;
+}
+
+.page-hint {
+  margin-top: 0;
+}
+
+@media (max-width: 820px) {
+  /* Narrow: the sidebar becomes a strip of icons rather than disappearing, so
+     nothing has to be hunted for behind a menu. */
+  .shell {
+    flex-direction: column;
+  }
+  .sidebar {
+    width: auto;
+    flex: none;
+    height: auto;
+    position: static;
+    flex-direction: row;
+    align-items: center;
+    gap: 6px;
+    overflow-x: auto;
+    padding: 10px 12px;
+  }
+  .sidebar-head {
+    padding: 0 10px 0 4px;
+  }
+  .sidebar-nav {
+    flex-direction: row;
+    flex: 1;
+  }
+  .sidebar-nav button span {
+    display: none;
+  }
+  .sidebar-nav button {
+    padding: 8px;
+  }
+  .sidebar-heading {
+    display: none;
+  }
+  /* The set of books is the way to the Books page, so it stays -- as the name
+     alone, on the end of the strip, rather than a labelled block. Hiding it
+     here left a narrow window with no way to that page at all. */
+  .sidebar-foot {
+    display: block;
+    flex: 0 0 auto;
+    padding: 0;
+    margin: 0;
+    border-top: 0;
+  }
+  .sidebar-foot .ledger-open {
+    width: auto;
+    padding: 6px 10px;
+    flex-direction: row;
+  }
+  .sidebar-foot .ledger-open-label {
+    display: none;
+  }
+  .sidebar-foot .ledger-open-name {
+    font-size: 0.78rem;
+    white-space: nowrap;
+  }
+  main,
+  .topbar {
+    padding-left: 16px;
+    padding-right: 16px;
+  }
+}
+
+/* ---------- combobox ---------- */
+
+.combo {
+  position: relative;
+  min-width: 15rem;
+  flex: 1 1 15rem;
+  max-width: 22rem;
+}
+
+.combo-input {
+  width: 100%;
+  font: inherit;
+  font-size: 14px;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.combo-input:hover {
+  border-color: var(--muted);
+}
+
+.combo-input::placeholder {
+  color: var(--muted);
+}
+
+.combo-list {
+  position: absolute;
+  top: calc(100% + 4px);
+  left: 0;
+  right: 0;
+  z-index: 30;
+  max-height: 16rem;
+  overflow-y: auto;
+  padding: 4px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  box-shadow: 0 10px 28px rgba(0, 0, 0, 0.15), 0 2px 6px rgba(0, 0, 0, 0.08);
+}
+
+.combo-list[hidden] {
+  display: none;
+}
+
+.combo-option {
+  padding: 6px 9px;
+  border-radius: 5px;
+  font-size: 13.5px;
+  cursor: pointer;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+.combo-option:hover,
+.combo-option.on {
+  background: var(--surface-2);
+}
+
+.combo-option[aria-selected="true"] {
+  font-weight: 600;
+}
+
+.combo-empty {
+  padding: 6px 9px;
+  font-size: 13.5px;
+  color: var(--muted);
+}
+
+
+
+.page-head { display: flex; align-items: flex-start; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.page-head h2 { margin: 0; font-size: 1.15rem; }
+.page-actions { display: flex; gap: 0.6rem; align-items: flex-start; flex-wrap: wrap; }
+
+/* The coding page's toolbar, held still.
+   The account chips are a list that changes length with the books, and they
+   sat first in a wrapping row -- so the search, the filter and the buttons
+   after them moved every time the list did, and again whenever a button's own
+   label changed. The chips take a line of their own underneath now, the
+   controls keep one order above them, and the button that counts what is left
+   is wide enough for the longest thing it says. */
+#page-reconcile .page-actions { align-items: center; }
+#page-reconcile .page-actions > *:not(#reconcile-accounts) { order: 1; }
+#reconcile-accounts { order: 2; flex: 1 0 100%; max-width: none; margin-top: 0.1rem; }
+#reconcile-search { flex: 0 1 16rem; }
+/* One button that opens its two ways, rather than a picker beside a verb that
+   changes meaning depending on it. */
+.ai-menu { position: relative; display: inline-block; }
+/* The group itself starts hidden, and would have shown for books that never
+   turned this on: the same trap, one element out. */
+.ai-menu[hidden] { display: none; }
+/* Anchored to the button's left edge: it is anchored to a button that can sit
+   anywhere in a wrapping toolbar, and hanging it off the right put it off the
+   side of the screen. */
+.ai-menu-items { position: absolute; left: 0; top: calc(100% + 0.3rem); z-index: 30;
+  display: flex; flex-direction: column; min-width: 15rem;
+  background: var(--card, #fff); border: 1px solid var(--border);
+  border-radius: 6px; padding: 0.25rem; box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+.ai-menu-items button { text-align: left; border: 0; background: transparent;
+  padding: 0.45rem 0.6rem; border-radius: 4px; font-size: 0.82rem; color: inherit;
+  cursor: pointer; }
+.ai-menu-items button:hover:not(:disabled) { background: rgba(128,128,128,0.14); }
+.ai-menu-items button:disabled { opacity: 0.45; cursor: default; }
+/* An author's display beats the browser's [hidden] rule, so a menu given
+   display:flex is open whatever its hidden attribute says. It said hidden and
+   showed anyway, and the attribute was the only thing the code was setting. */
+.ai-menu-items[hidden] { display: none; }
+#reconcile-ai { min-width: 10.5rem; }
+
+.ai-notice[hidden] { display: none; }
+/* Yellow, because it is not the page talking about itself: it is an offer of
+   somebody else's key, with somebody else's bill behind it. */
+.ai-notice { background: #fff8e1; border: 1px solid #f0c36d; border-left: 4px solid #e0a800;
+  border-radius: 4px; color: #4a3c10; padding: 0.6rem 0.85rem; max-width: 52rem;
+  margin: 0 0 0.9rem; }
+.ai-notice .link-button { color: #7a5c00; font-weight: 600; }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .ai-notice { background: #3a3008; border-color: #7a6412;
+    border-left-color: #c9a227; color: #f0e2b6; }
+  :root:not([data-theme="light"]) .ai-notice .link-button { color: #ffd968; }
+}
+:root[data-theme="dark"] .ai-notice { background: #3a3008; border-color: #7a6412;
+  border-left-color: #c9a227; color: #f0e2b6; }
+:root[data-theme="dark"] .ai-notice .link-button { color: #ffd968; }
+.ai-paste[hidden] { display: none; }
+.ai-paste { border: 1px solid var(--accent); border-radius: 6px; padding: 0.7rem 0.9rem;
+  margin: 0 0 0.8rem; max-width: 52rem; }
+.ai-review-read { margin: 0.8rem 0 0; }
+.ai-review-read h4 { margin: 0 0 0.35rem; font-size: 0.92rem; }
+.ai-carry h3 { margin: 0 0 0.4rem; font-size: 1rem; }
+.ai-carry h4 { margin: 0.9rem 0 0.35rem; font-size: 0.88rem; }
+.ai-carry p { margin: 0 0 0.45rem; }
+.ai-carry textarea { width: 100%; max-width: 46rem; font: inherit; font-size: 0.8rem;
+  padding: 0.45rem 0.6rem; border-radius: 4px; }
+.ai-carry .ai-prompt[hidden] { display: none; }
+
+/* One set-up, then a choice: said, rather than left to be inferred from four
+   boxes of equal weight. */
+.ai-step { margin: 1.4rem 0 0.6rem; }
+.ai-step:first-child { margin-top: 0; }
+.ai-step h2 { margin: 0.1rem 0 0; font-size: 1.05rem; }
+.ai-step-kicker { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.08em;
+  color: var(--muted, #667); }
+.page-hint { color: var(--muted, #667); font-size: 0.85rem; margin: 0.4rem 0 1rem; }
+.toggle { font-size: 0.8rem; display: flex; align-items: center; gap: 0.3rem; }
+
+.code-row { display: grid; grid-template-columns: minmax(12rem, 2fr) 7rem minmax(20rem, 3fr); gap: 0.75rem;
+  align-items: start; padding: 0.6rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); }
+.code-row.done { opacity: 0.55; }
+.code-bank { min-width: 0; }
+.code-date { font-size: 0.75rem; color: var(--muted, #667); }
+.code-who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-what { font-size: 0.8rem; color: var(--muted, #667); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; padding-top: 0.9rem; }
+.code-amount.out { color: #c62828; }
+.code-amount.in { color: #2e7d32; }
+.code-form { display: flex; gap: 0.4rem; flex-wrap: wrap; align-items: center; }
+.code-form select { max-width: 15rem; font-size: 0.85rem; }
+.code-form input[type="text"] { flex: 1 1 12rem; font-size: 0.85rem; }
+/* The contact is a name, so it needs less room than a sentence of description
+   and should not be the field that collapses when the row gets tight. */
+.code-contact { flex: 0 1 10rem !important; }
+.code-description { flex: 2 1 14rem !important; }
+.code-form button { min-width: 4rem; }
+.code-reason { grid-column: 3; font-size: 0.75rem; color: var(--muted, #667); }
+
+/* A phone.
+   Three columns side by side need forty-odd rems between them, which is wider
+   than a phone -- so the phone zoomed the whole page out to fit, and the
+   amount, sitting in a column of its own between the transaction and the
+   coding, read as floating between the two. Stacked instead: who and what on
+   the left with the amount beside it, the coding underneath at full width. */
+@media (max-width: 700px) {
+  .code-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 0;
+  }
+  .code-bank { grid-column: 1; grid-row: 1; }
+  .code-amount { grid-column: 2; grid-row: 1; padding-top: 0; align-self: start; }
+  .code-form, .code-reason { grid-column: 1 / -1; }
+  /* One field per line: half a dozen of them wrapping in pairs is harder to
+     read than a list, and a description is the field that wants the room. */
+  .code-form { gap: 0.35rem; }
+  .code-form select,
+  .code-form input[type="text"],
+  .code-form .combo,
+  .code-contact,
+  .code-description {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+  .code-form button { flex: 0 0 auto; }
+}
+
+/* Tables, on a phone.
+   A table of accounts with a picker in every row wants seven hundred-odd
+   pixels and will not fold, so the whole page was shrunk to fit it and every
+   word on the page went with it. Each table scrolls sideways within itself
+   instead, and the page around it stays the width of the screen. */
+@media (max-width: 700px) {
+  main table {
+    display: block;
+    max-width: 100%;
+    overflow-x: auto;
+  }
+  /* A floor under every column. Without it five columns share three hundred
+     pixels, each gets sixty, and the cells break words down the middle to fit
+     -- "unat tribu ted", which is harder to read than scrolling is. With it
+     the table is wider than the screen, which is what the scrolling above is
+     for, and the words stay whole. */
+  main table th,
+  main table td {
+    min-width: 5rem;
+  }
+}
+
+#rules-body table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+#rules-body th, #rules-body td { padding: 0.3rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); text-align: right; }
+
+/*.variance { margin: 2rem 0; }
+.variance-accounts { display: flex; flex-direction: column; font-size: 0.75rem; gap: 0.15rem; }
+.variance-accounts select { font-size: 0.75rem; min-width: 15rem; }
+.variance-head { display: flex; align-items: baseline; justify-content: space-between; gap: 1rem; flex-wrap: wrap; }
+.variance-head h2 { margin: 0; font-size: 1.1rem; }
+.variance-actions { display: flex; gap: 0.5rem; }
+.variance-hint { color: var(--muted, #667); font-size: 0.85rem; margin: 0.4rem 0 1rem; }
+.variance table { width: 100%; border-collapse: collapse; font-variant-numeric: tabular-nums; }
+.variance th, .variance td { padding: 0.35rem 0.6rem; text-align: right; border-bottom: 1px solid rgba(128,128,128,0.2); }
+.variance th:first-child, .variance td:first-child { text-align: left; }
+.variance tbody tr { cursor: pointer; }
+.variance tbody tr:hover { background: rgba(128,128,128,0.08); }
+.variance tr.settled td.left { color: #2e7d32; }
+.variance tr.open td.left { color: #c62828; font-weight: 600; }
+.variance-detail { margin-top: 1.25rem; padding-top: 1rem; border-top: 2px solid rgba(128,128,128,0.3); }
+.variance-detail h3 { margin: 0 0 0.25rem; font-size: 1rem; }
+.variance-detail h4 { margin: 1rem 0 0.35rem; font-size: 0.85rem; text-transform: uppercase; letter-spacing: 0.04em; color: var(--muted, #667); }
+.variance-detail table { font-size: 0.85rem; }
+.variance-problems { color: #c62828; font-size: 0.85rem; }
+.variance-note { font-size: 0.85rem; margin: 0.2rem 0; }
+
+ * Light and dark are both defined on tokens so the page follows the reader's
+ * system setting. Colours carry meaning here -- money in versus out, and three
+ * dedupe statuses -- so each is paired with a text label rather than relying on
+ * hue alone.
+ */
+:root {
+  /* A deep bank navy rather than a bright one: this sits beside statements and
+     signed accounts, and wants to look like the bank rather than like software.
+     The page is a cool off-white so white cards lift off it. */
+  --bg: #eef1f6;
+  --surface: #ffffff;
+  --surface-2: #f4f6fa;
+  --border: #dbe1ea;
+  --text: #16202e;
+  --muted: #5d6b7f;
+  --accent: #0b3d69;
+  --accent-soft: #e6eef7;
+  --accent-text: #ffffff;
+  --navy: #0a2540;
+  --navy-2: #123457;
+  --on-navy: #dbe6f2;
+  --on-navy-dim: #8ba3bf;
+  --in: #0f6b52;
+  --out: #b3402c;
+  --review: #8a5a12;
+  --review-bg: #fdf4e3;
+  --duplicate-bg: #eceff4;
+  --danger: #b3402c;
+  --radius: 8px;
+  --mono: ui-monospace, SFMono-Regular, "SF Mono", Menlo, Consolas, monospace;
+  /* Chart series: the validated categorical pair, not the in/out green and
+     red. Those two measure 5.8 apart under protanopia, which is fine on a
+     figure that also carries a minus sign and is not fine when the colour is
+     the only thing saying which bar is which. */
+  --chart-1: #2a78d6;
+  --chart-2: #eb6834;
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) {
+    --bg: #0d151f;
+    --surface: #16202e;
+    --surface-2: #1d2937;
+    --border: #2b3a4d;
+    --text: #e7edf5;
+    --muted: #93a4bb;
+    --accent: #5aa9e6;
+    --accent-soft: #16293d;
+    --accent-text: #08192b;
+    --navy: #0a1826;
+    --navy-2: #142639;
+    --on-navy: #dbe6f2;
+    --on-navy-dim: #7f97b3;
+    --in: #4fbf9b;
+    --out: #f08a76;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --review: #e0aa5a;
+    --review-bg: #2e2617;
+    --duplicate-bg: #1a2431;
+    --danger: #f08a76;
+  }
+}
+
+:root[data-theme="dark"] {
+    --bg: #0d151f;
+    --surface: #16202e;
+    --surface-2: #1d2937;
+    --border: #2b3a4d;
+    --text: #e7edf5;
+    --muted: #93a4bb;
+    --accent: #5aa9e6;
+    --accent-soft: #16293d;
+    --accent-text: #08192b;
+    --navy: #0a1826;
+    --navy-2: #142639;
+    --on-navy: #dbe6f2;
+    --on-navy-dim: #7f97b3;
+    --in: #4fbf9b;
+    --out: #f08a76;
+    --chart-1: #3987e5;
+    --chart-2: #d95926;
+    --review: #e0aa5a;
+    --review-bg: #2e2617;
+    --duplicate-bg: #1a2431;
+    --danger: #f08a76;
+}
+
+*,
+*::before,
+*::after {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  background: var(--bg);
+  color: var(--text);
+  font: 15px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+}
+
+main {
+  padding: 0 28px 56px;
+  max-width: 1280px;
+}
+
+
+/* Brand and entity picker stack at the left edge: which entity you are looking
+   at qualifies everything on every page, so it belongs with the title rather
+   than lost among the tabs. */
+.brand {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 10px;
+}
+
+
+
+.ledger-picker {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.ledger-picker select {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--text);
+  padding: 6px 30px 6px 11px;
+  max-width: 20rem;
+}
+
+/* A single round button that says what it will do next rather than what the
+   theme currently is -- the sun on a dark page means "go light". */
+.theme-toggle {
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  border-radius: 999px;
+  font-size: 14px;
+  line-height: 1;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  color: var(--muted);
+}
+
+.theme-toggle:hover {
+  color: var(--text);
+}
+
+
+/* ---------- dropzone ---------- */
+
+.dropzone {
+  border: 2px dashed var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  padding: 32px 24px;
+  text-align: center;
+  transition: border-color 0.15s, background 0.15s;
+}
+
+.dropzone.dragging {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.dropzone-title {
+  margin: 0;
+  font-size: 18px;
+  font-weight: 600;
+}
+
+.dropzone-sub {
+  margin: 4px 0 16px;
+  color: var(--muted);
+  font-size: 14px;
+}
+
+.options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 20px;
+  justify-content: center;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  text-align: left;
+}
+
+.options label {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+  font-size: 13px;
+  font-weight: 600;
+}
+
+.options label.checkbox {
+  display: grid;
+  grid-template-columns: auto 1fr;
+  align-items: center;
+  gap: 4px 8px;
+}
+
+.options label.checkbox small {
+  grid-column: 2;
+}
+
+.options small {
+  font-weight: 400;
+  color: var(--muted);
+  max-width: 34ch;
+}
+
+input[type="text"],
+input[type="search"],
+input[type="number"],
+input[type="date"],
+textarea {
+  font: inherit;
+  padding: 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+input[type="text"]:hover,
+input[type="search"]:hover,
+input[type="number"]:hover,
+select:hover {
+  border-color: var(--muted);
+}
+
+/*
+ * Selects were the one control left entirely unstyled, so every browser drew
+ * its own native widget -- which is what made the app look a decade older than
+ * it is. `appearance: none` drops the OS chrome; the caret is then a background
+ * SVG, and the right padding is what stops the text running under it.
+ *
+ * The caret is inlined per colour scheme because a data: URI cannot read a CSS
+ * variable.
+ */
+select {
+  font: inherit;
+  padding: 7px 30px 7px 10px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background-color: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  appearance: none;
+  -webkit-appearance: none;
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%236b6558' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 10px 6px;
+  transition: border-color 0.12s, box-shadow 0.12s;
+}
+
+/* An option list is drawn by the OS, so it does not inherit the page colours.
+   Setting them explicitly stops white-on-white text in dark mode. */
+select option {
+  background: var(--surface);
+  color: var(--text);
+}
+
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 10 6'%3E%3Cpath d='M1 1l4 4 4-4' fill='none' stroke='%239aa0aa' stroke-width='1.6' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E");
+  }
+}
+
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 1px;
+}
+
+/* The entity picker qualifies every figure on every page, so it is the one
+   control that reads as a control rather than as text. */
+.entity-filter {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 13px;
+  color: var(--muted);
+}
+
+.entity-filter select {
+  font-size: 14px;
+  font-weight: 550;
+  color: var(--text);
+  padding: 6px 30px 6px 11px;
+  max-width: 22rem;
+}
+
+input:focus-visible,
+button:focus-visible {
+  outline: 2px solid var(--accent);
+  outline-offset: 2px;
+}
+
+/* ---------- buttons ---------- */
+
+button {
+  font: inherit;
+  padding: 7px 14px;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+}
+
+button:hover {
+  background: var(--surface-2);
+}
+
+button.primary {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+button.primary:hover {
+  filter: brightness(1.08);
+}
+
+button.danger {
+  color: var(--danger);
+}
+
+button.active {
+  background: var(--accent);
+  border-color: var(--accent);
+  color: var(--accent-text);
+  font-weight: 600;
+}
+
+/* ---------- messages ---------- */
+
+.busy,
+.warning {
+  margin: 16px 0 0;
+  padding: 10px 14px;
+  border-radius: 6px;
+  background: var(--surface-2);
+  font-size: 14px;
+}
+
+.warning {
+  background: var(--review-bg);
+  color: var(--review);
+  border: 1px solid currentColor;
+}
+
+.reports {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 12px;
+  margin-top: 16px;
+}
+
+.report {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+  font-size: 13px;
+}
+
+.report.error {
+  border-color: var(--danger);
+  color: var(--danger);
+}
+
+.report p {
+  margin: 4px 0 0;
+  color: var(--muted);
+}
+
+.report.error p {
+  color: inherit;
+}
+
+.report details {
+  margin-top: 8px;
+}
+
+.report summary {
+  cursor: pointer;
+  color: var(--review);
+}
+
+.report ul {
+  margin: 8px 0 0;
+  padding-left: 18px;
+  color: var(--muted);
+}
+
+.report code {
+  font-family: var(--mono);
+  font-size: 12px;
+}
+
+/* ---------- stats ---------- */
+
+.stats {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(140px, 1fr));
+  gap: 12px;
+  margin: 24px 0 16px;
+}
+
+.stat {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 14px 16px;
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.stat-value {
+  font-size: 22px;
+  font-weight: 650;
+  font-variant-numeric: tabular-nums;
+}
+
+.stat.wide .stat-value {
+  font-size: 15px;
+  font-family: var(--mono);
+}
+
+.stat-label {
+  font-size: 12px;
+  color: var(--muted);
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+}
+
+/* ---------- toolbar ---------- */
+
+.toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 12px;
+  align-items: center;
+  margin-bottom: 12px;
+}
+
+.filters {
+  display: flex;
+  gap: 6px;
+}
+
+.toolbar input[type="search"] {
+  flex: 1 1 220px;
+  min-width: 0;
+}
+
+.ledger-actions {
+  display: flex;
+  gap: 6px;
+  margin-left: auto;
+}
+
+/* ---------- table ---------- */
+
+.table-scroll {
+  overflow-x: auto;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+
+table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 14px;
+}
+
+th {
+  text-align: left;
+  font-size: 12px;
+  text-transform: uppercase;
+  letter-spacing: 0.05em;
+  color: var(--muted);
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  background: var(--surface-2);
+  white-space: nowrap;
+  position: sticky;
+  top: 0;
+}
+
+td {
+  padding: 10px 12px;
+  border-bottom: 1px solid var(--border);
+  vertical-align: top;
+}
+
+tr:last-child td {
+  border-bottom: none;
+}
+
+tr.status-duplicate {
+  background: var(--duplicate-bg);
+  color: var(--muted);
+}
+
+tr.status-review {
+  background: var(--review-bg);
+}
+
+.date,
+.source {
+  font-family: var(--mono);
+  font-size: 12px;
+  white-space: nowrap;
+}
+
+.amount {
+  font-family: var(--mono);
+  font-variant-numeric: tabular-nums;
+  text-align: right;
+  white-space: nowrap;
+  font-weight: 600;
+}
+
+.amount.in {
+  color: var(--in);
+}
+
+.amount.out {
+  color: var(--out);
+}
+
+.amount .ccy {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.amount .foreign {
+  display: block;
+  font-size: 11px;
+  font-weight: 400;
+  color: var(--muted);
+}
+
+.party {
+  font-weight: 550;
+  min-width: 14ch;
+}
+
+.detail,
+.account {
+  color: var(--muted);
+  font-size: 13px;
+}
+
+.source {
+  color: var(--muted);
+  max-width: 22ch;
+  overflow-wrap: anywhere;
+}
+
+.empty {
+  text-align: center;
+  color: var(--muted);
+  padding: 32px 12px;
+}
+
+/* ---------- status chips ---------- */
+
+.chip {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 999px;
+  font-size: 11px;
+  font-weight: 650;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  border: 1px solid currentColor;
+}
+
+.chip.unique {
+  color: var(--in);
+}
+
+.chip.review {
+  color: var(--review);
+}
+
+.chip.duplicate {
+  color: var(--muted);
+}
+
+.reason {
+  margin: 6px 0 0;
+  font-size: 12px;
+  color: var(--muted);
+  max-width: 46ch;
+}
+
+.actions {
+  display: flex;
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.actions button {
+  padding: 4px 9px;
+  font-size: 12px;
+}
+
+/* ---------- help ---------- */
+
+.help {
+  margin-top: 40px;
+  padding-top: 24px;
+  border-top: 1px solid var(--border);
+}
+
+.help h2 {
+  font-size: 15px;
+  text-transform: uppercase;
+  letter-spacing: 0.06em;
+  color: var(--muted);
+  margin: 24px 0 10px;
+}
+
+.help h2:first-child {
+  margin-top: 0;
+}
+
+.help ul {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+  gap: 10px;
+}
+
+.help li {
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  padding: 12px 14px;
+}
+
+.help li span {
+  display: block;
+  color: var(--muted);
+  font-size: 13px;
+  margin-top: 4px;
+}
+
+.help p {
+  max-width: 78ch;
+  color: var(--muted);
+}
+
+footer {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 24px 20px 40px;
+  border-top: 1px solid var(--border);
+  color: var(--muted);
+  font-size: 13px;
+}
+
+@media (max-width: 640px) {
+
+  .ledger-actions {
+    margin-left: 0;
+  }
+
+  .options {
+    flex-direction: column;
+    align-items: stretch;
+  }
+}
+
+.code-warn {
+  grid-column: 1 / -1;
+  margin-top: 0.35rem;
+  padding: 0.4rem 0.6rem;
+  border-left: 3px solid #b26a00;
+  background: #fff6e5;
+  color: #7a4b00;
+  font-size: 0.85rem;
+  border-radius: 0 3px 3px 0;
+}
+
+/* Rules editor ---------------------------------------------------------- */
+.rules-summary { display: flex; gap: 0.5rem; align-items: center; flex-wrap: wrap;
+  margin: 0.6rem 0; font-size: 0.85rem; color: var(--muted, #667); }
+.rules-summary button { margin-left: 0.2rem; }
+.rules-dirty { color: #b26a00; font-weight: 600; }
+.rules-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; }
+.rules-table th, .rules-table td { padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(128,128,128,0.18); text-align: right;
+  vertical-align: top; }
+.rules-table td.rules-left, .rules-table th { text-align: left;
+  white-space: normal; overflow-wrap: anywhere; }
+.rules-table .rules-actions { text-align: right; white-space: nowrap; }
+.rules-table .rules-actions button { font-size: 0.75rem; padding: 0.15rem 0.45rem;
+  margin-left: 0.2rem; }
+
+.rule-editor { display: grid; grid-template-columns: repeat(auto-fit, minmax(11rem, 1fr));
+  gap: 0.5rem; padding: 0.7rem; margin: 0.4rem 0;
+  border: 1px solid rgba(128,128,128,0.35); border-radius: 6px;
+  background: rgba(128,128,128,0.05); text-align: left; }
+.rule-field { display: flex; flex-direction: column; gap: 0.15rem; font-size: 0.75rem; }
+.rule-field span { color: var(--muted, #667); }
+.rule-field input { font-size: 0.85rem; width: 100%; }
+.rule-impact { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; color: var(--muted, #667); }
+.rule-problems { grid-column: 1 / -1; margin: 0; font-size: 0.8rem; color: #c62828; }
+.rule-editor-actions { grid-column: 1 / -1; display: flex; gap: 0.4rem; }
+
+/* Entities -------------------------------------------------------------- */
+.entity-list { display: flex; flex-direction: column; gap: 0.35rem; margin: 0.6rem 0; }
+/* One entity is two lines: what it is on the first, how it appears on an
+   invoice on the second. It used to be one non-wrapping line, and adding the
+   billing fields to it stretched every control to the height of the tallest
+   and left the row sprawling. */
+.entity-chip { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  font-size: 0.85rem; padding: 0.5rem 0.6rem;
+  border: 1px solid rgba(128,128,128,0.3); border-radius: 5px; }
+.entity-chip > span { flex: 1; }
+.entity-chip > button { font-size: 0.75rem; padding: 0.15rem 0.5rem; }
+.entity-table { width: 100%; border-collapse: collapse; font-size: 0.8rem; margin: 0.4rem 0 1rem; }
+.entity-table th, .entity-table td { padding: 0.3rem 0.5rem;
+  border-bottom: 1px solid rgba(128,128,128,0.18); text-align: center; }
+.entity-table th:first-child, .entity-table td.entity-left { text-align: left; }
+.entity-table select { font-size: 0.8rem; max-width: 14rem; }
+
+/* The check page compares three codings side by side, so it is the one page
+   where the 1200px reading measure costs more than it gives: every column it
+   saves comes off the codings being compared. Let it use the window. */
+main:has(#page-check:not([hidden])) { max-width: none; }
+
+/* Breaking anywhere is right for an account name that must fit a narrow
+   column; it is wrong for a heading or a two-word placeholder, which then
+   read as "YOU COD ED". */
+#check-body .check-table th { overflow-wrap: normal; word-break: keep-all; }
+#check-body .check-table td.col-coded:empty::after { white-space: nowrap; }
+
+/* Accounts editor -------------------------------------------------------- */
+.account-add { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.5rem 0 0.8rem; }
+.account-add input { font-size: 0.85rem; }
+.account-add input:first-child { max-width: 8rem; }
+.account-add input:nth-child(2) { min-width: 18rem; flex: 1; }
+.accounts-table select { font-size: 0.8rem; }
+/* An account with no GST treatment is the one thing on this page that will
+   quietly produce a wrong return, so it does not look like an empty field. */
+.accounts-table select.gst-unset { border-color: #b26a00; color: #7a4b00; background: #fff6e5; }
+
+/* Reports ---------------------------------------------------------------- */
+.report-table { width: 100%; max-width: 46rem; border-collapse: collapse;
+  font-size: 0.85rem; margin: 0.5rem 0 1.4rem; }
+.report-table td { padding: 0.28rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.15); }
+.report-name { text-align: left; }
+.report-count { text-align: right; width: 3rem; color: var(--muted, #667); font-size: 0.75rem; }
+.report-amount { text-align: right; font-variant-numeric: tabular-nums; width: 8rem; }
+.report-table tr.report-section td { font-weight: 600; padding-top: 0.8rem; border-bottom: none; }
+.report-table tr.report-total td { border-top: 1px solid rgba(128,128,128,0.5);
+  border-bottom: none; font-weight: 600; }
+.report-table tr.report-net td { border-top: 2px solid rgba(128,128,128,0.6);
+  border-bottom: 2px double rgba(128,128,128,0.6); font-weight: 700; padding-top: 0.4rem; }
+.accounts-table select.type-unset { border-color: #b26a00; color: #7a4b00; background: #fff6e5; }
+
+.entity-owners-wrap input.entity-owners { flex: 0 0 auto; font-size: 0.8rem; width: 100%; }
+.entity-chip > select { font-size: 0.8rem; }
+.entity-chip > span { flex: 0 1 20rem; }
+.owner-table th { text-align: right; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.03em; padding: 0.3rem 0.5rem; color: var(--muted, #667); }
+.owner-table th:first-child, .owner-table th:nth-child(2) { text-align: left; }
+
+.extra-add { display: flex; gap: 0.4rem; flex-wrap: wrap; margin: 0.4rem 0 1.5rem; }
+.extra-add input, .extra-add select { font-size: 0.85rem; }
+.extra-add input { max-width: 12rem; }
+.depreciation-table td.report-name { max-width: 22rem; white-space: normal; overflow-wrap: anywhere; }
+.depreciation-table { max-width: 64rem; }
+.depreciation-table td.report-name:first-child { min-width: 24rem; max-width: 34rem; }
+.depreciation-table td:nth-child(2) { white-space: nowrap; overflow-wrap: normal; }
+.report-table td button.danger { font-size: 0.7rem; padding: 0.1rem 0.4rem; }
+
+#invoices-body .owner-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+#invoices-body h3 { font-size: 0.95rem; margin: 1.2rem 0 0.4rem; }
+
+
+/* An invoice line sits under the bank line it settles, not beside it: it is a
+   statement about the whole row, and it is only there when there is one. */
+.code-invoice { grid-column: 1 / -1; display: flex; gap: 0.4rem; align-items: center;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #1f6f4a; background: rgba(31,111,74,0.06);
+  border-radius: 0 3px 3px 0; }
+.code-invoice select { font-size: 0.8rem; max-width: 30rem; }
+/* A statement of fact that happens to be clickable: it reads as text, and
+   says on hover that the answer can be changed. */
+.code-invoice .invoice-matched {
+  font-weight: 600;
+  color: #1f6f4a;
+  background: none;
+  border: 0;
+  padding: 0;
+  font-family: inherit;
+  font-size: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+
+.code-invoice .invoice-matched:hover {
+  text-decoration: underline;
+}
+
+/* Found rather than decided, so it is worth a second look. */
+.code-invoice .invoice-auto {
+  font-weight: 400;
+  color: var(--muted);
+}
+
+/* A transfer is not a coding decision, so it reads differently from the invoice
+   row above it: violet rather than the green used for money earned or spent. */
+.code-transfer { grid-column: 1 / -1; display: flex; gap: 0.4rem; align-items: center;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #6a4b9c; background: rgba(106,75,156,0.06);
+  border-radius: 0 3px 3px 0; }
+.code-transfer select { font-size: 0.8rem; max-width: 30rem; }
+.code-transfer .transfer-matched { font-weight: 600; color: #6a4b9c; }
+
+/* A split says what the line is, so it reads first and in its own colour:
+   amber, neither the invoice green nor the transfer violet. */
+.code-split { grid-column: 1 / -1; display: flex; gap: 0.5rem; align-items: baseline;
+  flex-wrap: wrap; margin-top: 0.35rem; padding: 0.3rem 0.55rem; font-size: 0.8rem;
+  border-left: 3px solid #b8860b; background: rgba(184, 134, 11, 0.06); }
+.code-split .split-matched { font-weight: 600; color: #8a6508; }
+.code-split .split-parts { color: var(--muted); }
+
+/* The balance sheet. Section headings and totals carry the structure, because
+   a reader follows the shape of the statement before any figure on it. */
+.balance-sheet .bs-section td { font-weight: 600; padding-top: 0.7rem; border-bottom: 1px solid var(--border); }
+.balance-sheet .bs-total td { font-weight: 600; }
+.opening-heading { margin-top: 2rem; }
+.opening-table { max-width: 46rem; }
+.opening-table.multi-year { max-width: 100%; }
+.opening-table.multi-year th { text-align: right; font-size: 0.75rem; padding: 0.35rem 0.5rem; }
+.opening-table.multi-year th:first-child,
+.opening-table.multi-year th:nth-child(2) { text-align: left; }
+.opening-table.multi-year th .opening-col-sub { display: block; font-weight: 400; font-size: 0.7rem; color: var(--muted, #667); }
+.opening-table.multi-year td.amount { text-align: right; font-variant-numeric: tabular-nums; }
+.opening-table.multi-year td.type-cell { color: var(--muted, #667); font-size: 0.75rem; }
+.opening-table.multi-year .diff-ok { color: #1f6f4a; font-weight: 600; }
+.opening-table.multi-year .diff-bad { color: #c62828; font-weight: 700; }
+.opening-table .credit-val { color: var(--text); }
+
+/* A payout is worth interrupting for: coding it as it arrives is wrong in
+   three places at once, and it looks like an ordinary receipt. */
+/* A journal is read for its narration first: the figures keep, the reason does not. */
+.journal-card { margin: 0.9rem 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--border); }
+.journal-card.journal-broken { border-left-color: #a33; }
+.journal-narration { font-weight: 600; margin: 0 0 0.4rem; }
+
+.payout-banner { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+  margin: 0.6rem 0; padding: 0.6rem 0.8rem; font-size: 0.85rem;
+  border-left: 3px solid #b8860b; background: rgba(184, 134, 11, 0.08); }
+.coding-reconciliation-warning { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;
+  margin: 0.6rem 0 1rem; padding: 0.65rem 0.85rem; font-size: 0.85rem;
+  border-left: 3px solid #c62828; background: rgba(198, 40, 40, 0.12); }
+.coding-reconciliation-warning button.link-button { font-weight: 600; text-decoration: underline; cursor: pointer; }
+.highlight-flash { animation: flash-highlight 2.2s ease-out; }
+@keyframes flash-highlight {
+  0% { background-color: rgba(234, 179, 8, 0.45); }
+  100% { background-color: transparent; }
+}
+.balance-sheet .bs-total td:first-child { padding-left: 1rem; }
+.balance-sheet .bs-grand td { font-weight: 700; border-top: 2px solid var(--border);
+  border-bottom: 2px solid var(--border); }
+.balance-sheet tbody tr:not(.bs-section):not(.bs-total):not(.bs-grand) td:first-child { padding-left: 1rem; }
+
+/* Gathering several invoices against one payment. The chips are removable and
+   the tally says whether the set adds up, which is the only way to see that a
+   choice is right before committing to it. */
+.invoice-gathered { display: inline-flex; gap: 0.3rem; flex-wrap: wrap; }
+.invoice-chip { font-size: 0.75rem; padding: 0.1rem 0.4rem; border: 1px solid var(--border);
+  border-radius: 999px; background: var(--card); cursor: pointer; font-family: inherit; }
+.invoice-chip:hover { border-color: #a33; color: #a33; }
+.invoice-tally { font-size: 0.75rem; color: var(--muted); }
+.invoice-tally-exact { color: #1f6f4a; font-weight: 600; }
+.invoice-tally-over { color: #a33; font-weight: 600; }
+
+/* Found rather than agreed to, so it is worth a second look. */
+.code-transfer .transfer-auto { font-weight: 400; color: var(--muted); }
+
+/* ---------- invoice matching ---------- */
+
+/*
+ * A matching decision needs the evidence on screen, so these cells stack a
+ * heading over its detail rather than showing an invoice number alone. The
+ * detail lines are quieter than the heading so a column still scans vertically.
+ */
+.match-table { width: 100%; }
+.match-table td { vertical-align: top; }
+
+/* Figures should take only what they need, so the descriptive columns get the
+   rest. Left to itself the browser gave every amount column the same width as
+   its heading and squeezed "Why" to a character a line. */
+.match-table td.report-amount,
+.match-table th { white-space: nowrap; }
+.match-table td.report-amount { width: 1%; }
+
+.match-why { white-space: normal; min-width: 12rem; font-size: 0.78rem; }
+
+/* The two stacked cells carry the evidence, so they get a floor. Without it the
+   browser gave them less room than the figures and broke the contact name and
+   the payee across four lines each. */
+.match-table td.match-cell { min-width: 11rem; }
+
+/* ---------- writing an invoice ---------- */
+
+.invoice-editor {
+  margin: 1rem 0 1.5rem;
+  padding: 1rem 1.1rem 1.2rem;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.invoice-editor h3 { margin: 0 0 0.8rem; font-size: 1rem; }
+.invoice-editor h4 { margin: 1rem 0 0.5rem; font-size: 0.85rem; color: var(--muted); }
+
+.invoice-fields {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.7rem 1rem;
+}
+
+.invoice-fields label { display: flex; flex-direction: column; gap: 0.25rem; }
+.invoice-fields label > span { font-size: 0.75rem; color: var(--muted); }
+.invoice-fields small { font-size: 0.7rem; color: var(--muted); }
+
+.invoice-lines { display: flex; flex-direction: column; gap: 0.4rem; }
+
+/* Description, account, tax, amount, remove. The account is a combobox, which
+   brings its own width, so it is given a column rather than left to flex. */
+.invoice-line {
+  display: grid;
+  grid-template-columns: minmax(10rem, 2fr) minmax(11rem, 1.4fr) 9rem 7rem 2rem;
+  gap: 0.4rem;
+  align-items: center;
+}
+
+.invoice-line .combo { min-width: 0; max-width: none; }
+.invoice-line input, .invoice-line select { width: 100%; font-size: 0.85rem; }
+.invoice-amount { text-align: right; font-variant-numeric: tabular-nums; }
+
+.line-drop {
+  border: none;
+  background: none;
+  cursor: pointer;
+  font-size: 1rem;
+  color: var(--danger);
+  padding: 0;
+}
+
+.invoice-totals {
+  margin: 0.7rem 0 0;
+  font-size: 0.85rem;
+  font-variant-numeric: tabular-nums;
+  font-weight: 600;
+}
+
+.invoice-actions { display: flex; gap: 0.4rem; margin-top: 0.9rem; flex-wrap: wrap; }
+
+/* ---------- clearing everything ---------- */
+
+/* The typing box is the safeguard, so it is given room rather than tucked
+   beside the button as an afterthought. */
+.clear-form { display: flex; flex-direction: column; gap: 0.5rem; align-items: flex-start;
+  margin: 0.6rem 0 1rem; padding: 0.8rem 0.9rem; border: 1px solid var(--danger);
+  border-radius: 8px; background: rgba(163,58,42,0.05); max-width: 34rem; }
+.clear-form label { display: flex; flex-direction: column; gap: 0.3rem; width: 100%; }
+.clear-form label > span { font-size: 0.78rem; color: var(--muted); }
+.clear-form input { width: 100%; }
+.clear-form button:disabled { opacity: 0.45; cursor: not-allowed; }
+
+/* Said before the typing box rather than after it: it changes whether you want
+   to clear at all. */
+.clear-reload { font-size: 0.82rem; margin: 0.4rem 0 0.2rem; padding: 0.5rem 0.7rem;
+  border-left: 3px solid var(--review); background: var(--review-bg); color: var(--review);
+  border-radius: 0 4px 4px 0; max-width: 46rem; }
+
+/* ---------- bank balance check ---------- */
+
+.balance-check { margin: 1.2rem 0; padding: 0.9rem 1rem; border: 1px solid var(--border);
+  border-radius: 10px; background: var(--surface); }
+.balance-head { display: flex; align-items: center; gap: 0.7rem; flex-wrap: wrap; }
+.balance-head h3 { margin: 0; font-size: 0.95rem; }
+.balance-check .page-hint { margin: 0.4rem 0 0.8rem; }
+.balance-ok { font-weight: 600; color: #1f6f4a; margin: 0 0 0.6rem; }
+.balance-off { font-weight: 600; color: #b45309; margin: 0 0 0.6rem; }
+
+/* The differing days, listed under the account they belong to. */
+.balance-detail { padding: 0.3rem 0 0.6rem 1.4rem; font-size: 0.75rem;
+  font-variant-numeric: tabular-nums; color: var(--muted); }
+.balance-detail div { line-height: 1.5; white-space: pre; }
+#balances-body td.report-name:first-child { min-width: 16rem; white-space: normal; }
+
+
+
+
+
+.match-cell strong {
+  display: block;
+  font-weight: 600;
+}
+
+.match-sub {
+  font-size: 0.72rem;
+  color: var(--muted, #667);
+  line-height: 1.4;
+  max-width: 24rem;
+  overflow-wrap: anywhere;
+}
+
+.match-lines div {
+  font-size: 0.75rem;
+  line-height: 1.5;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  max-width: 30rem;
+}
+
+/* A difference is the reason a row is a proposal rather than a match. */
+.match-off { color: #b45309; font-weight: 600; }
+.match-ok { color: #1f6f4a; }
+
+/* IRD records: a flagged row stands out; one the books do not hold is quieter. */
+.ird-record { margin-bottom: 1.5rem; }
+.ird-table tr.ird-differs td { background: rgba(180, 83, 9, 0.08); }
+.ird-table tr.ird-not-held td, .ird-table tr.ird-outside-books td { color: var(--muted, #6b7280); }
+.ird-paste-box { margin: 0.5rem 0 1rem; }
+.ird-paste-box textarea { width: 100%; box-sizing: border-box; margin: 0.5rem 0; }
+.ird-not-held li { margin: 0.25rem 0; }
+
+
+.journal-balanced { color: #1f6f4a; font-weight: 600; font-size: 0.85rem; margin: 0.4rem 0; }
+.journal-out { color: #c62828; font-weight: 700; font-size: 0.85rem; margin: 0.4rem 0; }
+
+/* What the app read for itself, said once where every page can see it. */
+.startup-status { max-width: 1200px; margin: 0 auto; padding: 0 20px 0.4rem;
+  font-size: 0.75rem; color: var(--muted, #667); }
+
+/* History ---------------------------------------------------------------- */
+.who-label { display: inline-flex; align-items: center; gap: 0.35rem; font-size: 0.75rem;
+  color: var(--muted, #667); }
+.who-label input { font-size: 0.85rem; max-width: 10rem; }
+#history-body .owner-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+.event-reverted { opacity: 0.5; }
+.event-reverted td.report-name { text-decoration: line-through; }
+.event-undone { font-size: 0.7rem; color: var(--muted, #667); text-transform: uppercase;
+  letter-spacing: 0.04em; }
+
+/* Setup ------------------------------------------------------------------ */
+.setup-progress { font-size: 0.9rem; font-weight: 600; margin: 0.5rem 0; }
+.setup-steps { display: flex; flex-direction: column; gap: 0.4rem; margin-bottom: 1.6rem; }
+.setup-step { display: flex; gap: 0.7rem; align-items: flex-start;
+  padding: 0.55rem 0.7rem; border: 1px solid rgba(128,128,128,0.28); border-radius: 5px; }
+.setup-step.done { border-color: rgba(31,111,74,0.4); background: rgba(31,111,74,0.05); }
+.setup-step > div { flex: 1; }
+.setup-title { display: flex; flex-wrap: wrap; align-items: baseline; gap: 0.25rem; }
+.setup-what-sub { font-size: 0.82rem; font-weight: 400; color: var(--muted, #667); }
+.setup-mark { width: 1rem; color: #1f6f4a; font-weight: 700; }
+.setup-detail { font-size: 0.8rem; color: var(--muted, #667); margin-top: 0.1rem; }
+.setup-unlocks { font-size: 0.78rem; color: #6a4b9c; margin-top: 0.15rem; }
+.setup-step button { font-size: 0.75rem; padding: 0.2rem 0.6rem; }
+.setup-go { display: flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+.setup-table td.report-name { white-space: normal; overflow-wrap: anywhere; }
+
+.excel-extract-controls { display: flex; gap: 0.4rem; align-items: center; flex-wrap: wrap;
+  margin-top: 0.35rem; }
+.excel-extract-controls select { font-size: 0.8rem; max-width: 16rem; }
+.excel-extract-controls button { font-size: 0.78rem; padding: 0.2rem 0.6rem; }
+
+/* Books kept on a server ---------------------------------------------------- */
+.cloud-form { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: flex-end;
+  margin: 0.6rem 0; max-width: 34rem; }
+.cloud-form label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem;
+  font-weight: 600; flex: 1 1 14rem; }
+.cloud-form input { font-size: 0.95rem; padding: 0.35rem 0.45rem; width: 100%;
+  box-sizing: border-box; }
+.cloud-said { font-size: 0.85rem; color: var(--muted, #667); margin: 0.3rem 0 0.8rem; }
+.cloud-said.bad { color: var(--warn, #b45309); }
+.cloud-who { font-size: 0.9rem; display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; }
+.cloud-add { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.8rem 0; }
+.cloud-add input { font-size: 0.95rem; padding: 0.35rem 0.45rem; flex: 1 1 18rem; max-width: 24rem; }
+.backup-tools { display: flex; gap: 0.5rem; flex-wrap: wrap; margin: 0.4rem 0 1.4rem; }
+
+/* Migration (on trial) ----------------------------------------------------- */
+.migration-card { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;
+  padding: 0.8rem 1rem; margin: 0 0 0.8rem; max-width: 54rem; }
+.migration-card.done { border-color: rgba(31,111,74,0.4); }
+.migration-card h3 { display: flex; gap: 0.6rem; align-items: center; margin: 0 0 0.4rem; font-size: 1rem; }
+.migration-card h4 { margin: 1rem 0 0.3rem; font-size: 0.9rem; }
+.migration-num { display: inline-flex; align-items: center; justify-content: center; flex: 0 0 auto;
+  width: 1.5rem; height: 1.5rem; border-radius: 50%; background: rgba(128,128,128,0.15);
+  font-size: 0.8rem; font-weight: 700; }
+.migration-card.done .migration-num { background: rgba(31,111,74,0.15); color: #1f6f4a; }
+.migration-choices { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr));
+  gap: 0.5rem; margin: 0.5rem 0; }
+.migration-choice { display: flex; flex-direction: column; align-items: flex-start; gap: 0.2rem;
+  text-align: left; padding: 0.6rem 0.75rem; border-radius: 6px; }
+.migration-choice span { font-size: 0.78rem; color: var(--muted, #667); font-weight: 400; }
+.migration-choice[aria-pressed="true"] { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.migration-advice { border-left: 3px solid var(--accent); padding: 0.1rem 0.8rem; margin: 0.6rem 0; font-size: 0.88rem; }
+.migration-advice p { margin: 0.35rem 0; }
+.migration-list { margin: 0.4rem 0; padding-left: 1.2rem; font-size: 0.85rem; }
+.migration-actions { display: flex; gap: 0.5rem; flex-wrap: wrap; margin-top: 0.5rem; }
+.migration-entity { display: flex; gap: 1rem; flex-wrap: wrap; align-items: center; font-size: 0.85rem; margin: 0 0 0.5rem; }
+.migration-entity-name { flex: 1 1 11rem; min-width: 8rem; }
+.migration-entity-remove { font-size: 0.78rem; padding: 0.15rem 0.5rem; }
+.migration-entities .migration-entity { border-bottom: 1px solid rgba(128,128,128,0.18);
+  padding-bottom: 0.5rem; }
+.migration-entities .migration-entity:last-child { border-bottom: 0; }
+.migration-summary { display: flex; align-items: center; gap: 0.6rem; padding: 0.5rem 0.8rem; }
+.migration-summary-text { flex: 1 1 auto; font-size: 0.86rem; }
+.migration-summary button { font-size: 0.78rem; padding: 0.15rem 0.6rem; }
+.migration-queue { margin: 0.6rem 0; }
+.migration-queue-row { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  padding: 0.4rem 0; border-bottom: 1px solid rgba(128,128,128,0.18); }
+.migration-queue-row:last-child { border-bottom: 0; }
+.migration-queue-name { flex: 1 1 16rem; font-size: 0.88rem; }
+.migration-queue-done { font-size: 0.8rem; color: #1f6f4a; }
+.migration-here { margin-top: 1rem; }
+.migration-here h4 { margin: 0 0 0.4rem; font-size: 0.92rem; }
+/* Asking a model ------------------------------------------------------------ */
+.ai-offer, .ai-panel { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;
+  padding: 0.9rem 1.1rem; margin: 0 0 1rem; max-width: 62rem; }
+.ai-offer h3, .ai-panel h3 { margin: 0 0 0.5rem; font-size: 1rem; }
+.ai-panel h4 { margin: 0.9rem 0 0.35rem; font-size: 0.88rem; }
+.ai-offer p { font-size: 0.86rem; margin: 0.4rem 0; }
+.ai-offer ul { margin: 0.3rem 0 0.6rem; padding-left: 1.2rem; }
+.ai-offer li { font-size: 0.85rem; line-height: 1.5; margin: 0.2rem 0; }
+/* The two sentences somebody must not skim past. */
+.ai-careful { border-left: 3px solid var(--accent); padding-left: 0.7rem; }
+.ai-model { display: flex; align-items: center; gap: 0.5rem; font-size: 0.85rem;
+  margin: 0.5rem 0; }
+.ai-model select { max-width: 28rem; font-size: 0.85rem; }
+.ai-key-input { flex: 1 1 22rem; min-width: 12rem; font-family: inherit; }
+.ai-about { width: 100%; max-width: 46rem; font: inherit; font-size: 0.85rem;
+  padding: 0.5rem 0.6rem; border-radius: 4px; }
+.ai-entity { display: flex; gap: 0.7rem; align-items: center; flex-wrap: wrap;
+  margin: 0 0 0.4rem; }
+.ai-entity-name { flex: 0 0 11rem; font-size: 0.85rem; font-weight: 600; }
+.ai-entity input { flex: 1 1 18rem; min-width: 10rem; font-size: 0.85rem; }
+/* The description is two lines now, so the name sits at the top beside it
+   rather than floating in the middle of a taller box. */
+.ai-entity { align-items: flex-start; }
+.ai-entity-name { padding-top: 0.35rem; }
+.ai-entity textarea { flex: 1 1 18rem; min-width: 10rem; margin: 0; }
+.ai-prompt { white-space: pre-wrap; font-size: 0.72rem; line-height: 1.45;
+  max-height: 22rem; overflow: auto; background: rgba(128,128,128,0.08);
+  padding: 0.6rem 0.8rem; border-radius: 4px; margin: 0.5rem 0 0; }
+/* A reason that is a model's, marked as one: the difference between "your own
+   rule says so" and "something guessed" is the whole of what to weigh. */
+.code-reason-ai { color: var(--accent); }
+/* A suggestion that does not sit right: read twice before pressing the tick. */
+.code-reason-caution { color: #c62828; }
+.ai-table { margin: 0.6rem 0; }
+.ai-table td, .ai-table th { font-size: 0.8rem; }
+.ai-why { white-space: normal; max-width: 22rem; color: var(--muted, #667); }
+
+.migration-look { border: 1px solid rgba(128,128,128,0.28); border-radius: 6px;
+  padding: 0.9rem 1.1rem; margin: 0 0 1.2rem; max-width: 62rem; }
+.migration-look p { margin: 0 0 0.6rem; font-size: 0.86rem; }
+.migration-look .migration-actions { margin: 0; align-items: center; }
+.migration-look-link { font-size: 0.82rem; align-self: center; }
+/* A section borrowed from the Bank import page, sitting inside a step: it
+   keeps its own contents and loses the separator it wore between siblings. */
+.migration-card .import-subsection { margin-top: 0.8rem; padding-top: 0; border-top: 0; }
+.migration-card .import-subsection h3 { font-size: 0.92rem; margin: 0; }
+.migration-card .import-subsection .page-hint { margin: 0.3rem 0 0.5rem; }
+.bank-link-table { margin: 0.6rem 0; max-width: 44rem; }
+.bank-link-table td, .bank-link-table th { font-size: 0.82rem; }
+.bank-link-table select { max-width: 22rem; }
+.migration-place { font-size: 0.78rem; color: var(--muted, #667); margin: 0 0 0.5rem; }
+/* Clearing and backing up belong on the Bank import page, not in the middle
+   of setting the books up for the first time. */
+.migration-card #import-table .ledger-actions { display: none; }
+.migration-todo { margin: 0.9rem 0; }
+.migration-todo h4 { margin: 0 0 0.35rem; font-size: 0.92rem; }
+.migration-todo ul { margin: 0; padding-left: 1.2rem; }
+.migration-todo li { font-size: 0.85rem; line-height: 1.5; margin: 0.15rem 0; }
+.migration-folded { margin-top: 0.8rem; }
+.migration-folded .migration-guide { margin: 0.6rem 0 0.2rem; }
+.migration-restart { margin: 1.2rem 0 2rem; }
+.migration-restart button { font-size: 0.78rem; }
+.migration-guide { max-width: 54rem; margin: 1.4rem 0 2rem; }
+.migration-guide h3 { margin: 0 0 0.4rem; }
+.migration-guide h4 { margin: 1.2rem 0 0.35rem; font-size: 0.92rem; }
+.migration-guide p, .migration-guide li { font-size: 0.86rem; line-height: 1.5; }
+.migration-guide ol, .migration-guide ul { padding-left: 1.3rem; margin: 0.3rem 0; }
+.migration-table-wrap { overflow-x: auto; margin: 0.5rem 0; }
+.migration-table { max-width: none; }
+.migration-table td { white-space: normal; vertical-align: top; font-size: 0.82rem; }
+
+/* A control that reads as a quiet offer rather than an action to take. */
+.link-button {
+  background: none;
+  border: 0;
+  padding: 0;
+  color: var(--muted);
+  font: inherit;
+  font-size: 12px;
+  text-decoration: underline dotted;
+  cursor: pointer;
+}
+
+.link-button:hover {
+  color: var(--accent);
+}
+
+/* What the bank's own balance says about a questionable duplicate. */
+.verdict {
+  margin: 4px 0 6px;
+  font-size: 12px;
+}
+
+.verdict-double-counted { color: #b4462b; }
+.verdict-both-real { color: #1f6f4a; }
+.verdict-cannot-tell { color: var(--muted); }
+
+/* An export the bank cut short. Worth noticing at import, not at year end. */
+.report.cut-off {
+  border-left: 3px solid #c98a2b;
+  padding-left: 10px;
+}
+
+/* The bank feed: a form, then what it found. */
+.feed-form {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  align-items: center;
+  margin: 12px 0;
+}
+
+.feed-form input[type="text"],
+.feed-form input[type="password"] {
+  min-width: 320px;
+}
+
+.feed-steps {
+  margin: 8px 0 0 18px;
+  padding: 0;
+  color: var(--muted);
+  line-height: 1.55;
+}
+
+.feed-steps li { margin-bottom: 6px; }
+
+.feed-said {
+  margin: 6px 0;
+  color: var(--muted);
+}
+
+.feed-connected {
+  margin: 10px 0;
+  font-weight: 600;
+  color: #1f6f4a;
+}
+
+.feed-accounts { margin-top: 18px; }
+
+/* Choosing columns for a table nothing could name. */
+.column-picker {
+  border-left: 3px solid #c98a2b;
+  padding: 2px 0 2px 12px;
+  margin: 14px 0;
+}
+
+.feed-auto {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 10px 0;
+}
+
+/* Figures resting on transactions nobody has settled yet. */
+.unresolved-note {
+  margin: 8px 0 14px;
+  padding: 8px 12px;
+  border-left: 3px solid #c98a2b;
+  background: var(--accent-soft);
+  font-size: 13px;
+}
+
+/* GST registration sits with the entity, not on the report. */
+.entity-gst { display: inline-flex; align-items: center; gap: 0.3rem; white-space: nowrap; }
+
+/* A cell whose answer is not set here, or does not apply at all. */
+.cell-not-applicable { color: #8a8a8a; }
+.cell-said-elsewhere { color: #444; }
+
+/* A figure resting on an assumption, said before it is read. */
+.variance-note.warn { border-left: 3px solid #b26a00; padding-left: 0.6rem; color: #7a4b00; }
+
+/* The extract preview: many narrow columns, scrolled rather than squeezed. */
+.extract-table { width: 100%; border-collapse: collapse; margin-top: 0.8rem; font-size: 0.9em; }
+.extract-table th, .extract-table td { padding: 0.25rem 0.5rem; border-bottom: 1px solid #eee; text-align: left; }
+
+
+/* --- Charts -------------------------------------------------------------
+   Drawn by hand, so the marks are specified here rather than by a library:
+   thin bars, hairline grid, and text that never wears the data's colour. */
+/* Scrolled rather than shrunk. An SVG told to fill its container keeps
+   shrinking its own text with it, so on a narrow window the axis becomes a row
+   of grey smudges -- legible-looking at a glance and unreadable in fact. Below
+   the width the labels need, the chart scrolls sideways instead. */
+.chart-figure { margin: 0 0 1.6rem; position: relative; overflow-x: auto; }
+.chart { display: block; width: 100%; min-width: 620px; overflow: visible; }
+.chart-grid { stroke: var(--border); stroke-width: 1; }
+.chart-axis { stroke: var(--muted); stroke-width: 1; opacity: 0.6; }
+.chart-tick { fill: var(--muted); font-size: 11px; }
+.chart-name { fill: var(--text); font-size: 12px; }
+.chart-value { fill: var(--muted); font-size: 11px; font-variant-numeric: tabular-nums; }
+.chart-series-1 { fill: var(--chart-1); }
+.chart-series-2 { fill: var(--chart-2); }
+
+.chart-legend { display: flex; gap: 1.1rem; margin: 0 0 0.5rem 76px; font-size: 0.8rem;
+  color: var(--muted); }
+.chart-legend-item { display: inline-flex; align-items: center; gap: 0.35rem; }
+.chart-swatch { width: 11px; height: 11px; border-radius: 3px; display: inline-block; }
+.chart-swatch.chart-series-1 { background: var(--chart-1); }
+.chart-swatch.chart-series-2 { background: var(--chart-2); }
+
+.chart-tip { position: absolute; pointer-events: none; z-index: 5; background: var(--surface);
+  border: 1px solid var(--border); border-radius: 6px; padding: 0.4rem 0.6rem;
+  font-size: 0.78rem; line-height: 1.45; color: var(--text); white-space: nowrap;
+  box-shadow: 0 2px 10px rgba(0,0,0,0.14); }
+
+.chart-tiles { display: flex; flex-wrap: wrap; gap: 0.8rem; margin: 0 0 1.4rem; }
+.chart-tile { flex: 1 1 10rem; background: var(--surface-2); border: 1px solid var(--border);
+  border-radius: var(--radius); padding: 0.7rem 0.9rem; display: flex; flex-direction: column;
+  gap: 0.15rem; }
+.chart-tile-label { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.04em;
+  color: var(--muted); }
+.chart-tile-value { font-size: 1.35rem; font-variant-numeric: tabular-nums; color: var(--text); }
+.chart-tile-note { font-size: 0.74rem; color: var(--muted); }
+
+.chart-heading { font-size: 0.95rem; margin: 1.4rem 0 0.2rem; }
+
+/* Which ledger account a chart's bank row is, and what it serves. */
+.bank-link { max-width: 17rem; }
+.bank-serves { display: block; font-size: 0.78rem; margin-top: 0.15rem; }
+.row-remove { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
+  background: transparent; border: 1px solid var(--border); border-radius: 3px; }
+.row-remove:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
+.row-remove:disabled { opacity: 0.35; cursor: not-allowed; }
+/* Edit sits beside Remove and shares its shape, but not its colour: one of
+   them undoes a typo and the other throws an account away. */
+.row-edit { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
+  background: transparent; border: 1px solid var(--border); border-radius: 3px;
+  margin-right: 0.3rem; }
+.row-edit:hover { color: var(--accent); border-color: var(--accent); }
+/* What the owners box understood, under the owners box. Quiet when it agrees
+   with you, and not quiet when the shares do not add up. */
+.entity-owners-wrap { display: flex; flex-direction: column; gap: 0.15rem;
+  flex: 1 1 16rem; min-width: 0; }
+.entity-owners-said { flex: 0 0 auto; font-size: 0.75rem; color: var(--muted);
+  min-height: 1em; }
+.entity-owners-said.owners-wrong { color: var(--danger); }
+/* The add-an-entity form, under the entities rather than over them. */
+.entity-add-row { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.75rem 0 1.5rem; font-size: 0.85rem; }
+.entity-add-row select, .entity-add-row input[type="text"] { font-size: 0.85rem; }
+.entity-add-gst { display: flex; align-items: center; gap: 0.3rem; }
+/* An entity still carrying the placeholder name. Not an error -- a set of
+   books that works perfectly well -- but the one thing nothing can infer. */
+.entity-chip.needs-name { border-left: 3px solid var(--accent); padding-left: 0.6rem; }
+.entity-rename-hint { font-size: 0.78rem; color: var(--accent); display: block;
+  margin-top: 0.15rem; }
+/* The Books page. "open now" is a fact about the row, not a warning. */
+.books-open { font-size: 0.72rem; color: var(--muted); border: 1px solid var(--border);
+  border-radius: 3px; padding: 0 0.3rem; }
+.books-table td:last-child { white-space: nowrap; }
+.books-table td:last-child button { margin-left: 0.4rem; }
+/* The confirmation, under the row it belongs to. */
+.books-confirm { background: var(--accent-soft); padding: 0.75rem 0.9rem; }
+.books-confirm p { margin: 0 0 0.6rem; font-size: 0.85rem; }
+.books-new { margin-bottom: 1.5rem; }
+/* Which books are open, in the corner of the menu. A label, not a control:
+   it goes to the Books page rather than changing anything itself. */
+.ledger-open[hidden] { display: none; }
+.ledger-open { display: flex; flex-direction: column; align-items: flex-start;
+  gap: 0.1rem; width: 100%; text-align: left; background: transparent;
+  border: 1px solid var(--border); border-radius: 4px; padding: 0.4rem 0.6rem;
+  cursor: pointer; color: inherit; }
+.ledger-open:hover { border-color: var(--accent); }
+/* Lit the way a menu item is, because it is one: the way to the Books page. */
+.ledger-open.active { border-color: var(--accent); box-shadow: inset 0 0 0 1px var(--accent); }
+.ledger-open-label { font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); }
+.ledger-open-name { font-size: 0.85rem; font-weight: 600; }
+.shell.narrow .ledger-open-label { display: none; }
+/* The supplier details that go at the top of an invoice. */
+.entity-billing-details { flex: 1 0 100%; margin-top: 0.15rem; padding-top: 0.4rem;
+  border-top: 1px dashed rgba(128,128,128,0.3); }
+.entity-billing-details > summary { font-size: 0.72rem; color: var(--muted);
+  cursor: pointer; text-transform: uppercase; letter-spacing: 0.06em; }
+.entity-billing-details[open] > summary { margin-bottom: 0.4rem; }
+.entity-billing { display: flex; flex-wrap: wrap; gap: 0.6rem; }
+.entity-billing-field { display: flex; flex-direction: column; gap: 0.15rem;
+  flex: 1 1 8rem; min-width: 0; align-self: flex-start; }
+.entity-billing-field.wide { flex: 2 1 14rem; }
+.entity-billing-field input, .entity-billing-field textarea { font-size: 0.8rem;
+  width: 100%; }
+.entity-billing-field span { flex: 0 0 auto; font-size: 0.7rem; text-transform: uppercase;
+  letter-spacing: 0.06em; color: var(--muted); }
+.entity-billing-field textarea { resize: vertical; font: inherit; }
+.invoice-send { margin-left: 0.35rem; }
+
+/* A rule the app wrote from a coding decision, said once on the page. */
+.rule-made { background: var(--accent-soft); border-left: 3px solid var(--accent);
+  padding: 0.55rem 0.8rem; margin: 0 0 0.9rem; font-size: 0.88rem; border-radius: 0 3px 3px 0; }
+
+/* The confirm tick. Sized so it keeps the footprint the word "OK" had -- the
+   row's buttons sit in a line and a narrower one would shuffle the rest. */
+.code-tick { min-width: 2.6rem; font-size: 1.05em; line-height: 1.1; }
+
+/* A row with a transfer chosen has no coding to do, and says so by going flat
+   rather than by disappearing -- the controls stay in place so the row keeps
+   its shape in a long list. */
+/* Flat, except for whatever is still worth pressing. Dimming the row as a
+   whole took the tick down with it, so the one live control on a transfer row
+   looked as spent as the dead ones beside it. */
+.coding-off > * { opacity: 0.42; }
+.coding-off > .tick-live { opacity: 1; }
+.coding-off input:disabled, .coding-off select:disabled, .coding-off button:disabled {
+  cursor: not-allowed; background: var(--surface-2); }
+.combo.is-transfer { opacity: 0.42; pointer-events: none; }
+/* What stands in for the account, in the account's place. It is not dimmed
+   with the controls around it: it is the one thing on the row still worth
+   reading, and the row is only waiting for a tick to agree with it. */
+.code-instead[hidden] { display: none; }
+.code-instead { flex: 1 1 15rem; max-width: 22rem; display: flex; align-items: center;
+  gap: 0.35rem; font-size: 0.84rem; font-weight: 600; padding: 0.35rem 0.6rem;
+  border-radius: 6px; background: rgba(31,111,74,0.12); border: 1px solid rgba(31,111,74,0.45);
+  color: #1f6f4a; }
+.coding-off > .code-instead { opacity: 1; }
+.code-instead::before { content: "✓"; font-weight: 700; }
+.code-instead-ready { background: rgba(31,111,74,0.18); }
+@media (prefers-color-scheme: dark) {
+  :root:not([data-theme="light"]) .code-instead { background: rgba(80,200,140,0.14);
+    border-color: rgba(80,200,140,0.5); color: #7fd7a8; }
+}
+:root[data-theme="dark"] .code-instead { background: rgba(80,200,140,0.14);
+  border-color: rgba(80,200,140,0.5); color: #7fd7a8; }
+
+/* A pairing whose legs fell on different days: made, and worth a glance. */
+.transfer-matched.transfer-stretched { color: var(--review); }
+
+/* The general ledger: the first line of an entry carries the rule, so three
+   lines read as one entry rather than three unrelated rows. */
+.extract-table tr.entry-start td { border-top: 1px solid var(--border); }
+
+/* A button that has been pressed and is still working. The stripes move
+   towards the button's end, so "in progress" reads without a number that
+   would have to be invented. */
+button.working {
+  cursor: progress;
+  background-image: linear-gradient(
+    115deg,
+    rgba(255, 255, 255, 0.22) 25%, transparent 25%,
+    transparent 50%, rgba(255, 255, 255, 0.22) 50%,
+    rgba(255, 255, 255, 0.22) 75%, transparent 75%);
+  background-size: 1.1rem 1.1rem;
+  animation: working-stripes 0.8s linear infinite;
+}
+@keyframes working-stripes { to { background-position: 1.1rem 0; } }
+/* The same stripes on a button that is not the accent one. White at a fifth
+   opacity is legible on the accent and invisible on a pale surface, which is
+   the whole of the effect on the plain buttons. Mid-grey instead: it darkens
+   a light surface and lightens a dark one, so one rule covers both themes. */
+button.working:not(.primary):not(.active) {
+  background-image: linear-gradient(
+    115deg,
+    rgba(128, 128, 128, 0.3) 25%, transparent 25%,
+    transparent 50%, rgba(128, 128, 128, 0.3) 50%,
+    rgba(128, 128, 128, 0.3) 75%, transparent 75%);
+}
+@media (prefers-reduced-motion: reduce) {
+  button.working { animation: none; }
+}
+
+/* The same dropzone as the Import page, shorter: the Check page has a table
+   under it and does not need a landing pad the height of the window. */
+.dropzone-slim { padding: 1rem 1.25rem; margin-bottom: 1rem; }
+.dropzone-slim .dropzone-title { font-size: 1rem; margin: 0 0 0.3rem; }
+.dropzone-slim .dropzone-sub { margin: 0 0 0.75rem; }
+/* Nothing coded yet, so nothing to compare -- said plainly instead of as a
+   row of zeros. */
+.check-nothing { border: 1px solid var(--accent); border-radius: 6px;
+  padding: 0.9rem 1.1rem; margin-bottom: 1rem; background: var(--accent-soft); }
+.check-nothing p { margin: 0 0 0.6rem; }
+
+/* Bank rows that nothing has linked to a ledger account yet. Not an error --
+   a chart arrives this way -- but the reports cannot place a payment until
+   somebody says, and the control for it is a column far below. */
+.needs-linking { border-left: 3px solid var(--accent); padding: 0.5rem 0.75rem;
+  background: var(--accent-soft); border-radius: 0 4px 4px 0;
+  font-size: 0.85rem; margin: 0.75rem 0; }
+/* The demo, offered on Setup while there is nothing loaded. */
+.setup-demo { font-size: 0.85rem; color: var(--muted); margin: 0.5rem 0 1.25rem; }
+.setup-demo button { margin-top: 0.5rem; }
+
+/* What the Setup drop area did with each file, said as it goes. */
+#setup-loaded { margin-top: 0.75rem; font-size: 0.82rem; text-align: left;
+  display: flex; flex-direction: column; gap: 0.2rem; }
+#setup-loaded div { color: var(--muted); }
+
+/* The rule proposals, folded away once there is a comparison to read. */
+.check-rules-fold { margin-top: 1.5rem; border-top: 1px solid var(--border);
+  padding-top: 1rem; }
+.check-rules-fold > summary { cursor: pointer; font-weight: 600; font-size: 0.9rem;
+  padding: 0.3rem 0; }
+.check-rules-fold > summary:hover { color: var(--accent); }
+
+
+/* Setup: who these books belong to, and what to go and fetch. */
+.setup-name { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin: 0.6rem 0 0.9rem; }
+.setup-name label { font-weight: 600; }
+.setup-name input { flex: 1 1 18rem; font-size: 0.95rem; padding: 0.3rem 0.45rem; }
+.setup-name .setup-name-said { flex: 1 0 100%; font-size: 0.78rem; color: var(--muted); }
+.setup-files {
+  margin: 0.4rem 0 0.9rem;
+  padding: 0.5rem 0.75rem;
+  border: 1px solid rgba(128, 128, 128, 0.22);
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.02);
+}
+.setup-files > h3 {
+  margin: 0 0 0.35rem;
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.setup-files > p {
+  margin: 0 0 0.35rem;
+  font-size: 0.78rem;
+  color: var(--muted);
+}
+.setup-file {
+  display: grid;
+  grid-template-columns: 11.5rem 1.6fr 1.2fr;
+  gap: 0.2rem 0.8rem;
+  padding: 0.22rem 0.2rem;
+  align-items: baseline;
+  border-top: 1px solid rgba(128, 128, 128, 0.1);
+  font-size: 0.8rem;
+}
+.setup-file:first-of-type {
+  border-top: 0;
+}
+.setup-file.have {
+  opacity: 0.6;
+}
+.setup-file-what {
+  font-weight: 600;
+  font-size: 0.82rem;
+  white-space: nowrap;
+}
+.setup-file.have .setup-file-what {
+  color: #1f6f4a;
+}
+.setup-file-what a {
+  color: var(--accent);
+  text-decoration: none;
+}
+.setup-file-what a:hover {
+  text-decoration: underline;
+}
+.setup-file-where {
+  font-size: 0.78rem;
+}
+.setup-file-why {
+  font-size: 0.75rem;
+  color: var(--muted);
+}
+@media (max-width: 820px) {
+  .setup-file {
+    grid-template-columns: 10rem 1fr;
+  }
+  .setup-file-why {
+    grid-column: 2;
+  }
+}
+@media (max-width: 580px) {
+  .setup-file {
+    grid-template-columns: 1fr;
+    gap: 0.15rem;
+  }
+  .setup-file-why {
+    grid-column: 1;
+  }
+}
+
+.setup-migration-wrap {
+  margin-top: 0.35rem;
+  display: flex;
+  flex-direction: column;
+  gap: 0.4rem;
+}
+.setup-migration-details {
+  margin: 0.15rem 0;
+}
+.setup-migration-summary {
+  cursor: pointer;
+  font-size: 0.78rem;
+  color: var(--accent);
+  font-weight: 500;
+  user-select: none;
+  padding: 0.15rem 0;
+}
+.setup-migration-summary:hover {
+  text-decoration: underline;
+}
+.setup-migration-details[open] .setup-migration-summary {
+  margin-bottom: 0.35rem;
+}
+.setup-migration-details .setup-files {
+  margin: 0.3rem 0;
+}
+.dropzone-mini[hidden] { display: none; }
+.dropzone-mini {
+  display: inline-flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  padding: 6px 12px;
+  border: 1.5px dashed rgba(128, 128, 128, 0.35);
+  border-radius: 6px;
+  background: rgba(128, 128, 128, 0.03);
+  font-size: 0.78rem;
+  color: var(--muted);
+  transition: border-color 0.15s, background 0.15s;
+}
+.dropzone-mini.dragging {
+  border-color: var(--accent);
+  background: rgba(106, 75, 156, 0.08);
+}
+.dropzone-mini-text {
+  font-size: 0.78rem;
+}
+.dropzone-mini-btn {
+  font-size: 0.75rem;
+  padding: 2px 8px;
+  cursor: pointer;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+.dropzone-mini-btn:hover {
+  border-color: var(--accent);
+  color: var(--accent);
+}
+#setup-loaded {
+  flex: 1 0 100%;
+  font-size: 0.76rem;
+  color: #1f6f4a;
+}
+
+/* Bank import subsections and navigation */
+.import-subnav {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+  margin: 10px 0 16px;
+  padding-bottom: 12px;
+  border-bottom: 1px solid var(--border);
+}
+
+.import-subnav-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 6px 14px;
+  font-size: 13px;
+  font-weight: 500;
+  color: var(--muted);
+  text-decoration: none;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface);
+  transition: all 0.15s ease;
+}
+
+.import-subnav-link:hover {
+  color: var(--text);
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.import-subnav-link.active {
+  background: var(--accent);
+  color: var(--accent-text);
+  border-color: var(--accent);
+  font-weight: 600;
+}
+
+.import-subsection {
+  margin-top: 28px;
+  padding-top: 20px;
+  border-top: 1px solid var(--border);
+  scroll-margin-top: 60px;
+}
+
+.import-subsection:first-of-type {
+  margin-top: 12px;
+  padding-top: 0;
+  border-top: none;
+}
+
+.import-subsection-head {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  margin-bottom: 8px;
+}
+
+.import-subsection-head h3 {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--text);
+}
+
+/* Sidebar Bank import sublinks: hidden until Bank import is selected */
+.sidebar-sublinks {
+  display: none;
+  flex-direction: column;
+  margin-left: 28px;
+  margin-bottom: 8px;
+  margin-top: -4px;
+  gap: 3px;
+}
+
+.sidebar-sublinks.open {
+  display: flex;
+}
+
+.sidebar-sublinks[hidden] {
+  display: none !important;
+}
+
+.sidebar-sublink {
+  color: var(--on-navy-dim);
+  font-size: 11.5px;
+  text-decoration: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  transition: color 0.12s, background 0.12s;
+}
+
+.sidebar-sublink:hover {
+  color: #fff;
+  background: var(--navy-2);
+}
+
+.shell.narrow .sidebar-sublinks {
+  display: none !important;
+}
+
+/* Menu groups, which fold, and the search above them. */
+.sidebar-group-items {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+.sidebar-group.collapsed .sidebar-group-items {
+  display: none;
+}
+.sidebar-nav button.sidebar-heading {
+  margin: 12px 0 2px;
+  padding: 5px 8px;
+  border-radius: 6px;
+  font-size: 10.5px;
+  font-weight: 500;
+  letter-spacing: 0.1em;
+  text-transform: uppercase;
+  color: var(--on-navy-dim);
+  justify-content: space-between;
+}
+.menu-search + .sidebar-group button.sidebar-heading {
+  margin-top: 4px;
+}
+.sidebar-nav button.sidebar-heading::after {
+  content: "";
+  width: 5px;
+  height: 5px;
+  margin: 0 4px 3px 0;
+  border-right: 1.5px solid currentColor;
+  border-bottom: 1.5px solid currentColor;
+  transform: rotate(45deg);
+  transition: transform 0.12s;
+}
+.sidebar-group.collapsed button.sidebar-heading::after {
+  transform: rotate(-45deg);
+  margin-bottom: 0;
+}
+.sidebar-nav button.sidebar-heading:hover {
+  background: none;
+  color: #fff;
+}
+.sidebar-nav button span {
+  line-height: 1.25;
+}
+.menu-search {
+  margin: 0 0 2px;
+}
+.menu-search input {
+  width: 100%;
+  max-width: none;
+  box-sizing: border-box;
+  font-size: 13px;
+  padding: 7px 10px;
+  border-radius: 8px;
+  background: var(--navy-2);
+  border: 1px solid rgba(255, 255, 255, 0.13);
+  color: #fff;
+}
+.menu-search input::placeholder {
+  color: var(--on-navy-dim);
+}
+.menu-search-results {
+  display: flex;
+  flex-direction: column;
+  gap: 1px;
+  margin-top: 4px;
+  padding: 4px;
+  border-radius: 8px;
+  background: var(--navy-2);
+}
+.menu-search-results[hidden] {
+  display: none;
+}
+.sidebar-nav .menu-search-results button {
+  flex-direction: column;
+  align-items: flex-start;
+  gap: 1px;
+  padding: 6px 8px;
+  font-size: 13px;
+}
+.sidebar-nav .menu-search-results button small {
+  font-size: 10.5px;
+  color: var(--on-navy-dim);
+}
+.sidebar-nav .menu-search-results button.selected {
+  background: rgba(255, 255, 255, 0.12);
+  color: #fff;
+}
+.menu-search-empty {
+  padding: 6px 8px;
+  font-size: 12px;
+  color: var(--on-navy-dim);
+}
+/* Narrowed to icons: no room for the search, and a folded group would hide
+   icons with no heading left to unfold it from. */
+.shell.narrow .menu-search {
+  display: none;
+}
+.shell.narrow .sidebar-group.collapsed .sidebar-group-items {
+  display: flex;
+}
+@media (max-width: 820px) {
+  .menu-search,
+  .sidebar-nav button.sidebar-heading {
+    display: none;
+  }
+  .sidebar-group,
+  .sidebar-group-items,
+  .sidebar-group.collapsed .sidebar-group-items {
+    display: contents;
+  }
+}
+
+/* Feed inner sub-heading */
+.feed-subheading {
+  font-size: 0.85rem;
+  font-weight: 600;
+  color: var(--muted);
+  margin: 1.2rem 0 0.4rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+/* App initial loading overlay */
+.app-loading {
+  position: fixed;
+  inset: 0;
+  z-index: 10000;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  background-color: var(--bg);
+  color: var(--text);
+  opacity: 1;
+  visibility: visible;
+  transition: opacity 0.3s ease-out, visibility 0.3s ease-out;
+}
+.app-loading.dismissed {
+  opacity: 0;
+  visibility: hidden;
+  pointer-events: none;
+}
+.loading-card {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+  padding: 2.2rem 2.8rem;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  border-radius: var(--radius, 8px);
+  box-shadow: 0 8px 30px rgba(10, 37, 64, 0.12);
+  min-width: 250px;
+  max-width: 90vw;
+  text-align: center;
+}
+.loading-brand {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  margin-bottom: 1.25rem;
+}
+.loading-logo {
+  font-size: 1.8rem;
+  line-height: 1;
+}
+.loading-title {
+  font-size: 1.35rem;
+  font-weight: 700;
+  letter-spacing: 0.05em;
+  color: var(--accent);
+}
+.loading-spinner {
+  width: 2.2rem;
+  height: 2.2rem;
+  border: 3px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loading-spin 0.85s linear infinite;
+  margin-bottom: 1rem;
+}
+@keyframes loading-spin {
+  to { transform: rotate(360deg); }
+}
+@media (prefers-reduced-motion: reduce) {
+  .loading-spinner {
+    animation: none;
+    border-style: dotted;
+  }
+}
+.loading-msg {
+  font-size: 0.88rem;
+  color: var(--muted);
+  margin: 0;
+  min-height: 1.25rem;
+}
+
+/* ---------- demo banner for online / browser-only demonstration ---------- */
+
+/* A save that did not happen. Orange rather than red: the work is still on
+   screen and still recoverable, which is not the same as something broken. */
+.save-banner {
+  background: #b45309;
+  color: #ffffff;
+  padding: 6px 36px 6px 16px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1001;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+.save-banner[hidden] {
+  display: none !important;
+}
+.save-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.save-banner-reload {
+  background: #ffffff;
+  color: #b45309;
+  border: none;
+  border-radius: 5px;
+  padding: 2px 10px;
+  font-size: 0.78rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.save-banner-close {
+  position: absolute;
+  right: 8px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: #ffffff;
+  font-size: 1.1rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 0 6px;
+}
+
+.demo-banner {
+  background: #c62828;
+  color: #ffffff;
+  padding: 6px 36px 6px 16px;
+  font-size: 0.82rem;
+  line-height: 1.4;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  position: relative;
+  z-index: 1000;
+  box-shadow: 0 1px 4px rgba(0, 0, 0, 0.18);
+}
+.demo-banner[hidden] {
+  display: none !important;
+}
+.demo-banner-content {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  flex-wrap: wrap;
+  justify-content: center;
+}
+.demo-banner-badge {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  padding: 1px 7px;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.demo-banner a {
+  color: #ffffff;
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 2px;
+}
+.demo-banner a:hover {
+  color: #ffebee;
+}
+.demo-banner-again {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
+  padding: 1px 8px;
+  font: inherit;
+  font-weight: 700;
+  cursor: pointer;
+}
+.demo-banner-again:hover {
+  background: rgba(0, 0, 0, 0.45);
+}
+.demo-banner-close {
+  position: absolute;
+  right: 12px;
+  top: 50%;
+  transform: translateY(-50%);
+  background: none;
+  border: none;
+  color: rgba(255, 255, 255, 0.85);
+  font-size: 1.3rem;
+  line-height: 1;
+  cursor: pointer;
+  padding: 2px 6px;
+  border-radius: 3px;
+}
+.demo-banner-close:hover {
+  color: #ffffff;
+  background: rgba(0, 0, 0, 0.2);
+}
+
+.demo-privacy-notice {
+  font-size: 0.8rem;
+  padding: 0.5rem 0.8rem;
+  margin: 0.4rem 0 0.8rem;
+  border-radius: 6px;
+  background: rgba(198, 40, 40, 0.08);
+  border-left: 3px solid #c62828;
+  color: var(--text);
+  line-height: 1.4;
+}
+.demo-privacy-notice[hidden] {
+  display: none !important;
+}
+
+
+
+
+/* Coding to the GST account is a question with two answers and no default. */
+.split-gst-ask { border-color: var(--accent); font-weight: 600; }
+
+/* A report line opened to show what is in it. The figure stays where it was
+   and the entries appear under it, so the eye does not lose its place. */
+tr.report-open > td { font-weight: 600; }
+tr.report-behind > td { padding: 0 0 0.75rem 1.5rem; background: var(--surface-sunken, rgba(0, 0, 0, 0.03)); }
+tr.report-behind table { margin: 0; width: 100%; }
+tr.report-behind th { font-weight: 500; opacity: 0.75; }
+.report-name .link-button { text-align: left; }
+
+/* Set-up still has required steps outstanding. Orange rather than red: this
+   is work to finish, not something broken. */
+.sidebar-nav button[data-page="setup"].needs-doing {
+  color: var(--warn, #b45309);
+  font-weight: 600;
+}
+.sidebar-nav button[data-page="setup"].needs-doing::after {
+  content: "•";
+  margin-left: 0.35rem;
+  color: var(--warn, #b45309);
+}
+.sidebar-nav button[data-page="setup"].needs-doing.active {
+  color: inherit;
+}
+
+/* A step begun but not finished. Half a tick, in the same orange. */
+.setup-mark.partial { color: var(--warn, #b45309); }
+
+/* The IR10, set out as the form is printed. */
+.ir10-form td.ir10-box { width: 3rem; opacity: 0.75; }
+.ir10-form tr.ir10-total td { font-weight: 700; }
+.ir10-form tr.ir10-rule td { border-bottom: 1px solid rgba(128,128,128,0.6); }
+
+/* The list of reports: grouped, starred favourites first. */
+.page-actions.reports-home > :not(#report-kind):not(#report-download-excel) { display: none !important; }
+.reports-home-group { margin: 1rem 0 1.4rem; max-width: 62rem; }
+.reports-home-group h3 { margin: 0 0 0.5rem; font-size: 0.95rem; }
+.reports-home-list { display: grid; grid-template-columns: repeat(auto-fill, minmax(18rem, 1fr)); gap: 0.35rem 1rem; }
+.reports-home-item { display: grid; grid-template-columns: 1.6rem 1fr; align-items: baseline;
+  padding: 0.4rem 0.6rem; border: 1px solid var(--border); border-radius: 6px; }
+.reports-home-item .reports-open { justify-self: start; text-align: left; }
+.reports-home-item .reports-about { grid-column: 2; font-size: 0.78rem; opacity: 0.7; }
+/* Back to the list from an open report. */
+.reports-back { display: inline-block; margin: 0 0 0.8rem; padding: 0.2rem 0; border: 0;
+  background: none; color: inherit; font-size: 0.85rem; opacity: 0.75; cursor: pointer; }
+.reports-back:hover, .reports-back:focus-visible { opacity: 1; text-decoration: underline; }
+/* A property manager's statement being entered. */
+.agent-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(13rem, 1fr)); gap: 0.5rem 0.8rem; margin: 0.4rem 0 0.8rem; }
+.agent-fields label { display: flex; flex-direction: column; gap: 0.2rem; font-size: 0.8rem; }
+/* An account picker stacked under its label. Its usual flex basis sizes it
+   across a row; in a column it became 15rem tall, so its list opened that far
+   below the box and the field grew a gap to match. */
+.agent-fields label .combo { flex: 0 0 auto; min-width: 0; max-width: none; width: 100%; }
+.agent-section { margin: 0.7rem 0 0.2rem; font-weight: 600; font-size: 0.85rem; }
+.agent-row { display: grid; grid-template-columns: minmax(8rem, 1.2fr) minmax(10rem, 2fr) 8rem auto; gap: 0.4rem; align-items: center; margin: 0.25rem 0; }
+@media (max-width: 640px) { .agent-row { grid-template-columns: 1fr 1fr; } }
+.filed-tools { margin: 0 0 1.2rem; }
+.filed-tools table { margin-bottom: 0.6rem; }
+/* The GST return report. */
+.gst-return-status { display: inline-block; margin: 0.4rem 0 0.2rem; padding: 0.1rem 0.5rem;
+  border: 1px solid var(--border); border-radius: 4px; font-size: 0.78rem; }
+.gst-return-head { display: flex; justify-content: space-between; align-items: flex-start; gap: 1rem;
+  flex-wrap: wrap; margin: 0.4rem 0 0.8rem; }
+.gst-return-head h3 { margin: 0; }
+.gst-return-sub { margin: 0.2rem 0 0; font-size: 0.8rem; opacity: 0.75; }
+.gst-return-owed { text-align: right; }
+.gst-return-owed strong { display: block; font-size: 1.3rem; font-variant-numeric: tabular-nums; }
+.gst-return-owed span { font-size: 0.8rem; opacity: 0.75; }
+.gst-return-details { max-width: 32rem; margin-bottom: 0.6rem; }
+.gst-return-form { max-width: 42rem; }
+.gst-return-form td.ir10-box { width: 4rem; white-space: nowrap; }
+.reports-star { font-size: 1rem; line-height: 1; }
+
+/* The one-off connector setup, as numbered steps. A list rather than a
+   paragraph because it is a thing to do while looking at another window, and
+   somebody coming back to it needs to find their place again. */
+.ai-connect-steps {
+  margin: 0.4rem 0 0.8rem;
+  padding-left: 1.4rem;
+  font-size: 0.9rem;
+  line-height: 1.55;
+  color: var(--muted);
+  max-width: 46rem;
+}
+.ai-connect-steps li { margin: 0.35rem 0; }
+/* The address is the one thing that has to be exact, so it is shown as well
+   as copied: a clipboard that silently does nothing leaves nothing behind. */
+.ai-connect-url-row {
+  display: flex;
+  margin: 0.4rem 0 0.2rem;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.5rem;
+}
+.ai-connect-url {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.85rem;
+  padding: 0.2rem 0.45rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface-2);
+  color: var(--text);
+  word-break: break-all;
+}
+
+/* ---------- Payroll & Payday Filing ---------- */
+
+.payroll-employer-bar {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.65rem 1rem;
+  margin-bottom: 1.25rem;
+  border: 1px solid var(--border);
+  border-radius: 6px;
+  background: var(--surface-2);
+  flex-wrap: wrap;
+}
+
+.payroll-employer-label {
+  font-size: 0.88rem;
+  color: var(--text);
+}
+
+.payroll-ird-input {
+  font-family: ui-monospace, SFMono-Regular, Menlo, Consolas, monospace;
+  font-size: 0.92rem;
+  padding: 0.35rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  width: 9.5rem;
+}
+
+.payroll-ird-feedback {
+  font-size: 0.8rem;
+  font-weight: 500;
+}
+.payroll-ird-feedback.valid { color: #1f6f4a; }
+.payroll-ird-feedback.invalid { color: #b91c1c; }
+.payroll-ird-feedback.hint { color: var(--muted); }
+
+.payroll-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  padding: 1.25rem;
+  margin-bottom: 1.5rem;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.payroll-editor-card h3, .payroll-creator-head h3 {
+  margin: 0 0 1rem;
+  font-size: 1.15rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.payroll-form-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 1rem;
+  margin-bottom: 1.25rem;
+}
+
+.payroll-form-field {
+  display: flex;
+  flex-direction: column;
+  gap: 0.3rem;
+}
+
+.payroll-form-field.span-2 {
+  grid-column: span 2;
+}
+
+.payroll-form-field label {
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--text);
+}
+
+.payroll-form-field input,
+.payroll-form-field select {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.4rem 0.6rem;
+  border: 1px solid var(--border);
+  border-radius: 5px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+.payroll-form-field input:focus,
+.payroll-form-field select:focus {
+  border-color: var(--accent);
+  outline: none;
+}
+
+.payroll-form-field .field-hint {
+  font-size: 0.72rem;
+  color: var(--muted);
+}
+
+.payroll-form-error {
+  padding: 0.5rem 0.75rem;
+  margin: 0 0 1rem;
+  border-radius: 4px;
+  background: rgba(185, 28, 28, 0.1);
+  border-left: 3px solid #b91c1c;
+  color: #b91c1c;
+  font-size: 0.85rem;
+}
+
+.payroll-form-actions {
+  display: flex;
+  gap: 0.6rem;
+  align-items: center;
+  flex-wrap: wrap;
+  padding-top: 0.5rem;
+}
+
+.payroll-empty {
+  text-align: center;
+  padding: 3rem 1.5rem;
+  border: 1.5px dashed var(--border);
+  border-radius: 8px;
+  color: var(--muted);
+  background: var(--surface-2);
+}
+
+.payroll-empty p {
+  margin: 0 0 0.5rem;
+}
+
+.payroll-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.85rem;
+}
+
+.payroll-table th, .payroll-table td {
+  padding: 0.55rem 0.75rem;
+  border-bottom: 1px solid var(--border);
+  vertical-align: middle;
+}
+
+.payroll-table th {
+  background: var(--surface-2);
+  color: var(--muted);
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-weight: 600;
+  text-align: left;
+}
+
+.payroll-totals-row td {
+  background: var(--surface-2);
+  border-top: 2px solid var(--border);
+  font-weight: 600;
+}
+
+.payroll-tiny-input {
+  width: 5.5rem;
+  padding: 0.25rem 0.4rem;
+  font-size: 0.82rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+  text-align: right;
+}
+
+.payroll-tax-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  background: rgba(106, 75, 156, 0.12);
+  color: #6a4b9c;
+}
+
+.payroll-badge {
+  display: inline-block;
+  padding: 0.15rem 0.45rem;
+  border-radius: 3px;
+  font-size: 0.72rem;
+  font-weight: 600;
+  text-transform: uppercase;
+}
+
+.payroll-badge.active {
+  background: rgba(31, 111, 74, 0.12);
+  color: #1f6f4a;
+}
+
+.payroll-badge.finished {
+  background: rgba(128, 128, 128, 0.15);
+  color: var(--muted);
+}
+
+.payroll-badge.posted {
+  background: rgba(31, 111, 74, 0.12);
+  color: #1f6f4a;
+  border: 1px solid rgba(31, 111, 74, 0.3);
+}
+
+.payroll-badge.unposted {
+  background: rgba(180, 83, 9, 0.12);
+  color: #b45309;
+}
+
+.payroll-btn {
+  font-size: 0.76rem;
+  padding: 0.22rem 0.55rem;
+  border-radius: 4px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  margin-left: 0.25rem;
+}
+.payroll-btn:hover { border-color: var(--accent); color: var(--accent); }
+.payroll-btn.danger:hover { border-color: #b91c1c; color: #b91c1c; }
+
+.payroll-runs-list {
+  display: flex;
+  flex-direction: column;
+  gap: 1rem;
+}
+
+.payroll-run-card {
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  background: var(--surface);
+  overflow: hidden;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.04);
+}
+
+.payroll-run-card-head {
+  padding: 1rem 1.25rem;
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 0.75rem;
+  background: var(--surface-2);
+  border-bottom: 1px solid var(--border);
+}
+
+.payroll-run-title-group {
+  display: flex;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+
+.payroll-run-title-group h4 {
+  margin: 0;
+  font-size: 1rem;
+}
+
+.payroll-period-text {
+  font-size: 0.8rem;
+  color: var(--muted);
+}
+
+.payroll-run-totals-summary {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-wrap: wrap;
+}
+
+.summary-pill {
+  font-size: 0.8rem;
+  padding: 0.25rem 0.55rem;
+  border-radius: 12px;
+  background: var(--surface);
+  border: 1px solid var(--border);
+  color: var(--muted);
+}
+
+.summary-pill strong {
+  color: var(--text);
+}
+
+.summary-pill.accent {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+  color: var(--accent);
+}
+
+.summary-pill.accent strong {
+  color: var(--accent);
+}
+
+.payroll-run-actions {
+  display: flex;
+  align-items: center;
+  gap: 0.6rem;
+  padding: 0.75rem 1.25rem;
+  flex-wrap: wrap;
+}
+
+.payroll-action-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  font-size: 0.8rem;
+  padding: 0.35rem 0.75rem;
+  border-radius: 5px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  cursor: pointer;
+  font-weight: 500;
+  transition: all 0.12s ease;
+}
+
+.payroll-action-btn:hover {
+  border-color: var(--accent);
+  background: var(--surface-2);
+}
+
+.payroll-action-btn.primary {
+  background: #1f6f4a;
+  border-color: #1f6f4a;
+  color: #fff;
+  font-weight: 600;
+}
+.payroll-action-btn.primary:hover {
+  background: #19583b;
+  border-color: #19583b;
+}
+
+.payroll-action-btn.secondary {
+  border-color: #6a4b9c;
+  color: #6a4b9c;
+}
+.payroll-action-btn.secondary:hover {
+  background: rgba(106, 75, 156, 0.08);
+}
+
+.payroll-action-btn.danger {
+  color: #b91c1c;
+}
+.payroll-action-btn.danger:hover {
+  border-color: #b91c1c;
+  background: rgba(185, 28, 28, 0.06);
+}
+
+.payroll-run-breakdown {
+  border-top: 1px solid var(--border);
+  padding: 0.5rem 1.25rem 1rem;
+  background: var(--surface);
+}
+
+.payroll-run-controls {
+  display: flex;
+  gap: 1.25rem;
+  flex-wrap: wrap;
+  margin-bottom: 1.25rem;
+}
+
+.payroll-run-controls label {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  font-size: 0.82rem;
+  font-weight: 600;
+}
+
+.payroll-run-controls input {
+  font: inherit;
+  font-size: 0.88rem;
+  padding: 0.35rem 0.55rem;
+  border: 1px solid var(--border);
+  border-radius: 4px;
+  background: var(--surface);
+  color: var(--text);
+}
+
+/* Year-end adjustments: the fields sit in a row, the account ticks in columns. */
+.year-end-field {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  margin: 0 16px 8px 0;
+}
+.year-end-checks {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(240px, 1fr));
+  gap: 4px 16px;
+  margin: 6px 0 12px;
+}
+
+/* OpenAccountants' logo on the AI check page: dark lettering, so it sits on
+   white in either theme. */
+.oa-logo {
+  display: inline-block;
+  margin: 4px 0 12px;
+  padding: 6px 12px;
+  background: #fff;
+  border-radius: 8px;
+  line-height: 0;
+}
+.oa-logo img {
+  height: 30px;
+  width: auto;
+}
+
+/* Rental information: an up-to-date tenancy. */
+.rent-ok {
+  color: var(--ok, #2e7d32);
+  font-weight: 600;
+}
+
+/* The guide check: one IRD guide chosen at a time. */
+.ai-guide-list {
+  display: grid;
+  gap: 6px;
+  margin: 8px 0 12px;
+}
+.ai-guide {
+  display: flex;
+  gap: 6px;
+  align-items: baseline;
+}
+
+/* The review table on Start here: its step may use the page's full width,
+   and the Status column keeps room for its note and the two buttons. */
+.migration-card:has(#import-table) { max-width: none; }
+#import-table th:last-child,
+#import-table td:last-child { min-width: 20rem; }
+#import-table .reason { max-width: 52ch; }
+
+/* The account picker's last entry, an action rather than an account. */
+.combo-option.combo-extra {
+  border-top: 1px solid var(--border);
+  color: var(--accent, #1d4f91);
+  font-weight: 600;
+}
+
+/* Add an account, below the chart: each field labelled, with its guidance. */
+.account-add-form {
+  margin-top: 1.4rem;
+  padding: 1rem 1.1rem;
+  border: 1px solid var(--border);
+  border-radius: 8px;
+  max-width: 64rem;
+}
+.account-add-form h3 { margin: 0 0 0.7rem; font-size: 1rem; }
+.account-add-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr));
+  gap: 0.8rem 1rem;
+}
+.account-add-field { display: flex; flex-direction: column; gap: 0.25rem; font-size: 0.85rem; }
+.account-add-field > span { font-weight: 600; }
+.account-add-field .field-hint { color: var(--muted); font-size: 0.78rem; line-height: 1.35; }
+
+/* Rules page: how a keyword matches, and a rule that fits no line. */
+.rules-table .rule-any-order { color: var(--muted); font-size: 0.72rem; }
+.rules-table .rule-dead { display: inline-block; margin-left: 0.4rem; padding: 0 0.35rem;
+  border-radius: 3px; background: var(--review-bg); color: var(--review);
+  font-size: 0.72rem; }
+.rule-editor .rule-check { flex-direction: row; align-items: center; gap: 0.4rem; }
+.rule-editor .rule-check input { width: auto; }
+
+/* Chart of accounts grouped by entity. */
+.accounts-table tr.account-group th { text-align: left; padding: 0.9rem 0.5rem 0.3rem;
+  border-bottom: 2px solid var(--border); font-size: 0.85rem; background: transparent; }
+.accounts-table tr.account-group th span { color: var(--muted); font-weight: normal; }
+
+/* Standard accounts for an entity. */
+.standard-accounts .suffix-field { max-width: 26rem; }
+.standard-accounts .suffix-input { width: 5rem; text-transform: uppercase; }
+.standard-accounts .standard-replace { display: block; margin: 0.6rem 0; font-size: 0.88rem; }
+.standard-accounts .standard-table { margin: 0.6rem 0; }
+.standard-accounts tr.standard-there td { color: var(--muted); }
+.standard-accounts .suffix-offer { margin-top: 1rem; padding-top: 0.8rem; border-top: 1px solid var(--border); font-size: 0.88rem; }
+
+/* Reports built partly from unconfirmed suggestions. */
+.provisional-note { display: flex; align-items: center; gap: 0.8rem; flex-wrap: wrap;
+  background: var(--review-bg); border-left: 3px solid var(--review);
+  padding: 0.5rem 0.8rem; margin: 0.6rem 0 0.9rem; font-size: 0.88rem; border-radius: 0 3px 3px 0; }
+.provisional-note p { margin: 0; flex: 1 1 24rem; }
+
+/* Entities: one line each, settings and actions tucked away. */
+.entity-chip { flex-direction: column; align-items: stretch; gap: 0; padding: 0.35rem 0.6rem; }
+.entity-head { display: flex; align-items: center; gap: 0.6rem; flex-wrap: wrap; }
+.entity-head > span:first-child { flex: 0 1 auto; font-weight: 600; }
+.entity-head .entity-summary { flex: 1 1 12rem; color: var(--muted); font-size: 0.8rem; }
+.entity-head > button { font-size: 0.75rem; padding: 0.15rem 0.5rem; }
+.entity-settings { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center;
+  margin-top: 0.4rem; padding-top: 0.5rem; border-top: 1px dashed rgba(128,128,128,0.3); }
+.entity-settings[hidden] { display: none; }
+.entity-settings > select { font-size: 0.8rem; }
+.entity-menu { position: relative; }
+.entity-menu > summary { list-style: none; cursor: pointer; font-size: 0.75rem;
+  padding: 0.15rem 0.5rem; border: 1px solid var(--border); border-radius: 4px; user-select: none; }
+.entity-menu > summary::-webkit-details-marker { display: none; }
+.entity-menu-items { position: absolute; right: 0; top: calc(100% + 3px); z-index: 30;
+  display: flex; flex-direction: column; min-width: 11rem; padding: 0.25rem;
+  background: var(--surface); border: 1px solid var(--border); border-radius: 5px;
+  box-shadow: 0 4px 14px rgba(0,0,0,0.15); }
+.entity-menu-items button { text-align: left; font-size: 0.8rem; border: none; background: none;
+  padding: 0.35rem 0.6rem; border-radius: 3px; }
+.entity-menu-items button:hover { background: var(--accent-soft); }
+.entity-menu-items button.danger { color: var(--danger); }
+/* The chart's YTD column. */
+.accounts-table td.account-ytd { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+.entity-head { flex-wrap: nowrap; }
+.entity-head > span:first-child { white-space: nowrap; }
+.entity-head .entity-summary { min-width: 0; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.entity-head > button, .entity-menu > summary { flex: 0 0 auto; min-height: 0; line-height: 1.4; }
+.entity-menu { flex: 0 0 auto; display: inline-block; }
+.entity-head > span:first-child { flex: 0 1 auto; min-width: 6rem; overflow: hidden; text-overflow: ellipsis; }
+.entity-head .entity-summary { flex: 1 1 0; }
+.entity-chip > .entity-head { min-width: 0; width: 100%; }
+
+/* Whose account an option is, beside it in the account picker. */
+.combo-option .combo-note { color: var(--muted); font-size: 0.85em; }
+
+/* A picker in a label laid out top to bottom: its grow-to-15rem is meant
+   across, and in a column it grew down instead, opening its list far below. */
+.account-add-field > .combo, .rule-field > .combo { flex: 0 0 auto; }
+
+/* Bank import: taking one account's lines out. */
+.remove-account { display: flex; flex-wrap: wrap; gap: 0.5rem; align-items: center; margin: 0.5rem 0; }
+.remove-account .field-hint { flex-basis: 100%; margin: 0; }
+
+/* Start here: owners beside an entity, and what each entity does. */
+.migration-entity-owners { flex: 1 1 14rem; }
+.migration-about { display: flex; flex-direction: column; gap: 0.25rem; margin: 0.5rem 0; }
+.migration-about textarea { width: 100%; }
+
+/* ---------- bank files, compact ---------- */
+.dropzone.dropzone-compact {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px 12px;
+  padding: 10px 14px;
+  text-align: left;
+  border-width: 1.5px;
+}
+.dropzone-compact .dropzone-sub {
+  margin: 0;
+  font-size: 13px;
+  flex: 1 1 260px;
+}
+.dropzone-compact .import-options {
+  flex: 1 0 100%;
+  font-size: 13px;
+}
+.dropzone-compact .import-options summary {
+  cursor: pointer;
+  color: var(--muted);
+  width: max-content;
+}
+.dropzone-compact .options {
+  justify-content: flex-start;
+  margin-top: 8px;
+  padding-top: 8px;
+}
+.stats.stats-compact {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 4px 18px;
+  margin: 10px 0 8px;
+}
+.stats-compact .stat {
+  flex-direction: row;
+  align-items: baseline;
+  gap: 6px;
+  padding: 0;
+  background: none;
+  border: 0;
+}
+.stats-compact .stat-value,
+.stats-compact .stat.wide .stat-value {
+  font-size: 14px;
+  font-family: inherit;
+}
+.stats-compact .stat-label {
+  font-size: 12px;
+  text-transform: none;
+  letter-spacing: 0;
+}
+
+/* ---------- actions required ---------- */
+.actions-badge {
+  margin-left: auto;
+  min-width: 1.4em;
+  padding: 0 0.4em;
+  border-radius: 999px;
+  font-size: 0.72rem;
+  font-weight: 700;
+  line-height: 1.5;
+  text-align: center;
+  color: #ffffff;
+}
+.actions-badge[hidden] { display: none; }
+.actions-badge.actions-amber { background: #b45309; }
+.actions-badge.actions-red { background: #c62828; }
+.actions-list {
+  list-style: none;
+  margin: 0 0 1rem;
+  padding: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.actions-item {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 4px 10px;
+  width: 100%;
+  text-align: left;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left-width: 4px;
+  border-radius: var(--radius);
+  background: var(--surface);
+  color: var(--text);
+  font: inherit;
+  cursor: pointer;
+}
+.actions-item:hover { border-color: var(--accent); }
+.actions-red .actions-item { border-left-color: #c62828; }
+.actions-amber .actions-item { border-left-color: #b45309; }
+.actions-dot {
+  width: 10px;
+  height: 10px;
+  border-radius: 50%;
+  flex: none;
+  align-self: center;
+}
+.actions-red .actions-dot { background: #c62828; }
+.actions-amber .actions-dot { background: #b45309; }
+.actions-detail { color: var(--muted); font-size: 0.88rem; flex: 1 1 280px; }
+.actions-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.actions-row .actions-item { flex: 1 1 auto; }
+.actions-snooze { flex: none; font-size: 0.85rem; }
+.actions-snooze-form { display: inline-flex; align-items: center; gap: 6px; }
+.actions-snooze-form[hidden] { display: none; }
+.actions-snoozed { margin-top: 1rem; }
+.actions-snoozed summary { cursor: pointer; color: var(--muted); }
+.actions-resting { color: var(--muted); font-size: 0.9rem; padding: 2px 0; }
+
+/* The Matched table's "How" column: a short phrase, read in one line. */
+#invoices-body .owner-table td.report-name.match-how { white-space: nowrap; }
+
+/* --- Bank Reconciliation Report ---------------------------------------
+   Daily comparison across ledger, statement closing balances, Akahu live feed,
+   and Xero reference checkpoints. */
+.reconcile-guide {
+  background: var(--surface-2, rgba(0, 0, 0, 0.02));
+  border: 1px solid var(--border, rgba(128, 128, 128, 0.2));
+  border-radius: 6px;
+  padding: 0.65rem 0.95rem;
+  margin: 0 0 1.25rem;
+}
+.reconcile-guide > summary {
+  cursor: pointer;
+  font-weight: 600;
+  font-size: 0.88rem;
+  color: var(--text);
+  user-select: none;
+}
+.reconcile-guide > summary:hover {
+  color: var(--accent, #1d4ed8);
+}
+.reconcile-guide-grid {
+  margin-top: 0.75rem;
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 0.75rem 1.25rem;
+  font-size: 0.82rem;
+  line-height: 1.45;
+  color: var(--text);
+}
+.reconcile-guide-item strong {
+  display: inline-block;
+  color: var(--text);
+  margin-right: 0.25rem;
+}
+.reconcile-guide-item span {
+  color: var(--muted, #667);
+}
+
+.bank-reconcile-table {
+  width: 100%;
+  border-collapse: separate;
+  border-spacing: 0;
+  margin-top: 0.8rem;
+  font-size: 0.84rem;
+}
+.bank-reconcile-table th,
+.bank-reconcile-table td {
+  padding: 0.4rem 0.6rem;
+  border-bottom: 1px solid var(--border, rgba(128, 128, 128, 0.15));
+  border-right: 1px solid var(--border, rgba(128, 128, 128, 0.08));
+  vertical-align: middle;
+}
+.bank-reconcile-table th:last-child,
+.bank-reconcile-table td:last-child {
+  border-right: none;
+}
+.bank-reconcile-table th {
+  background: var(--surface-2, rgba(0, 0, 0, 0.03));
+  font-weight: 600;
+  white-space: nowrap;
+  border-top: 1px solid var(--border, rgba(128, 128, 128, 0.2));
+  border-bottom: 2px solid var(--border, rgba(128, 128, 128, 0.25));
+  cursor: help;
+}
+.bank-reconcile-table th.report-amount,
+.bank-reconcile-table td.report-amount {
+  text-align: right;
+  font-variant-numeric: tabular-nums;
+}
+.bank-reconcile-table th.report-center,
+.bank-reconcile-table td.report-center {
+  text-align: center;
+}
+.bank-reconcile-table .tx-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  padding: 0.1rem 0;
+}
+.bank-reconcile-table .tx-desc {
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.bank-reconcile-table .tx-badge {
+  font-family: monospace;
+  font-size: 0.82rem;
+  font-variant-numeric: tabular-nums;
+  padding: 0.1rem 0.35rem;
+  border-radius: 3px;
+  white-space: nowrap;
+  flex-shrink: 0;
+}
+.bank-reconcile-table .tx-badge-neg {
+  background: rgba(0, 0, 0, 0.05);
+  color: var(--text);
+}
+.bank-reconcile-table .tx-badge-pos {
+  background: rgba(16, 185, 129, 0.12);
+  color: var(--in);
+  font-weight: 600;
+}
+
+
+/* --- Status pills and notices -------------------------------------------
+   Green agrees, amber waiting, red out, grey nothing to compare. Colours come
+   from the theme so they follow dark mode. */
+.status-pill {
+  display: inline-block;
+  padding: 0.1rem 0.5rem;
+  border-radius: 999px;
+  font-size: 0.8rem;
+  font-weight: 600;
+  white-space: nowrap;
+}
+.status-pill.ok { background: color-mix(in srgb, var(--in) 14%, transparent); color: var(--in); }
+.status-pill.warn { background: var(--review-bg); color: var(--review); }
+.status-pill.off { background: color-mix(in srgb, var(--out) 14%, transparent); color: var(--out); }
+.status-pill.none { background: var(--duplicate-bg); color: var(--muted); }
+.status-sub { display: block; font-size: 0.78rem; color: var(--muted); margin-top: 0.15rem; }
+.amount-ok { color: var(--in); font-weight: 600; }
+.amount-off { color: var(--out); font-weight: 600; }
+
+.notice-pending {
+  background: var(--review-bg);
+  border: 1px solid color-mix(in srgb, var(--review) 35%, transparent);
+  border-radius: var(--radius);
+  padding: 0.6rem 0.9rem;
+  margin: 0 0 0.75rem;
+  font-size: 0.85rem;
+}
+.notice-pending.inline {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+}
+.notice-pending .report-table { margin: 0.4rem 0; }
+.notice-pending .notice-foot {
+  font-size: 0.82rem;
+  color: var(--muted);
+  border-top: 1px dashed var(--border);
+  padding-top: 0.4rem;
+  margin: 0;
+}
+.balance-hint td {
+  background: var(--review-bg);
+  border-left: 3px solid var(--review);
+  font-size: 0.82rem;
+  padding: 0.4rem 0.8rem;
+}
+.balance-breaks { margin-top: 0.8rem; font-size: 0.82rem; }
+.balance-breaks > summary { cursor: pointer; color: var(--muted); }
+.balance-breaks p { margin: 0.4rem 0 0.2rem; font-weight: 600; }
+
+.milestones-card {
+  margin-top: 2rem;
+  padding: 1.25rem 1.5rem;
+  border-radius: var(--radius);
+  border: 1px solid var(--border);
+  background: var(--surface);
+}
+.milestones-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 0.75rem;
+  flex-wrap: wrap;
+  margin-bottom: 0.75rem;
+}
+.milestones-head h3 { margin: 0 0 0.25rem; font-size: 1.05rem; }
+
+/* Bank reconciliation report: toolbar, tiles, differences and the daily table. */
+.reconcile-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 0.75rem;
+  margin: 0 0 1.2rem;
+}
+.reconcile-account { display: inline-flex; align-items: center; gap: 0.4rem; font-weight: 600; }
+.reconcile-filter-tabs { display: inline-flex; flex-wrap: wrap; gap: 0.3rem; }
+.reconcile-filter-tabs button,
+.reconcile-export { font-size: 0.82rem; padding: 0.25rem 0.6rem; }
+.reconcile-export { margin-left: auto; }
+.chart-tile.tile-good { border-left: 4px solid var(--in); }
+.chart-tile.tile-warn { border-left: 4px solid var(--out); }
+.reconcile-diagnostic {
+  border: 1px solid color-mix(in srgb, var(--out) 30%, transparent);
+  border-radius: var(--radius);
+  padding: 0.9rem 1.1rem;
+  margin: 0 0 1.2rem;
+}
+.reconcile-diagnostic h4 { margin: 0 0 0.4rem; color: var(--out); }
+.bank-reconcile-table tr.row-break td { background: color-mix(in srgb, var(--out) 8%, transparent); }
+.bank-reconcile-table tr.row-timing td { background: var(--review-bg); }
+.bank-reconcile-table .reconcile-date { white-space: nowrap; font-variant-numeric: tabular-nums; }
+.bank-reconcile-table .tx-list { display: flex; flex-direction: column; gap: 0.25rem; }
+.status-pill.status-list { display: inline-flex; flex-direction: column; gap: 2px; text-align: left; }
+.muted { color: var(--muted); }
+.amount-in { color: var(--in); }
+.amount-strong { font-weight: 600; }
+.amount-warn { color: var(--review); }
+
+/* Compare with Xero: ignoring a line with a reason. */
+.ignore-reason-form { display: inline-flex; gap: 0.35rem; align-items: center; flex-wrap: wrap; }
+.ignore-reason-form[hidden],
+.ignore-custom-input[hidden] { display: none; }
+.ignore-reason-select,
+.ignore-custom-input { font-size: 0.75rem; padding: 2px 4px; }
+.ignore-custom-input { min-width: 180px; }
+.ignored-fold { margin-top: 1rem; }
+.reconcile-diagnostic td:first-child { white-space: nowrap; }
+
+/* Personal year end: the accountant's checklist, a question to a row. */
+.personal-checklist h4 { margin: 0.9rem 0 0.3rem; font-size: 0.85rem; }
+.checklist-row { display: flex; flex-wrap: wrap; gap: 0.4rem 1rem; justify-content: space-between;
+  padding: 0.4rem 0; border-bottom: 1px solid var(--border); }
+.checklist-row > div:first-child { flex: 1 1 18rem; font-size: 0.85rem; }
+.checklist-answer { display: flex; flex-wrap: wrap; align-items: center; gap: 0.4rem; font-size: 0.8rem; }
+.checklist-answer input[type="text"] { min-width: 12rem; flex: 1; }
+.ir3-cover { display: inline-block; margin-right: 0.6rem; white-space: nowrap; }
+
+/* Payroll: allowances, reimbursements and deductions, a row each. */
+.payroll-template { margin-top: 0.8rem; }
+.payroll-items { margin: 0.5rem 0; }
+.payroll-items small { color: var(--muted); }
+.payroll-item-row { display: flex; flex-wrap: wrap; align-items: center; gap: 0.35rem; margin: 0.25rem 0; }
+.payroll-item-row input[type="text"]:first-child { min-width: 12rem; }
+
+/* myIR files: a card each, open while something is missing. */
+.myir-card { border: 1px solid var(--border); border-radius: var(--radius, 6px); padding: 0.4rem 0.7rem; margin: 0.4rem 0; }
+.myir-card > summary { cursor: pointer; font-weight: 600; }
+.myir-card.myir-missing > summary { color: var(--review, #8a5a00); }
+.myir-card textarea { width: 100%; }
+
+/* Rental year end: each property a card, its name the heading. */
+details.rental-year {
+  margin: 0.8rem 0;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+}
+details.rental-year > summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: baseline;
+  gap: 0.2rem 0.8rem;
+  padding: 0.75rem 1rem;
+  cursor: pointer;
+}
+details.rental-year[open] > summary {
+  border-bottom: 1px solid var(--border);
+  background: var(--accent-soft);
+  border-radius: var(--radius) var(--radius) 0 0;
+}
+details.rental-year > :not(summary) { margin-left: 1rem; margin-right: 1rem; }
+details.rental-year > :last-child { margin-bottom: 1rem; }
+details.rental-year > summary { list-style: none; }
+details.rental-year > summary::-webkit-details-marker { display: none; }
+details.rental-year > summary::before { content: "▸"; color: var(--muted); width: 0.9rem; }
+details.rental-year[open] > summary::before { content: "▾"; }
+.rental-year-name { font-size: 1.15rem; font-weight: 650; color: var(--accent); }
+.rental-year-meta { font-size: 0.9rem; color: var(--muted); }
+
+/* Modules: each a tile, on or off. */
+.modules-box { margin: 0 0 1.5rem; scroll-margin-top: 1rem; }
+.modules-box > h3 { margin-bottom: 0.25rem; }
+.module-tiles {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(230px, 1fr));
+  gap: 0.75rem;
+  margin-top: 0.75rem;
+}
+.module-tile {
+  display: flex;
+  flex-direction: column;
+  border: 1px solid var(--border);
+  border-radius: var(--radius);
+  background: var(--surface);
+  overflow: hidden;
+  transition: border-color 0.12s, background 0.12s;
+}
+.module-tile.on { border-color: var(--accent); background: var(--accent-soft); }
+.module-toggle {
+  display: flex;
+  flex-direction: column;
+  gap: 0.35rem;
+  width: 100%;
+  padding: 0.75rem 0.85rem 0.5rem;
+  border: 0;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.module-toggle:focus-visible { outline: 2px solid var(--accent); outline-offset: -2px; }
+.module-top { display: flex; align-items: center; justify-content: space-between; gap: 0.5rem; }
+.module-name { font-weight: 650; font-size: 0.98rem; }
+.module-tile.off .module-name { color: var(--muted); }
+.module-state {
+  flex: none;
+  min-width: 2.6rem;
+  padding: 0.1rem 0.55rem;
+  border-radius: 999px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  text-align: center;
+  border: 1px solid var(--border);
+  color: var(--muted);
+  background: var(--surface-2);
+}
+.module-tile.on .module-state { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+.module-what { font-size: 0.85rem; color: var(--muted); line-height: 1.35; }
+.module-foot { padding: 0 0.85rem 0.6rem; font-size: 0.78rem; color: var(--muted); }
+.module-held { padding: 0.45rem 0.85rem; font-size: 0.8rem; color: var(--review); background: var(--review-bg); border-top: 1px solid var(--border); }
+
+/* Presentation mode: boxes holding an IRD or bank number shown as dots. */
+.presenting .presentation-masked { -webkit-text-security: disc; text-security: disc; }
+.presentation-toggle {
+  padding: 0.25rem 0.7rem;
+  border: 1px solid var(--border);
+  border-radius: 999px;
+  background: var(--surface);
+  color: var(--muted);
+  font-size: 0.8rem;
+  cursor: pointer;
+}
+.presentation-toggle[aria-pressed="true"] { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+/* "Donate a coffee", in the top bar beside Present. */
+.donate-link {
+  margin-left: auto;
+  display: inline-flex;
+  align-items: center;
+  gap: 0.4rem;
+  padding: 0.25rem 0.75rem;
+  border: 1px solid var(--accent);
+  border-radius: 999px;
+  color: var(--accent);
+  font-size: 0.8rem;
+  font-weight: 600;
+  text-decoration: none;
+  white-space: nowrap;
+}
+.donate-link:hover { background: var(--accent-soft); }
+.donate-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+

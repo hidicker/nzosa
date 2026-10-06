@@ -1,0 +1,110 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZOSA</title>
+<meta name="description" content="NZOSA: free accounting for New Zealand. Bank files in; a coded ledger, GST returns, rental schedules and financial reports out.">
+<!--
+  NZOSA's home page: the address its licence credit links to
+  ("NZOSA, by hidicker"). It must keep working at /nzosa/home/ for as long as
+  copies of NZOSA point here. No scripts: the site's security policy allows
+  none inline, and this page needs none.
+-->
+<style>
+  :root {
+    --bg: #eef1f6; --surface: #ffffff; --border: #dbe1ea; --text: #16202e;
+    --muted: #5d6b7f; --accent: #0b3d69; --accent-soft: #e6eef7; --accent-text: #ffffff;
+    --coffee: #c25e1a; --coffee-text: #ffffff;
+    color-scheme: light dark;
+  }
+  @media (prefers-color-scheme: dark) {
+    :root {
+      --bg: #0d151f; --surface: #16202e; --border: #2b3a4d; --text: #e7edf5;
+      --muted: #93a4bb; --accent: #5aa9e6; --accent-soft: #16293d; --accent-text: #08192b;
+      --coffee: #f08a3c; --coffee-text: #1d0e03;
+    }
+  }
+  * { box-sizing: border-box; }
+  body {
+    margin: 0; background: var(--bg); color: var(--text);
+    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  }
+  main { max-width: 860px; margin: 0 auto; padding: 48px 16px 32px; }
+  .mark { font-weight: 800; letter-spacing: .04em; color: var(--accent); font-size: 15px; }
+  h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; margin: 10px 0 14px; }
+  .lede { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0; }
+
+  .donate {
+    margin: 36px 0; padding: 32px 24px; text-align: center;
+    background: var(--surface); border: 2px solid var(--coffee); border-radius: 16px;
+  }
+  .donate h2 { margin: 0 0 8px; font-size: 26px; }
+  .donate p { margin: 0 auto 22px; max-width: 520px; color: var(--muted); }
+  .coffee {
+    display: inline-flex; align-items: center; gap: 10px;
+    padding: 16px 30px; border-radius: 999px; font-size: 20px; font-weight: 700;
+    background: var(--coffee); color: var(--coffee-text); text-decoration: none;
+  }
+  .coffee:hover { filter: brightness(1.08); }
+  .coffee svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
+  .donate small { display: block; margin-top: 14px; color: var(--muted); font-size: 14px; }
+
+  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 40px; }
+  .button {
+    padding: 11px 20px; border-radius: 10px; text-decoration: none; font-weight: 600;
+    border: 1px solid var(--border); background: var(--surface); color: var(--text);
+  }
+  .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+
+  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
+  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
+  .card h3 { margin: 0 0 6px; font-size: 17px; }
+  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+
+  footer { max-width: 860px; margin: 0 auto; padding: 8px 16px 40px; color: var(--muted); font-size: 14px; }
+  footer a, .lede a { color: var(--accent); }
+</style>
+</head>
+<body>
+<main>
+  <div class="mark">NZOSA</div>
+  <h1>Free accounting for New Zealand.</h1>
+  <p class="lede">
+    Bank files in; a coded double-entry ledger, GST returns, rental schedules,
+    IR3 and IR10 figures and financial reports out. It codes from your own past
+    decisions, and every figure can be checked.
+  </p>
+
+  <section class="donate" aria-labelledby="donate-title">
+    <h2 id="donate-title">NZOSA is free. Help keep it that way.</h2>
+    <p>
+      There is no subscription and no paid tier. It is built and kept up to date
+      with each year's IRD rates by one person, and donations are what keep it going.
+    </p>
+    <a class="coffee" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener">
+      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 8h10v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14 9h1.5a2 2 0 0 1 0 4H14"/><path d="M7 3.5c-.6.8.6 1.4 0 2.3M10 3.5c-.6.8.6 1.4 0 2.3"/></svg>
+      Donate a coffee
+    </a>
+    <small>Secure payment by Stripe. Any amount, once, no account needed.</small>
+  </section>
+
+  <div class="actions">
+    <a class="button primary" href="../">Open NZOSA</a>
+    <a class="button" href="../../nzosa_demo/">Try the demo</a>
+  </div>
+
+  <div class="grid">
+    <div class="card"><h3>Your own past coding</h3><p>Rules are learned from how you have coded before, not from keywords you type in.</p></div>
+    <div class="card"><h3>GST, done properly</h3><p>Returns on any basis, reconciled to the ledger, with every difference explained.</p></div>
+    <div class="card"><h3>Rentals and personal</h3><p>Each property its own entity, rental schedules as an accountant sets them out, and each owner's IR3.</p></div>
+    <div class="card"><h3>Your data stays yours</h3><p>On your own computer it is plain files in a folder. Nothing is uploaded.</p></div>
+  </div>
+</main>
+<footer>
+  NZOSA, by hidicker. Free software under the GNU AGPL v3, with
+  <a href="../NOTICE.txt">additional terms</a>, provided as is and without warranty &mdash;
+  <a href="../LICENSE.txt">licence</a>.
+</footer>
+</body>
+</html>

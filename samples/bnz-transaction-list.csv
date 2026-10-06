@@ -1,0 +1,15 @@
+Sample Account - 02-1100-0022001-001
+Date,Amount,CCY,Serial,Trn,Particulars,Code,Reference,Other Party,Origin,Type,Batch,Other Party Account
+"02/09/2024","-662.39","NZD","","000","Two-Way Radio","2 x TwoPack","","SAMPLE RADIO LTD","02-1255","BP","0000","12-3100-0044004-000"
+"04/09/2024","5000.00","NZD","","050","","","INTERNET XFR","Payment","02-1255","FT","0000","02-1100-0022002-02"
+"31/03/2025","-172.08","NZD","","000","","","INTERNET XFR","Sample Card","02-1255","FT","0000","xxxx-xxxx-xxxx-4001"
+Total:,4165.53,NZD,Count:,3
+
+
+Sample Card - XXXX-XXXX-XXXX-4001
+Date,Amount,CCY,Serial,Trn,Particulars,Code,Reference,Other Party,Origin,Type,Batch,Other Party Account
+"01/04/2025","172.08","NZD","","065","","NZD17208","","PAYMENT - THANK YOU","","PAY","","02-1100-0022001-001"
+"02/03/2026","-20.00","NZD","","005","900000001","NZD2000","","PAYPAL *SAMPLEASSN","","PUR","",""
+"02/03/2026","-20.00","NZD","","005","900000001","NZD2000","","PAYPAL *SAMPLEASSN","","PUR","",""
+"02/09/2024","-37.69","NZD","","005","HTTPSOPENAI.C","USD2300","","OPENAI *CHATGPT SUBSCR","","PUR","",""
+Total:,94.39,NZD,Count:,4

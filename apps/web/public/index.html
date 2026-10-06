@@ -1,0 +1,873 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>NZOSA</title>
+    <meta
+      name="description"
+      content="Turn bank flat files into a clean, deduplicated transaction ledger. Runs entirely in your browser."
+    />
+    <link rel="stylesheet" href="styles.css" />
+    <link
+      rel="icon"
+      href="data:image/svg+xml,<svg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'><text y='13' font-size='13'>📒</text></svg>"
+    />
+  </head>
+  <body>
+    <div id="app-loading" class="app-loading" role="status" aria-live="polite">
+      <div class="loading-card">
+        <div class="loading-brand">
+          <span class="loading-logo" aria-hidden="true">📒</span>
+          <span class="loading-title">NZOSA</span>
+        </div>
+        <div class="loading-spinner" aria-hidden="true"></div>
+        <p id="loading-msg" class="loading-msg">Loading books&hellip;</p>
+      </div>
+    </div>
+    <script>
+      (function () {
+        // Safety fallback: if app.js is cached or delayed, ensure loader never hangs forever
+        setTimeout(function () {
+          var el = document.getElementById("app-loading");
+          if (el && !el.classList.contains("dismissed")) {
+            el.classList.add("dismissed");
+            setTimeout(function () { if (el.parentNode) el.parentNode.removeChild(el); }, 400);
+          }
+        }, 10000);
+      })();
+    </script>
+    <aside id="demo-banner" class="demo-banner" hidden>
+      <div class="demo-banner-content">
+        <span class="demo-banner-badge">Demo</span>
+        <span>This is a demo, with invented books. A version to run privately on your own computer is coming.</span>
+      </div>
+      <button type="button" id="demo-banner-close" class="demo-banner-close" aria-label="Dismiss banner" title="Dismiss banner">&times;</button>
+    </aside>
+    <aside id="save-banner" class="save-banner" hidden>
+      <div class="save-banner-content">
+        <span id="save-banner-text"></span>
+        <button type="button" id="save-banner-reload" class="save-banner-reload">Reload</button>
+      </div>
+      <button type="button" id="save-banner-close" class="save-banner-close" aria-label="Dismiss" title="Dismiss">&times;</button>
+    </aside>
+    <div class="shell">
+      <aside class="sidebar">
+        <div class="sidebar-head">
+          <button
+            id="sidebar-toggle"
+            type="button"
+            class="sidebar-toggle"
+            aria-expanded="true"
+            title="Narrow the menu to icons"
+          >
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false">
+              <path d="M4 5h12M4 10h12M4 15h12" />
+            </svg>
+          </button>
+          <span class="wordmark">NZOSA</span>
+          <button
+            id="theme-toggle"
+            type="button"
+            class="theme-toggle"
+            title="Light, dark, or whatever this computer is set to"
+          ></button>
+        </div>
+
+        <nav class="sidebar-nav" aria-label="Sections">
+          <div class="menu-search">
+            <input id="menu-search" type="search" placeholder="Search (Ctrl+K)" autocomplete="off"
+              aria-label="Search pages and reports" />
+            <div id="menu-search-results" class="menu-search-results" role="listbox" hidden></div>
+          </div>
+          <div class="sidebar-group" data-group="daily">
+            <button type="button" class="sidebar-heading" aria-expanded="true">Daily</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-page="reconcile" class="active">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 7h12M4 13h12M8 4l-4 3 4 3M12 10l4 3-4 3"/></svg>
+                <span>Reconcile</span>
+              </button>
+              <button type="button" data-page="actions">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3l7.5 13h-15z"/><path d="M10 8v4M10 14v.5"/></svg>
+                <span>Actions required</span>
+                <span class="actions-badge" hidden></span>
+              </button>
+              <button type="button" data-page="import">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>
+                <span>Bank import</span>
+              </button>
+              <div class="sidebar-sublinks" id="sidebar-import-sublinks" hidden>
+                <a href="#import-feed" class="sidebar-sublink">Bank feed – Akahu</a>
+                <a href="#import-wise" class="sidebar-sublink">Wise</a>
+                <a href="#import-balances" class="sidebar-sublink">Import bank balances</a>
+                <a href="#import-files" class="sidebar-sublink">Import bank files</a>
+                <a href="#import-table" class="sidebar-sublink">Differences &amp; review</a>
+              </div>
+              <button type="button" data-page="invoices" data-module="business">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
+                <span>Invoices</span>
+              </button>
+              <button type="button" data-page="bills" hidden data-module="business company">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h10v14l-2-1.5L11 17l-2-1.5L7 17l-2-1.5z"/><path d="M8 7h4M8 10h4"/></svg>
+                <span>Bills</span>
+              </button>
+              <button type="button" data-page="payroll" data-module="payroll">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
+                <span>Payroll</span>
+              </button>
+              <button type="button" data-page="tenancies" hidden data-module="rentals">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 9.5 10 4l7 5.5V16H3z"/><path d="M8 16v-4h4v4"/><circle cx="14.5" cy="6" r="1"/></svg>
+                <span>Rental information</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="enter">
+            <button type="button" class="sidebar-heading" aria-expanded="true">Enter</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-report="manual">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16h3l9-9-3-3-9 9z"/><path d="M11 6l3 3"/></svg>
+                <span>Manual journals</span>
+              </button>
+              <button type="button" data-page="assets" data-module="assets">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3z"/><path d="M7 7V5h6v2"/><path d="M3 11h14"/></svg>
+                <span>Fixed assets</span>
+              </button>
+              <button type="button" data-report="yearend" data-module="vehicle business">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 5h12v11H4z"/><path d="M4 8h12M8 3v4M12 3v4"/></svg>
+                <span>Year-end adjustments</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="reporting">
+            <button type="button" class="sidebar-heading" aria-expanded="true">Reporting</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-page="reports">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16V9M8.5 16V5M13 16v-4M17 16h-14"/></svg>
+                <span>Reports</span>
+              </button>
+              <button type="button" data-report="gstreturn" data-module="gst">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 15 15 5"/><circle cx="6.5" cy="6.5" r="1.5"/><circle cx="13.5" cy="13.5" r="1.5"/></svg>
+                <span>GST return</span>
+              </button>
+              <button type="button" data-page="rentalyear" data-module="rentals">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 10 10 4l7 6"/><path d="M5 9v7h10V9"/><path d="M8.5 16v-4h3v4"/></svg>
+                <span>Rental year end</span>
+              </button>
+              <button type="button" data-page="personalyear" data-module="personal">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="6" r="3"/><path d="M4 17a6 6 0 0 1 12 0"/><path d="M13 13l2 2 3-4"/></svg>
+                <span>Personal year end</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="setup">
+            <button type="button" class="sidebar-heading" aria-expanded="true">Set up</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-page="migration">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 10h9m0 0-3-3m3 3-3 3"/><path d="M11 4h5v12h-5"/></svg>
+                <span>Start here</span>
+              </button>
+              <button type="button" data-page="setup">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="2.5"/><path d="M10 3v2M10 15v2M3 10h2M15 10h2M5.4 5.4l1.4 1.4M13.2 13.2l1.4 1.4M14.6 5.4l-1.4 1.4M6.8 13.2l-1.4 1.4"/></svg>
+                <span>Setup</span>
+              </button>
+              <div class="sidebar-sublinks" id="sidebar-setup-sublinks" hidden>
+                <a href="#setup-modules" class="sidebar-sublink">Modules</a>
+                <a href="#setup-body" class="sidebar-sublink">Set-up steps</a>
+              </div>
+              <button type="button" data-page="opening">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v14"/><path d="M5 8h10"/><path d="M4 12h5M11 12h5"/></svg>
+                <span>Opening balances</span>
+              </button>
+              <button type="button" data-page="gst" data-module="gst">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 5h12v10H4z"/><path d="M7 9h6M7 12h3"/></svg>
+                <span>GST reconciliation</span>
+              </button>
+              <button type="button" data-page="ird">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M6 3h8l2 2v12H4V5z"/><path d="M7 9h6M7 12h6M7 15h3"/></svg>
+                <span>IRD records</span>
+              </button>
+              <button type="button" data-page="check" data-module="xero sheet">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 10.5 8 14l8-8"/></svg>
+                <span>Coding reconciliation</span>
+              </button>
+              <button type="button" data-page="entities">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 16V8l4-3 4 3v8"/><path d="M11 16V11l3-2 3 2v5"/><path d="M2 16h16"/></svg>
+                <span>Entities &amp; accounts</span>
+              </button>
+              <button type="button" data-page="rules">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h12M4 10h12M4 14h7"/><circle cx="14.5" cy="14" r="1.5"/></svg>
+                <span>Rules</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="ai">
+            <button type="button" class="sidebar-heading" aria-expanded="true">AI</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-page="ai">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3l1.6 3.6L15 8l-3.4 1.4L10 13l-1.6-3.6L5 8l3.4-1.4z"/><path d="M15 13l.8 1.8L17.5 16l-1.7.7L15 18l-.8-1.3L12.5 16l1.7-1.2z"/></svg>
+                <span>AI suggestions</span>
+              </button>
+              <button type="button" data-page="aicheck">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 5h11l3 3v9H3z"/><path d="M6.5 11.5 8.5 13.5l4-4.5"/></svg>
+                <span>AI accounts check</span>
+              </button>
+            </div>
+          </div>
+          <div class="sidebar-group" data-group="books">
+            <button type="button" class="sidebar-heading" aria-expanded="true">Books</button>
+            <div class="sidebar-group-items">
+              <button type="button" data-page="history">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="10" cy="10" r="7"/><path d="M10 6v4l2.5 2"/></svg>
+                <span>History and Undo</span>
+              </button>
+            </div>
+          </div>
+        </nav>
+
+        <div class="sidebar-foot">
+          <!-- Which books are open. Switching happens on the Books page now,
+               but the name stays: not knowing which set you are coding into is
+               how work ends up in the wrong one. -->
+          <button type="button" class="ledger-open" id="ledger-open" data-page="books" hidden>
+            <span class="ledger-open-label">Books</span>
+            <span class="ledger-open-name" id="ledger-open-name"></span>
+          </button>
+        </div>
+      </aside>
+
+      <div class="shell-body">
+        <header class="topbar">
+          <h1 id="page-title">Reconcile</h1>
+          <label class="entity-filter">
+            <span>Entity</span>
+            <select id="entity-filter"></select>
+          </label>
+          <a class="donate-link" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" target="_blank" rel="noopener" title="NZOSA is free. If it helps you, you can buy its maker a coffee.">
+            <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 8h10v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14 9h1.5a2 2 0 0 1 0 4H14"/><path d="M7 3.5c-.6.8.6 1.4 0 2.3M10 3.5c-.6.8.6 1.4 0 2.3"/></svg>
+            <span>Donate a coffee</span>
+          </a>
+        </header>
+        <p id="startup-status" class="startup-status" hidden></p>
+
+        <main>
+      <section id="page-actions" class="page" hidden>
+        <div id="actions-body"></div>
+      </section>
+
+      <section id="page-reconcile" class="page">
+        <div class="page-head">
+          <h2>Bank lines to code</h2>
+          <div class="page-actions">
+            <div class="chips" id="reconcile-accounts" role="group" aria-label="Accounts"></div>
+            <input id="reconcile-search" type="search" placeholder="Search payee or amount&hellip;" />
+            <select id="reconcile-filter" title="Which lines to show">
+              <option value="todo">Still to confirm</option>
+              <option value="suggested">Suggested, not yet confirmed</option>
+              <option value="ai">AI suggested</option>
+              <option value="nocode">Nothing suggested</option>
+              <option value="coded">Coded</option>
+              <option value="all">All</option>
+            </select>
+            <button id="reconcile-sort" type="button">Oldest first ↑</button>
+            <button id="accept-all" type="button">Accept all</button>
+            <span class="ai-menu" id="reconcile-ai-group" hidden>
+              <button id="reconcile-ai" type="button" aria-haspopup="true" aria-expanded="false">
+                AI suggestions
+              </button>
+              <div class="ai-menu-items" id="reconcile-ai-menu" hidden>
+                <button type="button" data-how="key" id="reconcile-ai-key"></button>
+                <button type="button" data-how="prompt" id="reconcile-ai-prompt"></button>
+              </div>
+            </span>
+          </div>
+        </div>
+        <p id="reconcile-ai-notice" class="page-hint ai-notice" hidden></p>
+        <div id="reconcile-ai-paste" class="ai-paste" hidden></div>
+        <p class="page-hint" id="reconcile-hint">
+          Each line has a suggested account and GST treatment. Accept or change it to code the line.
+        </p>
+        <div id="reconcile-body"></div>
+      </section>
+
+      <section id="page-check" class="page" hidden>
+        <div class="page-head">
+          <h2>Coding reconciliation</h2>
+          <div class="page-actions">
+            <div class="chips" id="check-accounts" role="group" aria-label="Accounts"></div>
+            <button id="check-clear" type="button">Clear</button>
+          </div>
+        </div>
+        <p class="page-hint">
+          Load the coding from your previous system to compare it with NZOSA's. Where they agree, the coding can become a rule; where they differ, choose which is right. Lines are matched on amount and nearest date.
+        </p>
+        <details class="how-to" data-module="xero">
+          <summary>How to get the file out of Xero</summary>
+          <ol>
+            <li>Go to <strong>Reporting &rarr; Account Transactions</strong>.</li>
+            <li>Select <strong>all accounts</strong>.</li>
+            <li>Under columns, select <strong>all columns</strong>.</li>
+            <li>Set <strong>Grouping/Summarising</strong> to <strong>None</strong>. This matters:
+              grouped output hides the account each posting went to, which is the whole point of
+              the check.</li>
+            <li>Click <strong>Update</strong>, then <strong>Export &rarr; Excel</strong>.</li>
+          </ol>
+          <p>
+            Load the resulting <code>.xlsx</code> or <code>.csv</code> here. A chart of accounts
+            export helps too, so a code and a name are recognised as the same account.
+          </p>
+        </details>
+        <details class="how-to">
+          <summary>Loading a spreadsheet instead</summary>
+          <p>
+            Your own spreadsheet is accepted, and needs three columns:
+          </p>
+          <ul>
+            <li><strong>Date</strong> and <strong>Amount</strong> — required, and found by
+              those headings.</li>
+            <li>A column saying what each line was coded to. Its heading can be
+              <code>What</code>, <code>Account</code>, <code>Code</code>, <code>Coding</code>,
+              <code>Category</code> or <code>Class</code> — whichever yours uses.</li>
+          </ul>
+          <p>
+            If none of those headings fits, the file is not refused: you are shown the headings
+            it found and can point at the right three columns yourself. Nothing needs renaming
+            first.
+          </p>
+          <p>
+            Keeping your coding on a sheet from scratch?
+            <button id="check-template" type="button" class="link-button">Download a template</button>
+            with those columns and two example lines.
+          </p>
+        </details>
+        <!-- The file button belongs where the file goes, and looking like the
+             one on the Import page, rather than tucked in the header beside a
+             filter. -->
+        <div id="check-drop" class="dropzone dropzone-slim">
+          <p class="dropzone-title">Drop the <span data-module="xero">Account Transactions export</span><span data-module="!xero">coded spreadsheet</span> here</p>
+          <p class="dropzone-sub">
+            <span data-module="xero">From Xero, or your own spreadsheet.</span> <code>.xlsx</code> or <code>.csv</code>.
+            <br />Read and parsed in this tab. Nothing is uploaded.
+          </p>
+          <button id="check-pick" type="button" class="primary">Choose file</button>
+          <input id="check-input" type="file" accept=".csv,.xlsx" multiple hidden />
+        </div>
+        <div id="check-body"></div>
+      </section>
+
+      <section id="page-rules" class="page" hidden>
+        <div class="page-head">
+          <h2>Coding rules</h2>
+          <div class="page-actions">
+            <input id="rules-search" type="search" placeholder="Search keyword, code&hellip;" />
+            <button id="rules-pick" type="button">Load rules&hellip;</button>
+            <input id="rules-input" type="file" accept=".json,application/json" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          Rules suggest an account; you confirm it. Higher priority wins, and an account restriction limits a rule to that bank account.
+        </p>
+        <div id="rules-status"></div>
+        <div id="rules-body"></div>
+      </section>
+
+      <section id="page-migration" class="page" hidden>
+        <div id="migration-body"></div>
+      </section>
+
+      <section id="page-ai" class="page" hidden>
+        <p class="page-hint">
+          Suggestions for lines no rule recognises. Off until you turn it on, and it shows what it will send before sending anything.
+        </p>
+        <div id="ai-body"></div>
+      </section>
+
+      <section id="page-aicheck" class="page" hidden>
+        <p class="page-hint">
+          Checks the finished year against New Zealand tax rules, using the IRD guides. A draft for a qualified person to review, not for filing.
+        </p>
+        <div id="ai-check-body"></div>
+      </section>
+
+      <section id="page-setup" class="page" hidden>
+        <div class="page-head">
+          <h2>Setup</h2>
+          <div class="page-actions">
+            <select id="setup-source">
+              <option value="xero">I use Xero</option>
+              <option value="sheet">I use a spreadsheet</option>
+              <option value="new">I am starting from new</option>
+            </select>
+          </div>
+        </div>
+        <p class="page-hint">
+          Already have coded transactions? Load them and your existing coding becomes the rules. Starting fresh, rules are made from your first coding decisions.
+        </p>
+        <div id="setup-intro"></div>
+        <div id="setup-body"></div>
+        <div id="setup-drop" class="dropzone dropzone-mini" hidden>
+          <span class="dropzone-mini-text">Drop exported files here, or</span>
+          <button id="setup-pick" type="button" class="dropzone-mini-btn">Choose files</button>
+          <input id="setup-input" type="file" accept=".csv,.xlsx,.txt" multiple hidden />
+          <div id="setup-loaded"></div>
+        </div>
+      </section>
+
+      <section id="page-history" class="page" hidden>
+        <div class="page-head">
+          <h2>History and Undo</h2>
+          <div class="page-actions">
+            <label class="who-label">
+              <span>You are</span>
+              <input id="who" type="text" placeholder="Your name" />
+            </label>
+            <select id="history-kind"><option value="">Everything</option></select>
+          </div>
+        </div>
+        <p class="page-hint">
+          Every change, most recent first, and how to undo it. Changes are recorded with the name entered; names are not verified. The history stays on this computer and is not included in exports.
+        </p>
+        <div id="history-body"></div>
+      </section>
+
+      <section id="page-invoices" class="page" hidden>
+        <div class="page-head">
+          <h2>Invoices</h2>
+          <div class="page-actions">
+            <input id="invoice-search" type="search" placeholder="Search contact, number&hellip;" />
+            <button id="invoice-new" type="button" class="primary">New invoice</button>
+            <button id="invoices-pick" type="button">Load invoices&hellip;</button>
+            <input id="invoices-input" type="file" accept=".csv,text/csv" hidden />
+            <button id="allocations-pick" type="button">Load allocations&hellip;</button>
+            <input id="allocations-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          Invoice payments are matched by invoice number, then recorded allocations, then exact amount and date. Anything less certain is suggested for you to confirm.
+        </p>
+        <div id="invoice-editor"></div>
+        <div id="invoices-body"></div>
+      </section>
+
+      <section id="page-bills" class="page" hidden>
+        <div class="page-head">
+          <h2>Bills</h2>
+          <div class="page-actions">
+            <select id="bill-filter" aria-label="Show"></select>
+            <input id="bill-search" type="search" placeholder="Search supplier, number&hellip;" />
+            <button id="bill-new" type="button" class="primary">New bill</button>
+          </div>
+        </div>
+        <p class="page-hint">
+          What is owed to suppliers. A bill is a draft until approved; approving it books the cost and its GST on the bill date. Match its payment on Reconcile.
+        </p>
+        <div id="bill-editor"></div>
+        <div id="bills-body"></div>
+      </section>
+
+      <section id="page-rentalyear" class="page" hidden>
+        <div class="page-head">
+          <h2>Rental year end</h2>
+        </div>
+        <p class="page-hint">
+          Each rental property's year: its schedule, the property manager's statements, and trips
+          made to it in your own vehicle. The owners' returns on Personal year end take their share
+          of what is here.
+        </p>
+        <div id="rentalyear-body"></div>
+      </section>
+
+      <section id="page-personalyear" class="page" hidden>
+        <div class="page-head">
+          <h2>Personal year end</h2>
+        </div>
+        <p class="page-hint">
+          A person's income tax return (IR3) for a year: what it still needs that these books cannot
+          know, and the return itself, set out as a year-end pack to print or save as a PDF.
+        </p>
+        <div id="personalyear-body"></div>
+      </section>
+
+      <section id="page-tenancies" class="page" hidden>
+        <div class="page-head">
+          <h2>Rental information</h2>
+        </div>
+        <p class="page-hint">
+          Each tenancy's rent, rent changes and bond, compared with the rent received, showing whether the tenant is behind or ahead and by how much. This page does not change the books.
+        </p>
+        <div id="tenancies-body"></div>
+      </section>
+
+      <section id="page-payroll" class="page" hidden>
+        <div class="page-head">
+          <h2>Payroll</h2>
+          <div class="page-actions" id="payroll-actions">
+            <div class="filters" id="payroll-tabs" role="group" aria-label="Payroll view">
+              <button id="payroll-tab-runs" type="button" class="active">Pay Runs</button>
+              <button id="payroll-tab-employees" type="button">Employees</button>
+              <button id="payroll-tab-leave" type="button">Leave</button>
+            </div>
+            <button id="payroll-new-run" type="button" class="primary">New pay run</button>
+            <button id="payroll-add-employee" type="button">Add employee</button>
+          </div>
+        </div>
+        <p class="page-hint" id="payroll-hint">
+          Employees, pay runs and payday filing. PAYE, student loan, KiwiSaver and ESCT follow Inland Revenue's payroll specification for each payday's tax year, and each pay run produces the Employment Information file to upload in myIR within two working days of payday.
+        </p>
+        <div id="payroll-employer-bar"></div>
+        <div id="payroll-editor"></div>
+        <div id="payroll-body"></div>
+      </section>
+
+      <section id="page-reports" class="page" hidden>
+        <div class="page-head">
+          <h2>Reports</h2>
+          <div class="page-actions">
+            <select id="report-basis">
+              <option value="posted">Accrual (our postings)</option>
+              <option value="accrual">Accrual (imported file)</option>
+              <option value="cash">Cash (bank data)</option>
+            </select>
+            <select id="report-gst" title="Whether the figures include GST">
+              <option value="net">Excluding GST</option>
+              <option value="gross">Including GST</option>
+            </select>
+            <select id="report-kind">
+              <option value="home">All reports</option>
+              <optgroup label="Financial statements">
+                <option value="pl">Profit and loss</option>
+                <option value="balancesheet">Balance sheet</option>
+                <option value="cashflow">Cash flow statement</option>
+                <option value="depreciation" data-module="assets">Depreciation schedule</option>
+                <option value="shareholders" data-module="company">Shareholder current accounts</option>
+              </optgroup>
+              <optgroup label="Taxes and balances">
+                <option value="gstreturn" data-module="gst">GST return</option>
+                <option value="ir10" data-module="business">IR10 financial statement</option>
+                <option value="journal">Journal report and trial balance</option>
+                <option value="general">General ledger detail</option>
+                <option value="manual">Manual journals</option>
+              </optgroup>
+              <optgroup label="Transactions">
+                <option value="bankreconcile">Bank reconciliation</option>
+                <option value="extract">Account transactions</option>
+              </optgroup>
+              <optgroup label="Payables and receivables">
+                <option value="agedpayables" data-module="business company">Aged payables</option>
+                <option value="agedreceivables" data-module="business">Aged receivables</option>
+              </optgroup>
+              <optgroup label="Rentals and owners">
+                <option value="rentals" data-module="rentals">Rental schedules</option>
+                <option value="yearend" data-module="vehicle business">Year-end adjustments</option>
+                <option value="ir3" data-module="personal">IR3 individual return</option>
+                <option value="owner" data-module="rentals personal">Income by owner</option>
+              </optgroup>
+              <optgroup label="Analytics">
+                <option value="charts">Charts</option>
+              </optgroup>
+            </select>
+            <select id="report-owner"></select>
+            <select id="report-year"></select>
+            <button id="journals-pick" type="button">Load ledger&hellip;</button>
+            <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
+            <button id="report-download" type="button">Download CSV</button>
+            <button id="report-download-excel" type="button">Excel detailed extract</button>
+          </div>
+        </div>
+        <p class="page-hint" id="reports-hint"></p>
+        <div id="reports-body"></div>
+      </section>
+
+      <section id="page-assets" class="page" hidden>
+        <div class="page-head">
+          <h2>Fixed assets</h2>
+        </div>
+        <p class="page-hint">
+          Record assets to calculate depreciation, and gains or losses on disposal.
+        </p>
+        <div id="assets-drop" class="dropzone dropzone-slim">
+          <p class="dropzone-title">Load a register from a file</p>
+          <p class="dropzone-sub">
+            The template below filled in on a sheet, or a register exported from here<span data-module="xero">, or from Xero:
+            <strong>Accounting &rarr; Fixed assets</strong>, then <strong>Export</strong></span>. A
+            <code>.csv</code>. It replaces the register held.
+            <br />Read and parsed in this tab. Nothing is uploaded.
+          </p>
+          <button id="assets-pick2" type="button">Choose file</button>
+          <input id="assets-input" type="file" accept=".csv,text/csv" hidden />
+        </div>
+        <div id="assets-body"></div>
+      </section>
+
+      <section id="page-books" class="page" hidden>
+        <div class="page-head">
+          <h2>Books</h2>
+        </div>
+        <p class="page-hint" id="books-hint">
+          Every set of books you can open here.
+        </p>
+        <div id="books-body"></div>
+      </section>
+
+      <section id="page-entities" class="page" hidden>
+        <div class="page-head">
+          <h2>Entities &amp; accounts</h2>
+          <div class="page-actions">
+            <button id="chart-pick" type="button">Load chart&hellip;</button>
+            <button id="chart-save" type="button">Export chart&hellip;</button>
+            <input id="chart-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          Each account belongs to one entity; a bank account can serve several. The GST treatment set here is used on the GST returns for anything coded to the account.
+        </p>
+        <div id="entities-body"></div>
+      </section>
+
+      <section id="page-opening" class="page" hidden>
+        <div class="page-head">
+          <h2>Opening balances</h2>
+          <div class="page-actions">
+            <select id="opening-year"></select>
+            <button id="opening-bank" type="button" class="primary">Enter bank balances</button>
+            <button id="opening-enter" type="button">Enter opening balances</button>
+            <button id="opening-pick" type="button">Import trial balance&hellip;</button>
+            <input id="opening-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          The position on the day these books start. Enter bank balances gives each bank account and loan its balance, from a statement on any date or from the bank feed. Where there is more than that &ndash; debtors, assets, GST owing &ndash; import a trial balance from the previous year end.
+        </p>
+        <div id="opening-body"></div>
+      </section>
+
+      <section id="page-import" class="page" hidden>
+        <div class="page-head">
+          <h2>Bank import</h2>
+          <nav class="import-subnav" aria-label="Bank import subsections">
+            <a href="#import-feed" class="import-subnav-link active">Bank feed – Akahu</a>
+          <a href="#import-wise" class="import-subnav-link">Wise</a>
+            <a href="#import-balances" class="import-subnav-link">Import bank balances</a>
+            <a href="#import-files" class="import-subnav-link">Import bank files</a>
+            <a href="#import-table" class="import-subnav-link">Differences &amp; review</a>
+          </nav>
+        </div>
+
+        <!-- 1. Bank feed - Akahu -->
+        <section id="import-feed" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Bank feed – Akahu</h3>
+          </div>
+          <p class="page-hint">
+            Import transactions automatically from your bank. You can also import files; lines that arrive twice are detected as duplicates.
+        </p>
+          <div id="feed-body"></div>
+        </section>
+
+        <!-- 1b. Wise -->
+        <section id="import-wise" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Wise</h3>
+          </div>
+          <p class="page-hint">
+            Wise balances, fetched with a Wise API token: the bank feed does not reach Wise. Fees come through as lines of their own.
+          </p>
+          <div id="wise-body"></div>
+        </section>
+
+        <!-- 2. Import bank balances -->
+        <section id="import-balances" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Import bank balances</h3>
+            <button id="balances-pick" type="button">Load daily balances&hellip;</button>
+            <input id="balances-input" type="file" accept=".csv,text/csv" hidden />
+          </div>
+          <p class="page-hint">
+            Import or enter bank balances to confirm no transactions are missing or duplicated. Export them from internet banking for the same period, or type a start and end balance for each account.
+        </p>
+          <div id="balances-entry"></div>
+          <div id="balances-body"></div>
+        </section>
+
+        <!-- 3. Import bank files -->
+        <section id="import-files" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Import bank files</h3>
+          </div>
+          <p id="demo-import-privacy-notice" class="demo-privacy-notice" hidden>
+            <strong>Public demo note:</strong> Transactions imported here are processed in your browser and stored in this browser's local cache. Do not import confidential financial files on shared or public computers.
+          </p>
+          <section id="dropzone" class="dropzone dropzone-compact" aria-label="Import bank files">
+          <button id="pick-button" type="button" class="primary">Choose files</button>
+          <span class="dropzone-sub">
+            or drop BNZ, ANZ or Wise CSV exports here, several at once. Read in this tab; nothing is uploaded.
+          </span>
+          <input id="file-input" type="file" accept=".csv,.txt,text/csv" multiple hidden />
+          <!-- Only one currency is kept (NZD), so there is no currency to choose. -->
+          <details class="import-options">
+            <summary>Options</summary>
+            <div class="options">
+              <label>
+                <span>Account id</span>
+                <input id="account" type="text" placeholder="e.g. visa-platinum" />
+                <small>Only for files that do not name their own account, like card exports.</small>
+              </label>
+              <label class="checkbox">
+                <input id="day-first" type="checkbox" checked />
+                <span>Dates are DD/MM/YYYY</span>
+                <small>Uncheck for MM/DD/YYYY exports.</small>
+              </label>
+            </div>
+          </details>
+        </section>
+
+          <p id="busy" class="busy" hidden>Parsing&hellip;</p>
+
+          <p id="storage-warning" class="warning" hidden>
+            This browser will not let the page store data, so nothing will survive closing this
+            tab. Export your ledger before you leave.
+          </p>
+
+          <section id="reports" class="reports" aria-live="polite"></section>
+
+          <section class="stats stats-compact">
+            <div class="stat">
+              <span class="stat-value" id="stat-total">0</span>
+              <span class="stat-label">transactions</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-review">0</span>
+              <span class="stat-label">need review</span>
+            </div>
+            <div class="stat">
+              <span class="stat-value" id="stat-accounts">0</span>
+              <span class="stat-label">accounts</span>
+            </div>
+            <div class="stat wide">
+              <span class="stat-value" id="stat-range">--</span>
+              <span class="stat-label">date range</span>
+            </div>
+          </section>
+        </section>
+
+        <!-- 4. The table with differences & review -->
+        <section id="import-table" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Differences &amp; review</h3>
+          </div>
+          <section class="toolbar">
+            <div class="filters" role="group" aria-label="Filter transactions">
+              <button id="filter-all" type="button">All</button>
+              <button id="filter-review" type="button" class="active">Needs review (0)</button>
+              <button id="filter-duplicate" type="button">Duplicates (0)</button>
+            </div>
+            <input id="search" type="search" placeholder="Search payee, particulars, amount&hellip;" />
+            <div class="ledger-actions">
+              <button id="export-button" type="button">Download a backup</button>
+              <button id="import-ledger-button" type="button">Restore from a backup&hellip;</button>
+              <input id="ledger-input" type="file" accept=".json,application/json" hidden />
+              <button id="clear-button" type="button" class="danger">Remove an account&rsquo;s lines&hellip;</button>
+            </div>
+            <div id="remove-account" class="remove-account" hidden></div>
+          </section>
+
+          <div class="table-scroll">
+            <table>
+              <thead>
+                <tr>
+                  <th>Date</th>
+                  <th>Amount</th>
+                  <th>Other party</th>
+                  <th>Particulars / code / reference</th>
+                  <th>Account</th>
+                  <th>Source</th>
+                  <th>Status</th>
+                </tr>
+              </thead>
+              <tbody id="rows">
+                <tr>
+                  <td colspan="7" class="empty">
+                    No transactions yet. Drop a bank export above to get started.
+                  </td>
+                </tr>
+              </tbody>
+            </table>
+          </div>
+        </section>
+      </section>
+
+      <section id="page-ird" class="page" hidden>
+        <div class="page-head">
+          <h2>IRD records</h2>
+          <div class="page-actions">
+            <button id="ird-pick" type="button" class="primary">Load myIR downloads&hellip;</button>
+            <input id="ird-input" type="file" accept=".xlsx,.csv" multiple hidden />
+          </div>
+        </div>
+        <p class="page-hint">
+          What Inland Revenue holds, checked against these books: GST returns, any tax account&rsquo;s
+          transactions, the employer summary, and an IR3&rsquo;s confirmation. Figures that differ are
+          flagged; figures these books do not hold are listed so they can be entered.
+        </p>
+        <details class="ird-paste-box">
+          <summary>Paste an IR3 confirmation</summary>
+          <p class="page-hint">
+            Open the filed IR3&rsquo;s confirmation in myIR, select all its text (Ctrl+A), copy it and
+            paste it here. It is read on this computer; nothing is sent anywhere.
+          </p>
+          <textarea id="ird-paste" rows="6" placeholder="Paste the whole confirmation, all pages"></textarea>
+          <button id="ird-paste-read" type="button">Read it</button>
+        </details>
+        <div id="ird-body"></div>
+      </section>
+
+      <section id="page-gst" class="page" hidden>
+      <section class="variance" id="variance">
+        <div class="variance-head">
+          <h2>GST reconciliation</h2>
+          <div class="variance-actions">
+            <button id="variance-pick" type="button">Load filed returns&hellip;</button>
+            <input id="variance-input" type="file" accept=".xlsx,.csv" multiple hidden />
+            <div class="chips" id="variance-accounts" role="group" aria-label="Accounts"></div>
+          </div>
+        </div>
+        <p class="variance-hint" id="variance-hint">
+          Each GST return you filed, beside what the books now say for the same period. Load
+          myIR's GST return summary (every period in one file) or the return workbooks your
+          accounting system exports, mark the books' own return as filed, or record one filed
+          some other way.
+        </p>
+        <div id="variance-body"></div>
+      </section>
+      </section>
+
+      <section class="help" hidden>
+        <h2>Where to get the files</h2>
+        <ul id="formats"></ul>
+        <h2>What happens to duplicates</h2>
+        <p>
+          Nothing is ever deleted automatically. Rows identical to one already in the ledger are
+          marked <span class="chip duplicate">duplicate</span> and left out, so re-importing an
+          overlapping statement is safe. Rows that only <em>look</em> like duplicates &mdash; the
+          same amount and payee with a different bank serial, or a day apart on a feed with no
+          serial &mdash; are marked <span class="chip review">review</span> and kept, for you to
+          decide.
+        </p>
+      </section>
+        </main>
+      </div>
+    </div>
+
+    <footer>
+      <p>
+        <a href="https://nbparagliding.nz/nzosa/home/" target="_blank" rel="noopener">NZOSA, by hidicker</a>.
+        Free software under the GNU AGPL v3, with
+        <a href="NOTICE.txt" target="_blank" rel="noopener">additional terms</a>, and no warranty &mdash;
+        <a href="LICENSE.txt" target="_blank" rel="noopener">licence</a>.
+        If it helps you, you can <a href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" target="_blank" rel="noopener">support NZOSA</a>.
+        <span id="footer-where"></span>
+      </p>
+    </footer>
+
+    <script type="module" src="app.js"></script>
+  </body>
+</html>

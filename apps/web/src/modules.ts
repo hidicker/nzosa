@@ -178,6 +178,12 @@ export function applyModules(): void {
   for (const element of document.querySelectorAll<HTMLElement>("[data-module]")) {
     element.hidden = !anyModuleOn(element.dataset["module"] ?? "");
   }
+  // A sidebar section with every page in it hidden goes too, rather than
+  // leaving a heading with nothing under it (Year end, in books with no
+  // rentals, no personal books and no adjustments to make).
+  for (const group of document.querySelectorAll<HTMLElement>(".sidebar-group")) {
+    group.hidden = ![...group.querySelectorAll<HTMLElement>(".sidebar-group-items > button")].some((b) => !b.hidden);
+  }
 }
 
 /** How these books came, in words for a sentence: "Xero", "your spreadsheet". */

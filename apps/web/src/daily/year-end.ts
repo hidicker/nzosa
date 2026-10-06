@@ -307,6 +307,12 @@ function renderVehicles(body: HTMLElement, year: number, posted: readonly Posted
   heading.textContent = "Vehicle private use";
   body.append(heading);
   body.append(
+    appliesTo(
+      "sole traders and partnerships, and a close company that has opted out of fringe benefit tax. " +
+        "Not for rentals: trips to a rental in your own vehicle are claimed on Rental year end.",
+    ),
+  );
+  body.append(
     note(
       "For a vehicle used partly privately, code its costs in full through the year. At balance " +
         "date the private share moves to drawings, and the GST claimed on it is returned in Box 9 " +
@@ -499,6 +505,7 @@ function renderPrepayments(body: HTMLElement, year: number, posted: readonly Pos
   const heading = document.createElement("h3");
   heading.textContent = "Prepayments";
   body.append(heading);
+  body.append(appliesTo("businesses: companies, sole traders, partnerships and trusts in business."));
   body.append(
     note(
       "For payments covering a period past 31 March, such as a year's insurance paid in " +
@@ -563,11 +570,27 @@ function renderPrepayments(body: HTMLElement, year: number, posted: readonly Pos
   }
 }
 
+/** Who a section is for: "For: sole traders and partnerships...". */
+function appliesTo(who: string): HTMLElement {
+  const p = document.createElement("p");
+  p.className = "applies-to";
+  const label = document.createElement("strong");
+  label.textContent = "For: ";
+  p.append(label, who);
+  return p;
+}
+
 /** The page, for one income year. */
 export function renderYearEnd(body: HTMLElement, year: number): void {
   const heading = document.createElement("h3");
   heading.textContent = `Year-end adjustments, year ended 31 March ${year}`;
   body.append(heading);
+  body.append(
+    note(
+      "Adjustments a business makes at balance date, for the books of its entities. Rentals and " +
+        "personal books have their own pages under Year end: Rental year end and Personal year end.",
+    ),
+  );
   const posted = postedJournals();
   // Each part belongs to a module: a vehicle's private use, a business's prepayments.
   if (moduleOn("vehicle")) renderVehicles(body, year, posted);

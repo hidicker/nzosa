@@ -4053,3 +4053,16 @@ details.rental-year[open] > summary::before { content: "▾"; }
   margin: 0 0.12em 0 0.02em;
   flex: none;
 }
+
+.sidebar-group[hidden] {
+  display: none !important;
+}
+
+/* Who a year-end adjustment is for, under its heading. */
+.applies-to {
+  margin: 0 0 0.5rem;
+  padding: 6px 10px;
+  border-radius: 6px;
+  background: var(--accent-soft);
+  font-size: 0.92rem;
+}

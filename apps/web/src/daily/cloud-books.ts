@@ -400,7 +400,22 @@ function saveToServer(body: HTMLElement): void {
     go.disabled = true;
     say(said, "Saving to the server…");
     void (async () => {
-      const made = await createBook(wanted);
+      // A set already called this -- often one an earlier attempt left
+      // part-filled -- is filled rather than joined by a second of the same
+      // name, once somebody has said its contents may be replaced.
+      const same = (await listBooks()).find((book) => book.name.trim().toLowerCase() === wanted.toLowerCase());
+      if (
+        same !== undefined &&
+        !confirm(
+          `A set called "${same.name}" is already on the server.\n\n` +
+            "Replace what is in it with the books in this browser?",
+        )
+      ) {
+        go.disabled = false;
+        say(said, "Nothing was saved. Choose another name to start a new set.");
+        return;
+      }
+      const made = same ?? (await createBook(wanted));
       if (made === null) {
         go.disabled = false;
         say(said, "Could not start a set on the server.", true);

@@ -907,18 +907,21 @@ async function writeCloud(
 }
 
 /**
- * Copy a whole set of books into a set on the server that has nothing in it.
+ * Copy a whole set of books into a set on the server, replacing what it holds.
  *
  * How books held in a browser -- a backup restored there, or what somebody
- * built before signing in -- become books on the server. Every part is written
- * as version 1 of a new set; the set is then opened, and from there on it
- * saves like any other.
+ * built before signing in -- become books on the server. Usually the set is
+ * new and empty; it can also be one an earlier attempt left part-filled, so
+ * each part is written over whatever version the server already has. The set
+ * is then opened, and from there on it saves like any other.
  */
 export async function copyToCloudBook(
   bookId: string,
   ledger: StoredLedger,
   extra: { rules: unknown; rulesarchive: unknown; events: unknown },
 ): Promise<{ ok: true } | { ok: false; why: string }> {
+  const held = await loadCloudParts(bookId);
+  if (held === null) return { ok: false, why: "The set on the server could not be read." };
   const writes: [string, unknown][] = [
     ...FOLDER_PARTS.map((part): [string, unknown] => [part, partValue(ledger, part)]),
     ["rules", extra.rules ?? {}],
@@ -927,7 +930,7 @@ export async function copyToCloudBook(
   ];
   for (const [part, value] of writes) {
     if (value === undefined) continue;
-    const outcome = await saveCloudPart(bookId, part, value, 0);
+    const outcome = await saveCloudPart(bookId, part, value, held[part]?.version ?? 0);
     if (outcome.kind !== "saved") {
       return {
         ok: false,

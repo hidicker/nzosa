@@ -493,8 +493,35 @@ export async function loadParts(bookId: string): Promise<Record<string, CloudPar
     data: unknown;
   }[];
   const parts: Record<string, CloudPart> = {};
-  for (const row of rows) parts[row.part] = { version: row.version, data: row.data };
+  for (const row of rows) parts[row.part] = { version: row.version, data: swapChars(row.data, STAND_IN, NUL) };
   return parts;
+}
+
+/**
+ * The null character, which Postgres will not store.
+ *
+ * The app joins the parts of some keys with it -- a person, a year and a
+ * question for the personal year-end answers; a bank line's fields for a
+ * duplicate kept on purpose -- because it can never occur in what is joined.
+ * Files and the browser keep it happily, but Postgres refuses any JSON holding
+ * it ("unsupported Unicode escape sequence"), so restored books would not save
+ * to the server. It goes up as U+E000, a private-use character no bank or
+ * person writes, and comes back as itself: the books never see the swap.
+ */
+const NUL = "\u0000";
+const STAND_IN = "";
+
+function swapChars(value: unknown, from: string, to: string): unknown {
+  if (typeof value === "string") return value.includes(from) ? value.split(from).join(to) : value;
+  if (Array.isArray(value)) return value.map((item) => swapChars(item, from, to));
+  if (value !== null && typeof value === "object") {
+    const out: Record<string, unknown> = {};
+    for (const [key, item] of Object.entries(value)) {
+      out[key.includes(from) ? key.split(from).join(to) : key] = swapChars(item, from, to);
+    }
+    return out;
+  }
+  return value;
 }
 
 interface PostgrestError {
@@ -521,7 +548,7 @@ export async function savePart(
 ): Promise<SaveOutcome> {
   const response = await rest("rpc/save_part", {
     method: "POST",
-    body: JSON.stringify({ p_book: bookId, p_part: part, p_data: data, p_version: version }),
+    body: JSON.stringify({ p_book: bookId, p_part: part, p_data: swapChars(data, NUL, STAND_IN), p_version: version }),
   });
   if (response === null) return { kind: "failed", why: "Not signed in, or no connection." };
 

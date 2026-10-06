@@ -206,6 +206,14 @@ export function sessionFromUrl(): boolean {
   if (hash === "") return false;
 
   const params = new URLSearchParams(hash);
+  // Turned back rather than signed in: Google refused, or the person cancelled.
+  // Kept for the sign-in form to say, and cleared from the address like a token.
+  const refused = params.get("error_description") ?? params.get("error");
+  if (refused !== null && params.get("access_token") === null) {
+    authError = refused;
+    history.replaceState(null, "", location.pathname + location.search);
+    return false;
+  }
   const accessToken = params.get("access_token");
   const refreshToken = params.get("refresh_token");
   if (accessToken === null || refreshToken === null) return false;
@@ -220,6 +228,47 @@ export function sessionFromUrl(): boolean {
   });
   history.replaceState(null, "", location.pathname + location.search);
   return true;
+}
+
+let authError: string | null = null;
+
+/** Why the last sign-in sent back from Google failed, once. */
+export function takeAuthError(): string | null {
+  const said = authError;
+  authError = null;
+  return said;
+}
+
+/**
+ * Whether the project offers signing in with Google.
+ *
+ * Asked of the project rather than assumed: Google is switched on in Supabase,
+ * with a client from Google's console, and until then a button for it would
+ * only lead to an error page. Asked once a visit.
+ */
+let googleAsked: Promise<boolean> | null = null;
+export function googleOffered(): Promise<boolean> {
+  if (!cloudConfigured()) return Promise.resolve(false);
+  googleAsked ??= fetch(`${CLOUD.url}/auth/v1/settings`, { headers: { apikey: CLOUD.publishableKey } })
+    .then((response) => (response.ok ? response.json() : null))
+    .then((settings: { external?: { google?: boolean } } | null) => settings?.external?.google === true)
+    .catch(() => false);
+  return googleAsked;
+}
+
+/**
+ * Sign in with Google, as vtasker does.
+ *
+ * The page goes to Supabase, which sends it on to Google and back here with
+ * the session in the address, where sessionFromUrl() takes it -- the same way
+ * back as the link in a confirmation email. A first sign-in makes the account.
+ * `prompt=select_account` lets somebody pick which Google account, rather than
+ * silently getting whichever one the browser is already signed in to.
+ */
+export function signInWithGoogle(): void {
+  const back = location.href.split("#")[0] ?? location.href;
+  const query = new URLSearchParams({ provider: "google", redirect_to: back, prompt: "select_account" });
+  location.assign(`${CLOUD.url}/auth/v1/authorize?${query.toString()}`);
 }
 
 export async function signOut(): Promise<void> {

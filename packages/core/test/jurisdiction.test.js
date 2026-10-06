@@ -13,7 +13,7 @@ test("New Zealand's year is 1 April to 31 March, as it always was", () => {
   assert.deepEqual(financialYear(2026, nz.yearEnd), { from: "2025-04-01", to: "2026-03-31" });
   assert.equal(financialYearOf("2025-04-01", nz.yearEnd), 2026);
   assert.equal(financialYearOf("2026-03-31", nz.yearEnd), 2026);
-  assert.deepEqual(nz.salesTax, { name: "GST", rate: 0.15 });
+  assert.deepEqual(nz.salesTax, { name: "GST", rate: 0.15, fraction: { num: 3, den: 23 } });
   assert.equal(nz.currency, "NZD");
 });
 

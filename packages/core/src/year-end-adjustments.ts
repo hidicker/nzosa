@@ -1,6 +1,7 @@
 import type { IsoDate } from "./dates.js";
 import type { Cents } from "./money.js";
 import type { PostedJournal, PostedLine } from "./posting.js";
+import { taxWithin } from "./sales-tax.js";
 
 /**
  * Year-end adjustments: the private use of a vehicle, and prepayments.
@@ -14,9 +15,7 @@ import type { PostedJournal, PostedLine } from "./posting.js";
  * rule depreciation already follows.
  */
 
-const GST_NUMERATOR = 3;
-const GST_DENOMINATOR = 23;
-const gstIn = (inclusive: Cents): Cents => Math.round((inclusive * GST_NUMERATOR) / GST_DENOMINATOR);
+const gstIn = (inclusive: Cents): Cents => taxWithin(inclusive);
 
 const yearStart = (year: number): IsoDate => `${year - 1}-04-01`;
 const yearEnd = (year: number): IsoDate => `${year}-03-31`;

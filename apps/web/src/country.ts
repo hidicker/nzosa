@@ -1,4 +1,4 @@
-import { jurisdictionOf } from "@nzosa/core";
+import { NO_SALES_TAX, jurisdictionOf, setSalesTaxFraction } from "@nzosa/core";
 import type { Jurisdiction } from "@nzosa/core";
 import { state } from "./state.js";
 
@@ -8,6 +8,16 @@ import { state } from "./state.js";
  */
 export function booksCountry(): Jurisdiction {
   return jurisdictionOf(state.ledger.jurisdiction);
+}
+
+/**
+ * Set what the books' country decides for the whole app, as they open: the
+ * rate of GST (15% in New Zealand, 10% in Australia, none in the United
+ * States). Called again whenever the country is changed.
+ */
+export function applyCountry(): void {
+  const tax = booksCountry().salesTax;
+  setSalesTaxFraction(tax === null ? NO_SALES_TAX : tax.fraction);
 }
 
 /** How numbers and dates are written: "en-NZ" for New Zealand. */

@@ -3,6 +3,7 @@ import type { IsoDate, DateRange } from "./dates.js";
 import { daysInMonth, inRange } from "./dates.js";
 import { nextWorkingDay } from "./nz-holidays.js";
 import type { Transaction } from "./types.js";
+import { grossFromTax, taxWithinExact } from "./sales-tax.js";
 
 /**
  * New Zealand GST returns (form GST101A).
@@ -22,9 +23,6 @@ import type { Transaction } from "./types.js";
  *    question, which is why `basis` is explicit rather than assumed.
  */
 
-/** GST rate as a fraction of the GST-inclusive amount: 15% GST is 3/23 of the total. */
-const GST_NUMERATOR = 3;
-const GST_DENOMINATOR = 23;
 
 export type GstBasis = "payments" | "invoice" | "hybrid";
 
@@ -245,7 +243,7 @@ export interface GstReturnResult {
  * the invoice it reverses, rather than both drifting the same direction.
  */
 export function gstContent(inclusive: Cents): Cents {
-  const exact = (inclusive * GST_NUMERATOR) / GST_DENOMINATOR;
+  const exact = taxWithinExact(inclusive);
   return Math.sign(exact) * Math.round(Math.abs(exact));
 }
 
@@ -401,13 +399,13 @@ export function gstReturn(
     // which is a return whose own boxes do not add up, and the first thing an
     // accountant checks. Xero works Box 5 back the same way, which is what its
     // filed returns show.
-    box7 = Math.round((box8 * GST_DENOMINATOR) / GST_NUMERATOR);
+    box7 = grossFromTax(box8);
     box5 = box7 + box6;
   }
 
   const box9 = (options.adjustments ?? 0) + lateDebit;
   const box10 = box8 + box9;
-  if (perLine) box11 = Math.round((perLinePurchaseGst * GST_DENOMINATOR) / GST_NUMERATOR);
+  if (perLine) box11 = grossFromTax(perLinePurchaseGst);
   const box12 = perLine ? perLinePurchaseGst : gstContent(box11);
   const box13 = (options.creditAdjustments ?? 0) + importGst + lateCredit;
   const box14 = box12 + box13;

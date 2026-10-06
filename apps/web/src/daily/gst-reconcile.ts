@@ -18,6 +18,7 @@ import type { FiledReturn, GstReturnResult, VarianceNote } from "@nzosa/core";
 import { loadFiledReturns } from "../migrate/file-intake.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { note } from "../ui.js";
+import { taxWithin } from "@nzosa/core";
 
 /**
  * Agreeing a filed GST return with what the books now say.
@@ -239,7 +240,7 @@ function renderDetail(row: VarianceRow): HTMLElement {
       for (const [index, text] of [
         line.date,
         formatAmount(line.amount),
-        formatAmount(Math.round((line.amount * 3) / 23)),
+        formatAmount(taxWithin(line.amount)),
         line.who,
         line.what,
       ].entries()) {

@@ -71,6 +71,7 @@ import type {
   SplitPart,
   Transaction,
 } from "@nzosa/core";
+import { taxWithin } from "@nzosa/core";
 
 
 /** An unconfirmed edit to one line: kept across redraws until the line is confirmed. */
@@ -2047,7 +2048,7 @@ export async function confirmLine(
     one.transaction.amount < 0
   ) {
     const gross = -one.transaction.amount;
-    const cost = rate === "15" ? gross - Math.round((gross * 3) / 23) : gross;
+    const cost = rate === "15" ? gross - taxWithin(gross) : gross;
     const held = (state.ledger.assets ?? []).some(
       (asset) => asset.purchased === one.transaction.date && asset.cost === cost,
     );

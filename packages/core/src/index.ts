@@ -390,3 +390,4 @@ export * from "./wise-api.js";
 export * from "./settled-gst.js";
 export * from "./opening-documents.js";
 export * from "./jurisdiction.js";
+export * from "./sales-tax.js";

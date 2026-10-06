@@ -2,6 +2,7 @@ import type { IsoDate } from "./dates.js";
 import type { FiledBoxes, FiledReturn } from "./filed-returns.js";
 import type { GstReturnResult } from "./gst.js";
 import type { Cents } from "./money.js";
+import { taxWithin } from "./sales-tax.js";
 
 /**
  * A filed GST return, recorded without an accounting system's workbook.
@@ -37,9 +38,9 @@ export interface EnteredGstBoxes {
 /** Every box of a GST101A, from the ones typed. */
 export function gstBoxesFrom(entered: EnteredGstBoxes): FiledBoxes {
   const box7 = entered.box5 - entered.box6;
-  const box8 = entered.box8 ?? Math.round((box7 * 3) / 23);
+  const box8 = entered.box8 ?? taxWithin(box7);
   const box10 = box8 + entered.box9;
-  const box12 = entered.box12 ?? Math.round((entered.box11 * 3) / 23);
+  const box12 = entered.box12 ?? taxWithin(entered.box11);
   const box14 = box12 + entered.box13;
   return {
     box5: entered.box5,

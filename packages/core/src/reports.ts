@@ -5,6 +5,7 @@ import type { Account } from "./chart.js";
 import type { GstClassification } from "./gst.js";
 import type { Transaction } from "./types.js";
 import type { Journal, JournalLine } from "./journals.js";
+import { taxWithin } from "./sales-tax.js";
 
 /**
  * Profit and loss from bank data.
@@ -344,7 +345,7 @@ export function gstWithin(amount: Cents, classification: GstClassification): Cen
   if (classification.side === "imports") return amount;
   if (classification.treatment !== "standard") return 0;
   if (classification.side === "none") return 0;
-  return Math.round((amount * 3) / 23);
+  return taxWithin(amount);
 }
 
 export function profitAndLoss(

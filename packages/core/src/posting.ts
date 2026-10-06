@@ -5,6 +5,7 @@ import type { Transaction } from "./types.js";
 import type { GstClassification } from "./gst.js";
 import { gstContent } from "./gst.js";
 import type { Invoice } from "./invoices.js";
+import { taxWithin } from "./sales-tax.js";
 
 /**
  * Turning a coded bank line into double-entry journal lines.
@@ -180,7 +181,7 @@ function gstWithin(amount: Cents, classification: GstClassification): Cents {
   if (classification.side === "imports") return amount;
   if (classification.treatment !== "standard") return 0;
   if (classification.side === "none") return 0;
-  return Math.round((amount * 3) / 23);
+  return taxWithin(amount);
 }
 
 /** One part of a bank line: what it was for, and how it is taxed. */

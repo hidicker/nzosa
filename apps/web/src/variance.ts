@@ -25,6 +25,7 @@ import type {
   Transaction,
   VarianceNote,
 } from "@nzosa/core";
+import { taxWithin } from "@nzosa/core";
 
 /**
  * The GST reconciliation view.
@@ -256,7 +257,7 @@ export interface Detail {
 }
 
 const gstOf = (lines: readonly { amount: number }[]): number =>
-  lines.reduce((sum, line) => sum + Math.round((line.amount * 3) / 23), 0);
+  lines.reduce((sum, line) => sum + taxWithin(line.amount), 0);
 
 /** The lines behind one period, matched up. */
 export function detailFor(row: VarianceRow): Detail | null {

@@ -90,6 +90,7 @@ import {
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
+import { applyCountry } from "./country.js";
 import { reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
 import {
@@ -168,6 +169,7 @@ async function init(): Promise<void> {
   try {
     const loaded = await load();
     state.ledger = loaded.ledger;
+    applyCountry();
     state.persistent = loaded.persistent;
 
     // Classify what is already stored, so the review queue survives a reload.

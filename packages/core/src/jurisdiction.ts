@@ -27,8 +27,11 @@ export interface Jurisdiction {
   yearEnd: { endMonth: number; endDay: number };
   /** Whether a written date is day first (12/03 is 12 March) or month first. */
   dayFirst: boolean;
-  /** The sales tax, or null where there is no national one (the United States). */
-  salesTax: { name: string; rate: number } | null;
+  /**
+   * The sales tax, or null where there is no national one (the United States).
+   * `fraction` is the tax as a share of a tax-inclusive amount: 15% is 3/23.
+   */
+  salesTax: { name: string; rate: number; fraction: { num: number; den: number } } | null;
   /** Who collects tax, shortest and in full, and their online service. */
   taxAuthority: { short: string; name: string; portal: string };
 }
@@ -41,7 +44,7 @@ export const JURISDICTIONS: Readonly<Record<JurisdictionId, Jurisdiction>> = {
     locale: "en-NZ",
     yearEnd: { endMonth: 3, endDay: 31 },
     dayFirst: true,
-    salesTax: { name: "GST", rate: 0.15 },
+    salesTax: { name: "GST", rate: 0.15, fraction: { num: 3, den: 23 } },
     taxAuthority: { short: "IRD", name: "Inland Revenue", portal: "myIR" },
   },
   // Drafts for the country packs to come. Nothing can choose them yet.
@@ -52,7 +55,7 @@ export const JURISDICTIONS: Readonly<Record<JurisdictionId, Jurisdiction>> = {
     locale: "en-AU",
     yearEnd: { endMonth: 6, endDay: 30 },
     dayFirst: true,
-    salesTax: { name: "GST", rate: 0.1 },
+    salesTax: { name: "GST", rate: 0.1, fraction: { num: 1, den: 11 } },
     taxAuthority: { short: "ATO", name: "Australian Taxation Office", portal: "ATO online services" },
   },
   us: {

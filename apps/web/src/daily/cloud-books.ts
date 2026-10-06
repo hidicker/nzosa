@@ -139,7 +139,13 @@ function signInForm(body: HTMLElement): void {
   googleButton.addEventListener("click", () => {
     googleButton.disabled = true;
     say(said, "Going to Google…");
-    signInWithGoogle();
+    void signInWithGoogle().then(() => {
+      // Still here only if it could not leave for Google.
+      const problem = takeAuthError();
+      if (problem === null) return;
+      googleButton.disabled = false;
+      say(said, `Google sign-in did not start: ${problem}`, true);
+    });
   });
   const or = document.createElement("p");
   or.className = "cloud-or";

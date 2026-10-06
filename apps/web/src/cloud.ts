@@ -200,12 +200,19 @@ function claimsOf(accessToken: string): { sub?: string; email?: string } {
  * The fragment is then cleared. A web address somebody might copy, bookmark or
  * paste to somebody else has no business carrying a refresh token.
  */
-export function sessionFromUrl(): boolean {
+export async function sessionFromUrl(): Promise<boolean> {
   if (!cloudConfigured()) return false;
   const hash = location.hash.startsWith("#") ? location.hash.slice(1) : "";
   if (hash === "") return false;
 
   const params = new URLSearchParams(hash);
+  // Back from Google directly (signInWithGoogle, below) with Google's token,
+  // which Supabase turns into a session.
+  const idToken = params.get("id_token");
+  if (idToken !== null) {
+    history.replaceState(null, "", location.pathname + location.search);
+    return googleSession(idToken, params.get("state"));
+  }
   // Turned back rather than signed in: Google refused, or the person cancelled.
   // Kept for the sign-in form to say, and cleared from the address like a token.
   const refused = params.get("error_description") ?? params.get("error");
@@ -257,18 +264,83 @@ export function googleOffered(): Promise<boolean> {
 }
 
 /**
- * Sign in with Google, as vtasker does.
+ * Sign in with Google.
  *
- * The page goes to Supabase, which sends it on to Google and back here with
- * the session in the address, where sessionFromUrl() takes it -- the same way
- * back as the link in a confirmation email. A first sign-in makes the account.
+ * On the site named in `googleReturn`, the page goes to Google itself and
+ * Google comes straight back to it with a signed token saying who this is,
+ * which Supabase then exchanges for a session. Google's screen therefore names
+ * this site rather than the database's address. Anywhere else -- a copy on
+ * somebody's own computer, a self-hosted one -- it goes through Supabase,
+ * which sends it on to Google and back here with the session in the address.
+ * Either way a first sign-in makes the account.
+ *
  * `prompt=select_account` lets somebody pick which Google account, rather than
  * silently getting whichever one the browser is already signed in to.
  */
-export function signInWithGoogle(): void {
-  const back = location.href.split("#")[0] ?? location.href;
-  const query = new URLSearchParams({ provider: "google", redirect_to: back, prompt: "select_account" });
-  location.assign(`${CLOUD.url}/auth/v1/authorize?${query.toString()}`);
+const GOOGLE_PENDING = "nzosa:google-pending";
+
+export async function signInWithGoogle(): Promise<void> {
+  const here = location.href.split("#")[0] ?? location.href;
+  if (CLOUD.googleClientId === "" || CLOUD.googleReturn === "" || !here.startsWith(CLOUD.googleReturn)) {
+    const query = new URLSearchParams({ provider: "google", redirect_to: here, prompt: "select_account" });
+    location.assign(`${CLOUD.url}/auth/v1/authorize?${query.toString()}`);
+    return;
+  }
+  // The nonce ties Google's token to this sign-in: Google signs its hash into
+  // the token, and Supabase checks the token against the nonce itself. The
+  // state ties the return to this browser, so a token pushed at the page by
+  // anybody else is refused.
+  const nonce = randomToken();
+  const state = randomToken();
+  try {
+    sessionStorage.setItem(GOOGLE_PENDING, JSON.stringify({ nonce, state }));
+  } catch {
+    authError = "this browser would not keep the sign-in while it went to Google.";
+    return;
+  }
+  const query = new URLSearchParams({
+    client_id: CLOUD.googleClientId,
+    redirect_uri: CLOUD.googleReturn,
+    response_type: "id_token",
+    scope: "openid email profile",
+    nonce: await sha256Hex(nonce),
+    state,
+    prompt: "select_account",
+  });
+  location.assign(`https://accounts.google.com/o/oauth2/v2/auth?${query.toString()}`);
+}
+
+/** Google's token, back in the address, for a session. */
+async function googleSession(idToken: string, state: string | null): Promise<boolean> {
+  let pending: { nonce?: string; state?: string } = {};
+  try {
+    pending = JSON.parse(sessionStorage.getItem(GOOGLE_PENDING) ?? "{}") as typeof pending;
+    sessionStorage.removeItem(GOOGLE_PENDING);
+  } catch {
+    // Nothing kept: refused below, as a return this browser did not start.
+  }
+  if (pending.nonce === undefined || state === null || state !== pending.state) {
+    authError = "the reply from Google did not match a sign-in started in this browser. Try again.";
+    return false;
+  }
+  const reply = await auth("token?grant_type=id_token", { provider: "google", id_token: idToken, nonce: pending.nonce });
+  const next = sessionFrom(reply);
+  if (next === null) {
+    authError = why(reply, "Supabase did not accept Google's sign-in.");
+    return false;
+  }
+  remember(next);
+  return true;
+}
+
+function randomToken(): string {
+  const bytes = crypto.getRandomValues(new Uint8Array(24));
+  return Array.from(bytes, (b) => b.toString(16).padStart(2, "0")).join("");
+}
+
+async function sha256Hex(text: string): Promise<string> {
+  const digest = await crypto.subtle.digest("SHA-256", new TextEncoder().encode(text));
+  return Array.from(new Uint8Array(digest), (b) => b.toString(16).padStart(2, "0")).join("");
 }
 
 export async function signOut(): Promise<void> {

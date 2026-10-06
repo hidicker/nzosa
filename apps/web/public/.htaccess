@@ -39,6 +39,7 @@ Options -Indexes
   AddType application/javascript .js
   AddType application/json .json .map
   AddType text/css .css
+  AddType image/webp .webp
 </IfModule>
 
 # A file that is not here is answered here, at once. Without this the site's

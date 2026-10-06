@@ -4,109 +4,344 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NZOSA</title>
-<meta name="description" content="NZOSA: free accounting for New Zealand. Bank files in; a coded ledger, GST returns, rental schedules and financial reports out.">
+<meta name="description" content="NZOSA: free, open-source accounting for New Zealand. Bank feeds, coding that learns from your own history, GST reconciled to what you filed, IR10, IR3 and rental schedules.">
 <!--
   NZOSA's home page: the address its licence credit links to
   ("NZOSA, by hidicker"). It must keep working at /nzosa/home/ for as long as
   copies of NZOSA point here. No scripts: the site's security policy allows
-  none inline, and this page needs none.
+  none inline, and this page needs none. Screenshots are of the demo's
+  invented books.
 -->
 <style>
   :root {
-    --bg: #eef1f6; --surface: #ffffff; --border: #dbe1ea; --text: #16202e;
-    --muted: #5d6b7f; --accent: #0b3d69; --accent-soft: #e6eef7; --accent-text: #ffffff;
-    --coffee: #c25e1a; --coffee-text: #ffffff;
+    --bg: #f4f6fa; --bg-alt: #e9eef5; --surface: #ffffff; --border: #dbe1ea;
+    --text: #16202e; --muted: #5d6b7f; --accent: #0b3d69; --accent-2: #1f6fb2;
+    --accent-soft: #e6eef7; --accent-text: #ffffff; --navy: #0b2340;
+    --coffee: #c25e1a; --coffee-text: #ffffff; --good: #1d7a46;
+    --shadow: 0 1px 2px rgba(16,32,52,.06), 0 12px 32px rgba(16,32,52,.10);
     color-scheme: light dark;
   }
   @media (prefers-color-scheme: dark) {
     :root {
-      --bg: #0d151f; --surface: #16202e; --border: #2b3a4d; --text: #e7edf5;
-      --muted: #93a4bb; --accent: #5aa9e6; --accent-soft: #16293d; --accent-text: #08192b;
-      --coffee: #f08a3c; --coffee-text: #1d0e03;
+      --bg: #0d151f; --bg-alt: #111c29; --surface: #16202e; --border: #2b3a4d;
+      --text: #e7edf5; --muted: #93a4bb; --accent: #5aa9e6; --accent-2: #7dbcf0;
+      --accent-soft: #16293d; --accent-text: #08192b; --navy: #08111c;
+      --coffee: #f08a3c; --coffee-text: #1d0e03; --good: #4cc584;
+      --shadow: 0 1px 2px rgba(0,0,0,.3), 0 12px 32px rgba(0,0,0,.35);
     }
   }
   * { box-sizing: border-box; }
+  html { scroll-behavior: smooth; }
   body {
     margin: 0; background: var(--bg); color: var(--text);
-    font: 17px/1.55 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    font: 17px/1.6 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+    -webkit-font-smoothing: antialiased;
   }
-  main { max-width: 860px; margin: 0 auto; padding: 48px 16px 32px; }
-  .mark { font-weight: 800; letter-spacing: .04em; color: var(--accent); font-size: 15px; }
-  h1 { font-size: clamp(30px, 6vw, 46px); line-height: 1.12; margin: 10px 0 14px; }
-  .lede { font-size: 19px; color: var(--muted); max-width: 640px; margin: 0; }
+  a { color: var(--accent-2); }
+  img { max-width: 100%; height: auto; display: block; }
+  .wrap { max-width: 1140px; margin: 0 auto; padding: 0 16px; }
+  .icon { width: 22px; height: 22px; fill: none; stroke: currentColor; stroke-width: 1.7; stroke-linecap: round; stroke-linejoin: round; flex: none; }
 
-  .donate {
-    margin: 36px 0; padding: 32px 24px; text-align: center;
-    background: var(--surface); border: 2px solid var(--coffee); border-radius: 16px;
+  /* Top bar */
+  .top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
+  .top .wrap { display: flex; align-items: center; gap: 20px; height: 62px; }
+  .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .06em; font-size: 19px; }
+  .brand svg { width: 30px; height: 30px; }
+  .top nav { display: flex; gap: 22px; margin-left: auto; }
+  .top nav a { color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600; }
+  .top nav a:hover { color: var(--text); }
+  .pill-coffee { display: inline-flex; align-items: center; gap: 8px; padding: 8px 16px; border-radius: 999px; background: var(--coffee); color: var(--coffee-text); text-decoration: none; font-weight: 700; font-size: 15px; white-space: nowrap; }
+  .pill-coffee .icon { width: 18px; height: 18px; }
+  @media (max-width: 820px) { .top nav { display: none; } .top .pill-coffee { margin-left: auto; } }
+
+  /* Hero */
+  .hero { padding: 64px 0 40px; text-align: center; }
+  .eyebrow { display: inline-block; font-size: 13px; font-weight: 700; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); background: var(--accent-soft); padding: 5px 12px; border-radius: 999px; }
+  .hero h1 { font-size: clamp(34px, 6vw, 60px); line-height: 1.06; letter-spacing: -.02em; margin: 18px auto 18px; max-width: 900px; }
+  .hero h1 span { color: var(--accent-2); }
+  .hero p.lede { font-size: clamp(17px, 2.2vw, 20px); color: var(--muted); max-width: 720px; margin: 0 auto 28px; }
+  .ctas { display: flex; gap: 12px; justify-content: center; flex-wrap: wrap; }
+  .btn { display: inline-flex; align-items: center; gap: 8px; padding: 13px 22px; border-radius: 10px; font-weight: 700; text-decoration: none; border: 1px solid var(--border); background: var(--surface); color: var(--text); }
+  .btn.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  .btn .icon { width: 19px; height: 19px; }
+  .ticks { display: flex; gap: 22px; justify-content: center; flex-wrap: wrap; margin: 22px 0 0; padding: 0; list-style: none; color: var(--muted); font-size: 15px; }
+  .ticks li { display: flex; align-items: center; gap: 6px; }
+  .ticks .icon { width: 17px; height: 17px; color: var(--good); }
+  .shot { margin: 44px auto 0; max-width: 1060px; border-radius: 14px; overflow: hidden; border: 1px solid var(--border); box-shadow: var(--shadow); background: var(--surface); }
+  .shot .bar { display: flex; gap: 6px; padding: 10px 12px; background: var(--bg-alt); border-bottom: 1px solid var(--border); }
+  .shot .bar i { width: 11px; height: 11px; border-radius: 50%; background: var(--border); }
+
+  /* Donation band */
+  .donate { margin-top: 56px; }
+  .donate .card {
+    display: grid; grid-template-columns: 1fr auto; gap: 24px; align-items: center;
+    padding: 30px 32px; border-radius: 18px; background: var(--surface);
+    border: 2px solid var(--coffee); box-shadow: var(--shadow);
   }
-  .donate h2 { margin: 0 0 8px; font-size: 26px; }
-  .donate p { margin: 0 auto 22px; max-width: 520px; color: var(--muted); }
-  .coffee {
-    display: inline-flex; align-items: center; gap: 10px;
-    padding: 16px 30px; border-radius: 999px; font-size: 20px; font-weight: 700;
-    background: var(--coffee); color: var(--coffee-text); text-decoration: none;
-  }
-  .coffee:hover { filter: brightness(1.08); }
-  .coffee svg { width: 26px; height: 26px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
-  .donate small { display: block; margin-top: 14px; color: var(--muted); font-size: 14px; }
+  .donate h2 { margin: 0 0 6px; font-size: 26px; }
+  .donate p { margin: 0; color: var(--muted); }
+  .coffee { display: inline-flex; align-items: center; gap: 10px; padding: 16px 30px; border-radius: 999px; font-size: 20px; font-weight: 800; background: var(--coffee); color: var(--coffee-text); text-decoration: none; white-space: nowrap; }
+  .coffee:hover, .pill-coffee:hover { filter: brightness(1.08); }
+  .coffee .icon { width: 26px; height: 26px; }
+  .donate small { display: block; margin-top: 8px; text-align: center; color: var(--muted); font-size: 13px; }
+  @media (max-width: 700px) { .donate .card { grid-template-columns: 1fr; text-align: center; } }
 
-  .actions { display: flex; flex-wrap: wrap; gap: 12px; margin: 0 0 40px; }
-  .button {
-    padding: 11px 20px; border-radius: 10px; text-decoration: none; font-weight: 600;
-    border: 1px solid var(--border); background: var(--surface); color: var(--text);
-  }
-  .button.primary { background: var(--accent); border-color: var(--accent); color: var(--accent-text); }
+  /* Sections */
+  section.block { padding: 84px 0 0; }
+  .head { text-align: center; max-width: 760px; margin: 0 auto 40px; }
+  .head h2 { font-size: clamp(28px, 4vw, 40px); line-height: 1.15; letter-spacing: -.01em; margin: 10px 0 12px; }
+  .head p { color: var(--muted); margin: 0; font-size: 18px; }
 
-  .grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(240px, 1fr)); gap: 14px; }
-  .card { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 18px 20px; }
-  .card h3 { margin: 0 0 6px; font-size: 17px; }
-  .card p { margin: 0; color: var(--muted); font-size: 15px; }
+  .grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .grid { grid-template-columns: repeat(2, 1fr); } }
+  @media (max-width: 600px) { .grid { grid-template-columns: 1fr; } }
+  .feature { background: var(--surface); border: 1px solid var(--border); border-radius: 14px; padding: 22px; }
+  .feature .badge { width: 42px; height: 42px; border-radius: 10px; display: grid; place-items: center; background: var(--accent-soft); color: var(--accent-2); margin-bottom: 14px; }
+  .feature h3 { margin: 0 0 6px; font-size: 18px; }
+  .feature p { margin: 0; color: var(--muted); font-size: 15.5px; }
 
-  footer { max-width: 860px; margin: 0 auto; padding: 8px 16px 40px; color: var(--muted); font-size: 14px; }
-  footer a, .lede a { color: var(--accent); }
+  .split { display: grid; grid-template-columns: 5fr 7fr; gap: 48px; align-items: center; margin: 0 0 80px; }
+  .split.flip { grid-template-columns: 7fr 5fr; }
+  .split.flip .copy { order: 2; }
+  @media (max-width: 900px) { .split, .split.flip { grid-template-columns: 1fr; gap: 24px; } .split.flip .copy { order: 0; } }
+  .copy h3 { font-size: clamp(24px, 3vw, 32px); line-height: 1.2; margin: 8px 0 12px; }
+  .copy p { color: var(--muted); margin: 0 0 14px; }
+  .copy ul { margin: 0; padding: 0; list-style: none; }
+  .copy li { display: flex; gap: 10px; margin: 0 0 9px; }
+  .copy li .icon { width: 19px; height: 19px; color: var(--good); margin-top: 4px; }
+  .kicker { font-size: 13px; font-weight: 800; letter-spacing: .08em; text-transform: uppercase; color: var(--accent-2); }
+  .split .shot { margin: 0; }
+
+  /* Bank band */
+  .bank { background: var(--navy); color: #e7edf5; border-radius: 22px; padding: 48px 40px; display: grid; grid-template-columns: 1.1fr 1fr; gap: 40px; align-items: center; }
+  .bank h2 { font-size: clamp(26px, 3.6vw, 36px); line-height: 1.15; margin: 8px 0 12px; color: #fff; }
+  .bank p { color: #b8c6d8; margin: 0 0 14px; }
+  .bank .kicker { color: #7dbcf0; }
+  .flow { display: grid; gap: 12px; }
+  .flow div { display: flex; align-items: center; gap: 14px; background: rgba(255,255,255,.06); border: 1px solid rgba(255,255,255,.12); border-radius: 12px; padding: 14px 16px; }
+  .flow b { display: block; color: #fff; }
+  .flow span { color: #b8c6d8; font-size: 14.5px; }
+  .flow .icon { color: #7dbcf0; width: 26px; height: 26px; }
+  @media (max-width: 900px) { .bank { grid-template-columns: 1fr; padding: 36px 22px; } }
+
+  /* Trust row */
+  .trust { display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  @media (max-width: 900px) { .trust { grid-template-columns: 1fr; } }
+  .trust .feature { padding: 26px; }
+
+  /* Closing */
+  .closing { text-align: center; padding: 90px 0 30px; }
+  .closing h2 { font-size: clamp(28px, 4vw, 40px); margin: 0 0 12px; }
+  .closing p { color: var(--muted); max-width: 620px; margin: 0 auto 26px; }
+  footer { border-top: 1px solid var(--border); margin-top: 60px; padding: 26px 0 40px; color: var(--muted); font-size: 14px; }
+  footer .wrap { display: flex; flex-wrap: wrap; gap: 8px 24px; justify-content: space-between; }
+  footer a { color: var(--muted); }
 </style>
 </head>
 <body>
-<main>
-  <div class="mark">NZOSA</div>
-  <h1>Free accounting for New Zealand.</h1>
-  <p class="lede">
-    Bank files in; a coded double-entry ledger, GST returns, rental schedules,
-    IR3 and IR10 figures and financial reports out. It codes from your own past
-    decisions, and every figure can be checked.
-  </p>
 
-  <section class="donate" aria-labelledby="donate-title">
-    <h2 id="donate-title">NZOSA is free. Help keep it that way.</h2>
-    <p>
-      There is no subscription and no paid tier. It is built and kept up to date
-      with each year's IRD rates by one person, and donations are what keep it going.
-    </p>
-    <a class="coffee" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener">
-      <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 8h10v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14 9h1.5a2 2 0 0 1 0 4H14"/><path d="M7 3.5c-.6.8.6 1.4 0 2.3M10 3.5c-.6.8.6 1.4 0 2.3"/></svg>
-      Donate a coffee
-    </a>
-    <small>Secure payment by Stripe. Any amount, once, no account needed.</small>
+<svg width="0" height="0" style="position:absolute" aria-hidden="true">
+  <symbol id="i-cup" viewBox="0 0 20 20"><path d="M4 8h10v4a4 4 0 0 1-4 4H8a4 4 0 0 1-4-4z"/><path d="M14 9h1.5a2 2 0 0 1 0 4H14"/><path d="M7 3.5c-.6.8.6 1.4 0 2.3M10 3.5c-.6.8.6 1.4 0 2.3"/></symbol>
+  <symbol id="i-tick" viewBox="0 0 20 20"><path d="M4 10.5l4 4 8-9"/></symbol>
+  <symbol id="i-download" viewBox="0 0 20 20"><path d="M10 3v10M6 9l4 4 4-4M4 16h12"/></symbol>
+  <symbol id="i-play" viewBox="0 0 20 20"><path d="M6 4l10 6-10 6z"/></symbol>
+  <symbol id="i-brain" viewBox="0 0 24 24"><path d="M9 4a3 3 0 0 0-3 3 3 3 0 0 0-2 5 3 3 0 0 0 2 5 3 3 0 0 0 6 1V5a3 3 0 0 0-3-1z"/><path d="M15 4a3 3 0 0 1 3 3 3 3 0 0 1 2 5 3 3 0 0 1-2 5 3 3 0 0 1-6 1"/></symbol>
+  <symbol id="i-bank" viewBox="0 0 24 24"><path d="M3 9l9-5 9 5M5 10v7M10 10v7M14 10v7M19 10v7M3 20h18"/></symbol>
+  <symbol id="i-scale" viewBox="0 0 24 24"><path d="M12 4v16M6 20h12M4 8h16M7 8l-3 6a3 3 0 0 0 6 0zM17 8l-3 6a3 3 0 0 0 6 0z"/></symbol>
+  <symbol id="i-percent" viewBox="0 0 24 24"><path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/></symbol>
+  <symbol id="i-home" viewBox="0 0 24 24"><path d="M4 11l8-7 8 7v9H4z"/><path d="M10 20v-5h4v5"/></symbol>
+  <symbol id="i-doc" viewBox="0 0 24 24"><path d="M7 3h7l4 4v14H7z"/><path d="M14 3v4h4M10 12h5M10 16h5"/></symbol>
+  <symbol id="i-people" viewBox="0 0 24 24"><circle cx="9" cy="8" r="3"/><path d="M3 20a6 6 0 0 1 12 0"/><circle cx="17" cy="9" r="2.5"/><path d="M16 14a5 5 0 0 1 5 5"/></symbol>
+  <symbol id="i-sparkle" viewBox="0 0 24 24"><path d="M12 3l1.8 5.2L19 10l-5.2 1.8L12 17l-1.8-5.2L5 10l5.2-1.8z"/><path d="M19 16l.7 2 2 .7-2 .7-.7 2-.7-2-2-.7 2-.7z"/></symbol>
+  <symbol id="i-car" viewBox="0 0 24 24"><path d="M5 16V11l2-5h10l2 5v5M3 16h18v2H3zM5 11h14"/><circle cx="7.5" cy="16" r="1.5"/><circle cx="16.5" cy="16" r="1.5"/></symbol>
+  <symbol id="i-lock" viewBox="0 0 24 24"><rect x="5" y="10" width="14" height="10" rx="2"/><path d="M8 10V7a4 4 0 0 1 8 0v3"/></symbol>
+  <symbol id="i-code" viewBox="0 0 24 24"><path d="M8 7l-5 5 5 5M16 7l5 5-5 5M14 4l-4 16"/></symbol>
+  <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol>
+  <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></symbol>
+  <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1"/><path d="M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></symbol>
+  <symbol id="i-mark" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="8" fill="currentColor" stroke="none"/><path d="M9 22V10l14 12V10" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
+</svg>
+
+<header class="top">
+  <div class="wrap">
+    <a class="brand" href="./"><svg style="color:var(--accent)"><use href="#i-mark"/></svg>NZOSA</a>
+    <nav aria-label="Sections">
+      <a href="#features">Features</a>
+      <a href="#banks">Bank feeds</a>
+      <a href="#year-end">Year end</a>
+      <a href="#private">Private &amp; open</a>
+      <a href="https://github.com/hidicker/nzosa">GitHub</a>
+    </nav>
+    <a class="pill-coffee" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener"><svg class="icon"><use href="#i-cup"/></svg>Donate a coffee</a>
+  </div>
+</header>
+
+<main>
+  <section class="hero">
+    <div class="wrap">
+      <span class="eyebrow">Free &amp; open source &middot; Made in New Zealand</span>
+      <h1>Accounting that <span>learns your books</span> and checks its own work.</h1>
+      <p class="lede">
+        Bank feeds in; a balanced double-entry ledger, GST returns reconciled to
+        what you filed, IR10, IR3 and rental schedules out. For small businesses,
+        rental owners and their accountants.
+      </p>
+      <div class="ctas">
+        <a class="btn primary" href="https://github.com/hidicker/nzosa#running-it"><svg class="icon"><use href="#i-download"/></svg>Download free</a>
+        <a class="btn" href="../../nzosa_demo/"><svg class="icon"><use href="#i-play"/></svg>Try the demo</a>
+        <a class="btn" href="../">Open NZOSA online</a>
+      </div>
+      <ul class="ticks">
+        <li><svg class="icon"><use href="#i-tick"/></svg>No subscription</li>
+        <li><svg class="icon"><use href="#i-tick"/></svg>Your data stays on your computer</li>
+        <li><svg class="icon"><use href="#i-tick"/></svg>Moves over from Xero</li>
+      </ul>
+      <div class="shot">
+        <div class="bar"><i></i><i></i><i></i></div>
+        <img src="img/reconcile.webp" width="2880" height="1800" alt="NZOSA's Reconcile page: bank lines with a suggested account, GST rate and description against each.">
+      </div>
+    </div>
   </section>
 
-  <div class="actions">
-    <a class="button primary" href="../">Open NZOSA</a>
-    <a class="button" href="../../nzosa_demo/">Try the demo</a>
-    <a class="button" href="https://github.com/hidicker/nzosa#running-it">Download for your computer</a>
+  <div class="wrap donate">
+    <div class="card">
+      <div>
+        <h2>NZOSA is free. A coffee keeps it that way.</h2>
+        <p>
+          No subscription and no paid tier. One person builds it and keeps it up
+          to date with each year's IRD rates and rules. If it saves you an
+          accountant's hour or a Xero bill, please chip in.
+        </p>
+      </div>
+      <div>
+        <a class="coffee" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener"><svg class="icon"><use href="#i-cup"/></svg>Donate a coffee</a>
+        <small>Any amount, once. Secure payment by Stripe.</small>
+      </div>
+    </div>
   </div>
 
-  <div class="grid">
-    <div class="card"><h3>Your own past coding</h3><p>Rules are learned from how you have coded before, not from keywords you type in.</p></div>
-    <div class="card"><h3>GST, done properly</h3><p>Returns on any basis, reconciled to the ledger, with every difference explained.</p></div>
-    <div class="card"><h3>Rentals and personal</h3><p>Each property its own entity, rental schedules as an accountant sets them out, and each owner's IR3.</p></div>
-    <div class="card"><h3>Your data stays yours</h3><p>On your own computer it is plain files in a folder. Nothing is uploaded.</p></div>
-  </div>
+  <section class="block" id="features">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">More than a bank-statement importer</span>
+        <h2>The hard parts of the books, done properly.</h2>
+        <p>Plenty of software reads a bank statement. NZOSA keeps a real set of books, and does the work an accountant usually charges for.</p>
+      </div>
+      <div class="grid">
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-brain"/></svg></div><h3>Coding that learns from you</h3><p>Rules are written from how you or your accountant coded before. You never type keywords, and a correction sticks.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-percent"/></svg></div><h3>GST, reconciled</h3><p>Returns built from your coding, set beside what you filed with IRD, with the lines behind every difference.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-doc"/></svg></div><h3>IR10 and IR3</h3><p>The IR10 box by box as it is filed, and each owner's IR3 with their rental share, other income and provisional tax.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-home"/></svg></div><h3>Rentals, the way accountants set them out</h3><p>Each property its own entity and owners, rental schedules with last year beside them, and property manager statements.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-people"/></svg></div><h3>Payroll and leave</h3><p>PAYE, KiwiSaver and student loan, employment information for myIR, and leave owed under the Holidays Act.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-sparkle"/></svg></div><h3>AI where it helps</h3><p>Optional, with your own Claude, ChatGPT or Gemini key: suggestions for lines it has never seen, and property manager statements read for you.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-swap"/></svg></div><h3>Matching that understands money</h3><p>Transfers between your own accounts, invoices settled by part payments, and Stripe payouts split into sale, surcharge and fee.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-car"/></svg></div><h3>Assets and vehicles</h3><p>A fixed asset register with depreciation and disposals, and vehicle trips claimed at IRD's kilometre rates.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-scale"/></svg></div><h3>Books that have to balance</h3><p>Every line lands in a double-entry ledger, so a mistake shows as a figure that does not add up, not a report that quietly reads wrong.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="banks">
+    <div class="wrap">
+      <div class="bank">
+        <div>
+          <span class="kicker">Bank feeds</span>
+          <h2>Connect your bank. The lines come to you.</h2>
+          <p>
+            Link your New Zealand bank accounts through Akahu, and Wise through its
+            own connection, and new transactions arrive ready to code. Prefer files?
+            Statement exports from your bank work too, and the same line is never
+            counted twice.
+          </p>
+          <p>Your bank login and tokens stay with you: on your own computer they never leave the books' folder.</p>
+        </div>
+        <div class="flow">
+          <div><svg class="icon"><use href="#i-link"/></svg><p style="margin:0"><b>Akahu bank feeds</b><span>The main New Zealand banks, through your own Akahu connection.</span></p></div>
+          <div><svg class="icon"><use href="#i-bank"/></svg><p style="margin:0"><b>Wise</b><span>Multi-currency balances, with the amount billed in your account's currency.</span></p></div>
+          <div><svg class="icon"><use href="#i-file"/></svg><p style="margin:0"><b>Statement files</b><span>Bank and card exports, loans included. Duplicates are recognised.</span></p></div>
+        </div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="year-end">
+    <div class="wrap">
+      <div class="split">
+        <div class="copy">
+          <span class="kicker">Coding</span>
+          <h3>Most of a year codes itself. You deal with the handful that matter.</h3>
+          <p>Load the coding from Xero or your spreadsheet and NZOSA lines up every suggestion against what was actually done, then writes the rules from the agreement.</p>
+          <ul>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Accept the bulk in a few clicks; disagreements are set out on their own.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>It asks rather than guesses: a line it cannot place stays in front of you.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Entertainment split 50/50 with the GST right, in one click.</li>
+          </ul>
+        </div>
+        <div class="shot"><div class="bar"><i></i><i></i><i></i></div><img src="img/reports.webp" width="2880" height="1800" alt="A profit and loss report in NZOSA, with the number of lines behind each account."></div>
+      </div>
+
+      <div class="split flip">
+        <div class="copy">
+          <span class="kicker">GST</span>
+          <h3>Every GST return, beside what you actually filed.</h3>
+          <p>Load myIR's GST return summary and each period is shown against what the books now say. Click a period to see exactly which lines make the difference, and write the reason against it.</p>
+          <ul>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Payments, invoice or hybrid basis; two-monthly or six-monthly.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Transfers never reach a return, and refunds go back to the right box.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Each owner of a shared rental can file for their own share.</li>
+          </ul>
+        </div>
+        <div class="shot"><div class="bar"><i></i><i></i><i></i></div><img src="img/gst.webp" width="2880" height="1800" alt="NZOSA's GST reconciliation: each period with boxes 5, 11 and 15 and when it is due."></div>
+      </div>
+
+      <div class="split">
+        <div class="copy">
+          <span class="kicker">Year end</span>
+          <h3>Rental schedules, IR3s and IR10, ready for your accountant.</h3>
+          <p>Each property's year on one card: its schedule, the property manager's statements and trips made to it. The owners' IR3s take their share automatically.</p>
+          <ul>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Property manager statements entered by hand or read with AI.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>IR10 every box from 1 to 60, in whole dollars, as filed.</li>
+            <li><svg class="icon"><use href="#i-tick"/></svg>Validated against a practitioner's signed accounts, to the dollar.</li>
+          </ul>
+        </div>
+        <div class="shot"><div class="bar"><i></i><i></i><i></i></div><img src="img/rentalyear.webp" width="2880" height="1800" alt="NZOSA's Rental year end page: a rental property's income and expenses for the year, and its property manager statements."></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="block" id="private" style="padding-top:20px">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">Private &amp; open</span>
+        <h2>Your books are yours.</h2>
+      </div>
+      <div class="trust">
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-lock"/></svg></div><h3>On your own computer</h3><p>Your books are plain files in a folder you can back up and read without this software. Nothing is uploaded, and the app makes no network requests of its own.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-code"/></svg></div><h3>Open source</h3><p>Free software under the GNU AGPL. Read every line on GitHub, check how a figure is worked out, or host your own copy online.</p></div>
+        <div class="feature"><div class="badge"><svg class="icon"><use href="#i-swap"/></svg></div><h3>Moving from Xero</h3><p>Bring your Xero files and NZOSA lays its figures beside Xero's, so you can see they agree before you rely on them.</p></div>
+      </div>
+    </div>
+  </section>
+
+  <section class="closing">
+    <div class="wrap">
+      <h2>Try it on invented books first.</h2>
+      <p>The demo is a coffee roastery and two rentals, part way through a year. Change anything; nothing is real.</p>
+      <div class="ctas">
+        <a class="btn primary" href="../../nzosa_demo/"><svg class="icon"><use href="#i-play"/></svg>Try the demo</a>
+        <a class="btn" href="https://github.com/hidicker/nzosa#running-it"><svg class="icon"><use href="#i-download"/></svg>Download free</a>
+        <a class="pill-coffee" style="padding:13px 22px;font-size:16px" href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener"><svg class="icon"><use href="#i-cup"/></svg>Donate a coffee</a>
+      </div>
+    </div>
+  </section>
 </main>
+
 <footer>
-  NZOSA, by hidicker. Free software under the GNU AGPL v3, with
-  <a href="../NOTICE.txt">additional terms</a>, provided as is and without warranty &mdash;
-  <a href="../LICENSE.txt">licence</a>.
-  <a href="https://github.com/hidicker/nzosa">Source code</a>.
+  <div class="wrap">
+    <span>NZOSA, by hidicker. Free software under the GNU AGPL v3, with <a href="../NOTICE.txt">additional terms</a>, provided as is and without warranty &mdash; <a href="../LICENSE.txt">licence</a>. You remain responsible for what you file.</span>
+    <span><a href="https://github.com/hidicker/nzosa">Source code</a> &middot; <a href="https://github.com/hidicker/nzosa/blob/main/docs/user-guide.md">Guide</a> &middot; <a href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener">Donate</a></span>
+  </div>
 </footer>
 </body>
 </html>

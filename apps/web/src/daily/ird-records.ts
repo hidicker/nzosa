@@ -269,12 +269,80 @@ function checksFor(held: StoredIrdRecord): IrdCheck[] {
 
 // --- the page ----------------------------------------------------------------
 
+/**
+ * Who files the returns: a tax agent, or the owners themselves.
+ *
+ * It moves every date that matters at year end -- an IR3 is due 7 July
+ * without an agent and as late as 31 March with one, and terminal tax moves
+ * from 7 February to 7 April -- so a review that does not know it calls
+ * returns late that are not.
+ */
+function filingPanel(): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "filing-panel";
+  const heading = document.createElement("h3");
+  heading.textContent = "Who files these returns";
+  wrap.append(heading);
+
+  const filing = state.ledger.filing;
+  const choice = document.createElement("select");
+  for (const [value, label] of [
+    ["", "Not said"],
+    ["agent", "A tax agent or accountant files them"],
+    ["self", "We file them ourselves"],
+  ] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = label;
+    choice.append(option);
+  }
+  choice.value = filing === undefined ? "" : filing.taxAgent ? "agent" : "self";
+
+  const agent = document.createElement("input");
+  agent.type = "text";
+  agent.placeholder = "Agent or accountant (optional)";
+  agent.value = filing?.agentName ?? "";
+  agent.hidden = choice.value !== "agent";
+
+  const keep = (): void => {
+    const next =
+      choice.value === ""
+        ? undefined
+        : {
+            taxAgent: choice.value === "agent",
+            ...(choice.value === "agent" && agent.value.trim() !== "" ? { agentName: agent.value.trim() } : {}),
+          };
+    const { filing: _gone, ...rest } = state.ledger;
+    state.ledger = next === undefined ? rest : { ...rest, filing: next };
+    agent.hidden = choice.value !== "agent";
+    void save(state.ledger).then((ok) => {
+      state.persistent = ok;
+    });
+  };
+  choice.addEventListener("change", keep);
+  agent.addEventListener("change", keep);
+
+  const row = document.createElement("div");
+  row.className = "filing-row";
+  row.append(choice, agent);
+  wrap.append(
+    row,
+    note(
+      "With a tax agent, an individual's return is due as late as 31 March of the next year and " +
+        "terminal tax on 7 April, rather than 7 July and 7 February.",
+    ),
+  );
+  return wrap;
+}
+
 export function renderIrdRecords(): void {
   const body = $("ird-body");
   body.textContent = "";
   if (message !== "") body.append(note(message));
 
   if (pending !== null) body.append(pendingPanel(pending));
+
+  body.append(filingPanel());
 
   // Every file myIR has that these books use -- the same cards Start here,
   // Personal year end and GST reconciliation show -- with where to get each.

@@ -110,8 +110,22 @@ export type StoredIncomeReturn = FiledIncomeReturn & {
   source: string;
 };
 
+/**
+ * Who files these books' returns.
+ *
+ * A tax agent changes the dates: an individual's return is due 7 July without
+ * one and up to 31 March of the next year with one (an extension of time), and
+ * terminal tax moves from 7 February to 7 April. Undefined means nobody has said.
+ */
+export interface Filing {
+  taxAgent: boolean;
+  /** The agent or accountant, for the record. */
+  agentName?: string;
+}
+
 export interface StoredLedger {
   version: 1;
+  filing?: Filing;
   legitimateDuplicates: string[];
   /**
    * Transactions thrown away as duplicates, by id.
@@ -652,6 +666,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.modules ? { modules: ledger.modules } : {}),
     ...(ledger.tenancies ? { tenancies: ledger.tenancies } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
+    ...(ledger.filing ? { filing: ledger.filing } : {}),
     // Written back with everything else. Left out, the file was read on open
     // and then quietly erased by the first coding anybody confirmed -- the
     // decisions part is rebuilt from this list, so an omission here is a

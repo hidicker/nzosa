@@ -4087,3 +4087,7 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .presentation-toggle[hidden] {
   display: none;
 }
+
+/* Who files the returns, on IRD records. */
+.filing-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.25rem 0 0.4rem; }
+.filing-row input { min-width: 16rem; }

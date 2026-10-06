@@ -10,11 +10,14 @@ import {
 import { state } from "../state.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
+import { ir3For, rentalSchedulesFor } from "./reports.js";
 import {
   balanceSheetRole,
   categorise,
   depreciationSchedule,
+  emptyEntityModel,
   generalLedgerRows,
+  ownersOf,
   gstWithin,
   plClassForType,
   splitAccountLabel,
@@ -2751,6 +2754,100 @@ function buildRawRulesArchiveSheet(ctx: SheetContext): string {
 </worksheet>`;
 }
 
+// --- Rental schedules and owners' IR3s ---
+
+/**
+ * Each rental's schedule, as Rental year end sets it out.
+ *
+ * The figures the owners' returns are built from. Without them a reviewer
+ * handed this workbook rebuilt a "profit" from the general ledger, every
+ * entity together and personal spending included, and checked that instead.
+ */
+function buildRentalSchedulesSheet(ctx: SheetContext): string {
+  const year = ctx.year === "all" ? ctx.endYear : ctx.year;
+  const schedules = rentalSchedulesFor(year, false);
+  const widths = [34, 30, 16, 16];
+  const rows: string[] = [];
+  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `Rental schedules — year to 31 March ${year}`, 13)}</row>`);
+  rows.push(
+    `<row r="2" ht="18" customHeight="1">${textCell("A2", "Each property's income and expenses, as Rental year end sets them out. GST-exclusive where the property is registered, inclusive where it is not.", 14)}</row>`,
+  );
+  rows.push(`<row r="3" ht="22" customHeight="1">
+    ${textCell("A3", "Property", 1)}${textCell("B3", "Line", 1)}${textCell("C3", "Heading", 1)}${textCell("D3", "Amount ($)", 3)}
+  </row>`);
+  let r = 4;
+  if (schedules.length === 0) {
+    rows.push(`<row r="${r}">${textCell(`A${r}`, "No rental properties in these books.", 5)}</row>`);
+  }
+  for (const { entity, now } of schedules) {
+    const owners = (entity.owners ?? []).map((o) => `${o.name} ${o.percent}%`).join(" / ");
+    rows.push(`<row r="${r}">${textCell(`A${r}`, `${entity.name} (${entity.kind ?? "business"}${owners ? `, ${owners}` : ""})`, 1)}</row>`);
+    r++;
+    for (const line of now.income) {
+      rows.push(`<row r="${r}">${textCell(`A${r}`, entity.name, 5)}${textCell(`B${r}`, `Income: ${line.name}`, 4)}${textCell(`C${r}`, "income", 5)}${numCell(`D${r}`, line.amount / 100, 6)}</row>`);
+      r++;
+    }
+    for (const line of now.expenses) {
+      rows.push(`<row r="${r}">${textCell(`A${r}`, entity.name, 5)}${textCell(`B${r}`, `Expense: ${line.name}`, 4)}${textCell(`C${r}`, line.heading ?? "", 5)}${numCell(`D${r}`, line.amount / 100, 6)}</row>`);
+      r++;
+    }
+    for (const [label, cents] of [
+      ["Total income", now.totalIncome],
+      ["Total expenses", now.totalExpenses],
+      ["Net rental income", now.net],
+    ] as const) {
+      rows.push(`<row r="${r}">${textCell(`A${r}`, entity.name, 5)}${textCell(`B${r}`, label, 1)}${textCell(`C${r}`, "", 5)}${numCell(`D${r}`, cents / 100, 6)}</row>`);
+      r++;
+    }
+    r++;
+  }
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  ${buildSheetViewsXml(3)}
+  ${buildColsXml(widths)}
+  <sheetData>${rows.join("")}</sheetData>
+</worksheet>`;
+}
+
+/** Each owner's IR3, box by box, as Personal year end fills it in. */
+function buildIr3Sheet(ctx: SheetContext): string {
+  const year = ctx.year === "all" ? ctx.endYear : ctx.year;
+  const owners = ownersOf(state.ledger.entities ?? emptyEntityModel());
+  const widths = [24, 8, 52, 18];
+  const rows: string[] = [];
+  rows.push(`<row r="1" ht="26" customHeight="1">${textCell("A1", `IR3 returns — year to 31 March ${year}`, 13)}</row>`);
+  rows.push(
+    `<row r="2" ht="18" customHeight="1">${textCell("A2", "Each owner's return as these books fill it in: their share of each rental, income entered separately (salary, interest, dividends), the tax and next year's provisional tax.", 14)}</row>`,
+  );
+  rows.push(`<row r="3" ht="22" customHeight="1">
+    ${textCell("A3", "Owner", 1)}${textCell("B3", "Box", 1)}${textCell("C3", "Title", 1)}${textCell("D3", "Figure", 3)}
+  </row>`);
+  let r = 4;
+  if (owners.length === 0) {
+    rows.push(`<row r="${r}">${textCell(`A${r}`, "No owners in these books.", 5)}</row>`);
+  }
+  for (const owner of owners) {
+    const ir3 = ir3For(owner, year);
+    for (const box of ir3.boxes) {
+      const figure =
+        box.text !== undefined ? textCell(`D${r}`, box.text, 5) : numCell(`D${r}`, (box.amount ?? 0) / 100, 6);
+      rows.push(`<row r="${r}">${textCell(`A${r}`, owner, 5)}${textCell(`B${r}`, box.box, 5)}${textCell(`C${r}`, box.title, box.total ? 1 : 4)}${figure}</row>`);
+      r++;
+    }
+    for (const said of ir3.notes) {
+      rows.push(`<row r="${r}">${textCell(`A${r}`, owner, 5)}${textCell(`B${r}`, "note", 5)}${textCell(`C${r}`, said, 4)}</row>`);
+      r++;
+    }
+    r++;
+  }
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  ${buildSheetViewsXml(3)}
+  ${buildColsXml(widths)}
+  <sheetData>${rows.join("")}</sheetData>
+</worksheet>`;
+}
+
 // --- Master Workbook Assembler ---
 
 export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
@@ -2828,6 +2925,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
   const sheet18Xml = buildRawReferenceSheet(ctx);
   const sheet19Xml = buildRawEventsSheet(ctx);
   const sheet20Xml = buildRawRulesArchiveSheet(ctx);
+  const sheet21Xml = buildRentalSchedulesSheet(ctx);
+  const sheet22Xml = buildIr3Sheet(ctx);
 
   // 2. OpenXML Structural Files
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2856,6 +2955,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
   <Override PartName="/xl/worksheets/sheet18.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/worksheets/sheet19.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
   <Override PartName="/xl/worksheets/sheet20.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet21.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+  <Override PartName="/xl/worksheets/sheet22.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
 </Types>`;
 
   const packageRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2886,6 +2987,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
     <sheet name="Reference Ledger" sheetId="18" r:id="rId18"/>
     <sheet name="Audit Trail Events" sheetId="19" r:id="rId19"/>
     <sheet name="Rules Archive" sheetId="20" r:id="rId20"/>
+    <sheet name="Rental Schedules" sheetId="21" r:id="rId21"/>
+    <sheet name="IR3 Returns" sheetId="22" r:id="rId22"/>
   </sheets>
 </workbook>`;
 
@@ -2911,6 +3014,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
   <Relationship Id="rId18" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet18.xml"/>
   <Relationship Id="rId19" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet19.xml"/>
   <Relationship Id="rId20" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet20.xml"/>
+  <Relationship Id="rId21" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet21.xml"/>
+  <Relationship Id="rId22" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet22.xml"/>
   <Relationship Id="rIdStyle" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
 
@@ -2941,6 +3046,8 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
     { name: "xl/worksheets/sheet18.xml", data: encodeUtf8(sheet18Xml) },
     { name: "xl/worksheets/sheet19.xml", data: encodeUtf8(sheet19Xml) },
     { name: "xl/worksheets/sheet20.xml", data: encodeUtf8(sheet20Xml) },
+    { name: "xl/worksheets/sheet21.xml", data: encodeUtf8(sheet21Xml) },
+    { name: "xl/worksheets/sheet22.xml", data: encodeUtf8(sheet22Xml) },
   ];
 
   return createZip(files);

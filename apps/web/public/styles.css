@@ -4040,3 +4040,16 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .donate-link:hover { background: var(--accent-soft); }
 .donate-link svg { width: 16px; height: 16px; fill: none; stroke: currentColor; stroke-width: 1.6; stroke-linecap: round; stroke-linejoin: round; }
 
+
+/* The wordmark's O is a ticked circle: books that check their own work. */
+.wordmark,
+.wordmark-lockup {
+  display: inline-flex;
+  align-items: center;
+}
+.wordmark-o {
+  width: 0.95em;
+  height: 0.95em;
+  margin: 0 0.12em 0 0.02em;
+  flex: none;
+}

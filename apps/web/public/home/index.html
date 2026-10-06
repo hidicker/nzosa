@@ -4,6 +4,7 @@
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <title>NZOSA</title>
+<link rel="icon" href="../icon.svg">
 <meta name="description" content="NZOSA: free, open-source accounting for New Zealand. Bank feeds, coding that learns from your own history, GST reconciled to what you filed, IR10, IR3 and rental schedules.">
 <!--
   NZOSA's home page: the address its licence credit links to
@@ -46,7 +47,8 @@
   .top { position: sticky; top: 0; z-index: 10; background: color-mix(in srgb, var(--bg) 88%, transparent); backdrop-filter: blur(10px); border-bottom: 1px solid var(--border); }
   .top .wrap { display: flex; align-items: center; gap: 20px; height: 62px; }
   .brand { display: flex; align-items: center; gap: 10px; color: var(--text); text-decoration: none; font-weight: 800; letter-spacing: .06em; font-size: 19px; }
-  .brand svg { width: 30px; height: 30px; }
+  .brand { gap: 0; font-size: 24px; letter-spacing: .1em; }
+  .brand .o { width: .92em; height: .92em; margin: 0 .1em 0 .02em; }
   .top nav { display: flex; gap: 22px; margin-left: auto; }
   .top nav a { color: var(--muted); text-decoration: none; font-size: 15px; font-weight: 600; }
   .top nav a:hover { color: var(--text); }
@@ -159,12 +161,11 @@
   <symbol id="i-swap" viewBox="0 0 24 24"><path d="M4 8h14l-3-3M20 16H6l3 3"/></symbol>
   <symbol id="i-file" viewBox="0 0 24 24"><path d="M6 3h9l3 3v15H6z"/><path d="M9 12h6M9 16h6M9 8h3"/></symbol>
   <symbol id="i-link" viewBox="0 0 24 24"><path d="M10 14a4 4 0 0 0 6 0l3-3a4 4 0 0 0-6-6l-1 1"/><path d="M14 10a4 4 0 0 0-6 0l-3 3a4 4 0 0 0 6 6l1-1"/></symbol>
-  <symbol id="i-mark" viewBox="0 0 32 32"><rect x="1" y="1" width="30" height="30" rx="8" fill="currentColor" stroke="none"/><path d="M9 22V10l14 12V10" fill="none" stroke="var(--bg)" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"/></symbol>
 </svg>
 
 <header class="top">
   <div class="wrap">
-    <a class="brand" href="./"><svg style="color:var(--accent)"><use href="#i-mark"/></svg>NZOSA</a>
+    <a class="brand" href="./" aria-label="NZOSA home">NZ<svg class="o" viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12.5" fill="none" stroke="var(--accent)" stroke-width="4.2"/><path d="M10 16.5L14.5 21L22.5 11" fill="none" stroke="var(--coffee)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SA</a>
     <nav aria-label="Sections">
       <a href="#features">Features</a>
       <a href="#banks">Bank feeds</a>

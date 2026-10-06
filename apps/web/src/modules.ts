@@ -164,13 +164,21 @@ export function moduleOn(id: ModuleId): boolean {
 
 /**
  * Whether any of a space-separated list of modules is on. `!xero` stands for
- * Xero being off, for the words that take its place.
+ * Xero being off, for the words that take its place. `a+b` is a and b, and a
+ * country's id (`nz`) is whether the books are kept there: the IR10 is
+ * `business+nz`, a business's return in New Zealand.
  */
+const COUNTRIES = new Set(["nz", "au", "us", "generic"]);
+function termOn(term: string): boolean {
+  if (term.startsWith("!")) return !termOn(term.slice(1));
+  if (COUNTRIES.has(term)) return booksCountry().id === term;
+  return moduleOn(term as ModuleId);
+}
 export function anyModuleOn(list: string): boolean {
   return list
     .split(/\s+/)
     .filter(Boolean)
-    .some((id) => (id.startsWith("!") ? !moduleOn(id.slice(1) as ModuleId) : moduleOn(id as ModuleId)));
+    .some((either) => either.split("+").every(termOn));
 }
 
 /** Choose a module on or off, or -- with null -- back to following the books. */

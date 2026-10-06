@@ -37,6 +37,10 @@ cpSync(join(webDist, "app.js"), join(demoDir, "app.js"));
 for (const file of readdirSync(webDist)) {
   if (/\.(png|svg|jpg)$/i.test(file)) cpSync(join(webDist, file), join(demoDir, file));
 }
+// The pages the footer links to: the licence, its terms, privacy and terms of service.
+for (const file of ["LICENSE.txt", "NOTICE.txt", "privacy.html", "terms.html"]) {
+  if (existsSync(join(webDist, file))) cpSync(join(webDist, file), join(demoDir, file));
+}
 if (existsSync(join(webDist, "app.js.map"))) {
   cpSync(join(webDist, "app.js.map"), join(demoDir, "app.js.map"));
 }

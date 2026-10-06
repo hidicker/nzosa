@@ -4084,3 +4084,6 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .google-button:hover { background: #f8f9fa; }
 .cloud-or { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.9rem; }
 .cloud-agree { margin: 0.6rem 0 0; color: var(--muted); font-size: 0.85rem; }
+.presentation-toggle[hidden] {
+  display: none;
+}

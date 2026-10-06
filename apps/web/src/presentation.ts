@@ -115,6 +115,7 @@ function sweep(root: Node): void {
 }
 
 let observer: MutationObserver | null = null;
+let toggleButton: HTMLButtonElement | null = null;
 
 function start(): void {
   names = people();
@@ -174,6 +175,7 @@ export function wirePresentation(): void {
       start();
       sync(button);
     } else {
+      button.hidden = true;
       stop();
       location.reload();
     }
@@ -186,6 +188,8 @@ export function wirePresentation(): void {
     }
   });
   bar.append(button);
+  toggleButton = button;
+  button.hidden = state.page !== "setup" && !presenting();
   sync(button);
   if (presenting()) start();
 }
@@ -195,7 +199,11 @@ export function wirePresentation(): void {
  * again, and go over the page once more only if they changed.
  */
 let namesSaid = "";
-export function refreshPresentation(): void {
+export function refreshPresentation(page: string): void {
+  // The switch is kept to Setup, where somebody preparing a recording looks
+  // for it, rather than on every page. While it is on it shows everywhere, so
+  // it can always be turned off; Ctrl+Shift+P works on any page regardless.
+  if (toggleButton !== null) toggleButton.hidden = page !== "setup" && !presenting();
   if (!presenting()) return;
   const next = people();
   const said = next.map((n) => n.name.source).join("|");

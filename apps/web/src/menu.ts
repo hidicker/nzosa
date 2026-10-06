@@ -94,7 +94,7 @@ export function markSidebar(page: string): void {
   // What belongs to a module that is off stays out of the way (modules.ts).
   applyModules();
   // Presentation mode masks people's names: the books may have just loaded.
-  refreshPresentation();
+  refreshPresentation(page);
   // Bills, besides, only for the entities that keep them: companies and
   // commercial rentals.
   const billsItem = document.querySelector<HTMLElement>('.sidebar-nav button[data-page="bills"]');

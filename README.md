@@ -19,7 +19,7 @@ It runs on your own machine. Nothing is uploaded, and the app makes no network r
 
 > **Mac users:** On macOS the first double-click may say it is from an unidentified developer. Right-click the file, choose **Open**, then click **Open** again.
 
-> **Online demo:** Want to try it first with sample data without installing anything? Visit the [online demo](https://nbparagliding.nz/nzosa/).
+> **Online demo:** Want to try it first with sample data without installing anything? Visit the [online demo](https://nbparagliding.nz/nzosa_demo/). More about NZOSA on its [home page](https://nbparagliding.nz/nzosa/home/).
 
 ### For developers / terminal
 

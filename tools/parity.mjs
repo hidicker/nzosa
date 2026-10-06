@@ -251,7 +251,9 @@ const CAPTURE = String.raw`
         const raw = new TextDecoder("utf-8").decode(new Uint8Array(await blob.arrayBuffer()));
         const sheets = raw.split(/(?=<\?xml)/).filter((s) => s.includes("<sheetData>"));
         sheets.forEach((s, i) => {
-          out["workbook year=" + v + " sheet " + (i + 1)] = s.replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
+          // Cut at the sheet's end: what follows is the zip's next header,
+          // which carries a timestamp and differs on every run.
+          out["workbook year=" + v + " sheet " + (i + 1)] = s.slice(0, s.indexOf("</worksheet>")).replace(/<[^>]+>/g, " ").replace(/\s+/g, " ").trim();
         });
       }
     }

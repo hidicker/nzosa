@@ -3,6 +3,8 @@ import { onboarding, sourceForTheseBooks } from "./migrate/onboarding-state.js";
 import { state } from "./state.js";
 import { savePart } from "./store.js";
 import { emptyEntityModel } from "@nzosa/core";
+import type { JurisdictionId } from "@nzosa/core";
+import { booksCountry } from "./country.js";
 
 /**
  * Modules: what a set of books uses, so the rest can stay out of the way.
@@ -41,6 +43,11 @@ interface ModuleInfo {
   inferred: () => boolean;
   /** What the books hold for it, said when it is off: "2 employees". */
   holds?: () => string | null;
+  /**
+   * The countries it exists in, where it is one country's forms and rules --
+   * New Zealand's IR3, PAYE, GST return. Absent where it works anywhere.
+   */
+  countries?: readonly JurisdictionId[];
 }
 
 function entities() {
@@ -59,6 +66,7 @@ const businesses = () => entities().filter((e) => (e.kind ?? "business") === "bu
 export const MODULES: readonly ModuleInfo[] = [
   {
     id: "rentals",
+    countries: ["nz"],
     name: "Rentals",
     what: "Rental year end, rental information, property manager statements and rental schedules.",
     basis: "entities",
@@ -66,6 +74,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "personal",
+    countries: ["nz"],
     name: "Personal",
     what: "Personal year end and each person's IR3.",
     basis: "entities",
@@ -90,6 +99,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "gst",
+    countries: ["nz"],
     name: "GST",
     what: "GST returns, and reconciling them with what was filed.",
     basis: "entities",
@@ -111,6 +121,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "payroll",
+    countries: ["nz"],
     name: "Payroll",
     what: "Employees, pay runs, PAYE and employer filing.",
     basis: "data",
@@ -119,6 +130,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "vehicle",
+    countries: ["nz"],
     name: "Company vehicle",
     what: "A vehicle's private use, taken out of a business's costs at year end.",
     basis: "data",
@@ -142,6 +154,10 @@ const info = (id: ModuleId): ModuleInfo | undefined => MODULES.find((m) => m.id 
 
 /** Whether a module is on: as chosen, or as the books show. */
 export function moduleOn(id: ModuleId): boolean {
+  // A module belonging to another country's tax system is off, whatever was
+  // chosen: these books cannot file that country's forms.
+  const countries = info(id)?.countries;
+  if (countries !== undefined && !countries.includes(booksCountry().id)) return false;
   const chosen = state.ledger.modules?.[id];
   return chosen ?? info(id)?.inferred() ?? true;
 }

@@ -37,11 +37,22 @@ send_folder() {
 
   # What the site now serves, against what was built. Asked with a throwaway
   # query so no cache answers for it.
+  #
+  # Asked again for up to half a minute before calling it a failure: the host
+  # can go on serving the old copy for some seconds after an upload, and a
+  # check made at once reported a good deploy as failed -- which also stopped
+  # the demo being uploaded after the app.
   local bad=0
   for name in app.js styles.css index.html; do
-    local built served
+    local built served tries=0
     built=$(sha256sum "$folder/$name" | cut -d' ' -f1)
-    served=$(curl -sS --fail -H 'Cache-Control: no-cache' "$site/$name?v=$RANDOM$RANDOM" | sha256sum | cut -d' ' -f1)
+    while :; do
+      served=$(curl -sS --fail -H 'Cache-Control: no-cache' "$site/$name?v=$RANDOM$RANDOM" | sha256sum | cut -d' ' -f1)
+      [ "$built" = "$served" ] && break
+      tries=$((tries + 1))
+      [ "$tries" -ge 6 ] && break
+      sleep 5
+    done
     if [ "$built" = "$served" ]; then
       echo "  $name matches"
     else

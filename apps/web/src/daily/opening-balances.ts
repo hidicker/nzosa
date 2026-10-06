@@ -13,6 +13,7 @@ import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalance
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearOf, taxYearStart } from "../tax-year.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Where each year started.
@@ -104,12 +105,12 @@ export function renderOpeningBalances(): void {
   }
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const formatAccounting = (cents: Cents): string => {
     if (cents === 0) return "—";
     const val = Math.abs(cents) / 100;
-    const formatted = val.toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatted = val.toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
     return cents < 0 ? `(${formatted})` : formatted;
   };
 
@@ -490,7 +491,7 @@ function balanceAtStart(bank: string, balance: Cents, on: string, start: string)
 }
 
 function dollars(cents: Cents): string {
-  return `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString("en-NZ", {
+  return `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   })}`;
@@ -1061,7 +1062,7 @@ function enteredBalances(held: OpeningBalances): HTMLElement {
   table.innerHTML = "<thead><tr><th>Account</th><th>In credit / owned</th><th>Owing / equity</th></tr></thead>";
   const tbody = document.createElement("tbody");
   const shown = (cents: Cents): string =>
-    (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   for (const [key, cents] of Object.entries(held.accounts).sort(([a], [b]) => a.localeCompare(b))) {
     const tr = document.createElement("tr");
     tr.append(nameCell(labelOf(key)));
@@ -1197,8 +1198,8 @@ export function balanceMovementSection(
 
   wrap.append(
     note(
-      `Between ${new Date(first.at).toLocaleString("en-NZ")} and ` +
-        `${new Date(last.at).toLocaleString("en-NZ")}: the bank's balance movement compared ` +
+      `Between ${new Date(first.at).toLocaleString(booksLocale())} and ` +
+        `${new Date(last.at).toLocaleString(booksLocale())}: the bank's balance movement compared ` +
         "with the transactions in that time.",
     ),
   );

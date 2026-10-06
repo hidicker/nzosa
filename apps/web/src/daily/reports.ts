@@ -116,6 +116,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { booksLocale } from "../country.js";
 
 /**
  * The entity and registration last applied to the GST control.
@@ -424,7 +425,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   }
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   for (const journal of [...held].sort((a, b) => a.date.localeCompare(b.date))) {
     const problems = checkManualJournal(journal);
@@ -815,7 +816,7 @@ function renderShareholders(body: HTMLElement, year: number): void {
   body.append(heading);
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const warning = overdrawnWarning(schedule);
   if (warning !== null) {
@@ -1036,7 +1037,7 @@ function renderIr10(body: HTMLElement, year: number): void {
   }
 
   const dollars = (cents: Cents): string => {
-    const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", {
+    const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });
@@ -1223,7 +1224,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   if (opening === undefined) {
     const warn = document.createElement("p");
@@ -1367,7 +1368,7 @@ function renderJournal(body: HTMLElement, year: number): void {
   const balance = trialBalance(journals);
   const tax = taxSummary(journals);
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // The imbalance is the whole point: a single-entry ledger cannot tell you it
   // is complete, and this one can.
@@ -1480,7 +1481,7 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   );
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const table = document.createElement("table");
   table.className = "report-table owner-table depreciation-table";
@@ -2117,7 +2118,7 @@ function renderGstReturn(body: HTMLElement, year: number): void {
   const entity = reportingEntity();
   const filed = state.filed.find((f) => f.periodEnd === result.period.to);
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   // --- period and tabs ---
   const controls = document.createElement("div");
@@ -2540,13 +2541,13 @@ function pairLines(now: readonly RentalLine[], before: readonly RentalLine[]): S
 function wholeDollars(cents: Cents): string {
   const dollars = Math.round(cents / 100);
   if (dollars === 0) return "-";
-  const text = Math.abs(dollars).toLocaleString("en-NZ");
+  const text = Math.abs(dollars).toLocaleString(booksLocale());
   return dollars < 0 ? `(${text})` : text;
 }
 
 /** Dollars and cents, a negative in brackets -- as a return prints. */
 function centsSaid(cents: Cents): string {
-  const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", {
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -3059,7 +3060,7 @@ function renderOwnerReport(body: HTMLElement, owner: string, year: number): void
   }
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -3143,7 +3144,7 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
   );
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -3959,7 +3960,7 @@ export function renderReportsPage(): void {
   const tbody = document.createElement("tbody");
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const addRow = (
     label: string,

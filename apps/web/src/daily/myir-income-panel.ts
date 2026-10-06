@@ -5,6 +5,7 @@ import { savePart } from "../store.js";
 import { note } from "../ui.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
 import { MYIR_NOTE, myirIncomePrompt, myirTaxExtras, readMyirIncome } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Reading myIR's income details for a person's year, by way of a model.
@@ -21,7 +22,7 @@ let pasted = "";
 let reading: ReturnType<typeof readMyirIncome> | null = null;
 
 function dollars(cents: number): string {
-  return (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 async function keep(owner: string, year: number): Promise<void> {

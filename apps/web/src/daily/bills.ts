@@ -23,6 +23,7 @@ import {
   isPosted,
 } from "@nzosa/core";
 import type { DocumentStatus, Entity, Invoice, InvoiceBalance, OutsidePayment } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Bills: what these books owe suppliers.
@@ -40,7 +41,7 @@ let paying: string | null = null;
 const today = (): string => new Date().toISOString().slice(0, 10);
 
 const money = (cents: number): string =>
-  (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 function entityName(id: string | undefined): string {
   if (id === undefined) return "";

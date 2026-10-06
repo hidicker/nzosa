@@ -8,6 +8,7 @@ import { note } from "../ui.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { feedRequestFrom, fromWise, onOrAfter, wiseAccountId } from "@nzosa/core";
 import type { IsoDate, WiseStatementLine } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Wise, connected with its own API token.
@@ -111,7 +112,7 @@ export async function renderWise(): Promise<void> {
   head.className = "page-hint";
   head.textContent =
     `Connected with token ${status.token}.` +
-    (status.lastFetch ? ` Last fetched ${new Date(status.lastFetch).toLocaleString("en-NZ")}.` : "");
+    (status.lastFetch ? ` Last fetched ${new Date(status.lastFetch).toLocaleString(booksLocale())}.` : "");
   const disconnect = button("Disconnect", () => {
     if (!confirm("Forget the Wise token for these books? The lines already brought in stay.")) return;
     void call("", { method: "DELETE" }).then(() => {
@@ -142,7 +143,7 @@ export async function renderWise(): Promise<void> {
       name.textContent = `${b.profileName || b.profileType} · ${b.currency}`;
       const now = document.createElement("td");
       now.className = "report-amount";
-      now.textContent = (b.amount / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2 });
+      now.textContent = (b.amount / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2 });
       const pick = document.createElement("td");
       const tick = document.createElement("input");
       tick.type = "checkbox";

@@ -9,6 +9,7 @@ import {
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { booksCurrency } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
 import { ir3For, rentalSchedulesFor } from "./reports.js";
@@ -1465,7 +1466,7 @@ function buildRawTransactionsSheet(ctx: SheetContext): string {
         ${textCell(`B${rIdx}`, t.date, 5)}
         ${textCell(`C${rIdx}`, t.account, 5)}
         ${numCell(`D${rIdx}`, t.amount / 100, 6)}
-        ${textCell(`E${rIdx}`, t.currency || "NZD", 5)}
+        ${textCell(`E${rIdx}`, t.currency || booksCurrency(), 5)}
         ${textCell(`F${rIdx}`, t.otherParty, 4)}
         ${textCell(`G${rIdx}`, t.particulars, 4)}
         ${textCell(`H${rIdx}`, t.code, 4)}
@@ -1617,7 +1618,7 @@ function buildRawInvoicesSheet(ctx: SheetContext): string {
           ${textCell(`E${rIdx}`, inv.issued, 5)}
           ${textCell(`F${rIdx}`, inv.due ?? "", 5)}
           ${textCell(`G${rIdx}`, inv.status, 5)}
-          ${textCell(`H${rIdx}`, inv.currency || "NZD", 5)}
+          ${textCell(`H${rIdx}`, inv.currency || booksCurrency(), 5)}
           ${textCell(`I${rIdx}`, line?.description ?? "", 4)}
           ${textCell(`J${rIdx}`, line?.accountCode ?? "", 5)}
           ${textCell(`K${rIdx}`, line?.taxType ?? "", 4)}

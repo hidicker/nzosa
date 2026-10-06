@@ -25,6 +25,7 @@ import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Everything waiting to be done, in one list, each a click from where it is
@@ -67,7 +68,7 @@ function today(): IsoDate {
 /** Dollars as a person reads them: $1,234.50. */
 function dollars(cents: number): string {
   return (cents < 0 ? "-$" : "$") +
-    (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 function plural(n: number, one: string, many = `${one}s`): string {

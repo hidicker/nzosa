@@ -2,6 +2,7 @@ import type { Cents, Entity, Ir3Return, OwnerRentalSchedule, TaxExtra } from "@n
 import { emptyEntityModel } from "@nzosa/core";
 import { ledgerName } from "../store.js";
 import { state } from "../state.js";
+import { booksLocale } from "../country.js";
 
 /**
  * A person's year-end pack: the IR3 laid out the way an accountant's
@@ -24,7 +25,7 @@ function esc(text: string): string {
 
 /** Two decimals with thousands separators; negative in brackets, as the accounts show them. */
 function money(cents: number): string {
-  const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", {
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });
@@ -108,7 +109,7 @@ export function ir3PackHtml(
   const mine = extras.filter((e) => e.owner === owner && e.year === year);
   const of = (category: TaxExtra["category"]) => mine.filter((e) => e.category === category);
   const period = `1 April ${year - 1} - 31 March ${year}`;
-  const made = new Date().toLocaleDateString("en-NZ", { day: "2-digit", month: "short", year: "numeric" });
+  const made = new Date().toLocaleDateString(booksLocale(), { day: "2-digit", month: "short", year: "numeric" });
   const header =
     `<header><div class="who">${esc(owner)}</div><div class="what">${year} Individual taxpayer summary (IR3)<br>${esc(period)}</div></header>`;
   const footer =

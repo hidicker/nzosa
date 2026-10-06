@@ -2,6 +2,7 @@ import { note } from "../ui.js";
 import { promptControls, sendPdfWithOwnKey } from "./ai-pdf.js";
 import { agentStatementPrompt, propertyForAddress, readAgentStatements } from "@nzosa/core";
 import type { Entity, ReadAgentStatement } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Reading a property manager's statement with an AI, into the statement editor.
@@ -16,7 +17,7 @@ let pasted = "";
 let reading: ReturnType<typeof readAgentStatements> | null = null;
 
 function dollars(cents: number): string {
-  return (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 }
 
 export function agentReaderPanel(

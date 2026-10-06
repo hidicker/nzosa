@@ -125,6 +125,11 @@ export interface Filing {
 
 export interface StoredLedger {
   version: 1;
+  /**
+   * The country these books are kept in (core's `JurisdictionId`). Undefined
+   * is New Zealand, as every set kept before this existed is.
+   */
+  jurisdiction?: string;
   filing?: Filing;
   legitimateDuplicates: string[];
   /**
@@ -667,6 +672,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.tenancies ? { tenancies: ledger.tenancies } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
+    ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),
     // Written back with everything else. Left out, the file was read on open
     // and then quietly erased by the first coding anybody confirmed -- the
     // decisions part is rebuilt from this list, so an omission here is a

@@ -4,6 +4,7 @@ import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { booksLocale } from "../country.js";
 
 /**
  * The statement of cash flows, for the entity the page is filtered to.
@@ -15,7 +16,7 @@ import { taxYearEnd, taxYearStart } from "../tax-year.js";
  */
 
 function money(cents: number): string {
-  const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return cents < 0 ? `(${text})` : text;
 }
 
@@ -170,7 +171,7 @@ function monthly(year: number, banks: ReadonlySet<string>): HTMLElement {
     const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
     const to = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
     months.push({
-      label: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString("en-NZ", { month: "short", timeZone: "UTC" }),
+      label: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(booksLocale(), { month: "short", timeZone: "UTC" }),
       s: statementFor({ from, to }, banks),
     });
   }

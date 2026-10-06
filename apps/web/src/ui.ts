@@ -1,4 +1,5 @@
 import type { Invoice } from "@nzosa/core";
+import { booksLocale } from "./country.js";
 
 /**
  * Presentation primitives, with no opinion about what is being presented.
@@ -123,6 +124,6 @@ export function currentTheme(): Theme {
 export function dollars(cents: number): string {
   return (
     (cents < 0 ? "-$" : "$") +
-    (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 })
+    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })
   );
 }

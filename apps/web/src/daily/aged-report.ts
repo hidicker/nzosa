@@ -25,6 +25,7 @@ import {
 import type { Cents } from "@nzosa/core";
 import type { AgedReport, Invoice, InvoiceKind } from "@nzosa/core";
 import { taxYearEnd } from "../tax-year.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Aged payables and aged receivables.
@@ -98,7 +99,7 @@ function ledgerBalance(kind: InvoiceKind, asAt: string): { codes: string[]; owed
 }
 
 const money = (cents: number): string =>
-  (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
 export function renderAged(body: HTMLElement, kind: InvoiceKind, year: number): void {
   const asAt = asAtChosen ?? defaultAsAt(year);

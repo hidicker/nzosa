@@ -42,6 +42,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
+import { booksCurrency, booksLocale } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -128,7 +129,7 @@ function blankInvoice(): Invoice {
       tax: 0,
       paid: 0,
       outstanding: 0,
-      currency: "NZD",
+      currency: booksCurrency(),
       status: "Draft",
       lines: [{
         description: "", accountCode: "", taxType: registered ? "15% GST on Expenses" : "No GST",
@@ -148,7 +149,7 @@ function blankInvoice(): Invoice {
     tax: 0,
     paid: 0,
     outstanding: 0,
-    currency: "NZD",
+    currency: booksCurrency(),
     status: "Awaiting Payment",
     lines: [{ description: "", accountCode: "", taxType: "15% GST on Income", net: 0, tax: 0, gross: 0 }],
   };
@@ -800,7 +801,7 @@ export function renderInvoices(): void {
   });
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
 
   const summary = document.createElement("div");
   summary.className = "check-summary";

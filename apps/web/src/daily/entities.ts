@@ -43,6 +43,7 @@ import {
   sectionForType,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
+import { booksLocale } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -1215,7 +1216,7 @@ function balanceCell(
   if (raw === 0) return cell;
   const creditNormal = /revenue|income|sales|liabilit|equity|payable|retained|gst|historical|rounding|tracking|unpaid/.test(type);
   const shown = creditNormal ? -raw : raw;
-  const text = (Math.abs(shown) / 100).toLocaleString("en-NZ", {
+  const text = (Math.abs(shown) / 100).toLocaleString(booksLocale(), {
     minimumFractionDigits: 2,
     maximumFractionDigits: 2,
   });

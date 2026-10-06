@@ -57,6 +57,7 @@ import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { renderWise } from "./wise-feed.js";
 import { autoLinkBankRows } from "./entities.js";
+import { booksCurrency, booksLocale } from "../country.js";
 
 /**
  * Getting bank data in, by file or by feed.
@@ -189,7 +190,7 @@ export async function handleFiles(files: File[]): Promise<void> {
 
   const account = $<HTMLInputElement>("account").value.trim();
   // One currency is kept (NZD), so there is nothing to choose.
-  const currency = "NZD";
+  const currency = booksCurrency();
   const dayFirst = $<HTMLInputElement>("day-first").checked;
 
   const incoming: Transaction[] = [];
@@ -805,7 +806,7 @@ export async function renderFeed(): Promise<void> {
     when.className = "feed-said";
     // Said plainly, because a feed that has stopped working looks exactly like
     // a feed with nothing new until you know when it last managed to look.
-    when.textContent = `Last looked ${new Date(status.lastFetch).toLocaleString("en-NZ")}.`;
+    when.textContent = `Last looked ${new Date(status.lastFetch).toLocaleString(booksLocale())}.`;
     body.append(when);
   }
 
@@ -1688,7 +1689,7 @@ function justBeforeTable(lines: readonly Transaction[], start: string): HTMLElem
     );
     const amount = document.createElement("td");
     amount.className = "report-amount";
-    amount.textContent = (line.amount / 100).toLocaleString("en-NZ", {
+    amount.textContent = (line.amount / 100).toLocaleString(booksLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     });

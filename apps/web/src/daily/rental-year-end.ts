@@ -7,6 +7,7 @@ import type { Cents, Entity } from "@nzosa/core";
 import { renderAgentStatements, rentalSchedulesFor } from "./reports.js";
 import { tripsPanel, tripsStatus, vehiclesPanel } from "./vehicle-trips-panel.js";
 import { taxYearEnd } from "../tax-year.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Each rental's year end, property by property.
@@ -25,7 +26,7 @@ const opened = new Set<string>();
 let vehiclesOpen = false;
 
 function money(cents: Cents): string {
-  const text = (Math.abs(cents) / 100).toLocaleString("en-NZ", { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
   return cents < 0 ? `(${text})` : text;
 }
 

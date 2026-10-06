@@ -55,6 +55,7 @@ import { isDemoBuild } from "../ai-consent.js";
 import { savePart } from "../store.js";
 import { MODULES, anyModuleOn, applyModules, moduleOn, modulesPanel } from "../modules.js";
 import { onboarding, rememberSource, sourceForTheseBooks } from "./onboarding-state.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Setting a set of books up, and the steps that say what is left to do.
@@ -685,7 +686,7 @@ function migrationStepContent(source: string): HTMLElement {
  */
 function bankBalancesStep(led: StoredLedger): SetupStep {
   const money = (cents: number): string =>
-    `${cents < 0 ? "-" : ""}$${(Math.abs(cents) / 100).toLocaleString("en-NZ", {
+    `${cents < 0 ? "-" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
       minimumFractionDigits: 2,
       maximumFractionDigits: 2,
     })}`;

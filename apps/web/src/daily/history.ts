@@ -12,6 +12,7 @@ import { daysWork, formatAmount, localDay, sourceIdsOf } from "@nzosa/core";
 import type { PostedJournal } from "@nzosa/core";
 import { amountCell, nameCell } from "../ui.js";
 import { applyModules } from "../modules.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Every change, and the ability to take one back.
@@ -91,7 +92,7 @@ export function renderHistory(): void {
   body.append(
     note(
       `${shown.length} of ${state.events.length} changes, ${size}. ` +
-        `The last ${MAX_EVENTS.toLocaleString("en-NZ")} are kept; older ones fall off.`,
+        `The last ${MAX_EVENTS.toLocaleString(booksLocale())} are kept; older ones fall off.`,
     ),
   );
 

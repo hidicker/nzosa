@@ -170,9 +170,34 @@ export async function restoreBackup(
   if (parsed.rules) await saveRules(parsed.rules);
   if (parsed.rulesArchive) await saveRulesArchive(parsed.rulesArchive);
   if (Array.isArray(parsed.events)) await saveEvents(parsed.events);
+  rememberRestoredName(isBackup && typeof parsed.books === "string" ? parsed.books : "");
   return saved
     ? { ok: true }
     : { ok: false, why: "Some of it could not be written. Nothing was cleared first." };
+}
+
+/**
+ * The name of the books a backup was taken from, once restored.
+ *
+ * Kept so the books carry it on: saving restored books to the server offers it
+ * as the new set's name, rather than asking somebody to remember what the
+ * folder on their own computer was called.
+ */
+const RESTORED_NAME_KEY = "nzosa:restored-name";
+function rememberRestoredName(name: string): void {
+  try {
+    if (name === "") localStorage.removeItem(RESTORED_NAME_KEY);
+    else localStorage.setItem(RESTORED_NAME_KEY, name);
+  } catch {
+    // Not remembered: the name is simply asked for.
+  }
+}
+export function restoredName(): string {
+  try {
+    return localStorage.getItem(RESTORED_NAME_KEY) ?? "";
+  } catch {
+    return "";
+  }
 }
 
 /** Take a backup of the books open now and save it to this computer. */
@@ -215,7 +240,8 @@ export async function restoreWithConfirm(file: File, books: string): Promise<voi
  */
 export function backupTools(body: HTMLElement, books: string, hosted: boolean): void {
   const heading = document.createElement("h3");
-  heading.textContent = "Backup";
+  // Named, so it is plain which books a backup takes and a restore replaces.
+  heading.textContent = books === "" ? "Backup" : `Backup: ${books}`;
   body.append(heading);
 
   body.append(

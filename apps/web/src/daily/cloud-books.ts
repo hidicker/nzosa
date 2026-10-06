@@ -10,10 +10,11 @@ import {
   signOut,
   signUp,
 } from "../cloud.js";
-import { backupTools } from "../backup.js";
+import { backupTools, buildBackup, restoredName } from "../backup.js";
 import { renderMembers } from "./cloud-members.js";
 import { rpc } from "../cloud.js";
-import { openCloudBook, openCloudBookId } from "../store.js";
+import { state } from "../state.js";
+import { copyToCloudBook, openCloudBook, openCloudBookId } from "../store.js";
 import { note } from "../ui.js";
 
 /**
@@ -356,7 +357,77 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
     backupTools(body, openNow.name, true);
   } else {
     browserBackup(body);
+    saveToServer(body);
   }
+}
+
+/**
+ * Put the books in this browser on the server, as a new set.
+ *
+ * The second half of moving books up from a copy on somebody's own computer:
+ * restore its backup here, then save it to the server. Offered with the name
+ * the backup carried, so the set online is called what the books were called.
+ */
+function saveToServer(body: HTMLElement): void {
+  const count = state.ledger.transactions.length;
+  if (count === 0) return;
+  body.append(heading("Save these books to the server"));
+  body.append(
+    note(
+      `The books in this browser (${count} transaction${count === 1 ? "" : "s"}) become a new set ` +
+        "on the server, which you can then open from any computer and share. Everything comes " +
+        "across, including rules and history; bank feeds and AI keys are connected again there.",
+    ),
+  );
+  const row = document.createElement("div");
+  row.className = "cloud-add";
+  const name = document.createElement("input");
+  name.type = "text";
+  name.placeholder = "Name for the set on the server";
+  name.value = restoredName();
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "primary";
+  go.textContent = "Save to the server";
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  go.addEventListener("click", () => {
+    const wanted = name.value.trim();
+    if (wanted === "") {
+      say(said, "Give the set a name first.", true);
+      return;
+    }
+    go.disabled = true;
+    say(said, "Saving to the server…");
+    void (async () => {
+      const made = await createBook(wanted);
+      if (made === null) {
+        go.disabled = false;
+        say(said, "Could not start a set on the server.", true);
+        return;
+      }
+      const backup = await buildBackup();
+      const result = await copyToCloudBook(made.id, backup.ledger, {
+        rules: backup.rules,
+        rulesarchive: backup.rulesArchive,
+        events: backup.events,
+      });
+      if (!result.ok) {
+        go.disabled = false;
+        say(
+          said,
+          `${result.why} The set "${made.name}" was started on the server and may be partly ` +
+            "filled; nothing in this browser was changed.",
+          true,
+        );
+        return;
+      }
+      openCloudBook({ id: made.id, name: made.name });
+      location.reload();
+    })();
+  });
+  row.append(name, go);
+  body.append(row, said);
 }
 
 /**

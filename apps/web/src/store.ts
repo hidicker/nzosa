@@ -907,6 +907,38 @@ async function writeCloud(
 }
 
 /**
+ * Copy a whole set of books into a set on the server that has nothing in it.
+ *
+ * How books held in a browser -- a backup restored there, or what somebody
+ * built before signing in -- become books on the server. Every part is written
+ * as version 1 of a new set; the set is then opened, and from there on it
+ * saves like any other.
+ */
+export async function copyToCloudBook(
+  bookId: string,
+  ledger: StoredLedger,
+  extra: { rules: unknown; rulesarchive: unknown; events: unknown },
+): Promise<{ ok: true } | { ok: false; why: string }> {
+  const writes: [string, unknown][] = [
+    ...FOLDER_PARTS.map((part): [string, unknown] => [part, partValue(ledger, part)]),
+    ["rules", extra.rules ?? {}],
+    ["rulesarchive", extra.rulesarchive],
+    ["events", extra.events],
+  ];
+  for (const [part, value] of writes) {
+    if (value === undefined) continue;
+    const outcome = await saveCloudPart(bookId, part, value, 0);
+    if (outcome.kind !== "saved") {
+      return {
+        ok: false,
+        why: `The ${part} could not be saved to the server: ${outcome.kind === "conflict" ? "the set is not empty" : outcome.why}.`,
+      };
+    }
+  }
+  return { ok: true };
+}
+
+/**
  * Write one of the parts the app saves on its own -- the rules, the rule sets
  * they replaced, the history -- to hosted books.
  *

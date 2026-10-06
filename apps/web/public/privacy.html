@@ -1,0 +1,141 @@
+<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>NZOSA privacy policy</title>
+<link rel="icon" href="icon.svg">
+<style>
+  :root { --bg: #f4f6fa; --surface: #fff; --border: #dbe1ea; --text: #16202e; --muted: #5d6b7f; --accent: #0b3d69; --link: #1f6fb2; --coffee: #c25e1a; color-scheme: light dark; }
+  @media (prefers-color-scheme: dark) { :root { --bg: #0d151f; --surface: #16202e; --border: #2b3a4d; --text: #e7edf5; --muted: #93a4bb; --accent: #5aa9e6; --link: #7dbcf0; --coffee: #f08a3c; } }
+  * { box-sizing: border-box; }
+  body { margin: 0; background: var(--bg); color: var(--text); font: 17px/1.65 system-ui, -apple-system, "Segoe UI", Roboto, sans-serif; }
+  header, main, footer { max-width: 780px; margin: 0 auto; padding: 0 16px; }
+  header { padding-top: 22px; }
+  .brand { display: inline-flex; align-items: center; font-weight: 800; letter-spacing: .1em; font-size: 22px; color: var(--text); text-decoration: none; }
+  .brand svg { width: .92em; height: .92em; margin: 0 .1em 0 .02em; }
+  h1 { font-size: clamp(28px, 5vw, 38px); line-height: 1.15; margin: 28px 0 6px; }
+  h2 { font-size: 22px; margin: 36px 0 8px; }
+  h3 { font-size: 18px; margin: 22px 0 4px; }
+  .updated { color: var(--muted); margin: 0 0 20px; }
+  .summary { background: var(--surface); border: 1px solid var(--border); border-radius: 12px; padding: 4px 20px; }
+  a { color: var(--link); }
+  ul { padding-left: 1.2em; }
+  li { margin: 4px 0; }
+  footer { color: var(--muted); font-size: 14px; padding-top: 40px; padding-bottom: 40px; }
+</style>
+</head>
+<body>
+<header>
+  <a class="brand" href="home/" aria-label="NZOSA home">NZ<svg viewBox="0 0 32 32" aria-hidden="true"><circle cx="16" cy="16" r="12.5" fill="none" stroke="var(--accent)" stroke-width="4.2"/><path d="M10 16.5L14.5 21L22.5 11" fill="none" stroke="var(--coffee)" stroke-width="4.2" stroke-linecap="round" stroke-linejoin="round"/></svg>SA</a>
+</header>
+<main>
+  <h1>Privacy policy</h1>
+  <p class="updated">Last updated 6 October 2026</p>
+
+  <div class="summary">
+    <p><strong>In short:</strong> NZOSA is free accounting software made by one person in New Zealand
+    (hidicker). Run on your own computer, it collects nothing: your books are files in a folder on that
+    computer. If you sign in to keep your books online, they are stored with our database provider so you
+    can reach them. Your books are never sold, never used for advertising, and never looked at except to
+    help you when you ask. There are no analytics and no tracking cookies.</p>
+  </div>
+
+  <h2>Who we are</h2>
+  <p>"NZOSA", "we" and "us" mean the NZOSA project and its maker, hidicker, in New Zealand. We follow the
+  New Zealand Privacy Act 2020. Questions, requests and complaints about privacy go to
+  <a href="mailto:nzosa@proton.me">nzosa@proton.me</a>.</p>
+
+  <h2>NZOSA on your own computer</h2>
+  <p>When you download NZOSA and run it yourself, your books are files in a folder on your computer. We
+  never receive them, and the app sends nothing to us. It connects to other services only when you set
+  one up or press a button for it:</p>
+  <ul>
+    <li><strong>Bank feeds.</strong> If you connect Akahu or Wise, the app fetches your transactions and
+    balances from them using the token you give it. The token stays in your books' folder.</li>
+    <li><strong>AI.</strong> If you add your own key for Claude (Anthropic), ChatGPT (OpenAI), Gemini
+    (Google), OpenRouter or Jev, then when you press an AI button the lines being asked about (dates,
+    amounts, payees, descriptions and account names) are sent to that provider under your key, and its
+    own privacy terms apply.</li>
+    <li><strong>OpenAccountants.</strong> If you connect it on the AI check page, the AI provider you use
+    looks up New Zealand tax guides from openaccountants.com while it answers. The lookups can include the
+    topic being checked.</li>
+  </ul>
+
+  <h2>Books kept online (signed in)</h2>
+  <p>If you sign in at nbparagliding.nz/nzosa to keep books online, we hold:</p>
+  <ul>
+    <li><strong>Your account:</strong> your email address and, if you sign in with Google, the name and
+    profile picture address Google shares with us. A password, if you use one, is stored only as a secure
+    hash.</li>
+    <li><strong>Your books:</strong> everything you put in them, such as bank lines, coding, invoices,
+    payroll, entities, owners and IRD numbers, so you can open them from any computer.</li>
+    <li><strong>Sharing:</strong> who you invite to a set of books, their email address and their role.</li>
+    <li><strong>Connections:</strong> bank feed tokens and AI keys you add. They are kept on the server
+    (the page is only ever shown their first and last few characters) and used only to fetch your transactions or ask the AI for you.</li>
+    <li><strong>AI use:</strong> a count of AI requests per person per day, to keep the shared AI within its
+    limits. Not what was asked.</li>
+  </ul>
+  <p>Only you and the people you invite can open your books: the database enforces this on every request.
+  We do not look at your books unless you ask us to help with a problem, and then only as far as needed.</p>
+  <p>If you use the shared AI rather than your own key, the lines being asked about are sent to Google
+  Gemini through our server, under a paid key whose terms do not let Google train on them.</p>
+
+  <h2>The online demo</h2>
+  <p>The demo at nbparagliding.nz/nzosa_demo holds invented books, kept in your browser. Nothing you do in
+  it reaches us, except that pressing <em>AI suggestions</em> sends the demo's invented lines to Google
+  Gemini through our server, and a daily count of those requests is kept.</p>
+
+  <h2>Signing in with Google</h2>
+  <p>Signing in with Google gives us your Google account's email address, name and profile picture address,
+  and nothing else: not your contacts, files, mail or calendar. We use them only to sign you in and show
+  who is signed in.</p>
+
+  <h2>Donations</h2>
+  <p>Donations are taken by Stripe on its own pages. We see the amount, the date and the name and email
+  address you give Stripe. We never see your card details. Stripe's privacy policy covers the payment.</p>
+
+  <h2>The website</h2>
+  <p>Our web host keeps standard server logs: the address your request came from, the page asked for,
+  your browser and the time. They are used to keep the site working and secure. We use no analytics, no
+  advertising and no tracking cookies. The app uses your browser's storage only to work: your books in the
+  demo, your sign-in, and settings such as dark mode.</p>
+
+  <h2>Who else handles it</h2>
+  <p>We use these providers to run the online parts of NZOSA. Their servers may be outside New Zealand; we
+  choose providers that protect personal information to standards comparable to New Zealand's.</p>
+  <ul>
+    <li><strong>Supabase</strong>: database, sign-in and server functions for books kept online.</li>
+    <li><strong>Google</strong>: Google sign-in, and Gemini for the shared AI and the demo's AI suggestions.</li>
+    <li><strong>Stripe</strong>: donations.</li>
+    <li><strong>Our web host</strong>: serving the website and app at nbparagliding.nz.</li>
+    <li><strong>Akahu, Wise and AI providers you choose</strong>: only when you connect them, as above.</li>
+  </ul>
+  <p>We do not sell personal information or share it with anyone else, unless the law requires us to.</p>
+
+  <h2>How long we keep it</h2>
+  <p>Books kept online stay until you delete them. Your account stays until you ask us to delete it: email
+  <a href="mailto:nzosa@proton.me">nzosa@proton.me</a> and we will delete your account and any books only
+  you belong to. Our database provider's backups expire on their own schedule after that. Server logs are
+  kept by our web host for a limited time.</p>
+
+  <h2>Your rights</h2>
+  <p>You can ask to see the personal information we hold about you and ask us to correct it. You can
+  download a backup of your books at any time from the Books page. If you are not happy with how we have
+  handled your information, tell us at <a href="mailto:nzosa@proton.me">nzosa@proton.me</a>. You can also
+  complain to the <a href="https://www.privacy.org.nz/">Office of the Privacy Commissioner</a>.</p>
+
+  <h2>Security</h2>
+  <p>How NZOSA protects your data, and how to report a problem, is set out in its
+  <a href="https://github.com/hidicker/nzosa/blob/main/SECURITY.md">security policy</a>. If a privacy breach
+  were likely to cause you serious harm, we would tell you and the Privacy Commissioner.</p>
+
+  <h2>Changes</h2>
+  <p>If this policy changes, the new version will be posted here with a new date. For a significant change
+  affecting books kept online, we will tell signed-in users in the app.</p>
+</main>
+<footer>
+  NZOSA, by hidicker &middot; <a href="home/">Home</a> &middot; <a href="terms.html">Terms of service</a> &middot; <a href="mailto:nzosa@proton.me">nzosa@proton.me</a>
+</footer>
+</body>
+</html>

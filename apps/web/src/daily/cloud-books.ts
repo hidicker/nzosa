@@ -149,7 +149,21 @@ function signInForm(body: HTMLElement): void {
     google.hidden = !offered;
   });
 
-  body.append(google, form, said);
+  const agree = document.createElement("p");
+  agree.className = "cloud-agree";
+  const terms = document.createElement("a");
+  terms.href = "terms.html";
+  terms.target = "_blank";
+  terms.rel = "noopener";
+  terms.textContent = "terms of service";
+  const privacy = document.createElement("a");
+  privacy.href = "privacy.html";
+  privacy.target = "_blank";
+  privacy.rel = "noopener";
+  privacy.textContent = "privacy policy";
+  agree.append("By signing in you agree to the ", terms, " and the ", privacy, ".");
+
+  body.append(google, form, agree, said);
   const refused = takeAuthError();
   if (refused !== null) say(said, `Google sign-in did not finish: ${refused}`, true);
 }

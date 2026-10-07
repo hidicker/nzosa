@@ -1,6 +1,7 @@
 import { NO_SALES_TAX, jurisdictionOf, minorUnits, setSalesTaxFraction } from "@nzosa/core";
 import type { Jurisdiction } from "@nzosa/core";
 import { state } from "./state.js";
+import { addCountryReports } from "./daily/country-reports.js";
 
 /**
  * The country these books are kept in, for anything on screen that depends on
@@ -16,8 +17,14 @@ export function booksCountry(): Jurisdiction {
  * States). Called again whenever the country is changed.
  */
 export function applyCountry(): void {
-  const tax = booksCountry().salesTax;
+  const country = booksCountry();
+  const tax = country.salesTax;
   setSalesTaxFraction(tax === null ? NO_SALES_TAX : tax.fraction);
+  // The country's own reports, and its date order for bank files (12/03 is
+  // 12 March in New Zealand and 3 December in the United States).
+  addCountryReports(country.id);
+  const dayFirst = document.getElementById("day-first");
+  if (dayFirst instanceof HTMLInputElement) dayFirst.checked = country.dayFirst;
 }
 
 /** How numbers and dates are written: "en-NZ" for New Zealand. */

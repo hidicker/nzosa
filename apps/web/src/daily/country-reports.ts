@@ -316,3 +316,53 @@ export function renderBas(body: HTMLElement, year: number): void {
     ),
   );
 }
+
+/**
+ * The books' own country's reports, added to the report list once the books
+ * are open. Never in the page for anyone else: a hidden option is still in the
+ * list, and some browsers have shown hidden options anyway, so books kept in
+ * New Zealand get nothing added at all.
+ */
+const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string][] }> = {
+  us: {
+    label: "United States",
+    options: [
+      ["schedulee", "Schedule E (rentals)"],
+      ["schedulec", "Schedule C (business)"],
+      ["contractors", "Contractors and 1099-NEC"],
+    ],
+  },
+  au: {
+    label: "Australia",
+    options: [
+      ["aurental", "Rental property schedule"],
+      ["bas", "GST on the BAS"],
+    ],
+  },
+  kr: {
+    label: "South Korea",
+    options: [
+      ["krbusiness", "표준손익계산서 Business income statement"],
+      ["krrental", "부동산임대 Rental income"],
+      ["krvat", "부가가치세 VAT return"],
+    ],
+  },
+};
+
+export function addCountryReports(country: string): void {
+  const select = document.getElementById("report-kind");
+  const wanted = COUNTRY_REPORTS[country];
+  if (select === null || wanted === undefined || select.querySelector("optgroup[data-country]") !== null) return;
+  const group = document.createElement("optgroup");
+  group.label = wanted.label;
+  group.dataset["country"] = country;
+  for (const [value, text] of wanted.options) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    group.append(option);
+  }
+  const analytics = select.querySelector('optgroup[label="Analytics"]');
+  if (analytics !== null) select.insertBefore(group, analytics);
+  else select.append(group);
+}

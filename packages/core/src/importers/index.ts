@@ -6,6 +6,7 @@ import { bnzCard } from "./bnz-card.js";
 import { bnzTransactionList } from "./bnz-transaction-list.js";
 import { anzLoan } from "./anz-loan.js";
 import { wise } from "./wise.js";
+import { importOfx, isOfx } from "../ofx.js";
 import type { ReadonlyCsvRecord } from "../csv.js";
 import type {
   DetectionResult,
@@ -66,6 +67,17 @@ export interface ImportOptions {
  * having rows disappear.
  */
 export function importFile(text: string, options: ImportOptions = {}): ImportResult {
+  // OFX and QFX are not CSV at all; they are read whole, then numbered and
+  // given ids below like every other file.
+  if (options.importer === undefined && isOfx(text)) {
+    return numbered(
+      importOfx(text, {
+        ...(options.file !== undefined ? { file: options.file } : {}),
+        ...(options.account !== undefined ? { account: options.account } : {}),
+        ...(options.defaultCurrency !== undefined ? { defaultCurrency: options.defaultCurrency } : {}),
+      }),
+    );
+  }
   const records = parseCsvRecords(text);
   const file = options.file ?? "upload.csv";
 
@@ -87,8 +99,11 @@ export function importFile(text: string, options: ImportOptions = {}): ImportRes
     ...(options.dayFirst !== undefined ? { dayFirst: options.dayFirst } : {}),
   };
 
-  const result = chosen.parse(records, context);
+  return numbered(chosen.parse(records, context));
+}
 
+/** Occurrence numbers and ids, the same for every importer. */
+function numbered(result: ImportResult): ImportResult {
   // Number otherwise-identical rows within this file before ids are assigned,
   // so three real repeats get three ids rather than colliding on one.
   const counts = new Map<string, number>();

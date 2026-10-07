@@ -43,7 +43,7 @@ import {
   sectionForType,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -647,7 +647,7 @@ export function renderEntities(): void {
       "any 12 months; its periods end 30 September and 31 March.";
     frequency.addEventListener("change", () => {
       const live = state.ledger.entities ?? emptyEntityModel();
-      const months = Number(frequency.value) as 1 | 2 | 6;
+      const months = Number(frequency.value) as 1 | 2 | 3 | 6;
       void saveEntities(
         {
           ...live,
@@ -1217,8 +1217,8 @@ function balanceCell(
   const creditNormal = /revenue|income|sales|liabilit|equity|payable|retained|gst|historical|rounding|tracking|unpaid/.test(type);
   const shown = creditNormal ? -raw : raw;
   const text = (Math.abs(shown) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   });
   cell.textContent = shown < 0 ? `(${text})` : text;
   cell.title = profitAndLoss ? "This financial year to date" : "Balance today";

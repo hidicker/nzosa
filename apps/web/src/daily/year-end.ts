@@ -13,7 +13,7 @@ import { amountCell, nameCell, note } from "../ui.js";
 import { E12_ROWS, KILOMETRE_RATES, NOT_IN_E12, NO_LOGBOOK_LIMIT, emptyEntityModel } from "@nzosa/core";
 import type { Cents, Entity, PostedJournal, Prepayment, VehicleFuel, VehicleUse } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Year-end adjustments: the private use of a vehicle, and prepayments.
@@ -26,8 +26,8 @@ import { booksLocale } from "../country.js";
 
 function money(cents: Cents): string {
   const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   });
   return cents < 0 ? `(${text})` : text;
 }

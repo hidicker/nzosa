@@ -1,5 +1,7 @@
 import {
   AU_RENTAL_SCHEDULE,
+  KR_BUSINESS_STATEMENT,
+  KR_RENTAL_STATEMENT,
   SCHEDULE_C,
   SCHEDULE_E,
   basDueDate,
@@ -8,8 +10,10 @@ import {
   emptyEntityModel,
   estimatedTaxDates,
   formSchedule,
-  formatAmount,
   isRental,
+  krIncomeTaxDue,
+  krVatPeriods,
+  krVatReturn,
   nec1099Threshold,
   simplerBas,
 } from "@nzosa/core";
@@ -20,6 +24,7 @@ import { note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
 import { entityYearReport, scheduleName } from "./reports.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * The United States' and Australia's forms, as reports.
@@ -31,7 +36,9 @@ import { taxYearEnd, taxYearStart } from "../tax-year.js";
  * from its name, and a wrong guess has to be easy to see.
  */
 
-const money = (cents: number): string => formatAmount(cents);
+/** Grouped, with the currency's decimals: "22,200.00", or "36,000,000" for won. */
+const money = (cents: number): string =>
+  (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
 
 function entities(): readonly Entity[] {
   return (state.ledger.entities ?? emptyEntityModel()).entities;
@@ -137,7 +144,9 @@ export function renderContractors(body: HTMLElement, year: number): void {
     if (!journal.date.startsWith(String(year))) continue;
     for (const line of journal.lines) {
       if (line.amount <= 0) continue;
-      const name = scheduleName(line.accountCode);
+      // The line carries the bare code ("460B"); the name is the chart's.
+      const code = line.accountCode.trim();
+      const name = state.chart.find((one) => one.code.trim() === code)?.name ?? scheduleName(code);
       if (!/contract|subcontract|freelanc/.test(name.toLowerCase())) continue;
       payments.push({ payee: journal.narration || "(no payee)", date: journal.date, amount: line.amount });
     }
@@ -183,6 +192,77 @@ export function renderAuRentalSchedule(body: HTMLElement, year: number): void {
   title.textContent = `Rental property schedule — year to 30 June ${year}`;
   body.append(title);
   formFor(body, year, AU_RENTAL_SCHEDULE, isRental, "No rental properties in these books. Add one on Entities & accounts.");
+}
+
+/** 표준손익계산서: the business on the standard income statement headings. */
+export function renderKrBusiness(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `표준손익계산서 Business income statement — ${year}`;
+  body.append(title);
+  formFor(
+    body,
+    year,
+    KR_BUSINESS_STATEMENT,
+    (entity) => (entity.kind ?? "business") === "business",
+    "No business in these books. Add one on Entities & accounts.",
+  );
+  body.append(note(`종합소득세 신고·납부 기한 Comprehensive income tax is due by ${krIncomeTaxDue(year)}.`));
+}
+
+/** 부동산임대업: each rental's income and expenses. */
+export function renderKrRental(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `부동산임대업 Rental income — ${year}`;
+  body.append(title);
+  formFor(body, year, KR_RENTAL_STATEMENT, isRental, "No rental properties in these books. Add one on Entities & accounts.");
+}
+
+/** 부가가치세: each half year's VAT, from the returns the books work out. */
+export function renderKrVat(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `부가가치세 VAT — ${year}`;
+  body.append(title);
+  let returns: ReturnType<typeof computeOurReturns> = [];
+  try {
+    returns = computeOurReturns(varianceInput(), taxYearStart(year), taxYearEnd(year));
+  } catch {
+    returns = [];
+  }
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    "<thead><tr><th>과세기간 Period</th><th>신고기한 Due</th><th>과세표준 Tax base</th><th>매출세액 Output VAT</th><th>매입세액 Input VAT</th><th>납부(환급)세액 Payable</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const period of krVatPeriods(year)) {
+    const inside = returns.filter((r) => r.period.to >= period.from && r.period.to <= period.to);
+    const sum = (key: string): number =>
+      inside.reduce((t, r) => t + ((r.boxes as unknown as Record<string, number | undefined>)[key] ?? 0), 0);
+    const vat = krVatReturn({ box5: sum("box5"), box6: sum("box6"), box8: sum("box8"), box12: sum("box12"), box13: sum("box13") });
+    const tr = document.createElement("tr");
+    for (const [text, cls] of [
+      [`${period.label} ${period.from} ~ ${period.to}`, "report-name"],
+      [period.due, "report-note"],
+      [money(vat.taxBase), "report-amount"],
+      [money(vat.outputVat), "report-amount"],
+      [money(vat.inputVat), "report-amount"],
+      [`${money(Math.abs(vat.payable))} ${vat.payable >= 0 ? "납부 to pay" : "환급 refund"}`, "report-amount"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(
+    table,
+    note(
+      "세금계산서·신용카드·현금영수증 매출은 신고서에서 나누어 적습니다. Tax-invoice, card and cash-receipt " +
+        "sales are one figure here; the return splits them. 개인 일반과세자는 4월·10월에 예정고지세액을 납부합니다. " +
+        "An individual pays a preliminary amount on notice in April and October.",
+    ),
+  );
 }
 
 /** GST on the BAS, quarter by quarter: G1, 1A, 1B and the net. */

@@ -1,4 +1,4 @@
-import { NO_SALES_TAX, jurisdictionOf, setSalesTaxFraction } from "@nzosa/core";
+import { NO_SALES_TAX, jurisdictionOf, minorUnits, setSalesTaxFraction } from "@nzosa/core";
 import type { Jurisdiction } from "@nzosa/core";
 import { state } from "./state.js";
 
@@ -28,4 +28,13 @@ export function booksLocale(): string {
 /** The currency an amount is in when nothing says otherwise: "NZD" for New Zealand. */
 export function booksCurrency(): string {
   return booksCountry().currency;
+}
+
+/**
+ * How many decimals money is shown with: 2 for New Zealand dollars, none for
+ * won. Amounts are held in hundredths whatever the currency, so this is how
+ * they are shown, never how they are stored.
+ */
+export function moneyPlaces(): number {
+  return Math.min(2, minorUnits(booksCurrency()));
 }

@@ -1,6 +1,6 @@
 import { TAX_EXTRA_CATEGORIES, taxTypeOf } from "@nzosa/core";
 import type { TaxExtra } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Income from outside the books, a payer to a row, with what lies behind it.
@@ -15,7 +15,7 @@ import { booksLocale } from "../country.js";
 type IncomeLine = Pick<TaxExtra, "category" | "payer" | "gross" | "credits" | "imputation" | "note" | "details">;
 
 function money(cents: number): string {
-  return (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  return (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
 }
 
 /** What kind of income a line is, in words, with the source's own name where it is narrower. */

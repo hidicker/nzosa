@@ -102,7 +102,7 @@ export interface Entity {
    * open to sales under $500,000 in any 12 months; with a 31 March balance
    * date its periods end 30 September and 31 March.
    */
-  gstFrequency?: 1 | 2 | 6;
+  gstFrequency?: 1 | 2 | 3 | 6;
   /**
    * The GST number, as it goes on an invoice you send somebody.
    *

@@ -152,6 +152,12 @@ export const ASKED: readonly ModuleId[] = ["payroll", "vehicle", "assets", "busi
 
 const info = (id: ModuleId): ModuleInfo | undefined => MODULES.find((m) => m.id === id);
 
+/** The modules that exist in these books' country: all of them in New Zealand. */
+export function modulesHere(): readonly ModuleInfo[] {
+  const here = booksCountry().id;
+  return MODULES.filter((m) => m.countries === undefined || m.countries.includes(here));
+}
+
 /** Whether a module is on: as chosen, or as the books show. */
 export function moduleOn(id: ModuleId): boolean {
   // A module belonging to another country's tax system is off, whatever was
@@ -242,7 +248,7 @@ const BASIS: Record<Basis, string> = {
 export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HTMLElement {
   const grid = document.createElement("div");
   grid.className = "module-tiles";
-  for (const module of MODULES.filter((m) => only === undefined || only.includes(m.id))) {
+  for (const module of modulesHere().filter((m) => only === undefined || only.includes(m.id))) {
     const chosen = state.ledger.modules?.[module.id];
     const on = moduleOn(module.id);
     const tile = document.createElement("div");

@@ -25,7 +25,8 @@ import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
+import { booksCountry } from "../country.js";
 
 /**
  * Everything waiting to be done, in one list, each a click from where it is
@@ -68,7 +69,7 @@ function today(): IsoDate {
 /** Dollars as a person reads them: $1,234.50. */
 function dollars(cents: number): string {
   return (cents < 0 ? "-$" : "$") +
-    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
 }
 
 function plural(n: number, one: string, many = `${one}s`): string {
@@ -84,7 +85,7 @@ function gstDue(now: IsoDate): { periodEnd: IsoDate; due: IsoDate }[] {
   const from = state.ledger.transactions.reduce((min, t) => (t.date < min ? t.date : min), now);
   // A period the bank lines never reach is not one these books are doing.
   const last = state.ledger.transactions.reduce((max, t) => (t.date > max ? t.date : max), from);
-  const periods = gstPeriods({ from, to: now }, { months: gstFrequency(), anchorMonth: 3 });
+  const periods = gstPeriods({ from, to: now }, { months: gstFrequency(), anchorMonth: booksCountry().yearEnd.endMonth });
   // Only returns due in the sixty days either side of today. Somebody who files
   // in myIR and never records it here would otherwise see every return since
   // the books began as overdue, for ever.
@@ -236,7 +237,7 @@ export function actionItems(): ActionItem[] {
     // being worked out, or was filed, without it.
     const ended = gstPeriods(
       { from: open.reduce((min, one) => (one.transaction.date < min ? one.transaction.date : min), now), to: now },
-      { months: gstFrequency(), anchorMonth: 3 },
+      { months: gstFrequency(), anchorMonth: booksCountry().yearEnd.endMonth },
     ).filter((p) => p.to < now);
     const lastEnded = ended.length > 0 ? ended[ended.length - 1]!.to : "";
     const late = open.filter((one) => lastEnded !== "" && one.transaction.date <= lastEnded).length;

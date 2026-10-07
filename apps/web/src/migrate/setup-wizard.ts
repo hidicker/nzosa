@@ -1,3 +1,5 @@
+import { JURISDICTIONS, jurisdictionOf } from "@nzosa/core";
+import { edition } from "../edition.js";
 import { redraw, showPage } from "../app.js";
 import { allMyirCards } from "../daily/myir-cards.js";
 import {
@@ -53,9 +55,9 @@ import type { Account, Entity } from "@nzosa/core";
 import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
 import { isDemoBuild } from "../ai-consent.js";
 import { savePart } from "../store.js";
-import { MODULES, anyModuleOn, applyModules, moduleOn, modulesPanel } from "../modules.js";
+import { anyModuleOn, applyModules, moduleOn, modulesHere, modulesPanel } from "../modules.js";
 import { onboarding, rememberSource, sourceForTheseBooks } from "./onboarding-state.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Setting a set of books up, and the steps that say what is left to do.
@@ -687,8 +689,8 @@ function migrationStepContent(source: string): HTMLElement {
 function bankBalancesStep(led: StoredLedger): SetupStep {
   const money = (cents: number): string =>
     `${cents < 0 ? "-" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: moneyPlaces(),
+      maximumFractionDigits: moneyPlaces(),
     })}`;
 
   // The bank's daily balances file, whenever one is loaded. It needs nothing
@@ -1364,11 +1366,12 @@ function renderSetupIntro(): void {
   box.className = "modules-box";
   const heading = document.createElement("h3");
   heading.textContent = "Modules";
-  const on = MODULES.filter((m) => moduleOn(m.id)).length;
+  const here = modulesHere();
+  const on = here.filter((m) => moduleOn(m.id)).length;
   box.append(
     heading,
     note(
-      `${on} of ${MODULES.length} on. Anything that belongs to a module that is off is hidden: its ` +
+      `${on} of ${here.length} on. Anything that belongs to a module that is off is hidden: its ` +
         "pages, reports and questions. Nothing in the books changes, and turning a module back on " +
         "brings it all back. Click one to turn it on or off.",
     ),
@@ -1376,8 +1379,54 @@ function renderSetupIntro(): void {
   );
   const steps = document.createElement("h3");
   steps.textContent = "Set-up steps";
+  const country = countryBox();
+  if (country !== null) intro.append(country);
   intro.append(box, steps);
   intro.hidden = false;
+}
+
+/**
+ * Which country these books are kept in.
+ *
+ * Only in the international edition, or for books already set to another
+ * country: NZOSA as it ships keeps New Zealand's books and never asks. The
+ * country decides the tax year, the currency, the rate of GST or VAT, and
+ * which returns and pages there are; changing it reloads the app so that
+ * everything is drawn again under the new country.
+ */
+function countryBox(): HTMLElement | null {
+  const set = state.ledger.jurisdiction;
+  if (edition() !== "international" && (set === undefined || set === "nz")) return null;
+  const box = document.createElement("section");
+  box.id = "setup-country";
+  box.className = "modules-box";
+  const heading = document.createElement("h3");
+  heading.textContent = "Country";
+  const select = document.createElement("select");
+  select.setAttribute("aria-label", "Country these books are kept in");
+  for (const one of Object.values(JURISDICTIONS)) {
+    const option = document.createElement("option");
+    option.value = one.id;
+    option.textContent = one.name;
+    select.append(option);
+  }
+  select.value = jurisdictionOf(set).id;
+  select.addEventListener("change", () => {
+    state.ledger = { ...state.ledger, jurisdiction: select.value };
+    select.disabled = true;
+    void savePart(state.ledger).then(() => location.reload());
+  });
+  const here = jurisdictionOf(set);
+  box.append(
+    heading,
+    note(
+      "The country decides the tax year, the currency, GST or VAT, and which returns these books " +
+        `produce. Now: ${here.name} — year to ${here.yearEnd.endDay}/${here.yearEnd.endMonth}, ${here.currency}` +
+        (here.salesTax === null ? ", no national sales tax." : `, ${here.salesTax.name} ${Math.round(here.salesTax.rate * 100)}%.`),
+    ),
+    select,
+  );
+  return box;
 }
 
 export function renderSetup(): void {

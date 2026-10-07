@@ -112,8 +112,11 @@ async function openChrome(port) {
   await new Promise((r) => ws.addEventListener("open", r));
   let id = 0;
   const pending = new Map();
+  const problems = [];
   ws.addEventListener("message", (e) => {
     const m = JSON.parse(e.data);
+    if (m.method === "Runtime.exceptionThrown") problems.push(m.params.exceptionDetails?.exception?.description ?? m.params.exceptionDetails?.text);
+    if (m.method === "Runtime.consoleAPICalled" && m.params.type === "error") problems.push(m.params.args.map((a) => a.value ?? a.description).join(" "));
     if (pending.has(m.id)) {
       pending.get(m.id)(m);
       pending.delete(m.id);
@@ -126,6 +129,7 @@ async function openChrome(port) {
       ws.send(JSON.stringify({ id: n, method, params }));
     });
   return {
+    problems,
     send,
     async evaluate(expression) {
       const reply = await send("Runtime.evaluate", { expression, awaitPromise: true, returnByValue: true });
@@ -201,7 +205,10 @@ const CAPTURE = String.raw`
 
       if (page === "reports" && !button.dataset.report) {
         const kind = document.getElementById("report-kind");
-        for (const k of [...kind.options].map((o) => o.value)) {
+        // Only what a person can choose: a hidden option, or one in a hidden
+        // group, belongs to a module or a country these books do not have.
+        const choosable = [...kind.options].filter((o) => !o.hidden && !(o.parentElement instanceof HTMLOptGroupElement && o.parentElement.hidden));
+        for (const k of choosable.map((o) => o.value)) {
           await choose(kind, k);
           await wait(200);
           const year = document.getElementById("report-year");
@@ -317,10 +324,12 @@ if (probe !== "") {
   const server = await serveBooks(repoA, folder, books[0], 3459);
   const chrome = await openChrome(9449);
   await chrome.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+  await chrome.send("Runtime.enable");
   await chrome.send("Page.navigate", { url: "http://127.0.0.1:3459/" });
   await wait(6000);
   try {
     console.log(JSON.stringify(await chrome.evaluate(probe), null, 1));
+    if (chrome.problems.length > 0) console.log(`PAGE ERRORS:\n${chrome.problems.slice(0, 10).join("\n")}`);
   } finally {
     chrome.close();
     server.kill();

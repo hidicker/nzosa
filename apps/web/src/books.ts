@@ -79,6 +79,7 @@ import type {
   TripClaim,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
+import { booksCountry } from "./country.js";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -1389,13 +1390,16 @@ export function postedJournals(): PostedJournal[] {
  * frequency every registered entity shares, and two-monthly -- IRD's default
  * -- when they differ or nobody has said.
  */
-export function gstFrequency(): 1 | 2 | 6 {
+export function gstFrequency(): 1 | 2 | 3 | 6 {
+  // The country's usual period where nobody has said: two-monthly in New
+  // Zealand, quarterly in Australia, six-monthly in South Korea.
+  const usual = booksCountry().id === "au" ? 3 : booksCountry().id === "kr" ? 6 : 2;
   const model = state.ledger.entities ?? emptyEntityModel();
   const chosen = model.entities.find((e) => e.id === state.entityFilter);
-  if (chosen !== undefined) return chosen.gstFrequency ?? 2;
+  if (chosen !== undefined) return chosen.gstFrequency ?? usual;
   const registered = model.entities.filter((e) => e.gstRegistered !== false && e.kind !== "personal");
-  const set = new Set(registered.map((e) => e.gstFrequency ?? 2));
-  return set.size === 1 ? ([...set][0] ?? 2) : 2;
+  const set = new Set(registered.map((e) => e.gstFrequency ?? usual));
+  return set.size === 1 ? ([...set][0] ?? usual) : usual;
 }
 
 /**

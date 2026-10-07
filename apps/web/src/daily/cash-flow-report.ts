@@ -4,7 +4,7 @@ import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * The statement of cash flows, for the entity the page is filtered to.
@@ -16,7 +16,7 @@ import { booksLocale } from "../country.js";
  */
 
 function money(cents: number): string {
-  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
   return cents < 0 ? `(${text})` : text;
 }
 

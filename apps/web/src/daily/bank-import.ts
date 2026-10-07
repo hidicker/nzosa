@@ -57,7 +57,7 @@ import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { renderWise } from "./wise-feed.js";
 import { autoLinkBankRows } from "./entities.js";
-import { booksCurrency, booksLocale } from "../country.js";
+import { booksCurrency, booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Getting bank data in, by file or by feed.
@@ -1690,8 +1690,8 @@ function justBeforeTable(lines: readonly Transaction[], start: string): HTMLElem
     const amount = document.createElement("td");
     amount.className = "report-amount";
     amount.textContent = (line.amount / 100).toLocaleString(booksLocale(), {
-      minimumFractionDigits: 2,
-      maximumFractionDigits: 2,
+      minimumFractionDigits: moneyPlaces(),
+      maximumFractionDigits: moneyPlaces(),
     });
     tr.append(amount);
     const seen = xeroHas(line, start);

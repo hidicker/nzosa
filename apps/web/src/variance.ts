@@ -26,6 +26,7 @@ import type {
   VarianceNote,
 } from "@nzosa/core";
 import { taxWithin } from "@nzosa/core";
+import { booksCountry } from "./country.js";
 
 /**
  * The GST reconciliation view.
@@ -68,7 +69,7 @@ export interface VarianceInput {
   /** Whether a bank account is used only by entities not registered for GST. */
   unregisteredBank?: (account: string) => boolean;
   /** Months in a GST period: 1, 2 (the default) or 6. */
-  months?: 1 | 2 | 6;
+  months?: 1 | 2 | 3 | 6;
   /** Box 9 debit adjustments for a period: the private use of a vehicle. */
   debitAdjustments?: (period: { from: string; to: string }) => number;
   /**
@@ -188,7 +189,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
 
   // Every cycle for a 31 March balance date ends in March: monthly, the
   // odd months, or September and March.
-  return gstPeriods({ from, to }, { months: input.months ?? 2, anchorMonth: 3 }).map((period) =>
+  return gstPeriods({ from, to }, { months: input.months ?? 2, anchorMonth: booksCountry().yearEnd.endMonth }).map((period) =>
     gstReturn(selected, period, {
       resolve,
       claimIn: (t) => expanded.overrides[t.id]?.claimIn ?? null,

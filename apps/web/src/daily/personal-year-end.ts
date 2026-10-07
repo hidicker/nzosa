@@ -11,7 +11,7 @@ import { provisionalPaidFromIrd } from "./ird-provisional.js";
 import { checklistHtml, checklistOpen, checklistPanel } from "./personal-checklist.js";
 import { tripsStatus } from "./vehicle-trips-panel.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * A person's year end: what their return needs, and the return.
@@ -31,8 +31,8 @@ let chosenOwner = "";
 
 function money(cents: number): string {
   return `${cents < 0 ? "-" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   })}`;
 }
 

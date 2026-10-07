@@ -18,7 +18,7 @@ import {
   readIncomeReturn,
 } from "@nzosa/core";
 import type { Cents, Entity, FiledIncomeReturn, FiledIr3, FiledIr4, IncomeReturnForm } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Last year's income tax return, read in from myIR.
@@ -39,8 +39,8 @@ let asking = "";
 
 function dollars(cents: Cents): string {
   return `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   })}`;
 }
 

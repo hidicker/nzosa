@@ -5,7 +5,7 @@ import { amountCell, nameCell, note } from "../ui.js";
 import { KILOMETRE_RATES, emptyEntityModel, emptyTripLog, isRental, ownersOf, totalKmFor, tripKm } from "@nzosa/core";
 import type { Cents, Trip, TripLog, VehicleFuel } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Trips to the rentals in the owners' own cars, and the year's claim for them.
@@ -28,7 +28,7 @@ const FUELS: { value: VehicleFuel; label: string }[] = [
 let lastTrip: Partial<Trip> = {};
 
 function money(cents: Cents): string {
-  return `$${(cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 })}`;
+  return `$${(cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() })}`;
 }
 
 const km = (n: number): string => `${(Math.round(n * 10) / 10).toLocaleString(booksLocale())} km`;

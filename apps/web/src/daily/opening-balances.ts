@@ -13,7 +13,7 @@ import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalance
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Where each year started.
@@ -105,12 +105,12 @@ export function renderOpeningBalances(): void {
   }
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
 
   const formatAccounting = (cents: Cents): string => {
     if (cents === 0) return "—";
     const val = Math.abs(cents) / 100;
-    const formatted = val.toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    const formatted = val.toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
     return cents < 0 ? `(${formatted})` : formatted;
   };
 
@@ -492,8 +492,8 @@ function balanceAtStart(bank: string, balance: Cents, on: string, start: string)
 
 function dollars(cents: Cents): string {
   return `${cents < 0 ? "−" : ""}$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   })}`;
 }
 
@@ -1062,7 +1062,7 @@ function enteredBalances(held: OpeningBalances): HTMLElement {
   table.innerHTML = "<thead><tr><th>Account</th><th>In credit / owned</th><th>Owing / equity</th></tr></thead>";
   const tbody = document.createElement("tbody");
   const shown = (cents: Cents): string =>
-    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: 2, maximumFractionDigits: 2 });
+    (Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
   for (const [key, cents] of Object.entries(held.accounts).sort(([a], [b]) => a.localeCompare(b))) {
     const tr = document.createElement("tr");
     tr.append(nameCell(labelOf(key)));

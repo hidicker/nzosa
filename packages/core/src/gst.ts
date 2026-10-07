@@ -452,7 +452,7 @@ function applyShare(amount: Cents, sharePercent: number): Cents {
 
 export interface GstPeriodOptions {
   /** Months per period: 1, 2 or 6. */
-  months: 1 | 2 | 6;
+  months: 1 | 2 | 3 | 6;
   /**
    * A month in which a period ends, 1-12, which fixes the cycle.
    *

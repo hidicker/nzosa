@@ -79,8 +79,15 @@ cpSync(join(root, "public"), outdir, {
 cpSync(join(root, "..", "..", "LICENSE"), join(outdir, "LICENSE.txt"));
 cpSync(join(root, "..", "..", "NOTICE"), join(outdir, "NOTICE.txt"));
 
+// Which edition this is. "nz" is NZOSA as it ships; "international" also lets
+// a set of books be kept in another country (Setup, the country choice). Set
+// with --edition international, or NZOSA_EDITION.
+const editionArg = process.argv.indexOf("--edition");
+const edition = editionArg >= 0 ? process.argv[editionArg + 1] : (process.env.NZOSA_EDITION ?? "nz");
+
 const options = {
   entryPoints: [join(root, "src/main.ts")],
+  define: { __NZOSA_EDITION__: JSON.stringify(edition) },
   bundle: true,
   format: "esm",
   target: ["es2022"],

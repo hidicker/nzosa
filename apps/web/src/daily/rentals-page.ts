@@ -5,7 +5,7 @@ import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { bondStatus, emptyEntityModel, parseAmount, rentOn, rentPosition } from "@nzosa/core";
 import type { Cents, Entity, IsoDate, RentFrequency, Tenancy } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Rental information: each tenancy's rent, its changes and its bond, and
@@ -20,8 +20,8 @@ let editing: Tenancy | null = null;
 
 function money(cents: Cents): string {
   const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
-    minimumFractionDigits: 2,
-    maximumFractionDigits: 2,
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
   });
   return cents < 0 ? `(${text})` : text;
 }

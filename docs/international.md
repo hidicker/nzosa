@@ -86,7 +86,21 @@ How the forms work:
 - **Placement:** an account goes on the first line whose rule its name matches, and the line lists the accounts behind it.
 - **Choice:** a person's choice of line can be passed in, and wins over the guess.
 
-Rates and thresholds were checked against what was known in mid-2026. Each file says which ones to confirm before relying on them.
+Rates, thresholds and rules were checked on 7 October 2026 against the OpenAccountants guides:
+- **United States:** us-1099-nec-issuance (accountant-verified), us-tax-workflow-base, us-sole-prop-bookkeeping and us-federal-return-assembly
+- **Australia:** au-rates-2026-27, au-gst-bas, australia-gst and au-rental-property
+- **South Korea:** kr-income-tax, written by the accountant Yeong Min Lee
+
+That check corrected:
+- Entertainment is not deductible in the US.
+- The 1099-NEC note now covers attorneys and payment processors.
+- Australia's low income tax offset and Medicare low-income threshold are applied.
+- BAS due dates move off weekends.
+- Australian rental losses are limited from 1 July 2027 (new builds, or properties held at 12 May 2026).
+- Korea's tax base is rounded down to 10,000 won, with the basic deduction and standard credit applied.
+- National pension and health insurance are kept out of Korean business expenses.
+
+The guides are guidance, not certified figures: confirm each rate with the ATO, the IRS and the NTS (Hometax) before relying on it.
 
 ## Bank files
 

@@ -42,8 +42,12 @@ export const KR_BUSINESS_STATEMENT: FormDefinition = {
     { id: "fees", title: "지급수수료 Fees and commissions", side: "expense" },
     { id: "interest", title: "이자비용 Interest", side: "expense" },
     { id: "other", title: "기타 Other expenses", side: "expense" },
+    // Not a 필요경비 at all: national pension and health insurance are income
+    // deductions (소득공제), claimed on the return, not against the business.
+    { id: "social-insurance", title: "국민연금·건강보험 Pension and health insurance (소득공제, not an expense)", side: "expense", share: 0 },
   ],
   rules: [
+    ["social-insurance", /국민연금|건강보험|국민건강|national pension|health insurance/],
     ["other-income", /interest income|이자수익|other income|영업외|잡이익|refund/],
     ["sales", /sales|revenue|매출|수입|income|fees/],
     ["cogs", /cost of (goods|sales)|매출원가|purchases|상품|inventory/],
@@ -70,6 +74,7 @@ export const KR_BUSINESS_STATEMENT: FormDefinition = {
   notes: [
     "기업업무추진비(접대비)는 한도 내에서만 필요경비로 인정됩니다. Business entertainment is deductible only within its limit.",
     "복식부기의무자는 재무상태표와 함께 표준손익계산서를 제출합니다. A bookkeeping-obliged business files the balance sheet with this statement.",
+    "3.3% 원천징수 후 받은 금액은 총액으로 환산해 수입에 넣고, 원천징수세액은 기납부세액으로 공제합니다. Income received after 3.3% withholding goes in gross; the tax withheld is credited.",
   ],
 };
 
@@ -181,7 +186,8 @@ const KR_BRACKETS: readonly Bracket[] = [
  */
 export function krIncomeTax(taxBase: Cents, year: number): { incomeTax: Cents; localTax: Cents } | null {
   if (year < 2023) return null;
-  const base = Math.max(0, taxBase);
+  // 과세표준 is rounded down to the 10,000 won before the rates apply.
+  const base = Math.floor(Math.max(0, taxBase) / 1_000_000) * 1_000_000;
   let tax = 0;
   KR_BRACKETS.forEach((bracket, i) => {
     const next = KR_BRACKETS[i + 1]?.over ?? Number.POSITIVE_INFINITY;

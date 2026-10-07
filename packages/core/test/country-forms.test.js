@@ -134,7 +134,7 @@ test("BAS quarters and due dates, lodging yourself", () => {
     basQuarters(2026).map((q) => `${q.from}..${q.to} due ${basDueDate(q.to)}`),
     [
       "2025-07-01..2025-09-30 due 2025-10-28",
-      "2025-10-01..2025-12-31 due 2026-02-28",
+      "2025-10-01..2025-12-31 due 2026-03-02",
       "2026-01-01..2026-03-31 due 2026-04-28",
       "2026-04-01..2026-06-30 due 2026-07-28",
     ],
@@ -204,4 +204,34 @@ test("South Korea: VAT return from a return's boxes, and the two VAT periods", a
   assert.equal(formLineFor(KR_RENTAL_STATEMENT, "월세 수입", "income"), "rent");
   assert.equal(JURISDICTIONS.kr.currency, "KRW");
   assert.deepEqual(JURISDICTIONS.kr.salesTax.fraction, { num: 1, den: 11 });
+});
+
+test("checked against OpenAccountants: US entertainment is not deductible; meals are half", async () => {
+  const { SCHEDULE_C, formLineFor } = await import("../dist/index.js");
+  assert.equal(formLineFor(SCHEDULE_C, "Client entertainment", "expense"), "entertainment");
+  assert.equal(formLineFor(SCHEDULE_C, "Business meals", "expense"), "24b");
+  assert.equal(SCHEDULE_C.lines.find((l) => l.id === "entertainment").share, 0);
+});
+
+test("checked against OpenAccountants: Australia's LITO, Medicare low-income threshold and BAS dates off weekends", async () => {
+  const { auLowIncomeOffset, medicareLevy, basDueDate } = await import("../dist/index.js");
+  assert.equal(auLowIncomeOffset(3_000_000, 2026), 70_000);
+  assert.equal(auLowIncomeOffset(4_500_000, 2026), 32_500);
+  assert.equal(auLowIncomeOffset(6_666_700, 2026), 0);
+  assert.equal(auLowIncomeOffset(5_000_000, 2030), null);
+  // 2025-26 single: none at $28,011; 10c a dollar above it; the full 2% from $35,013.
+  assert.equal(medicareLevy(2_801_100, 2026), 0);
+  assert.equal(medicareLevy(3_000_000, 2026), 19_890);
+  assert.equal(medicareLevy(10_000_000, 2026), 200_000);
+  // 28 February 2027 is a Sunday: the December quarter is due 1 March 2027.
+  assert.equal(basDueDate("2026-12-31"), "2027-03-01");
+});
+
+test("checked against OpenAccountants: Korea's tax base is rounded down to 10,000 won; pension is not an expense", async () => {
+  const { krIncomeTax, KR_BUSINESS_STATEMENT, formLineFor } = await import("../dist/index.js");
+  // 21,834,999 won rounds down to 21,830,000: 840,000 + 7,830,000 x 15% = 2,014,500.
+  assert.equal(krIncomeTax(2_183_499_900, 2026).incomeTax, 201_450_000);
+  assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "국민연금 보험료", "expense"), "social-insurance");
+  assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "National health insurance", "expense"), "social-insurance");
+  assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "화재보험 Fire insurance", "expense"), "insurance");
 });

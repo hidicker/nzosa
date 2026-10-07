@@ -2,6 +2,7 @@ import {
   AU_RENTAL_SCHEDULE,
   KR_BUSINESS_STATEMENT,
   KR_RENTAL_STATEMENT,
+  auLowIncomeOffset,
   auResidentTax,
   SCHEDULE_C,
   SCHEDULE_E,
@@ -13,6 +14,7 @@ import {
   formSchedule,
   isRental,
   medicareLevy,
+  medicareThresholdHeld,
   krIncomeTax,
   krIncomeTaxDue,
   krVatPeriods,
@@ -182,9 +184,11 @@ export function renderContractors(body: HTMLElement, year: number): void {
   body.append(
     table,
     note(
-      `A 1099-NEC is due for each non-corporate payee paid ${money(nec1099Threshold(year))} or more in ${year}, ` +
-        "by 31 January of the next year, with their W-9 details. Payments by card or a payment app are " +
-        "reported by the network on a 1099-K instead; take those out. Confirm the threshold for the year.",
+      `A 1099-NEC is due for each payee paid ${money(nec1099Threshold(year))} or more for services in ${year}, ` +
+        "by 31 January of the next year (the next business day if that is a weekend), with their W-9 details. " +
+        "Not for a corporation, except an attorney, who is always reported. Payments by card or through a " +
+        "payment processor such as PayPal Business are reported on a 1099-K instead; take those out. " +
+        "$600 to 2025; $2,000 from 2026 under the One Big Beautiful Bill Act.",
     ),
   );
 }
@@ -431,23 +435,31 @@ export function renderAuTax(body: HTMLElement, year: number): void {
     const heading = document.createElement("h4");
     heading.textContent = one.owner;
     const tax = auResidentTax(one.total, year);
-    const levy = medicareLevy(one.total);
+    const lito = auLowIncomeOffset(one.total, year);
+    const afterOffset = tax === null ? null : Math.max(0, tax - (lito ?? 0));
+    const levy = medicareLevy(one.total, year);
     body.append(
       heading,
       estimateTable([
         ...one.parts.map((part) => [`Share of ${part.entity}`, money(part.share)] as const),
         ["Taxable income from these books", money(one.total), true],
         ["Tax at resident rates", tax === null ? "rates not held for this year" : money(tax)],
-        ["Medicare levy (2%, before the low-income reduction)", money(levy)],
-        ["Estimate", tax === null ? "—" : money(tax + levy), true],
+        ["Low income tax offset", lito === null ? "not held for this year" : `-${money(Math.min(lito, tax ?? 0))}`],
+        [
+          medicareThresholdHeld(year) ? "Medicare levy (2%, single low-income reduction applied)" : "Medicare levy (2%, low-income reduction not applied)",
+          money(levy),
+        ],
+        ["Estimate", afterOffset === null ? "—" : money(afterOffset + levy), true],
       ]),
     );
   }
   body.append(
     note(
-      "Only the income these books hold. Salary, interest, dividends, deductions and offsets (the low " +
-        "income tax offset among them) are the return's. A net rental loss reduces other income: " +
-        "Australia does not ring-fence it. Confirm the rates for the year with the ATO.",
+      "Only the income these books hold. Salary, interest, dividends, deductions and other offsets are " +
+        "the return's, and the low income tax offset is worked on this income alone. A net rental loss " +
+        "reduces other income; from 1 July 2027 only for a new build or a property held at 7:30 pm AEST " +
+        "on 12 May 2026. Rates per the OpenAccountants Australian rates card (2025-26 and 2026-27); " +
+        "confirm them with the ATO.",
     ),
   );
 }
@@ -465,22 +477,37 @@ export function renderKrTax(body: HTMLElement, year: number): void {
   for (const one of owners) {
     const heading = document.createElement("h4");
     heading.textContent = one.owner;
-    const tax = krIncomeTax(one.total, year);
+    // 기본공제 for the taxpayer alone (1,500,000 won); spouse, dependants,
+    // pension and health insurance are the return's.
+    const BASIC = 150_000_000;
+    const taxBase = Math.max(0, one.total - BASIC);
+    const tax = krIncomeTax(taxBase, year);
+    // 표준세액공제 70,000 won, where no other special deductions are claimed.
+    const STANDARD_CREDIT = 7_000_000;
+    const national = tax === null ? null : Math.max(0, tax.incomeTax - STANDARD_CREDIT);
+    const local = national === null ? null : Math.floor(national / 10 / 100) * 100;
     body.append(
       heading,
       estimateTable([
         ...one.parts.map((part) => [`${part.entity} 소득 share`, money(part.share)] as const),
         ["종합소득금액 Income from these books", money(one.total), true],
-        ["종합소득세 Income tax (before deductions)", tax === null ? "rates not held for this year" : money(tax.incomeTax)],
-        ["지방소득세 Local income tax", tax === null ? "—" : money(tax.localTax)],
-        ["합계 Estimate", tax === null ? "—" : money(tax.incomeTax + tax.localTax), true],
+        ["기본공제 Basic deduction (self)", `-${money(Math.min(BASIC, Math.max(0, one.total)))}`],
+        ["과세표준 Tax base (to the 10,000 won)", money(Math.floor(taxBase / 1_000_000) * 1_000_000)],
+        ["산출세액 Income tax", tax === null ? "rates not held for this year" : money(tax.incomeTax)],
+        ["표준세액공제 Standard tax credit", tax === null ? "—" : `-${money(Math.min(STANDARD_CREDIT, tax.incomeTax))}`],
+        ["지방소득세 Local income tax (10%)", local === null ? "—" : money(local)],
+        ["합계 Estimate", national === null || local === null ? "—" : money(national + local), true],
       ]),
     );
   }
   body.append(
     note(
-      `소득공제·세액공제 전 금액입니다. Before deductions and credits, which are the return's. ` +
-        `신고·납부 기한 Due by ${krIncomeTaxDue(year)}. Confirm the rates for the year.`,
+      "본인 기본공제와 표준세액공제만 반영했습니다. Only the basic deduction for the taxpayer and the standard " +
+        "credit are applied; family deductions, pension and health insurance (소득공제), other credits, " +
+        "withholding (3.3%) and prepayments are the return's. " +
+        `신고·납부 기한 Due by ${krIncomeTaxDue(year)}. 전년도 세액이 30만원을 넘으면 11월 30일까지 중간예납. ` +
+        "Over 300,000 won of tax last year, half is prepaid by 30 November. Rates per the OpenAccountants " +
+        "Korean income tax guide (Yeong Min Lee); confirm them on Hometax.",
     ),
   );
 }

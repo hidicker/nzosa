@@ -92,6 +92,9 @@ export const SCHEDULE_C: FormDefinition = {
     { id: "25", title: "25 Utilities", side: "expense" },
     { id: "26", title: "26 Wages (less employment credits)", side: "expense" },
     { id: "27a", title: "27a Other expenses", side: "expense" },
+    // Not a line on the form: entertainment has been 0% deductible since 2018
+    // (IRC 274(a)), so it is shown, and claimed nowhere.
+    { id: "entertainment", title: "Entertainment (not deductible)", side: "expense", share: 0 },
   ],
   rules: [
     ["6", /interest income|interest received|other income|refund|grant|rebate/],
@@ -114,7 +117,8 @@ export const SCHEDULE_C: FormDefinition = {
     ["20b", /rent|lease/],
     ["21", /repair|maintenance/],
     ["22", /supplies|materials|small tools/],
-    ["24b", /meal|entertainment|food|restaurant/],
+    ["entertainment", /entertain/],
+    ["24b", /meal|food|restaurant/],
     ["24a", /travel|airfare|flight|hotel|accommodation|lodging/],
     ["25", /utilit|electric|power|water|internet|phone|telephone/],
     ["18", /office|postage|stationery|software|subscription/],
@@ -122,7 +126,7 @@ export const SCHEDULE_C: FormDefinition = {
   otherIncome: "1",
   otherExpense: "27a",
   notes: [
-    "Line 24b allows half of business meals; the full amount spent is shown beside it.",
+    "Line 24b allows half of business meals with a documented business purpose; the full amount spent is shown beside it. Entertainment is not deductible at all (IRC 274(a)).",
     "Business use of your home (line 30, Form 8829 or the simplified method) is not in the books: work it out before filing.",
     "Self-employment tax (Schedule SE) is due on net earnings of $400 or more.",
   ],

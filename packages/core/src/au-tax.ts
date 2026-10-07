@@ -67,6 +67,7 @@ export const AU_RENTAL_SCHEDULE: FormDefinition = {
     "Travel to inspect, maintain or collect rent for a residential rental is not deductible from 1 July 2017 for most individuals; anything on the travel line needs checking.",
     "Depreciation on second-hand plant in a residential rental bought after 9 May 2017 is not deductible for most individuals.",
     "Each owner returns their share of the net rent by their legal interest in the property.",
+    "From 1 July 2027 a net loss on a residential rental reduces other income only for new builds, or a property held at 7:30 pm AEST on 12 May 2026.",
   ],
 };
 
@@ -98,10 +99,15 @@ export function simplerBas(boxes: { box5?: number; box8?: number; box12?: number
 export function basDueDate(quarterEnd: IsoDate): IsoDate {
   const year = Number(quarterEnd.slice(0, 4));
   const month = Number(quarterEnd.slice(5, 7));
-  if (month === 9) return `${year}-10-28`;
-  if (month === 12) return `${year + 1}-02-28`;
-  if (month === 3) return `${year}-04-28`;
-  return `${year}-07-28`;
+  const due =
+    month === 9 ? `${year}-10-28` : month === 12 ? `${year + 1}-02-28` : month === 3 ? `${year}-04-28` : `${year}-07-28`;
+  // A due date on a weekend is the next business day: 28 February 2027 is a
+  // Sunday, so 1 March. Public holidays move it too, which this does not know.
+  const at = new Date(`${due}T00:00:00Z`);
+  const day = at.getUTCDay();
+  if (day === 6) at.setUTCDate(at.getUTCDate() + 2);
+  if (day === 0) at.setUTCDate(at.getUTCDate() + 1);
+  return at.toISOString().slice(0, 10);
 }
 
 /** The quarters of an Australian financial year, by the year it ends in. */
@@ -164,10 +170,40 @@ export function auResidentTax(taxable: Cents, year: number): Cents | null {
 }
 
 /**
- * The Medicare levy, 2% of taxable income. Low-income thresholds, the
- * surcharge for those without private hospital cover and exemptions are not
- * applied: they turn on family and cover these books do not hold.
+ * The low income tax offset: $700 up to $37,500, less 5c a dollar to $45,000,
+ * then 1.5c a dollar to nil at $66,667 (unchanged 2020-21 to 2026-27). It can
+ * only reduce tax to nil. Null for a year it is not held for.
  */
-export function medicareLevy(taxable: Cents): Cents {
-  return Math.round(Math.max(0, taxable) * 0.02);
+export function auLowIncomeOffset(taxable: Cents, year: number): Cents | null {
+  if (year < 2021 || year > 2027) return null;
+  const income = Math.max(0, taxable);
+  if (income <= 3_750_000) return 70_000;
+  if (income <= 4_500_000) return Math.round(70_000 - (income - 3_750_000) * 0.05);
+  return Math.max(0, Math.round(32_500 - (income - 4_500_000) * 0.015));
+}
+
+/**
+ * Low-income thresholds for the Medicare levy, single, by year: no levy at or
+ * below the first figure, 10c a dollar above it until that reaches 2%. Family
+ * thresholds, seniors, the surcharge and exemptions turn on what these books
+ * do not hold.
+ */
+const MEDICARE_LOW_INCOME: Readonly<Record<number, Cents>> = { 2026: 2_801_100 };
+
+/**
+ * The Medicare levy, 2% of taxable income, with the single low-income
+ * reduction where the year's threshold is held.
+ */
+export function medicareLevy(taxable: Cents, year?: number): Cents {
+  const income = Math.max(0, taxable);
+  const full = Math.round(income * 0.02);
+  const threshold = year === undefined ? undefined : MEDICARE_LOW_INCOME[year];
+  if (threshold === undefined) return full;
+  if (income <= threshold) return 0;
+  return Math.min(full, Math.round((income - threshold) * 0.1));
+}
+
+/** Whether the year's Medicare low-income threshold is held, so the levy is reduced. */
+export function medicareThresholdHeld(year: number): boolean {
+  return MEDICARE_LOW_INCOME[year] !== undefined;
 }

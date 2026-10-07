@@ -46,6 +46,15 @@ const FREEZE_CLOCK = `(() => {
   Frozen.parse = Real.parse;
   Frozen.UTC = Real.UTC;
   window.Date = Frozen;
+  // Offline, the same on both sides: what another site says (the shared AI's
+  // allowance, a bank feed) changes from one minute to the next, and would
+  // read as a difference between builds that is not one.
+  const realFetch = window.fetch.bind(window);
+  window.fetch = (input, init) => {
+    const url = new URL(typeof input === "string" ? input : input.url, location.href);
+    if (url.origin !== location.origin) return Promise.reject(new TypeError("offline for the parity check"));
+    return realFetch(input, init);
+  };
 })();`;
 const chromePath = arg("chrome", "C:/Program Files/Google/Chrome/Application/chrome.exe");
 if (books.length === 0) {

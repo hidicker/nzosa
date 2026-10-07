@@ -23,6 +23,7 @@ export function applyCountry(): void {
   // The country's own reports, and its date order for bank files (12/03 is
   // 12 March in New Zealand and 3 December in the United States).
   addCountryReports(country.id);
+  if (country.id !== "nz") dropNewZealandReports();
   const dayFirst = document.getElementById("day-first");
   if (dayFirst instanceof HTMLInputElement) dayFirst.checked = country.dayFirst;
 }
@@ -44,4 +45,18 @@ export function booksCurrency(): string {
  */
 export function moneyPlaces(): number {
   return Math.min(2, minorUnits(booksCurrency()));
+}
+
+/**
+ * New Zealand's returns out of the report list for books kept anywhere else.
+ * Hiding them is not enough -- a hidden option is still in the list, and some
+ * browsers have shown hidden options -- and they can never apply to these
+ * books, so they are removed. New Zealand books never get here.
+ */
+const NEW_ZEALAND_REPORTS = ["gstreturn", "ir10", "rentals", "yearend", "ir3", "owner"];
+function dropNewZealandReports(): void {
+  const select = document.getElementById("report-kind");
+  if (select === null) return;
+  for (const value of NEW_ZEALAND_REPORTS) select.querySelector(`option[value="${value}"]`)?.remove();
+  for (const group of select.querySelectorAll("optgroup")) if (group.children.length === 0) group.remove();
 }

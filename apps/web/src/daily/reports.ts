@@ -2476,8 +2476,13 @@ function entityReporter(): (entity: Entity, period: DateRange) => ProfitAndLoss 
   };
 }
 
+/** One entity's profit and loss for a year, on the basis the page is set to. */
+export function entityYearReport(entity: Entity, year: number): ProfitAndLoss | null {
+  return entityReporter()(entity, yearPeriod(year));
+}
+
 /** An account as a schedule names it: without the code on the end. */
-function scheduleName(code: string): string {
+export function scheduleName(code: string): string {
   const { name } = splitAccountLabel(code);
   return name.trim() === "" ? code : name;
 }

@@ -32,6 +32,21 @@ const repoB = resolve(arg("b", "."));
 const ledgers = resolve(arg("ledgers", join(repoA, "ledgers")));
 const books = (arg("books", "") || "").split(",").filter(Boolean);
 const outDir = resolve(arg("out", join(tmpdir(), "nzosa-parity")));
+// One moment for both sides. Anything dated "today" -- the aged reports, a
+// due date -- otherwise differs when a run crosses midnight, and that is a
+// difference in the clock, not in the code.
+const frozenNow = Number(arg("now", String(Date.now())));
+const FREEZE_CLOCK = `(() => {
+  const fixed = ${frozenNow};
+  const Real = Date;
+  class Frozen extends Real {
+    constructor(...args) { if (args.length === 0) super(fixed); else super(...args); }
+    static now() { return fixed; }
+  }
+  Frozen.parse = Real.parse;
+  Frozen.UTC = Real.UTC;
+  window.Date = Frozen;
+})();`;
 const chromePath = arg("chrome", "C:/Program Files/Google/Chrome/Application/chrome.exe");
 if (books.length === 0) {
   console.error("usage: node tools/parity.mjs --a <repo> --b <repo> --ledgers <folder> --books a,b");
@@ -280,6 +295,8 @@ async function captureSide(repo, label, book, port, chromePort) {
   const chrome = await openChrome(chromePort);
   try {
     await chrome.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
+    await chrome.send("Page.enable");
+    await chrome.send("Page.addScriptToEvaluateOnNewDocument", { source: FREEZE_CLOCK });
     await chrome.send("Page.navigate", { url: `http://127.0.0.1:${port}/` });
     await wait(1500);
     return await chrome.evaluate(CAPTURE);

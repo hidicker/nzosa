@@ -168,7 +168,7 @@ export function moduleOn(id: ModuleId): boolean {
  * country's id (`nz`) is whether the books are kept there: the IR10 is
  * `business+nz`, a business's return in New Zealand.
  */
-const COUNTRIES = new Set(["nz", "au", "us", "generic"]);
+const COUNTRIES = new Set(["nz", "au", "us", "kr", "generic"]);
 function termOn(term: string): boolean {
   if (term.startsWith("!")) return !termOn(term.slice(1));
   if (COUNTRIES.has(term)) return booksCountry().id === term;

@@ -13,7 +13,7 @@
  * Zealand's, exactly as every set ever kept has been.
  */
 
-export type JurisdictionId = "nz" | "au" | "us" | "generic";
+export type JurisdictionId = "nz" | "au" | "us" | "kr" | "generic";
 
 export interface Jurisdiction {
   id: JurisdictionId;
@@ -67,6 +67,17 @@ export const JURISDICTIONS: Readonly<Record<JurisdictionId, Jurisdiction>> = {
     dayFirst: false,
     salesTax: null,
     taxAuthority: { short: "IRS", name: "Internal Revenue Service", portal: "IRS online account" },
+  },
+  kr: {
+    id: "kr",
+    name: "South Korea",
+    currency: "KRW",
+    locale: "ko-KR",
+    yearEnd: { endMonth: 12, endDay: 31 },
+    // Korean dates are year first (2026. 3. 12.), which reads the same either way.
+    dayFirst: false,
+    salesTax: { name: "VAT", rate: 0.1, fraction: { num: 1, den: 11 } },
+    taxAuthority: { short: "NTS", name: "National Tax Service (국세청)", portal: "Hometax (홈택스)" },
   },
   generic: {
     id: "generic",

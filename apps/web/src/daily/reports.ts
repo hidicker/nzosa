@@ -1,4 +1,4 @@
-import { renderAuRentalSchedule, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrVat, renderScheduleC, renderScheduleE } from "./country-reports.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderScheduleE } from "./country-reports.js";
 import { spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
@@ -3314,6 +3314,8 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   krbusiness: "The business on the standard income statement headings (표준손익계산서).",
   krrental: "Each rental's income and expenses (부동산임대업).",
   krvat: "VAT for each half year (부가가치세 확정신고), and the income tax due date.",
+  autax: "Each owner's share of the books' income, with resident tax and the Medicare levy.",
+  krtax: "Each owner's share of the books' income, with comprehensive and local income tax.",
 };
 
 /** The reports this viewer has starred, kept in the browser rather than the books. */
@@ -3917,6 +3919,8 @@ export function renderReportsPage(): void {
     krbusiness: renderKrBusiness,
     krrental: renderKrRental,
     krvat: renderKrVat,
+    autax: renderAuTax,
+    krtax: renderKrTax,
   };
   const countryRender = countryReport[kind];
   if (countryRender !== undefined) {

@@ -2,6 +2,7 @@ import {
   AU_RENTAL_SCHEDULE,
   KR_BUSINESS_STATEMENT,
   KR_RENTAL_STATEMENT,
+  auResidentTax,
   SCHEDULE_C,
   SCHEDULE_E,
   basDueDate,
@@ -11,6 +12,8 @@ import {
   estimatedTaxDates,
   formSchedule,
   isRental,
+  medicareLevy,
+  krIncomeTax,
   krIncomeTaxDue,
   krVatPeriods,
   krVatReturn,
@@ -337,6 +340,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
     options: [
       ["aurental", "Rental property schedule"],
       ["bas", "GST on the BAS"],
+      ["autax", "Income tax estimate"],
     ],
   },
   kr: {
@@ -345,6 +349,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["krbusiness", "표준손익계산서 Business income statement"],
       ["krrental", "부동산임대 Rental income"],
       ["krvat", "부가가치세 VAT return"],
+      ["krtax", "종합소득세 Income tax estimate"],
     ],
   },
 };
@@ -365,4 +370,117 @@ export function addCountryReports(country: string): void {
   const analytics = select.querySelector('optgroup[label="Analytics"]');
   if (analytics !== null) select.insertBefore(group, analytics);
   else select.append(group);
+}
+
+/**
+ * Each owner's share of what the books earned: every rental and business by
+ * the owner's percentage, net. The base for an owner's income tax, before
+ * anything the books do not hold (salary, interest, deductions).
+ */
+function ownerIncome(year: number): { owner: string; parts: { entity: string; share: number }[]; total: number }[] {
+  const byOwner = new Map<string, { entity: string; share: number }[]>();
+  for (const entity of entities()) {
+    if (entity.kind === "personal") continue;
+    if (!isRental(entity) && entity.structure === "company") continue;
+    const report = entityYearReport(entity, year);
+    if (report === null) continue;
+    for (const owner of entity.owners ?? []) {
+      const list = byOwner.get(owner.name) ?? [];
+      list.push({ entity: entity.name, share: Math.round((report.netProfit * owner.percent) / 100) });
+      byOwner.set(owner.name, list);
+    }
+  }
+  return [...byOwner.entries()].map(([owner, parts]) => ({
+    owner,
+    parts,
+    total: parts.reduce((sum, part) => sum + part.share, 0),
+  }));
+}
+
+function estimateTable(rows: readonly (readonly [string, string, boolean?])[]): HTMLTableElement {
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const tbody = document.createElement("tbody");
+  for (const [label, amount, total] of rows) {
+    const tr = document.createElement("tr");
+    if (total === true) tr.className = "report-total";
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = label;
+    const value = document.createElement("td");
+    value.className = "report-amount";
+    value.textContent = amount;
+    tr.append(name, value);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  return table;
+}
+
+/** Australia: each owner's share, resident tax on it and the Medicare levy. */
+export function renderAuTax(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `Income tax estimate — year to 30 June ${year}`;
+  body.append(title);
+  const owners = ownerIncome(year);
+  if (owners.length === 0) {
+    body.append(note("No owners set. On Entities & accounts, give each rental and business its owners and their shares."));
+    return;
+  }
+  for (const one of owners) {
+    const heading = document.createElement("h4");
+    heading.textContent = one.owner;
+    const tax = auResidentTax(one.total, year);
+    const levy = medicareLevy(one.total);
+    body.append(
+      heading,
+      estimateTable([
+        ...one.parts.map((part) => [`Share of ${part.entity}`, money(part.share)] as const),
+        ["Taxable income from these books", money(one.total), true],
+        ["Tax at resident rates", tax === null ? "rates not held for this year" : money(tax)],
+        ["Medicare levy (2%, before the low-income reduction)", money(levy)],
+        ["Estimate", tax === null ? "—" : money(tax + levy), true],
+      ]),
+    );
+  }
+  body.append(
+    note(
+      "Only the income these books hold. Salary, interest, dividends, deductions and offsets (the low " +
+        "income tax offset among them) are the return's. A net rental loss reduces other income: " +
+        "Australia does not ring-fence it. Confirm the rates for the year with the ATO.",
+    ),
+  );
+}
+
+/** South Korea: each owner's 종합소득금액 share, income tax and local income tax. */
+export function renderKrTax(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `종합소득세 추정 Comprehensive income tax estimate — ${year}`;
+  body.append(title);
+  const owners = ownerIncome(year);
+  if (owners.length === 0) {
+    body.append(note("No owners set. On Entities & accounts, give each rental and business its owners and their shares."));
+    return;
+  }
+  for (const one of owners) {
+    const heading = document.createElement("h4");
+    heading.textContent = one.owner;
+    const tax = krIncomeTax(one.total, year);
+    body.append(
+      heading,
+      estimateTable([
+        ...one.parts.map((part) => [`${part.entity} 소득 share`, money(part.share)] as const),
+        ["종합소득금액 Income from these books", money(one.total), true],
+        ["종합소득세 Income tax (before deductions)", tax === null ? "rates not held for this year" : money(tax.incomeTax)],
+        ["지방소득세 Local income tax", tax === null ? "—" : money(tax.localTax)],
+        ["합계 Estimate", tax === null ? "—" : money(tax.incomeTax + tax.localTax), true],
+      ]),
+    );
+  }
+  body.append(
+    note(
+      `소득공제·세액공제 전 금액입니다. Before deductions and credits, which are the return's. ` +
+        `신고·납부 기한 Due by ${krIncomeTaxDue(year)}. Confirm the rates for the year.`,
+    ),
+  );
 }

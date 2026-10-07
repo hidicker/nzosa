@@ -183,6 +183,15 @@ export function accountTreatment(
 
   if (code.includes("exempt")) return { treatment: "exempt", side: "none" };
   if (code.includes("no gst")) return { treatment: "out-of-scope", side: "none" };
+  // Other countries' words for the same things. Australia (Xero's codes):
+  // input taxed is exempt, GST free is zero-rated, BAS excluded is outside the
+  // return. South Korea: no VAT is outside it. None of these words is in a New
+  // Zealand code, so New Zealand's charts read exactly as before.
+  if (code.includes("input taxed")) return { treatment: "exempt", side: "none" };
+  if (code.includes("bas excluded") || code.includes("no vat") || code.includes("no sales tax")) {
+    return { treatment: "out-of-scope", side: "none" };
+  }
+  if (code.includes("gst free") || code.includes("vat free")) return { treatment: "zero-rated" };
 
   // Side is left open on zero-rated: exports are sales and a zero-rated
   // purchase is a purchase, and the sign of the transaction says which without

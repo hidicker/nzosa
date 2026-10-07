@@ -109,7 +109,7 @@ export const SCHEDULE_C: FormDefinition = {
     ["17", /legal|lawyer|attorney|account|bookkeep|professional/],
     ["8", /advertis|marketing|promotion/],
     ["13", /depreciat|amortiz|amortis|section 179/],
-    ["20a", /equipment (hire|rent|lease)|vehicle lease|machinery/],
+    ["20a", /(rent|lease|hire).*(equipment|machinery|vehicle)|(equipment|machinery|vehicle).*(rent|lease|hire)/],
     ["9", /vehicle|motor|mileage|\bcar\b|truck|fuel|parking/],
     ["20b", /rent|lease/],
     ["21", /repair|maintenance/],

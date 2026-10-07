@@ -1,3 +1,4 @@
+import { booksCountry } from "../country.js";
 import { JURISDICTIONS, jurisdictionOf } from "@nzosa/core";
 import { edition } from "../edition.js";
 import { redraw, showPage } from "../app.js";
@@ -49,7 +50,7 @@ import {
   parseXeroAllocations,
   parseXeroInvoices,
   parseXeroJournalReport,
-  starterChart,
+  starterChartFor,
 } from "@nzosa/core";
 import type { Account, Entity } from "@nzosa/core";
 import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
@@ -503,7 +504,7 @@ let cachedStarterAccounts: Account[] | null = null;
 
 function defaultStarterAccounts(): Account[] {
   if (!cachedStarterAccounts) {
-    cachedStarterAccounts = starterChart();
+    cachedStarterAccounts = starterChartFor(booksCountry().id);
   }
   return cachedStarterAccounts;
 }
@@ -818,7 +819,7 @@ export function setupSteps(
   // Accounts of an entity's own: anything but the business starter chart,
   // which new books give to their first entity whatever it is. A household
   // holding Sales and Cost of Goods Sold has not got its accounts yet.
-  const starter = new Set(starterChart().map((a) => `${a.code.trim()}|${a.name.trim()}`));
+  const starter = new Set(starterChartFor(booksCountry().id).map((a) => `${a.code.trim()}|${a.name.trim()}`));
   const owning = new Set<string>();
   for (const account of state.chart) {
     const id = model.accounts[accountEntityKey(account)];
@@ -1703,7 +1704,7 @@ export async function seedStarterChart(): Promise<void> {
   if (state.ledger.transactions.length > 0) return;
   if (Object.keys(state.ledger.overrides ?? {}).length > 0) return;
 
-  const chart = starterChart();
+  const chart = starterChartFor(booksCountry().id);
   state.chart = chart;
   state.ledger = { ...state.ledger, chart };
   state.persistent = await savePart(state.ledger, "chart");

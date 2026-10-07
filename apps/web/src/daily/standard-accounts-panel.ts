@@ -1,3 +1,4 @@
+import { booksCountry } from "../country.js";
 import { redraw } from "../app.js";
 import { accountsForEditing, persistRules, reclassify, record } from "../books.js";
 import { state } from "../state.js";
@@ -9,7 +10,7 @@ import {
   isSuffix,
   renameAccount,
   standardAccounts,
-  starterChart,
+  starterChartFor,
   suggestSuffix,
   suffixedCode,
 } from "@nzosa/core";
@@ -52,7 +53,7 @@ const KIND_NAME: Record<EntityKind, string> = {
 
 /** The chart is still the standard business chart exactly, and nothing uses it. */
 function untouchedStarterChart(): boolean {
-  const starter = starterChart();
+  const starter = starterChartFor(booksCountry().id);
   if (state.chart.length !== starter.length) return false;
   if (!state.chart.every((a, i) => a.code === starter[i]?.code && a.name === starter[i]?.name)) {
     return false;

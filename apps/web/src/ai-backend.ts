@@ -259,13 +259,18 @@ export async function aiReadDocument(prompt: string, file: File): Promise<AiAnsw
 }
 
 /**
- * A question asked in full, with these books' own key, on this computer only.
+ * A question asked in full, with these books' own key.
  *
- * For reading a spreadsheet: never through the shared allowance, and not yet
- * from books online. Null where it cannot be asked here, so the page offers
- * the prompt to copy instead.
+ * For reading a spreadsheet: never through the shared allowance. On this
+ * computer through the app, and for books online through their function.
+ * Null where it cannot be asked -- books kept in a browser -- so the page
+ * offers the prompt to copy instead.
  */
 export async function aiAsk(prompt: string): Promise<AiAnswer | null> {
+  if (aiRoute() === "cloud") {
+    const answer = await hosted<AiAnswer>("ask", { prompt });
+    return answer.ok ? answer.body : { error: answer.error };
+  }
   if (aiRoute() !== "folder") return null;
   const response = await local("/api/ai/ask", {
     method: "POST",

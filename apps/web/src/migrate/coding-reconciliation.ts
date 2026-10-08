@@ -1,5 +1,5 @@
 import { moduleOn } from "../modules.js";
-import { wireSheetAi } from "./sheet-ai.js";
+import { matchSuggestions, wireSheetAi } from "./sheet-ai.js";
 import { redraw, showPage } from "../app.js";
 import {
   AI_BATCH,
@@ -2520,6 +2520,23 @@ export function codingMatches(options: { open?: boolean } = {}): HTMLElement | n
   }
   table.append(head, tbody);
   box.append(table);
+
+  // Suggested by AI, into the same picks a person makes: drafts, marked "to
+  // save", that nothing keeps until Save matches is pressed.
+  if (unmatched.length > 0 && state.chart.length > 0) {
+    box.append(
+      matchSuggestions(unmatched, lines, known, (matches) => {
+        for (const [name, match] of matches) {
+          matchDrafts.set(
+            name,
+            match.kind === "transfer" ? TRANSFER_CHOICE : match.kind === "ignore" ? IGNORE_CHOICE : match.account,
+          );
+        }
+        redraw("check");
+        redraw("migration");
+      }),
+    );
+  }
 
   const keep = document.createElement("button");
   keep.type = "button";

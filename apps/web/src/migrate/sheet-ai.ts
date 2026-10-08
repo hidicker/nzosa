@@ -6,6 +6,8 @@ import { state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import {
+  categoryMatchPrompt,
+  codingAccountsOnly,
   checkAgainstSheetTotals,
   checkPrompt,
   conversionPrompt,
@@ -13,6 +15,7 @@ import {
   joinConversions,
   lineTotals,
   parseCsvRecords,
+  readCategoryMatches,
   readCheckAnswer,
   readConversionAnswer,
   readXlsx,
@@ -21,8 +24,9 @@ import {
   sheetLinesToTransactions,
   sheetParts,
   sheetToCsv,
+  splitAccountLabel,
 } from "@nzosa/core";
-import type { CheckResult, SheetConversion, SheetPart, SheetTab } from "@nzosa/core";
+import type { CategoryMatch, CheckResult, SheetConversion, SheetPart, SheetTab } from "@nzosa/core";
 
 /**
  * Any spreadsheet, read with AI: the page.
@@ -89,7 +93,7 @@ async function tabsOf(file: File): Promise<SheetTab[]> {
 
 async function load(file: File): Promise<void> {
   // Asked again each time: a key added since the page opened counts.
-  keyHere = aiRoute() === "folder" && (await aiStatus().catch(() => null))?.configured === true;
+  keyHere = canAsk() && (await aiStatus().catch(() => null))?.configured === true;
   const tabs = await tabsOf(file);
   const parts = sheetParts(tabs);
   const rows = tabs.reduce((sum, tab) => sum + tab.rows.length, 0);
@@ -446,11 +450,105 @@ export function renderSheetAi(done = ""): void {
 }
 
 /** Once, when the app starts: whether a key of the books' own can be asked from here. */
+/** Where a key of the books' own can be asked: this computer, or books online. */
+function canAsk(): boolean {
+  return aiRoute() === "folder" || aiRoute() === "cloud";
+}
+
 export function wireSheetAi(): void {
   renderSheetAi();
-  if (aiRoute() !== "folder") return;
+  if (!canAsk()) return;
   void aiStatus().then((status) => {
     keyHere = status?.configured === true;
     renderSheetAi();
   });
+}
+
+/** What was said after suggestions were last read, kept across the table being redrawn. */
+let suggestedSaid = "";
+
+/**
+ * Suggest, with AI, which account each unmatched name in the imported coding
+ * means. The suggestions are handed to `apply`, which fills the match table's
+ * picks as unsaved drafts: a person checks each and saves, or changes it.
+ */
+export function matchSuggestions(
+  unmatched: readonly string[],
+  lineCounts: ReadonlyMap<string, number>,
+  accounts: readonly string[],
+  apply: (matches: Map<string, CategoryMatch>) => void,
+): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "sheet-ai-part";
+  wrap.append(text("strong", "Suggest matches with AI"));
+  wrap.append(
+    note(
+      "Sends the names below, a few examples of what was coded to each, and your chart's account " +
+        "names, but no amounts. The suggestions fill the table as unsaved picks for you to check.",
+    ),
+  );
+  if (suggestedSaid !== "") wrap.append(note(suggestedSaid));
+  const names = unmatched.map((name) => {
+    const coded = state.reference.filter((line) => line.code === name);
+    const ins = coded.filter((line) => line.amount > 0).length;
+    const outs = coded.filter((line) => line.amount < 0).length;
+    const direction: "in" | "out" | "both" | undefined =
+      ins > 0 && outs > 0 ? "both" : ins > 0 ? "in" : outs > 0 ? "out" : undefined;
+    return {
+    name,
+    lines: lineCounts.get(name) ?? 0,
+    ...(direction !== undefined ? { direction } : {}),
+    examples: [
+      ...new Set(
+        state.reference
+          .filter((line) => line.code === name)
+          .map((line) => (line.contact ?? line.description ?? "").trim())
+          .filter((example) => example !== ""),
+      ),
+    ].slice(0, 3),
+    };
+  });
+  // Each account with its type, so money in is not matched to an expense.
+  const typed = codingAccountsOnly(accounts.map((label) => {
+    const { code, name } = splitAccountLabel(label);
+    const account =
+      state.chart.find((a) => code !== "" && a.code.trim() === code) ??
+      state.chart.find((a) => a.name.trim().toLowerCase() === name.trim().toLowerCase());
+    return { label, type: account?.type ?? "" };
+  }));
+  const prompt = categoryMatchPrompt(names, typed, state.ledger.booksAbout ?? "");
+  const said = document.createElement("p");
+  said.className = "feed-said";
+  const use = (answer: string): void => {
+    const read = readCategoryMatches(answer, names, typed);
+    const left = unmatched.length - read.matches.size;
+    suggestedSaid =
+      `${read.matches.size} suggestion${read.matches.size === 1 ? "" : "s"} filled in below, marked "to save": ` +
+      "check each, then Save matches." +
+      (left > 0 ? ` ${left} left for you to choose.` : "") +
+      (read.problems.length > 0 ? ` ${read.problems.join(" ")}` : "");
+    apply(read.matches);
+  };
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  actions.append(button("Copy the prompt", () => copy(prompt, said)));
+  if (canAsk()) {
+    const ask = button("Ask with my key", () => {
+      ask.disabled = true;
+      said.textContent = "Asking…";
+      void aiAsk(prompt).then((got) => {
+        ask.disabled = false;
+        if (got === null || got.error !== undefined) {
+          said.textContent = got?.error ?? "Not available here: copy the prompt instead.";
+          return;
+        }
+        use(got.text ?? "");
+      });
+    });
+    actions.append(ask);
+  }
+  const paste = document.createElement("textarea");
+  paste.placeholder = "Paste the AI's answer here";
+  wrap.append(actions, paste, button("Read the suggestions", () => use(paste.value)), said);
+  return wrap;
 }

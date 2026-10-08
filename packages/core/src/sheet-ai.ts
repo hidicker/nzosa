@@ -1,6 +1,7 @@
 import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
 import type { BankFields, ReferenceLine } from "./coding-check.js";
+import { splitAccountLabel } from "./chart-codes.js";
 
 /**
  * Any spreadsheet, read by an AI into lines this app can use.
@@ -534,4 +535,158 @@ export function sheetLinesToTransactions(
     extras: { sheetCategory: line.category, sheetRow: `${line.sheet}!${line.row}` },
     source: { importer: "spreadsheet (AI)", file: source, line: i + 1 },
   }));
+}
+
+/** A name the imported coding uses, with what it was used for. */
+export interface CategoryToMatch {
+  name: string;
+  lines: number;
+  /** A few descriptions of lines coded to it, for what it means. */
+  examples: readonly string[];
+  /** Which way the money coded to it went: rent received and rent paid are different accounts. */
+  direction?: "in" | "out" | "both";
+}
+
+/** What the model said a name is: one of the accounts, a transfer, or to be ignored. */
+export type CategoryMatch =
+  | { kind: "account"; account: string; why: string }
+  | { kind: "transfer"; why: string }
+  | { kind: "ignore"; why: string };
+
+/**
+ * The prompt that suggests which of the chart's accounts each name means.
+ *
+ * Names and what was coded to them, and the chart's own account names -- no
+ * amounts, which say nothing about what a category is. It may only choose an
+ * account from the list, and is told to leave a name alone rather than guess.
+ */
+export function categoryMatchPrompt(
+  names: readonly CategoryToMatch[],
+  accounts: readonly (string | { label: string; type: string })[],
+  about = "",
+): string {
+  const way = (n: CategoryToMatch): string =>
+    n.direction === "in" ? "money in" : n.direction === "out" ? "money out" : n.direction === "both" ? "money in and out" : "";
+  return [
+    "Below are the category names someone's old spreadsheet or accounting system coded their money to,",
+    "and the accounts in their new chart of accounts. For each name, say which ONE account it means.",
+    about.trim() === "" ? "" : `About these books: ${about.trim()}`,
+    "",
+    "Reply with ONE JSON object and nothing else -- no explanation, no code fence:",
+    '{"matches": [{"category": the name exactly as given, "kind": "account" | "transfer" | "ignore" | "unsure",',
+    '  "account": the account EXACTLY as written in the list below, when kind is "account",',
+    '  "why": a few words}]}',
+    "",
+    '- "transfer": the name is money moved between the person\'s own accounts (savings, card payments).',
+    '- "ignore": the name marks lines that are not money at all, or were left out ("Ignore", "Pending").',
+    '- "unsure": you cannot tell. Saying so is better than a guess: a person will choose.',
+    "- Choose only from the list. Never invent an account or change its wording.",
+    "- The account must fit the money's direction: money in belongs to an income (revenue) account, or a",
+    "  liability or equity one; money out to an expense, asset or liability account. Rent RECEIVED is not",
+    "  rent PAID.",
+    "- Never choose an account that is merely similar or shares a word: council rates are not power, and",
+    "  insurance is not interest. Where the list has no account for the thing itself, choose the general",
+    "  one for its side if the list has one (General Expenses for money out; Other Revenue or Other",
+    "  Income for money in, rather than Sales for income that is not from selling). Otherwise say unsure.",
+    "",
+    "Names (lines coded to it, which way the money went, examples of what they were):",
+    ...names.map((n) => {
+      const facts = [`${n.lines} line${n.lines === 1 ? "" : "s"}`, way(n), n.examples.length > 0 ? `e.g. ${n.examples.join("; ")}` : ""];
+      return `- ${n.name} (${facts.filter((f) => f !== "").join("; ")})`;
+    }),
+    "",
+    "Accounts (name, then its type):",
+    ...accounts.map((a) => (typeof a === "string" ? `- ${a}` : `- ${a.label} (${a.type || "no type set"})`)),
+  ]
+    .filter((line, i, all) => !(line === "" && all[i - 1] === ""))
+    .join("\n");
+}
+
+/**
+ * Read the suggestions, keeping only what can be used: a name that was asked
+ * about, and an account that is in the chart exactly. Anything else is left
+ * for a person, and said.
+ */
+/**
+ * The accounts a category may be matched to: not the ones the app keeps for
+ * itself -- bank accounts, receivables and payables, GST, rounding, retained
+ * earnings -- which are posted to by what they are for, never chosen as a
+ * line's coding. A model offered Accounts Receivable for rent received chose
+ * it.
+ */
+export function codingAccountsOnly<T extends { type: string }>(accounts: readonly T[]): T[] {
+  return accounts.filter(
+    (a) => !/bank|receivable|payable|\bgst\b|rounding|historical|tracking|retained|unpaid expense/i.test(a.type),
+  );
+}
+
+/**
+ * The chart's own label for an account written another way -- "473 Repairs
+ * and Maintenance" for "Repairs and Maintenance - 473". By code where both
+ * have one, otherwise by name; never a near miss.
+ */
+function sameAccount(said: string, accounts: readonly { label: string }[]): string | undefined {
+  const { code, name } = splitAccountLabel(said);
+  const split = accounts.map((a) => ({ label: a.label, ...splitAccountLabel(a.label) }));
+  if (code !== "") {
+    const byCode = split.filter((a) => a.code === code);
+    if (byCode.length === 1 && byCode[0]!.name.toLowerCase() === name.toLowerCase()) return byCode[0]!.label;
+    if (byCode.length > 0) return undefined;
+  }
+  const byName = split.filter((a) => a.name.toLowerCase() === name.trim().toLowerCase());
+  return byName.length === 1 ? byName[0]!.label : undefined;
+}
+
+/** Whether money going one way can be coded to an account of this type. */
+function fitsDirection(direction: CategoryToMatch["direction"], type: string): boolean {
+  if (direction === "in" && /expense|overhead|direct cost|cost of sales/i.test(type)) return false;
+  if (direction === "out" && /revenue|income|sales/i.test(type)) return false;
+  return true;
+}
+
+export function readCategoryMatches(
+  answer: string,
+  names: readonly (string | CategoryToMatch)[],
+  accounts: readonly (string | { label: string; type: string })[],
+): { matches: Map<string, CategoryMatch>; problems: string[] } {
+  const named = names.map((n) => (typeof n === "string" ? { name: n, lines: 0, examples: [] } : n));
+  const typed = accounts.map((a) => (typeof a === "string" ? { label: a, type: "" } : a));
+  const matches = new Map<string, CategoryMatch>();
+  const problems: string[] = [];
+  let raw: Record<string, unknown>;
+  try {
+    raw = jsonIn(answer) as Record<string, unknown>;
+  } catch (error) {
+    return { matches, problems: [`The answer could not be read: ${(error as Error).message}`] };
+  }
+  const asked = new Map(named.map((n) => [n.name.toLowerCase(), n.name]));
+  const directionOf = new Map(named.map((n) => [n.name, n.direction]));
+  const chart = new Map(typed.map((a) => [a.label.toLowerCase(), a.label]));
+  const typeOf = new Map(typed.map((a) => [a.label, a.type]));
+  for (const item of Array.isArray(raw["matches"]) ? raw["matches"] : []) {
+    const one = (item ?? {}) as Record<string, unknown>;
+    const name = asked.get(text(one["category"]).toLowerCase());
+    if (name === undefined) continue;
+    const kind = text(one["kind"]);
+    const why = text(one["why"]);
+    if (kind === "transfer" || kind === "ignore") {
+      matches.set(name, { kind, why });
+      continue;
+    }
+    if (kind !== "account") continue;
+    const account = chart.get(text(one["account"]).toLowerCase()) ?? sameAccount(text(one["account"]), typed);
+    if (account === undefined) {
+      problems.push(`"${name}": the suggested account "${text(one["account"])}" is not in your chart, so it is left for you.`);
+      continue;
+    }
+    const direction = directionOf.get(name);
+    if (!fitsDirection(direction, typeOf.get(account) ?? "")) {
+      problems.push(
+        `"${name}": ${account} was suggested, but it is money ${direction} and that is ${direction === "in" ? "an expense" : "an income"} account, so it is left for you.`,
+      );
+      continue;
+    }
+    matches.set(name, { kind: "account", account, why });
+  }
+  return { matches, problems };
 }

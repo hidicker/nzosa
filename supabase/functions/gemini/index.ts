@@ -263,6 +263,34 @@ Deno.serve(async (request: Request) => {
       }
     }
 
+    // A question asked in full: a spreadsheet to be read into lines, or a
+    // check of what was read. Only ever on a key of these books' own -- a
+    // year of spreadsheet on the shared key would empty it for everybody --
+    // and counted as five against the person's allowance, since a part of a
+    // sheet is many lines at once.
+    if (action === "ask") {
+      const prompt = String(body.prompt ?? "");
+      if (prompt === "") return reply({ error: "nothing to ask" }, 400);
+      // A part of a sheet is a few hundred rows; anything far beyond that is
+      // not what this is for, and would only be paid for.
+      if (prompt.length > 600_000) return reply({ error: "that is too big to ask in one go" }, 400);
+      const theirs = await keyFor(book);
+      if (theirs === null) {
+        return reply({ error: "Reading a spreadsheet needs a key of your own for these books." }, 400);
+      }
+      try {
+        await asCaller(jwt, "ai_take", { book, asking: 5, demo: false });
+      } catch (error) {
+        return reply({ error: (error as Error).message }, 429);
+      }
+      try {
+        const text = await askModel(detectProvider(theirs.key), theirs.key, theirs.model, prompt, byFetch);
+        return reply({ text });
+      } catch (error) {
+        return reply({ error: (error as Error).message }, 502);
+      }
+    }
+
     if (action === "converse") {
       const contents = Array.isArray(body.contents) ? (body.contents as unknown[]) : [];
       const tools = Array.isArray(body.tools) ? (body.tools as unknown[]) : [];

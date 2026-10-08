@@ -131,3 +131,75 @@ test("a 'difference' with the same figure both ways is a confirmation, not a dif
   assert.equal(read.differences.length, 0);
   assert.equal(read.agrees, true);
 });
+
+test("category suggestions: only names asked about, only accounts in the chart", async () => {
+  const { categoryMatchPrompt, readCategoryMatches } = await import("../dist/index.js");
+  const prompt = categoryMatchPrompt(
+    [{ name: "Rates", lines: 4, examples: ["Kowhai Council"] }],
+    ["Rates - 445", "Insurance - 433"],
+  );
+  assert.match(prompt, /- Rates \(4 lines; e\.g\. Kowhai Council\)/);
+  assert.doesNotMatch(prompt, /\d+\.\d\d/, "no amounts are sent");
+  const read = readCategoryMatches(
+    JSON.stringify({
+      matches: [
+        { category: "rates", kind: "account", account: "rates - 445", why: "council" },
+        { category: "Insurance", kind: "account", account: "House cover - 999", why: "made up" },
+        { category: "To savings", kind: "transfer" },
+        { category: "Pending", kind: "unsure" },
+        { category: "Not asked", kind: "ignore" },
+      ],
+    }),
+    ["Rates", "Insurance", "To savings", "Pending"],
+    ["Rates - 445", "Insurance - 433"],
+  );
+  assert.deepEqual(read.matches.get("Rates"), { kind: "account", account: "Rates - 445", why: "council" });
+  assert.equal(read.matches.has("Insurance"), false);
+  assert.match(read.problems[0], /not in your chart/);
+  assert.equal(read.matches.get("To savings").kind, "transfer");
+  assert.equal(read.matches.has("Pending"), false, "unsure is left for a person");
+  assert.equal(read.matches.has("Not asked"), false);
+});
+
+test("system accounts are not offered, and a match against the money's direction is refused", async () => {
+  const { codingAccountsOnly, readCategoryMatches } = await import("../dist/index.js");
+  const chart = [
+    { label: "Sales - 200", type: "Revenue" },
+    { label: "Rent - 469", type: "Overhead" },
+    { label: "Accounts Receivable - 610", type: "Accounts Receivable" },
+    { label: "GST - 820", type: "GST" },
+  ];
+  assert.deepEqual(codingAccountsOnly(chart).map((a) => a.label), ["Sales - 200", "Rent - 469"]);
+  const read = readCategoryMatches(
+    JSON.stringify({ matches: [
+      { category: "Rent in", kind: "account", account: "Rent - 469" },
+      { category: "Fees", kind: "account", account: "Sales - 200" },
+      { category: "Shop takings", kind: "account", account: "Sales - 200" },
+    ] }),
+    [
+      { name: "Rent in", lines: 2, examples: [], direction: "in" },
+      { name: "Fees", lines: 3, examples: [], direction: "out" },
+      { name: "Shop takings", lines: 9, examples: [], direction: "in" },
+    ],
+    chart,
+  );
+  assert.equal(read.matches.has("Rent in"), false, "money in to an expense account");
+  assert.equal(read.matches.has("Fees"), false, "money out to an income account");
+  assert.equal(read.matches.get("Shop takings").account, "Sales - 200");
+  assert.equal(read.problems.length, 2);
+});
+
+test("an account written code first is the same account, but a code with another name is not", async () => {
+  const { readCategoryMatches } = await import("../dist/index.js");
+  const chart = [{ label: "Repairs and Maintenance - 473", type: "Overhead" }, { label: "Rent - 469", type: "Overhead" }];
+  const read = readCategoryMatches(
+    JSON.stringify({ matches: [
+      { category: "Repairs", kind: "account", account: "473 Repairs and Maintenance" },
+      { category: "Rent", kind: "account", account: "473 Rent" },
+    ] }),
+    [{ name: "Repairs", lines: 1, examples: [], direction: "out" }, { name: "Rent", lines: 1, examples: [], direction: "out" }],
+    chart,
+  );
+  assert.equal(read.matches.get("Repairs").account, "Repairs and Maintenance - 473");
+  assert.equal(read.matches.has("Rent"), false);
+});

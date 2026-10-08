@@ -408,6 +408,7 @@
         </p>
         <div id="setup-intro"></div>
         <div id="setup-body"></div>
+        <div id="setup-locks" class="setup-locks"></div>
         <div id="setup-drop" class="dropzone dropzone-mini" hidden>
           <span class="dropzone-mini-text">Drop exported files here, or</span>
           <button id="setup-pick" type="button" class="dropzone-mini-btn">Choose files</button>
@@ -731,7 +732,8 @@
             tab. Export your ledger before you leave.
           </p>
 
-          <section id="reports" class="reports" aria-live="polite"></section>
+          <div id="locked-arrivals" class="feed-before"></div>
+        <section id="reports" class="reports" aria-live="polite"></section>
 
           <section class="stats stats-compact">
             <div class="stat">

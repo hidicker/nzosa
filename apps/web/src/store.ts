@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, Employee, EntityModel, FixedAsset, Invoice, Journal, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -348,6 +348,14 @@ export interface StoredLedger {
   beforeStart?: Transaction[];
   /** The feed ids of those left out, so a later fetch does not offer them again. */
   beforeStartLeft?: string[];
+  /** Periods that are finished: filed GST returns, and years signed off. */
+  lockDates?: LockDates;
+  /**
+   * Bank lines that arrived dated in a locked period, held for a decision
+   * rather than posted there: a feed line from last month after its return
+   * was filed would otherwise change the return.
+   */
+  lockedArrivals?: Transaction[];
   /** Actions required, put off until a day: item to the day it comes back. */
   snoozed?: Record<string, string>;
   /** Unmatched lines in external reference exports (e.g. Xero) dismissed with a reason. Key is line key -> { reason, at }. */
@@ -689,6 +697,8 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.snoozed ? { snoozed: ledger.snoozed } : {}),
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
+    ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
+    ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
     ...(ledger.beforeStartLeft ? { beforeStartLeft: ledger.beforeStartLeft } : {}),
     ...(ledger.booksAbout ? { booksAbout: ledger.booksAbout } : {}),
   };
@@ -1128,8 +1138,21 @@ export async function load(): Promise<{ ledger: StoredLedger; persistent: boolea
   }
 }
 
+/**
+ * Asked before anything is written, and able to refuse by throwing.
+ *
+ * The lock dates use it: one place every change to the books passes through,
+ * rather than a check beside each of a hundred saves where the one forgotten
+ * is the one that changes a filed return.
+ */
+let saveGuard: ((ledger: StoredLedger) => void) | null = null;
+export function setSaveGuard(guard: (ledger: StoredLedger) => void): void {
+  saveGuard = guard;
+}
+
 /** Write the whole ledger, every part. Used on import and first run. */
 export async function save(ledger: StoredLedger): Promise<boolean> {
+  saveGuard?.(ledger);
   if (backend === "folder") return writeFolder(ledger, FOLDER_PARTS);
   if (backend === "cloud") return writeCloud(ledger, FOLDER_PARTS);
   return write(ledger, PARTS);
@@ -1182,6 +1205,7 @@ export async function savePart(
   ledger: StoredLedger,
   ...parts: readonly LedgerPart[]
 ): Promise<boolean> {
+  saveGuard?.(ledger);
   if (backend === "folder") {
     // A named part still goes through the same routine, because the decisions
     // file has to be written whatever else changed: a coding and a chart edit

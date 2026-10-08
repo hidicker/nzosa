@@ -1,4 +1,5 @@
 import type { LedgerEvent } from "./events.js";
+import { resetLockBaseline } from "./lock.js";
 import { state } from "./state.js";
 import {
   ledgerName,
@@ -166,6 +167,8 @@ export async function restoreBackup(
     ? { ...parsed.ledger, version: 1 }
     : { ...state.ledger, ...old, version: 1 }) as StoredLedger;
   state.chart = state.ledger.chart ?? [];
+  // A restore replaces the books, locks and all: the comparison starts again.
+  resetLockBaseline();
   const saved = await save(state.ledger);
   if (parsed.rules) await saveRules(parsed.rules);
   if (parsed.rulesArchive) await saveRulesArchive(parsed.rulesArchive);

@@ -203,6 +203,23 @@ export function actionItems(): ActionItem[] {
     });
   }
 
+  const lockedLate = (state.ledger.lockedArrivals ?? []).length;
+  if (lockedLate > 0) {
+    items.push({
+      key: "locked-arrivals",
+      what: "Lines dated in a locked period",
+      count: lockedLate,
+      urgency: "amber",
+      detail:
+        `${plural(lockedLate, "bank line")} arrived after ${lockedLate === 1 ? "its" : "their"} period was ` +
+        "locked: bring each in dated the first open day, leave it out, or move the lock.",
+      go: () => {
+        showPage("import");
+        document.getElementById("locked-arrivals")?.scrollIntoView({ block: "start" });
+      },
+    });
+  }
+
   const justBefore = justBeforeWaiting().length;
   if (justBefore > 0) {
     items.push({

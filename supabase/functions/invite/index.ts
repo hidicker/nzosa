@@ -17,6 +17,7 @@
  */
 
 import { SMTPClient } from "https://deno.land/x/denomailer@1.6.0/mod.ts";
+import { letter } from "./letter.ts";
 
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
@@ -68,34 +69,7 @@ async function callerEmail(jwt: string): Promise<string> {
   return user?.email ?? "";
 }
 
-const ROLE_WORDS: Record<string, string> = {
-  owner: "as an owner",
-  bookkeeper: "as a bookkeeper",
-  accountant: "as their accountant",
-  readonly: "to read them (read only)",
-};
-
-function letter(books: string, role: string, from: string): { subject: string; text: string } {
-  const who = from !== "" ? from : "Someone";
-  return {
-    subject: `${who} has invited you to ${books} in NZOSA`,
-    text: [
-      "Kia ora,",
-      "",
-      `${who} has invited you to their books "${books}" in NZOSA, ${ROLE_WORDS[role] ?? "to work on them"}.`,
-      "",
-      `To accept, sign in or sign up at ${APP_URL} with this email address. The invitation`,
-      "will be waiting on your Books page, where you can accept or decline it.",
-      "",
-      "Nothing is shared with you until you accept. If you were not expecting this, you can",
-      "ignore this email and the invitation will simply wait unanswered.",
-      "",
-      "NZOSA -- open-source accounting for New Zealand",
-    ].join("\n"),
-  };
-}
-
-async function send(to: string, subject: string, text: string): Promise<void> {
+async function send(to: string, subject: string, text: string, html: string): Promise<void> {
   const client = new SMTPClient({
     connection: {
       hostname: SMTP_HOST,
@@ -105,7 +79,7 @@ async function send(to: string, subject: string, text: string): Promise<void> {
     },
   });
   try {
-    await client.send({ from: `NZOSA <${SMTP_USER}>`, to, subject, content: text });
+    await client.send({ from: `NZOSA <${SMTP_USER}>`, to, subject, content: text, html });
   } finally {
     await client.close();
   }
@@ -157,8 +131,8 @@ Deno.serve(async (request: Request) => {
     if (!take.ok) {
       return reply({ invited: true, emailed: false, said: NOT_EMAILED[take.why ?? ""] ?? "No email was sent." });
     }
-    const { subject, text } = letter(take.books ?? "", take.role ?? role, await callerEmail(jwt));
-    await send(take.email ?? email, subject, text);
+    const { subject, text, html } = letter(take.books ?? "", take.role ?? role, await callerEmail(jwt), APP_URL);
+    await send(take.email ?? email, subject, text, html);
     return reply({ invited: true, emailed: true });
   } catch (error) {
     console.error("invite email:", (error as Error).message);

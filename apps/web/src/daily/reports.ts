@@ -54,6 +54,8 @@ import {
   balanceSheetRole,
   accrualProfitAndLoss,
   checkManualJournal,
+  dayAfter,
+  reversalOf,
   computeBalanceSheet,
   postedFromImported,
   depreciationSchedule,
@@ -432,14 +434,26 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const problems = checkManualJournal(journal);
 
     const card = document.createElement("div");
-    card.className = problems.length > 0 ? "journal-card journal-broken" : "journal-card";
+    card.className =
+      journal.deleted !== undefined
+        ? "journal-card journal-deleted"
+        : problems.length > 0
+          ? "journal-card journal-broken"
+          : "journal-card";
 
     const title = document.createElement("p");
     title.className = "journal-narration";
     title.textContent = `${journal.date} — ${journal.narration}`;
     card.append(title);
 
-    if (problems.length > 0) {
+    if (journal.deleted !== undefined) {
+      const gone = document.createElement("p");
+      gone.className = "journal-out";
+      gone.textContent =
+        `Deleted ${new Date(journal.deleted.at).toLocaleDateString(booksLocale())} by ${journal.deleted.by}. ` +
+        "Kept here so the record shows it; it posts nothing.";
+      card.append(gone);
+    } else if (problems.length > 0) {
       const bad = document.createElement("p");
       bad.className = "journal-out";
       bad.textContent =
@@ -465,12 +479,10 @@ function renderManualJournals(body: HTMLElement, year: number): void {
       card.append(note(journal.source));
     }
 
-    const remove = document.createElement("button");
-    remove.type = "button";
-    remove.className = "link-button";
-    remove.textContent = "remove";
-    remove.addEventListener("click", () => void removeManualJournal(journal, year));
-    card.append(remove);
+    // Which journal reversed which, both ways, so neither is read alone.
+    const reversed = all.find((j) => j.reverses === journal.id && j.deleted === undefined);
+    if (reversed !== undefined) card.append(note(`Reversed by the journal of ${reversed.date}.`));
+    card.append(journalActions(journal, reversed !== undefined));
     body.append(card);
   }
 }
@@ -770,11 +782,119 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   return wrap;
 }
 
-async function removeManualJournal(journal: ManualJournal, year: number): Promise<void> {
-  if (!confirm(`Remove this journal?\n\n${journal.date} — ${journal.narration}`)) return;
-  const kept = (state.ledger.manualJournals ?? []).filter((j) => j.id !== journal.id);
-  await saveManualJournals(kept, `Removed journal: ${journal.narration}`);
-  void year;
+/** The journal being reversed on the page, and the date offered for it. */
+let reversing: { id: string; date: string } | null = null;
+
+/**
+ * The first day the locks leave open, or "" with no locks.
+ *
+ * Where a correction to a finished period belongs: a reversal dated inside a
+ * lock would be refused, and should be.
+ */
+function firstOpenDay(): string {
+  const locks = state.ledger.lockDates;
+  const last = [locks?.year ?? "", locks?.gst ?? ""].reduce((a, b) => (a > b ? a : b), "");
+  return last === "" ? "" : dayAfter(last);
+}
+
+/**
+ * Reverse, delete or restore one journal.
+ *
+ * Deleting keeps the journal, marked, rather than taking it off the list:
+ * somebody reviewing the books sees that it was there and was taken out. In a
+ * locked period neither deleting nor restoring gets past the lock; reversing,
+ * dated after it, is how a finished year is corrected.
+ */
+function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "journal-actions";
+  const button = (label: string, act: () => void, className = "link-button"): HTMLButtonElement => {
+    const b = document.createElement("button");
+    b.type = "button";
+    b.className = className;
+    b.textContent = label;
+    b.addEventListener("click", act);
+    box.append(b);
+    return b;
+  };
+  const all = (): ManualJournal[] => state.ledger.manualJournals ?? [];
+
+  if (journal.deleted !== undefined) {
+    button("Restore", () => {
+      const back = all().map((j) => {
+        if (j.id !== journal.id) return j;
+        const { deleted: _gone, ...kept } = j;
+        return kept;
+      });
+      void saveManualJournals(back, `Restored journal: ${journal.narration}`);
+    });
+    return box;
+  }
+
+  if (reversing?.id === journal.id) {
+    const date = document.createElement("input");
+    date.type = "date";
+    date.value = reversing.date;
+    date.min = journal.date;
+    date.addEventListener("input", () => {
+      if (reversing !== null) reversing.date = date.value;
+    });
+    box.append("Reverse on ", date, " ");
+    button(
+      "Post reversal",
+      () => {
+        const on = date.value;
+        if (on === "" || on < journal.date) {
+          alert("Choose a date on or after the journal's own.");
+          return;
+        }
+        reversing = null;
+        const mirror = reversalOf(journal, on, `m${Date.now().toString(36)}`);
+        void saveManualJournals([...all(), mirror], `Reversed journal: ${journal.narration}`);
+      },
+      "primary",
+    );
+    button("Cancel", () => {
+      reversing = null;
+      redraw("reports");
+    });
+    return box;
+  }
+
+  if (!reversed) {
+    button("Reverse…", () => {
+      const open = firstOpenDay();
+      const next = dayAfter(journal.date);
+      reversing = { id: journal.id, date: open > next ? open : next };
+      redraw("reports");
+    });
+  }
+  // Inside a lock, deleting would be refused: a finished year is corrected by
+  // reversing, so that is what is offered.
+  const lock = firstOpenDay();
+  if (lock !== "" && journal.date < lock) {
+    box.append(reversed ? "" : "In a locked year: reverse it to correct it.");
+    return box;
+  }
+  button("Delete", () => {
+    if (
+      !confirm(
+        `Delete this journal?
+
+${journal.date} — ${journal.narration}
+
+` +
+          "It stays on the list marked as deleted, and posts nothing. You can restore it.",
+      )
+    ) {
+      return;
+    }
+    const at = new Date().toISOString();
+    const by = state.who.trim() === "" ? "unattributed" : state.who.trim();
+    const marked = all().map((j) => (j.id === journal.id ? { ...j, deleted: { at, by } } : j));
+    void saveManualJournals(marked, `Deleted journal: ${journal.narration}`);
+  });
+  return box;
 }
 
 /** Read the manual journals out of an imported journal report. */

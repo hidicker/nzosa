@@ -53,6 +53,15 @@ export interface ManualJournal {
   lines: ManualJournalLine[];
   /** Where it came from, when it was read out of another system. */
   source?: string;
+  /** The id of the journal this one reverses, when it is a reversal. */
+  reverses?: string;
+  /**
+   * When it was deleted, and by whom. A deleted journal stays on the list,
+   * marked, and posts nothing -- as Xero keeps a voided journal -- so that
+   * somebody reviewing the books can see it was there and that it was taken
+   * out, rather than finding nothing at all.
+   */
+  deleted?: { at: string; by: string };
 }
 
 /** What is wrong with a manual journal. Named apart from the report reader's. */
@@ -100,6 +109,7 @@ export function postManualJournal(
   journal: ManualJournal,
   options: PostingOptions = {},
 ): PostedJournal | null {
+  if (journal.deleted !== undefined) return null;
   if (checkManualJournal(journal).length > 0) return null;
   const resolve = options.resolveAccount ?? ((code: string) => ({ code, name: code }));
 
@@ -126,6 +136,29 @@ export function postManualJournal(
     lines,
     source: "manual",
     taxBasis: "payments",
+  };
+}
+
+/**
+ * The journal that undoes another, on a date of the writer's choosing.
+ *
+ * How a finished period is corrected: the wrong entry is left where it was
+ * reported, and its mirror posted in a period still open. Every line the other
+ * way round, the same accounts, so the two together come to nothing and both
+ * stay on the record. Pointing back by id is what lets the list say which
+ * journal reversed which.
+ */
+export function reversalOf(journal: ManualJournal, date: IsoDate, id: string): ManualJournal {
+  return {
+    id,
+    date,
+    narration: `Reverses the journal of ${journal.date}: ${journal.narration}`,
+    lines: journal.lines.map((line) => ({
+      code: line.code,
+      amount: -line.amount as Cents,
+      ...(line.description !== undefined ? { description: line.description } : {}),
+    })),
+    reverses: journal.id,
   };
 }
 

@@ -1675,6 +1675,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* A journal is read for its narration first: the figures keep, the reason does not. */
 .journal-card { margin: 0.9rem 0; padding: 0.6rem 0.8rem; border-left: 3px solid var(--border); }
 .journal-card.journal-broken { border-left-color: #a33; }
+.journal-card.journal-deleted { border-left-color: var(--muted, #888); opacity: 0.7; }
+.journal-card.journal-deleted table { text-decoration: line-through; }
+.journal-actions { display: flex; gap: 0.6rem; align-items: center; flex-wrap: wrap; margin-top: 0.4rem; font-size: 0.85rem; }
 .journal-narration { font-weight: 600; margin: 0 0 0.4rem; }
 
 .payout-banner { display: flex; gap: 0.75rem; align-items: center; flex-wrap: wrap;

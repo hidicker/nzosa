@@ -87,3 +87,31 @@ test("what comes out of a report still has to balance", () => {
   ]);
   assert.deepEqual(checkManualJournal(found[0]), []);
 });
+
+test("a reversal mirrors every line, points back, and the two come to nothing", async () => {
+  const { reversalOf } = await import("../dist/index.js");
+  const wrong = {
+    id: "kowhai-1",
+    date: "2026-03-31",
+    narration: "Rimu repairs reclassified",
+    lines: [
+      { code: "Repairs - 473", amount: 12000, description: "Rimu" },
+      { code: "Owner Drawings - 980", amount: -12000 },
+    ],
+  };
+  const back = reversalOf(wrong, "2026-04-01", "kowhai-2");
+  assert.equal(back.reverses, "kowhai-1");
+  assert.equal(back.date, "2026-04-01");
+  assert.deepEqual(back.lines.map((l) => l.amount), [-12000, 12000]);
+  assert.equal(back.lines[0].description, "Rimu");
+  assert.deepEqual(checkManualJournal(back), []);
+  const both = [postManualJournal(wrong), postManualJournal(back)].flatMap((j) => j.lines);
+  const byAccount = new Map();
+  for (const l of both) byAccount.set(l.accountCode, (byAccount.get(l.accountCode) ?? 0) + l.amount);
+  assert.deepEqual([...byAccount.values()], [0, 0]);
+});
+
+test("a deleted journal is kept but posts nothing", () => {
+  assert.equal(postManualJournal({ ...GOOD, deleted: { at: "2026-10-09T09:00:00Z", by: "Totara" } }), null);
+  assert.notEqual(postManualJournal(GOOD), null);
+});

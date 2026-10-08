@@ -1930,7 +1930,8 @@ function buildRawEntitiesSheet(ctx: SheetContext): string {
 function buildRawJournalsSheet(ctx: SheetContext): string {
   const { entityName } = ctx;
   const journals = state.ledger.journals ?? [];
-  const manualJournals = state.ledger.manualJournals ?? [];
+  // Deleted ones post nothing, so they are not journals in this table.
+  const manualJournals = (state.ledger.manualJournals ?? []).filter((j) => j.deleted === undefined);
   const widths = [16, 16, 12, 32, 12, 18, 8, 14, 25, 30, 14, 14, 14, 14];
   const rowsXml: string[] = [];
 

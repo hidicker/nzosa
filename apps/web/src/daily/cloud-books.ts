@@ -249,6 +249,42 @@ async function renderInvitations(body: HTMLElement): Promise<void> {
 }
 
 /** The sets of books this person may open. */
+/** Sets this person owns that were deleted, each with a way back. */
+async function deletedSets(body: HTMLElement): Promise<void> {
+  const gone = await rpc<{ id: string; name: string; deleted_at: string }[]>("deleted_books", {});
+  if (gone === null || gone.length === 0) return;
+  const fold = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = `Deleted sets (${gone.length})`;
+  fold.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table books-table";
+  const tbody = document.createElement("tbody");
+  for (const book of gone) {
+    const row = document.createElement("tr");
+    const name = document.createElement("td");
+    name.textContent = book.name;
+    const when = document.createElement("td");
+    when.textContent = `Deleted ${new Date(book.deleted_at).toLocaleDateString()}`;
+    const actions = document.createElement("td");
+    actions.className = "report-amount";
+    const back = document.createElement("button");
+    back.type = "button";
+    back.textContent = "Restore";
+    back.addEventListener("click", () => {
+      back.disabled = true;
+      void rpc<string>("restore_book", { book: book.id }).then(() => location.reload());
+    });
+    actions.append(back);
+    row.append(name, when, actions);
+    tbody.append(row);
+  }
+  table.append(tbody);
+  fold.append(table);
+  fold.append(note("Deleted sets keep everything in them. Restoring puts one back for everyone who could see it."));
+  body.append(fold);
+}
+
 async function booksList(body: HTMLElement, email: string): Promise<void> {
   const who = document.createElement("p");
   who.className = "cloud-who";
@@ -361,12 +397,44 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
       });
       actions.append(" ", rename);
 
+      // Deleting hides the set from everybody and keeps everything in it; an
+      // owner can restore it below. Typing the name is the guard against the
+      // wrong row, which a yes/no box is not.
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "danger";
+      remove.textContent = "Delete";
+      remove.addEventListener("click", () => {
+        const typed = prompt(
+          `Delete "${book.name}"?\n\nIt disappears for everyone who can see it. Nothing in it is erased, ` +
+            "and an owner can restore it from this page.\n\nType the name to delete it:",
+        );
+        if (typed === null) return;
+        if (typed.trim() !== book.name.trim()) {
+          say(said, "The name did not match, so nothing was deleted.", true);
+          return;
+        }
+        remove.disabled = true;
+        void rpc<string>("delete_book", { book: book.id }).then((result) => {
+          if (result === "deleted") {
+            if (book.id === open) openCloudBook(null);
+            location.reload();
+            return;
+          }
+          remove.disabled = false;
+          say(said, "Could not delete them. Only an owner of these books can.", true);
+        });
+      });
+      actions.append(" ", remove);
+
       row.append(name, when, actions);
       tbody.append(row);
     }
     table.append(head, tbody);
     body.append(table);
   }
+
+  await deletedSets(body);
 
   // Starting a set of books, which is also how somebody's first set is made.
   const add = document.createElement("div");

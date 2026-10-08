@@ -110,6 +110,16 @@ export const BUSINESS_KINDS = {
   charity: { what: "charity: a donation, or a purchase from its shop" },
   payroll: { what: "payroll service: its fees, or wages paid through it" },
   accounting: { what: "accounting and business software", accounts: [/subscriptions?|software|computer expenses/i] },
+  evCharging: { what: "electric vehicle charging", accounts: [/motor ?vehicle/i, /\bvehicle/i] },
+  professional: {
+    what: "professional body or registration: membership and practising fees",
+    accounts: [/dues|memberships?|registrations?|practising/i, /subscriptions?/i],
+  },
+  education: { what: "education provider: course fees", accounts: [/training|education|professional development|courses?/i] },
+  news: { what: "news subscription", accounts: [/subscriptions?/i] },
+  childcare: { what: "childcare: usually personal" },
+  attraction: { what: "attraction, ski field or day out: usually personal or entertainment" },
+  farm: { what: "farm supplies and services: fertiliser, seed, animal health or stock" },
 } as const satisfies Record<string, BusinessKind>;
 
 export type BusinessKindName = keyof typeof BUSINESS_KINDS;
@@ -516,8 +526,8 @@ Steel and Tube|STEEL AND TUBE,STEEL TUBE|hardware
 Kings Plant Barn|KINGS PLANT BARN|hardware
 Palmers|PALMERS|hardware
 Oderings|ODERINGS|hardware
-Farmlands|FARMLANDS|hardware
-PGG Wrightson|PGG WRIGHTSON,PGG|hardware
+Farmlands|FARMLANDS|farm
+PGG Wrightson|PGG WRIGHTSON,PGG|farm
 Noel Leeming|NOEL LEEMING|electronics
 Harvey Norman|HARVEY NORMAN|electronics
 JB Hi-Fi|JB HI FI,JBHIFI,JB HIFI|electronics
@@ -542,7 +552,6 @@ Ballantynes|BALLANTYNES|retail
 David Jones|DAVID JONES|retail
 Whitcoulls|WHITCOULLS|retail
 Paper Plus|PAPER PLUS|retail
-Paper Plus NZ|PAPERPLUS|retail
 Unity Books|UNITY BOOKS|retail
 Typo|TYPO|retail
 Cotton On|COTTON ON|retail
@@ -740,6 +749,305 @@ Environment Canterbury|ENVIRONMENT CANTERBURY,ECAN|regionalCouncil
 Otago Regional Council|OTAGO REGIONAL COUNCIL|regionalCouncil
 Environment Southland|ENVIRONMENT SOUTHLAND|regionalCouncil
 West Coast Regional Council|WEST COAST REGIONAL COUNCIL|regionalCouncil
+Tradify|TRADIFY|software
+Fergus|FERGUS SOFTWARE,FERGUSHQ|software
+ServiceM8|SERVICEM8|software
+simPRO|SIMPRO|software
+AroFlo|AROFLO|software
+Buildxact|BUILDXACT|software
+WorkflowMax|WORKFLOWMAX,WORKFLOW MAX|software
+Timely|TIMELY|software
+Cliniko|CLINIKO|software
+Nookal|NOOKAL|software
+Mindbody|MINDBODY|software
+Fresha|FRESHA|software
+Unleashed|UNLEASHED SOFTWARE|software
+Cin7|CIN7|software
+Hubdoc|HUBDOC|accounting
+Dext|DEXT,RECEIPT BANK|accounting
+ApprovalMax|APPROVALMAX|accounting
+Fathom|FATHOM HQ,FATHOMHQ|accounting
+Syft|SYFT ANALYTICS|accounting
+Ignition|IGNITION APP,PRACTICE IGNITION|accounting
+Karbon|KARBON|accounting
+FYI Docs|FYI DOCS,FYI SOFTWARE|accounting
+FreshBooks|FRESHBOOKS|accounting
+Wave|WAVE FINANCIAL,WAVEAPPS|accounting
+Pipedrive|PIPEDRIVE|software
+Zoho|ZOHO|software
+Klaviyo|KLAVIYO|software
+MailerLite|MAILERLITE|software
+Constant Contact|CONSTANT CONTACT|software
+Campaign Monitor|CAMPAIGN MONITOR|software
+Buffer|BUFFER COM,BUFFER PUBLISHING|software
+Later|LATER COM|software
+Sprout Social|SPROUT SOCIAL|software
+Loom|LOOM|software
+Miro|MIRO COM,REALTIMEBOARD|software
+Airtable|AIRTABLE|software
+ClickUp|CLICKUP|software
+Basecamp|BASECAMP|software
+Todoist|TODOIST,DOIST|software
+Evernote|EVERNOTE|software
+Smartsheet|SMARTSHEET|software
+Freshdesk|FRESHDESK,FRESHWORKS|software
+Zendesk|ZENDESK|software
+Intercom|INTERCOM|software
+Twilio|TWILIO|software
+SendGrid|SENDGRID|software
+Mailgun|MAILGUN|software
+Postmark|POSTMARK APP|software
+Bitbucket|BITBUCKET|software
+GitLab|GITLAB|software
+JetBrains|JETBRAINS|software
+Heroku|HEROKU|hosting
+Linode|LINODE,AKAMAI CLOUD|hosting
+Vultr|VULTR|hosting
+Render|RENDER COM|hosting
+Supabase|SUPABASE|hosting
+MongoDB|MONGODB|hosting
+Sentry|SENTRY|software
+Datadog|DATADOG|software
+Cloudinary|CLOUDINARY|hosting
+Vimeo|VIMEO|software
+Envato|ENVATO|software
+Shutterstock|SHUTTERSTOCK|software
+iStock|ISTOCK,GETTY IMAGES|software
+Midjourney|MIDJOURNEY|software
+Perplexity|PERPLEXITY|software
+Cursor|CURSOR AI,ANYSPHERE|software
+Descript|DESCRIPT|software
+Otter.ai|OTTER AI|software
+Acuity Scheduling|ACUITY|software
+Gumroad|GUMROAD|payments
+Teachable|TEACHABLE|software
+Thinkific|THINKIFIC|software
+Kajabi|KAJABI|software
+Udemy|UDEMY|education
+Coursera|COURSERA|education
+LinkedIn Learning|LINKEDIN LEARNING,LYNDA|education
+Skillshare|SKILLSHARE|education
+Duolingo|DUOLINGO|streaming
+Box|BOX COM,BOX INC|software
+Backblaze|BACKBLAZE|software
+iDrive|IDRIVE|software
+Proton|PROTON AG,PROTONMAIL,PROTON VPN|software
+NordVPN|NORDVPN,NORD SECURITY|software
+ExpressVPN|EXPRESSVPN|software
+Surfshark|SURFSHARK|software
+Windscribe|WINDSCRIBE|software
+Malwarebytes|MALWAREBYTES|software
+Norton|NORTON,NORTONLIFELOCK,GEN DIGITAL|software
+McAfee|MCAFEE|software
+Kaspersky|KASPERSKY|software
+Bitdefender|BITDEFENDER|software
+Avast|AVAST|software
+TeamViewer|TEAMVIEWER|software
+AnyDesk|ANYDESK|software
+Splashtop|SPLASHTOP|software
+GoTo|GOTO COM,LOGMEIN|software
+Webex|WEBEX,CISCO WEBEX|software
+RingCentral|RINGCENTRAL|telco
+Vonage|VONAGE|telco
+Skype|SKYPE|telco
+Dialpad|DIALPAD|telco
+TikTok|TIKTOK,TIKTOK ADS|advertising
+Pinterest|PINTEREST|advertising
+Snapchat|SNAPCHAT,SNAP INC|advertising
+X|X CORP,TWITTER|advertising
+Microsoft Advertising|MICROSOFT ADVERTISING,BING ADS,MSFT ADS|advertising
+Localist|LOCALIST|advertising
+hipages|HIPAGES|advertising
+realestate.co.nz|REALESTATE CO NZ|advertising
+OneRoof|ONEROOF|advertising
+Homes.co.nz|HOMES CO NZ|advertising
+Trade Me Property|TRADE ME PROPERTY|advertising
+Student Job Search|STUDENT JOB SEARCH,SJS|recruitment
+ChargeNet|CHARGENET|evCharging
+Jolt|JOLT CHARGE,JOLT|evCharging
+Tesla Supercharger|TESLA SUPERCHARGER,TESLA SUPERCHARGING|evCharging
+Tesla|TESLA|vehicle
+Z Charge|Z CHARGE|evCharging
+Paystation|PAYSTATION|payments
+Smartpay|SMARTPAY|payments
+Kogan|KOGAN COM,KOGAN|marketplace
+Wish|WISH COM,CONTEXTLOGIC|marketplace
+Booktopia|BOOKTOPIA|retail
+Dymocks|DYMOCKS|retail
+Nespresso|NESPRESSO|retail
+Kitchen Things|KITCHEN THINGS|electronics
+Foot Locker|FOOT LOCKER,FOOTLOCKER|retail
+JD Sports|JD SPORTS|retail
+Merchant 1948|MERCHANT 1948|retail
+Witchery|WITCHERY|retail
+Country Road|COUNTRY ROAD|retail
+Seed Heritage|SEED HERITAGE|retail
+Portmans|PORTMANS|retail
+Jay Jays|JAY JAYS|retail
+Factorie|FACTORIE|retail
+Supre|SUPRE|retail
+Rodd & Gunn|RODD GUNN,RODD AND GUNN|retail
+Icebreaker|ICEBREAKER|outdoor
+EziBuy|EZIBUY|retail
+Shoe Clinic|SHOE CLINIC|retail
+Overland|OVERLAND FOOTWEAR|retail
+Wild Pair|WILD PAIR|retail
+Mountain Warehouse|MOUNTAIN WAREHOUSE|outdoor
+Pagani|PAGANI|retail
+H&M|H M HENNES,HENNES MAURITZ,H AND M|retail
+Zara online|ZARA COM|retail
+Uniqlo|UNIQLO|retail
+kikki.K|KIKKI K|retail
+Wallace Cotton|WALLACE COTTON|homeware
+Living & Giving|LIVING GIVING|homeware
+Target Furniture|TARGET FURNITURE|homeware
+Danske Mobler|DANSKE MOBLER|homeware
+Forty Winks|FORTY WINKS|homeware
+Beds R Us|BEDS R US,BEDSRUS|homeware
+Bike Barn|BIKE BARN|outdoor
+Trade Tested|TRADE TESTED|hardware
+Coates Hire|COATES HIRE|hardware
+Guthrie Bowron|GUTHRIE BOWRON|hardware
+Edmac|EDMAC|hardware
+Freightways|FREIGHTWAYS|courier
+Toll|TOLL NZ,TOLL GROUP,TOLL IPEC|courier
+TNT|TNT EXPRESS|courier
+Urgent Couriers|URGENT COURIERS|courier
+Kiwi Express|KIWI EXPRESS|courier
+Taco Bell|TACO BELL|fastFood
+Popeyes|POPEYES|fastFood
+Better Burger|BETTER BURGER|fastFood
+Shake Out|SHAKE OUT|fastFood
+Tank|TANK JUICE|fastFood
+Boost Juice|BOOST JUICE|fastFood
+Chatime|CHATIME|fastFood
+Krispy Kreme|KRISPY KREME|fastFood
+Jamaica Blue|JAMAICA BLUE|fastFood
+Gloria Jean's|GLORIA JEANS|fastFood
+Esquires|ESQUIRES|fastFood
+The Coffee Club|THE COFFEE CLUB,COFFEE CLUB|fastFood
+Velvet Burger|VELVET BURGER|fastFood
+Mad Mex|MAD MEX|fastFood
+Bakers Delight|BAKERS DELIGHT|fastFood
+Skyline|SKYLINE ROTORUA,SKYLINE QUEENSTOWN,SKYLINE ENTERPRISES|attraction
+Hobbiton|HOBBITON|attraction
+Te Papa|TE PAPA|attraction
+Mt Hutt|MT HUTT,MOUNT HUTT|attraction
+Cardrona|CARDRONA|attraction
+Coronet Peak|CORONET PEAK|attraction
+The Remarkables|THE REMARKABLES,REMARKABLES SKI|attraction
+Mt Ruapehu|MT RUAPEHU,WHAKAPAPA SKI,TUROA|attraction
+Treble Cone|TREBLE CONE|attraction
+Rainbow's End|RAINBOWS END|attraction
+Kelly Tarlton's|KELLY TARLTONS|attraction
+Auckland Zoo|AUCKLAND ZOO|attraction
+Wellington Zoo|WELLINGTON ZOO|attraction
+Orana Wildlife Park|ORANA PARK,ORANA WILDLIFE|attraction
+Zealandia|ZEALANDIA|attraction
+Sky Tower|SKY TOWER|attraction
+Shotover Jet|SHOTOVER JET|attraction
+AJ Hackett|AJ HACKETT|attraction
+Ramada|RAMADA|accommodation
+Holiday Inn|HOLIDAY INN|accommodation
+Crowne Plaza|CROWNE PLAZA|accommodation
+InterContinental|INTERCONTINENTAL|accommodation
+Hyatt|HYATT|accommodation
+QT Hotels|QT HOTEL,QT QUEENSTOWN,QT WELLINGTON,QT AUCKLAND|accommodation
+Heartland Hotels|HEARTLAND HOTEL|accommodation
+Quality Hotel|QUALITY HOTEL|accommodation
+Rendezvous Hotels|RENDEZVOUS HOTEL|accommodation
+Marriott Hotels|MARRIOTT HOTEL,COURTYARD MARRIOTT,MARRIOTT INTERNATIONAL|accommodation
+Southern Cross Travel Insurance|SOUTHERN CROSS TRAVEL,SCTI|insurance
+Cover-More|COVER MORE,COVERMORE|insurance
+1Cover|1COVER|insurance
+World Nomads|WORLD NOMADS|insurance
+MAS|MEDICAL ASSURANCE SOCIETY,MAS INSURANCE|insurance
+Lumley|LUMLEY|insurance
+Club Marine|CLUB MARINE|insurance
+Youi|YOUI|insurance
+Healthpost|HEALTHPOST|pharmacy
+BestStart|BESTSTART,BEST START|childcare
+Kindercare|KINDERCARE|childcare
+Kidsfirst|KIDSFIRST|childcare
+University of Auckland|UNIVERSITY OF AUCKLAND|education
+Victoria University of Wellington|VICTORIA UNIVERSITY,TE HERENGA WAKA|education
+University of Canterbury|UNIVERSITY OF CANTERBURY|education
+University of Otago|UNIVERSITY OF OTAGO|education
+Massey University|MASSEY UNIVERSITY,MASSEY UNI|education
+University of Waikato|UNIVERSITY OF WAIKATO|education
+AUT|AUCKLAND UNIVERSITY OF TECHNOLOGY,AUT|education
+Lincoln University|LINCOLN UNIVERSITY|education
+Te Pukenga|TE PUKENGA|education
+Open Polytechnic|OPEN POLYTECHNIC|education
+NZQA|NZQA,NZ QUALIFICATIONS AUTHORITY|government
+Ministry of Education|MINISTRY OF EDUCATION|government
+Health New Zealand|HEALTH NEW ZEALAND,TE WHATU ORA|government
+Charities Services|CHARITIES SERVICES|government
+Financial Markets Authority|FINANCIAL MARKETS AUTHORITY|government
+Real Estate Authority|REAL ESTATE AUTHORITY|professional
+Building Practitioners Board|BUILDING PRACTITIONERS|professional
+Electrical Workers Registration Board|ELECTRICAL WORKERS REGISTRATION,EWRB|professional
+Plumbers Gasfitters and Drainlayers Board|PLUMBERS GASFITTERS,PGDB|professional
+NZ Law Society|NZ LAW SOCIETY,NEW ZEALAND LAW SOCIETY|professional
+Chartered Accountants ANZ|CHARTERED ACCOUNTANTS AUSTRALIA,CA ANZ,CAANZ|professional
+CPA Australia|CPA AUSTRALIA|professional
+Engineering New Zealand|ENGINEERING NEW ZEALAND,ENGINEERING NZ|professional
+Medical Council of NZ|MEDICAL COUNCIL|professional
+Nursing Council of NZ|NURSING COUNCIL|professional
+Teaching Council|TEACHING COUNCIL|professional
+Master Builders|MASTER BUILDERS|professional
+Master Electricians|MASTER ELECTRICIANS|professional
+Master Plumbers|MASTER PLUMBERS|professional
+BusinessNZ|BUSINESSNZ,BUSINESS NZ|professional
+Chamber of Commerce|CHAMBER OF COMMERCE|professional
+Otago Daily Times|OTAGO DAILY TIMES,ODT|news
+Newsroom|NEWSROOM PRO|news
+BusinessDesk|BUSINESSDESK|news
+National Business Review|NATIONAL BUSINESS REVIEW,NBR|news
+The Economist|THE ECONOMIST|news
+New York Times|NEW YORK TIMES,NYTIMES|news
+The Guardian|THE GUARDIAN,GUARDIAN NEWS|news
+Medium|MEDIUM COM|news
+Kidscan|KIDSCAN|charity
+Women's Refuge|WOMENS REFUGE|charity
+Ronald McDonald House|RONALD MCDONALD HOUSE|charity
+Child Cancer Foundation|CHILD CANCER FOUNDATION|charity
+Movember|MOVEMBER|charity
+Givealittle|GIVEALITTLE|charity
+Tear Fund|TEARFUND,TEAR FUND|charity
+City Mission|CITY MISSION|charity
+Paramount Plus|PARAMOUNT PLUS|streaming
+Tidal|TIDAL MUSIC|streaming
+Deezer|DEEZER|streaming
+Kindle Unlimited|KINDLE UNLIMITED|streaming
+Storytel|STORYTEL|streaming
+Headspace|HEADSPACE|streaming
+Calm|CALM COM|streaming
+Strava|STRAVA|streaming
+Zwift|ZWIFT|streaming
+Google Play|GOOGLE PLAY|streaming
+iHerb|IHERB|pharmacy
+Pet Depot|PET DEPOT|retail
+Mag & Turbo|MAG TURBO,MAG AND TURBO|vehicle
+Tyre Warehouse|TYRE WAREHOUSE|vehicle
+Autobarn|AUTOBARN|vehicle
+Maui|MAUI MOTORHOMES,MAUI RENTALS|rentalCar
+Britz|BRITZ|rentalCar
+Wilderness Motorhomes|WILDERNESS MOTORHOMES|rentalCar
+Turners|TURNERS AUCTIONS,TURNERS CARS|vehicle
+Briscoes Online|BRISCOES ONLINE|homeware
+Noel Leeming Online|NOEL LEEMING ONLINE|electronics
+Mitre 10 Mega|MITRE 10 MEGA|hardware
+Bunnings Trade|BUNNINGS TRADE|hardware
+PlaceMakers Trade|PLACEMAKERS TRADE|hardware
+Farmlands Card|FARMLANDS CARD|farm
+Ravensdown|RAVENSDOWN|farm
+Ballance Agri-Nutrients|BALLANCE AGRI|farm
+LIC|LIVESTOCK IMPROVEMENT,LIC|farm
+Wrightson Seeds|WRIGHTSON SEEDS|farm
+Rural Supplies|RURAL SUPPLIES|farm
+CRT|CRT FARMLANDS|farm
+Carrfields|CARRFIELDS|farm
 `;
 
 export interface KnownBusiness {

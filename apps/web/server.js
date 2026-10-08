@@ -1069,6 +1069,60 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         return;
       }
 
+      // A question asked in full with these books' own key: a spreadsheet to be
+      // read into lines, or a check of what was read. Only ever the person's
+      // own key -- never the shared allowance, which a year of spreadsheet
+      // would empty for everybody -- and counted as five against the day's
+      // allowance, since a part of a sheet is many lines at once.
+      if (path === "/api/ai/ask" && request.method === "POST") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const ai = readAi(ledgerRoot, current);
+        if (ai === null) {
+          send(response, 400, { error: "no key set for these books" });
+          return;
+        }
+        const provider = detectProvider(ai.key);
+        if (provider === "jev") {
+          send(response, 400, { error: "A Jev key cannot read a spreadsheet. Use a Claude, Gemini or OpenAI key." });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        const prompt = String(body.prompt ?? "");
+        if (prompt === "") {
+          send(response, 400, { error: "nothing to ask" });
+          return;
+        }
+        const used = aiUsedToday(ai);
+        const cost = 5;
+        if (used + cost > AI_DAILY_LIMIT) {
+          send(response, 429, {
+            error: `That would pass the day's limit of ${AI_DAILY_LIMIT}. Try again tomorrow, or copy the prompt into your own AI.`,
+            usedToday: used,
+            limit: AI_DAILY_LIMIT,
+          });
+          return;
+        }
+        let said;
+        try {
+          said = await askAiModel(
+            provider,
+            ai.key,
+            ai.model ?? pickAiModel(provider, ai.models ?? [], ""),
+            prompt,
+            fetch,
+          );
+        } catch (error) {
+          send(response, 502, { error: String(error.message ?? error) });
+          return;
+        }
+        writeAi(ledgerRoot, current, { ...ai, used: { ...(ai.used ?? {}), [today()]: used + cost } });
+        send(response, 200, { text: said, usedToday: used + cost, limit: AI_DAILY_LIMIT });
+        return;
+      }
+
       // A document -- a filed return's PDF -- read with these books' own key.
       //
       // Only ever sent because somebody chose the file and agreed, on the page,

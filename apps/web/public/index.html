@@ -338,10 +338,27 @@
             first.
           </p>
           <p>
+            If it also has the bank's own columns (<code>Particulars</code>, <code>Code</code>,
+            <code>Reference</code>, <code>Other Party</code>, <code>Other Party Account</code>,
+            <code>Serial</code>), they are used to tell apart lines of the same amount on the same
+            day. A spreadsheet laid out any other way can be read with AI, below.
+          </p>
+          <p>
             Keeping your coding on a sheet from scratch?
             <button id="check-template" type="button" class="link-button">Download a template</button>
             with those columns and two example lines.
           </p>
+        </details>
+        <details class="how-to" id="sheet-ai">
+          <summary>Any other spreadsheet: read it with AI</summary>
+          <p>
+            For a spreadsheet of any layout: money in and out in separate columns, a column per
+            category, a tab per month or property, totals mixed in. An AI reads every line and the
+            sheet's own totals; a second request checks the totals again; you see it all before
+            anything is kept. Copy each prompt into an AI you use and paste its answer back, or ask
+            with your own key.
+          </p>
+          <div id="sheet-ai-body"></div>
         </details>
         <!-- The file button belongs where the file goes, and looking like the
              one on the Import page, rather than tucked in the header beside a

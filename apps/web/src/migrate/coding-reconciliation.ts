@@ -1,4 +1,5 @@
 import { moduleOn } from "../modules.js";
+import { wireSheetAi } from "./sheet-ai.js";
 import { redraw, showPage } from "../app.js";
 import {
   AI_BATCH,
@@ -3778,6 +3779,7 @@ function accountDefault(code: string, amount: number): { treatment: GstTreatment
 
 /** Loading what the other system coded, clearing it, and accepting in bulk. */
 export function wireCodingReconciliation(): void {
+  wireSheetAi();
 
   $("accept-all").addEventListener("click", () => void acceptAllShown());
   wireAiButton();

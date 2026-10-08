@@ -4097,3 +4097,9 @@ details.rental-year[open] > summary::before { content: "▾"; }
 /* Who files the returns, on IRD records. */
 .filing-row { display: flex; flex-wrap: wrap; gap: 0.6rem; align-items: center; margin: 0.25rem 0 0.4rem; }
 .filing-row input { min-width: 16rem; }
+
+/* Any spreadsheet, read with AI. */
+.sheet-ai-part { border-top: 1px solid var(--border); padding: 0.6rem 0; }
+.sheet-ai-part textarea { display: block; width: 100%; box-sizing: border-box; min-height: 5rem; margin: 0.4rem 0; font: inherit; font-size: 0.85rem; }
+.sheet-ai-keep { border-top: 2px solid var(--border); margin-top: 0.8rem; padding-top: 0.6rem; }
+.sheet-ai-keep label { display: block; margin: 0.3rem 0; }

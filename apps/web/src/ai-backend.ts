@@ -258,6 +258,26 @@ export async function aiReadDocument(prompt: string, file: File): Promise<AiAnsw
   return said;
 }
 
+/**
+ * A question asked in full, with these books' own key, on this computer only.
+ *
+ * For reading a spreadsheet: never through the shared allowance, and not yet
+ * from books online. Null where it cannot be asked here, so the page offers
+ * the prompt to copy instead.
+ */
+export async function aiAsk(prompt: string): Promise<AiAnswer | null> {
+  if (aiRoute() !== "folder") return null;
+  const response = await local("/api/ai/ask", {
+    method: "POST",
+    headers: { "content-type": "application/json" },
+    body: JSON.stringify({ prompt }),
+  });
+  if (response === null) return { error: "Could not reach the app." };
+  const said = (await response.json().catch(() => ({}))) as AiAnswer;
+  if (!response.ok) return { error: said.error ?? "The model would not answer." };
+  return said;
+}
+
 export async function aiSuggest(prompt: string, asking: number, asked?: AskedLines): Promise<AiAnswer> {
   if (aiRoute() === "demo") return demoSuggest(prompt, asking);
   if (aiRoute() === "folder") {

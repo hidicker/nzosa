@@ -8,6 +8,7 @@ import {
   signInWithGoogle,
   takeAuthError,
   signOut,
+  renameBook,
   signUp,
 } from "../cloud.js";
 import { backupTools, buildBackup, restoredName } from "../backup.js";
@@ -317,6 +318,48 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
         });
         actions.append(openIt);
       }
+
+      // Renamed in place: the name cell becomes a box with Save beside it.
+      const rename = document.createElement("button");
+      rename.type = "button";
+      rename.textContent = "Rename";
+      rename.addEventListener("click", () => {
+        const box = document.createElement("input");
+        box.type = "text";
+        box.value = book.name;
+        box.maxLength = 120;
+        const keep = document.createElement("button");
+        keep.type = "button";
+        keep.className = "primary";
+        keep.textContent = "Save";
+        const cancel = document.createElement("button");
+        cancel.type = "button";
+        cancel.textContent = "Cancel";
+        cancel.addEventListener("click", () => location.reload());
+        keep.addEventListener("click", () => {
+          const wanted = box.value.trim();
+          if (wanted === "" || wanted === book.name) return;
+          keep.disabled = true;
+          void renameBook(book.id, wanted).then((result) => {
+            if (result === "renamed") {
+              if (book.id === open) openCloudBook({ id: book.id, name: wanted });
+              location.reload();
+              return;
+            }
+            keep.disabled = false;
+            say(
+              said,
+              result === "refused" ? "Only an owner of these books can rename them." : "Could not rename them.",
+              true,
+            );
+          });
+        });
+        name.textContent = "";
+        name.append(box, " ", keep, " ", cancel);
+        box.focus();
+        box.select();
+      });
+      actions.append(" ", rename);
 
       row.append(name, when, actions);
       tbody.append(row);

@@ -479,6 +479,22 @@ export async function createBook(name: string): Promise<CloudBook | null> {
     : { id: made.id, name: made.name, createdAt: made.created_at };
 }
 
+/**
+ * Give a set of books another name. Only an owner may: the update policy on
+ * books says so, and anybody else's request changes no row -- which is why the
+ * changed row is asked back, and an empty answer read as a refusal.
+ */
+export async function renameBook(id: string, name: string): Promise<"renamed" | "refused" | "failed"> {
+  const response = await rest(`books?id=eq.${encodeURIComponent(id)}`, {
+    method: "PATCH",
+    headers: { prefer: "return=representation" },
+    body: JSON.stringify({ name }),
+  });
+  if (response === null || !response.ok) return "failed";
+  const rows = (await response.json().catch(() => [])) as unknown[];
+  return rows.length > 0 ? "renamed" : "refused";
+}
+
 /** Every part of one set of books, with the version each is at. */
 export async function loadParts(bookId: string): Promise<Record<string, CloudPart> | null> {
   const response = await rest(

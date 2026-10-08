@@ -1,4 +1,4 @@
-import { currentSession, rpc } from "../cloud.js";
+import { callFunction, currentSession, rpc } from "../cloud.js";
 import { note } from "../ui.js";
 
 /**
@@ -40,6 +40,32 @@ const ROLES: readonly (readonly [MemberRow["role"], string, string])[] = [
 
 function roleName(role: string): string {
   return ROLES.find(([value]) => value === role)?.[1] ?? role;
+}
+
+/**
+ * Invite somebody, which also emails them (supabase/functions/invite). Inviting
+ * again sends the email again, within the server's daily limits. The words are
+ * the same whether or not that address has an account here.
+ */
+async function invite(bookId: string, email: string, role: string): Promise<{ ok: boolean; message: string }> {
+  try {
+    const answer = await callFunction<{ invited?: boolean; emailed?: boolean; said?: string }>("invite", {
+      book: bookId,
+      email,
+      role,
+    });
+    if (answer.invited !== true) return { ok: false, message: "Could not send that invitation." };
+    const after = "These books stay private until they accept.";
+    return {
+      ok: true,
+      message: answer.emailed === true
+        ? `Invited ${email}, and emailed them how to accept. ${after}`
+        : `Invited ${email}, but not by email: ${answer.said ?? "no email was sent."} They will see it ` +
+          `on their Books page when they sign in with that address. ${after}`,
+    };
+  } catch (error) {
+    return { ok: false, message: (error as Error).message || "Could not send that invitation." };
+  }
 }
 
 function say(box: HTMLElement, message: string, bad = false): void {
@@ -175,24 +201,13 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       if (wanted === "") return;
       go.disabled = true;
       say(said, "Inviting…");
-      void rpc<string>("invite_to_book", {
-        book: book.id,
-        who: wanted,
-        as_role: role.value,
-      }).then((result) => {
+      void invite(book.id, wanted, role.value).then((result) => {
         go.disabled = false;
-        if (result === "invited") {
+        say(said, result.message, !result.ok);
+        if (result.ok) {
           email.value = "";
-          // The same words whether or not that address has an account here.
-          say(
-            said,
-            `Invited ${wanted}. They will see it on their own Books page the next ` +
-              "time they sign in, and these books stay private until they accept.",
-          );
           void draw();
-          return;
         }
-        say(said, "Could not send that invitation.", true);
       });
     });
 
@@ -200,7 +215,8 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
     list.append(add);
     list.append(
       note(
-        "Read-only access lets an accountant review the books without changing anything.",
+        "They are emailed an invitation from NZOSA saying who invited them and how to accept. " +
+          "Read only lets somebody review the books without changing anything.",
       ),
     );
 
@@ -233,7 +249,18 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
           take.disabled = true;
           void rpc<string>("cancel_invitation", { invitation: row.id }).then(() => void draw());
         });
-        actions.append(take);
+        const again = document.createElement("button");
+        again.type = "button";
+        again.textContent = "Send again";
+        again.addEventListener("click", () => {
+          again.disabled = true;
+          say(said, "Sending…");
+          void invite(book.id, row.email, row.role).then((result) => {
+            again.disabled = false;
+            say(said, result.message, !result.ok);
+          });
+        });
+        actions.append(again, " ", take);
         tr.append(who, what, actions);
         rows.append(tr);
       }

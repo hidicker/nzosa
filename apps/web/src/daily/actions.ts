@@ -10,7 +10,7 @@ import {
   transferSuggestions,
   gstFrequency,
 } from "../books.js";
-import { aiSuggestionFor, suggestFromDirectory } from "../ai.js";
+import { DIRECTORY_VIA, aiSuggestionFor, suggestFromDirectory } from "../ai.js";
 import { feedTieNow } from "./opening-balances.js";
 import { justBeforeWaiting } from "./bank-import.js";
 import {
@@ -240,11 +240,16 @@ export function actionItems(): ActionItem[] {
   // Everything waiting on Reconcile, as one line: the split is in the detail.
   suggestFromDirectory();
   const open = reconcileRows().all.filter((one) => !settledAlready(one));
-  const byAi = open.filter((one) => one.code === null && aiSuggestionFor(one.transaction.id) !== undefined).length;
+  const proposed = (one: (typeof open)[number]) =>
+    one.code === null ? aiSuggestionFor(one.transaction.id) : undefined;
+  const byKnown = open.filter((one) => proposed(one)?.via === DIRECTORY_VIA).length;
+  const byAi = open.filter((one) => proposed(one) !== undefined).length - byKnown;
   const transfers = transferSuggestions();
   const asTransfer = open.filter((one) => transfers.has(one.transaction.id)).length;
-  const nothing = open.filter((one) => nothingHasAnswered(one)).length;
-  const byRules = open.length - byAi - nothing - asTransfer;
+  // A line with a proposal on it has had nothing in the books answer it, but
+  // it has a suggestion: counted once, under what suggested it.
+  const nothing = open.filter((one) => nothingHasAnswered(one) && proposed(one) === undefined).length;
+  const byRules = open.length - byAi - byKnown - nothing - asTransfer;
   const proposals = matchInvoices({
     invoices: invoicesToMatch(),
     transactions: state.ledger.transactions,
@@ -268,6 +273,7 @@ export function actionItems(): ActionItem[] {
         [
           open.length > 0 ? `${open.length} to confirm` : "",
           byRules > 0 ? `${byRules} suggested by rules` : "",
+          byKnown > 0 ? `${byKnown} from the list of known businesses` : "",
           byAi > 0 ? `${byAi} by AI` : "",
           asTransfer > 0 ? plural(asTransfer, "transfer") : "",
           nothing > 0 ? `${nothing} with nothing suggested` : "",

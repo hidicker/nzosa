@@ -52,6 +52,16 @@ export interface ReferenceLine {
    * its accounts would make every line pair with nothing.
    */
   bankAccount?: string;
+  /**
+   * The bank's own fields for the line, where the source carries them: a
+   * spreadsheet pasted from the bank's export keeps Particulars, Code,
+   * Reference, Other Party and the rest beside its own columns.
+   *
+   * They are what tells two lines of the same amount on the same day apart.
+   * Date and amount alone paired them in whatever order they came, and a
+   * file of three thousand lines had ninety-four such repeats.
+   */
+  bankFields?: BankFields;
   /** GST rate as the source names it, e.g. `15% GST on Expenses`. */
   gstRate?: string;
   /**
@@ -110,6 +120,118 @@ export interface ReferencePart {
   amount: Cents;
   gstRate: string;
   description: string;
+}
+
+/** The bank's fields on a line, as its statement export names them. */
+export interface BankFields {
+  particulars?: string;
+  code?: string;
+  reference?: string;
+  otherParty?: string;
+  otherPartyAccount?: string;
+  serial?: string;
+  trn?: string;
+  type?: string;
+}
+
+/** A sheet heading for each bank field, compared ignoring case and spacing. */
+const BANK_FIELD_HEADINGS: readonly (readonly [keyof BankFields, string])[] = [
+  ["particulars", "particulars"],
+  ["code", "code"],
+  ["reference", "reference"],
+  ["otherParty", "otherparty"],
+  ["otherPartyAccount", "otherpartyaccount"],
+  ["serial", "serial"],
+  ["trn", "trn"],
+  ["type", "type"],
+];
+
+/**
+ * Which columns of a sheet hold the bank's fields, by their headings.
+ *
+ * `skip` is the column already taken for the coding: a sheet that codes in a
+ * column headed Code has no bank Code to read beside it.
+ */
+function bankFieldColumns(
+  headings: ReadonlyMap<number, string>,
+  skip: number,
+): Map<keyof BankFields, number> {
+  const out = new Map<keyof BankFields, number>();
+  for (const [column, heading] of headings) {
+    if (column === skip) continue;
+    const name = heading.toLowerCase().replace(/[^a-z]/g, "");
+    const field = BANK_FIELD_HEADINGS.find(([, wanted]) => wanted === name)?.[0];
+    if (field !== undefined && !out.has(field)) out.set(field, column);
+  }
+  return out;
+}
+
+function bankFieldsOf(
+  row: ReadonlyMap<number, string>,
+  columns: ReadonlyMap<keyof BankFields, number>,
+): BankFields | undefined {
+  const fields: BankFields = {};
+  for (const [field, column] of columns) {
+    const value = (row.get(column) ?? "").trim();
+    if (value !== "") fields[field] = value;
+  }
+  return Object.keys(fields).length === 0 ? undefined : fields;
+}
+
+/**
+ * A New Zealand account number as numbers: `ANZ 12-3456-0001234-000` and
+ * `12-3456-0001234-00` are the same account. One export gives the suffix three
+ * digits and another two, and some put the bank's name in front; compared as
+ * text they disagreed on 373 lines of one real file, and every one of those
+ * pairs was refused as two different accounts.
+ */
+function accountNumberKey(text: string | undefined): string | undefined {
+  if (text === undefined) return undefined;
+  const groups = text.match(/\d+/g) ?? [];
+  if (groups.length === 4) return groups.map((g) => String(Number(g))).join("-");
+  return text;
+}
+
+/** Text as compared between the two sides: case, spacing and punctuation aside. */
+function same(a: string | undefined, b: string | undefined): boolean | undefined {
+  const norm = (text: string | undefined) => (text ?? "").toLowerCase().replace(/[^a-z0-9]/g, "");
+  const x = norm(a);
+  const y = norm(b);
+  if (x === "" || y === "") return undefined;
+  return x === y;
+}
+
+/**
+ * How strongly a bank line's own fields say it is this reference line.
+ *
+ * Each field both sides carry counts: the near-unique ones -- the bank's
+ * serial and transaction numbers, the other party's account -- for three, a
+ * disagreement on one of them against it by as much, since two lines with
+ * different serials are not the same line; the descriptive ones for one each.
+ * Fields one side lacks say nothing either way.
+ */
+export function bankFieldScore(line: ReferenceLine, transaction: Transaction): number {
+  const fields = line.bankFields;
+  if (fields === undefined) return 0;
+  let score = 0;
+  const strong: readonly (readonly [string | undefined, string | undefined])[] = [
+    [fields.serial, transaction.serial],
+    [fields.trn, transaction.trn],
+    [accountNumberKey(fields.otherPartyAccount), accountNumberKey(transaction.otherPartyAccount)],
+  ];
+  for (const [a, b] of strong) {
+    const said = same(a, b);
+    if (said === true) score += 3;
+    if (said === false) score -= 3;
+  }
+  const weak: readonly (readonly [string | undefined, string | undefined])[] = [
+    [fields.particulars, transaction.particulars],
+    [fields.code, transaction.code],
+    [fields.reference, transaction.reference],
+    [fields.otherParty, transaction.otherParty],
+  ];
+  for (const [a, b] of weak) if (same(a, b) === true) score += 1;
+  return score;
 }
 
 /** Normalise an account to something two systems can be compared on. */
@@ -242,6 +364,11 @@ export function readSheetColumns(
   source: string,
 ): ReferenceLine[] {
   const out: ReferenceLine[] = [];
+  const headings = sheetHeadings(sheet);
+  const fieldColumns = bankFieldColumns(
+    new Map(headings.columns.map(({ index, name }) => [index, name])),
+    columns.code,
+  );
   for (const key of [...sheet.rows.keys()].sort((a, b) => a - b)) {
     const row = sheet.rows.get(key);
     if (!row) continue;
@@ -250,7 +377,16 @@ export function readSheetColumns(
     const date = parseDate(row.get(columns.date) ?? "");
     const amount = parseAmount(row.get(columns.amount) ?? "");
     if (date === null || amount === null) continue;
-    out.push({ date, amount, code, label: code, source });
+    const fields = bankFieldsOf(row, fieldColumns);
+    out.push({
+      date,
+      amount,
+      code,
+      label: code,
+      source,
+      ...(fields ? { bankFields: fields } : {}),
+      ...(fields?.otherParty ? { contact: fields.otherParty } : {}),
+    });
   }
   return out;
 }
@@ -317,6 +453,10 @@ function readSheet(sheet: SheetRows, source: string): ReferenceLine[] {
   // or the working spreadsheet's "BankAccountAuto".
   const bankColumn =
     [...columns.entries()].find(([heading]) => /^bank\s*account/i.test(heading))?.[1] ?? -1;
+  const fieldColumns = bankFieldColumns(
+    new Map([...columns.entries()].map(([heading, column]) => [column, heading])),
+    whatColumn,
+  );
   const out: ReferenceLine[] = [];
 
   for (const key of [...sheet.rows.keys()].sort((a, b) => a - b)) {
@@ -331,7 +471,17 @@ function readSheet(sheet: SheetRows, source: string): ReferenceLine[] {
     if (date === null || amount === null) continue;
 
     const bank = bankColumn < 0 ? "" : (row.get(bankColumn) ?? "").trim();
-    out.push({ date, amount, code, label: code, source, ...(bank !== "" ? { bankAccount: bank } : {}) });
+    const fields = bankFieldsOf(row, fieldColumns);
+    out.push({
+      date,
+      amount,
+      code,
+      label: code,
+      source,
+      ...(bank !== "" ? { bankAccount: bank } : {}),
+      ...(fields ? { bankFields: fields } : {}),
+      ...(fields?.otherParty ? { contact: fields.otherParty } : {}),
+    });
   }
 
   return out;
@@ -833,8 +983,10 @@ function sameRate(ours: string, theirs: string): boolean {
  * posting exported twice under two filenames is still one posting.
  */
 export function dedupeReference(lines: readonly ReferenceLine[]): ReferenceLine[] {
-  const seen = new Map<string, number>();
+  const seen = new Map<string, number[]>();
   const out: ReferenceLine[] = [];
+  const fieldsKey = (line: ReferenceLine | undefined): string =>
+    line?.bankFields === undefined ? "" : JSON.stringify(Object.entries(line.bankFields).sort());
   for (const line of lines) {
     const key = [
       line.date,
@@ -845,18 +997,31 @@ export function dedupeReference(lines: readonly ReferenceLine[]): ReferenceLine[
       line.gstRate ?? "",
       (line.parts ?? []).length,
     ].join("\u0000");
-    const at = seen.get(key);
+    // Lines alike in everything else are the same line read twice -- unless
+    // the bank's own fields say otherwise: two equal charges on one day, with
+    // different serials, are two charges. A line read before the fields were
+    // read takes them on from the same line read again, rather than being
+    // kept beside it.
+    const ats = seen.get(key) ?? [];
+    const mine = fieldsKey(line);
+    const same = ats.find((i) => fieldsKey(out[i]) === mine);
+    const bare = mine === "" ? undefined : ats.find((i) => out[i]?.bankFields === undefined);
+    const at = same ?? bare;
     if (at !== undefined) {
-      // The same line read again, by a reader that now knows its bank account.
-      // Kept as first loaded, with the account added, so loading the file again
-      // is how lines read before that was so come to say where they were.
+      // The same line read again, by a reader that now knows its bank account
+      // or its bank fields. Kept as first loaded, with what is new added.
       const kept = out[at];
-      if (kept !== undefined && kept.bankAccount === undefined && line.bankAccount !== undefined) {
-        out[at] = { ...kept, bankAccount: line.bankAccount };
+      if (kept !== undefined) {
+        out[at] = {
+          ...kept,
+          ...(kept.bankAccount === undefined && line.bankAccount !== undefined ? { bankAccount: line.bankAccount } : {}),
+          ...(kept.bankFields === undefined && line.bankFields !== undefined ? { bankFields: line.bankFields } : {}),
+          ...(kept.contact === undefined && line.contact !== undefined ? { contact: line.contact } : {}),
+        };
       }
       continue;
     }
-    seen.set(key, out.length);
+    seen.set(key, [...ats, out.length]);
     out.push(line);
   }
   return out;
@@ -1102,16 +1267,55 @@ export function compareCodings(
     return undefined;
   };
 
+  /**
+   * The evidence a line is this entry's, beyond its amount: the bank's own
+   * fields where both sides have them, and the payee's name. Two lines of the
+   * same amount on one day were told apart by name alone, or not at all.
+   */
+  const evidence = (line: ReferenceLine, entry: CodedTransaction): number =>
+    2 * bankFieldScore(line, entry.transaction) + nameAgreement(line, entry.transaction);
+  /**
+   * Where the evidence ties, the line whose coding agrees with ours: of two
+   * equal lines a day apart, the one that says the same thing is the likelier
+   * pair, and choosing the other would report a disagreement that is not one.
+   */
+  const agrees = (line: ReferenceLine, entry: CodedTransaction): number => {
+    if (entry.code === null) return 0;
+    const theirs = options.aliases?.[line.code] ?? line.code;
+    return entry.code === theirs || accountKey(entry.code, chart) === accountKey(theirs, chart) ? 1 : 0;
+  };
+  /**
+   * The nearest line by date, among those the bank's fields do not rule out:
+   * a serial or an account that differs says the two are different lines,
+   * whatever their amounts.
+   */
+  const nearestOf = (entry: CodedTransaction): ReferenceLine | undefined => {
+    let best: ReferenceLine | undefined;
+    let bestGap = Number.POSITIVE_INFINITY;
+    let bestAgrees = -1;
+    for (const line of openTo(entry)) {
+      if (bankFieldScore(line, entry.transaction) < 0) continue;
+      const gap = near(line, entry);
+      const agree = agrees(line, entry);
+      if (gap < bestGap || (gap === bestGap && agree > bestAgrees)) {
+        best = line;
+        bestGap = gap;
+        bestAgrees = agree;
+      }
+    }
+    return best;
+  };
+
   const chosen = new Map<CodedTransaction, ReferenceLine>();
-  const named: { entry: CodedTransaction; line: ReferenceLine; score: number; gap: number }[] = [];
+  const named: { entry: CodedTransaction; line: ReferenceLine; score: number; gap: number; agree: number }[] = [];
   for (const entry of inOrder) {
     if (entry.code === null) continue;
     for (const line of openTo(entry)) {
-      const score = nameAgreement(line, entry.transaction);
-      if (score > 0) named.push({ entry, line, score, gap: near(line, entry) });
+      const score = evidence(line, entry);
+      if (score > 0) named.push({ entry, line, score, gap: near(line, entry), agree: agrees(line, entry) });
     }
   }
-  named.sort((a, b) => b.score - a.score || a.gap - b.gap);
+  named.sort((a, b) => b.score - a.score || a.gap - b.gap || b.agree - a.agree);
   for (const one of named) {
     if (chosen.has(one.entry) || used.has(one.line)) continue;
     chosen.set(one.entry, one.line);
@@ -1120,15 +1324,7 @@ export function compareCodings(
 
   for (const entry of inOrder) {
     if (entry.code === null || chosen.has(entry)) continue;
-    let best: ReferenceLine | undefined;
-    let bestGap = Number.POSITIVE_INFINITY;
-    for (const line of openTo(entry)) {
-      const gap = near(line, entry);
-      if (gap < bestGap) {
-        best = line;
-        bestGap = gap;
-      }
-    }
+    const best = nearestOf(entry);
     if (best !== undefined) {
       chosen.set(entry, best);
       used.add(best);
@@ -1194,7 +1390,7 @@ export function compareCodings(
   const looseNamed: { entry: CodedTransaction; line: ReferenceLine; score: number; gap: number }[] = [];
   for (const entry of unpaired) {
     for (const line of openTo(entry)) {
-      const score = nameAgreement(line, entry.transaction);
+      const score = evidence(line, entry);
       if (score > 0) looseNamed.push({ entry, line, score, gap: near(line, entry) });
     }
   }
@@ -1206,15 +1402,7 @@ export function compareCodings(
   }
   for (const entry of unpaired) {
     if (looseChosen.has(entry)) continue;
-    let best: ReferenceLine | undefined;
-    let bestGap = Number.POSITIVE_INFINITY;
-    for (const line of openTo(entry)) {
-      const gap = near(line, entry);
-      if (gap < bestGap) {
-        best = line;
-        bestGap = gap;
-      }
-    }
+    const best = nearestOf(entry);
     if (best !== undefined) {
       looseChosen.set(entry, best);
       used.add(best);

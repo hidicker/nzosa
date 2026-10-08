@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { compareCodings, nameAgreement } from "../dist/index.js";
+import { bankFieldScore, compareCodings, dedupeReference, nameAgreement } from "../dist/index.js";
 
 const txn = (id, date, amount, otherParty) => ({
   id, date, amount, account: "BNZ Visa", otherParty, particulars: "",
@@ -216,4 +216,79 @@ test("part of a busy day adds up only if it names the payee", () => {
     line("2026-06-10", 1000, "200 Sales", "Matai Bakery", ""),
   ];
   assert.equal(compareCodings([{ transaction: t, code: null }], day).uncoded[0].theirs, null);
+});
+
+// Two equal charges on one day, told apart by the bank's own fields.
+const fieldsLine = (code, serial, particulars) => ({
+  ...line("2026-07-01", -2000, code, "", ""),
+  bankFields: { serial, particulars },
+});
+const bankLine = (id, serial, particulars) => ({
+  ...txn(id, "2026-07-01", -2000, "KOWHAI CAFE"),
+  serial,
+  particulars,
+});
+
+test("the bank's fields decide between equal lines on the same day", () => {
+  const a = bankLine("a", "1001", "LUNCH");
+  const b = bankLine("b", "1002", "COFFEE");
+  const result = compareCodings(
+    [{ transaction: a, code: "420 Entertainment" }, { transaction: b, code: "429 General expenses" }],
+    [fieldsLine("429 General expenses", "1002", "COFFEE"), fieldsLine("420 Entertainment", "1001", "LUNCH")],
+  );
+  assert.equal(result.differed.length, 0, "each line found its own");
+  assert.equal(result.agreed.length, 2);
+});
+
+test("a different serial rules a line out, even on date and amount", () => {
+  const a = bankLine("a", "1001", "");
+  const result = compareCodings([{ transaction: a, code: "429 General expenses" }], [fieldsLine("429 General expenses", "9999", "")]);
+  assert.equal(result.unreferenced.length, 1, "not paired");
+  assert.equal(result.unmatched.length, 1);
+});
+
+test("with nothing to tell them apart, the line that agrees is the pair", () => {
+  const a = txn("a", "2026-07-01", -2000, "KOWHAI CAFE");
+  const result = compareCodings(
+    [{ transaction: a, code: "420 Entertainment" }],
+    [line("2026-07-01", -2000, "429 General expenses", ""), line("2026-07-01", -2000, "420 Entertainment", "")],
+  );
+  assert.equal(result.agreed.length, 1);
+  assert.equal(result.differed.length, 0);
+});
+
+test("bankFieldScore: strong fields count most, a clash counts against", () => {
+  const t = { ...txn("t", "2026-07-01", -2000, "Rimu Ltd"), serial: "77", particulars: "INV 5", otherPartyAccount: "12-3456-0001234-00" };
+  assert.equal(bankFieldScore({ ...line("2026-07-01", -2000, "429", ""), bankFields: { serial: "77", particulars: "inv5" } }, t), 4);
+  assert.equal(bankFieldScore({ ...line("2026-07-01", -2000, "429", ""), bankFields: { otherPartyAccount: "12-3456-0009999-00" } }, t), -3);
+  assert.equal(bankFieldScore(line("2026-07-01", -2000, "429", ""), t), 0);
+});
+
+test("reloading keeps equal lines with different bank fields, and fills in old ones", () => {
+  const old = line("2026-07-01", -2000, "429 General expenses", "");
+  const first = { ...old, bankFields: { serial: "1001" } };
+  const second = { ...old, bankFields: { serial: "1002" } };
+  const merged = dedupeReference([old, first, second]);
+  assert.equal(merged.length, 2, "the old line took the first's fields; the second is its own");
+  assert.deepEqual(merged.map((l) => l.bankFields?.serial), ["1001", "1002"]);
+  assert.equal(dedupeReference([first, { ...first }]).length, 1, "the same line twice is one");
+});
+
+test("a pasted bank sheet keeps the bank's fields, and its own coding column", async () => {
+  const { parseReconciledCsv } = await import("../dist/index.js");
+  const csv = [
+    "Date,Amount,Particulars,Code,Reference,Other Party,Other Party Account,Serial,What",
+    "01/07/2026,-20.00,LUNCH,,,Kowhai Cafe,12-3456-0001234-00,1001,Entertainment",
+    "01/07/2026,-20.00,COFFEE,,,Kowhai Cafe,,1002,General expenses",
+  ].join("\n");
+  const lines = parseReconciledCsv(csv, "sheet.csv");
+  assert.equal(lines.length, 2);
+  assert.equal(lines[0].code, "Entertainment", "What is the coding, not the bank's Code");
+  assert.deepEqual(lines[0].bankFields, {
+    particulars: "LUNCH",
+    otherParty: "Kowhai Cafe",
+    otherPartyAccount: "12-3456-0001234-00",
+    serial: "1001",
+  });
+  assert.equal(lines[1].contact, "Kowhai Cafe");
 });

@@ -211,11 +211,13 @@ async function renderInvitations(body: HTMLElement): Promise<void> {
   for (const one of waiting) {
     const row = document.createElement("p");
     row.className = "cloud-who";
-    const what = one.role === "accountant"
+    const what = one.role === "readonly"
       ? "to read them"
-      : one.role === "owner"
-        ? "as an owner"
-        : "to code them";
+      : one.role === "accountant"
+        ? "as their accountant"
+        : one.role === "owner"
+          ? "as an owner"
+          : "to code them";
     row.append(
       document.createTextNode(
         `${one.invited_by === "" ? "Somebody" : one.invited_by} invited you to ${one.books}, ${what}.`,

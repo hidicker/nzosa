@@ -231,8 +231,10 @@ Create your account, confirm it from the email, and sign in.
 2. **Start here** walks you through the rest, the same as on the desktop:
    start date, entities, chart of accounts, opening balances.
 3. **Invite** your bookkeeper or accountant from the Books page. Roles:
-   *owner* (everything), *bookkeeper* (codes and imports), *accountant*
-   (reads, and can check the year).
+   *owner* (everything, including who is a member), *accountant* (everything
+   in the books, lock dates and year end included), *bookkeeper* (the daily
+   work; cannot move lock dates) and *read only* (sees everything, changes
+   nothing).
 4. **Bank feed:** connect with your own Akahu personal app tokens
    ([my.akahu.nz](https://my.akahu.nz) → Developers). They go into your Vault.
 5. **Wise:** a read-only API token from Wise (Settings → API tokens), on the

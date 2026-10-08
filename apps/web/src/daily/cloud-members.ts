@@ -4,10 +4,13 @@ import { note } from "../ui.js";
 /**
  * Who else can see a set of books kept on the server.
  *
- * Three roles, and they are about what somebody may do rather than who they
- * are: an owner decides who is here, a bookkeeper codes, an accountant reads.
- * The read-only one is the point of the whole arrangement -- handing a year to
- * an accountant should not mean handing them the ability to change it.
+ * Four roles, about what somebody may do rather than who they are: an owner
+ * decides who is here; an accountant does everything in the books, lock dates
+ * and year end included; a bookkeeper does the daily work but cannot move a
+ * lock; read only sees and changes nothing. The accountant was read-only once,
+ * the reverse of every other accounting system, where the person who signs
+ * the year off can do the most -- and could not then move a lock or correct
+ * a coding. Locked periods are what keep a finished year safe now.
  *
  * Nothing here enforces any of that. The database does, on every request; this
  * only asks, and would be handed nothing if it asked for more than it may
@@ -17,20 +20,21 @@ import { note } from "../ui.js";
 interface MemberRow {
   user_id: string;
   email: string;
-  role: "owner" | "bookkeeper" | "accountant";
+  role: "owner" | "bookkeeper" | "accountant" | "readonly";
   since: string;
 }
 
 interface InvitationRow {
   id: string;
   email: string;
-  role: "owner" | "bookkeeper" | "accountant";
+  role: "owner" | "bookkeeper" | "accountant" | "readonly";
   sent: string;
 }
 
 const ROLES: readonly (readonly [MemberRow["role"], string, string])[] = [
-  ["bookkeeper", "Bookkeeper", "Codes and saves. Cannot change who else is here."],
-  ["accountant", "Accountant (read only)", "Sees everything, changes nothing."],
+  ["bookkeeper", "Bookkeeper", "Codes, reconciles and saves. Cannot move lock dates or change who else is here."],
+  ["accountant", "Accountant", "Everything in the books, lock dates and year end included. Cannot change who else is here."],
+  ["readonly", "Read only", "Sees everything, changes nothing."],
   ["owner", "Owner", "Everything, including who else may look."],
 ];
 

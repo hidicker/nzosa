@@ -22,12 +22,12 @@ function today(): string {
   return new Date().toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
 }
 
-/** For books online, only an owner moves a lock. Elsewhere there is one person. */
+/** For books online, an owner or the accountant moves a lock. Elsewhere there is one person. */
 async function mayMoveLocks(): Promise<boolean> {
   if (backendKind() !== "cloud") return true;
   const book = openCloudBookId();
   if (book === "") return true;
-  return (await rpc<boolean>("has_role", { book, roles: ["owner"] })) === true;
+  return (await rpc<boolean>("has_role", { book, roles: ["owner", "accountant"] })) === true;
 }
 
 /** Lines dated up to `day` still waiting to be confirmed on Reconcile. */
@@ -88,7 +88,7 @@ export function renderLockDates(): void {
   saveIt.disabled = true;
   void mayMoveLocks().then((may) => {
     saveIt.disabled = !may;
-    if (!may) said.textContent = "Only an owner of these books can move a lock.";
+    if (!may) said.textContent = "Only an owner or the accountant of these books can move a lock.";
   });
   saveIt.addEventListener("click", () => {
     const next: LockDates = {

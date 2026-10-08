@@ -409,7 +409,7 @@ function payPanel(bill: Invoice, balance: InvoiceBalance): HTMLElement {
 
   const memo = document.createElement("input");
   memo.type = "text";
-  memo.placeholder = "e.g. Paid by Ana on her own card";
+  memo.placeholder = "e.g. Paid by Rata on their own card";
   field("Note", memo);
   box.append(grid);
 

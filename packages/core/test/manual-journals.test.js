@@ -3,12 +3,12 @@ import test from "node:test";
 import { checkManualJournal, postManualJournal, manualJournalsIn } from "../dist/index.js";
 
 const GOOD = {
-  id: "3463",
+  id: "3101",
   date: "2026-03-31",
-  narration: "YE26 - Remove interest expense. This is not a loan from directors its personal",
+  narration: "YE26 - Remove interest expense. The loan is personal, not the company's",
   lines: [
-    { code: "Interest Expense - 437", amount: -335478 },
-    { code: "Owner Drawings - 980", amount: 335478 },
+    { code: "Interest Expense - 437", amount: -128740 },
+    { code: "Owner Drawings - 980", amount: 128740 },
   ],
 };
 
@@ -21,7 +21,7 @@ test("a balanced journal with a reason is accepted and posts", () => {
 });
 
 test("an unbalanced journal is refused, not posted with the difference hidden", () => {
-  const broken = { ...GOOD, lines: [{ code: "437", amount: -335478 }, { code: "980", amount: 300000 }] };
+  const broken = { ...GOOD, lines: [{ code: "437", amount: -128740 }, { code: "980", amount: 300000 }] };
   const problems = checkManualJournal(broken);
   assert.equal(problems.length, 1);
   assert.match(problems[0].message, /does not balance/);
@@ -56,7 +56,7 @@ const report = (id, narration, lines) => ({
 
 test("manual journals are picked out of a report, and the marker is not kept", () => {
   const found = manualJournalsIn([
-    report("3463", "YE26 - Remove interest expense - Manual", [["437", "Interest Expense", -335478], ["980", "Owner Drawings", 335478]]),
+    report("3101", "YE26 - Remove interest expense - Manual", [["437", "Interest Expense", -128740], ["980", "Owner Drawings", 128740]]),
     report("3400", "Sales invoice INV-0101", [["610", "Accounts Receivable", 10000], ["200", "Sales", -10000]]),
   ]);
   assert.equal(found.length, 1, "only the manual one");
@@ -83,7 +83,7 @@ test("the reversal itself is not imported either", () => {
 
 test("what comes out of a report still has to balance", () => {
   const found = manualJournalsIn([
-    report("3463", "YE26 - Remove interest expense - Manual", [["437", "Interest Expense", -335478], ["980", "Owner Drawings", 335478]]),
+    report("3101", "YE26 - Remove interest expense - Manual", [["437", "Interest Expense", -128740], ["980", "Owner Drawings", 128740]]),
   ]);
   assert.deepEqual(checkManualJournal(found[0]), []);
 });

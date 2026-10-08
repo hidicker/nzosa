@@ -373,7 +373,7 @@ function ourAccrualJournals(): Journal[] {
  * Manual journals: the entries a person writes and no bank line implies.
  *
  * Shown with their narration, because that is the part that matters a year
- * later. The figures will still be obvious then; why somebody moved 3,354.78
+ * later. The figures will still be obvious then; why somebody moved 1,287.40
  * out of interest and into drawings will not.
  */
 function renderManualJournals(body: HTMLElement, year: number): void {

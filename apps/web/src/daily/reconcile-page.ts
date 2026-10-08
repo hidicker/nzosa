@@ -1,3 +1,5 @@
+import { changesByLine } from "../events.js";
+import { booksLocale } from "../country.js";
 import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import { lastFeedStatus } from "../feed-route.js";
@@ -359,6 +361,17 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   });
 
   bank.append(date, who, what, flowLine, details);
+  // Coded once is not a change; coded and then coded again is, and says so
+  // here, where somebody reviewing the line will see it.
+  const changes = changesByLine(state.events).get(one.transaction.id);
+  if (changes !== undefined && changes.count >= 2) {
+    const changed = document.createElement("div");
+    changed.className = "code-changed";
+    const by = changes.last.who !== "" && changes.last.who !== "unattributed" ? ` by ${changes.last.who}` : "";
+    changed.textContent = `Recoded: last changed${by} ${new Date(changes.last.at).toLocaleDateString(booksLocale())}`;
+    changed.title = `${changes.count} changes to this line. Each one is in History and Undo.`;
+    bank.append(changed);
+  }
   if (state.expanded === one.transaction.id)
     bank.append(rawFields(one.transaction));
 

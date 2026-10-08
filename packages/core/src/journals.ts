@@ -140,7 +140,7 @@ export function parseXeroJournalReport(text: string): JournalImportResult {
  *
  * Neither is the better file. Loading the valued one over the narrated one
  * used to lose every manual journal silently, which on real books was three of
- * them and 3,354.78 of interest that came back as an expense. So the values
+ * them and 1,287.40 of interest that came back as an expense. So the values
  * come from the incoming report and the narration is carried across by journal
  * id, and the result is the only version of these journals that answers both
  * questions.

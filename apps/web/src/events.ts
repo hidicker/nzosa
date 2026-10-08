@@ -508,3 +508,59 @@ export const KIND_LABELS: Record<EventKind, string> = {
   assets: "Fixed assets",
   varianceNote: "GST explanation",
 };
+
+/** How often one bank line's coding has been changed, and the latest change. */
+export interface LineChanges {
+  count: number;
+  last: LedgerEvent;
+}
+
+let changesFor: { events: readonly LedgerEvent[]; byLine: Map<string, LineChanges> } | null = null;
+
+/**
+ * Every change History holds to each bank line, by transaction id.
+ *
+ * So Reconcile can say a line was recoded where the line is, rather than only
+ * on a page nobody reviewing the books would think to open. Worked out once
+ * per change to the log, not once per row drawn.
+ */
+export function changesByLine(events: readonly LedgerEvent[]): Map<string, LineChanges> {
+  if (changesFor !== null && changesFor.events === events) return changesFor.byLine;
+  const byLine = new Map<string, LineChanges>();
+  const touch = (id: string | undefined, event: LedgerEvent): void => {
+    if (id === undefined || id === "") return;
+    const held = byLine.get(id);
+    byLine.set(id, {
+      count: (held?.count ?? 0) + 1,
+      last: held !== undefined && held.last.at > event.at ? held.last : event,
+    });
+  };
+  for (const event of events) {
+    switch (event.kind) {
+      case "coding":
+      case "split":
+      case "invoiceMatch":
+        touch(event.targetId, event);
+        break;
+      case "transfer": {
+        const pair = (event.before ?? event.after) as Partial<TransferPair> | null;
+        touch(pair?.from ?? event.targetId, event);
+        touch(pair?.to, event);
+        break;
+      }
+      case "codingBatch":
+        for (const entry of (event.before ?? []) as CodingBatchEntry[]) touch(entry.id, event);
+        break;
+      case "transferBatch":
+        for (const pair of (event.after ?? []) as TransferPair[]) {
+          touch(pair.from, event);
+          touch(pair.to, event);
+        }
+        break;
+      default:
+        break;
+    }
+  }
+  changesFor = { events, byLine };
+  return byLine;
+}

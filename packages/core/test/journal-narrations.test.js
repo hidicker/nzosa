@@ -11,10 +11,10 @@ const journal = (id, narration, over = {}) => ({
 test("a narration is carried onto the report that has none", () => {
   // General Ledger Detail values every line and carries no Narration column.
   // Loading it over the Journal Report used to lose every manual journal
-  // silently -- on real books three of them, and 3,354.78 of interest that
+  // silently -- on real books three of them, and 1,287.40 of interest that
   // came back as an expense.
-  const held = [journal("3463", "YE26 - Remove interest expense - Manual")];
-  const incoming = [journal("3463", "")];
+  const held = [journal("3101", "YE26 - Remove interest expense - Manual")];
+  const incoming = [journal("3101", "")];
   const { journals, carried } = mergeJournalNarrations(incoming, held);
   assert.equal(carried, 1);
   assert.equal(journals[0].narration, "YE26 - Remove interest expense - Manual");
@@ -22,19 +22,19 @@ test("a narration is carried onto the report that has none", () => {
 
 test("the incoming values are the ones kept", () => {
   // The whole reason to load the other report is that it prices each line.
-  const held = [journal("3463", "YE26 - Manual")];
-  const incoming = [journal("3463", "", {
-    lines: [{ accountCode: "200", accountName: "Sales", description: "", amount: 3354_78, line: 9 }],
+  const held = [journal("3101", "YE26 - Manual")];
+  const incoming = [journal("3101", "", {
+    lines: [{ accountCode: "200", accountName: "Sales", description: "", amount: 1287_40, line: 9 }],
   })];
   const { journals } = mergeJournalNarrations(incoming, held);
-  assert.equal(journals[0].lines[0].amount, 335478, "the value comes from the incoming report");
+  assert.equal(journals[0].lines[0].amount, 128740, "the value comes from the incoming report");
   assert.equal(journals[0].narration, "YE26 - Manual", "the narration from the one held");
 });
 
 test("a narration the incoming report states is not overwritten", () => {
   // A report that says something is describing the journal it is describing.
-  const held = [journal("3463", "the older account of it")];
-  const incoming = [journal("3463", "what this report says")];
+  const held = [journal("3101", "the older account of it")];
+  const incoming = [journal("3101", "what this report says")];
   const { journals, carried } = mergeJournalNarrations(incoming, held);
   assert.equal(journals[0].narration, "what this report says");
   assert.equal(carried, 0);
@@ -48,10 +48,10 @@ test("a journal nothing was held for is taken as it stands", () => {
 });
 
 test("who posted it, and when, are carried on the same rule", () => {
-  const held = [journal("3463", "YE26", { postedBy: "Ana", postedDate: "2026-04-02" })];
-  const incoming = [journal("3463", "")];
+  const held = [journal("3101", "YE26", { postedBy: "Rata", postedDate: "2026-04-02" })];
+  const incoming = [journal("3101", "")];
   const { journals } = mergeJournalNarrations(incoming, held);
-  assert.equal(journals[0].postedBy, "Ana");
+  assert.equal(journals[0].postedBy, "Rata");
   assert.equal(journals[0].postedDate, "2026-04-02");
 });
 
@@ -64,8 +64,8 @@ test("nothing is carried when there is nothing to carry", () => {
 test("a narrated journal the incoming report does not mention is reported as lost", () => {
   // Replacing is usually right -- a fresh export of the same period -- but one
   // year loaded over a file holding two drops the other without saying so.
-  const held = [journal("3463", "YE26 - Manual"), journal("2000", "YE25 - Manual"), journal("1", "")];
-  const incoming = [journal("3463", "")];
+  const held = [journal("3101", "YE26 - Manual"), journal("2000", "YE25 - Manual"), journal("1", "")];
+  const incoming = [journal("3101", "")];
   const lost = narratedJournalsLost(incoming, held);
   assert.deepEqual(lost.map((j) => j.id), ["2000"], "only the narrated one that is going");
 });

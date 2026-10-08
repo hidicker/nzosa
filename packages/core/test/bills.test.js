@@ -50,7 +50,7 @@ test("a payment outside the bank lines settles the bill", () => {
 });
 
 test("paid by a shareholder: payable cleared against their account, tax where it fell due", () => {
-  const paid = bill({ paidOutside: [{ date: "2025-05-05", amount: 11500, accountCode: "881", note: "Paid by Ana" }] });
+  const paid = bill({ paidOutside: [{ date: "2025-05-05", amount: 11500, accountCode: "881", note: "Paid by Rata" }] });
   const [journal] = outsidePaymentJournals(paid, { control: { code: "800", name: "Accounts Payable" } });
   assert.equal(journal.lines.reduce((s, l) => s + l.amount, 0), 0);
   const payable = journal.lines.find((l) => l.accountCode === "800");

@@ -295,7 +295,7 @@ function sayNarrationsKept(n: number): void {
  *
  * The journal report is the only place these exist. Loading it and stopping
  * there left them sitting in a file the books had already read: on one real
- * ledger three of them -- a 3,354.78 interest reversal, a 3,324.10 GST
+ * ledger three of them -- a 1,287.40 interest reversal, a 2,416.90 GST
  * correction and a rounding adjustment -- sat in the report for months and in
  * nobody's books, because taking them was a separate button on a page there
  * was no reason to open.

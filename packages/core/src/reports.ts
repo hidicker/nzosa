@@ -252,7 +252,7 @@ export function groupProfitAndLoss(
   const alphabetical = (a: ReportLine, b: ReportLine): number =>
     a.code.localeCompare(b.code, "en-NZ", { sensitivity: "base" });
   // An account that nets to nothing is left off, as the other system leaves it
-  // off. On these books that is interest of 3,354.78 posted and then reversed
+  // off. On these books that is interest of 1,287.40 posted and then reversed
   // at year end: a line reading "-0.00" is not a figure anybody needs, and it
   // reads as though something were wrong. The totals are untouched, because a
   // line of nothing adds nothing.

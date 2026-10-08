@@ -710,6 +710,7 @@
 .code-date { font-size: 0.75rem; color: var(--muted, #667); }
 .code-who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
 .code-what { font-size: 0.8rem; color: var(--muted, #667); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+.code-changed { font-size: 0.75rem; color: var(--muted, #667); font-style: italic; }
 .code-amount { text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; padding-top: 0.9rem; }
 .code-amount.out { color: #c62828; }
 .code-amount.in { color: #2e7d32; }

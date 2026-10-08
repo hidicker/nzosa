@@ -1,4 +1,5 @@
 import { clearInbox, inboxIsFresh } from "../nightly.js";
+import { morningChoice } from "../nightly-ui.js";
 import type { Morning } from "../nightly.js";
 import { PreviousSystem, previousSystem } from "../modules.js";
 import { redraw, showPage } from "../app.js";
@@ -852,7 +853,7 @@ export async function renderFeed(): Promise<void> {
     void feedAutoFetch(box.checked);
   });
   auto.append(box, " Fetch new transactions when NZOSA opens");
-  body.append(auto);
+  body.append(auto, morningChoice());
 
   if (status.pending && status.pending.length > 0) {
     body.append(pendingTransactionsSection(status.pending, status.accounts ?? {}, status.balances ?? []));

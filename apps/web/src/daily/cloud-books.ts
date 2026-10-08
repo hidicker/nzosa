@@ -381,6 +381,17 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   make.addEventListener("click", () => {
     const wanted = name.value.trim();
     if (wanted === "") return;
+    // Two sets of one name cannot be told apart in this list. Suggest the
+    // next free one and let them start it, or type their own.
+    const taken = (n: string): boolean => books.some((book) => book.name.trim().toLowerCase() === n.toLowerCase());
+    if (taken(wanted)) {
+      let n = 2;
+      while (taken(`${wanted} (${n})`)) n += 1;
+      name.value = `${wanted} (${n})`;
+      say(said, `There is already a set called "${wanted}". Start "${name.value}" instead, or type another name.`);
+      name.focus();
+      return;
+    }
     make.disabled = true;
     say(said, "Starting…");
     void createBook(wanted).then((made) => {
@@ -436,6 +447,38 @@ function saveToServer(body: HTMLElement): void {
   go.textContent = "Save to the server";
   const said = document.createElement("p");
   said.className = "cloud-said";
+  // Where a choice is offered, when the name is taken.
+  const choice = document.createElement("div");
+  choice.className = "cloud-add";
+  choice.hidden = true;
+
+  const fill = async (made: { id: string; name: string } | null): Promise<void> => {
+    if (made === null) {
+      go.disabled = false;
+      say(said, "Could not start a set on the server.", true);
+      return;
+    }
+    say(said, "Saving to the server…");
+    const backup = await buildBackup();
+    const result = await copyToCloudBook(made.id, backup.ledger, {
+      rules: backup.rules,
+      rulesarchive: backup.rulesArchive,
+      events: backup.events,
+    });
+    if (!result.ok) {
+      go.disabled = false;
+      say(
+        said,
+        `${result.why} The set "${made.name}" was started on the server and may be partly ` +
+          "filled; nothing in this browser was changed.",
+        true,
+      );
+      return;
+    }
+    openCloudBook({ id: made.id, name: made.name });
+    location.reload();
+  };
+
   go.addEventListener("click", () => {
     const wanted = name.value.trim();
     if (wanted === "") {
@@ -443,51 +486,55 @@ function saveToServer(body: HTMLElement): void {
       return;
     }
     go.disabled = true;
-    say(said, "Saving to the server…");
+    choice.hidden = true;
+    say(said, "Checking the name…");
     void (async () => {
-      // A set already called this -- often one an earlier attempt left
-      // part-filled -- is filled rather than joined by a second of the same
-      // name, once somebody has said its contents may be replaced.
-      const same = (await listBooks()).find((book) => book.name.trim().toLowerCase() === wanted.toLowerCase());
-      if (
-        same !== undefined &&
-        !confirm(
-          `A set called "${same.name}" is already on the server.\n\n` +
-            "Replace what is in it with the books in this browser?",
-        )
-      ) {
-        go.disabled = false;
-        say(said, "Nothing was saved. Choose another name to start a new set.");
+      const books = await listBooks();
+      const taken = (n: string): boolean => books.some((book) => book.name.trim().toLowerCase() === n.toLowerCase());
+      const same = books.find((book) => book.name.trim().toLowerCase() === wanted.toLowerCase());
+      if (same === undefined) {
+        await fill(await createBook(wanted));
         return;
       }
-      const made = same ?? (await createBook(wanted));
-      if (made === null) {
-        go.disabled = false;
-        say(said, "Could not start a set on the server.", true);
-        return;
-      }
-      const backup = await buildBackup();
-      const result = await copyToCloudBook(made.id, backup.ledger, {
-        rules: backup.rules,
-        rulesarchive: backup.rulesArchive,
-        events: backup.events,
+      // The name is taken -- often by a set an earlier attempt left part
+      // filled, sometimes by books that matter. Both answers are offered, the
+      // safe one first: a new set beside it, or that set's contents replaced.
+      let n = 2;
+      while (taken(`${wanted} (${n})`)) n += 1;
+      const fresh = `${wanted} (${n})`;
+      say(said, `A set called "${same.name}" is already on the server.`);
+      const asNew = document.createElement("button");
+      asNew.type = "button";
+      asNew.className = "primary";
+      asNew.textContent = `Save as a new set, "${fresh}"`;
+      asNew.addEventListener("click", () => {
+        choice.hidden = true;
+        void createBook(fresh).then(fill);
       });
-      if (!result.ok) {
+      const replace = document.createElement("button");
+      replace.type = "button";
+      replace.className = "danger";
+      replace.textContent = `Replace what is in "${same.name}"`;
+      replace.addEventListener("click", () => {
+        if (!confirm(`Replace everything in "${same.name}" on the server with the books in this browser?`)) return;
+        choice.hidden = true;
+        void fill(same);
+      });
+      const cancel = document.createElement("button");
+      cancel.type = "button";
+      cancel.textContent = "Cancel";
+      cancel.addEventListener("click", () => {
+        choice.hidden = true;
         go.disabled = false;
-        say(
-          said,
-          `${result.why} The set "${made.name}" was started on the server and may be partly ` +
-            "filled; nothing in this browser was changed.",
-          true,
-        );
-        return;
-      }
-      openCloudBook({ id: made.id, name: made.name });
-      location.reload();
+        say(said, "Nothing was saved.");
+      });
+      choice.textContent = "";
+      choice.append(asNew, replace, cancel);
+      choice.hidden = false;
     })();
   });
   row.append(name, go);
-  body.append(row, said);
+  body.append(row, said, choice);
 }
 
 /**

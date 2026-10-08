@@ -495,6 +495,17 @@ export async function renameBook(id: string, name: string): Promise<"renamed" | 
   return rows.length > 0 ? "renamed" : "refused";
 }
 
+/** One part of a set of books, or null where it has none (or it could not be read). */
+export async function loadPart(bookId: string, part: string): Promise<CloudPart | null> {
+  const response = await rest(
+    `book_parts?book_id=eq.${encodeURIComponent(bookId)}&part=eq.${encodeURIComponent(part)}&select=version,data`,
+  );
+  if (response === null || !response.ok) return null;
+  const rows = (await response.json().catch(() => [])) as { version: number; data: unknown }[];
+  const row = rows[0];
+  return row === undefined ? null : { version: row.version, data: swapChars(row.data, STAND_IN, NUL) };
+}
+
 /** Every part of one set of books, with the version each is at. */
 export async function loadParts(bookId: string): Promise<Record<string, CloudPart> | null> {
   const response = await rest(

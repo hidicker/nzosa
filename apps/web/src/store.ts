@@ -26,7 +26,7 @@ import type {
 } from "@nzosa/core";
 import type { LedgerEvent } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { currentSession, loadParts as loadCloudParts, rpc, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, loadPart as loadCloudPart, loadParts as loadCloudParts, rpc, savePart as saveCloudPart, signedIn } from "./cloud.js";
 
 /**
  * Browser-side ledger storage.
@@ -1070,9 +1070,8 @@ export async function readNightlyPart(): Promise<unknown | null> {
   if (backend === "cloud") {
     const book = cloudBook;
     if (book === null) return null;
-    const parts = await loadCloudParts(book.id);
-    const held = parts?.["nightly"];
-    if (held === undefined) return null;
+    const held = await loadCloudPart(book.id, "nightly");
+    if (held === null) return null;
     nightlyVersion = held.version;
     return held.data;
   }
@@ -1105,7 +1104,7 @@ export async function writeNightlyPart(data: unknown): Promise<boolean> {
         return true;
       }
       if (outcome.kind !== "conflict") return false;
-      nightlyVersion = (await loadCloudParts(book.id))?.["nightly"]?.version ?? 0;
+      nightlyVersion = (await loadCloudPart(book.id, "nightly"))?.version ?? 0;
     }
   }
   return false;

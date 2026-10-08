@@ -66,6 +66,12 @@ export interface AskedAbout {
   details: string;
   /** Which of these books' accounts it came from, by label rather than number. */
   paidFrom: string;
+  /**
+   * What the business is, where it is one a list of well-known New Zealand
+   * businesses knows: "Mobil: fuel station". Sent only for the lines
+   * asked about, never the list.
+   */
+  known?: string;
 }
 
 /** What a model proposed for one transaction. */
@@ -286,9 +292,18 @@ export function wholePrompt(
   coded: readonly { payee: string; code: string }[] = [],
 ): string {
   const worked = examples(coded);
+  const knows = asked.some((one) => one.known !== undefined);
   return [
     instructions(books),
     ...(worked === "" ? [] : ["", worked]),
+    ...(knows
+      ? [
+          "",
+          'Where a transaction has "known", it says what that business is, from a list of well-known ' +
+            "New Zealand businesses. Use it to tell what was bought; which account it belongs to still " +
+            "depends on these books and who paid.",
+        ]
+      : []),
     "",
     "Transactions to code:",
     JSON.stringify(asked, null, 1),

@@ -6,7 +6,10 @@ import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
 import {
   accountEntityKey,
+  accountForBusiness,
   askAbout,
+  businessOf,
+  describeBusiness,
   briefing,
   directionCaution,
   emptyEntityModel,
@@ -65,6 +68,70 @@ export function aiSuggestionCount(): number {
 
 export function forgetAiSuggestions(): void {
   found.clear();
+  directoryFor = null;
+}
+
+/** Where a suggestion came from when it was the list of known businesses. */
+export const DIRECTORY_VIA = "NZ business list";
+
+/** Account types money spent can be coded to. */
+const SPENDING = /expense|overhead|direct cost|cost of sales|depreciation/i;
+
+let directoryFor: { ledger: unknown; chart: unknown } | null = null;
+
+/**
+ * Suggest accounts from the list of well-known New Zealand businesses, for
+ * the lines nothing else has answered -- before any model is asked, and free.
+ *
+ * Only money spent, and only where what the business sells settles the
+ * account and the chart has exactly one account that fits: fuel to the one
+ * motor vehicle account, a phone plan to the one telephone account. Never on
+ * a personal entity's account, where the answer is drawings, not a cost.
+ * Where the bank account serves several entities it is left alone, because
+ * which entity's account is the question a list cannot answer.
+ *
+ * Kept with the model's suggestions, as a proposal to accept or change, and
+ * so a line answered here is not paid for again by asking a model.
+ */
+export function suggestFromDirectory(): number {
+  if (directoryFor !== null && directoryFor.ledger === state.ledger && directoryFor.chart === state.chart) return 0;
+  directoryFor = { ledger: state.ledger, chart: state.chart };
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const byId = new Map(model.entities.map((entity) => [entity.id, entity]));
+  const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const spending = state.chart.filter((account) => SPENDING.test(account.type ?? "") && account.code.trim() !== "");
+  let got = 0;
+  for (const one of waitingForAnswers()) {
+    if (one.transaction.amount >= 0) continue;
+    const business = businessOf(one.transaction);
+    if (business === null) continue;
+    const serves = model.banks[one.transaction.account] ?? [];
+    if (serves.length > 1) continue;
+    const owner = serves.length === 1 ? byId.get(serves[0]!) : undefined;
+    if (owner?.kind === "personal") continue;
+    const own =
+      owner === undefined
+        ? []
+        : spending.filter((account) => model.accounts[accountEntityKey(account)] === owner.id);
+    const pool = own.length > 0 ? own : model.entities.length <= 1 ? spending : [];
+    const code = accountForBusiness(
+      business,
+      pool.map((account) => ({ label: account.code.trim(), name: account.name })),
+      paidInForeignCurrency(one.transaction),
+    );
+    if (code === null) continue;
+    const label = labelForCode(code, labels);
+    if (label === null) continue;
+    found.set(one.transaction.id, {
+      id: one.transaction.id,
+      code: label,
+      confidence: 1,
+      because: describeBusiness(business),
+      via: DIRECTORY_VIA,
+    });
+    got += 1;
+  }
+  return got;
 }
 
 /** Every line, coded the way the Reconcile page codes them: rules first. */
@@ -139,7 +206,13 @@ export function whatWouldBeAsked(lines: readonly Suggestion[], howMany = AI_BATC
   );
   const asked = lines
     .slice(0, Math.max(1, howMany))
-    .map((one) => askAbout(one.transaction, labels.get(one.transaction.id) ?? ""));
+    .map((one) => {
+      const asked = askAbout(one.transaction, labels.get(one.transaction.id) ?? "");
+      // What the business is, where the list of well-known ones knows it: one
+      // note for this line, never the list.
+      const business = businessOf(one.transaction);
+      return business === null ? asked : { ...asked, known: describeBusiness(business) };
+    });
 
   const books = {
     ...briefing(model, state.chart, (entity) => entity.about ?? ""),
@@ -255,6 +328,9 @@ export function promptToCarry(lines: readonly Suggestion[], howMany: number): {
   asked: AskedAbout[];
   codes: string[];
 } {
+  // The free answers first, so a model is never paid to name the account a
+  // power company's bill goes to.
+  if (suggestFromDirectory() > 0) lines = lines.filter((one) => !found.has(one.transaction.id));
   const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   return {
     text:

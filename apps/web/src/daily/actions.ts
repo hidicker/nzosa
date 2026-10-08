@@ -10,7 +10,7 @@ import {
   transferSuggestions,
   gstFrequency,
 } from "../books.js";
-import { aiSuggestionFor } from "../ai.js";
+import { aiSuggestionFor, suggestFromDirectory } from "../ai.js";
 import { feedTieNow } from "./opening-balances.js";
 import { justBeforeWaiting } from "./bank-import.js";
 import {
@@ -238,6 +238,7 @@ export function actionItems(): ActionItem[] {
   }
 
   // Everything waiting on Reconcile, as one line: the split is in the detail.
+  suggestFromDirectory();
   const open = reconcileRows().all.filter((one) => !settledAlready(one));
   const byAi = open.filter((one) => one.code === null && aiSuggestionFor(one.transaction.id) !== undefined).length;
   const transfers = transferSuggestions();

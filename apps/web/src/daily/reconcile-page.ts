@@ -40,7 +40,7 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { splitEditor } from "../split-ui.js";
 import { $, state } from "../state.js";
 import { startNewAccount } from "./entities.js";
-import { aiSuggestionFor, rateForSuggestion } from "../ai.js";
+import { DIRECTORY_VIA, aiSuggestionFor, rateForSuggestion, suggestFromDirectory } from "../ai.js";
 import { save, savePart } from "../store.js";
 import { dollars, note } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
@@ -124,6 +124,9 @@ const GENERIC_PAYEES = new Set([
  */
 
 export function renderReconcile(): void {
+  // Free suggestions from the list of known businesses, before anything is
+  // drawn; worked out again only when the books or chart change.
+  suggestFromDirectory();
   fillAccounts("reconcile-accounts", state.reconcileAccounts, renderReconcile);
   const body = $("reconcile-body");
   body.textContent = "";
@@ -547,8 +550,10 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         ? // Named as a model's, and never as a rule's. Somebody deciding whether
           // to press the tick is owed the difference between "your own rule says
           // so" and "something guessed, this confidently, because".
-          `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
-          `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}` +
+          (fromModel.via === DIRECTORY_VIA
+            ? `Known NZ business · ${fromModel.because}`
+            : `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
+              `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`) +
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`) +
           (fromHistory === null ? "" : ` · GST ${fromHistory.why}`)
         : `${rateLabel(one.classification)} · ${one.reason}`;

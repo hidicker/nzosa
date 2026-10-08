@@ -13,6 +13,7 @@ import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
+import { resetLockBaseline } from "./lock.js";
 import { chosenStartDate } from "./migrate/onboarding-state.js";
 import {
   agentStatementJournal,
@@ -765,6 +766,8 @@ export function markDemoSeeded(): void {
  */
 export async function wipe(): Promise<void> {
   state.ledger = emptyLedger();
+  // Cleared on purpose: the books that held the locks are gone with them.
+  resetLockBaseline();
   state.chart = [];
   state.rules = undefined;
   state.rulesName = "";

@@ -101,6 +101,8 @@ export type EventKind =
   | "openingDocuments"
   /** Asking the AI when the books open, on or off. */
   | "aiAutoSuggest"
+  /** The GST and year lock dates. */
+  | "lockDates"
   /** Property manager statements, whole. */
   | "agentStatements"
   /** Vehicles' business use and prepayments, whole. */
@@ -395,6 +397,13 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, incomeReturns: (event.before ?? []) as NonNullable<StoredLedger["incomeReturns"]> };
     case "irdRecords":
       return { ...ledger, irdRecords: (event.before ?? []) as NonNullable<StoredLedger["irdRecords"]> };
+    case "lockDates": {
+      if (event.before === null || event.before === undefined) {
+        const { lockDates: _gone, ...rest } = ledger;
+        return rest;
+      }
+      return { ...ledger, lockDates: event.before as NonNullable<StoredLedger["lockDates"]> };
+    }
     case "aiAutoSuggest": {
       if (event.before === true) return { ...ledger, aiAutoSuggest: true };
       const { aiAutoSuggest: _gone, ...rest } = ledger;
@@ -488,6 +497,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   irdRecords: "IRD records",
   xeroBankNumbers: "Xero bank account numbers",
   aiAutoSuggest: "AI suggestions when the books open",
+  lockDates: "Lock dates",
   openingDocuments: "Invoices and bills open at the start",
   agentStatements: "Property manager statement",
   yearEnd: "Year-end adjustments",

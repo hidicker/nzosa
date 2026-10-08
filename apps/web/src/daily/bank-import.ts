@@ -6,6 +6,7 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { placeBankImport } from "../menu.js";
+import { renderLockedArrivals } from "./lock-dates.js";
 import { amountCell, dollars, download, escapeHtml, nameCell, note } from "../ui.js";
 import {
   feedAccounts,
@@ -33,6 +34,7 @@ import {
   formatChartOfAccounts,
   formatOwners,
   fromAkahu,
+  lockedThrough,
   feedRequestFrom,
   onOrAfter,
   hash,
@@ -239,9 +241,11 @@ export async function handleFiles(files: File[]): Promise<void> {
   // keeps its provenance. Anything already judged a duplicate and thrown
   // away is not offered again.
   const discarded = new Set(state.ledger.removedDuplicates ?? []);
-  const merged = dedupe(
-    [...state.ledger.transactions, ...incoming.filter((t) => !discarded.has(t.id))],
-    { legitimateDuplicates: state.ledger.legitimateDuplicates },
+  const merged = holdLocked(
+    dedupe(
+      [...state.ledger.transactions, ...incoming.filter((t) => !discarded.has(t.id))],
+      { legitimateDuplicates: state.ledger.legitimateDuplicates },
+    ),
   );
 
   state.ledger = { ...state.ledger, transactions: merged.kept };
@@ -327,9 +331,11 @@ export async function addTransactions(
   const wanted = incoming.filter((transaction) => !removed.has(transaction.id));
   const skippedAsRemoved = incoming.length - wanted.length;
 
-  const merged = dedupe([...state.ledger.transactions, ...wanted], {
-    legitimateDuplicates: state.ledger.legitimateDuplicates,
-  });
+  const merged = holdLocked(
+    dedupe([...state.ledger.transactions, ...wanted], {
+      legitimateDuplicates: state.ledger.legitimateDuplicates,
+    }),
+  );
 
   state.ledger = { ...state.ledger, transactions: merged.kept };
   state.entries = merged.entries;
@@ -1002,6 +1008,7 @@ export async function checkBankBalances(file: File): Promise<void> {
 
 export function render(): void {
   renderStatus();
+  renderLockedArrivals();
   renderReports();
   renderBalanceEntry();
   redraw("importRows");
@@ -1733,4 +1740,32 @@ async function decideJustBefore(line: Transaction, include: boolean): Promise<vo
   }
   redraw("actionsBadge");
   void renderFeed();
+}
+
+/**
+ * Keep new lines dated in a locked period out of the books, held for a
+ * decision.
+ *
+ * A feed line from last month arriving after that month's GST return was
+ * filed would change the return. It is not dropped -- it is real money -- but
+ * held on Bank import, to be brought in dated the first open day, or kept out,
+ * or dealt with by moving the lock.
+ */
+function holdLocked<T extends { kept: Transaction[]; entries: { transaction: Transaction }[] }>(merged: T): T {
+  const through = lockedThrough(state.ledger.lockDates);
+  if (through === undefined) return merged;
+  const before = new Set(state.ledger.transactions.map((t) => t.id));
+  const held = merged.kept.filter((t) => !before.has(t.id) && t.date <= through);
+  if (held.length === 0) return merged;
+  const out = new Set(held.map((t) => t.id));
+  const already = new Set((state.ledger.lockedArrivals ?? []).map((t) => t.id));
+  state.ledger = {
+    ...state.ledger,
+    lockedArrivals: [...(state.ledger.lockedArrivals ?? []), ...held.filter((t) => !already.has(t.id))],
+  };
+  return {
+    ...merged,
+    kept: merged.kept.filter((t) => !out.has(t.id)),
+    entries: merged.entries.filter((e) => !out.has(e.transaction.id)),
+  };
 }

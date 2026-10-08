@@ -83,6 +83,7 @@ import {
 } from "./migrate/setup-wizard.js";
 import { renderMigration, wireMigration } from "./migrate/migration-page.js";
 import { autoSuggestOnOpen, renderAi } from "./daily/ai-page.js";
+import { installLockGuard, resetLockBaseline } from "./lock.js";
 import { renderAiCheck } from "./daily/ai-check-page.js";
 import {
   applyChartColumns,
@@ -165,6 +166,8 @@ async function init(): Promise<void> {
     variance: renderVariance,
   });
   setLoadingStatus("Opening books…");
+  // Before anything can be saved: locked periods stay as they were locked.
+  installLockGuard(() => showPage(state.page));
   try {
     const loaded = await load();
     state.ledger = loaded.ledger;
@@ -172,6 +175,9 @@ async function init(): Promise<void> {
 
     // Classify what is already stored, so the review queue survives a reload.
     reclassify();
+    // The books as opened are what the locks are measured against.
+    state.chart = state.ledger.chart ?? [];
+    resetLockBaseline();
     // Once, here -- not in reclassify, which runs on every coding change and
     // would drag somebody back to the queue each time they coded a line.
     showWhatNeedsDeciding();

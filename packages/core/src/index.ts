@@ -389,3 +389,4 @@ export * from "./xero-bank-accounts.js";
 export * from "./wise-api.js";
 export * from "./settled-gst.js";
 export * from "./opening-documents.js";
+export * from "./lock-dates.js";

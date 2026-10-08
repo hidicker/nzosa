@@ -1,4 +1,5 @@
 import { wirePresentation } from "./presentation.js";
+import { INBOX_FRESH_HOURS, readMorning, restoreMorning } from "./nightly.js";
 import { registerPages, showPage } from "./app.js";
 import {
   dismissLoading,
@@ -246,7 +247,19 @@ async function init(): Promise<void> {
     // Last, and not waited for. A feed that is slow, or a bank that is down,
     // must not hold up an app whose books are already on the screen.
     // Then the AI, once the feed has brought in whatever it brings.
-    void autoFetchFromFeed().then(() => autoSuggestOnOpen());
+    // What the morning run left: suggestions onto their lines, and the bank's
+    // new lines into the books through the feed's own import, below.
+    const morning = await readMorning();
+    await restoreMorning(morning);
+    const ranToday =
+      morning.ran !== undefined && Date.now() - Date.parse(morning.ran.at) < INBOX_FRESH_HOURS * 3600 * 1000;
+    if (ranToday && morning.ran !== undefined) {
+      state.startupMessage =
+        `Got ready this morning: ${morning.ran.added} new line${morning.ran.added === 1 ? "" : "s"} from the bank, ` +
+        `${morning.ran.suggested} suggestion${morning.ran.suggested === 1 ? "" : "s"} waiting on Reconcile.`;
+    }
+    // Not asked again on opening what the morning already asked.
+    void autoFetchFromFeed(morning).then(() => (ranToday ? undefined : autoSuggestOnOpen()));
 
     // Someone opening this for the first time has nothing to reconcile, and the
     // Reconcile page cannot say what to do about that. The guided start can: it

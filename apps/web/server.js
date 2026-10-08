@@ -20,6 +20,8 @@
  */
 import { context } from "esbuild";
 import { createServer } from "node:http";
+import { execFileSync } from "node:child_process";
+import { tmpdir } from "node:os";
 import {
   createReadStream,
   existsSync,
@@ -84,12 +86,100 @@ function lockFile(folder) {
   return join(folder, ".open-by");
 }
 
-function takeLock(folder) {
+function takeLock(folder, port) {
   mkdirSync(folder, { recursive: true });
+  // The port too, so the morning run can ask this server rather than start a
+  // second one on the same books.
   writeFileSync(
     lockFile(folder),
-    JSON.stringify({ pid: process.pid, since: new Date().toISOString() }, null, 1),
+    JSON.stringify({ pid: process.pid, since: new Date().toISOString(), ...(port ? { port } : {}) }, null, 1),
   );
+}
+
+/**
+ * The morning run's results, beside the books (see src/nightly.ts): the
+ * feed's new lines waiting to come in, and suggested codes. Not a part of the
+ * ledger, and not in its backups: a note on the side, remade every morning.
+ */
+function nightlyFile(folder) {
+  return join(folder, "nightly.json");
+}
+
+function readNightly(folder) {
+  try {
+    return JSON.parse(readFileSync(nightlyFile(folder), "utf8"));
+  } catch {
+    return {};
+  }
+}
+
+function writeNightly(folder, value) {
+  const file = nightlyFile(folder);
+  const temporary = `${file}.writing`;
+  writeFileSync(temporary, JSON.stringify(value), { mode: 0o600 });
+  renameSync(temporary, file);
+}
+
+/** The Windows scheduled task that runs the morning run. One per computer. */
+const MORNING_TASK = "NZOSA morning";
+
+function morningTaskExists() {
+  try {
+    execFileSync("schtasks", ["/Query", "/TN", MORNING_TASK], { stdio: "ignore", windowsHide: true });
+    return true;
+  } catch {
+    return false;
+  }
+}
+
+/**
+ * Set up the morning run at six, every day, on this computer, for whoever is
+ * signed in to Windows -- no password, no administrator.
+ *
+ * Written as task XML rather than schtasks flags for the one setting flags
+ * cannot reach: StartWhenAvailable, so a computer that was asleep at six
+ * runs it when it wakes rather than waiting for tomorrow.
+ */
+function scheduleMorning(ledgerRoot) {
+  const escape = (text) => text.replace(/&/g, "&amp;").replace(/</g, "&lt;").replace(/>/g, "&gt;").replace(/"/g, "&quot;");
+  const script = join(dirname(fileURLToPath(import.meta.url)), "nightly.js");
+  const xml = `<?xml version="1.0" encoding="UTF-16"?>
+<Task version="1.2" xmlns="http://schemas.microsoft.com/windows/2004/02/mit/task">
+  <RegistrationInfo><Description>Gets NZOSA's books ready: checks the bank feed and suggests codes. Turned on in NZOSA.</Description></RegistrationInfo>
+  <Triggers>
+    <CalendarTrigger>
+      <StartBoundary>2026-01-01T06:00:00</StartBoundary>
+      <ScheduleByDay><DaysInterval>1</DaysInterval></ScheduleByDay>
+    </CalendarTrigger>
+  </Triggers>
+  <Principals><Principal id="Author"><LogonType>InteractiveToken</LogonType><RunLevel>LeastPrivilege</RunLevel></Principal></Principals>
+  <Settings>
+    <StartWhenAvailable>true</StartWhenAvailable>
+    <DisallowStartIfOnBatteries>false</DisallowStartIfOnBatteries>
+    <StopIfGoingOnBatteries>false</StopIfGoingOnBatteries>
+    <RunOnlyIfNetworkAvailable>true</RunOnlyIfNetworkAvailable>
+    <ExecutionTimeLimit>PT1H</ExecutionTimeLimit>
+    <MultipleInstancesPolicy>IgnoreNew</MultipleInstancesPolicy>
+  </Settings>
+  <Actions Context="Author">
+    <Exec>
+      <Command>${escape(process.execPath)}</Command>
+      <Arguments>"${escape(script)}" --ledgers "${escape(ledgerRoot)}"</Arguments>
+    </Exec>
+  </Actions>
+</Task>`;
+  const file = join(tmpdir(), `nzosa-morning-${process.pid}.xml`);
+  // Task Scheduler reads its XML as UTF-16, as the declaration says.
+  writeFileSync(file, Buffer.concat([Buffer.from([0xff, 0xfe]), Buffer.from(xml, "utf16le")]));
+  try {
+    execFileSync("schtasks", ["/Create", "/F", "/TN", MORNING_TASK, "/XML", file], { stdio: "pipe", windowsHide: true });
+  } finally {
+    rmSync(file, { force: true });
+  }
+}
+
+function unscheduleMorning() {
+  execFileSync("schtasks", ["/Delete", "/F", "/TN", MORNING_TASK], { stdio: "pipe", windowsHide: true });
 }
 
 function releaseLock(folder) {
@@ -401,6 +491,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 
   tidy(folderOf(current));
   takeLock(folderOf(current));
+  let listening = 0;
 
   const server = createServer(async (request, response) => {
     const host = request.headers.host;
@@ -456,6 +547,53 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           ledgers: listLedgers(ledgerRoot),
           parts: PARTS,
         });
+        return;
+      }
+
+      if (path === "/api/nightly" && request.method === "GET") {
+        send(response, 200, readNightly(folderOf(current)));
+        return;
+      }
+
+      if (path === "/api/nightly" && request.method === "PUT") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        if (body === null || typeof body !== "object" || Array.isArray(body)) {
+          send(response, 400, { error: "expected an object" });
+          return;
+        }
+        writeNightly(folderOf(current), body);
+        send(response, 200, { ok: true });
+        return;
+      }
+
+      // Whether the morning run is set up on this computer, and setting it up.
+      if (path === "/api/nightly/schedule" && request.method === "GET") {
+        const supported = process.platform === "win32";
+        send(response, 200, { supported, scheduled: supported && morningTaskExists(), at: "06:00" });
+        return;
+      }
+
+      if (path === "/api/nightly/schedule" && request.method === "PUT") {
+        if (process.platform !== "win32") {
+          send(response, 400, { error: "the morning run can be set up from here on Windows only" });
+          return;
+        }
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const body = JSON.parse(await readBody(request));
+        try {
+          if (body.on === true) scheduleMorning(ledgerRoot);
+          else if (morningTaskExists()) unscheduleMorning();
+          send(response, 200, { scheduled: morningTaskExists() });
+        } catch (error) {
+          send(response, 500, { error: `Windows would not set it up: ${String(error.stderr ?? error.message).trim()}` });
+        }
         return;
       }
 
@@ -1311,7 +1449,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           writeMeta(folderOf(current), { name: label, created: new Date().toISOString() });
         }
         tidy(folderOf(current));
-        takeLock(folderOf(current));
+        takeLock(folderOf(current), listening);
         send(response, 200, { ledger: current, folder: folderOf(current) });
         return;
       }
@@ -1331,7 +1469,11 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 
   return new Promise((resolvePromise, reject) => {
     server.on("error", reject);
-    server.listen(port, "127.0.0.1", () => resolvePromise({ server, stop }));
+    server.listen(port, "127.0.0.1", () => {
+      listening = server.address().port;
+      takeLock(folderOf(current), listening);
+      resolvePromise({ server, stop, port: listening });
+    });
   });
 }
 

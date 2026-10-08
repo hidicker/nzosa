@@ -101,6 +101,8 @@ export type EventKind =
   | "openingDocuments"
   /** Asking the AI when the books open, on or off. */
   | "aiAutoSuggest"
+  /** Getting the books ready every morning, on or off. */
+  | "nightly"
   /** The GST and year lock dates. */
   | "lockDates"
   /** Property manager statements, whole. */
@@ -409,6 +411,11 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       const { aiAutoSuggest: _gone, ...rest } = ledger;
       return rest;
     }
+    case "nightly": {
+      if (event.before === true) return { ...ledger, nightly: true };
+      const { nightly: _gone, ...rest } = ledger;
+      return rest;
+    }
     case "xeroBankNumbers": {
       if (event.before === null || event.before === undefined) {
         const { xeroBankNumbers: _gone, ...rest } = ledger;
@@ -497,6 +504,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   irdRecords: "IRD records",
   xeroBankNumbers: "Xero bank account numbers",
   aiAutoSuggest: "AI suggestions when the books open",
+  nightly: "Ready every morning",
   lockDates: "Lock dates",
   openingDocuments: "Invoices and bills open at the start",
   agentStatements: "Property manager statement",

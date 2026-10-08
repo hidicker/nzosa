@@ -66,6 +66,38 @@ export function aiSuggestionCount(): number {
   return found.size;
 }
 
+/** Every suggestion held, to keep beside the books between openings. */
+export function allAiSuggestions(): AiSuggestion[] {
+  return [...found.values()];
+}
+
+/**
+ * Put back suggestions kept from earlier -- the morning run's, or the last
+ * session's -- for the lines still waiting, and only where the account is one
+ * these books still have. A line answered since, or an account since removed,
+ * is not brought back to life by a note written before it.
+ */
+export function restoreAiSuggestions(kept: readonly AiSuggestion[]): number {
+  const waiting = new Set(waitingForAnswers().map((one) => one.transaction.id));
+  const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  let back = 0;
+  for (const one of kept) {
+    if (!waiting.has(one.id) || found.has(one.id)) continue;
+    const label = labelForCode(splitAccountLabel(one.code).code || one.code, labels);
+    if (label === null) continue;
+    found.set(one.id, { ...one, code: label });
+    back += 1;
+  }
+  return back;
+}
+
+/** Told whenever a model's answers arrive, so they can be kept. */
+let keeper: ((all: AiSuggestion[]) => void) | null = null;
+
+export function keepAiSuggestionsWith(keep: (all: AiSuggestion[]) => void): void {
+  keeper = keep;
+}
+
 export function forgetAiSuggestions(): void {
   found.clear();
   directoryFor = null;
@@ -354,12 +386,14 @@ export function promptToCarry(lines: readonly Suggestion[], howMany: number): {
 export async function askAboutLines(
   lines: readonly Suggestion[],
   howMany = AI_BATCH,
+  /** Who to ask: the books' own route, unless the morning run says otherwise. */
+  ask: typeof aiSuggest = aiSuggest,
 ): Promise<{ got: number; said: string }> {
   const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
   const detail = perLineDetail(lines.slice(0, Math.max(1, howMany)), codes);
-  const answer = await aiSuggest(prompt, asked.length, {
+  const answer = await ask(prompt, asked.length, {
     lines: asked.map((one, index) => ({ ...one, ...detail[index] })),
     codes,
     about: state.ledger.booksAbout ?? "",
@@ -367,7 +401,9 @@ export async function askAboutLines(
   if (answer.error !== undefined) return { got: 0, said: answer.error };
   // Where the answer came from matters a year later: a suggestion made on the
   // shared key was made on a model somebody else chose and paid for.
-  return keepWhatIsUsable(answer.text ?? "", asked, codes, answer.demo === true ? "shared key" : undefined);
+  const kept = keepWhatIsUsable(answer.text ?? "", asked, codes, answer.demo === true ? "shared key" : undefined);
+  if (kept.got > 0) keeper?.(allAiSuggestions());
+  return kept;
 }
 
 const KIND_WORDS: Record<EntityKind, string> = {

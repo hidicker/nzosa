@@ -17,15 +17,21 @@ export function booksCountry(): Jurisdiction {
  * States). Called again whenever the country is changed.
  */
 export function applyCountry(): void {
-  const country = booksCountry();
-  const tax = country.salesTax;
-  setSalesTaxFraction(tax === null ? NO_SALES_TAX : tax.fraction);
+  const country = applyCountryRules();
   // The country's own reports, and its date order for bank files (12/03 is
   // 12 March in New Zealand and 3 December in the United States).
   addCountryReports(country.id);
   if (country.id !== "nz") dropNewZealandReports();
   const dayFirst = document.getElementById("day-first");
   if (dayFirst instanceof HTMLInputElement) dayFirst.checked = country.dayFirst;
+}
+
+/** What the country decides with no page to draw on: the rate of GST. */
+export function applyCountryRules(): Jurisdiction {
+  const country = booksCountry();
+  const tax = country.salesTax;
+  setSalesTaxFraction(tax === null ? NO_SALES_TAX : tax.fraction);
+  return country;
 }
 
 /** How numbers and dates are written: "en-NZ" for New Zealand. */

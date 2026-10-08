@@ -1,5 +1,8 @@
 node_modules/
 dist/
+dist-node/
+nightly.json
+.nightly.log
 online-demo/
 *.zip
 *.tsbuildinfo

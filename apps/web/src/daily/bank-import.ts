@@ -1,3 +1,5 @@
+import { clearInbox, inboxIsFresh } from "../nightly.js";
+import type { Morning } from "../nightly.js";
 import { PreviousSystem, previousSystem } from "../modules.js";
 import { redraw, showPage } from "../app.js";
 import { accountsForEditing, bankLabel, ensureDefaultEntity, reclassify, } from "../books.js";
@@ -115,7 +117,35 @@ function booksStartForFeed(): IsoDate | undefined {
  * to be visible, and it does nothing at all until accounts have been mapped --
  * an unmapped feed has nowhere to put anything.
  */
-export async function autoFetchFromFeed(): Promise<void> {
+/**
+ * The feed's items as these books' lines: only the accounts linked to one of
+ * them, named the way the bank names them.
+ */
+export function feedLines(
+  items: Parameters<typeof fromAkahu>[0],
+  links: Record<string, string>,
+  labels: Record<string, string> = {},
+): ReturnType<typeof fromAkahu> {
+  return fromAkahu(items, {
+    accountFor: (id) => {
+      const to = links[id];
+      return to === undefined || to === "" ? null : to;
+    },
+    labelFor: (id) => labels[id],
+  });
+}
+
+/** The feed's new lines that belong in these books: from the day they start. */
+export function feedLinesForBooks(
+  items: Parameters<typeof fromAkahu>[0],
+  links: Record<string, string>,
+  labels: Record<string, string> = {},
+): ReturnType<typeof fromAkahu> {
+  const fetched = feedLines(items, links, labels);
+  return { ...fetched, transactions: onOrAfter(fetched.transactions, booksStartForFeed()) };
+}
+
+export async function autoFetchFromFeed(morning?: Morning): Promise<void> {
   if (!feedPossible()) return;
 
   try {
@@ -128,8 +158,20 @@ export async function autoFetchFromFeed(): Promise<void> {
     const mapped = Object.values(mapping).filter((to) => to !== "");
     if (mapped.length === 0) return;
 
-    const start = feedStartDate(mapping);
-    const items = await feedTransactions(start === undefined ? "" : feedRequestFrom(start));
+    // What the morning run fetched, waiting in its inbox. Fresh, it stands in
+    // for asking the bank again -- which is what makes opening quick; older,
+    // the bank is asked as well. Either way once per item, by the bank's own
+    // id: the same item twice would read as a genuine repeat payment.
+    const waiting = (morning?.inbox?.items ?? []) as Parameters<typeof fromAkahu>[0];
+    const asked =
+      morning !== undefined && inboxIsFresh(morning)
+        ? []
+        : await feedTransactions((() => {
+            const start = feedStartDate(mapping);
+            return start === undefined ? "" : feedRequestFrom(start);
+          })());
+    const items = [...new Map([...waiting, ...asked].map((item) => [item._id, item])).values()];
+    const fromInbox = waiting.length > 0;
 
     // The links as they are now, not as they were when the fetch set out. A
     // bank can take a while to answer, and an account set to "do not import"
@@ -140,13 +182,7 @@ export async function autoFetchFromFeed(): Promise<void> {
     // more question to the bank, asked once rather than on every opening.
     const unnamed = Object.values(now).some((to) => to !== "" && bankLabel(to) === to);
     const labels = unnamed ? akahuLabels(await feedAccounts().catch(() => [])) : {};
-    const fetched = fromAkahu(items, {
-      accountFor: (id) => {
-        const to = now[id];
-        return to === undefined || to === "" ? null : to;
-      },
-      labelFor: (id) => labels[id],
-    });
+    const fetched = feedLines(items, now, labels);
     // Asked for from a week early; nothing from before the books start goes
     // into them -- but what is dated in the week before is held for a decision.
     await holdJustBefore(fetched.transactions);
@@ -154,15 +190,17 @@ export async function autoFetchFromFeed(): Promise<void> {
     const named = nameHeldAccounts(labels, now);
     if (read.transactions.length === 0) {
       if (named) state.persistent = await save(state.ledger);
+      if (fromInbox) await clearInbox();
       return;
     }
 
     const before = state.ledger.transactions.length;
     await addTransactions(read.transactions, {
       importer: "akahu",
-      file: "bank feed, on opening",
+      file: fromInbox ? "bank feed, fetched this morning" : "bank feed, on opening",
       problems: read.problems,
     });
+    if (fromInbox) await clearInbox();
     const added = state.ledger.transactions.length - before;
 
     // Nothing new is the ordinary case and says nothing. Something new is
@@ -310,6 +348,40 @@ export async function addTransactions(
    */
   options: { restoreRemoved?: boolean } = {},
 ): Promise<{ skippedAsRemoved: number }> {
+  const { skippedAsRemoved } = mergeIncoming(incoming, options);
+  showWhatNeedsDeciding();
+  state.reports.push({
+    name: report.file,
+    importer: report.importer,
+    account: "",
+    count: incoming.length,
+    problems: report.problems,
+  });
+
+  state.persistent = await save(state.ledger);
+  // Bank data is where a person with no other system starts, so this is the
+  // moment their books first have accounts in them. Waiting until the next
+  // reload to give them the one entity those accounts belong to made the
+  // first minutes of a new ledger look emptier than it was.
+  await ensureDefaultEntity();
+  // A chart loaded before the bank lines had rows naming these accounts that
+  // could not be linked until they existed.
+  await autoLinkBankRows();
+  render();
+  return { skippedAsRemoved };
+}
+
+/**
+ * The merge an import does, in memory only: ids from each line's content, the
+ * lines somebody removed kept out, duplicates found, and lines dated inside a
+ * lock held aside. Nothing is saved -- which is what lets the morning run see
+ * the books as they would be with the bank's new lines in, without putting
+ * them there.
+ */
+export function mergeIncoming(
+  incoming: Transaction[],
+  options: { restoreRemoved?: boolean } = {},
+): { skippedAsRemoved: number } {
   const counts = new Map<string, number>();
   for (const transaction of incoming) {
     const key = dedupeKey(transaction);
@@ -340,25 +412,6 @@ export async function addTransactions(
 
   state.ledger = { ...state.ledger, transactions: merged.kept };
   state.entries = merged.entries;
-  showWhatNeedsDeciding();
-  state.reports.push({
-    name: report.file,
-    importer: report.importer,
-    account: "",
-    count: incoming.length,
-    problems: report.problems,
-  });
-
-  state.persistent = await save(state.ledger);
-  // Bank data is where a person with no other system starts, so this is the
-  // moment their books first have accounts in them. Waiting until the next
-  // reload to give them the one entity those accounts belong to made the
-  // first minutes of a new ledger look emptier than it was.
-  await ensureDefaultEntity();
-  // A chart loaded before the bank lines had rows naming these accounts that
-  // could not be linked until they existed.
-  await autoLinkBankRows();
-  render();
   return { skippedAsRemoved };
 }
 

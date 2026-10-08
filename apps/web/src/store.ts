@@ -335,6 +335,13 @@ export interface StoredLedger {
    */
   aiAutoSuggest?: boolean;
   /**
+   * Get these books ready every morning: check the bank feed and suggest codes
+   * for waiting lines on the owner's own key, before anybody opens them. What
+   * the morning finds waits beside the books (see nightly.ts) until they are
+   * opened; nothing goes into them unattended. Off until turned on.
+   */
+  nightly?: boolean;
+  /**
    * The bank's own balance, day by day, as last loaded for each account. Kept
    * so the check can be run again against the books as they stand -- the
    * answer is worked out each time, never stored.
@@ -574,6 +581,15 @@ export function booksReadOnly(): boolean {
   return readOnly;
 }
 
+/**
+ * Write nothing, from here on. For the morning run, which reads the books to
+ * work out what is waiting and must never save them: it has no person behind
+ * it to attribute a change to, and the books may be open somewhere else.
+ */
+export function holdWrites(): void {
+  readOnly = true;
+}
+
 async function readOnlyMember(bookId: string): Promise<boolean> {
   const me = currentSession()?.userId ?? "";
   const rows = await rpc<{ user_id: string; role: string }[]>("book_member_list", { book: bookId });
@@ -715,6 +731,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.startedAtNothing ? { startedAtNothing: true } : {}),
     ...(ledger.aiEnabled ? { aiEnabled: true } : {}),
     ...(ledger.aiAutoSuggest ? { aiAutoSuggest: true } : {}),
+    ...(ledger.nightly ? { nightly: true } : {}),
     ...(ledger.dailyBalances ? { dailyBalances: ledger.dailyBalances } : {}),
     ...(ledger.snoozed ? { snoozed: ledger.snoozed } : {}),
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
@@ -800,7 +817,7 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
  * can say what it is replacing, and remembered as written so an unchanged part
  * is not sent back.
  */
-function ledgerFromParts(
+export function ledgerFromParts(
   parts: Record<string, { version: number; data: unknown }>,
 ): StoredLedger {
   const body = { parts };
@@ -1031,6 +1048,67 @@ async function putCloudPart(part: string, data: unknown): Promise<boolean> {
 function cloudPart<T>(part: string): T | null {
   const held = cloudParts[part];
   return held === undefined ? null : (held.data as T);
+}
+
+/**
+ * What the morning run left beside these books: the bank's new lines waiting
+ * to come in, and suggested codes. Never part of the books, and never held
+ * back by somebody being read only: it is a note on the side, not a change.
+ *
+ * In a folder, a file of its own (the server's /api/nightly); on the server,
+ * a part of its own, written with its version like any other.
+ */
+export async function readNightlyPart(): Promise<unknown | null> {
+  if (backend === "folder") {
+    try {
+      const response = await api("nightly");
+      return response.ok ? ((await response.json()) as unknown) : null;
+    } catch {
+      return null;
+    }
+  }
+  if (backend === "cloud") {
+    const book = cloudBook;
+    if (book === null) return null;
+    const parts = await loadCloudParts(book.id);
+    const held = parts?.["nightly"];
+    if (held === undefined) return null;
+    nightlyVersion = held.version;
+    return held.data;
+  }
+  return null;
+}
+
+let nightlyVersion = 0;
+
+export async function writeNightlyPart(data: unknown): Promise<boolean> {
+  if (backend === "folder") {
+    try {
+      const response = await api("nightly", {
+        method: "PUT",
+        headers: { "content-type": "application/json" },
+        body: JSON.stringify(data),
+      });
+      return response.ok;
+    } catch {
+      return false;
+    }
+  }
+  if (backend === "cloud" && !readOnly) {
+    const book = cloudBook;
+    if (book === null) return false;
+    // Twice at most: the morning run may have written it since it was read.
+    for (let attempt = 0; attempt < 2; attempt += 1) {
+      const outcome = await saveCloudPart(book.id, "nightly", data, nightlyVersion);
+      if (outcome.kind === "saved") {
+        nightlyVersion = outcome.version;
+        return true;
+      }
+      if (outcome.kind !== "conflict") return false;
+      nightlyVersion = (await loadCloudParts(book.id))?.["nightly"]?.version ?? 0;
+    }
+  }
+  return false;
 }
 
 /** The ledgers side by side in the same place, for the picker. */

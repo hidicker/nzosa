@@ -107,6 +107,7 @@ import {
   writesToFolder,
   loadEvents,
   loadUser,
+  booksReadOnly,
   onSaveTrouble,
   requestPersistence,
   savePart,
@@ -309,6 +310,18 @@ function wireUp(): void {
     const banner = document.getElementById("save-banner");
     if (banner !== null) banner.hidden = true;
   });
+  // Said once on opening, rather than discovered on the first change refused.
+  if (booksReadOnly()) {
+    document.body.classList.add("read-only");
+    const banner = document.getElementById("save-banner");
+    const said = document.getElementById("save-banner-text");
+    const reload = document.getElementById("save-banner-reload");
+    if (banner !== null && said !== null) {
+      said.textContent = "Read only: you can look through these books but not change them.";
+      if (reload !== null) reload.hidden = true;
+      banner.hidden = false;
+    }
+  }
   wireBankImport();
   wireFileIntake();
   wireReconcile();

@@ -26,7 +26,7 @@ import type {
 } from "@nzosa/core";
 import type { LedgerEvent } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { loadParts as loadCloudParts, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, loadParts as loadCloudParts, rpc, savePart as saveCloudPart, signedIn } from "./cloud.js";
 
 /**
  * Browser-side ledger storage.
@@ -559,6 +559,28 @@ function rememberedCloudBook(): { id: string; name: string } | null {
   }
 }
 
+/**
+ * Whether the person signed in may only read the books open.
+ *
+ * The server is what stops them: save_part refuses anybody but an owner,
+ * bookkeeper or accountant. This is so the page does not let them work
+ * on a change that can never be written -- it refuses at once instead, and
+ * says why. Not knowing the role (the list could not be read) counts as read
+ * only, the same direction the server errs in.
+ */
+let readOnly = false;
+
+export function booksReadOnly(): boolean {
+  return readOnly;
+}
+
+async function readOnlyMember(bookId: string): Promise<boolean> {
+  const me = currentSession()?.userId ?? "";
+  const rows = await rpc<{ user_id: string; role: string }[]>("book_member_list", { book: bookId });
+  const mine = rows?.find((row) => row.user_id === me);
+  return mine === undefined || mine.role === "readonly";
+}
+
 /** Open a set of hosted books, or none. The page reloads around it, as switching always does. */
 export function openCloudBook(book: { id: string; name: string } | null): void {
   try {
@@ -886,6 +908,7 @@ async function loadFromCloud(): Promise<StoredLedger | null> {
   // Only after a read that succeeded. A read that failed never gets here, so
   // this cannot turn "could not load" into "empty, go ahead and overwrite".
   for (const part of FOLDER_PARTS) loadedParts.add(part);
+  readOnly = await readOnlyMember(book.id);
   cloudParts = parts;
   backend = "cloud";
   cloudBook = book;
@@ -981,7 +1004,7 @@ export async function copyToCloudBook(
  */
 async function putCloudPart(part: string, data: unknown): Promise<boolean> {
   const book = cloudBook;
-  if (book === null) return false;
+  if (book === null || readOnly) return false;
   if (data === undefined) return true;
   if (lastWritten.get(part) === data) return true;
 
@@ -1153,6 +1176,7 @@ export function setSaveGuard(guard: (ledger: StoredLedger) => void): void {
 /** Write the whole ledger, every part. Used on import and first run. */
 export async function save(ledger: StoredLedger): Promise<boolean> {
   saveGuard?.(ledger);
+  if (readOnly) return false;
   if (backend === "folder") return writeFolder(ledger, FOLDER_PARTS);
   if (backend === "cloud") return writeCloud(ledger, FOLDER_PARTS);
   return write(ledger, PARTS);
@@ -1206,6 +1230,7 @@ export async function savePart(
   ...parts: readonly LedgerPart[]
 ): Promise<boolean> {
   saveGuard?.(ledger);
+  if (readOnly) return false;
   if (backend === "folder") {
     // A named part still goes through the same routine, because the decisions
     // file has to be written whatever else changed: a coding and a chart edit

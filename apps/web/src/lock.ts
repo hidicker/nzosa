@@ -1,7 +1,7 @@
 import { postedJournals, varianceInput } from "./books.js";
 import { computeOurReturns } from "./variance.js";
 import { state } from "./state.js";
-import { setSaveGuard } from "./store.js";
+import { booksReadOnly, setSaveGuard } from "./store.js";
 import type { StoredLedger } from "./store.js";
 import { lockBroken, lockedFigures } from "@nzosa/core";
 import type { Account, LockDates, LockedFigures } from "@nzosa/core";
@@ -21,6 +21,9 @@ import type { Account, LockDates, LockedFigures } from "@nzosa/core";
  */
 
 export class LockedChange extends Error {}
+
+/** A change by somebody who may only read these books (see booksReadOnly). */
+export class ReadOnlyChange extends Error {}
 
 interface Baseline {
   ledger: StoredLedger;
@@ -83,6 +86,13 @@ export function resetLockBaseline(): void {
 }
 
 function guard(ledger: StoredLedger): void {
+  // Read only refuses everything, and the same way a lock does: the books go
+  // back as they were opened, so nothing on screen pretends to be saved.
+  if (booksReadOnly() && baseline !== null) {
+    state.ledger = baseline.ledger;
+    state.chart = baseline.chart;
+    throw new ReadOnlyChange("You can read these books but not change them.");
+  }
   const locks = ledger.lockDates;
   if (baseline === null || (!hasLocks(locks) && !hasLocks(baseline.ledger.lockDates))) {
     baseline = { ledger, chart: state.chart, figures: null, key: "" };
@@ -113,6 +123,15 @@ function guard(ledger: StoredLedger): void {
 export function installLockGuard(redrawPage: () => void): void {
   setSaveGuard(guard);
   window.addEventListener("unhandledrejection", (event) => {
+    if (event.reason instanceof ReadOnlyChange) {
+      event.preventDefault();
+      alert(
+        `${event.reason.message}\n\nNothing was changed. An owner of these books can give you ` +
+          "more than read-only access.",
+      );
+      redrawPage();
+      return;
+    }
     if (!(event.reason instanceof LockedChange)) return;
     event.preventDefault();
     alert(

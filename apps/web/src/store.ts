@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, DonationReceipt, Grant, PropertyCare, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, DonationReceipt, Grant, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -260,6 +260,9 @@ export interface StoredLedger {
   grantLinks?: Record<string, string>;
   /** Donation receipts issued, cancelled ones kept, for seven years (see core's donation-receipts.ts). */
   donationReceipts?: DonationReceipt[];
+  /** A not-for-profit's yearly Performance Report inputs, by `entity:year`, and where its accounts go. */
+  performanceReports?: Record<string, PerformanceInputs>;
+  tier4Lines?: Record<string, Tier4Line>;
   /** Payments that buy something running past a balance date. */
   prepayments?: Prepayment[];
   /**
@@ -727,6 +730,8 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.grants ? { grants: ledger.grants } : {}),
     ...(ledger.grantLinks ? { grantLinks: ledger.grantLinks } : {}),
     ...(ledger.donationReceipts ? { donationReceipts: ledger.donationReceipts } : {}),
+    ...(ledger.performanceReports ? { performanceReports: ledger.performanceReports } : {}),
+    ...(ledger.tier4Lines ? { tier4Lines: ledger.tier4Lines } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
     ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),

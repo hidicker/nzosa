@@ -196,9 +196,19 @@ export function nzResident(residence: string | undefined): boolean {
 
 export type BeneficiaryRule = "minor" | "corporate" | null;
 
+/**
+ * The tax year (ending 31 March) a balance date falls in: an early balance date
+ * (April to September) and a late one (October to March) both count toward the
+ * next 31 March.
+ */
+function taxYearOf(balanceDate: IsoDate): number {
+  const year = Number(balanceDate.slice(0, 4));
+  return Number(balanceDate.slice(5, 7)) >= 4 ? year + 1 : year;
+}
+
 /** Which special rule, if any, taxes this beneficiary's allocation as trustee income. */
 export function beneficiaryRule(b: TrustBeneficiary, allocation: Cents, balanceDate: IsoDate): BeneficiaryRule {
-  if (b.corporateRule === true) return "corporate";
+  if (b.corporateRule === true && taxYearOf(balanceDate) >= TRUSTEE_RATE_FROM_YEAR) return "corporate";
   if (
     b.born !== undefined &&
     b.born !== "" &&
@@ -385,6 +395,8 @@ export interface BeneficiarySheet {
   /** Their account: opening, movements, closing (26U to 26Y). */
   opening: Cents;
   distributionsTaxable: Cents;
+  /** True when 26V was filled in from the allocation rather than typed. */
+  distributionsFromAllocation: boolean;
   distributionsNotTaxable: Cents;
   withdrawals: Cents;
   closing: Cents;
@@ -520,7 +532,10 @@ export function trustWorksheet(options: {
     }
     const books = options.accountBalances?.[b.id];
     const opening = (books !== undefined ? books.opening : n(inputs.openingBalances[b.id])) as Cents;
-    const dt = n(inputs.distributionsTaxable[b.id]);
+    // Box 26V is the accounting income distributed to them for the year, which
+    // is what was allocated unless the trustees say otherwise.
+    const typed = inputs.distributionsTaxable[b.id];
+    const dt = (typed !== undefined ? n(typed) : Math.max(0, allocation)) as Cents;
     const dn = n(inputs.distributionsNotTaxable[b.id]);
     const wd = n(inputs.withdrawals[b.id]);
     sheets.push({
@@ -544,6 +559,7 @@ export function trustWorksheet(options: {
       payable: 0,
       opening,
       distributionsTaxable: dt,
+      distributionsFromAllocation: typed === undefined && allocation > 0,
       distributionsNotTaxable: dn,
       withdrawals: wd,
       closing: (opening + dt + dn - wd) as Cents,

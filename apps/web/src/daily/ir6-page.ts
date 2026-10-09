@@ -76,15 +76,27 @@ function tick(label: string, checked: boolean, onChange: (value: boolean) => voi
   return wrap;
 }
 
-function dollarsBox(cents: number | undefined, onChange: (c: Cents | undefined) => void, title?: string): HTMLInputElement {
+function dollarsBox(
+  cents: number | undefined,
+  onChange: (c: Cents | undefined) => void,
+  title?: string,
+  /** A figure worked out for the box, shown until something is typed; 0 can then be typed over it. */
+  filled?: number,
+): HTMLInputElement {
   const box = document.createElement("input");
   box.type = "text";
   box.className = "payroll-tiny-input";
   box.placeholder = "0.00";
   if (title !== undefined) box.title = title;
-  box.value = cents === undefined || cents === 0 ? "" : (cents / 100).toFixed(2);
+  const shown = cents ?? filled;
+  box.value = shown === undefined || (shown === 0 && filled === undefined) ? "" : (shown / 100).toFixed(2);
   box.addEventListener("change", () => {
     const parsed = parseAmount(box.value);
+    if (filled !== undefined) {
+      // Cleared: back to the worked-out figure. Typed, even 0: kept as typed.
+      onChange(box.value.trim() === "" || parsed === null ? undefined : (parsed as Cents));
+      return;
+    }
     onChange(parsed === null || parsed === 0 ? undefined : (parsed as Cents));
   });
   return box;
@@ -391,7 +403,12 @@ export function renderIr6Page(): void {
         linked !== undefined
           ? amountCell(money(linked.opening))
           : cell(dollarsBox(inputs.openingBalances[b.id], (v) => setMap("openingBalances", b.id, v, `IR6: opening account of ${b.name}`))),
-        cell(dollarsBox(inputs.distributionsTaxable[b.id], (v) => setMap("distributionsTaxable", b.id, v, `IR6: distribution to ${b.name}`), "Accounting income credited or paid to them for the year")),
+        cell(dollarsBox(
+          inputs.distributionsTaxable[b.id],
+          (v) => setMap("distributionsTaxable", b.id, v, `IR6: distribution to ${b.name}`),
+          "Accounting income credited or paid to them for the year. Filled in from what was allocated; type over it if the accounts differ, or clear it to go back.",
+          mine?.distributionsFromAllocation === true ? mine.distributionsTaxable : undefined,
+        )),
         cell(dollarsBox(inputs.distributionsNotTaxable[b.id], (v) => setMap("distributionsNotTaxable", b.id, v, `IR6: untaxed distribution to ${b.name}`), "Corpus, assets, debts forgiven, trust property used below market value")),
         cell(dollarsBox(inputs.withdrawals[b.id], (v) => setMap("withdrawals", b.id, v, `IR6: withdrawals by ${b.name}`), "Cash drawn, assets taken, property used for less than market value")),
         amountCell(money(mine?.closing ?? (linked?.opening ?? inputs.openingBalances[b.id] ?? 0))),
@@ -410,6 +427,16 @@ export function renderIr6Page(): void {
     }
     t.append(tb);
     body.append(wrapTable(t));
+    const filled = sheet.beneficiaries.filter((x) => x.distributionsFromAllocation).map((x) => (x.name === "" ? "(unnamed)" : x.name));
+    if (filled.length > 0) {
+      body.append(
+        note(
+          `"Distributed (taxable)" has been filled in from what was allocated, for ${filled.join(", ")}: the IR6 asks for ` +
+            "the accounting income distributed to each beneficiary for the year on the beneficiary's page, " +
+            "which is usually the same. Type over it where the accounts show something different.",
+        ),
+      );
+    }
   }
 
   // The allocation, as the trustees' journal

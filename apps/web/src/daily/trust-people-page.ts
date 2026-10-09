@@ -2,7 +2,7 @@ import { redraw } from "../app.js";
 import { saveEntities } from "../books.js";
 import { $, state } from "../state.js";
 import { note } from "../ui.js";
-import { ageOn, emptyEntityModel, emptyTrust } from "@nzosa/core";
+import { accountEntityKey, ageOn, emptyEntityModel, emptyTrust } from "@nzosa/core";
 import type { Entity, Trust, TrustAppointer, TrustBeneficiary, TrustPerson } from "@nzosa/core";
 
 /**
@@ -169,7 +169,13 @@ export function renderTrustPeoplePage(): void {
   }
 
   const today = new Date().toISOString().slice(0, 10);
-  const liabilityAccounts = state.chart.filter((a) => /liabilit|payable|equity/i.test(a.type));
+  // The trust's own accounts: a beneficiary's current account is the trust's
+  // liability, never somebody else's equity. With nothing assigned to the trust
+  // yet, every account, rather than an empty list.
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const theTrusts = (a: (typeof state.chart)[number]): boolean => model.accounts[accountEntityKey(a)] === entity.id;
+  const kinds = state.chart.filter((a) => /liabilit|payable|equity/i.test(a.type));
+  const liabilityAccounts = kinds.some(theTrusts) ? kinds.filter(theTrusts) : kinds;
 
   section(
     body,
@@ -187,7 +193,9 @@ export function renderTrustPeoplePage(): void {
       none.value = "";
       none.textContent = "Their account in the books";
       account.append(none);
-      for (const a of liabilityAccounts) {
+      // One linked earlier to an account outside the list stays shown.
+      const linkedElsewhere = state.chart.filter((a) => a.code === b.accountCode && !liabilityAccounts.includes(a));
+      for (const a of [...liabilityAccounts, ...linkedElsewhere]) {
         const option = document.createElement("option");
         option.value = a.code;
         option.textContent = `${a.code} ${a.name}`;

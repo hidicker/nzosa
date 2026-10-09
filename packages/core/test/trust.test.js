@@ -89,6 +89,10 @@ test("a New Zealand child under 16 is a minor unless the allocation is $1,000 or
     assert.equal(beneficiaryRule({ ...kiri, residence }, 500_000, BALANCE), "minor", residence);
   }
   assert.equal(beneficiaryRule({ ...kiri, residence: "Australia" }, 500_000, BALANCE), null);
+  // The corporate beneficiary rule began with the 2024-25 income year.
+  const company = { id: "co", name: "Holdings Ltd", corporateRule: true };
+  assert.equal(beneficiaryRule(company, 500_000, "2025-03-31"), "corporate");
+  assert.equal(beneficiaryRule(company, 500_000, "2024-03-31"), null);
   assert.equal(beneficiaryRule({ ...kiri, residence: "AU" }, 500_000, BALANCE), null, "the rule is for New Zealand residents");
   assert.equal(beneficiaryRule({ ...kiri, born: "2011-03-31" }, 500_000, BALANCE), null, "16 on balance date is not a minor");
   assert.equal(beneficiaryRule(ana, 500_000, BALANCE), null);
@@ -262,6 +266,16 @@ test("each beneficiary's account runs from the opening balance by the year's mov
   const rows = ir6bRows(a);
   assert.deepEqual(rows.map((r) => r.box).slice(-5), ["26U", "26V", "26W", "26X", "26Y"]);
   assert.equal(s.box.totalDistributions, 1_200_000);
+});
+
+test("what was allocated is the distribution, until the trustees say otherwise", () => {
+  const filled = sheet({ allocations: { ana: 1_000_000 } }).beneficiaries[0];
+  assert.equal(filled.distributionsTaxable, 1_000_000);
+  assert.equal(filled.distributionsFromAllocation, true);
+  assert.equal(filled.closing, filled.opening + 1_000_000);
+  const typed = sheet({ allocations: { ana: 1_000_000 }, distributionsTaxable: { ana: 0 } }).beneficiaries[0];
+  assert.equal(typed.distributionsTaxable, 0);
+  assert.equal(typed.distributionsFromAllocation, false);
 });
 
 test("a minor taxed on the IR6 shows only the income and the account on the IR6B", () => {

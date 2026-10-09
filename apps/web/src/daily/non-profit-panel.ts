@@ -81,6 +81,34 @@ export function nonProfitSettings(entity: Entity): HTMLElement {
       change(entity, { ...np, donee: value }, value ? "donee organisation" : "not a donee organisation"),
     ),
   );
+  // What a receipt shows, and who signs it: only a donee organisation issues them.
+  if (np.donee === true) {
+    const ird = document.createElement("input");
+    ird.type = "text";
+    ird.placeholder = "IRD number";
+    ird.value = np.irdNumber ?? "";
+    ird.addEventListener("change", () => {
+      const { irdNumber: _gone, ...rest } = np;
+      change(entity, ird.value.trim() === "" ? rest : { ...rest, irdNumber: ird.value.trim() }, "IRD number");
+    });
+    const signer = document.createElement("input");
+    signer.type = "text";
+    signer.placeholder = "Authorised to sign receipts: full name";
+    signer.value = np.signatory?.name ?? "";
+    const role = document.createElement("input");
+    role.type = "text";
+    role.placeholder = "Designation (Treasurer)";
+    role.value = np.signatory?.designation ?? "";
+    const saveSigner = (): void => {
+      const { signatory: _gone, ...rest } = np;
+      const name = signer.value.trim();
+      const designation = role.value.trim();
+      change(entity, name === "" && designation === "" ? rest : { ...rest, signatory: { name, designation } }, "who signs receipts");
+    };
+    signer.addEventListener("change", saveSigner);
+    role.addEventListener("change", saveSigner);
+    box.append(ird, signer, role);
+  }
   if (np.registeredCharity !== true) {
     box.append(
       tick("Approved by Inland Revenue for the $1,000 deduction", np.deduction === true, (value) =>

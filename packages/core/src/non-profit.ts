@@ -43,6 +43,13 @@ export interface NonProfit {
   donee?: boolean | undefined;
   /** Inland Revenue has approved it as a not-for-profit for the $1,000 deduction. */
   deduction?: boolean | undefined;
+  /** Its IRD number, as a donation receipt shows it. */
+  irdNumber?: string | undefined;
+  /**
+   * Who is authorised to sign donation receipts, and their designation. Not
+   * the donor, and not the donor's family: see donation-receipts.ts.
+   */
+  signatory?: { name: string; designation: string } | undefined;
 }
 
 /** What a form usually is, as a starting point. Every answer can be changed. */
@@ -103,6 +110,9 @@ export function nonProfitNotes(np: NonProfit, gstRegistered: boolean): string[] 
   }
   if (np.donee === true && (np.charityNumber ?? "").trim() === "" && np.registeredCharity === true) {
     notes.push("Donation receipts carry the charity's registration number: enter it above.");
+  }
+  if (np.donee === true && (np.irdNumber ?? "").trim() === "") {
+    notes.push("Donation receipts carry the organisation's IRD number: enter it above.");
   }
   if (np.registeredCharity !== true && np.deduction !== true) {
     notes.push(

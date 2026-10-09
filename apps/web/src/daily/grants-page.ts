@@ -186,7 +186,7 @@ function editor(draft: Grant, entities: Entity[]): HTMLElement {
 }
 
 /** The bank lines that could belong to an organisation: those of the accounts it uses. */
-function linesFor(entity: Entity | undefined): Transaction[] {
+export function linesFor(entity: Entity | undefined): Transaction[] {
   const model = state.ledger.entities ?? emptyEntityModel();
   const serves = (account: string): boolean => {
     const list = model.banks[account] ?? [];

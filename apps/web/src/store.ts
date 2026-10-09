@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, Grant, PropertyCare, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, DonationReceipt, Grant, PropertyCare, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -258,6 +258,8 @@ export interface StoredLedger {
   /** A not-for-profit's grants, and which bank lines belong to which (see core's grants.ts). */
   grants?: Grant[];
   grantLinks?: Record<string, string>;
+  /** Donation receipts issued, cancelled ones kept, for seven years (see core's donation-receipts.ts). */
+  donationReceipts?: DonationReceipt[];
   /** Payments that buy something running past a balance date. */
   prepayments?: Prepayment[];
   /**
@@ -724,6 +726,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.propertyCare ? { propertyCare: ledger.propertyCare } : {}),
     ...(ledger.grants ? { grants: ledger.grants } : {}),
     ...(ledger.grantLinks ? { grantLinks: ledger.grantLinks } : {}),
+    ...(ledger.donationReceipts ? { donationReceipts: ledger.donationReceipts } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
     ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),

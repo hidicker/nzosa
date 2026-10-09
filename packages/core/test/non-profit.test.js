@@ -30,7 +30,10 @@ test("notes: donee without charity, the receipt number, the deduction, and GST",
   const receipt = nonProfitNotes({ form: "charity", registeredCharity: true, donee: true }, false).join(" ");
   assert.match(receipt, /registration number/);
   const withNumber = nonProfitNotes({ form: "charity", registeredCharity: true, donee: true, charityNumber: "CC12345" }, false).join(" ");
-  assert.doesNotMatch(withNumber, /enter it above/);
+  assert.doesNotMatch(withNumber, /registration number/);
+  assert.match(withNumber, /IRD number/, "a donee also needs its IRD number on receipts");
+  const complete = nonProfitNotes({ form: "charity", registeredCharity: true, donee: true, charityNumber: "CC12345", irdNumber: "123-456-789" }, false).join(" ");
+  assert.doesNotMatch(complete, /enter it above/);
   assert.match(nonProfitNotes({ form: "club" }, false).join(" "), /\$1,000 deduction/);
   assert.doesNotMatch(nonProfitNotes({ form: "club", deduction: true }, false).join(" "), /can claim a \$1,000/);
   assert.match(nonProfitNotes({ form: "charity" }, true).join(" "), /grants and subscriptions are/);

@@ -66,6 +66,7 @@ import { markActions, renderActions } from "./daily/actions.js";
 import { renderIrdRecords, wireIrdRecords } from "./daily/ird-records.js";
 import { renderRentalsPage } from "./daily/rentals-page.js";
 import { renderGrantsPage } from "./daily/grants-page.js";
+import { renderDonationsPage } from "./daily/donations-page.js";
 import { renderPersonalYearEnd } from "./daily/personal-year-end.js";
 import { renderRentalYearEnd } from "./daily/rental-year-end.js";
 import {
@@ -160,6 +161,7 @@ async function init(): Promise<void> {
     payroll: renderPayrollPage,
     tenancies: renderRentalsPage,
     grants: renderGrantsPage,
+    donations: renderDonationsPage,
     personalYear: renderPersonalYearEnd,
     rentalYear: renderRentalYearEnd,
     reconcile: renderReconcile,

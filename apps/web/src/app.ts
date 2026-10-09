@@ -45,6 +45,7 @@ export type PageName =
   | "payroll"
   | "personalYear"
   | "rentalYear"
+  | "donations"
   | "grants"
   | "tenancies"
   | "reconcile"
@@ -166,6 +167,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "payroll") redraw("payroll");
   if (page === "tenancies") redraw("tenancies");
   if (page === "grants") redraw("grants");
+  if (page === "donations") redraw("donations");
   if (page === "personalyear") redraw("personalYear");
   if (page === "rentalyear") redraw("rentalYear");
 

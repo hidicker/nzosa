@@ -119,3 +119,24 @@ test("an account is never filed under another entity's account of the same name"
   // A name with no code still finds its account.
   assert.equal(labelForChartAccount({ ...rimu, code: "" }, ["Rent received"]), "Rent received");
 });
+
+test("a partnership's chart: no income tax or directors, and an account each for every partner", () => {
+  const codes = (list) => list.map((a) => a.code);
+  const company = standardAccounts("business", { structure: "company" });
+  assert.ok(codes(company).includes("505") && codes(company).includes("910"));
+  const firm = standardAccounts("business", { structure: "partnership", partners: ["Ana", "Tom"], suffix: "AT" });
+  assert.ok(!codes(firm).includes("505AT"), "no income tax expense");
+  assert.ok(!codes(firm).includes("830AT"), "no income tax owing");
+  assert.ok(!codes(firm).includes("970AT") && !codes(firm).includes("980AT"), "no single owner's equity");
+  assert.equal(firm.find((a) => a.code === "910AT")?.name, "Loans from partners");
+  assert.deepEqual(
+    firm.filter((a) => /^9[78][12]AT$/.test(a.code)).map((a) => a.name),
+    ["Ana: current account", "Ana: drawings", "Tom: current account", "Tom: drawings"],
+  );
+  assert.equal(new Set(codes(firm)).size, firm.length, "no code twice");
+  const unnamed = standardAccounts("business", { structure: "partnership" });
+  assert.ok(unnamed.some((a) => a.name === "Partner 2: drawings"));
+  const sole = standardAccounts("business", { structure: "sole-trader" });
+  assert.equal(sole.find((a) => a.code === "910")?.name, "Loan from owner");
+  assert.ok(codes(sole).includes("980"), "a sole trader keeps owner drawings");
+});

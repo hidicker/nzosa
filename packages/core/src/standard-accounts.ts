@@ -1,5 +1,5 @@
 import type { Account } from "./chart.js";
-import type { EntityKind } from "./entities.js";
+import type { BusinessStructure, EntityKind } from "./entities.js";
 import { starterChart } from "./starter-chart.js";
 
 /**
@@ -175,6 +175,48 @@ const TAX_CODE = {
 } as const;
 
 /**
+ * Accounts of a company's chart that an unincorporated business has no use
+ * for. A partnership or a sole trader pays no income tax itself -- each
+ * partner, or the owner, pays it on their share in their own return -- so
+ * neither the expense nor the liability belongs in its books.
+ */
+const COMPANY_ONLY = new Set(["505", "830"]);
+
+const LOAN_FROM = {
+  partnership: { name: "Loans from partners", description: "Money lent to the partnership by a partner, beyond their capital" },
+  "sole-trader": { name: "Loan from owner", description: "Money the owner has lent to the business" },
+} as const;
+
+/**
+ * A partnership's equity, partner by partner.
+ *
+ * Each partner has a current account -- capital put in, and their share of the
+ * profit credited at year end -- and a drawings account for what they take
+ * out, as an accountant's partnership chart has. A partner's drawings and any
+ * "salary" are not expenses of the partnership; they come out of this. Partners
+ * not yet named are numbered, to be renamed when they are.
+ */
+function partnerAccounts(partners: readonly string[]): Account[] {
+  const names = partners.length > 0 ? partners.slice(0, 9) : ["Partner 1", "Partner 2"];
+  return names.flatMap((name, i) => [
+    {
+      code: `97${i + 1}`,
+      name: `${name}: current account`,
+      type: "Equity",
+      taxCode: "No GST",
+      description: `${name}'s capital and share of the profit, less drawings closed off at year end`,
+    },
+    {
+      code: `98${i + 1}`,
+      name: `${name}: drawings`,
+      type: "Equity",
+      taxCode: "No GST",
+      description: `What ${name} took out during the year, including private use of partnership money`,
+    },
+  ]);
+}
+
+/**
  * The standard accounts for one kind of entity, with its code suffix.
  *
  * A business gets the standard company chart. An entity not registered for GST
@@ -183,7 +225,14 @@ const TAX_CODE = {
  */
 export function standardAccounts(
   kind: EntityKind,
-  options: { suffix?: string; gstRegistered?: boolean } = {},
+  options: {
+    suffix?: string;
+    gstRegistered?: boolean;
+    /** A business's structure: a partnership or sole trader pays no income tax of its own and has no directors. */
+    structure?: BusinessStructure | undefined;
+    /** The partners, by name, for a partnership's current and drawings accounts. */
+    partners?: readonly string[] | undefined;
+  } = {},
 ): Account[] {
   const suffix = options.suffix ?? "";
   const registered = options.gstRegistered !== false;
@@ -193,9 +242,14 @@ export function standardAccounts(
   });
 
   if (kind === "business") {
-    return starterChart()
+    const unincorporated = options.structure === "partnership" || options.structure === "sole-trader";
+    const base = starterChart()
       .filter((a) => registered || a.type !== "GST")
-      .map((a) => withSuffix(registered ? a : { ...a, taxCode: "No GST" }));
+      .filter((a) => !unincorporated || !COMPANY_ONLY.has(a.code))
+      .map((a) => (unincorporated && a.code === "910" ? { ...a, ...LOAN_FROM[options.structure === "partnership" ? "partnership" : "sole-trader"] } : a))
+      .filter((a) => options.structure !== "partnership" || (a.code !== "970" && a.code !== "980"));
+    const extra = options.structure === "partnership" ? partnerAccounts(options.partners ?? []) : [];
+    return [...base, ...extra].map((a) => withSuffix(registered ? a : { ...a, taxCode: "No GST" }));
   }
   return STANDARD[kind]
     .filter((row) => registered || row.name !== "GST")

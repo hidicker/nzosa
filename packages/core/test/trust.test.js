@@ -12,6 +12,7 @@ import {
   trustStatements,
   trustWorksheet,
   trusteeRate,
+  allocationJournal,
   defaultTrustIncomeClass,
   defaultExpensePlacement,
 } from "../dist/index.js";
@@ -50,7 +51,7 @@ const journals = [
 const { income, expenses } = incomeAndExpenses({ journals, chart, from: "2026-04-01", to: "2027-03-31" });
 
 const ana = { id: "ana", name: "Ana Kowhai", born: "1980-02-02", residence: "NZ", irdNumber: "11111111", accountCode: "850" };
-const kiri = { id: "kiri", name: "Kiri Kowhai", born: "2015-06-01", residence: "NZ" };
+const kiri = { id: "kiri", name: "Kiri Kowhai", born: "2015-06-01", residence: "NZ", accountCode: "852" };
 const trust = { ...emptyTrust("complying"), beneficiaries: [ana, kiri], settlors: [{ id: "s1", name: "Hemi Kowhai" }] };
 const BALANCE = "2027-03-31";
 
@@ -342,4 +343,26 @@ test("whatever the figures, income is shared out and the tax adds up", () => {
     const toBeneficiaries = s.beneficiaries.filter((x) => x.rule === null).reduce((sum, x) => sum + x.credits, 0);
     assert.ok(Math.abs(toBeneficiaries + b.creditsTrustee - b.credits) <= 2, "RWT is not lost or made up");
   }
+});
+
+test("the allocation is posted as one balanced journal into each beneficiary's account", () => {
+  const s = sheet({ allocations: { ana: 1_000_000, kiri: 500_000 } });
+  const label = (code) => `Account - ${code}`;
+  const made = allocationJournal({ entityId: "kowhai", year: 2026, date: "2026-03-31", debit: "Accumulated funds - 970", sheet: s, trust, label });
+  assert.deepEqual(made.problems, []);
+  assert.equal(made.journal.id, "trust-allocation-kowhai-2026");
+  assert.equal(made.journal.lines.reduce((sum, l) => sum + l.amount, 0), 0, "balanced");
+  assert.equal(made.journal.lines[0].amount, 1_500_000);
+  assert.deepEqual(made.journal.lines.slice(1).map((l) => [l.code, l.amount]), [["Account - 850", -1_000_000], ["Account - 852", -500_000]]);
+});
+
+test("no journal when a beneficiary has no account, or nothing was allocated", () => {
+  const s = sheet({ allocations: { kiri: 500_000 } });
+  const bare = { ...trust, beneficiaries: [ana, { ...kiri, accountCode: undefined }] };
+  const made = allocationJournal({ entityId: "k", year: 2026, date: "2026-03-31", debit: "X - 970", sheet: s, trust: bare, label: (c) => c });
+  assert.equal(made.journal, null);
+  assert.match(made.problems[0], /no account/);
+  const none = allocationJournal({ entityId: "k", year: 2026, date: "2026-03-31", debit: "X - 970", sheet: sheet({}), trust, label: (c) => c });
+  assert.equal(none.journal, null);
+  assert.match(none.problems[0], /Nothing is allocated/);
 });

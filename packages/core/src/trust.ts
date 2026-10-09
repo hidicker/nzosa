@@ -3,6 +3,7 @@ import type { IsoDate } from "./dates.js";
 import type { Account } from "./chart.js";
 import type { PostedJournal } from "./posting.js";
 import { incomeAndExpenses } from "./ir9.js";
+import type { ManualJournal } from "./manual-journals.js";
 import type { AccountAmount } from "./ir9.js";
 
 /**
@@ -947,4 +948,63 @@ export function personId(p: TrustPerson): string {
 
 export function trustYearEnd(year: number): IsoDate {
   return `${year}-03-31`;
+}
+
+// ---- The trustees' allocation, as a journal ---------------------------------------
+
+export interface AllocationJournal {
+  /** One journal a year: posting again replaces it. */
+  id: string;
+  journal: ManualJournal | null;
+  /** Why there is none, or what to look at, in words. */
+  problems: string[];
+}
+
+/**
+ * The entry that records the trustees' allocation in the books: the income
+ * allocated comes out of the trust's own funds and into each beneficiary's
+ * current account, on balance date. The accountant's year-end journal for a
+ * trust; what is later paid out is a bank line against the account.
+ *
+ * `debit` and each beneficiary's account are written as the books write them
+ * (`Name - code`). A beneficiary with no account linked is a problem, not a
+ * silent omission: the journal would not match the return.
+ */
+export function allocationJournal(options: {
+  entityId: string;
+  year: number;
+  date: IsoDate;
+  debit: string;
+  sheet: TrustWorksheet;
+  trust: Trust;
+  /** An account's label from its code, as the books write it. */
+  label: (code: string) => string;
+}): AllocationJournal {
+  const id = `trust-allocation-${options.entityId}-${options.year}`;
+  const problems: string[] = [];
+  const credits: { code: string; amount: Cents; description: string }[] = [];
+  for (const b of options.sheet.beneficiaries) {
+    if (b.allocation <= 0) continue;
+    const person = options.trust.beneficiaries.find((x) => x.id === b.id);
+    const code = (person?.accountCode ?? "").trim();
+    if (code === "") {
+      problems.push(`${b.name} has no account in the books: link one on Trust people.`);
+      continue;
+    }
+    credits.push({ code: options.label(code), amount: b.allocation, description: `Income allocated to ${b.name}` });
+  }
+  const total = credits.reduce((s, c) => s + c.amount, 0);
+  if (options.debit.trim() === "") problems.push("Choose the account the allocation comes out of.");
+  if (total === 0 && problems.length === 0) problems.push("Nothing is allocated to any beneficiary this year.");
+  if (problems.length > 0) return { id, journal: null, problems };
+  return {
+    id,
+    problems,
+    journal: {
+      id,
+      date: options.date,
+      narration: `Income allocated to beneficiaries, year ended ${options.date}`,
+      lines: [{ code: options.debit, amount: total as Cents }, ...credits.map((c) => ({ code: c.code, amount: -c.amount as Cents, description: c.description }))],
+    },
+  };
 }

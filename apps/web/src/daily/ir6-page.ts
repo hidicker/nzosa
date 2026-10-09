@@ -1,5 +1,5 @@
 import { redraw } from "../app.js";
-import { bookYears, postedJournals, record } from "../books.js";
+import { bookYears, postedJournals, record, saveManualJournals } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
@@ -9,6 +9,8 @@ import {
   SETTLEMENT_KINDS,
   TRUST_INCOME_CLASSES,
   accountEntityKey,
+  accountLabel,
+  allocationJournal,
   beneficiaryRule,
   defaultBalancePlace,
   defaultExpensePlacement,
@@ -407,6 +409,67 @@ export function renderIr6Page(): void {
     }
     t.append(tb);
     body.append(wrapTable(t));
+  }
+
+  // The allocation, as the trustees' journal
+  if (trust.beneficiaries.length > 0) {
+    const equity = state.chart.filter((a) => /equity/i.test(a.type) && only(a));
+    const box = document.createElement("div");
+    box.className = "journal-card";
+    const title = document.createElement("p");
+    title.className = "journal-narration";
+    title.textContent = "Record the allocation in the books";
+    box.append(title);
+    const labelOf = (code: string): string => {
+      const found = state.chart.find((a) => a.code.trim() === code.trim());
+      return found === undefined ? code : accountLabel(found.code, found.name);
+    };
+    const pick = document.createElement("select");
+    pick.title = "The account the allocation comes out of: the trust's accumulated funds";
+    const usual = equity.find((a) => /accumulated|undistributed|retained|income/i.test(a.name)) ?? equity[0];
+    for (const a of equity) {
+      const option = document.createElement("option");
+      option.value = accountLabel(a.code, a.name);
+      option.textContent = `${a.code} ${a.name}`;
+      option.selected = a === usual;
+      pick.append(option);
+    }
+    const made = allocationJournal({
+      entityId: entity.id,
+      year,
+      date: balanceDate,
+      debit: pick.value,
+      sheet,
+      trust,
+      label: labelOf,
+    });
+    const existing = (state.ledger.manualJournals ?? []).find((j) => j.id === made.id && j.deleted === undefined);
+    box.append(
+      note(
+        "Takes the income allocated above out of the trust's funds and puts it in each beneficiary's current account on balance date, as an accountant's year-end journal does. " +
+          "What is paid out afterwards is a bank line against that account. Tax the trustee pays for a beneficiary is not in this entry.",
+      ),
+    );
+    if (existing !== undefined) {
+      const posted = existing.lines.filter((l) => l.amount > 0).reduce((sum, l) => sum + l.amount, 0);
+      const same = made.journal !== null && posted === made.journal.lines[0]?.amount;
+      box.append(note(same ? `Posted: $${money(posted)} on ${existing.date}.` : `Posted for $${money(posted)} on ${existing.date}, but the allocation above is now different. Post again to replace it.`));
+    }
+    for (const problem of made.problems) box.append(note(problem));
+    const post = document.createElement("button");
+    post.type = "button";
+    post.textContent = existing !== undefined ? "Post again (replaces it)" : "Post the allocation journal";
+    post.disabled = equity.length === 0 || made.journal === null;
+    if (equity.length === 0) box.append(note("Add an equity account for the trust's funds first, under Entities & accounts."));
+    post.addEventListener("click", () => {
+      const again = allocationJournal({ entityId: entity.id, year, date: balanceDate, debit: pick.value, sheet, trust, label: labelOf });
+      if (again.journal === null) return;
+      const kept = (state.ledger.manualJournals ?? []).filter((j) => j.id !== again.id);
+      void saveManualJournals([...kept, again.journal], `Trust allocation for the year ended ${balanceDate}`);
+      redraw("ir6");
+    });
+    box.append(pick, post);
+    body.append(box);
   }
 
   // 6. Settlements

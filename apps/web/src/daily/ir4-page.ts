@@ -403,7 +403,7 @@ export function renderIr4Page(): void {
   );
   body.append(
     field("Opening balance (debit is negative) $", "icaOpening", "imputation opening balance", "From last year's closing balance; negative for a debit"),
-    field("Income tax paid in the year (provisional and terminal) $", "icaIncomeTaxPaid", "income tax paid"),
+    field("Income tax paid between 1 April and 31 March, by the date paid $", "icaIncomeTaxPaid", "income tax paid", "Provisional tax and end-of-year tax, counted in the tax year the payment is made, whatever year it is for. Not use-of-money interest, imputation penalty tax or other penalties."),
     field("Other credits (not RWT on dividends or RLWT, which are added) $", "icaOtherCredits", "other imputation credits"),
     field("Income tax refunded $", "icaRefunds", "income tax refunded"),
     field("Imputation credits attached to dividends paid $", "icaDividendCredits", "credits attached to dividends"),
@@ -411,6 +411,12 @@ export function renderIr4Page(): void {
     field("Adjustment to reduce further income tax $", "icaAdjustment", "imputation adjustment"),
   );
   body.append(rowsTable(icaRows(sheet), ["42E", "43D", "44", "44B"]));
+  body.append(
+    note(
+      "The account runs from 1 April to 31 March whatever the balance date, and an entry is dated by the day the payment is made. Credits can only be passed on to shareholders if at least 66% of the voting or market value interests have stayed the same since the credits arose; " +
+        "a change of shareholding of more than 34% needs a debit to remove any unused credit. A debit at the end of the tax year is further income tax with a 10% penalty, due 20 June, and a payment towards it goes first to any late payment penalty and interest.",
+    ),
+  );
   for (const problem of sheet.problems) {
     const warn = note(problem);
     warn.style.color = "var(--warn, #b45309)";
@@ -421,29 +427,42 @@ export function renderIr4Page(): void {
   body.append(heading("Paying a dividend"));
   body.append(
     note(
-      "Imputation credits can be attached up to 28/72 of the dividend (a ratio of 0.3889), and no more than the account holds. Work out the credit to attach to a dividend before it is paid.",
+      "Credits can be attached up to 28/72 of the dividend (38.89%, or 28% of the gross) and no more than the account holds. The first dividend of a tax year sets the ratio for the rest: later dividends must carry credits at the same ratio, " +
+        "unless a ratio change declaration (IR407) is made before paying, or the account is debited. Resident withholding tax of 33% of the gross dividend is deducted, less the imputation credit.",
     ),
   );
   const calc = document.createElement("div");
   calc.className = "journal-card";
-  const dividend = dollarsBox(undefined, (v) => {
+  const out = document.createElement("div");
+  let dividendNow: Cents | undefined;
+  let firstNet: Cents | undefined;
+  let firstCredit: Cents | undefined;
+  const show = (): void => {
     out.textContent = "";
-    if (v === undefined) return;
-    const r = dividendImputation(v, Math.max(0, sheet.ica.closing) as Cents);
+    if (dividendNow === undefined) return;
+    const bench = firstNet !== undefined ? { net: firstNet, credit: (firstCredit ?? 0) as Cents } : undefined;
+    const r = dividendImputation(dividendNow, Math.max(0, sheet.ica.closing) as Cents, bench);
     out.append(
       note(
         `Dividend $${money(r.net)}: attach an imputation credit of $${money(r.credit)} (ratio ${r.ratio.toFixed(4)}), making $${money(r.gross)} gross. ` +
+          `Deduct RWT of $${money(r.rwt)} and pay the shareholder $${money(r.payable)}. ` +
+          (r.benchmark !== null ? `This follows the ratio of the first dividend this tax year (${r.benchmark.ratio.toFixed(4)}). ` : "") +
           (r.limitedByAccount
-            ? `The account holds $${money(r.available)}, less than the maximum credit of $${money(r.maximum)}: the dividend is not fully imputed, and the shareholder is taxed on the rest at their own rate.`
-            : `That is the full credit the law allows, and the account covers it.`),
+            ? `The account holds $${money(r.available)}, less than the credit that would be attached: the dividend is not fully imputed, and the shareholder is taxed on the rest at their own rate.`
+            : r.credit === r.maximum
+              ? "That is the full credit the law allows, and the account covers it."
+              : "The account covers it."),
       ),
     );
-  });
-  const out = document.createElement("div");
+  };
   const label = document.createElement("label");
   label.className = "year-end-field";
-  label.append("Dividend to be paid, in cash $ ", dividend);
-  calc.append(label, out);
+  label.append("Dividend to be paid, in cash $ ", dollarsBox(undefined, (v) => { dividendNow = v; show(); }));
+  const first = document.createElement("label");
+  first.className = "year-end-field";
+  first.append("First dividend this tax year, in cash $ ", dollarsBox(undefined, (v) => { firstNet = v; show(); }), " with credit $ ", dollarsBox(undefined, (v) => { firstCredit = v; show(); }));
+  first.title = "If one was already paid this tax year, its ratio is the benchmark for this one.";
+  calc.append(label, first, out);
   body.append(calc);
 
   const save = document.createElement("button");

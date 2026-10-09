@@ -176,3 +176,43 @@ test("whatever the figures, the tax adds up and nothing is negative that should 
     assert.ok(b.lossClaimed <= b.lossBroughtForward);
   }
 });
+
+import { allocationDebit } from "../dist/index.js";
+
+test("a fully imputed dividend: $72 of profit, $28 of credit, $5 of RWT, $67 paid (IR274)", () => {
+  const d = dividendImputation(7_200, 100_000);
+  assert.equal(d.credit, 2_800);
+  assert.equal(d.gross, 10_000);
+  assert.equal(d.rwt, 500);
+  assert.equal(d.payable, 6_700);
+  const none = dividendImputation(7_200, 0);
+  assert.equal(none.credit, 0);
+  assert.equal(none.rwt, 2_376, "33% of the whole dividend, with no credit to set against it");
+});
+
+test("a later dividend follows the ratio of the first one of the tax year", () => {
+  const first = { net: 100_000, credit: 20_000 };
+  const later = dividendImputation(100_000, 1_000_000, first);
+  assert.equal(later.credit, 20_000);
+  assert.equal(later.benchmark.followed, true);
+  assert.equal(dividendImputation(50_000, 1_000_000, first).credit, 10_000);
+  assert.equal(dividendImputation(100_000, 1_000_000, { net: 100_000, credit: 0 }).credit, 0, "no credits if the first had none");
+  assert.equal(dividendImputation(100_000, 5_000, first).credit, 5_000, "still no more than the account holds");
+  assert.equal(dividendImputation(100_000, 5_000, first).benchmark.followed, false);
+});
+
+test("the allocation debit is IR274's worked example", () => {
+  assert.equal(allocationDebit([{ net: 100_000, credit: 20_000 }, { net: 100_000, credit: 10_000 }]), 10_000);
+  assert.equal(allocationDebit([{ net: 100_000, credit: 20_000 }, { net: 100_000, credit: 20_000 }]), 0);
+  assert.equal(allocationDebit([]), 0);
+});
+
+test("a refund is limited to last year's imputation credit balance", () => {
+  const s = ir4Worksheet({
+    income: [{ code: "A", name: "Sales", amount: 100_000 }],
+    expenses: [],
+    inputs: { ...emptyIr4Inputs(), provisionalPaid: 500_000, icaOpening: 100_000 },
+  });
+  assert.ok(s.box.toPay < 0);
+  assert.ok(s.notes.some((n) => /limited to the credit balance/.test(n)));
+});

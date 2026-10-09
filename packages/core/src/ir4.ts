@@ -331,6 +331,13 @@ export function ir4Worksheet(options: {
     const penalty = Math.round(debit * 0.1) as Cents;
     return { opening, incomeTaxPaid, rwtInterest: rwtInt, imputationReceived: impRec, otherCredits: other, totalCredits, refunds, dividendCredits, otherDebits, totalDebits, closing, adjustment, furtherTax, penalty };
   })();
+  // A refund is limited to the credit balance of the account at the end of the last tax year.
+  if (toPay < 0 && -toPay > Math.max(0, ica.opening)) {
+    notes.push(
+      `The return ends in a refund of $${(-toPay / 100).toFixed(2)}, but a refund is limited to the credit balance in the imputation account at the end of the last tax year (the opening balance, $${(Math.max(0, ica.opening) / 100).toFixed(2)}). ` +
+        "Inland Revenue holds the rest and carries it forward; an interim imputation return (IR4J) can release it once more credits have arisen.",
+    );
+  }
   if (ica.closing < 0) {
     problems.push(
       `The imputation credit account ends in debit by $${(-ica.closing / 100).toFixed(2)}: further income tax is payable by 20 June, with a penalty of 10% of the debit balance.`,
@@ -477,15 +484,17 @@ export function icaRows(s: Ir4Worksheet): { label: string; box: string; amount: 
 }
 
 export const MAX_IMPUTATION_RATIO = 28 / 72;
+/** The rate of resident withholding tax on a dividend, on the gross amount. */
+export const DIVIDEND_RWT_RATE = 0.33;
 
 export interface DividendImputation {
-  /** The dividend paid in cash. */
+  /** The dividend paid in cash: the share of profits distributed. */
   net: Cents;
   /** The most credit the law allows on it: 28/72 of the dividend. */
   maximum: Cents;
   /** What the account can cover. */
   available: Cents;
-  /** The credit to attach: the smaller of the two. */
+  /** The credit to attach. */
   credit: Cents;
   /** The dividend with its credit: what the shareholder includes as income. */
   gross: Cents;
@@ -493,20 +502,63 @@ export interface DividendImputation {
   ratio: number;
   /** True when the account holds less than the maximum credit. */
   limitedByAccount: boolean;
+  /** Resident withholding tax to deduct: 33% of the gross dividend, less the imputation credit. */
+  rwt: Cents;
+  /** What the shareholder is paid: the dividend less the RWT. */
+  payable: Cents;
+  /** Set where an earlier dividend this tax year fixed the ratio. */
+  benchmark: { ratio: number; followed: boolean } | null;
 }
 
-/** The imputation credit to attach to a dividend, given what the account holds. */
-export function dividendImputation(net: Cents, available: Cents): DividendImputation {
+/**
+ * The imputation credit to attach to a dividend, given what the account holds.
+ *
+ * The first dividend of a tax year is the benchmark: every later one has to
+ * carry credits at the same ratio, or the company files a ratio change
+ * declaration (IR407) before paying it, or an allocation debit follows. Where a
+ * benchmark is given, that ratio is used (and no credit at all if the benchmark
+ * had none), still limited by the maximum and by what the account holds.
+ */
+export function dividendImputation(
+  net: Cents,
+  available: Cents,
+  benchmark?: { net: Cents; credit: Cents } | undefined,
+): DividendImputation {
   const maximum = Math.round(net * MAX_IMPUTATION_RATIO) as Cents;
   const room = floor0(available) as Cents;
-  const credit = Math.min(maximum, room) as Cents;
+  const wanted =
+    benchmark !== undefined && benchmark.net > 0 ? (Math.round((net * benchmark.credit) / benchmark.net) as Cents) : maximum;
+  const credit = Math.min(maximum, room, wanted) as Cents;
+  const gross = (net + credit) as Cents;
+  const rwt = floor0(Math.round(gross * DIVIDEND_RWT_RATE) - credit) as Cents;
+  const ratio = net > 0 ? credit / net : 0;
   return {
     net,
     maximum,
     available: room,
     credit,
-    gross: (net + credit) as Cents,
-    ratio: net > 0 ? credit / net : 0,
-    limitedByAccount: room < maximum,
+    gross,
+    ratio,
+    limitedByAccount: room < wanted,
+    rwt,
+    payable: (net - rwt) as Cents,
+    benchmark:
+      benchmark !== undefined && benchmark.net > 0
+        ? { ratio: benchmark.credit / benchmark.net, followed: Math.abs(ratio - benchmark.credit / benchmark.net) < 1e-6 }
+        : null,
   };
+}
+
+/**
+ * The allocation debit, where a later dividend's ratio differs from the
+ * benchmark's and no ratio change declaration was made: (a x b) - c, where a is
+ * all the dividends paid in the tax year (without credits), b the lesser of the
+ * greatest ratio of any of them and the maximum, and c all the credits attached.
+ */
+export function allocationDebit(dividends: readonly { net: Cents; credit: Cents }[]): Cents {
+  const a = dividends.reduce((sum, d) => sum + d.net, 0);
+  const c = dividends.reduce((sum, d) => sum + d.credit, 0);
+  const greatest = dividends.reduce((best, d) => (d.net > 0 ? Math.max(best, d.credit / d.net) : best), 0);
+  const b = Math.min(greatest, MAX_IMPUTATION_RATIO);
+  return floor0(Math.round(a * b - c)) as Cents;
 }

@@ -33,6 +33,9 @@ import type { AccountAmount } from "./ir9.js";
  * - The loss limitation rule for LTC owners no longer applies, except to an
  *   LTC in a partnership or joint venture with another LTC. That is not
  *   worked out here: it needs the owner's basis, which only the owner has.
+ * - Also from Inland Revenue's IR879 (April 2024): an LTC keeps no imputation
+ *   credit account, working owners are paid with PAYE and all owners deduct
+ *   their share, and an owner's share for a part year is weighted by days.
  *
  * Not worked out here: the loss limitation rule, foreign investment fund and
  * controlled foreign company income (entered as a figure), the attribution
@@ -462,7 +465,9 @@ export function ir7Notes(kind: Ir7Kind): string[] {
     ? [
         ...common,
         "An LTC's owners share by their effective look-through interest, generally their percentage of the shares. The loss limitation rule no longer applies to most owners; it still does where the LTC is in a partnership or joint venture with another LTC, and that is not worked out here.",
-        "An LTC is still a company: it files this return and keeps its accounts, but pays no income tax itself.",
+        "An LTC is still a company: it files this return and keeps its accounts, but pays no income tax itself. It keeps no imputation credit account: imputation credits it receives pass through to the owners, and its dividends are not taxable.",
+        "An owner who works for the LTC under an employment contract is paid wages with PAYE, and every owner deducts their share of those wages. An LTC cannot pay a shareholder-employee salary without PAYE.",
+        "If ownership changed part-way through the year, each owner's share is their percentage weighted by the days they held it (IR879). Shares here are for the whole year, so work out the weighted shares first and enter those.",
       ]
     : [
         ...common,

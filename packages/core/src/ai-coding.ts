@@ -190,6 +190,13 @@ function kindRule(kind: string, structure?: string): string {
   }
   if (kind === "commercial") return "commercial rental: not ring-fenced";
   if (kind === "personal") return "personal affairs: most spending is not deductible at all";
+  if (kind === "trust") {
+    return (
+      "a trust or estate: income is either distributed to beneficiaries or kept as trustee income; " +
+      "money paid to a beneficiary is a distribution (or a withdrawal from their current account), never " +
+      "a wage or drawings. Money put in by a settlor is not income"
+    );
+  }
   if (kind === "nonprofit") {
     return (
       "a not-for-profit: donations, grants and subscriptions are income it holds for its purposes; " +

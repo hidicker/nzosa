@@ -17,6 +17,7 @@ import {
 import { GST_OPTIONS } from "../reconcile.js";
 import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
 import { formSelect, nonProfitSettings } from "./non-profit-panel.js";
+import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
@@ -35,6 +36,7 @@ import {
   formatOwners,
   isKnownType,
   nonProfitDefaults,
+  emptyTrust,
   nonProfitFormName,
   ownersTotal,
   parseOwners,
@@ -109,6 +111,7 @@ const KIND_CAPTION: Record<EntityKind, string> = {
   commercial: "Commercial rental",
   personal: "Personal",
   nonprofit: "Non-profit",
+  trust: "Trust or estate",
 };
 
 /** Open the chart of accounts ready to add an account, named as typed. */
@@ -136,6 +139,7 @@ export function addEntityForm(): HTMLElement {
     ["commercial", "Commercial rental"],
     ["personal", "Personal"],
     ["nonprofit", "Non-profit (charity, society, club)"],
+    ["trust", "Trust or estate"],
   ] as const) {
     const option = document.createElement("option");
     option.value = value;
@@ -191,6 +195,7 @@ export function addEntityForm(): HTMLElement {
           kind: kind.value as EntityKind,
           gstRegistered: gst.checked,
           ...(kind.value === "nonprofit" ? { nonprofit: nonProfitDefaults(nonProfitForm) } : {}),
+          ...(kind.value === "trust" ? { trust: emptyTrust() } : {}),
         },
       ],
     });
@@ -574,6 +579,7 @@ export function renderEntities(): void {
       ["commercial", "Commercial rental"],
       ["personal", "Personal"],
       ["nonprofit", "Non-profit (charity, society, club)"],
+      ["trust", "Trust or estate"],
     ] as const) {
       const option = document.createElement("option");
       option.value = value;
@@ -595,6 +601,7 @@ export function renderEntities(): void {
                 ...(kind.value === "nonprofit" && e.nonprofit === undefined
                   ? { nonprofit: nonProfitDefaults("society") }
                   : {}),
+                ...(kind.value === "trust" && e.trust === undefined ? { trust: emptyTrust() } : {}),
               }
             : e,
         ),
@@ -817,7 +824,7 @@ export function renderEntities(): void {
     const head = document.createElement("div");
     head.className = "entity-head";
     head.append(name, summary, settingsButton, menu);
-    settings.append(ownersWrap, kind, structure, gstWrap, exemptWrap, nonProfitSettings(entity));
+    settings.append(ownersWrap, kind, structure, gstWrap, exemptWrap, nonProfitSettings(entity), trustSettings(entity));
     row.append(head, settings);
 
     // What goes at the top of an invoice you send somebody. Nothing else in

@@ -106,8 +106,40 @@ const NON_PROFIT: readonly StandardRow[] = [
   { code: "970", name: "Accumulated funds", type: "Equity", gst: "none", description: "What the organisation has built up; opening balances are balanced here" },
 ];
 
+/**
+ * A trust's accounts. Money a settlor puts in is "settled", not income. What the
+ * trust owes a beneficiary sits in a current account for each, which the
+ * Trust people page links to the beneficiary. Interest and dividends are kept
+ * apart because the IR6 asks for them in separate boxes.
+ */
+const TRUST: readonly StandardRow[] = [
+  { code: "200", name: "Rent received", type: "Revenue", gst: "none", description: "Rent from the trust's property" },
+  { code: "210", name: "Business income", type: "Revenue", gst: "none", description: "Trading income, if the trust runs a business" },
+  { code: "260", name: "Other income", type: "Other Income", gst: "none", description: "Any other taxable income" },
+  { code: "270", name: "Interest received", type: "Other Income", gst: "none", description: "Bank and term deposit interest" },
+  { code: "275", name: "Dividends received", type: "Other Income", gst: "none", description: "Dividends from shares and funds" },
+  { code: "280", name: "Capital gains", type: "Other Income", gst: "none", description: "Gains on selling investments or property that are not taxable; not income for the IR6" },
+  { code: "404", name: "Bank fees", type: "Expense", gst: "none", description: "Account fees" },
+  { code: "412", name: "Accounting and tax fees", type: "Expense", gst: "none", description: "Preparing the accounts and the trust's return" },
+  { code: "414", name: "Legal fees", type: "Expense", gst: "none", description: "Lawyers' fees" },
+  { code: "429", name: "General expenses", type: "Expense", gst: "none", description: "Sundry running costs" },
+  { code: "433", name: "Insurance", type: "Expense", gst: "none", description: "Insurance on the trust's property" },
+  { code: "437", name: "Interest", type: "Expense", gst: "none", description: "Interest on borrowing" },
+  { code: "469", name: "Rates", type: "Expense", gst: "none", description: "Council rates and water" },
+  { code: "473", name: "Repairs and maintenance", type: "Expense", gst: "none", description: "Upkeep of the trust's property" },
+  { code: "485", name: "Trustee fees", type: "Expense", gst: "none", description: "Fees paid to professional trustees" },
+  { code: "700", name: "Investments", type: "Fixed Asset", gst: "none", description: "Shares, units and other investments" },
+  { code: "710", name: "Land and buildings", type: "Fixed Asset", gst: "none", description: "Property the trust owns" },
+  { code: "720", name: "Loans to associated persons", type: "Current Asset", gst: "none", description: "Money lent to settlors, trustees, beneficiaries or their families" },
+  { code: "800", name: "Loans from associated persons", type: "Current Liability", gst: "none", description: "Money borrowed from settlors, trustees, beneficiaries or their families" },
+  { code: "850", name: "Beneficiary current account", type: "Current Liability", gst: "none", description: "What the trust owes a beneficiary from income allocated to them but not yet paid; add one for each beneficiary" },
+  { code: "960", name: "Settled funds", type: "Equity", gst: "none", description: "Money and property settled on the trust (its corpus)" },
+  { code: "970", name: "Accumulated trust funds", type: "Equity", gst: "none", description: "What the trust has built up; opening balances are balanced here" },
+];
+
 const STANDARD: Readonly<Record<Exclude<EntityKind, "business">, readonly StandardRow[]>> = {
   nonprofit: NON_PROFIT,
+  trust: TRUST,
   residential: [
     { code: "200", name: "Rent received", type: "Revenue", gst: "none", description: "Rent from tenants" },
     { code: "260", name: "Other rental income", type: "Other Income", gst: "none", description: "Water recharged, insurance payouts, bond kept for damage" },

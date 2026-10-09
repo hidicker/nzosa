@@ -50,6 +50,7 @@ const KIND_NAME: Record<EntityKind, string> = {
   commercial: "commercial rental",
   personal: "person",
   nonprofit: "not-for-profit",
+  trust: "trust",
 };
 
 /** The chart is still the standard business chart exactly, and nothing uses it. */

@@ -31,7 +31,8 @@ export type ModuleId =
   | "payroll"
   | "gst"
   | "assets"
-  | "nonprofit";
+  | "nonprofit"
+  | "trust";
 
 /** Where an automatic answer comes from, said beside it. */
 type Basis = "entities" | "source" | "data";
@@ -65,6 +66,15 @@ const xeroHeld = (): boolean => Object.keys(state.ledger.xeroBankNumbers ?? {}).
 const businesses = () => entities().filter((e) => (e.kind ?? "business") === "business");
 
 export const MODULES: readonly ModuleInfo[] = [
+  {
+    id: "trust",
+    countries: ["nz"],
+    name: "Trusts and estates",
+    what: "A trust's people, beneficiary accounts and the IR6 return.",
+    basis: "entities",
+    inferred: () => entities().some((e) => e.kind === "trust"),
+    holds: () => count(entities().filter((e) => e.kind === "trust").length, "trust"),
+  },
   {
     id: "nonprofit",
     countries: ["nz"],
@@ -155,7 +165,7 @@ export const MODULES: readonly ModuleInfo[] = [
     inferred: () =>
       (state.ledger.assets ?? []).length > 0 ||
       businesses().length > 0 ||
-      entities().some((e) => e.kind === "nonprofit"),
+      entities().some((e) => e.kind === "nonprofit" || e.kind === "trust"),
     holds: () => count((state.ledger.assets ?? []).length, "asset"),
   },
 ];

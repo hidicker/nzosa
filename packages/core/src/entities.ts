@@ -1,5 +1,6 @@
 import type { Account } from "./chart.js";
 import type { NonProfit } from "./non-profit.js";
+import type { Trust } from "./trust.js";
 
 /**
  * Entities: the separate books a chart of accounts is really several of.
@@ -164,9 +165,14 @@ export interface Entity {
    * approved for the $1,000 deduction. See non-profit.ts.
    */
   nonprofit?: NonProfit;
+  /**
+   * For a trust or estate (kind `trust`): its type, settlors, appointers and
+   * beneficiaries. See trust.ts.
+   */
+  trust?: Trust;
 }
 
-export type EntityKind = "residential" | "commercial" | "business" | "personal" | "nonprofit";
+export type EntityKind = "residential" | "commercial" | "business" | "personal" | "nonprofit" | "trust";
 
 export type BusinessStructure = "company" | "sole-trader" | "partnership" | "trust";
 

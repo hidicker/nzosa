@@ -412,6 +412,7 @@ const KIND_WORDS: Record<EntityKind, string> = {
   commercial: "commercial rental",
   personal: "personal",
   nonprofit: "not-for-profit",
+  trust: "trust or estate",
 };
 
 /**

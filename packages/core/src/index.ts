@@ -409,3 +409,5 @@ export * from "./ir9.js";
 export * from "./trust.js";
 export * from "./ir7.js";
 export * from "./ir4.js";
+export * from "./small-society.js";
+export * from "./tier3-report.js";

@@ -1,0 +1,443 @@
+import { redraw } from "../app.js";
+import { bookYears, postedJournals, record } from "../books.js";
+import { $, state } from "../state.js";
+import { savePart } from "../store.js";
+import { amountCell, nameCell, note } from "../ui.js";
+import {
+  accountEntityKey,
+  currentAssetsAt,
+  emptyEntityModel,
+  operatingPaymentsFrom,
+  reportingStandard,
+  smallSocietyProblems,
+  smallSocietyReportHtml,
+  smallSocietyStatements,
+  standardName,
+  tier3Problems,
+  tier3ReportHtml,
+  tier3Statements,
+  statementFromFigures,
+} from "@nzosa/core";
+import type { Account, Cents, Entity, ReportingStandard, SocietyInputs, Tier3Inputs } from "@nzosa/core";
+import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
+import { booksLocale, moneyPlaces } from "../country.js";
+import { inputsFor as performanceInputs, legalFormOf, statementFor } from "./performance-report-page.js";
+
+/**
+ * Which financial reporting standard a society or charity uses, from its last
+ * two years' operating payments and current assets, and the statements for the
+ * two the Annual report page does not cover: a small society's minimum
+ * statements for the Companies Office, and a Tier 3 performance report. See
+ * core's small-society.ts and tier3-report.ts for what the sources say.
+ */
+
+let chosen = "";
+let chosenYear = 0;
+
+const key = (entity: Entity, year: number): string => `${entity.id}:${year}`;
+
+function inputsFor(entity: Entity, year: number): SocietyInputs {
+  return state.ledger.societyReports?.[key(entity, year)] ?? {};
+}
+
+function money(cents: number): string {
+  const text = (Math.abs(cents) / 100).toLocaleString(booksLocale(), {
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
+  });
+  return cents < 0 ? `(${text})` : text;
+}
+
+async function saveInputs(entity: Entity, year: number, next: SocietyInputs, what: string): Promise<void> {
+  const before = state.ledger.societyReports ?? {};
+  const after = { ...before, [key(entity, year)]: next };
+  state.ledger = { ...state.ledger, societyReports: after };
+  state.persistent = await savePart(state.ledger);
+  await record("societyReport", what, before, after);
+}
+
+function heading(text: string): HTMLElement {
+  const h = document.createElement("h3");
+  h.textContent = text;
+  return h;
+}
+
+function textArea(value: string, rows: number, placeholder: string, onChange: (v: string) => void): HTMLTextAreaElement {
+  const box = document.createElement("textarea");
+  box.rows = rows;
+  box.value = value;
+  box.placeholder = placeholder;
+  box.addEventListener("change", () => onChange(box.value));
+  return box;
+}
+
+function labelled(label: string, control: HTMLElement): HTMLLabelElement {
+  const wrap = document.createElement("label");
+  wrap.className = "year-end-field";
+  wrap.style.display = "block";
+  wrap.append(`${label} `, control);
+  return wrap;
+}
+
+function openReport(html: string): void {
+  const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+function wrapTable(table: HTMLElement): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "table-scroll";
+  wrap.append(table);
+  return wrap;
+}
+
+function statementTable(rows: { label: string; amount: number; strong?: boolean }[]): HTMLElement {
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const tbody = document.createElement("tbody");
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    const label = nameCell(r.label);
+    if (r.strong === true) label.style.fontWeight = "600";
+    tr.append(label, amountCell(money(r.amount)));
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  return wrapTable(table);
+}
+
+export function renderSocietyPage(): void {
+  const body = $("society-body");
+  body.textContent = "";
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const entities = model.entities.filter((e) => e.kind === "nonprofit");
+  if (entities.length === 0) {
+    body.append(note("No not-for-profit organisations. On Entities & accounts, add one: a charity, society or club."));
+    return;
+  }
+  const entity = entities.find((e) => e.id === chosen) ?? entities.find((e) => e.id === state.entityFilter) ?? entities[0];
+  if (entity === undefined) return;
+  chosen = entity.id;
+  const years = bookYears();
+  if (years.length === 0) {
+    body.append(note("No transactions yet, so there is no year to report on."));
+    return;
+  }
+  const today = new Date().toISOString().slice(0, 10);
+  if (!years.includes(chosenYear)) chosenYear = years.filter((y) => taxYearEnd(y) < today)[0] ?? years[0] ?? 0;
+  const year = chosenYear;
+  const np = entity.nonprofit;
+
+  const pick = document.createElement("div");
+  pick.className = "page-actions";
+  if (entities.length > 1) {
+    const who = document.createElement("select");
+    for (const e of entities) {
+      const option = document.createElement("option");
+      option.value = e.id;
+      option.textContent = e.name;
+      option.selected = e.id === entity.id;
+      who.append(option);
+    }
+    who.addEventListener("change", () => {
+      chosen = who.value;
+      redraw("society");
+    });
+    pick.append(who);
+  }
+  const when = document.createElement("select");
+  for (const y of years) {
+    const option = document.createElement("option");
+    option.value = String(y);
+    option.textContent = `Year ended ${taxYearEndSaid(y)}`;
+    option.selected = y === year;
+    when.append(option);
+  }
+  when.addEventListener("change", () => {
+    chosenYear = Number(when.value);
+    redraw("society");
+  });
+  pick.append(when);
+  body.append(pick);
+
+  const patch = (change: (draft: SocietyInputs) => void, what: string): void => {
+    const next = structuredClone(inputsFor(entity, year));
+    change(next);
+    void saveInputs(entity, year, next, what);
+    redraw("society");
+  };
+
+  const owned = (accountKey: string): boolean => {
+    const holder = model.accounts[accountKey];
+    return holder === entity.id || (holder === undefined && model.entities.length <= 1);
+  };
+  const only = (account: Account): boolean => {
+    const bank = (account.ledgerAccount ?? "").trim();
+    if (bank !== "") return (model.banks[bank] ?? []).includes(entity.id) || (model.banks[bank] === undefined && model.entities.length <= 1);
+    return owned(accountEntityKey(account));
+  };
+  const journals = postedJournals();
+  const statementsFor = (y: number) => smallSocietyStatements({ journals, chart: state.chart, from: taxYearStart(y), to: taxYearEnd(y), only });
+
+  // 1. Which standard
+  body.append(heading("1. Which standard applies?"));
+  const last = statementsFor(year - 1);
+  const before = statementsFor(year - 2);
+  const thisYear = statementsFor(year);
+  const payments: [Cents, Cents] = [operatingPaymentsFrom(last.expenses), operatingPaymentsFrom(before.expenses)];
+  const assets: [Cents, Cents] = [currentAssetsAt(last), currentAssetsAt(before)];
+  const answer = reportingStandard({
+    registeredCharity: np?.registeredCharity === true,
+    donee: np?.donee === true,
+    operatingPayments: payments,
+    currentAssets: assets,
+    thisYearPayments: operatingPaymentsFrom(thisYear.expenses),
+  });
+  const stored = inputsFor(entity, year);
+  const standard: ReportingStandard = stored.standard ?? answer.standard;
+  body.append(
+    statementTable([
+      { label: `Operating payments, year ended ${taxYearEndSaid(year - 1)}`, amount: payments[0] },
+      { label: `Operating payments, year ended ${taxYearEndSaid(year - 2)}`, amount: payments[1] },
+      { label: `Current assets at ${taxYearEndSaid(year - 1)}`, amount: assets[0] },
+      { label: `Current assets at ${taxYearEndSaid(year - 2)}`, amount: assets[1] },
+      { label: `Operating payments this year, so far as the books show`, amount: operatingPaymentsFrom(thisYear.expenses) },
+    ]),
+  );
+  body.append(
+    note(
+      "Operating payments are measured on the cash basis and leave out depreciation, money owed and capital spending. These figures are the year's expenses less depreciation from the books, which is near enough to test against $50,000 and $140,000 but is not exact: check them if they are close.",
+    ),
+  );
+  const verdict = document.createElement("div");
+  verdict.className = "journal-card";
+  const title = document.createElement("p");
+  title.className = "journal-narration";
+  title.textContent = `Suggested: ${standardName(answer.standard)}`;
+  verdict.append(title);
+  for (const reason of answer.reasons) verdict.append(note(reason));
+  body.append(verdict);
+  const choose = document.createElement("select");
+  for (const value of ["small-society", "tier-4", "tier-3"] as const) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = standardName(value);
+    option.selected = value === standard;
+    choose.append(option);
+  }
+  choose.addEventListener("change", () =>
+    patch((d) => {
+      if (choose.value === answer.standard) delete d.standard;
+      else d.standard = choose.value as ReportingStandard;
+    }, "reporting standard"),
+  );
+  body.append(labelled("Use:", choose));
+  if (np?.registeredCharity === true) {
+    body.append(note("A registered charity files its annual return and performance report with Charities Services, under the Tier 4 or Tier 3 standard, whatever its size."));
+  } else {
+    body.append(note("Financial statements are due at the Companies Office within six months of balance date, after being presented to the members at the annual general meeting."));
+  }
+
+  if (standard === "tier-4") {
+    body.append(heading("2. Tier 4: the Annual report page"));
+    body.append(note("The Tier 4 cash performance report is on the Annual report page, with the cash received and paid worked out from the books."));
+    const go = document.createElement("button");
+    go.type = "button";
+    go.textContent = "Open the Annual report page";
+    go.addEventListener("click", () => document.querySelector<HTMLElement>('[data-page="performance"]')?.click());
+    body.append(go);
+    return;
+  }
+
+  const perf = performanceInputs(entity, year);
+  const signers: [string, string] = [stored.signers?.[0] ?? perf.approvedBy[0] ?? "", stored.signers?.[1] ?? perf.approvedBy[1] ?? ""];
+
+  if (standard === "small-society") {
+    body.append(heading("2. Small society: financial statements"));
+    const s = thisYear;
+    const incomeRows = [
+      ...s.income.map((a) => ({ label: a.name, amount: a.amount as number })),
+      { label: "Total income", amount: s.totalIncome as number, strong: true },
+      ...s.expenses.map((a) => ({ label: a.name, amount: -a.amount as number })),
+      { label: "Total expenditure", amount: -s.totalExpenses as number, strong: true },
+      { label: s.surplus >= 0 ? "Surplus for the year" : "Deficit for the year", amount: s.surplus as number, strong: true },
+    ];
+    body.append(statementTable(incomeRows));
+    const position = [
+      ...[...s.currentAssets, ...s.fixedAssets].map((a) => ({ label: a.name, amount: a.amount as number })),
+      { label: "Total assets", amount: s.totalAssets as number, strong: true },
+      ...[...s.currentLiabilities, ...s.nonCurrentLiabilities].map((a) => ({ label: a.name, amount: -a.amount as number })),
+      { label: "Total liabilities", amount: -s.totalLiabilities as number, strong: true },
+      { label: "Net assets (accumulated funds)", amount: s.netAssets as number, strong: true },
+    ];
+    body.append(statementTable(position));
+    body.append(
+      labelled(
+        "Mortgages, charges and other security interests over its property at the end of the year:",
+        textArea(stored.securityInterests ?? "", 3, "Leave empty if there are none", (v) =>
+          patch((d) => {
+            if (v.trim() === "") delete d.securityInterests;
+            else d.securityInterests = v;
+          }, "security interests"),
+        ),
+      ),
+    );
+    for (const index of [0, 1] as const) {
+      const input = document.createElement("input");
+      input.type = "text";
+      input.placeholder = "Full name";
+      input.value = signers[index];
+      input.addEventListener("change", () =>
+        patch((d) => {
+          const next: [string, string] = [...(d.signers ?? signers)] as [string, string];
+          next[index] = input.value.trim();
+          d.signers = next;
+        }, "signers"),
+      );
+      body.append(labelled(`Committee member ${index + 1} signs:`, input));
+    }
+    const date = document.createElement("input");
+    date.type = "date";
+    date.value = stored.approvedOn ?? "";
+    date.addEventListener("change", () =>
+      patch((d) => {
+        if (date.value === "") delete d.approvedOn;
+        else d.approvedOn = date.value;
+      }, "date approved"),
+    );
+    body.append(labelled("Approved on:", date));
+    const problems = smallSocietyProblems({ statements: s, signers });
+    const status = document.createElement("div");
+    status.className = problems.length > 0 ? "journal-card journal-broken" : "journal-card";
+    const line = document.createElement("p");
+    line.className = "journal-narration";
+    line.textContent = problems.length > 0 ? "Before these are ready:" : "Ready to print, sign and file.";
+    status.append(line);
+    for (const p of problems) status.append(note(p));
+    const open = document.createElement("button");
+    open.type = "button";
+    open.className = "primary";
+    open.textContent = "Open the statements to print or save as PDF";
+    open.addEventListener("click", () => {
+      const now = inputsFor(entity, year);
+      openReport(
+        smallSocietyReportHtml({
+          name: entity.name,
+          statements: s,
+          securityInterests: now.securityInterests ?? "",
+          signers,
+          approvedOn: now.approvedOn,
+        }),
+      );
+    });
+    status.append(open);
+    body.append(status);
+    body.append(
+      note(
+        "These are the minimum a small society must show: income and expenditure, assets and liabilities at the end of the year (current and non-current), and any security over its property. The Companies Office has an optional Excel template that meets the same requirements. " +
+          "The statements are filed as a PDF, dated and signed by two committee members, and the society confirms on filing which standard it used.",
+      ),
+    );
+    return;
+  }
+
+  // Tier 3
+  body.append(heading("2. Tier 3: performance report"));
+  const t3 = stored.tier3 ?? {};
+  const setT3 = (name: keyof Tier3Inputs, v: string): void =>
+    patch((d) => {
+      const next = { ...(d.tier3 ?? {}) } as Record<string, unknown>;
+      if (v.trim() === "") delete next[name];
+      else next[name] = v;
+      d.tier3 = next as Tier3Inputs;
+    }, `Tier 3: ${name}`);
+  const area = (label: string, name: keyof Tier3Inputs, rows = 2, placeholder = ""): HTMLElement =>
+    labelled(label, textArea((t3[name] as string | undefined) ?? "", rows, placeholder, (v) => setT3(name, v)));
+  const m = tier3Statements({ journals, chart: state.chart, from: taxYearStart(year), to: taxYearEnd(year), mapping: state.ledger.tier4Lines ?? {}, only });
+  const rowsOf = (groups: { label: string; total: number }[], totalLabel: string, total: number) => [
+    ...groups.map((g) => ({ label: g.label, amount: g.total })),
+    { label: totalLabel, amount: total, strong: true },
+  ];
+  body.append(Object.assign(document.createElement("h4"), { textContent: "Statement of financial performance" }));
+  body.append(
+    statementTable([
+      ...rowsOf(m.revenue, "Total revenue", m.totalRevenue),
+      ...rowsOf(m.expenses.map((g) => ({ label: g.label, total: -g.total })), "Total expenses", -m.totalExpenses),
+      { label: m.surplus >= 0 ? "Surplus" : "Deficit", amount: m.surplus, strong: true },
+      ...(m.incomeTax !== 0 ? [{ label: "Income tax", amount: -m.incomeTax }, { label: "Surplus (deficit) after tax", amount: m.surplusAfterTax, strong: true }] : []),
+    ]),
+  );
+  body.append(Object.assign(document.createElement("h4"), { textContent: "Statement of financial position" }));
+  body.append(
+    statementTable([
+      ...rowsOf([...m.currentAssets.map((g) => ({ label: `Current: ${g.label}`, total: g.total })), ...m.nonCurrentAssets.map((g) => ({ label: `Non-current: ${g.label}`, total: g.total }))], "Total assets", m.totalAssets),
+      ...rowsOf([...m.currentLiabilities.map((g) => ({ label: `Current: ${g.label}`, total: -g.total })), ...m.nonCurrentLiabilities.map((g) => ({ label: `Non-current: ${g.label}`, total: -g.total }))], "Total liabilities", -m.totalLiabilities),
+      { label: "Net assets", amount: m.netAssets, strong: true },
+      ...m.funds.map((f) => ({ label: `Fund: ${f.label}`, amount: f.amount as number })),
+    ]),
+  );
+  body.append(note("The statement of cash flows is the cash received and paid worked out for the Annual report page, with the same categories. Set which line each account is on there."));
+
+  body.append(Object.assign(document.createElement("h4"), { textContent: "Entity information" }));
+  body.append(
+    area("Purpose or mission:", "purpose", 2, "The key difference the organisation is trying to make"),
+    area("Structure (branches, divisions or units):", "structure", 2, "Leave empty if there are none"),
+    area("Governance:", "governance", 2, "Who makes the key decisions"),
+    area("Entities it controls:", "controlled", 1, "Leave empty if none"),
+    area("Reliance on volunteers and donated goods or services:", "volunteers", 2),
+  );
+  body.append(Object.assign(document.createElement("h4"), { textContent: "Accounting policies and notes" }));
+  body.append(
+    area("Specific accounting policies:", "policies", 3, "Revenue, grants with conditions, fixed assets and depreciation, debtors"),
+    area("Changes in accounting policies:", "policyChanges", 1, "Leave empty if none"),
+    area("Deferred revenue: what the expectations are, and when they will be met:", "deferredRevenue", 2),
+    area("Significant goods or services in kind provided to it:", "inKind", 2),
+    area("Commitments (leases, purchases, grants promised):", "commitments", 2),
+    area("Contingent liabilities and guarantees:", "contingent", 2),
+    area("Funds: the purpose of each, and any restriction on it:", "reserves", 2),
+    area("Assets used as security for loans:", "security", 2),
+    area("Assets held on behalf of others:", "heldForOthers", 2),
+  );
+  body.append(note("What the organisation did, related parties, errors corrected and who approves the report are entered on the Annual report page, and used here."));
+
+  const problems = tier3Problems({ statements: m, inputs: t3, performance: perf, gstRegistered: entity.gstRegistered === true });
+  const status = document.createElement("div");
+  status.className = problems.length > 0 ? "journal-card journal-broken" : "journal-card";
+  const line = document.createElement("p");
+  line.className = "journal-narration";
+  line.textContent = problems.length > 0 ? "Before this report is ready:" : "Ready to print, sign and file.";
+  status.append(line);
+  const list = document.createElement("ul");
+  for (const p of problems) list.append(Object.assign(document.createElement("li"), { textContent: p }));
+  if (problems.length > 0) status.append(list);
+  const open = document.createElement("button");
+  open.type = "button";
+  open.className = "primary";
+  open.textContent = "Open the report to print or save as PDF";
+  open.addEventListener("click", () => {
+    const cash = statementFor(entity, year);
+    const cashBefore = statementFor(entity, year - 1);
+    const previousCash = cashBefore.reconciles ? cashBefore : statementFromFigures(year - 1, taxYearStart(year - 1), taxYearEnd(year - 1), perf.previousFigures ?? {});
+    const previous = tier3Statements({ journals, chart: state.chart, from: taxYearStart(year - 1), to: taxYearEnd(year - 1), mapping: state.ledger.tier4Lines ?? {}, only });
+    openReport(
+      tier3ReportHtml({
+        entity: { name: entity.name, legalForm: legalFormOf(entity) },
+        gstRegistered: entity.gstRegistered === true,
+        statements: m,
+        previous: previous.totalRevenue !== 0 || previous.totalExpenses !== 0 ? previous : null,
+        cash,
+        previousCash,
+        inputs: inputsFor(entity, year).tier3 ?? {},
+        performance: performanceInputs(entity, year),
+      }),
+    );
+  });
+  status.append(open);
+  body.append(status);
+  body.append(
+    note(
+      "Built from the XRB's Tier 3 (NFP) Standard. Review the categories each account has fallen into, and have an accountant look at the policies and notes before the report is adopted.",
+    ),
+  );
+}

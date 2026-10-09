@@ -131,6 +131,8 @@ export type EventKind =
   | "ir7Return"
   /** A company's IR4 and imputation credit account choices. */
   | "ir4Return"
+  /** A society's reporting standard and statements' inputs. */
+  | "societyReport"
   /** Payroll -- employer details, employees and pay runs -- whole. */
   | "payroll"
   /** The fixed asset register, whole. */
@@ -461,6 +463,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, tripLog: (event.before ?? { vehicles: [], trips: [], years: [] }) as NonNullable<StoredLedger["tripLog"]> };
     case "tenancies":
       return { ...ledger, tenancies: (event.before ?? []) as NonNullable<StoredLedger["tenancies"]> };
+    case "societyReport":
+      return { ...ledger, societyReports: (event.before ?? {}) as NonNullable<StoredLedger["societyReports"]> };
     case "ir4Return":
       return { ...ledger, ir4Returns: (event.before ?? {}) as NonNullable<StoredLedger["ir4Returns"]> };
     case "ir7Return":
@@ -557,6 +561,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   trustReturn: "Trust return",
   ir7Return: "IR7 worksheet",
   ir4Return: "IR4 worksheet",
+  societyReport: "Society statements",
   payroll: "Payroll",
   assets: "Fixed assets",
   varianceNote: "GST explanation",

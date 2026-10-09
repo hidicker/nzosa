@@ -42,7 +42,7 @@ function key(entity: Entity, year: number): string {
   return `${entity.id}:${year}`;
 }
 
-function inputsFor(entity: Entity, year: number): PerformanceInputs {
+export function inputsFor(entity: Entity, year: number): PerformanceInputs {
   return state.ledger.performanceReports?.[key(entity, year)] ?? emptyInputs();
 }
 
@@ -76,7 +76,7 @@ function cashAccountsOf(entity: Entity): CashAccounts {
   return { banks: owned.map((id) => ({ id, label: labelOf(id) })), cashCodes };
 }
 
-function statementFor(entity: Entity, year: number) {
+export function statementFor(entity: Entity, year: number) {
   return cashStatement({
     journals: postedJournals(),
     chart: state.chart,
@@ -89,7 +89,7 @@ function statementFor(entity: Entity, year: number) {
   });
 }
 
-function legalFormOf(entity: Entity): string {
+export function legalFormOf(entity: Entity): string {
   const np = entity.nonprofit;
   if (np === undefined) return "Not-for-profit organisation";
   const form = nonProfitFormName(np.form);

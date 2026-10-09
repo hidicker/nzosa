@@ -53,6 +53,7 @@ export type PageName =
   | "ir6"
   | "ir7"
   | "ir4"
+  | "society"
   | "tenancies"
   | "reconcile"
   | "reports"
@@ -178,6 +179,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "ir6") redraw("ir6");
   if (page === "ir7") redraw("ir7");
   if (page === "ir4") redraw("ir4");
+  if (page === "society") redraw("society");
   if (page === "donations") redraw("donations");
   if (page === "performance") redraw("performance");
   if (page === "personalyear") redraw("personalYear");

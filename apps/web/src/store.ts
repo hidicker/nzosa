@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, DonationReceipt, Grant, Ir9Inputs, Ir7Inputs, Ir4Inputs, TrustInputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, DonationReceipt, Grant, Ir9Inputs, Ir7Inputs, Ir4Inputs, SocietyInputs, TrustInputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -271,6 +271,8 @@ export interface StoredLedger {
   ir7Returns?: Record<string, Ir7Inputs>;
   /** A company's IR4 and imputation credit account choices, by `entity:year` (see core's ir4.ts). */
   ir4Returns?: Record<string, Ir4Inputs>;
+  /** A society's reporting standard and its small-society or Tier 3 statements' inputs, by `entity:year`. */
+  societyReports?: Record<string, SocietyInputs>;
   /** Payments that buy something running past a balance date. */
   prepayments?: Prepayment[];
   /**
@@ -744,6 +746,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.trustReturns ? { trustReturns: ledger.trustReturns } : {}),
     ...(ledger.ir7Returns ? { ir7Returns: ledger.ir7Returns } : {}),
     ...(ledger.ir4Returns ? { ir4Returns: ledger.ir4Returns } : {}),
+    ...(ledger.societyReports ? { societyReports: ledger.societyReports } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
     ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),

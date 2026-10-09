@@ -1,4 +1,4 @@
-import { existsSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
 import { join, sep } from "node:path";
 
 /**
@@ -28,9 +28,9 @@ export class Sandbox {
 
   constructor(folder: string) {
     if (!existsSync(folder) || !statSync(folder).isDirectory()) {
-      throw new Error(`${folder} is not a folder of NZOSA books.`);
+      throw new Error(`${folder} is not a folder.`);
     }
-    this.root = realpathSync(folder);
+    this.root = realpathSync(booksIn(realpathSync(folder)));
   }
 
   /** The text of one book file, or undefined when the books do not have it. */
@@ -54,4 +54,31 @@ export class Sandbox {
       return existsSync(path) ? String(statSync(path).mtimeMs) : "-";
     }).join("|");
   }
+}
+
+/**
+ * The books a chosen folder means.
+ *
+ * People pick the folder that holds their books, or the one above it. A folder
+ * that is not books and has no books in it is an error said out loud, because
+ * the alternative is an answer of "no transactions" that reads as a fact about
+ * their accounts. Several sets of books below it is also an error: choosing
+ * between somebody's personal books and a company's is not this server's call.
+ */
+function booksIn(folder: string): string {
+  const isBooks = (dir: string): boolean => existsSync(join(dir, "transactions.json"));
+  if (isBooks(folder)) return folder;
+  const inside = readdirSync(folder, { withFileTypes: true })
+    .filter((entry) => entry.isDirectory() && isBooks(join(folder, entry.name)))
+    .map((entry) => entry.name);
+  if (inside.length === 1) return join(folder, inside[0] as string);
+  if (inside.length === 0) {
+    throw new Error(
+      `${folder} holds no NZOSA books (no transactions.json in it, or in any folder directly inside it). ` +
+        `Choose the folder NZOSA keeps your books in.`,
+    );
+  }
+  throw new Error(
+    `${folder} holds ${inside.length} sets of books: ${inside.join(", ")}. Choose the one you want.`,
+  );
 }

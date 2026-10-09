@@ -204,6 +204,23 @@ test("a rules file the app wrote, with the set wrapped inside it, codes the same
   assert.equal(found.rows[0].codedTo, "460RE");
 });
 
+test("choosing the folder above the books finds the books; several or none is said plainly", () => {
+  const { root, folder } = books();
+  // One set of books below the chosen folder: that is the one meant.
+  assert.equal(new Sandbox(root).root, new Sandbox(folder).root);
+  assert.equal(call(context(root), "list_entities").transactions, 5);
+
+  // Several below it: name them rather than pick.
+  const other = join(root, "company");
+  mkdirSync(other);
+  writeFileSync(join(other, "transactions.json"), JSON.stringify({ version: 1, data: [] }));
+  assert.throws(() => new Sandbox(root), /2 sets of books: books, company/);
+
+  // None: an error, never an empty answer that reads as a fact about the accounts.
+  const empty = mkdtempSync(join(tmpdir(), "nzosa-empty-"));
+  assert.throws(() => new Sandbox(empty), /holds no NZOSA books/);
+});
+
 test("a book file that is a link to somewhere else is refused", (t) => {
   const { root, folder } = books();
   const outside = join(root, "outside.json");

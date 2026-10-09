@@ -105,3 +105,37 @@ test("rent paid in advance before the tenancy starts counts toward the first wee
 test("the first rent runs from the start even if entered with a later date", () => {
   assert.equal(rentOn([{ from: "2024-11-25", amount: 56_000 }], "2024-11-21"), 56_000);
 });
+
+test("a line needs every word it gives, and a second line takes a second payer", async () => {
+  const { rentReceipts, rentSources } = await import("../dist/index.js");
+  const journals = [
+    receipt("2026-01-05", 30_000, "SMITH J RENT"),
+    receipt("2026-01-05", 20_000, "RIMU K RENT"),
+    receipt("2026-01-06", 9_000, "SMITH J POWER SHARE"),
+    receipt("2026-01-07", 40_000, "TOTARA M RENT"),
+  ];
+  const both = {
+    ...weekly,
+    sources: [
+      { accounts: ["2110"], mentioning: "smith, rent" },
+      { accounts: ["2110"], mentioning: "rimu" },
+    ],
+  };
+  const got = rentReceipts(both, journals).map((r) => r.amount);
+  assert.deepEqual(got, [30_000, 20_000], "Smith's rent and Rimu's, not Smith's power or Totara's rent");
+  assert.equal(rentSources(both).length, 2);
+});
+
+test("a tenancy saved with 'any of these words' still matches as it did", async () => {
+  const { rentReceipts, rentSources } = await import("../dist/index.js");
+  const old = { ...weekly, payer: "smith, rimu" };
+  assert.equal(rentSources(old).length, 2);
+  const journals = [receipt("2026-01-05", 30_000, "SMITH J RENT"), receipt("2026-01-05", 20_000, "RIMU K RENT"), receipt("2026-01-07", 40_000, "TOTARA M RENT")];
+  assert.deepEqual(rentReceipts(old, journals).map((r) => r.amount), [30_000, 20_000]);
+});
+
+test("a payment matching two lines is counted once", async () => {
+  const { rentReceipts } = await import("../dist/index.js");
+  const twice = { ...weekly, sources: [{ accounts: ["2110"], mentioning: "smith" }, { accounts: ["2110"], mentioning: "rent" }] };
+  assert.deepEqual(rentReceipts(twice, [receipt("2026-01-05", 30_000, "SMITH J RENT")]).map((r) => r.amount), [30_000]);
+});

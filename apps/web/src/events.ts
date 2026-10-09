@@ -115,6 +115,8 @@ export type EventKind =
   | "modules"
   /** Tenancies and their rent, whole. */
   | "tenancies"
+  /** A rental property's jobs, issues and ticks, every property's at once. */
+  | "propertyCare"
   /** Payroll -- employer details, employees and pay runs -- whole. */
   | "payroll"
   /** The fixed asset register, whole. */
@@ -445,6 +447,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, tripLog: (event.before ?? { vehicles: [], trips: [], years: [] }) as NonNullable<StoredLedger["tripLog"]> };
     case "tenancies":
       return { ...ledger, tenancies: (event.before ?? []) as NonNullable<StoredLedger["tenancies"]> };
+    case "propertyCare":
+      return { ...ledger, propertyCare: (event.before ?? {}) as NonNullable<StoredLedger["propertyCare"]> };
     case "yearEnd": {
       const before = (event.before ?? {}) as Pick<StoredLedger, "vehicleUse" | "prepayments">;
       return { ...ledger, vehicleUse: before.vehicleUse ?? [], prepayments: before.prepayments ?? [] };
@@ -512,6 +516,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   tripLog: "Vehicle trips",
   modules: "Modules",
   tenancies: "Tenancies",
+  propertyCare: "Property jobs and checks",
   payroll: "Payroll",
   assets: "Fixed assets",
   varianceNote: "GST explanation",

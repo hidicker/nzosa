@@ -4107,3 +4107,11 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .sheet-ai-part textarea { display: block; width: 100%; box-sizing: border-box; min-height: 5rem; margin: 0.4rem 0; font: inherit; font-size: 0.85rem; }
 .sheet-ai-keep { border-top: 2px solid var(--border); margin-top: 0.8rem; padding-top: 0.6rem; }
 .sheet-ai-keep label { display: block; margin: 0.3rem 0; }
+
+/* A tenancy's rent, one line per person paying: account AND words. */
+.rent-source { display: flex; flex-wrap: wrap; gap: 0.25rem 1rem; align-items: center; }
+
+/* A property's jobs and issues, and its ticks. */
+.property-care-ticks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0.6rem 0; }
+.property-care-table input[type=text] { width: 100%; min-width: 12rem; }
+.property-care-overdue td { background: color-mix(in srgb, #c33 10%, transparent); }

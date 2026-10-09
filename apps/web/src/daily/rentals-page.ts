@@ -3,8 +3,12 @@ import { postedJournals, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { bondStatus, emptyEntityModel, parseAmount, rentOn, rentPosition } from "@nzosa/core";
-import type { Cents, Entity, IsoDate, RentFrequency, Tenancy } from "@nzosa/core";
+import { accountEntityKey, bondStatus, emptyEntityModel, parseAmount, rentOn, rentPosition, rentSources } from "@nzosa/core";
+import type { Account, Cents, Entity, IsoDate, RentFrequency, RentSource, Tenancy } from "@nzosa/core";
+import { tripsPanel } from "./vehicle-trips-panel.js";
+import { propertyCarePanel } from "./property-care-panel.js";
+import { vehiclesBox } from "./rental-year-end.js";
+import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
@@ -56,6 +60,17 @@ function input(type: string, value: string): HTMLInputElement {
   box.type = type;
   box.value = value;
   return box;
+}
+
+/**
+ * The income accounts a property's rent can be coded to: its own, where the
+ * chart says which are whose, or every income account where it does not.
+ */
+function incomeAccounts(entityId: string): Account[] {
+  const income = state.chart.filter((a) => a.code !== "" && /revenue|income|sales/i.test(a.type));
+  const owners = (state.ledger.entities ?? emptyEntityModel()).accounts;
+  const own = income.filter((a) => owners[accountEntityKey(a)] === entityId);
+  return own.length > 0 ? own : income;
 }
 
 const dollars = (c: Cents | undefined): string => (c === undefined || c === 0 ? "" : (c / 100).toFixed(2));
@@ -128,19 +143,84 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   const bondRef = input("text", draft.bond?.reference ?? "");
   bondRef.placeholder = "Bond number";
 
-  const accounts = document.createElement("select");
-  accounts.multiple = true;
-  accounts.size = 4;
-  const income = state.chart.filter((a) => a.code !== "" && /revenue|income|sales/i.test(a.type));
-  for (const a of income) {
-    const option = document.createElement("option");
-    option.value = a.code;
-    option.textContent = `${a.code} ${a.name}`;
-    option.selected = draft.accounts.includes(a.code);
-    accounts.append(option);
-  }
-  const payer = input("text", draft.payer ?? "");
-  payer.placeholder = "e.g. SMITH J (optional)";
+  // Where the rent comes from: a line per person paying, each its account AND
+  // every word it gives. One account to a line, so a line saved with several
+  // becomes several lines -- the same payments either way.
+  const lines: RentSource[] = rentSources(draft).flatMap((source) =>
+    (source.accounts.length > 0 ? source.accounts : [""]).map((code) => ({
+      accounts: code === "" ? [] : [code],
+      ...(source.mentioning !== undefined ? { mentioning: source.mentioning } : {}),
+    })),
+  );
+  if (lines.length === 0) lines.push({ accounts: [] });
+  const lineRows = document.createElement("div");
+  const lineInputs: [HTMLSelectElement, HTMLInputElement][] = [];
+  const readLines = (): void => {
+    lineInputs.forEach(([code, words], i) => {
+      lines[i] = {
+        accounts: code.value === "" ? [] : [code.value],
+        ...(words.value.trim() !== "" ? { mentioning: words.value.trim() } : {}),
+      };
+    });
+  };
+  const drawLines = (): void => {
+    lineRows.textContent = "";
+    lineInputs.length = 0;
+    lines.forEach((line, i) => {
+      const code = document.createElement("select");
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = "Choose the account";
+      code.append(none);
+      const offered = incomeAccounts(entity.value);
+      const held = line.accounts[0];
+      if (held !== undefined && !offered.some((a) => a.code === held)) {
+        const kept = state.chart.find((a) => a.code === held);
+        if (kept !== undefined) offered.unshift(kept);
+      }
+      for (const a of offered) {
+        const option = document.createElement("option");
+        option.value = a.code;
+        option.textContent = `${a.code} ${a.name}`;
+        option.selected = line.accounts[0] === a.code;
+        code.append(option);
+      }
+      const words = input("text", line.mentioning ?? "");
+      words.placeholder = i === 0 ? "e.g. SMITH, RENT (optional)" : "e.g. RIMU K";
+      lineInputs.push([code, words]);
+      const row = document.createElement("div");
+      row.className = "rent-source";
+      row.append(field(i === 0 ? "Rent is coded to" : "and rent coded to", code), field("AND mentioning", words));
+      if (lines.length > 1) {
+        const drop = document.createElement("button");
+        drop.type = "button";
+        drop.className = "link-button";
+        drop.textContent = "\u2715";
+        drop.title = "Remove this line";
+        drop.addEventListener("click", () => {
+          readLines();
+          lines.splice(i, 1);
+          drawLines();
+        });
+        row.append(drop);
+      }
+      lineRows.append(row);
+    });
+  };
+  drawLines();
+  // Another property, another set of accounts to choose from.
+  entity.addEventListener("change", () => {
+    readLines();
+    drawLines();
+  });
+  const addLine = document.createElement("button");
+  addLine.type = "button";
+  addLine.textContent = "Add another person paying";
+  addLine.addEventListener("click", () => {
+    readLines();
+    lines.push({ accounts: lines[0]?.accounts ?? [] });
+    drawLines();
+  });
 
   box.append(
     field("Property", entity),
@@ -156,13 +236,15 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
     field("Bond lodged", bondLodged),
     field("Bond number", bondRef),
     document.createElement("hr"),
-    field("Rent is coded to", accounts),
-    field("Only payments mentioning", payer),
+    lineRows,
+    addLine,
     note(
       "Rent is read from the account it is coded to, including rent a property manager " +
-        "collected. If the account holds more than one tenant, enter words from this tenant's " +
-        "payments (a name or reference), separated by commas. Rent paid up to 90 days before " +
-        "the tenancy starts counts toward the first weeks.",
+        "collected. Where the account holds more than one tenant, give words from this " +
+        "tenant's payments: a payment must mention every word on its line (SMITH, RENT takes " +
+        "Smith's rent and not Smith's other payments). Add a line for each other person who " +
+        "pays rent for this tenancy. Rent paid up to 90 days before the tenancy starts counts " +
+        "toward the first weeks.",
     ),
   );
 
@@ -178,7 +260,9 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
     const changes = rentInputs
       .map(([f, a], i) => ({ from: (i === 0 ? start.value : f.value) as IsoDate, amount: parseAmount(a.value) ?? 0 }))
       .filter((r) => r.from !== "" && r.amount > 0);
-    const chosen = [...accounts.selectedOptions].map((o) => o.value);
+    readLines();
+    const sources = lines.filter((line) => line.accounts.length > 0);
+    const chosen = [...new Set(sources.flatMap((line) => line.accounts))];
     const problems = [
       tenant.value.trim() === "" ? "name the tenant" : "",
       start.value === "" ? "give the start date" : "",
@@ -209,7 +293,7 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
           }
         : {}),
       accounts: chosen,
-      ...(payer.value.trim() !== "" ? { payer: payer.value.trim() } : {}),
+      sources,
     };
     const others = (state.ledger.tenancies ?? []).filter((t) => t.id !== next.id);
     editing = null;
@@ -225,6 +309,29 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   actions.append(save, cancel);
   box.append(actions, trouble);
   return box;
+}
+
+/** A tick and a date: the day the tenant was told they were behind. */
+function toldBehind(t: Tenancy, asAt: IsoDate): HTMLElement {
+  const wrap = document.createElement("label");
+  wrap.className = "feed-auto";
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  box.checked = t.toldBehind !== undefined;
+  const when = input("date", t.toldBehind ?? asAt);
+  when.max = asAt;
+  const store = (): void => {
+    const { toldBehind: _old, ...rest } = t;
+    const next: Tenancy = box.checked && when.value !== "" ? { ...rest, toldBehind: when.value } : rest;
+    const others = (state.ledger.tenancies ?? []).map((x) => (x.id === t.id ? next : x));
+    void saveTenancies(others, box.checked ? `Told ${t.tenant} they are behind, ${when.value}` : `Not told: ${t.tenant}`);
+  };
+  box.addEventListener("change", store);
+  when.addEventListener("change", () => {
+    if (box.checked) store();
+  });
+  wrap.append(box, " Tenant told they are behind, on ", when);
+  return wrap;
 }
 
 const PERIOD_WORD: Record<RentFrequency, string> = { weekly: "week", fortnightly: "fortnight", monthly: "month" };
@@ -258,6 +365,8 @@ function card(t: Tenancy, entities: Entity[], asAt: IsoDate): HTMLElement {
   box.append(verdict);
   for (const said of position.notes) box.append(note(said));
   box.append(note(`Bond: ${bondStatus(t.bond, entity?.kind === "residential", asAt)}${t.bond ? ` $${money(t.bond.amount)}.` : ""}`));
+  // Behind: whether the tenant has been told, and when.
+  if (b > 0) box.append(toldBehind(t, asAt));
 
   // The table: newest first, each period's due, paid and running balance.
   const details = document.createElement("details");
@@ -298,6 +407,28 @@ function card(t: Tenancy, entities: Entity[], asAt: IsoDate): HTMLElement {
   return box;
 }
 
+/** Which properties are open, so saving does not fold the page up. */
+const opened = new Set<string>();
+let openedOnce = false;
+
+function newTenancy(entityId: string, asAt: IsoDate): Tenancy {
+  const rentAccount = incomeAccounts(entityId).find((a) => /rent/i.test(a.name));
+  return {
+    id: `t${Date.now().toString(36)}`,
+    entityId,
+    tenant: "",
+    start: asAt,
+    frequency: "weekly",
+    rents: [],
+    accounts: rentAccount ? [rentAccount.code] : [],
+  };
+}
+
+/**
+ * The tenancies page, property by property, as Rental year end is: each
+ * property a heading with its tenancies, current then ended, and the trips
+ * made to it in the owners' own cars this year.
+ */
 export function renderRentalsPage(): void {
   const body = $("tenancies-body");
   body.textContent = "";
@@ -307,50 +438,80 @@ export function renderRentalsPage(): void {
     return;
   }
   const asAt = new Date().toISOString().slice(0, 10);
-
-  const actions = document.createElement("div");
-  actions.className = "page-actions";
-  const add = document.createElement("button");
-  add.type = "button";
-  add.className = "primary";
-  add.textContent = "Add a tenancy";
-  add.disabled = editing !== null;
-  add.addEventListener("click", () => {
-    const first = entities.find((e) => e.id === state.entityFilter) ?? entities[0];
-    const rentAccount = state.chart.find(
-      (a) => /rent/i.test(a.name) && /revenue|income|sales/i.test(a.type) && (first === undefined || true),
-    );
-    editing = {
-      id: `t${Date.now().toString(36)}`,
-      entityId: first?.id ?? "",
-      tenant: "",
-      start: asAt,
-      frequency: "weekly",
-      rents: [],
-      accounts: rentAccount ? [rentAccount.code] : [],
-    };
-    redraw("tenancies");
-  });
-  actions.append(add);
-  body.append(actions);
-  if (editing !== null) body.append(editor(editing, entities));
-
-  const all = (state.ledger.tenancies ?? []).filter(
-    (t) => state.entityFilter === "" || t.entityId === state.entityFilter,
-  );
-  if (all.length === 0) {
-    body.append(note("No tenancies yet. Add one with its start date, rent and bond."));
-    return;
+  const year = taxYearOf(asAt);
+  const tenancies = state.ledger.tenancies ?? [];
+  const shown = entities.filter((e) => state.entityFilter === "" || e.id === state.entityFilter);
+  // Open to start with: every property with a current tenancy, or the only one.
+  if (!openedOnce) {
+    openedOnce = true;
+    for (const e of shown) {
+      const current = tenancies.some((t) => t.entityId === e.id && (t.end === undefined || t.end >= asAt));
+      if (current || shown.length === 1) opened.add(e.id);
+    }
   }
-  const current = all.filter((t) => t.end === undefined || t.end >= asAt);
-  const past = all.filter((t) => t.end !== undefined && t.end < asAt);
-  for (const t of current) body.append(card(t, entities, asAt));
-  if (past.length > 0) {
-    const h = document.createElement("h3");
-    h.textContent = "Ended tenancies";
-    body.append(h);
-    for (const t of past) body.append(card(t, entities, asAt));
+
+  for (const entity of shown) {
+    const mine = tenancies.filter((t) => t.entityId === entity.id);
+    const current = mine.filter((t) => t.end === undefined || t.end >= asAt);
+    const past = mine.filter((t) => t.end !== undefined && t.end < asAt);
+
+    const section = document.createElement("details");
+    section.className = "rental-year";
+    section.open = opened.has(entity.id) || editing?.entityId === entity.id;
+    section.addEventListener("toggle", () => {
+      if (section.open) opened.add(entity.id);
+      else opened.delete(entity.id);
+    });
+    const summary = document.createElement("summary");
+    const name = document.createElement("span");
+    name.className = "rental-year-name";
+    name.textContent = entity.name;
+    const meta = document.createElement("span");
+    meta.className = "rental-year-meta";
+    const behind = current
+      .map((t) => rentPosition(t, postedJournals(), asAt).balance)
+      .filter((b) => b > 0)
+      .reduce((sum, b) => sum + b, 0);
+    meta.textContent =
+      current.length === 0
+        ? "no current tenancy"
+        : current.map((t) => t.tenant).join(", ") + (behind > 0 ? ` · behind $${money(behind)}` : " · up to date");
+    summary.append(name, meta);
+    section.append(summary);
+
+    const actions = document.createElement("div");
+    actions.className = "page-actions";
+    const add = document.createElement("button");
+    add.type = "button";
+    add.textContent = "Add a tenancy";
+    add.disabled = editing !== null;
+    add.addEventListener("click", () => {
+      editing = newTenancy(entity.id, asAt);
+      opened.add(entity.id);
+      redraw("tenancies");
+    });
+    actions.append(add);
+    section.append(actions);
+    if (editing !== null && editing.entityId === entity.id) section.append(editor(editing, entities));
+
+    if (mine.length === 0) section.append(note("No tenancies yet. Add one with its start date, rent and bond."));
+    for (const t of current) section.append(card(t, entities, asAt));
+    if (past.length > 0) {
+      const h = document.createElement("h4");
+      h.textContent = "Ended tenancies";
+      section.append(h);
+      for (const t of past) section.append(card(t, entities, asAt));
+    }
+
+    section.append(propertyCarePanel(entity.id, renderRentalsPage));
+    const trips = document.createElement("h4");
+    trips.textContent = `Trips to the property in your own vehicle, year to ${taxYearEndSaid(year)}`;
+    section.append(vehiclesBox(year, renderRentalsPage), trips, tripsPanel(year, renderRentalsPage, entity.id));
+    body.append(section);
   }
+  // A tenancy for a property not shown -- the filter moved since -- is still drawn.
+  if (editing !== null && !shown.some((e) => e.id === editing?.entityId)) body.append(editor(editing, entities));
+
   body.append(
     note(
       "Rent is due in advance on the first day of each period. A managed property is only as " +

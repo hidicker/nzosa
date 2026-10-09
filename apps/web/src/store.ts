@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, PropertyCare, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -253,6 +253,8 @@ export interface StoredLedger {
   modules?: Partial<Record<string, boolean>>;
   /** Tenancies, for tracking rent owed against rent paid. */
   tenancies?: Tenancy[];
+  /** Each rental property's jobs and issues, and its Healthy Homes and insurance ticks, by entity. */
+  propertyCare?: Record<string, PropertyCare>;
   /** Payments that buy something running past a balance date. */
   prepayments?: Prepayment[];
   /**
@@ -716,6 +718,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.tripLog ? { tripLog: ledger.tripLog } : {}),
     ...(ledger.modules ? { modules: ledger.modules } : {}),
     ...(ledger.tenancies ? { tenancies: ledger.tenancies } : {}),
+    ...(ledger.propertyCare ? { propertyCare: ledger.propertyCare } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
     ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),

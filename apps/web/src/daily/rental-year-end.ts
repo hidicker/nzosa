@@ -80,7 +80,7 @@ function scheduleTable(entity: Entity, year: number): HTMLElement {
  * under every property: Tier 1 runs out on a car's own kilometres, whichever
  * property each trip was for, so they are entered once and shown in each.
  */
-function vehiclesBox(year: number): HTMLElement {
+export function vehiclesBox(year: number, rerender: () => void = renderRentalYearEnd): HTMLElement {
   const status = tripsStatus(year);
   const fleet = state.ledger.tripLog?.vehicles.length ?? 0;
   const box = document.createElement("details");
@@ -94,7 +94,7 @@ function vehiclesBox(year: number): HTMLElement {
       ? "Vehicles: none yet"
       : `Vehicles: ${state.ledger.tripLog?.vehicles.map((v) => v.name).join(", ")}` +
         (status.missingOdometer > 0 ? ` -- ${status.missingOdometer} without the year's odometer readings` : "");
-  box.append(summary, vehiclesPanel(year, renderRentalYearEnd));
+  box.append(summary, vehiclesPanel(year, rerender));
   return box;
 }
 

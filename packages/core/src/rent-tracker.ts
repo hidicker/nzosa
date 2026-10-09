@@ -43,10 +43,48 @@ export interface Tenancy {
   accounts: string[];
   /**
    * Words that pick this tenant's payments out of the rent account, where
-   * one account holds more than one tenancy. Matched against the journal's
-   * narration and line descriptions, ignoring case. Empty takes everything.
+   * one account holds more than one tenancy -- any one of them, as it was
+   * first written. Kept for tenancies saved that way; `sources` replaces it.
    */
   payer?: string | undefined;
+  /**
+   * Where this tenancy's rent comes from: one line per person or way it is
+   * paid -- a second flatmate, a parent paying part of it, Work and Income.
+   * A payment is this tenancy's rent when it matches any one line: coded to
+   * one of that line's accounts AND mentioning every word that line gives.
+   */
+  sources?: RentSource[] | undefined;
+  /** The day the tenant was told they were behind, when they have been. */
+  toldBehind?: IsoDate | undefined;
+}
+
+/** One way a tenancy's rent arrives. */
+export interface RentSource {
+  /** Chart codes the rent is coded to. */
+  accounts: string[];
+  /**
+   * Words the payment must mention, every one of them, separated by commas:
+   * "SMITH, RENT" takes a payment from Smith marked rent and not Smith's
+   * other payments. Matched against the narration and line descriptions,
+   * ignoring case. Empty takes everything in the accounts.
+   */
+  mentioning?: string | undefined;
+}
+
+function wordsOf(text: string | undefined): string[] {
+  return (text ?? "").toLowerCase().split(/[,;]/).map((w) => w.trim()).filter((w) => w !== "");
+}
+
+/**
+ * The lines a tenancy's rent is matched by. A tenancy saved before there were
+ * lines matched any one of its words, so each word becomes a line of its own
+ * and it matches exactly what it did.
+ */
+export function rentSources(tenancy: Tenancy): RentSource[] {
+  if (tenancy.sources !== undefined && tenancy.sources.length > 0) return tenancy.sources;
+  const words = wordsOf(tenancy.payer);
+  if (words.length === 0) return [{ accounts: tenancy.accounts }];
+  return words.map((word) => ({ accounts: tenancy.accounts, mentioning: word }));
 }
 
 export interface RentPeriod {
@@ -126,28 +164,33 @@ export function rentReceipts(
   tenancy: Tenancy,
   journals: readonly PostedJournal[],
 ): { date: IsoDate; amount: Cents; narration: string }[] {
-  const accounts = new Set(tenancy.accounts.map((c) => c.trim()));
-  const words = (tenancy.payer ?? "").toLowerCase().split(/[,;]/).map((w) => w.trim()).filter((w) => w !== "");
+  const sources = rentSources(tenancy).map((source) => ({
+    accounts: new Set(source.accounts.map((c) => c.trim())),
+    words: wordsOf(source.mentioning),
+  }));
   const out: { date: IsoDate; amount: Cents; narration: string }[] = [];
   for (const journal of journals) {
     // Rent is paid in advance, often before the tenancy starts.
     if (journal.date < addDays(tenancy.start, -PAID_BEFORE_START_DAYS)) continue;
     if (tenancy.end !== undefined && journal.date > addDays(tenancy.end, 31)) continue;
-    let amount = 0;
-    const said: string[] = [journal.narration];
-    for (const line of journal.lines) {
-      if (!accounts.has(line.accountCode.trim())) continue;
-      // Rent is a credit. Where GST was charged the supply line carries the
-      // GST-inclusive amount the tenant actually paid.
-      amount += line.taxBase !== undefined ? line.taxBase : -line.amount;
-      said.push(line.description);
-    }
-    if (amount === 0) continue;
-    if (words.length > 0) {
+    // The first line it matches, and only one: a payment matching two lines
+    // is still one payment.
+    for (const source of sources) {
+      let amount = 0;
+      const said: string[] = [journal.narration];
+      for (const line of journal.lines) {
+        if (!source.accounts.has(line.accountCode.trim())) continue;
+        // Rent is a credit. Where GST was charged the supply line carries the
+        // GST-inclusive amount the tenant actually paid.
+        amount += line.taxBase !== undefined ? line.taxBase : -line.amount;
+        said.push(line.description);
+      }
+      if (amount === 0) continue;
       const text = said.join(" ").toLowerCase();
-      if (!words.some((w) => text.includes(w))) continue;
+      if (!source.words.every((w) => text.includes(w))) continue;
+      out.push({ date: journal.date, amount: amount as Cents, narration: journal.narration });
+      break;
     }
-    out.push({ date: journal.date, amount, narration: journal.narration });
   }
   return out.sort((a, b) => a.date.localeCompare(b.date));
 }
@@ -219,8 +262,8 @@ export function rentPosition(
   if (tenancy.rents.length === 0) notes.push("No rent is set for this tenancy yet.");
   if (receipts.length === 0 && due > 0) {
     notes.push(
-      "No rent found in the books for this tenancy. Check the rent account chosen, and the payer " +
-        "words if any are set.",
+      "No rent found in the books for this tenancy. Check the rent account on each line, and that " +
+        "a payment mentions every word its line gives.",
     );
   }
 

@@ -23,7 +23,7 @@ import { codingReconciliationWaiting, unmatchedReferenceWaiting } from "../migra
 import { bankLinkState, setupSteps } from "../migrate/setup-wizard.js";
 import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices } from "@nzosa/core";
+import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry } from "../country.js";
@@ -299,6 +299,22 @@ export function actionItems(): ActionItem[] {
   const unassigned = [...balances.values()].filter(
     (b) => isCreditNote(b.invoice) && (credits[b.invoice.number] ?? "") === "",
   ).length;
+  // Rental properties' jobs and issues past their due date.
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const late = model.entities.flatMap((entity) =>
+    overdueTasks(state.ledger.propertyCare?.[entity.id], now).map((task) => `${task.what} (${entity.name})`),
+  );
+  if (late.length > 0) {
+    items.push({
+      key: "property-jobs",
+      what: "Property jobs overdue",
+      count: late.length,
+      urgency: "amber",
+      detail: `${late.slice(0, 3).join("; ")}${late.length > 3 ? `; and ${late.length - 3} more` : ""}.`,
+      go: () => showPage("tenancies"),
+    });
+  }
+
   if (unassigned > 0) {
     items.push({
       key: "credit-notes",

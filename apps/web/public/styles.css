@@ -1141,6 +1141,17 @@ button.danger {
   color: var(--danger);
 }
 
+/* A button that cannot be pressed has to look it, primary ones included. */
+button:disabled,
+button:disabled:hover {
+  opacity: 0.45;
+  cursor: not-allowed;
+  filter: none;
+}
+button:not(.primary):disabled:hover {
+  background: var(--surface);
+}
+
 button.active {
   background: var(--accent);
   border-color: var(--accent);

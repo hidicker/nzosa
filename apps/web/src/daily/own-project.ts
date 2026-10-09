@@ -62,6 +62,21 @@ export async function checkProject(urlText: string, key: string): Promise<Projec
   };
 }
 
+/**
+ * A legacy secret key is a token whose words say service_role only once
+ * decoded: the plain-text test above cannot see it.
+ */
+export function legacyServiceKey(key: string): boolean {
+  const middle = key.trim().split(".")[1];
+  if (middle === undefined) return false;
+  try {
+    const claims = JSON.parse(atob(middle.replace(/-/g, "+").replace(/_/g, "/"))) as { role?: unknown };
+    return claims.role === "service_role";
+  } catch {
+    return false;
+  }
+}
+
 /** Remember the project and start again from it, signed out. */
 export function useProject(url: string, key: string): void {
   const clean = cleanProjectUrl(url);
@@ -206,7 +221,7 @@ export function ownProjectPanel(): HTMLElement {
   use.disabled = true;
 
   const run = async (): Promise<ProjectCheck> => {
-    if (/service_role|sb_secret_/i.test(key.value)) {
+    if (/service_role|sb_secret_/i.test(key.value) || legacyServiceKey(key.value)) {
       const refused = { ok: false, confirmsEmail: false, said: "That looks like a secret key. Use the publishable key, which is safe to put in a web page; a secret key must never go here." };
       said.textContent = refused.said;
       said.className = "cloud-said bad";

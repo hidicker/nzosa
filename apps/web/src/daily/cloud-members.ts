@@ -1,4 +1,5 @@
 import { callFunction, currentSession, rpc } from "../cloud.js";
+import { usingOwnProject } from "../cloud-config.js";
 import { note } from "../ui.js";
 
 /**
@@ -48,6 +49,22 @@ function roleName(role: string): string {
  * the same whether or not that address has an account here.
  */
 async function invite(bookId: string, email: string, role: string): Promise<{ ok: boolean; message: string }> {
+  const after = "These books stay private until they accept.";
+  if (usingOwnProject()) {
+    // A project of somebody's own has the tables but not the invite function:
+    // the invitation is made by the database itself, and nothing is emailed.
+    try {
+      const made = await rpc<string>("invite_to_book", { book: bookId, who: email, as_role: role });
+      if (made === null) return { ok: false, message: "Could not make that invitation. Only an owner may invite." };
+      return {
+        ok: true,
+        message: `Invited ${email}. No email is sent from your own project: tell them to sign up here with that ` +
+          `address, and the invitation will be waiting on their Books page. ${after}`,
+      };
+    } catch (error) {
+      return { ok: false, message: (error as Error).message || "Could not make that invitation." };
+    }
+  }
   try {
     const answer = await callFunction<{ invited?: boolean; emailed?: boolean; said?: string }>("invite", {
       book: bookId,
@@ -55,7 +72,6 @@ async function invite(bookId: string, email: string, role: string): Promise<{ ok
       role,
     });
     if (answer.invited !== true) return { ok: false, message: "Could not send that invitation." };
-    const after = "These books stay private until they accept.";
     return {
       ok: true,
       message: answer.emailed === true

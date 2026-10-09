@@ -257,3 +257,29 @@ test("security over property is printed when a society says there is some", () =
   assert.ok(some.includes("Mortgages, charges and other security interests"));
   assert.ok(some.includes("A mortgage over the clubrooms"));
 });
+
+test("a brand-new organisation with no opening balances: it starts at nothing and its first report reconciles", () => {
+  const fresh = [
+    journal("2026-05-01", line("cheque", 20_000), line("200", -20_000)),
+    journal("2026-06-01", line("461", 5_000), line("cheque", -5_000)),
+  ];
+  const base = { journals: fresh, chart, accounts: { banks: [{ id: "cheque", label: "Cheque account" }], cashCodes: [] }, mapping: {} };
+  const s = cashStatement({ ...base, year: 2027, from: "2026-04-01", to: "2027-03-31" });
+  assert.equal(s.dollars.opening, 0);
+  assert.equal(s.dollars.closing, 150);
+  assert.equal(s.dollars.held, 150);
+  assert.equal(s.reconciles, true);
+  const before = cashStatement({ ...base, year: 2026, from: "2025-04-01", to: "2026-03-31" });
+  assert.equal(before.dollars.closing, 0, "nothing before the organisation existed: no comparatives");
+  assert.equal(before.reconciles, true);
+});
+
+test("the opening balance of a year that starts mid-way through the books is last year's closing cash", () => {
+  const books = { asAt: "2026-04-01", accounts: { cheque: 250_000 } };
+  const j = [journal("2026-04-15", line("cheque", 10_000), line("200", -10_000)), journal("2027-04-15", line("cheque", 40_000), line("200", -40_000))];
+  const base = { journals: j, chart, accounts: { banks: [{ id: "cheque", label: "Cheque account" }], cashCodes: [] }, opening: books, mapping: {} };
+  const second = cashStatement({ ...base, year: 2028, from: "2027-04-01", to: "2028-03-31" });
+  assert.equal(second.dollars.opening, 2_600, "2,500 opening + the first year's 100");
+  assert.equal(second.dollars.closing, 3_000);
+  assert.equal(second.reconciles, true);
+});

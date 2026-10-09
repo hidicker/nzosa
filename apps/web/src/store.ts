@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, DonationReceipt, Grant, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, DonationReceipt, Grant, Ir9Inputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -263,6 +263,8 @@ export interface StoredLedger {
   /** A not-for-profit's yearly Performance Report inputs, by `entity:year`, and where its accounts go. */
   performanceReports?: Record<string, PerformanceInputs>;
   tier4Lines?: Record<string, Tier4Line>;
+  /** A club or society's IR9 worksheet choices, by `entity:year`. */
+  ir9Returns?: Record<string, Ir9Inputs>;
   /** Payments that buy something running past a balance date. */
   prepayments?: Prepayment[];
   /**
@@ -732,6 +734,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.donationReceipts ? { donationReceipts: ledger.donationReceipts } : {}),
     ...(ledger.performanceReports ? { performanceReports: ledger.performanceReports } : {}),
     ...(ledger.tier4Lines ? { tier4Lines: ledger.tier4Lines } : {}),
+    ...(ledger.ir9Returns ? { ir9Returns: ledger.ir9Returns } : {}),
     ...(ledger.prepayments ? { prepayments: ledger.prepayments } : {}),
     ...(ledger.filing ? { filing: ledger.filing } : {}),
     ...(ledger.jurisdiction ? { jurisdiction: ledger.jurisdiction } : {}),

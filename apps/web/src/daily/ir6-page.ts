@@ -377,7 +377,8 @@ export function renderIr6Page(): void {
         td.append(control);
         return td;
       };
-      const tax = rule === "minor" ? "Minor: 39%, in the trust" : rule === "corporate" ? "Corporate: 39%, in the trust" : b.trusteeDoesNotPay === true ? "Their own return" : "Their rates, paid by the trustee";
+      const minor = `${Math.round(sheet.minorRate * 100)}%`;
+      const tax = rule === "minor" ? `Minor: ${minor}, in the trust` : rule === "corporate" ? `Corporate: ${minor}, in the trust` : b.trusteeDoesNotPay === true ? "Their own return" : "Their rates, paid by the trustee";
       tr.append(
         nameCell(b.name === "" ? "(unnamed)" : b.name),
         cell(dollarsBox(inputs.allocations[b.id], (v) => setMap("allocations", b.id, v, `IR6: allocation to ${b.name}`))),

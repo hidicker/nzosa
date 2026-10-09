@@ -125,6 +125,16 @@ export const MINOR_THRESHOLD: Cents = 100_000;
 export const TRUSTEE_RATE = 0.39;
 export const TRUSTEE_LOW_RATE = 0.33;
 export const LEGACY_SUPER_RATE = 0.28;
+/** The first tax year (ending 31 March) of the 39% trustee rate: the 2024-25 income year. */
+export const TRUSTEE_RATE_FROM_YEAR = 2025;
+
+/**
+ * The rate on minor and corporate beneficiary income taxed as trustee income:
+ * the trustee rate, which was 33% before the 2024-25 income year.
+ */
+export function minorRuleRate(year: number): number {
+  return year < TRUSTEE_RATE_FROM_YEAR ? TRUSTEE_LOW_RATE : TRUSTEE_RATE;
+}
 /** Trustee net income of this or less is taxed at the lower rate. */
 export const LOW_RATE_LIMIT: Cents = 1_000_000;
 export const NON_COMPLYING_RATE = 0.45;
@@ -174,6 +184,16 @@ export function ageOn(born: IsoDate, on: IsoDate): number {
   return age;
 }
 
+/**
+ * Whether "tax resident in" names New Zealand. It is typed by hand, so "NZ",
+ * "New Zealand" and "Aotearoa" all say so; left empty, the trust's own country
+ * is assumed, as a new person starts with it.
+ */
+export function nzResident(residence: string | undefined): boolean {
+  const said = (residence ?? "").toLowerCase().replace(/[.\s]+/g, " ").trim();
+  return ["", "nz", "nzl", "n z", "new zealand", "aotearoa", "aotearoa new zealand"].includes(said);
+}
+
 export type BeneficiaryRule = "minor" | "corporate" | null;
 
 /** Which special rule, if any, taxes this beneficiary's allocation as trustee income. */
@@ -183,7 +203,7 @@ export function beneficiaryRule(b: TrustBeneficiary, allocation: Cents, balanceD
     b.born !== undefined &&
     b.born !== "" &&
     ageOn(b.born, balanceDate) < MINOR_AGE &&
-    (b.residence ?? "NZ").toUpperCase() === "NZ" &&
+    nzResident(b.residence) &&
     b.disabilityAllowance !== true &&
     allocation > MINOR_THRESHOLD
   ) {
@@ -200,6 +220,9 @@ export interface TrusteeRate {
 /** The rate on trustee income (question 27B), and the reason, in words. */
 export function trusteeRate(trust: Trust, year: number, trusteeNetIncome: Cents): TrusteeRate {
   if (trust.legacySuperannuation === true) return { rate: LEGACY_SUPER_RATE, why: "a legacy superannuation fund trust pays 28%" };
+  if (year < TRUSTEE_RATE_FROM_YEAR) {
+    return { rate: TRUSTEE_LOW_RATE, why: "before the 2024-25 income year, trustee income was taxed at 33%" };
+  }
   if (trust.disabledBeneficiaryTrust === true) return { rate: TRUSTEE_LOW_RATE, why: "a disabled beneficiary trust pays 33%" };
   if (trust.energyConsumerTrust === true) return { rate: TRUSTEE_LOW_RATE, why: "an energy consumer trust pays 33%" };
   if (trust.estateDeathYear !== undefined && year >= trust.estateDeathYear && year <= trust.estateDeathYear + 3) {
@@ -411,6 +434,8 @@ export interface TrustWorksheet {
   };
   rate: number;
   rateWhy: string;
+  /** The rate on minor and corporate beneficiary income (27C). */
+  minorRate: number;
   /** A loss, and the credits that couldn't be used, to carry to next year. */
   lossCarriedForward: Cents;
   beneficiaries: BeneficiarySheet[];
@@ -609,7 +634,7 @@ export function trustWorksheet(options: {
   // on the 39% trustee tax rate, April 2024).
   const { rate, why } = trusteeRate(trust, year, Math.max(0, trusteeIncome - expenses) as Cents);
   const trusteeTax = Math.round(taxable * rate) as Cents;
-  const minorCorporateTax = Math.round(wholeDollars(minorCorporate) * TRUSTEE_RATE) as Cents;
+  const minorCorporateTax = Math.round(wholeDollars(minorCorporate) * minorRuleRate(year)) as Cents;
   const totalTrusteeTax = (trusteeTax + minorCorporateTax) as Cents;
 
   const overseasTrustee = (n(inputs.overseasTax) - overseasToBeneficiaries) as Cents;
@@ -678,6 +703,7 @@ export function trustWorksheet(options: {
     },
     rate,
     rateWhy: why,
+    minorRate: minorRuleRate(year),
     lossCarriedForward: Math.round(lossCarried) as Cents,
     beneficiaries: sheets,
     incomeBy,
@@ -713,7 +739,7 @@ export function trustRows(sheet: TrustWorksheet): { label: string; box: string; 
     { label: "Tax payable for beneficiaries (from the IR6Bs)", box: "26Z", amount: b.beneficiaryTax },
     { label: "Taxable trustee income", box: "27A", amount: b.taxableTrusteeIncome },
     { label: `Tax on trustee income, at ${Math.round(sheet.rate * 100)}%`, box: "27B", amount: b.trusteeTax },
-    { label: "Tax on minor and corporate beneficiary income, at 39%", box: "27C", amount: b.minorCorporateTax },
+    { label: `Tax on minor and corporate beneficiary income, at ${Math.round(sheet.minorRate * 100)}%`, box: "27C", amount: b.minorCorporateTax },
     { label: "Total tax on trustee income", box: "27D", amount: b.totalTrusteeTax },
     { label: "Trustee's share of overseas tax paid", box: "27E", amount: b.overseasTaxTrustee },
     { label: "After overseas tax", box: "27F", amount: b.afterOverseas },

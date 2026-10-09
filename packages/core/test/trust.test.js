@@ -13,6 +13,7 @@ import {
   trustStatements,
   trustWorksheet,
   trusteeRate,
+  minorRuleRate,
   allocationJournal,
   defaultTrustIncomeClass,
   defaultExpensePlacement,
@@ -83,6 +84,11 @@ test("a New Zealand child under 16 is a minor unless the allocation is $1,000 or
   assert.equal(beneficiaryRule(kiri, 120_000, BALANCE), "minor", "$1,200 is taxed in full at 39%");
   assert.equal(beneficiaryRule(kiri, 100_000, BALANCE), null, "$1,000 exactly is beneficiary income");
   assert.equal(beneficiaryRule({ ...kiri, disabilityAllowance: true }, 500_000, BALANCE), null);
+  // "Tax resident in" is typed by hand: New Zealand written out is still New Zealand.
+  for (const residence of ["New Zealand", "nz", "N.Z.", " Aotearoa ", ""]) {
+    assert.equal(beneficiaryRule({ ...kiri, residence }, 500_000, BALANCE), "minor", residence);
+  }
+  assert.equal(beneficiaryRule({ ...kiri, residence: "Australia" }, 500_000, BALANCE), null);
   assert.equal(beneficiaryRule({ ...kiri, residence: "AU" }, 500_000, BALANCE), null, "the rule is for New Zealand residents");
   assert.equal(beneficiaryRule({ ...kiri, born: "2011-03-31" }, 500_000, BALANCE), null, "16 on balance date is not a minor");
   assert.equal(beneficiaryRule(ana, 500_000, BALANCE), null);
@@ -99,6 +105,11 @@ test("trustee income is taxed at 39%, or less in the cases the guide lists", () 
   assert.equal(trusteeRate(estate, 2025, 9_000_000).rate, 0.33, "the year of death");
   assert.equal(trusteeRate(estate, 2028, 9_000_000).rate, 0.33, "three years after");
   assert.equal(trusteeRate(estate, 2029, 9_000_000).rate, 0.39, "then the full rate");
+  // The 39% rate began with the 2024-25 income year; before it, every trust paid 33%.
+  assert.equal(trusteeRate(trust, 2024, 9_000_000).rate, 0.33, "the year to 31 March 2024");
+  assert.equal(trusteeRate(trust, 2025, 9_000_000).rate, 0.39, "the year to 31 March 2025");
+  assert.equal(minorRuleRate(2024), 0.33);
+  assert.equal(minorRuleRate(2025), 0.39);
 });
 
 test("the books' accounts are classed from their names, and every class can be changed", () => {

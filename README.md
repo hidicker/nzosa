@@ -44,7 +44,9 @@ npm install && npm run build
 node packages/mcp/dist/server.js --books "/path/to/your/books"
 ```
 
-In Claude Desktop's config, add it as a server with that command and arguments. `--entities a,b` limits it to some of the entities in the books, and `--max-rows` caps how many rows one answer can hold.
+For Claude Desktop there is a one-file extension: run `npm run build:mcpb`, then open `packages/mcp/nzosa.mcpb` in Claude Desktop (Settings, Extensions) and choose your books folder when it asks.
+
+Or, by hand, in Claude Desktop's config, add it as a server with that command and arguments. `--entities a,b` limits it to some of the entities in the books, and `--max-rows` caps how many rows one answer can hold.
 
 Be clear about what that means: whatever the AI asks for is sent to the company running it, including payee names and bank references. The tools return figures without free text wherever they can, and mark the text they do return as data. A model that runs on your own machine keeps all of it local. The tools today are `list_entities`, `search_transactions`, `get_unreconciled_transactions`, `get_coding_progress` and `check_daily_balances`; reports and journals are not in yet.
 

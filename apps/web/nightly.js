@@ -135,7 +135,10 @@ async function runOne(id, runner) {
 
     // What came in is added to anything still waiting from an earlier morning
     // nobody opened the books after, by the bank's own id.
-    const waiting = morning.inbox?.items ?? [];
+    // Not what the books have taken in since: an inbox nobody opened the books after
+    // would otherwise carry every old line forward, and grow.
+    const inBooks = new Set((parts.transactions?.data ?? []).map((t) => t.extras?.akahuId).filter(Boolean));
+    const waiting = (morning.inbox?.items ?? []).filter((item) => !inBooks.has(item._id));
     const seen = new Set(result.items.map((item) => item._id));
     const items = [...waiting.filter((item) => !seen.has(item._id)), ...result.items];
     const at = new Date().toISOString();

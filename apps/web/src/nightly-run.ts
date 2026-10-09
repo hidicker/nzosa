@@ -92,9 +92,15 @@ export async function morningRun(input: MorningInput): Promise<MorningResult> {
   const linked = Object.values(input.feed?.links ?? {}).some((to) => to !== "");
   if (input.feed !== undefined && linked) {
     const start = feedResumeDate({ mapping: input.feed.links, transactions: state.ledger.transactions });
-    items = await input.feed.fetch(start === undefined ? "" : feedRequestFrom(start));
+    const fetched = await input.feed.fetch(start === undefined ? "" : feedRequestFrom(start));
+    // An account with no lines yet is fetched from the books' first day, every time,
+    // so most of what comes back is already in the books. The inbox keeps only what
+    // is not: it is what the next opening has to bring in, and it is stored beside
+    // the books every morning.
+    const have = new Set(state.ledger.transactions.map((t) => t.extras?.["akahuId"]).filter((id) => id !== undefined));
+    items = (fetched as { _id?: string }[]).filter((item) => item._id === undefined || !have.has(item._id));
     const before = new Set(state.ledger.transactions.map((t) => t.id));
-    const read = feedLinesForBooks(items as never, input.feed.links, input.feed.labels ?? {});
+    const read = feedLinesForBooks(fetched as never, input.feed.links, input.feed.labels ?? {});
     mergeIncoming(read.transactions);
     added = state.ledger.transactions.filter((t) => !before.has(t.id)).length;
   }
@@ -119,9 +125,9 @@ export async function morningRun(input: MorningInput): Promise<MorningResult> {
       if (waiting.length === 0) break;
       const batch = Math.min(AI_OWN_BATCH, input.maxLines - asked, waiting.length);
       const result = await askAboutLines(waiting, batch, input.ask);
-      asked += batch;
       if (result.said !== "") said.push(result.said);
       if (result.failed === true) break;
+      asked += batch;
       // Asked and not answered: remembered. (An error means it was not asked.)
       const answered = new Set(allAiSuggestions().map((s) => s.id));
       for (const one of waiting.slice(0, batch)) {

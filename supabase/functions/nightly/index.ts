@@ -102,7 +102,12 @@ async function runBook(book: string): Promise<string> {
   // once, by the bank's own id.
   const fresh = result.items as { _id?: string }[];
   const seen = new Set(fresh.map((item) => item._id));
-  const items = [...(morning.inbox?.items ?? []).filter((item) => !seen.has(item._id)), ...fresh];
+  // Not what the books have taken in since, or the inbox of a morning nobody opened
+  // the books after would carry every old line forward and grow.
+  const inBooks = new Set(
+    ((parts["transactions"]?.data ?? []) as { extras?: { akahuId?: string } }[]).map((t) => t.extras?.akahuId).filter(Boolean),
+  );
+  const items = [...(morning.inbox?.items ?? []).filter((item) => !seen.has(item._id) && !inBooks.has(item._id as string)), ...fresh];
   const at = new Date().toISOString();
   const said = result.said + (ownKey ? "" : key !== null && detectProvider(key.key) === "jev"
     ? "; a Jev key is not asked in the morning yet"

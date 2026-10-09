@@ -153,3 +153,22 @@ test("an error is not remembered as a line the model could not answer", async ()
   const r = await run({ parts: parts(many), ask: async () => ({ error: "no allowance left today" }), maxLines: 100, now: new Date("2026-10-01T00:00:00Z") });
   assert.deepEqual(r.unsure.ids, {});
 });
+
+test("the inbox keeps only what the books do not already hold, and a refused ask is not counted as asked", async () => {
+  const held = { ...line("a1", "2026-05-02", -6150, "Z RIMU"), extras: { akahuId: "trans_old" }, source: { importer: "akahu", file: "feed", line: 1 } };
+  const result = await run({
+    parts: parts([held]),
+    feed: {
+      links: { acc_totara: "12-3456-7890123-00" },
+      fetch: async () => [
+        { _id: "trans_old", _account: "acc_totara", date: "2026-05-02T00:00:00Z", description: "Z RIMU", amount: -61.5 },
+        { _id: "trans_new", _account: "acc_totara", date: "2026-05-06T00:00:00Z", description: "TOTARA TRADING", amount: -88 },
+      ],
+    },
+    ask: async () => ({ error: "no allowance left today" }),
+    maxLines: 100,
+  });
+  assert.deepEqual(result.items.map((i) => i._id), ["trans_new"]);
+  assert.match(result.said, /0 lines asked of the AI|0 line asked of the AI|no allowance left today/);
+  assert.ok(!/100 lines asked/.test(result.said));
+});

@@ -1,3 +1,4 @@
+import { ownProjectPanel } from "./own-project.js";
 import { cloudConfigured } from "../cloud-config.js";
 import {
   createBook,
@@ -645,6 +646,7 @@ export function renderCloudBooks(body: HTMLElement): boolean {
   if (session === null) {
     signInForm(body);
     browserBackup(body);
-  } else void booksList(body, session.email);
+    body.append(ownProjectPanel());
+  } else void booksList(body, session.email).then(() => body.append(ownProjectPanel()));
   return true;
 }

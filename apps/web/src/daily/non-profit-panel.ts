@@ -83,6 +83,16 @@ export function nonProfitSettings(entity: Entity): HTMLElement {
   );
   // What a receipt shows, and who signs it: only a donee organisation issues them.
   if (np.donee === true) {
+    const parent = document.createElement("input");
+    parent.type = "text";
+    parent.placeholder = "Part of a larger organisation? Its name, for receipts";
+    parent.title = "A branch must say on its receipts which larger organisation it belongs to.";
+    parent.value = np.partOf ?? "";
+    parent.addEventListener("change", () => {
+      const { partOf: _gone, ...rest } = np;
+      change(entity, parent.value.trim() === "" ? rest : { ...rest, partOf: parent.value.trim() }, "part of");
+    });
+    box.append(parent);
     const ird = document.createElement("input");
     ird.type = "text";
     ird.placeholder = "IRD number";

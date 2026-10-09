@@ -43,6 +43,8 @@ export interface NonProfit {
   donee?: boolean | undefined;
   /** Inland Revenue has approved it as a not-for-profit for the $1,000 deduction. */
   deduction?: boolean | undefined;
+  /** The larger organisation it is a branch or part of, which a donation receipt must say. */
+  partOf?: string | undefined;
   /** Its IRD number, as a donation receipt shows it. */
   irdNumber?: string | undefined;
   /**

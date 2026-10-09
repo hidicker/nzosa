@@ -15,7 +15,8 @@ import type { NonProfit } from "./non-profit.js";
  * donation receipts" and IR255 (read October 2026; check them again before
  * relying on this for a filing):
  *
- * - the organisation's full name on its letterhead, and its IRD number, and its
+ * - the organisation's full name on its letterhead -- with the larger
+ *   organisation it belongs to, if it is a branch -- and its IRD number, and its
  *   Charities Services registration number if it has one;
  * - the donor's full name, and their address if the organisation holds it;
  * - the amount and the date -- or, for regular payments, the total for the
@@ -182,6 +183,7 @@ export function receiptHtml(
 <body>
 <header>
   <h1>${escape(organisation.name)}</h1>
+  ${(np.partOf ?? "").trim() !== "" ? `<p class="address">Part of ${escape((np.partOf ?? "").trim())}</p>` : ""}
   ${organisation.address !== undefined && organisation.address.trim() !== "" ? `<p class="address">${escape(organisation.address.trim())}</p>` : ""}
   <p class="ids">${ids.join(" &middot; ")}</p>
 </header>

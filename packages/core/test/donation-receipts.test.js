@@ -78,3 +78,28 @@ test("under five dollars is flagged, not refused", () => {
   assert.equal(belowCreditMinimum(499), true);
   assert.equal(belowCreditMinimum(500), false);
 });
+
+// Inland Revenue's donation receipt template (IR1130, May 2021) numbers the items a receipt must show.
+test("every item on Inland Revenue's IR1130 template is on the receipt", () => {
+  const html = receiptHtml({ name: "Kowhai Tennis Club", address: "2 Totara St" }, np, receipt);
+  const items = {
+    "1 letterhead with the organisation's name": "<h1>Kowhai Tennis Club</h1>",
+    "2 donor's name": "Kowhai Smith",
+    "3 clear statement that it was a donation": "<strong>donation</strong>",
+    "4 amount": "$120.00",
+    "5 receipt number": "DR-0001",
+    "6 date of donation": "14 August 2026",
+    "7 signature of an authorised person, with name and designation": 'class="line"',
+    "8 IRD number": "IRD number: 123-456-789",
+    "8 Charities Services registration number": "CC99999",
+  };
+  for (const [what, needle] of Object.entries(items)) assert.ok(html.includes(needle), what);
+  const year = receiptHtml({ name: "Kowhai Tennis Club" }, np, { ...receipt, year: 2027 });
+  assert.ok(year.includes("year ended 31 March 2027"), "or the financial year, for regular giving");
+});
+
+test("a branch says which larger organisation it belongs to", () => {
+  const branch = receiptHtml({ name: "Kowhai Tennis Club" }, { ...np, partOf: "Aotearoa Tennis Federation" }, receipt);
+  assert.ok(branch.includes("Part of Aotearoa Tennis Federation"));
+  assert.ok(!receiptHtml({ name: "Kowhai Tennis Club" }, np, receipt).includes("Part of"));
+});

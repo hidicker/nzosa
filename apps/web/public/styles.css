@@ -4115,3 +4115,8 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .property-care-ticks { display: flex; flex-wrap: wrap; gap: 0.25rem 1.5rem; margin: 0.6rem 0; }
 .property-care-table input[type=text] { width: 100%; min-width: 12rem; }
 .property-care-overdue td { background: color-mix(in srgb, #c33 10%, transparent); }
+
+/* A grant's bank lines, to tick. */
+.grant-line { display: flex; gap: 0.4rem; align-items: baseline; padding: 0.15rem 0; font-size: 0.9rem; }
+.grant-link-panel { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-top: 1px solid var(--border); }
+.grant-link-panel h5 { margin: 0.8rem 0 0.3rem; }

@@ -14,6 +14,7 @@ import { caches, state } from "./state.js";
 import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
 import { resetLockBaseline } from "./lock.js";
+import { applyModules } from "./modules.js";
 import { chosenStartDate } from "./migrate/onboarding-state.js";
 import {
   agentStatementJournal,
@@ -633,6 +634,10 @@ export async function saveEntities(
   // The picker at the top of every page lists them too, and went on offering
   // the placeholder the guided start had just replaced.
   redraw("entityFilter");
+  // What the books use follows the entities (a first rental, a first
+  // non-profit), so the menu is brought up to date with them now rather than
+  // when something else happens to redraw it.
+  applyModules();
 }
 
 /**

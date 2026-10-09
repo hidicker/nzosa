@@ -30,7 +30,8 @@ export type ModuleId =
   | "vehicle"
   | "payroll"
   | "gst"
-  | "assets";
+  | "assets"
+  | "nonprofit";
 
 /** Where an automatic answer comes from, said beside it. */
 type Basis = "entities" | "source" | "data";
@@ -64,6 +65,15 @@ const xeroHeld = (): boolean => Object.keys(state.ledger.xeroBankNumbers ?? {}).
 const businesses = () => entities().filter((e) => (e.kind ?? "business") === "business");
 
 export const MODULES: readonly ModuleInfo[] = [
+  {
+    id: "nonprofit",
+    countries: ["nz"],
+    name: "Non-profit",
+    what: "Grants and what became of them, and the reports a charity, society or club files.",
+    basis: "entities",
+    inferred: () => entities().some((e) => e.kind === "nonprofit"),
+    holds: () => count((state.ledger.grants ?? []).length, "grant"),
+  },
   {
     id: "rentals",
     countries: ["nz"],
@@ -142,7 +152,10 @@ export const MODULES: readonly ModuleInfo[] = [
     name: "Fixed assets",
     what: "The asset register and depreciation.",
     basis: "data",
-    inferred: () => (state.ledger.assets ?? []).length > 0 || businesses().length > 0,
+    inferred: () =>
+      (state.ledger.assets ?? []).length > 0 ||
+      businesses().length > 0 ||
+      entities().some((e) => e.kind === "nonprofit"),
     holds: () => count((state.ledger.assets ?? []).length, "asset"),
   },
 ];

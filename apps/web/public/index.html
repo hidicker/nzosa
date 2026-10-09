@@ -102,17 +102,21 @@
                 <a href="#import-files" class="sidebar-sublink">Import bank files</a>
                 <a href="#import-table" class="sidebar-sublink">Differences &amp; review</a>
               </div>
-              <button type="button" data-page="invoices" data-module="business">
+              <button type="button" data-page="invoices" data-module="business nonprofit">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
                 <span>Invoices</span>
               </button>
-              <button type="button" data-page="bills" hidden data-module="business company">
+              <button type="button" data-page="bills" hidden data-module="business company nonprofit">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h10v14l-2-1.5L11 17l-2-1.5L7 17l-2-1.5z"/><path d="M8 7h4M8 10h4"/></svg>
                 <span>Bills</span>
               </button>
               <button type="button" data-page="payroll" data-module="payroll">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
                 <span>Payroll</span>
+              </button>
+              <button type="button" data-page="grants" hidden data-module="nonprofit">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 17s-6-3.6-6-8.2A3.3 3.3 0 0 1 10 7a3.3 3.3 0 0 1 6 1.8C16 13.4 10 17 10 17z"/></svg>
+                <span>Grants</span>
               </button>
               <button type="button" data-page="tenancies" hidden data-module="rentals">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 9.5 10 4l7 5.5V16H3z"/><path d="M8 16v-4h4v4"/><circle cx="14.5" cy="6" r="1"/></svg>
@@ -509,6 +513,16 @@
         <div id="personalyear-body"></div>
       </section>
 
+      <section id="page-grants" class="page" hidden>
+        <div class="page-head">
+          <h2>Grants</h2>
+        </div>
+        <p class="page-hint">
+          Each grant, what has come in against it, what has been spent and what is left, and the report a funder asks for. This page does not change the books, except for the year-end entry for a grant that has to be returned if unspent.
+        </p>
+        <div id="grants-body"></div>
+      </section>
+
       <section id="page-tenancies" class="page" hidden>
         <div class="page-head">
           <h2>Rental information</h2>
@@ -574,8 +588,8 @@
                 <option value="extract">Account transactions</option>
               </optgroup>
               <optgroup label="Payables and receivables">
-                <option value="agedpayables" data-module="business company">Aged payables</option>
-                <option value="agedreceivables" data-module="business">Aged receivables</option>
+                <option value="agedpayables" data-module="business company nonprofit">Aged payables</option>
+                <option value="agedreceivables" data-module="business nonprofit">Aged receivables</option>
               </optgroup>
               <optgroup label="Rentals and owners">
                 <option value="rentals" data-module="rentals">Rental schedules</option>

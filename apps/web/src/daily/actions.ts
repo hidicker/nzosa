@@ -23,7 +23,7 @@ import { codingReconciliationWaiting, unmatchedReferenceWaiting } from "../migra
 import { bankLinkState, setupSteps } from "../migrate/setup-wizard.js";
 import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks } from "@nzosa/core";
+import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry } from "../country.js";
@@ -312,6 +312,37 @@ export function actionItems(): ActionItem[] {
       urgency: "amber",
       detail: `${late.slice(0, 3).join("; ")}${late.length > 3 ? `; and ${late.length - 3} more` : ""}.`,
       go: () => showPage("tenancies"),
+    });
+  }
+
+  // Grants: a funder's report due or overdue, and a grant that has ended with
+  // money still held for it.
+  const grants = (state.ledger.grants ?? []).filter((g) => grantOpen(g));
+  const owedReports = reportsDue(grants, now);
+  if (owedReports.length > 0) {
+    const overdue = owedReports.filter((g) => (g.reportDue ?? "") < now).length;
+    items.push({
+      key: "grant-reports",
+      what: "Grant reports due",
+      count: owedReports.length,
+      urgency: overdue > 0 ? "red" : "amber",
+      detail:
+        owedReports
+          .slice(0, 3)
+          .map((g) => `${g.funder} by ${g.reportDue}`)
+          .join("; ") + (owedReports.length > 3 ? `; and ${owedReports.length - 3} more` : "") + ".",
+      go: () => showPage("grants"),
+    });
+  }
+  const leftOver = endedWithMoneyLeft(grants, state.ledger.grantLinks ?? {}, state.ledger.transactions, now);
+  if (leftOver.length > 0) {
+    items.push({
+      key: "grant-left",
+      what: "Grants ended with money left",
+      count: leftOver.length,
+      urgency: "amber",
+      detail: `${leftOver.map((p) => p.grant.funder).slice(0, 3).join("; ")}: check what the funder wants done with what is left.`,
+      go: () => showPage("grants"),
     });
   }
 

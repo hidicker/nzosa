@@ -441,6 +441,13 @@ export interface PerformanceInputs {
   relatedParties: { relationship: string; what: string; amount: Cents }[];
   /** Amounts owed to or by related parties at year end, in words. */
   relatedBalances?: string | undefined;
+  /**
+   * Mortgages, charges and other security interests over the organisation's
+   * property at year end. Not part of Tier 4, but a small incorporated society
+   * (under $50,000 of operating payments and current assets) must show them in
+   * its financial statements, so they can be said here and are printed as a note.
+   */
+  securityInterests?: string | undefined;
   /** Errors in last year's report that have been corrected. */
   errors?: string | undefined;
   /** Optional: events after year end; grants with expectations over their use. */
@@ -732,6 +739,7 @@ ${
         .join("")}</tbody></table>`
 }
 ${(inputs.relatedBalances ?? "").trim() !== "" ? `<p>${escape((inputs.relatedBalances ?? "").trim())}</p>` : ""}
+${(inputs.securityInterests ?? "").trim() !== "" ? `<h3>Mortgages, charges and other security interests</h3><p>${escape((inputs.securityInterests ?? "").trim())}</p>` : ""}
 <h3>Correction of errors</h3>
 <p>${(inputs.errors ?? "").trim() !== "" ? escape((inputs.errors ?? "").trim()) : "There were no errors in the previous year's report that have been corrected in this one."}</p>
 ${(inputs.eventsAfter ?? "").trim() !== "" ? `<h3>Events after the financial year end</h3><p>${escape((inputs.eventsAfter ?? "").trim())}</p>` : ""}

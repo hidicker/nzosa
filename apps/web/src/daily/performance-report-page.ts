@@ -540,6 +540,20 @@ export function renderPerformancePage(): void {
     ),
   );
 
+  if (np?.form === "society" && np.registeredCharity !== true) {
+    body.append(
+      Object.assign(document.createElement("h4"), { textContent: "Security over property" }),
+      note(
+        "An incorporated society that is not a registered charity, and had under $50,000 of operating payments and current " +
+          "assets in each of the last two years, may file just a statement of receipts and payments, its assets and " +
+          "liabilities, and any mortgages or other security over its property. This report covers the first two; say " +
+          "here what security there is, if any.",
+      ),
+      textArea(inputs.securityInterests ?? "", 2, "Mortgages, charges or other security over property at year end (leave empty if none)", (v) =>
+        patch({ securityInterests: v }, "Security interests"),
+      ),
+    );
+  }
   body.append(Object.assign(document.createElement("h4"), { textContent: "Corrections and other information" }));
   body.append(
     textArea(inputs.errors ?? "", 2, "Errors in last year's report that were corrected this year: what was wrong and how it was put right", (v) =>

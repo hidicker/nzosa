@@ -247,3 +247,13 @@ test("last year's figures are checked against this year's opening and against th
   const none = reportProblems({ entity, inputs, statement: current, previous: right }).join(" ");
   assert.doesNotMatch(none, /should be this year's opening|do not add up/);
 });
+
+test("security over property is printed when a society says there is some", () => {
+  const statement = cashStatement(options);
+  const entity = { name: "Kowhai Junior Tennis", legalForm: "Incorporated society" };
+  const none = performanceReportHtml({ entity, gstRegistered: false, statement, previous: statement, inputs: emptyInputs() });
+  assert.ok(!none.includes("security interests"));
+  const some = performanceReportHtml({ entity, gstRegistered: false, statement, previous: statement, inputs: { ...emptyInputs(), securityInterests: "A mortgage over the clubrooms, held by a bank." } });
+  assert.ok(some.includes("Mortgages, charges and other security interests"));
+  assert.ok(some.includes("A mortgage over the clubrooms"));
+});

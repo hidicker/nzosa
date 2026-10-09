@@ -1,4 +1,5 @@
 import type { Cents } from "./money.js";
+import type { IsoDate } from "./dates.js";
 import type { Account } from "./chart.js";
 import type { AccountAmount } from "./ir9.js";
 
@@ -35,7 +36,7 @@ import type { AccountAmount } from "./ir9.js";
  *   worked out here: it needs the owner's basis, which only the owner has.
  * - Also from Inland Revenue's IR879 (April 2024): an LTC keeps no imputation
  *   credit account, working owners are paid with PAYE and all owners deduct
- *   their share, and an owner's share for a part year is weighted by days.
+ *   their share, and an owner's share for a part year is weighted by days (built in).
  *
  * Not worked out here: the loss limitation rule, foreign investment fund and
  * controlled foreign company income (entered as a figure), the attribution
@@ -52,6 +53,9 @@ export interface Ir7Holder {
   /** Percentage share, 0 to 100. */
   percent: number;
   irdNumber?: string | undefined;
+  /** Held from this day, and until this one, where not for the whole year. */
+  from?: IsoDate | undefined;
+  to?: IsoDate | undefined;
 }
 
 export type Ir7IncomeClass =
@@ -135,6 +139,8 @@ export interface Ir7Inputs {
   /** Losses extinguished on transition from a QC or LAQC, and deductions claimed for them before. */
   extinguished?: Cents | undefined;
   extinguishedClaimed?: Cents | undefined;
+  /** When a partner or owner held their share, by name, where it was not the whole year. */
+  periods?: Record<string, { from?: IsoDate; to?: IsoDate }> | undefined;
 }
 
 export function emptyIr7Inputs(): Ir7Inputs {
@@ -227,6 +233,24 @@ export interface Ir7Worksheet {
   nil: boolean;
 }
 
+const dayNumber = (d: IsoDate): number => Date.UTC(Number(d.slice(0, 4)), Number(d.slice(5, 7)) - 1, Number(d.slice(8, 10))) / 86_400_000;
+
+/**
+ * Each holder's share for the year: the percentage weighted by the days it was
+ * held, as Inland Revenue's IR879 does for an owner who came or went part-way
+ * through (40% for 275 days of 365 is 40% x 275/365 of the year's income).
+ */
+export function weightedHolders(holders: readonly Ir7Holder[], period?: { from: IsoDate; to: IsoDate } | undefined): Ir7Holder[] {
+  if (period === undefined) return [...holders];
+  const total = dayNumber(period.to) - dayNumber(period.from) + 1;
+  return holders.map((h) => {
+    const start = Math.max(dayNumber(period.from), h.from !== undefined && h.from !== "" ? dayNumber(h.from) : -Infinity);
+    const end = Math.min(dayNumber(period.to), h.to !== undefined && h.to !== "" ? dayNumber(h.to) : Infinity);
+    const days = Math.max(0, end - start + 1);
+    return days === total ? h : { ...h, percent: (h.percent * days) / total };
+  });
+}
+
 /** The IR7 and its attribution page, from the books, the holders' shares and the year's choices. */
 export function ir7Worksheet(options: {
   income: readonly AccountAmount[];
@@ -234,8 +258,11 @@ export function ir7Worksheet(options: {
   holders: readonly Ir7Holder[];
   inputs: Ir7Inputs;
   kind: Ir7Kind;
+  /** The income year, so that a share held for part of it can be weighted by the days it was held. */
+  period?: { from: IsoDate; to: IsoDate } | undefined;
 }): Ir7Worksheet {
-  const { inputs, holders } = options;
+  const { inputs } = options;
+  const holders = weightedHolders(options.holders, options.period);
   const n = (v: Cents | undefined): Cents => (v ?? 0) as Cents;
   const incomeBy: Record<Ir7IncomeClass, Cents> = {
     notIncome: 0, schedular: 0, interest: 0, dividends: 0, overseas: 0, business: 0, residential: 0, rental: 0, property: 0, other: 0,
@@ -309,7 +336,7 @@ export function ir7Worksheet(options: {
     return {
       id: h.id,
       name: h.name,
-      percent: h.percent,
+      percent: Math.round(h.percent * 10_000) / 10_000,
       irdNumber: (h.irdNumber ?? "").trim(),
       interest: interestP,
       dividends: dividendsP,
@@ -467,7 +494,7 @@ export function ir7Notes(kind: Ir7Kind): string[] {
         "An LTC's owners share by their effective look-through interest, generally their percentage of the shares. The loss limitation rule no longer applies to most owners; it still does where the LTC is in a partnership or joint venture with another LTC, and that is not worked out here.",
         "An LTC is still a company: it files this return and keeps its accounts, but pays no income tax itself. It keeps no imputation credit account: imputation credits it receives pass through to the owners, and its dividends are not taxable.",
         "An owner who works for the LTC under an employment contract is paid wages with PAYE, and every owner deducts their share of those wages. An LTC cannot pay a shareholder-employee salary without PAYE.",
-        "If ownership changed part-way through the year, each owner's share is their percentage weighted by the days they held it (IR879). Shares here are for the whole year, so work out the weighted shares first and enter those.",
+        "If ownership changed part-way through the year, give each owner the dates they held their share: each share is weighted by the days held (IR879), and the shares for every day must add up to 100%.",
       ]
     : [
         ...common,

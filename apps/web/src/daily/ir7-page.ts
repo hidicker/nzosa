@@ -206,8 +206,10 @@ export function renderIr7Page(): void {
     name: p.name,
     percent: p.percent,
     irdNumber: entity.holderIrd?.[p.name],
+    from: inputs.periods?.[p.name]?.from,
+    to: inputs.periods?.[p.name]?.to,
   }));
-  const sheet = ir7Worksheet({ income, expenses, holders, inputs, kind });
+  const sheet = ir7Worksheet({ income, expenses, holders, inputs, kind, period: { from, to } });
 
   // 1. Does it have to file?
   body.append(heading("Does it have to file?"));
@@ -338,7 +340,7 @@ export function renderIr7Page(): void {
   if (holders.length > 0) {
     const t = document.createElement("table");
     t.className = "report-table";
-    t.innerHTML = `<thead><tr><th>${kind === "ltc" ? "Owner" : "Partner"}</th><th>Share</th><th>IRD number</th></tr></thead>`;
+    t.innerHTML = `<thead><tr><th>${kind === "ltc" ? "Owner" : "Partner"}</th><th>Share</th><th>IRD number</th><th>Held from</th><th>Held until</th></tr></thead>`;
     const tb = document.createElement("tbody");
     for (const h of holders) {
       const tr = document.createElement("tr");
@@ -365,7 +367,29 @@ export function renderIr7Page(): void {
       });
       const cell = document.createElement("td");
       cell.append(input);
-      tr.append(nameCell(h.name), amountCell(`${h.percent}%`), cell);
+      const dateCell = (which: "from" | "to"): HTMLTableCellElement => {
+        const d = document.createElement("input");
+        d.type = "date";
+        d.value = (which === "from" ? h.from : h.to) ?? "";
+        d.title = which === "from" ? "Leave empty if held from the start of the year" : "Leave empty if held to the end of the year";
+        d.addEventListener("change", () =>
+          patch((draft) => {
+            const all = { ...(draft.periods ?? {}) };
+            const mine = { ...(all[h.name] ?? {}) };
+            if (d.value === "") delete mine[which];
+            else mine[which] = d.value;
+            if (mine.from === undefined && mine.to === undefined) delete all[h.name];
+            else all[h.name] = mine;
+            if (Object.keys(all).length === 0) delete draft.periods;
+            else draft.periods = all;
+          }, `IR7: ${h.name} held ${which}`),
+        );
+        const td = document.createElement("td");
+        td.append(d);
+        return td;
+      };
+      const shown = sheet.attributions.find((a) => a.id === h.id);
+      tr.append(nameCell(h.name), amountCell(shown !== undefined && shown.percent !== h.percent ? `${h.percent}% (${shown.percent}% of the year)` : `${h.percent}%`), cell, dateCell("from"), dateCell("to"));
       tb.append(tr);
     }
     t.append(tb);

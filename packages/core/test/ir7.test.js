@@ -159,3 +159,43 @@ test("whatever the figures and shares, the attributions always add up", () => {
     assert.ok(!s.problems.some((p) => /do not add up/.test(p)));
   }
 });
+
+import { weightedHolders } from "../dist/index.js";
+
+test("an owner who came part-way through the year is weighted by the days held (IR879)", () => {
+  const period = { from: "2025-04-01", to: "2026-03-31" };
+  const holders = [
+    { id: "c", name: "Charles Totara", percent: 60, irdNumber: "1" },
+    { id: "d", name: "Dan Rimu", percent: 40, irdNumber: "2", to: "2025-06-29" },
+    { id: "k", name: "Caroline Totara", percent: 40, irdNumber: "3", from: "2025-06-30" },
+  ];
+  const w = weightedHolders(holders, period);
+  assert.equal(w[0].percent, 60);
+  assert.ok(Math.abs(w[1].percent - (40 * 90) / 365) < 0.0001);
+  assert.ok(Math.abs(w[2].percent - (40 * 275) / 365) < 0.0001);
+  const s = ir7Worksheet({
+    income: [{ code: "A", name: "Sales", amount: 50_000_000 }],
+    expenses: [],
+    holders,
+    kind: "ltc",
+    period,
+    inputs: emptyIr7Inputs(),
+  });
+  assert.deepEqual(s.problems, []);
+  assert.equal(s.attributions.reduce((x, a) => x + a.total, 0), s.box.afterExpenses, "nothing lost");
+  const caroline = s.attributions.find((a) => a.id === "k");
+  assert.ok(Math.abs(caroline.total - 15_068_493) <= 1, "$500,000 x 40% x 275/365 is $150,684.93 in IR879: here the same, in cents");
+});
+
+test("shares that do not cover every day of the year are said", () => {
+  const period = { from: "2025-04-01", to: "2026-03-31" };
+  const s = ir7Worksheet({
+    income: [{ code: "A", name: "Sales", amount: 1_000_000 }],
+    expenses: [],
+    holders: [{ id: "a", name: "A", percent: 100, irdNumber: "1", from: "2025-10-01" }],
+    kind: "ltc",
+    period,
+    inputs: emptyIr7Inputs(),
+  });
+  assert.ok(s.problems.some((p) => /not 100%/.test(p)));
+});

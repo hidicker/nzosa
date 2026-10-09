@@ -1,6 +1,8 @@
 import type { IsoDate } from "./dates.js";
 import type { GstReturnResult } from "./gst.js";
 import type { PostedJournal } from "./posting.js";
+import type { EntityModel } from "./entities.js";
+import { reportsNetOfGst } from "./entities.js";
 
 /**
  * Lock dates: periods that are finished, and stay as they were finished.
@@ -33,6 +35,29 @@ export interface LockedFigures {
 export function lockedThrough(locks: LockDates | undefined): IsoDate | undefined {
   const dates = [locks?.gst, locks?.year].filter((d): d is IsoDate => d !== undefined && d !== "");
   return dates.length === 0 ? undefined : dates.reduce((a, b) => (a > b ? a : b));
+}
+
+/**
+ * Whether a bank line arriving now has to be held back from a locked period.
+ *
+ * Anything dated in a finished year is. A line dated only under the GST lock
+ * is held when its bank account pays for an entity registered for GST, whose
+ * filed return it could change; an unregistered entity's line has no return to
+ * change, so it comes straight in. A bank account the entities do not mention
+ * is held while any entity is registered, since it cannot be told apart.
+ */
+export function heldByLock(
+  locks: LockDates | undefined,
+  model: EntityModel | undefined,
+  line: { date: IsoDate; account: string },
+): boolean {
+  if (locks?.year && line.date <= locks.year) return true;
+  if (!locks?.gst || line.date > locks.gst) return false;
+  const entities = model?.entities ?? [];
+  if (entities.length === 0) return true;
+  const serves = model?.banks[line.account] ?? [];
+  const whose = serves.length > 0 ? entities.filter((e) => serves.includes(e.id)) : entities;
+  return whose.length === 0 || whose.some((e) => reportsNetOfGst(e));
 }
 
 /** The first day nothing is locked on: the day after the later lock. */

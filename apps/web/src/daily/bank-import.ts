@@ -38,6 +38,7 @@ import {
   formatOwners,
   fromAkahu,
   lockedThrough,
+  heldByLock,
   feedRequestFrom,
   onOrAfter,
   hash,
@@ -1807,10 +1808,10 @@ async function decideJustBefore(line: Transaction, include: boolean): Promise<vo
  * or dealt with by moving the lock.
  */
 function holdLocked<T extends { kept: Transaction[]; entries: { transaction: Transaction }[] }>(merged: T): T {
-  const through = lockedThrough(state.ledger.lockDates);
-  if (through === undefined) return merged;
+  const locks = state.ledger.lockDates;
+  if (lockedThrough(locks) === undefined) return merged;
   const before = new Set(state.ledger.transactions.map((t) => t.id));
-  const held = merged.kept.filter((t) => !before.has(t.id) && t.date <= through);
+  const held = merged.kept.filter((t) => !before.has(t.id) && heldByLock(locks, state.ledger.entities, t));
   if (held.length === 0) return merged;
   const out = new Set(held.map((t) => t.id));
   const already = new Set((state.ledger.lockedArrivals ?? []).map((t) => t.id));

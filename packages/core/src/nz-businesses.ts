@@ -1100,6 +1100,20 @@ function aliases(): Map<string, Alias[]> {
   return index;
 }
 
+/**
+ * Every name and alias on the list, upper case. Public names of businesses and
+ * public bodies: the privacy audit uses it to tell them from people.
+ */
+export function knownBusinessNames(): string[] {
+  const out = new Set<string>();
+  for (const line of LIST.split("\n")) {
+    const [name, said, kind] = line.split("|");
+    if (name === undefined || said === undefined || kind === undefined) continue;
+    for (const alias of [name, ...said.split(",")]) if (alias.trim() !== "") out.add(alias.trim().toUpperCase());
+  }
+  return [...out];
+}
+
 /** How many businesses the list knows. */
 export function knownBusinessCount(): number {
   return LIST.split("\n").filter((line) => line.split("|").length === 3).length;

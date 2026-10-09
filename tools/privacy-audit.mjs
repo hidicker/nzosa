@@ -14,7 +14,8 @@
  *   node tools/privacy-audit.mjs ledgers/my-books
  */
 import { readFileSync, existsSync } from "node:fs";
-import { join } from "node:path";
+import { dirname, join } from "node:path";
+import { fileURLToPath, pathToFileURL } from "node:url";
 import { execSync } from "node:child_process";
 
 const folder = process.argv[2];
@@ -40,7 +41,23 @@ const part = (name) => {
  * enough to read, which is what makes it get read.
  */
 const GENERIC =
-  /^(ACCOUNTANT|ADJUSTMENT|INSURANCE|INTEREST.*|PRINCIPAL|SPENDING|GROCERIES|MAINTENANCE|INVESTMENT|KIWISAVER|BANK FEE|LOAN PAYMT|LOAN DRAWDOWN|HOUSING LOAN|INLAND REVENUE|INTERNET XFR|BILL PAYMENT|WITHDRAWAL|AUTOMATIC PAYMENT|VISA PURCHASE|DIRECT CREDIT|DIRECT DEBIT|DD PAYMENT.*|PAYMENT - THANK YOU|BNZCREDITCDS|BANK OF NEW ZEALAND|BNZ ADVANTAGE VISA.*|AUCKLAND|AUCKLAND COUNCIL|WELLINGTON|CHRISTCHURCH|DUNEDIN|HAMILTON|TAURANGA|SHARESIES|TRANSFERWISE|TRANSFER|CONVERSION|STRIPE.*|PAYPAL.*|BUNNINGS|BUNNINGS WAREHOUSE|WOOLWORTHS|COUNTDOWN|PAK ?N ?SAVE|NEW WORLD|MITRE 10.*|FEDEX.*|GOOGLE ADS.*|GOOGLE\.COM|GOOGLE|GENERATIVELANGUAGE.*|OPENAI.*|ANTHROPIC.*|CLAUDE.*|GEMINI.*|CHATGPT.*|HTTPS.*|SPOTIFY.*|NETFLIX.*|XERO.*|FULL YEAR|NZD[0-9]+|INV-[0-9]+|BUILDING|CHRISTMAS|ENGINEER|CLEANING|LOAN INTEREST|LOAN PAYMENT|PROV TAX|PROVISIONAL TAX|GST RETURN|INCOME TAX|TRAINING|DHL EXPRESS.*|TOWER INSURANCE.*|STOCKHOLM|GOOD CHOICE|COMPLAINT|TENANCY SERVICES|0+)$/;
+  /^(ACCOUNTANT|ADJUSTMENT|INSURANCE|INTEREST.*|PRINCIPAL|SPENDING|GROCERIES|MAINTENANCE|INVESTMENT|KIWISAVER|BANK FEE|LOAN PAYMT|LOAN DRAWDOWN|HOUSING LOAN|INLAND REVENUE|INTERNET XFR|BILL PAYMENT|WITHDRAWAL|AUTOMATIC PAYMENT|VISA PURCHASE|DIRECT CREDIT|DIRECT DEBIT|DD PAYMENT.*|PAYMENT - THANK YOU|BNZCREDITCDS|BANK OF NEW ZEALAND|BNZ ADVANTAGE VISA.*|AUCKLAND|AUCKLAND COUNCIL|WELLINGTON|CHRISTCHURCH|DUNEDIN|HAMILTON|TAURANGA|SHARESIES|TRANSFERWISE|TRANSFER|CONVERSION|STRIPE.*|PAYPAL.*|BUNNINGS|BUNNINGS WAREHOUSE|WOOLWORTHS|COUNTDOWN|PAK ?N ?SAVE|NEW WORLD|MITRE 10.*|FEDEX.*|GOOGLE ADS.*|GOOGLE\.COM|GOOGLE|GENERATIVELANGUAGE.*|OPENAI.*|ANTHROPIC.*|CLAUDE.*|GEMINI.*|CHATGPT.*|HTTPS.*|SPOTIFY.*|NETFLIX.*|XERO.*|FULL YEAR|NZD[0-9]+|INV-[0-9]+|BUILDING|CHRISTMAS|ENGINEER|CLEANING|LOAN INTEREST|LOAN PAYMENT|PROV TAX|PROVISIONAL TAX|GST RETURN|INCOME TAX|TRAINING|DHL EXPRESS.*|TOWER INSURANCE.*|STOCKHOLM|GOOD CHOICE|COMPLAINT|TENANCY SERVICES|INSPECTION|LESS TAX|MARKETPLACE|RICHMOND|NELSON|0+)$/;
+
+/*
+ * Businesses are not people. The list of well-known New Zealand businesses is
+ * published on purpose, and a payee that is one of them, or a word inside one
+ * of their names ("ASHBURTON" in "Ashburton District Council"), identifies
+ * nobody. Read from the built core, so `npm run build` first.
+ */
+const { businessIn, knownBusinessNames } = await import(
+  pathToFileURL(join(dirname(fileURLToPath(import.meta.url)), "..", "packages", "core", "dist", "index.js")).href
+);
+const BUSINESS_NAMES = knownBusinessNames().map((name) => ` ${name.replace(/[^A-Z0-9']+/g, " ")} `);
+const isBusiness = (needle) => {
+  if (businessIn(needle) !== null) return true;
+  const spaced = ` ${needle.replace(/[^A-Z0-9']+/g, " ")} `;
+  return BUSINESS_NAMES.some((name) => name.includes(spaced));
+};
 
 const strings = new Set();
 const add = (value) => {
@@ -95,8 +112,8 @@ for (const file of tracked) {
 
 const found = new Map();
 for (const needle of strings) {
-  if (GENERIC.test(needle)) continue;
-  // On a boundary, not merely present: "MOUNT ST" sits inside "aMOUNT STays",
+  if (GENERIC.test(needle) || isBusiness(needle)) continue;
+  // On a boundary, not merely present: "ASH ST" sits inside "cASH STatement",
   // and a report full of those is one nobody reads to the end. Checked by
   // looking at the characters either side rather than by building a pattern,
   // because a payee can contain anything a regular expression treats as syntax.

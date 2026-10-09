@@ -20,10 +20,16 @@ review of the hosted copy. This file is the running record of what came of them.
   does not hold, and guessing one is worse than leaving it out: the levy would
   look calculated when it was invented. Wanted: the current CU schedule from
   ACC, loaded the way other rate tables are, with the year it applies to.
-- **A read-only MCP server.** The engine is pure functions over local files, so
-  a small wrapper could answer `get_trial_balance`, `get_gst_return`,
-  `get_unreconciled_transactions` and `check_daily_balances` for an AI client
-  without any books leaving the machine. New package, no change to the engine.
+- **A read-only MCP server: reports and journals.** `packages/mcp` exists and
+  answers `list_entities`, `search_transactions`, `get_unreconciled_transactions`,
+  `get_coding_progress` and `check_daily_balances` from the raw books. What it
+  cannot yet answer is anything that needs the ledger posted as double entry
+  (`get_trial_balance`, `get_gst_return`, a journals listing). That assembly is
+  `postedJournals()` in `apps/web/src/books.ts`, built from the app's in-memory
+  state: invoices in play, pay runs, year-end journals, the entity GST
+  accounts. It has to move into core, with the app calling it, before a server
+  can post the same ledger. Do that with the golden-master and parity checks
+  running, since every report depends on it.
 
 ### Offered back to OpenAccountants
 

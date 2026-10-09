@@ -35,6 +35,19 @@ An app with nothing in it opens on **Setup**, which lists what is needed, in the
 
 Started either of those ways, your books are files in a folder you can back up and read without this software. Opened as a plain web page with no server behind it, they live in that browser instead — fine for trying it out, wrong for anything you depend on. The [guide for owners](docs/user-guide.md) explains the difference in plain terms; section 19 of the [developer guide](docs/developer-guide.md) explains the mechanism.
 
+## Ask an AI about your books (optional)
+
+`packages/mcp` is a small read-only [MCP](https://modelcontextprotocol.io) server. It lets an AI client on the same machine, such as Claude Desktop or Claude Code, search your transactions and check how much of your coding is done, without the books going anywhere except to the AI you chose to ask. It has no network listener, it opens no file for writing, and it can see the one folder you point it at.
+
+```bash
+npm install && npm run build
+node packages/mcp/dist/server.js --books "/path/to/your/books"
+```
+
+In Claude Desktop's config, add it as a server with that command and arguments. `--entities a,b` limits it to some of the entities in the books, and `--max-rows` caps how many rows one answer can hold.
+
+Be clear about what that means: whatever the AI asks for is sent to the company running it, including payee names and bank references. The tools return figures without free text wherever they can, and mark the text they do return as data. A model that runs on your own machine keeps all of it local. The tools today are `list_entities`, `search_transactions`, `get_unreconciled_transactions`, `get_coding_progress` and `check_daily_balances`; reports and journals are not in yet.
+
 ## Documentation
 
 | | |

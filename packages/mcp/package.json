@@ -1,0 +1,23 @@
+{
+  "name": "@nzosa/mcp",
+  "version": "0.1.0",
+  "description": "A read-only MCP server over a folder of NZOSA books, for an AI client on the same machine.",
+  "license": "AGPL-3.0-or-later",
+  "type": "module",
+  "bin": {
+    "nzosa-mcp": "./dist/server.js"
+  },
+  "files": [
+    "dist"
+  ],
+  "scripts": {
+    "build": "tsc --build",
+    "test": "npm run build && node --test \"test/*.test.js\""
+  },
+  "dependencies": {
+    "@nzosa/core": "0.1.0"
+  },
+  "devDependencies": {
+    "@types/node": "^22.0.0"
+  }
+}

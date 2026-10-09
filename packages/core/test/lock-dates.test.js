@@ -72,3 +72,13 @@ test("the GST lock guards the returns, not the accounts", () => {
 test("no locks, nothing guarded", () => {
   assert.equal(lockBroken({}, lockedFigures({}, books, returns), lockedFigures({}, [], [])), null);
 });
+
+test("renaming an account inside a locked year changes no figure", () => {
+  const locks = { year: "2026-03-31" };
+  const before = lockedFigures(locks, books, []);
+  const renamed = books.map((j) => ({
+    ...j,
+    lines: j.lines.map((l) => (l.accountCode === "429" ? { ...l, accountName: "Sundry expenses" } : l)),
+  }));
+  assert.equal(lockBroken(locks, before, lockedFigures(locks, renamed, [])), null);
+});

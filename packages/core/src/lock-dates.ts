@@ -63,7 +63,9 @@ export function lockedFigures(
     for (const journal of journals) {
       if (journal.date > locks.year) continue;
       for (const line of journal.lines) {
-        const key = `${journal.date}|${line.accountCode}|${line.accountName}`;
+        // By code alone: renaming an account changes no figure. The name stands
+        // in only where a line has no code.
+        const key = `${journal.date}|${line.accountCode !== "" ? line.accountCode : line.accountName}`;
         totals.set(key, (totals.get(key) ?? 0) + line.amount);
       }
     }

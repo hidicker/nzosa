@@ -114,3 +114,42 @@ test("at most the lines allowed are asked about", async () => {
   });
   assert.equal(asking, 12);
 });
+
+test("lines the model could not answer are left alone the next morning, and not paid for again", async () => {
+  const many = Array.from({ length: 6 }, (_, i) => line(`u${i}`, `2026-06-0${i + 1}`, -(2000 + i), `KOWHAI SUPPLIER ${i}`));
+  const seen = [];
+  const ask = async (prompt, count) => {
+    seen.push(count);
+    return { text: "[]" };
+  };
+  const first = await run({ parts: parts(many), ask, maxLines: 100, now: new Date("2026-10-01T00:00:00Z") });
+  assert.equal(Object.keys(first.unsure.ids).length, 6, "all six asked and none answered");
+  const asked = seen.reduce((a, b) => a + b, 0);
+  assert.equal(asked, 6);
+
+  seen.length = 0;
+  const second = await run({ parts: parts(many), ask, maxLines: 100, unsure: first.unsure, now: new Date("2026-10-02T00:00:00Z") });
+  assert.equal(seen.length, 0, "nothing asked: they were tried yesterday");
+  assert.equal(Object.keys(second.unsure.ids).length, 6);
+
+  const later = await run({ parts: parts(many), ask, maxLines: 100, unsure: first.unsure, now: new Date("2026-10-16T00:00:00Z") });
+  assert.equal(seen.reduce((a, b) => a + b, 0), 6, "asked again after 14 days");
+  assert.equal(later.unsure.ids.u0, "2026-10-16T00:00:00.000Z");
+});
+
+test("a change to the chart lets the unanswered lines be asked again", async () => {
+  const many = [line("c1", "2026-06-01", -2000, "KOWHAI SUPPLIER ONE")];
+  const ask = async () => ({ text: "[]" });
+  const first = await run({ parts: parts(many), ask, maxLines: 100, now: new Date("2026-10-01T00:00:00Z") });
+  let count = 0;
+  const changed = parts(many);
+  changed.decisions.data.chart = [...chart, { code: "493", name: "Travel", type: "Overhead", taxCode: "15% GST on Expenses", description: "" }];
+  await run({ parts: changed, ask: async (_p, n) => ((count += n), { text: "[]" }), maxLines: 100, unsure: first.unsure, now: new Date("2026-10-02T00:00:00Z") });
+  assert.equal(count, 1, "the chart is different, so the line is worth asking again");
+});
+
+test("an error is not remembered as a line the model could not answer", async () => {
+  const many = [line("e1", "2026-06-01", -2000, "KOWHAI SUPPLIER ONE")];
+  const r = await run({ parts: parts(many), ask: async () => ({ error: "no allowance left today" }), maxLines: 100, now: new Date("2026-10-01T00:00:00Z") });
+  assert.deepEqual(r.unsure.ids, {});
+});

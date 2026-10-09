@@ -37,6 +37,28 @@ export interface MorningInput {
   ask?: (prompt: string, asking: number, asked?: AskedLines) => Promise<AiAnswer>;
   /** The most lines to ask a model about this morning. */
   maxLines: number;
+  /** Lines a model could not answer on earlier mornings, so they are not paid for again at once. */
+  unsure?: UnsureLines | undefined;
+  /** Now, for a test. */
+  now?: Date | undefined;
+}
+
+/** Lines the model was asked about and could not name an account for, and when. */
+export interface UnsureLines {
+  /** Of the rules and the chart when they were asked: a change in either lets them be asked again. */
+  signature: string;
+  ids: Record<string, string>;
+}
+
+/** How long a line the model could not answer is left alone, unless the rules or the chart change. */
+export const UNSURE_DAYS = 14;
+
+/** A short fingerprint of what the model is told it may answer with. */
+function signatureOf(rules: unknown, chart: readonly { code: string; name: string }[]): string {
+  const text = JSON.stringify(rules ?? null) + chart.map((a) => `${a.code}:${a.name}`).join("|");
+  let hash = 5381;
+  for (let i = 0; i < text.length; i++) hash = ((hash << 5) + hash + text.charCodeAt(i)) | 0;
+  return String(hash >>> 0);
 }
 
 export interface MorningResult {
@@ -46,6 +68,8 @@ export interface MorningResult {
   items: unknown[];
   suggestions: AiSuggestion[];
   said: string;
+  /** What the model could not answer, to be kept for the next morning. */
+  unsure: UnsureLines;
 }
 
 function rulesFrom(held: unknown): RuleSet | undefined {
@@ -78,22 +102,43 @@ export async function morningRun(input: MorningInput): Promise<MorningResult> {
   const known = suggestFromDirectory();
   const said: string[] = [];
   let asked = 0;
+  const now = input.now ?? new Date();
+  const signature = signatureOf(state.rules, state.chart);
+  // What was not answerable on earlier mornings is left alone while it is recent
+  // and nothing the model is told has changed; otherwise the oldest waiting lines
+  // would be paid for again every morning and use up the day's allowance.
+  const recent = (when: string): boolean => now.getTime() - Date.parse(when) < UNSURE_DAYS * 86_400_000;
+  const unsure: Record<string, string> =
+    input.unsure !== undefined && input.unsure.signature === signature
+      ? Object.fromEntries(Object.entries(input.unsure.ids).filter(([, when]) => recent(when)))
+      : {};
+  let barren = 0;
   if (input.ask !== undefined) {
     while (asked < input.maxLines) {
-      const waiting = waitingForAnswers();
+      const waiting = waitingForAnswers().filter((one) => unsure[one.transaction.id] === undefined);
       if (waiting.length === 0) break;
       const batch = Math.min(AI_OWN_BATCH, input.maxLines - asked, waiting.length);
       const result = await askAboutLines(waiting, batch, input.ask);
       asked += batch;
       if (result.said !== "") said.push(result.said);
-      if (result.got === 0) break;
+      if (result.failed === true) break;
+      // Asked and not answered: remembered. (An error means it was not asked.)
+      const answered = new Set(allAiSuggestions().map((s) => s.id));
+      for (const one of waiting.slice(0, batch)) {
+        if (!answered.has(one.transaction.id)) unsure[one.transaction.id] = now.toISOString();
+      }
+      barren = result.got === 0 ? barren + 1 : 0;
+      if (barren >= 2) break;
     }
   }
+  const stillWaiting = new Set(waitingForAnswers().map((one) => one.transaction.id));
+  for (const id of Object.keys(unsure)) if (!stillWaiting.has(id)) delete unsure[id];
   const suggestions = allAiSuggestions();
   return {
     added,
     items,
     suggestions,
+    unsure: { signature, ids: unsure },
     said: [
       `${added} new line${added === 1 ? "" : "s"} from the bank`,
       `${known} suggested from the list of known businesses`,

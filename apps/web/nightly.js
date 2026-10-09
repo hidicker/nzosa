@@ -1,7 +1,7 @@
 /**
  * The morning run, on this computer.
  *
- *   node apps/web/nightly.js [--ledgers <folder>] [--ledger <name>] [--max 200]
+ *   node apps/web/nightly.js [--ledgers <folder>] [--ledger <name>] [--max 100]
  *
  * Run by the "NZOSA morning" scheduled task, which the app sets up when
  * "Ready every morning" is turned on. For each set of books with it on, it
@@ -33,7 +33,7 @@ const arg = (name, fallback) => {
 };
 const ledgerRoot = resolve(arg("--ledgers", join(root, "..", "..", "ledgers")));
 const only = arg("--ledger", "");
-const maxLines = Number(arg("--max", "200"));
+const maxLines = Number(arg("--max", "100"));
 
 function log(line) {
   const stamped = `${new Date().toISOString()} ${line}`;
@@ -106,7 +106,8 @@ async function runOne(id, runner) {
     const result = await morningRun({
       parts,
       kept: morning.suggestions?.list ?? [],
-      maxLines: Number.isInteger(maxLines) && maxLines >= 0 ? maxLines : 200,
+      maxLines: Number.isInteger(maxLines) && maxLines >= 0 ? maxLines : 100,
+      ...(morning.unsure !== undefined ? { unsure: morning.unsure } : {}),
       ...(feed.configured && feed.autoFetch !== false
         ? {
             feed: {
@@ -143,6 +144,7 @@ async function runOne(id, runner) {
       body: JSON.stringify({
         ...(items.length > 0 ? { inbox: { at, items } } : {}),
         suggestions: { at, list: result.suggestions },
+        unsure: result.unsure,
         ran: { at, added: result.added, suggested: result.suggestions.length, said: result.said },
       }),
     });

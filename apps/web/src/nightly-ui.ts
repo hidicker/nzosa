@@ -7,7 +7,7 @@ import { save } from "./store.js";
 /**
  * Getting these books ready every morning, before anybody opens them.
  *
- * At six: the bank feed checked, then codes suggested for up to two hundred
+ * At six: the bank feed checked, then codes suggested for up to a hundred
  * waiting lines on the books' own key. Nothing goes into the books until they
  * are opened (see nightly.ts). On this computer it is a Windows scheduled
  * task, set up here; for books on the server, the server does it.
@@ -21,7 +21,7 @@ export function morningChoice(): HTMLElement {
   tick.checked = state.ledger.nightly === true;
   label.append(
     tick,
-    " Get these books ready every morning at 6am: check the bank feed, and suggest codes for up to 200 " +
+    " Get these books ready every morning at 6am: check the bank feed, and suggest codes for up to 100 " +
       "waiting lines where they have an AI key of their own. Nothing goes into the books until you open them.",
   );
   const said = document.createElement("p");

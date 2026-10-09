@@ -5,7 +5,7 @@
  * with a key of its own that only the database's vault and this function hold.
  * It looks for the sets of books with "Ready every morning" turned on and, for
  * each one in a call of its own: checks the bank feed, suggests codes from the
- * list of known businesses, then asks the AI about up to 200 waiting lines on
+ * list of known businesses, then asks the AI about up to 100 waiting lines on
  * the books' own key -- never the shared one.
  *
  * It puts nothing into the books. The bank's new lines and the suggestions go
@@ -24,7 +24,7 @@ import { morningRun } from "./run.js";
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
 const NIGHTLY_KEY = Deno.env.get("NIGHTLY_KEY") ?? "";
-const MAX_LINES = 200;
+const MAX_LINES = 100;
 
 function reply(body: unknown, status = 200): Response {
   return new Response(JSON.stringify(body), { status, headers: { "content-type": "application/json" } });
@@ -57,6 +57,7 @@ const byFetch: AiFetcher = (url, init) => fetch(url, init);
 interface Morning {
   inbox?: { at: string; items: { _id?: string }[] };
   suggestions?: { at: string; list: unknown[] };
+  unsure?: { signature: string; ids: Record<string, string> };
 }
 
 async function runBook(book: string): Promise<string> {
@@ -75,6 +76,7 @@ async function runBook(book: string): Promise<string> {
     parts,
     kept: (morning.suggestions?.list ?? []) as never,
     maxLines: MAX_LINES,
+    ...(morning.unsure !== undefined ? { unsure: morning.unsure } : {}),
     ...(feed !== null && feed.settings?.autoFetch !== false
       ? { feed: { links: feed.accounts ?? {}, fetch: (from: string) => allTransactions(feed, from, "") } }
       : {}),
@@ -110,6 +112,7 @@ async function runBook(book: string): Promise<string> {
     value: {
       ...(items.length > 0 ? { inbox: { at, items } } : {}),
       suggestions: { at, list: result.suggestions },
+      unsure: result.unsure,
       ran: { at, added: result.added, suggested: result.suggestions.length, said },
     },
   });

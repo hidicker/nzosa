@@ -1,6 +1,7 @@
 import { allAiSuggestions, keepAiSuggestionsWith, restoreAiSuggestions } from "./ai.js";
 import { readNightlyPart, writeNightlyPart } from "./store.js";
 import type { AiSuggestion } from "@nzosa/core";
+import type { UnsureLines } from "./nightly-run.js";
 
 /**
  * What the morning run leaves beside a set of books, and the page's side of it.
@@ -24,11 +25,20 @@ export interface Morning {
   suggestions?: { at: string; list: AiSuggestion[] };
   /** What the last morning run did, in a line. */
   ran?: { at: string; added: number; suggested: number; said: string };
+  /** Lines a model could not answer, left alone for a while. */
+  unsure?: UnsureLines;
+}
+
+/** What was last read, for the Actions page to say whether the morning run is running. */
+let latest: Morning = {};
+export function morningNow(): Morning {
+  return latest;
 }
 
 export async function readMorning(): Promise<Morning> {
   const held = await readNightlyPart();
-  return held !== null && typeof held === "object" ? (held as Morning) : {};
+  latest = held !== null && typeof held === "object" ? (held as Morning) : {};
+  return latest;
 }
 
 async function change(patch: (morning: Morning) => Morning): Promise<void> {

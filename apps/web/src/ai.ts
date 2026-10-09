@@ -388,7 +388,7 @@ export async function askAboutLines(
   howMany = AI_BATCH,
   /** Who to ask: the books' own route, unless the morning run says otherwise. */
   ask: typeof aiSuggest = aiSuggest,
-): Promise<{ got: number; said: string }> {
+): Promise<{ got: number; said: string; failed?: boolean }> {
   const { prompt, asked, codes } = whatWouldBeAsked(lines, howMany);
   if (asked.length === 0) return { got: 0, said: "Nothing is waiting to be asked about." };
 
@@ -398,7 +398,7 @@ export async function askAboutLines(
     codes,
     about: state.ledger.booksAbout ?? "",
   });
-  if (answer.error !== undefined) return { got: 0, said: answer.error };
+  if (answer.error !== undefined) return { got: 0, said: answer.error, failed: true };
   // Where the answer came from matters a year later: a suggestion made on the
   // shared key was made on a model somebody else chose and paid for.
   const kept = keepWhatIsUsable(answer.text ?? "", asked, codes, answer.demo === true ? "shared key" : undefined);

@@ -19,6 +19,7 @@ import {
   openBankReconcileReport,
 } from "./balance-diagnostics.js";
 import { save } from "../store.js";
+import { morningNow } from "../nightly.js";
 import { codingReconciliationWaiting, unmatchedReferenceWaiting } from "../migrate/coding-reconciliation.js";
 import { bankLinkState, setupSteps } from "../migrate/setup-wizard.js";
 import { $, state } from "../state.js";
@@ -116,6 +117,27 @@ export function actionItems(): ActionItem[] {
       detail: `The last fetch failed: ${state.feedProblem}`,
       go: () => showPage("import"),
     });
+  }
+
+  // The morning run, where these books have it turned on: said when it has not
+  // run, so a computer that was off or not signed in does not fail quietly.
+  if (state.ledger.nightly === true) {
+    const ran = morningNow().ran;
+    const hours = ran === undefined ? Infinity : (Date.now() - Date.parse(ran.at)) / 3_600_000;
+    if (hours > 36) {
+      const when = ran === undefined ? "" : new Date(ran.at).toLocaleDateString(booksLocale());
+      items.push({
+        key: "morning",
+        what: "Morning run",
+        count: 1,
+        urgency: hours > 96 ? "red" : "amber",
+        detail:
+          ran === undefined
+            ? "Turned on, but it has not run yet. It runs at 6am, or when the computer is next on and signed in."
+            : `It last ran on ${when}. On this computer it runs at 6am if the computer is on and signed in, or when it is next on; books on the server are done by the server.`,
+        go: () => showPage("ai"),
+      });
+    }
   }
 
   const tie = feedTieNow();
@@ -610,6 +632,10 @@ export function renderActions(): void {
     }
     fold.append(list);
     body.append(fold);
+  }
+  const ran = state.ledger.nightly === true ? morningNow().ran : undefined;
+  if (ran !== undefined && Date.now() - Date.parse(ran.at) <= 36 * 3_600_000) {
+    body.append(note(`Morning run, ${new Date(ran.at).toLocaleString(booksLocale())}: ${ran.said.replace(/\.$/, "")}.`));
   }
   body.append(renderMilestonesSection());
 }

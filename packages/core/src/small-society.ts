@@ -24,10 +24,12 @@ import type { Tier3Inputs } from "./tier3-report.js";
  *   liabilities, current and non-current, at the end of the year; and the
  *   mortgages, charges and other security interests over its property at the
  *   end of the year.
- * - Otherwise it uses an XRB standard: Tier 4, the cash standard, where operating
- *   payments are under $140,000; above that, Tier 3, which is accrual. A
- *   registered charity reports to Charities Services under the XRB standards
- *   whatever its size.
+ * - Otherwise it uses an XRB standard: Tier 4, the cash standard, unless its
+ *   operating payments were $140,000 or more in each of the two preceding
+ *   years (Financial Reporting Act 2013, s 46); then Tier 3, which is accrual,
+ *   unless total expenses were over $5 million in each of them (Tier 2; over
+ *   $33 million, Tier 1). A registered charity reports to Charities Services
+ *   under the XRB standards whatever its size.
  * - Financial statements are due within six months of balance date, presented
  *   to members at the annual general meeting, dated, and signed by two
  *   committee members.
@@ -37,6 +39,8 @@ import type { Tier3Inputs } from "./tier3-report.js";
 export interface SocietyInputs {
   /** The standard chosen where it differs from what the figures suggest. */
   standard?: ReportingStandard | undefined;
+  /** This year's own figures, as its signed statements give them: they decide the next two years' standard. */
+  figures?: SocietyYearFigures | undefined;
   securityInterests?: string | undefined;
   signers?: [string, string] | undefined;
   approvedOn?: IsoDate | undefined;
@@ -45,8 +49,23 @@ export interface SocietyInputs {
 
 export const SMALL_SOCIETY_LIMIT: Cents = 5_000_000;
 export const TIER4_LIMIT: Cents = 14_000_000;
+/** Total expenses above which Tier 3 is no longer open: Tier 2, for years ending 31 March 2024 on. */
+export const TIER3_LIMIT: Cents = 500_000_000;
+/** Total expenses above which Tier 1 applies. */
+export const TIER2_LIMIT: Cents = 3_300_000_000;
 
-export type ReportingStandard = "small-society" | "tier-4" | "tier-3";
+export type ReportingStandard = "small-society" | "tier-4" | "tier-3" | "tier-2";
+
+/**
+ * A year's own figures, as its signed financial statements give them. These,
+ * not the books, decide the standard: books that start part-way through those
+ * years, or were not imported for all of them, understate them.
+ */
+export interface SocietyYearFigures {
+  operatingPayments?: Cents | undefined;
+  currentAssets?: Cents | undefined;
+  totalExpenses?: Cents | undefined;
+}
 
 export interface StandardAnswer {
   standard: ReportingStandard;
@@ -54,20 +73,34 @@ export interface StandardAnswer {
   reasons: string[];
 }
 
-/** What applies to the organisation this year, from its last two years' figures. */
+const dollars = (cents: number): string => `$${Math.round(cents / 100).toLocaleString("en-NZ")}`;
+
+/**
+ * What applies this year, from the two years before it.
+ *
+ * The size tests are on the two preceding years, each of them: a society is a
+ * small society only if both years were under both $50,000 limits; Tier 4 is
+ * open unless operating payments were $140,000 or more in both years (the
+ * Financial Reporting Act's "specified not-for-profit entity"); and Tier 3
+ * unless total expenses were over $5 million in both. Crossing a line once
+ * moves nobody: it takes two years in a row.
+ */
 export function reportingStandard(options: {
   registeredCharity: boolean;
   donee: boolean;
-  /** Operating payments, cash basis, for each of the last two financial years. */
+  /** Operating payments, cash basis, for the last financial year and the one before it. */
   operatingPayments: readonly [Cents, Cents];
   /** Current assets at the end of each of them. */
   currentAssets: readonly [Cents, Cents];
-  /** This year's operating payments, where known: the Tier 4 limit is tested on it. */
+  /** Total expenses, accrual basis, for each of them, where known. */
+  totalExpenses?: readonly [Cents, Cents] | undefined;
+  /** Not used: this year's figures decide next year's standard, not this one's. Kept for callers. */
   thisYearPayments?: Cents | undefined;
 }): StandardAnswer {
   const reasons: string[] = [];
-  const paymentsUnder = options.operatingPayments.every((p) => p < SMALL_SOCIETY_LIMIT);
-  const assetsUnder = options.currentAssets.every((a) => a < SMALL_SOCIETY_LIMIT);
+  const both = (pair: readonly [Cents, Cents], test: (c: Cents) => boolean): boolean => pair.every(test);
+  const paymentsUnder = both(options.operatingPayments, (p) => p < SMALL_SOCIETY_LIMIT);
+  const assetsUnder = both(options.currentAssets, (a) => a < SMALL_SOCIETY_LIMIT);
   const exempt = !options.registeredCharity && !options.donee;
   if (exempt && paymentsUnder && assetsUnder) {
     reasons.push("It is not a registered charity or a donee organisation, and in each of the last two years its operating payments and its current assets were both under $50,000.");
@@ -84,17 +117,47 @@ export function reportingStandard(options: {
     if (!paymentsUnder) reasons.push("Its operating payments were $50,000 or more in one of the last two years.");
     if (!assetsUnder) reasons.push("Its current assets were $50,000 or more at the end of one of the last two years.");
   }
-  const worst = Math.max(options.thisYearPayments ?? 0, ...options.operatingPayments);
-  if (worst < TIER4_LIMIT) {
-    reasons.push("Operating payments are under $140,000, so it can use the Tier 4 cash standard.");
-    return { standard: "tier-4", reasons };
+
+  const expenses = options.totalExpenses;
+  if (expenses !== undefined && both(expenses, (e) => e > TIER3_LIMIT)) {
+    const tier1 = both(expenses, (e) => e > TIER2_LIMIT);
+    reasons.push(
+      tier1
+        ? "Total expenses were over $33 million in both of the last two years: Tier 1, full PBE Standards. That is beyond what NZOSA prepares; it needs an accountant."
+        : "Total expenses were over $5 million in both of the last two years: Tier 2, PBE Standards with reduced disclosure. That is beyond what NZOSA prepares; it needs an accountant.",
+    );
+    return { standard: "tier-2", reasons };
   }
-  reasons.push("Operating payments are $140,000 or more, so the Tier 3 accrual standard applies. A society whose two earlier years were both under $140,000 may choose Tier 4 for this year.");
-  return { standard: "tier-3", reasons };
+
+  const [last, before] = options.operatingPayments;
+  if (last >= TIER4_LIMIT && before >= TIER4_LIMIT) {
+    reasons.push(
+      `Operating payments were $140,000 or more in both of the last two years (${dollars(last)} and ${dollars(before)}), so the Tier 3 accrual standard applies.`,
+    );
+    return { standard: "tier-3", reasons };
+  }
+  if (last >= TIER4_LIMIT || before >= TIER4_LIMIT) {
+    reasons.push(
+      "Operating payments were $140,000 or more in only one of the last two years, so the Tier 4 cash standard can still be used. " +
+        "Two years in a row over $140,000 means Tier 3 from the year after.",
+    );
+  } else {
+    reasons.push("Operating payments were under $140,000 in the last two years, so it can use the Tier 4 cash standard.");
+  }
+  if (expenses !== undefined && expenses.some((e) => e > TIER3_LIMIT)) {
+    reasons.push("Total expenses were over $5 million in one of the last two years: a second such year means Tier 2.");
+  }
+  return { standard: "tier-4", reasons };
 }
 
 export function standardName(s: ReportingStandard): string {
-  return s === "small-society" ? "Small society minimum requirements" : s === "tier-4" ? "Tier 4 (NFP), cash" : "Tier 3 (NFP), accrual";
+  return s === "small-society"
+    ? "Small society minimum requirements"
+    : s === "tier-4"
+      ? "Tier 4 (NFP), cash"
+      : s === "tier-3"
+        ? "Tier 3 (NFP), accrual"
+        : "Tier 2 (PBE Standards RDR), or Tier 1 over $33 million";
 }
 
 export interface SmallSocietyStatements {

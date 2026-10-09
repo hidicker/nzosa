@@ -28,6 +28,8 @@ import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, match
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry } from "../country.js";
+import { societyFiguresEntered } from "./society-report-page.js";
+import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
 
 /**
  * Everything waiting to be done, in one list, each a click from where it is
@@ -223,6 +225,25 @@ export function actionItems(): ActionItem[] {
       detail: `${plural(review, "line")} to review: possibly in twice.`,
       go: () => showPage("import"),
     });
+  }
+
+  // At each year end, a not-for-profit's figures for the year just finished, as
+  // its signed statements give them: they decide the standard for the next two.
+  {
+    const finished = taxYearOf(new Date().toISOString().slice(0, 10)) - 1;
+    const orgs = (state.ledger.entities?.entities ?? []).filter((e) => e.kind === "nonprofit" && !societyFiguresEntered(e, finished));
+    if (orgs.length > 0) {
+      items.push({
+        key: `society-figures-${finished}`,
+        what: "Year-end figures for the reporting standard",
+        count: orgs.length,
+        urgency: "amber",
+        detail:
+          `${orgs.map((o) => o.name).join(", ")}: enter the operating payments, current assets and total expenses for the year ended ` +
+          `${taxYearEndSaid(finished)} from the signed financial statements. They decide which reporting standard applies next.`,
+        go: () => showPage("society"),
+      });
+    }
   }
 
   const lockedLate = (state.ledger.lockedArrivals ?? []).length;

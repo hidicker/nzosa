@@ -54,6 +54,8 @@ import {
   starterChartFor,
 } from "@nzosa/core";
 import type { Account, Entity } from "@nzosa/core";
+import { societyFiguresEntered } from "../daily/society-report-page.js";
+import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
 import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
 import { isDemoBuild } from "../ai-consent.js";
 import { savePart } from "../store.js";
@@ -1234,6 +1236,26 @@ export function setupSteps(
         : {}),
     },
   );
+  // A not-for-profit's reporting standard turns on its last two years as its
+  // signed statements give them: asked for here, not read from books that may
+  // not hold the whole of those years.
+  const current = taxYearOf(new Date().toISOString().slice(0, 10));
+  for (const org of model.entities.filter((e) => e.kind === "nonprofit")) {
+    const years = [current - 1, current - 2];
+    const have = years.filter((y) => societyFiguresEntered(org, y)).length;
+    steps.push({
+      what: `${org.name}: the last two years' figures`,
+      done: have === 2,
+      partial: have === 1,
+      detail:
+        have === 2
+          ? "entered"
+          : `Operating payments, current assets and total expenses for the years ended ${years.map((y) => taxYearEndSaid(y)).join(" and ")}, ` +
+            "from the signed financial statements, on the Which report? page",
+      unlocks: "Which reporting standard applies: small society, Tier 4 or Tier 3",
+      page: "society",
+    });
+  }
   // A step for a module that is off is not on the list: no invoices to load
   // for personal books, no Xero journal report for books from a spreadsheet.
   const moduleOf: Record<string, string> = {

@@ -23,11 +23,24 @@ test("a charity or a donee organisation is never a small society", () => {
   assert.match(reportingStandard({ ...ok, donee: true }).reasons.join(" "), /donee organisation/);
 });
 
-test("$140,000 or more of operating payments is Tier 3", () => {
-  assert.equal(reportingStandard({ ...ok, registeredCharity: true, operatingPayments: [14_000_000, 100] }).standard, "tier-3");
-  assert.equal(reportingStandard({ ...ok, registeredCharity: true, operatingPayments: [100, 100], thisYearPayments: 14_000_000 }).standard, "tier-3");
-  assert.equal(reportingStandard({ ...ok, registeredCharity: true, operatingPayments: [13_999_999, 100] }).standard, "tier-4");
+test("Tier 3 takes $140,000 or more of operating payments in both of the last two years", () => {
+  const charity = { ...ok, registeredCharity: true };
+  assert.equal(reportingStandard({ ...charity, operatingPayments: [14_000_000, 14_000_000] }).standard, "tier-3");
+  const once = reportingStandard({ ...charity, operatingPayments: [14_000_000, 100] });
+  assert.equal(once.standard, "tier-4", "one year over is not enough");
+  assert.match(once.reasons.join(" "), /only one of the last two years/);
+  assert.equal(reportingStandard({ ...charity, operatingPayments: [100, 14_000_000] }).standard, "tier-4");
+  assert.equal(reportingStandard({ ...charity, operatingPayments: [100, 100], thisYearPayments: 14_000_000 }).standard, "tier-4", "this year decides next year's");
   assert.equal(standardName("tier-3"), "Tier 3 (NFP), accrual");
+});
+
+test("over $5 million of expenses in both years is Tier 2, beyond what is prepared here", () => {
+  const big = { ...ok, registeredCharity: true, operatingPayments: [600_000_000, 600_000_000] };
+  const r = reportingStandard({ ...big, totalExpenses: [600_000_000, 550_000_000] });
+  assert.equal(r.standard, "tier-2");
+  assert.match(r.reasons.join(" "), /accountant/);
+  assert.equal(reportingStandard({ ...big, totalExpenses: [600_000_000, 400_000_000] }).standard, "tier-3");
+  assert.match(reportingStandard({ ...big, totalExpenses: [4_000_000_000, 4_000_000_000] }).reasons.join(" "), /Tier 1/);
 });
 
 const chart = [

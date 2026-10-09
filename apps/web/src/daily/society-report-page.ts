@@ -8,6 +8,7 @@ import {
   currentAssetsAt,
   emptyEntityModel,
   operatingPaymentsFrom,
+  parseAmount,
   reportingStandard,
   smallSocietyProblems,
   smallSocietyReportHtml,
@@ -18,7 +19,7 @@ import {
   tier3Statements,
   statementFromFigures,
 } from "@nzosa/core";
-import type { Account, Cents, Entity, ReportingStandard, SocietyInputs, Tier3Inputs } from "@nzosa/core";
+import type { Account, Cents, Entity, ReportingStandard, SocietyInputs, SocietyYearFigures, Tier3Inputs } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { inputsFor as performanceInputs, legalFormOf, statementFor } from "./performance-report-page.js";
@@ -107,6 +108,96 @@ function statementTable(rows: { label: string; amount: number; strong?: boolean 
   return wrapTable(table);
 }
 
+interface PriorYear {
+  year: number;
+  operatingPayments: Cents;
+  currentAssets: Cents;
+  totalExpenses: Cents;
+  /** Which of the three were not entered, and so came from the books. */
+  fromBooks: string[];
+}
+
+/** The two years before `year`: as entered from their statements, else from the books. */
+function priorYearFigures(
+  entity: Entity,
+  year: number,
+  statementsFor: (y: number) => ReturnType<typeof smallSocietyStatements>,
+): [PriorYear, PriorYear] {
+  const one = (y: number): PriorYear => {
+    const entered = inputsFor(entity, y).figures ?? {};
+    const books = statementsFor(y);
+    const fromBooks: string[] = [];
+    const pick = (value: Cents | undefined, fallback: Cents, name: string): Cents => {
+      if (value !== undefined) return value;
+      fromBooks.push(name);
+      return fallback;
+    };
+    return {
+      year: y,
+      operatingPayments: pick(entered.operatingPayments, operatingPaymentsFrom(books.expenses), "operating payments"),
+      currentAssets: pick(entered.currentAssets, currentAssetsAt(books), "current assets"),
+      totalExpenses: pick(entered.totalExpenses, books.totalExpenses, "total expenses"),
+      fromBooks,
+    };
+  };
+  return [one(year - 1), one(year - 2)];
+}
+
+/** Whether a year's own figures have been entered from its statements. */
+export function societyFiguresEntered(entity: Entity, year: number): boolean {
+  const f = inputsFor(entity, year).figures;
+  return f?.operatingPayments !== undefined && f.currentAssets !== undefined && f.totalExpenses !== undefined;
+}
+
+/** A box per figure per year, saved under that year: the figures belong to it, not to the year being reported. */
+function priorFiguresTable(entity: Entity, years: number[], shown: PriorYear[], after: () => void): HTMLElement {
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const head = document.createElement("thead");
+  const hr = document.createElement("tr");
+  hr.append(nameCell(""));
+  for (const y of years) hr.append(nameCell(`Year ended ${taxYearEndSaid(y)}`));
+  head.append(hr);
+  const tbody = document.createElement("tbody");
+  const rows: [keyof SocietyYearFigures, string, string][] = [
+    ["operatingPayments", "Operating payments", "Cash paid out for the year's operations: not depreciation, money owed, or land, buildings and equipment bought"],
+    ["currentAssets", "Current assets at year end", "Cash, money owed to it, and anything else to be used or turned into cash within a year"],
+    ["totalExpenses", "Total expenses", "The year's total expenses on the accrual basis, from its statement of financial performance"],
+  ];
+  for (const [field, label, title] of rows) {
+    const tr = document.createElement("tr");
+    const name = nameCell(label);
+    name.title = title;
+    tr.append(name);
+    years.forEach((y, i) => {
+      const td = document.createElement("td");
+      const box = document.createElement("input");
+      box.type = "text";
+      box.className = "payroll-tiny-input";
+      box.title = title;
+      const entered = inputsFor(entity, y).figures?.[field];
+      const fallback = shown[i]?.[field] ?? 0;
+      box.value = entered === undefined ? "" : (entered / 100).toFixed(2);
+      box.placeholder = `${(fallback / 100).toFixed(2)} (books)`;
+      box.style.width = "10em";
+      box.addEventListener("change", () => {
+        const parsed = box.value.trim() === "" ? null : parseAmount(box.value);
+        const next = structuredClone(inputsFor(entity, y));
+        const figures: SocietyYearFigures = { ...(next.figures ?? {}) };
+        if (parsed === null) delete figures[field];
+        else figures[field] = parsed;
+        next.figures = figures;
+        void saveInputs(entity, y, next, `${entity.name}: ${label.toLowerCase()}, year ended ${taxYearEndSaid(y)}`).then(after);
+      });
+      td.append(box);
+      tr.append(td);
+    });
+    tbody.append(tr);
+  }
+  table.append(head, tbody);
+  return wrapTable(table);
+}
+
 export function renderSocietyPage(): void {
   const body = $("society-body");
   body.textContent = "";
@@ -182,44 +273,44 @@ export function renderSocietyPage(): void {
 
   // 1. Which standard
   body.append(heading("1. Which standard applies?"));
-  const last = statementsFor(year - 1);
-  const before = statementsFor(year - 2);
   const thisYear = statementsFor(year);
-  const payments: [Cents, Cents] = [operatingPaymentsFrom(last.expenses), operatingPaymentsFrom(before.expenses)];
-  const assets: [Cents, Cents] = [currentAssetsAt(last), currentAssetsAt(before)];
+  const prior = priorYearFigures(entity, year, statementsFor);
   const answer = reportingStandard({
     registeredCharity: np?.registeredCharity === true,
     donee: np?.donee === true,
-    operatingPayments: payments,
-    currentAssets: assets,
-    thisYearPayments: operatingPaymentsFrom(thisYear.expenses),
+    operatingPayments: [prior[0].operatingPayments, prior[1].operatingPayments],
+    currentAssets: [prior[0].currentAssets, prior[1].currentAssets],
+    totalExpenses: [prior[0].totalExpenses, prior[1].totalExpenses],
   });
   const stored = inputsFor(entity, year);
   const standard: ReportingStandard = stored.standard ?? answer.standard;
   body.append(
-    statementTable([
-      { label: `Operating payments, year ended ${taxYearEndSaid(year - 1)}`, amount: payments[0] },
-      { label: `Operating payments, year ended ${taxYearEndSaid(year - 2)}`, amount: payments[1] },
-      { label: `Current assets at ${taxYearEndSaid(year - 1)}`, amount: assets[0] },
-      { label: `Current assets at ${taxYearEndSaid(year - 2)}`, amount: assets[1] },
-      { label: `Operating payments this year, so far as the books show`, amount: operatingPaymentsFrom(thisYear.expenses) },
-    ]),
-  );
-  body.append(
     note(
-      "Operating payments are measured on the cash basis and leave out depreciation, money owed and capital spending. These figures are the year's expenses less depreciation from the books, which is near enough to test against $50,000 and $140,000 but is not exact: check them if they are close.",
+      "The standard is decided by the two years before this one, from their signed financial statements. Enter " +
+        "each year's figures as those statements give them. Until you do, the books' own figures are used, and " +
+        "they are short wherever the books do not hold the whole of a year.",
     ),
   );
+  body.append(priorFiguresTable(entity, [year - 1, year - 2], prior, () => redraw("society")));
+  const guessed = prior.filter((p) => p.fromBooks.length > 0);
+  if (guessed.length > 0) {
+    body.append(
+      note(
+        `Not yet entered, so taken from the books: ${guessed.map((p) => `${p.fromBooks.join(", ")} for the year ended ${taxYearEndSaid(p.year)}`).join("; ")}. ` +
+          "The suggestion below is only as good as those.",
+      ),
+    );
+  }
   const verdict = document.createElement("div");
   verdict.className = "journal-card";
   const title = document.createElement("p");
   title.className = "journal-narration";
-  title.textContent = `Suggested: ${standardName(answer.standard)}`;
+  title.textContent = `Suggested: ${standardName(answer.standard)}${guessed.length > 0 ? " (from the books' figures)" : ""}`;
   verdict.append(title);
   for (const reason of answer.reasons) verdict.append(note(reason));
   body.append(verdict);
   const choose = document.createElement("select");
-  for (const value of ["small-society", "tier-4", "tier-3"] as const) {
+  for (const value of ["small-society", "tier-4", "tier-3", "tier-2"] as const) {
     const option = document.createElement("option");
     option.value = value;
     option.textContent = standardName(value);
@@ -237,6 +328,17 @@ export function renderSocietyPage(): void {
     body.append(note("A registered charity files its annual return and performance report with Charities Services, under the Tier 4 or Tier 3 standard, whatever its size."));
   } else {
     body.append(note("Financial statements are due at the Companies Office within six months of balance date, after being presented to the members at the annual general meeting."));
+  }
+
+  if (standard === "tier-2") {
+    body.append(heading("2. Tier 2 or Tier 1"));
+    body.append(
+      note(
+        "Tier 2 and Tier 1 are full accrual reporting under PBE Standards, with an audit or review. NZOSA keeps the books " +
+          "for it, but the financial statements need an accountant. The Reports page has the trial balance and ledger they work from.",
+      ),
+    );
+    return;
   }
 
   if (standard === "tier-4") {

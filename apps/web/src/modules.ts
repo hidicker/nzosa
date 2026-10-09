@@ -277,10 +277,15 @@ export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HT
       void setModule(module.id, !on).then(redraw);
     });
 
-    const foot = document.createElement("div");
-    foot.className = "module-foot";
-    foot.append(chosen === undefined ? `Automatic, ${BASIS[module.basis]}` : "Chosen");
+    // Said only for the exception. Every tile used to end "Automatic, from
+    // your entities", which is the answer for nearly all of them and so told
+    // nobody anything; what is worth a line is a module somebody has chosen
+    // by hand, with the way back. The rest say it on hover.
+    tile.title = chosen === undefined ? `Automatic, ${BASIS[module.basis]}` : "";
+    tile.append(toggle);
     if (chosen !== undefined) {
+      const foot = document.createElement("div");
+      foot.className = "module-foot";
       const reset = document.createElement("button");
       reset.type = "button";
       reset.className = "link-button";
@@ -288,9 +293,9 @@ export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HT
       reset.addEventListener("click", () => {
         void setModule(module.id, null).then(redraw);
       });
-      foot.append(" · ", reset);
+      foot.append("Chosen · ", reset);
+      tile.append(foot);
     }
-    tile.append(toggle, foot);
     const held = on ? null : (module.holds?.() ?? null);
     if (held !== null) {
       const warn = document.createElement("div");

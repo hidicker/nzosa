@@ -127,7 +127,7 @@ export function nonProfitNotes(np: NonProfit, gstRegistered: boolean): string[] 
   }
   if (gstRegistered) {
     notes.push(
-      "GST: unconditional donations are not a taxable supply, grants and subscriptions are, and selling " +
+      "GST: unconditional donations are not a taxable supply, grants (from government and public authorities, and where something is given back), sponsorship and subscriptions are, and selling " +
         "donated goods is exempt. A non-profit that makes only exempt supplies should not be registered.",
     );
   } else {

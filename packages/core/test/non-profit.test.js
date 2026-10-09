@@ -36,7 +36,7 @@ test("notes: donee without charity, the receipt number, the deduction, and GST",
   assert.doesNotMatch(complete, /enter it above/);
   assert.match(nonProfitNotes({ form: "club" }, false).join(" "), /\$1,000 deduction/);
   assert.doesNotMatch(nonProfitNotes({ form: "club", deduction: true }, false).join(" "), /can claim a \$1,000/);
-  assert.match(nonProfitNotes({ form: "charity" }, true).join(" "), /grants and subscriptions are/);
+  assert.match(nonProfitNotes({ form: "charity" }, true).join(" "), /sponsorship and subscriptions are/);
   assert.match(nonProfitNotes({ form: "charity" }, false).join(" "), /\$60,000/);
 });
 

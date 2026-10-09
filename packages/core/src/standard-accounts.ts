@@ -73,7 +73,7 @@ const RENTAL_BALANCES: readonly StandardRow[] = [
 const NON_PROFIT: readonly StandardRow[] = [
   { code: "200", name: "Subscriptions", type: "Revenue", gst: "income", description: "Membership subscriptions and levies" },
   { code: "210", name: "Donations", type: "Revenue", gst: "none", description: "Unconditional gifts from the public and members; no GST. A donor who gets something back is buying, not giving" },
-  { code: "220", name: "Grants", type: "Revenue", gst: "income", description: "Grants and sponsorship used for the organisation's purposes; taxable if registered for GST" },
+  { code: "220", name: "Grants", type: "Revenue", gst: "income", description: "Government and council grants, service contracts and sponsorship: taxable if registered for GST. A gift from a private funder with nothing given back is a donation, with no GST: code it to Donations" },
   { code: "230", name: "Fundraising", type: "Revenue", gst: "income", description: "Raffles, events, sausage sizzles and other fundraising" },
   { code: "240", name: "Sales of donated goods", type: "Revenue", gst: "none", description: "Takings from selling gifted goods, such as an op shop; an exempt supply" },
   { code: "250", name: "Trading income", type: "Revenue", gst: "income", description: "Hall hire, bar and canteen takings, fees for services and programmes" },

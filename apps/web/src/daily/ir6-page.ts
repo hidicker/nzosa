@@ -529,10 +529,12 @@ export function renderIr6Page(): void {
   }
   if (sheet.box.toPay < 0) body.append(note("The return ends in a refund. Choose on the form where it goes."));
   if (sheet.provisionalNext !== null) {
+    const [a = 0, b = 0, c = 0] = sheet.provisionalNext.instalments;
     body.append(
       note(
-        `This trust is a provisional tax payer: residual income tax is over $5,000. The standard option for next year is this year's residual income tax plus 5%, $${money(sheet.provisionalNext)}, ` +
-          "paid in three instalments (28 August, 15 January and 7 May for a 31 March balance date). Distributions to minor and corporate beneficiaries count. The estimation option is on the form's worksheet.",
+        `This trust is a provisional tax payer: residual income tax is over $5,000. The standard option for next year is this year's residual income tax plus 5%, $${money(sheet.provisionalNext.amount)}, ` +
+          `in instalments of $${money(a)}, $${money(b)} and $${money(c)} (28 August, 15 January and 7 May for a 31 March balance date; a tax agent's extension of time changes which year it is worked from). ` +
+          "Income taxed under the minor and corporate rules counts. The estimation option is on the form's worksheet.",
       ),
     );
   }

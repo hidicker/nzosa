@@ -4,6 +4,8 @@ import type { Account } from "./chart.js";
 import type { PostedJournal } from "./posting.js";
 import { incomeAndExpenses } from "./ir9.js";
 import type { ManualJournal } from "./manual-journals.js";
+import { provisionalStandardOption } from "./rental-schedules.js";
+import type { ProvisionalStandard } from "./rental-schedules.js";
 import type { AccountAmount } from "./ir9.js";
 
 /**
@@ -31,8 +33,9 @@ import type { AccountAmount } from "./ir9.js";
  * - Other beneficiary income is taxed at the beneficiary's own marginal rates;
  *   the trustee pays it for them unless they agree otherwise. It is not final
  *   tax: the beneficiary includes the income and the tax in their own return.
- * - Trustee income is taxed at 39%, or 33% where trustee net income is
- *   $10,000 or less, for a disabled beneficiary trust, for an estate in the
+ * - Trustee income is taxed at 39%, or 33% where trustee net income (trustee
+ *   income less deductible expenses, ignoring income taxed under the minor and
+ *   corporate beneficiary rules) is $10,000 or less, for a disabled beneficiary trust, for an estate in the
  *   year of death and the three after, or an energy consumer trust; 28% for a
  *   legacy superannuation fund trust.
  * - A distribution other than beneficiary income is not taxable from a
@@ -133,13 +136,18 @@ export const PROVISIONAL_LIMIT: Cents = 500_000;
 type Bracket = readonly [upTo: number, rate: number];
 
 /**
- * Individual income tax rates by the tax year that ends 31 March. 2026 is the
- * table printed in the 2026 IR6 guide (blended through the year, which is why
- * it has more steps); 2027 on is the table it gives for 2027 provisional tax.
+ * Individual income tax rates by the tax year that ends 31 March, as Inland
+ * Revenue publishes them ("Tax rates for individuals"): the table "From 1 April
+ * 2025" applies to the 2026 year and after; the 2025 year had the blended
+ * rates for the 31 July 2024 change of thresholds; before that, the old bands.
+ *
+ * Note: the printed 2026 Estate or trust return guide (IR6G) shows the blended
+ * 2025 table at question 26L. Inland Revenue's own rates page and the rest of
+ * this program use the 2026 table for the 2026 year, and so does this.
  */
 export function individualRates(year: number): readonly Bracket[] {
-  if (year >= 2027) return [[15_600, 0.105], [53_500, 0.175], [78_100, 0.3], [180_000, 0.33], [Infinity, 0.39]];
-  if (year === 2026) {
+  if (year >= 2026) return [[15_600, 0.105], [53_500, 0.175], [78_100, 0.3], [180_000, 0.33], [Infinity, 0.39]];
+  if (year === 2025) {
     return [[14_000, 0.105], [15_600, 0.1282], [48_000, 0.175], [53_500, 0.2164], [70_000, 0.3], [78_100, 0.3099], [180_000, 0.33], [Infinity, 0.39]];
   }
   return [[14_000, 0.105], [48_000, 0.175], [70_000, 0.3], [180_000, 0.33], [Infinity, 0.39]];
@@ -410,7 +418,7 @@ export interface TrustWorksheet {
   incomeBy: Record<TrustIncomeClass, Cents>;
   problems: string[];
   /** The standard option for next year's provisional tax, where the trust is a provisional taxpayer. */
-  provisionalNext: Cents | null;
+  provisionalNext: ProvisionalStandard | null;
 }
 
 /** The IR6, from the books, the trust's people and the choices made for the year. */
@@ -478,7 +486,9 @@ export function trustWorksheet(options: {
   for (const b of trust.beneficiaries) {
     const allocation = n(inputs.allocations[b.id]);
     if (allocation <= 0 && n(inputs.distributionsTaxable[b.id]) + n(inputs.distributionsNotTaxable[b.id]) + n(inputs.withdrawals[b.id]) + n(inputs.taxableDistributions[b.id]) === 0) continue;
-    const rule = allocation > 0 ? beneficiaryRule(b, allocation, balanceDate) : null;
+    // A disabled beneficiary trust is outside the minor beneficiary rule altogether.
+    const found = allocation > 0 ? beneficiaryRule(b, allocation, balanceDate) : null;
+    const rule = trust.disabledBeneficiaryTrust === true && found === "minor" ? null : found;
     if (allocation > 0) {
       if (rule === null) ordinaryTotal += allocation;
       else ruleTotal += allocation;
@@ -579,7 +589,6 @@ export function trustWorksheet(options: {
 
   // Trustee income.
   const expenses = spent.q21;
-  const afterExpenses = trusteeIncome + minorCorporate - expenses;
   const bf = n(inputs.lossBroughtForward);
   const trusteeNet = (trusteeIncome - expenses) as number;
   let lossClaimed = 0;
@@ -594,7 +603,11 @@ export function trustWorksheet(options: {
   } else {
     lossCarried = bf - trusteeNet;
   }
-  const { rate, why } = trusteeRate(trust, year, Math.max(0, afterExpenses) as Cents);
+  // The $10,000 test (a "de minimis trust", section HC 40) is on the trustee income
+  // less deductible expenses. Income taxed as trustee income under the minor and
+  // corporate beneficiary rules is ignored for it (Inland Revenue's special report
+  // on the 39% trustee tax rate, April 2024).
+  const { rate, why } = trusteeRate(trust, year, Math.max(0, trusteeIncome - expenses) as Cents);
   const trusteeTax = Math.round(taxable * rate) as Cents;
   const minorCorporateTax = Math.round(wholeDollars(minorCorporate) * TRUSTEE_RATE) as Cents;
   const totalTrusteeTax = (trusteeTax + minorCorporateTax) as Cents;
@@ -669,7 +682,7 @@ export function trustWorksheet(options: {
     beneficiaries: sheets,
     incomeBy,
     problems,
-    provisionalNext: residual > PROVISIONAL_LIMIT ? (Math.round(residual * 1.05) as Cents) : null,
+    provisionalNext: residual > PROVISIONAL_LIMIT ? provisionalStandardOption({ lastYear: residual as Cents }) : null,
   };
 }
 

@@ -1,6 +1,7 @@
 import assert from "node:assert/strict";
 import test from "node:test";
 import {
+  incomeTaxOn,
   ageOn,
   beneficiaryRule,
   emptyTrust,
@@ -60,8 +61,17 @@ test("income tax on a person's whole income follows the year's table", () => {
   assert.equal(individualTax(1_000_000, 2027), 105_000);
   assert.equal(individualTax(0, 2027), 0);
   assert.equal(individualTax(20_000_000, 2027), 5_707_750, "$200,000 reaches the 39% band");
-  assert.ok(individualTax(1_000_000, 2026) === 105_000, "10.5% up to $14,000 in 2026 too");
-  assert.equal(individualTax(1_560_000, 2026), 147_000 + Math.round(160_000 * 0.1282), "the 2026 table has a 12.82% step to $15,600");
+  assert.equal(individualTax(1_560_000, 2026), 163_800, "10.5% to $15,600 in 2026: the table from 1 April 2025");
+  assert.equal(individualTax(1_560_000, 2025), 147_000 + Math.round(160_000 * 0.1282), "the 2025 year had a 12.82% step to $15,600");
+  assert.equal(individualTax(5_350_000, 2026), 163_800 + 663_250, "17.5% to $53,500");
+});
+
+test("the individual rates agree with the table the rest of the program uses", () => {
+  for (const year of [2025, 2026, 2027, 2028]) {
+    for (const dollars of [0, 9_000, 14_001, 15_600, 40_000, 53_501, 70_000, 100_000, 180_000, 250_000]) {
+      assert.equal(individualTax(dollars * 100, year), incomeTaxOn(dollars * 100, year), `${year} at $${dollars}`);
+    }
+  }
 });
 
 test("ages are counted in whole years on the balance date", () => {
@@ -226,7 +236,8 @@ test("a taxable distribution with no income allocated is still reported and taxe
 
 test("provisional tax is due when the residual income tax is over $5,000, at last year's plus 5%", () => {
   const s = sheet({});
-  assert.equal(s.provisionalNext, Math.round(1_092_000 * 1.05));
+  assert.equal(s.provisionalNext.amount, 1_146_600, "last year plus 5%, whole dollars");
+  assert.equal(s.provisionalNext.instalments.reduce((a, b) => a + b, 0), 1_146_600);
   const small = trustWorksheet({ income: [{ code: "270", name: "Interest received", amount: 100_000 }], expenses: [], trust, inputs: emptyTrustInputs(), year: 2027, balanceDate: BALANCE });
   assert.equal(small.provisionalNext, null);
 });
@@ -365,4 +376,24 @@ test("no journal when a beneficiary has no account, or nothing was allocated", (
   const none = allocationJournal({ entityId: "k", year: 2026, date: "2026-03-31", debit: "X - 970", sheet: sheet({}), trust, label: (c) => c });
   assert.equal(none.journal, null);
   assert.match(none.problems[0], /Nothing is allocated/);
+});
+
+test("income taxed under the minor rule does not count towards the $10,000 test", () => {
+  // Trustee income $6,000, less $1,000 of expenses: $5,000 net, so 33%, however much a child is allocated.
+  const inc = [{ code: "270", name: "Interest received", amount: 6_000_000 }, { code: "275", name: "Dividends received", amount: 0 }];
+  const exp = [{ code: "412", name: "Accounting fees", amount: 100_000 }];
+  const s = trustWorksheet({ income: inc, expenses: exp, trust, inputs: { ...emptyTrustInputs(), allocations: { kiri: 5_000_000 } }, year: 2026, balanceDate: "2026-03-31" });
+  assert.equal(s.box.minorCorporate, 5_000_000);
+  assert.equal(s.box.trusteeIncome, 1_000_000);
+  assert.equal(s.rate, 0.33);
+  assert.equal(s.box.minorCorporateTax, 1_950_000, "the child's allocation is still taxed at 39%");
+});
+
+test("a disabled beneficiary trust is outside the minor beneficiary rule", () => {
+  const dbt = { ...trust, disabledBeneficiaryTrust: true };
+  const s = sheet({ allocations: { kiri: 500_000 } }, dbt);
+  assert.equal(s.beneficiaries[0].rule, null);
+  assert.equal(s.box.minorCorporate, 0);
+  assert.equal(s.box.beneficiaryIncome, 500_000);
+  assert.equal(sheet({ allocations: { kiri: 500_000 } }).beneficiaries[0].rule, "minor", "any other trust: the rule applies");
 });

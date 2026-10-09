@@ -433,7 +433,7 @@ function equityFor(bank: string): string {
   // Blank makes it a choice, which saving insists on.
   const theirs = choices.filter((c) => entityId !== undefined && c.entityId === entityId);
   const pick = (list: typeof choices) =>
-    list.find((c) => /funds introduced|owner.*funds|owner.*equity|capital/i.test(c.name)) ?? list[0];
+    list.find((c) => /funds introduced|owner.*funds|owner.*equity|accumulated funds|capital/i.test(c.name)) ?? list[0];
   return pick(theirs)?.code ?? "";
 }
 

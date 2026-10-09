@@ -190,6 +190,13 @@ function kindRule(kind: string, structure?: string): string {
   }
   if (kind === "commercial") return "commercial rental: not ring-fenced";
   if (kind === "personal") return "personal affairs: most spending is not deductible at all";
+  if (kind === "nonprofit") {
+    return (
+      "a not-for-profit: donations, grants and subscriptions are income it holds for its purposes; " +
+      "nobody takes profit out, and spending is for what the organisation exists to do. A payment " +
+      "to a member or committee person is reimbursement or a wage, never drawings"
+    );
+  }
   if (structure === "company") {
     return (
       "a company: taxed on its own profit; money the shareholder takes out is salary, a " +

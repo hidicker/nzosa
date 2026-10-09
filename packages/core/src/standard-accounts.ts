@@ -59,7 +59,55 @@ const RENTAL_BALANCES: readonly StandardRow[] = [
   { code: "980", name: "Drawings", type: "Equity", gst: "none", description: "Money taken out of the property's accounts by the owner" },
 ];
 
+/**
+ * A not-for-profit's accounts, named for what its members and funders ask
+ * about: where the money came from and what it was for.
+ *
+ * GST follows the treatment of each kind of receipt when the organisation is
+ * registered: an unconditional donation is not a supply, so no GST; a grant
+ * or a subscription is a taxable supply; selling donated goods is exempt, so
+ * the takings carry no GST and the costs of running that shop cannot be
+ * claimed. Grants received before they are spent have an account of their
+ * own, because a grant with conditions is income only as it is used.
+ */
+const NON_PROFIT: readonly StandardRow[] = [
+  { code: "200", name: "Subscriptions", type: "Revenue", gst: "income", description: "Membership subscriptions and levies" },
+  { code: "210", name: "Donations", type: "Revenue", gst: "none", description: "Unconditional gifts from the public and members; no GST. A donor who gets something back is buying, not giving" },
+  { code: "220", name: "Grants", type: "Revenue", gst: "income", description: "Grants and sponsorship used for the organisation's purposes; taxable if registered for GST" },
+  { code: "230", name: "Fundraising", type: "Revenue", gst: "income", description: "Raffles, events, sausage sizzles and other fundraising" },
+  { code: "240", name: "Sales of donated goods", type: "Revenue", gst: "none", description: "Takings from selling gifted goods, such as an op shop; an exempt supply" },
+  { code: "250", name: "Trading income", type: "Revenue", gst: "income", description: "Hall hire, bar and canteen takings, fees for services and programmes" },
+  { code: "270", name: "Interest received", type: "Other Income", gst: "none", description: "Bank interest" },
+  { code: "260", name: "Other income", type: "Other Income", gst: "income", description: "Anything else received" },
+  { code: "404", name: "Bank fees", type: "Expense", gst: "none", description: "Account fees" },
+  { code: "408", name: "Cost of fundraising", type: "Expense", gst: "expense", description: "What it cost to raise money: raffle prizes, stock for events" },
+  { code: "412", name: "Accounting and audit fees", type: "Expense", gst: "expense", description: "Preparing the accounts, any review or audit" },
+  { code: "416", name: "Depreciation", type: "Depreciation", gst: "none", description: "Equipment and buildings" },
+  { code: "420", name: "Venue and hall hire", type: "Expense", gst: "expense", description: "Meeting rooms, grounds, hall and field hire" },
+  { code: "425", name: "Grants and donations paid", type: "Expense", gst: "none", description: "Money given on to people or other organisations; no GST" },
+  { code: "429", name: "General expenses", type: "Expense", gst: "expense", description: "Sundry running costs" },
+  { code: "433", name: "Insurance", type: "Expense", gst: "expense", description: "Public liability, property and volunteers' cover" },
+  { code: "437", name: "Interest", type: "Expense", gst: "none", description: "Interest on borrowing" },
+  { code: "445", name: "Light, power, heating", type: "Expense", gst: "expense", description: "Power and gas for the premises" },
+  { code: "453", name: "Office expenses", type: "Expense", gst: "expense", description: "Postage, stationery, software and subscriptions" },
+  { code: "461", name: "Programme and activity costs", type: "Expense", gst: "expense", description: "What the organisation spends on what it exists to do" },
+  { code: "469", name: "Rent and rates", type: "Expense", gst: "expense", description: "Rent, council rates and water" },
+  { code: "473", name: "Repairs and maintenance", type: "Expense", gst: "expense", description: "Upkeep of the premises and equipment" },
+  { code: "477", name: "Salaries and wages", type: "Expense", gst: "none", description: "Paid staff, including employer KiwiSaver and ACC" },
+  { code: "489", name: "Telephone and internet", type: "Expense", gst: "expense", description: "Phone and internet" },
+  { code: "493", name: "Travel", type: "Expense", gst: "expense", description: "Travel for the organisation's purposes, including volunteers' mileage" },
+  { code: "496", name: "Volunteer costs", type: "Expense", gst: "expense", description: "Thanking and training volunteers" },
+  { code: "740", name: "Equipment", type: "Fixed Asset", gst: "expense", description: "Equipment and furniture the organisation owns" },
+  { code: "800", name: "Accounts Payable", type: "Accounts Payable", gst: "none", description: "Approved bills not yet paid" },
+  { code: "805", name: "Grants received in advance", type: "Current Liability", gst: "none", description: "A grant with conditions, received before it is spent: income only as the conditions are met" },
+  { code: "810", name: "Subscriptions in advance", type: "Current Liability", gst: "none", description: "Subscriptions paid for a period that has not started" },
+  { code: "820", name: "GST", type: "Current Liability", gst: "none", description: "GST owing to or from Inland Revenue" },
+  { code: "960", name: "Special purpose funds", type: "Equity", gst: "none", description: "Money set aside or given for a particular purpose" },
+  { code: "970", name: "Accumulated funds", type: "Equity", gst: "none", description: "What the organisation has built up; opening balances are balanced here" },
+];
+
 const STANDARD: Readonly<Record<Exclude<EntityKind, "business">, readonly StandardRow[]>> = {
+  nonprofit: NON_PROFIT,
   residential: [
     { code: "200", name: "Rent received", type: "Revenue", gst: "none", description: "Rent from tenants" },
     { code: "260", name: "Other rental income", type: "Other Income", gst: "none", description: "Water recharged, insurance payouts, bond kept for damage" },

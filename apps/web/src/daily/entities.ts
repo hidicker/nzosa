@@ -16,6 +16,7 @@ import {
 } from "../books.js";
 import { GST_OPTIONS } from "../reconcile.js";
 import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
+import { formSelect, nonProfitSettings } from "./non-profit-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
@@ -33,6 +34,8 @@ import {
   entityId,
   formatOwners,
   isKnownType,
+  nonProfitDefaults,
+  nonProfitFormName,
   ownersTotal,
   parseOwners,
   rateForTreatment,
@@ -42,7 +45,7 @@ import {
   reportsNetOfGst,
   sectionForType,
 } from "@nzosa/core";
-import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
+import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
@@ -105,6 +108,7 @@ const KIND_CAPTION: Record<EntityKind, string> = {
   residential: "Residential rental",
   commercial: "Commercial rental",
   personal: "Personal",
+  nonprofit: "Non-profit",
 };
 
 /** Open the chart of accounts ready to add an account, named as typed. */
@@ -131,6 +135,7 @@ export function addEntityForm(): HTMLElement {
     ["residential", "Residential rental"],
     ["commercial", "Commercial rental"],
     ["personal", "Personal"],
+    ["nonprofit", "Non-profit (charity, society, club)"],
   ] as const) {
     const option = document.createElement("option");
     option.value = value;
@@ -138,6 +143,14 @@ export function addEntityForm(): HTMLElement {
     kind.append(option);
   }
   kind.title = "Residential rental losses are ring-fenced; the others are not.";
+
+  // What sort of non-profit, asked only when one is chosen: it sets the usual
+  // answers (registered charity or not) that can be changed afterwards.
+  let nonProfitForm: NonProfitForm = "society";
+  const form = formSelect(nonProfitForm, (chosen) => {
+    nonProfitForm = chosen;
+  });
+  form.hidden = true;
 
   const gstWrap = document.createElement("label");
   gstWrap.className = "entity-add-gst";
@@ -150,6 +163,7 @@ export function addEntityForm(): HTMLElement {
   // left on from "Business" claimed GST on the groceries.
   kind.addEventListener("change", () => {
     gst.checked = gstUsually(kind.value);
+    form.hidden = kind.value !== "nonprofit";
   });
 
   const add = document.createElement("button");
@@ -171,12 +185,18 @@ export function addEntityForm(): HTMLElement {
       ...model,
       entities: [
         ...model.entities,
-        { id, name: wanted, kind: kind.value as EntityKind, gstRegistered: gst.checked },
+        {
+          id,
+          name: wanted,
+          kind: kind.value as EntityKind,
+          gstRegistered: gst.checked,
+          ...(kind.value === "nonprofit" ? { nonprofit: nonProfitDefaults(nonProfitForm) } : {}),
+        },
       ],
     });
   });
 
-  row.append(name, kind, gstWrap, add);
+  row.append(name, kind, form, gstWrap, add);
   return row;
 }
 
@@ -553,6 +573,7 @@ export function renderEntities(): void {
       ["residential", "Residential rental"],
       ["commercial", "Commercial rental"],
       ["personal", "Personal"],
+      ["nonprofit", "Non-profit (charity, society, club)"],
     ] as const) {
       const option = document.createElement("option");
       option.value = value;
@@ -566,7 +587,16 @@ export function renderEntities(): void {
       void saveEntities({
         ...live,
         entities: live.entities.map((e) =>
-          e.id === entity.id ? { ...e, kind: kind.value as EntityKind } : e,
+          e.id === entity.id
+            ? {
+                ...e,
+                kind: kind.value as EntityKind,
+                // A non-profit starts with a form's usual answers, to be changed.
+                ...(kind.value === "nonprofit" && e.nonprofit === undefined
+                  ? { nonprofit: nonProfitDefaults("society") }
+                  : {}),
+              }
+            : e,
         ),
       });
     });
@@ -742,7 +772,9 @@ export function renderEntities(): void {
     summary.textContent = [
       (entity.kind ?? "business") === "business" && entity.structure !== undefined
         ? (BUSINESS_STRUCTURES.find(([value]) => value === entity.structure)?.[1] ?? "Business")
-        : KIND_CAPTION[entity.kind ?? "business"],
+        : entity.kind === "nonprofit" && entity.nonprofit !== undefined
+          ? nonProfitFormName(entity.nonprofit.form)
+          : KIND_CAPTION[entity.kind ?? "business"],
       reportsNetOfGst(entity) ? "GST registered" : "not GST registered",
       formatOwners(entity.owners ?? []),
     ]
@@ -785,7 +817,7 @@ export function renderEntities(): void {
     const head = document.createElement("div");
     head.className = "entity-head";
     head.append(name, summary, settingsButton, menu);
-    settings.append(ownersWrap, kind, structure, gstWrap, exemptWrap);
+    settings.append(ownersWrap, kind, structure, gstWrap, exemptWrap, nonProfitSettings(entity));
     row.append(head, settings);
 
     // What goes at the top of an invoice you send somebody. Nothing else in

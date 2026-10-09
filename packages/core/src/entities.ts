@@ -1,4 +1,5 @@
 import type { Account } from "./chart.js";
+import type { NonProfit } from "./non-profit.js";
 
 /**
  * Entities: the separate books a chart of accounts is really several of.
@@ -157,9 +158,15 @@ export interface Entity {
    * shareholder current account is split on the IR4.
    */
   shareholders?: Owner[];
+  /**
+   * For a not-for-profit (kind `nonprofit`): what sort it is, and the facts
+   * that decide how it is treated -- registered charity, donee organisation,
+   * approved for the $1,000 deduction. See non-profit.ts.
+   */
+  nonprofit?: NonProfit;
 }
 
-export type EntityKind = "residential" | "commercial" | "business" | "personal";
+export type EntityKind = "residential" | "commercial" | "business" | "personal" | "nonprofit";
 
 export type BusinessStructure = "company" | "sole-trader" | "partnership" | "trust";
 

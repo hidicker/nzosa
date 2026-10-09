@@ -170,6 +170,10 @@ export interface Entity {
    * beneficiaries. See trust.ts.
    */
   trust?: Trust;
+  /** A company that is a look-through company (LTC): its owners are taxed on its income. See ir7.ts. */
+  lookThrough?: boolean;
+  /** IRD numbers of the owners or shareholders, by name, for the IR7's attribution pages. */
+  holderIrd?: Record<string, string>;
 }
 
 export type EntityKind = "residential" | "commercial" | "business" | "personal" | "nonprofit" | "trust";

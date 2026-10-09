@@ -638,6 +638,30 @@ export function renderEntities(): void {
       });
     });
 
+    // A company can be a look-through company: its owners, not it, are taxed.
+    const ltcWrap = document.createElement("label");
+    ltcWrap.className = "entity-gst";
+    const ltcBox = document.createElement("input");
+    ltcBox.type = "checkbox";
+    ltcBox.checked = entity.lookThrough === true;
+    ltcWrap.title = "A look-through company files an IR7 and its owners include its income in their own returns.";
+    ltcWrap.append(ltcBox, document.createTextNode(" Look-through company (LTC)"));
+    ltcWrap.hidden = (entity.kind ?? "business") !== "business" || entity.structure !== "company";
+    ltcBox.addEventListener("change", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      void saveEntities(
+        {
+          ...live,
+          entities: live.entities.map((e) => {
+            if (e.id !== entity.id) return e;
+            const { lookThrough: _was, ...rest } = e;
+            return ltcBox.checked ? { ...rest, lookThrough: true } : rest;
+          }),
+        },
+        `${entity.name} ${ltcBox.checked ? "is" : "is not"} a look-through company`,
+      );
+    });
+
     // Registration decides whether this entity's own reports are net of GST,
     // so it lives beside the entity rather than as a switch on the report:
     // one ledger can hold a registered company and an unregistered rental,
@@ -824,7 +848,7 @@ export function renderEntities(): void {
     const head = document.createElement("div");
     head.className = "entity-head";
     head.append(name, summary, settingsButton, menu);
-    settings.append(ownersWrap, kind, structure, gstWrap, exemptWrap, nonProfitSettings(entity), trustSettings(entity));
+    settings.append(ownersWrap, kind, structure, ltcWrap, gstWrap, exemptWrap, nonProfitSettings(entity), trustSettings(entity));
     row.append(head, settings);
 
     // What goes at the top of an invoice you send somebody. Nothing else in

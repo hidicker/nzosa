@@ -32,7 +32,8 @@ export type ModuleId =
   | "gst"
   | "assets"
   | "nonprofit"
-  | "trust";
+  | "trust"
+  | "ir7";
 
 /** Where an automatic answer comes from, said beside it. */
 type Basis = "entities" | "source" | "data";
@@ -66,6 +67,14 @@ const xeroHeld = (): boolean => Object.keys(state.ledger.xeroBankNumbers ?? {}).
 const businesses = () => entities().filter((e) => (e.kind ?? "business") === "business");
 
 export const MODULES: readonly ModuleInfo[] = [
+  {
+    id: "ir7",
+    countries: ["nz"],
+    name: "Partnerships and look-through companies",
+    what: "The IR7 return and each partner or owner's share of the income.",
+    basis: "entities",
+    inferred: () => entities().some((e) => e.structure === "partnership" || (e.structure === "company" && e.lookThrough === true)),
+  },
   {
     id: "trust",
     countries: ["nz"],

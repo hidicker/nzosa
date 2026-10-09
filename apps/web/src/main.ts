@@ -69,6 +69,7 @@ import { renderGrantsPage } from "./daily/grants-page.js";
 import { renderIr9Page } from "./daily/ir9-page.js";
 import { renderTrustPeoplePage } from "./daily/trust-people-page.js";
 import { renderIr6Page } from "./daily/ir6-page.js";
+import { renderIr7Page } from "./daily/ir7-page.js";
 import { renderDonationsPage } from "./daily/donations-page.js";
 import { renderPerformancePage } from "./daily/performance-report-page.js";
 import { renderPersonalYearEnd } from "./daily/personal-year-end.js";
@@ -168,6 +169,7 @@ async function init(): Promise<void> {
     ir9: renderIr9Page,
     trustPeople: renderTrustPeoplePage,
     ir6: renderIr6Page,
+    ir7: renderIr7Page,
     donations: renderDonationsPage,
     performance: renderPerformancePage,
     personalYear: renderPersonalYearEnd,

@@ -51,6 +51,7 @@ export type PageName =
   | "ir9"
   | "trustPeople"
   | "ir6"
+  | "ir7"
   | "tenancies"
   | "reconcile"
   | "reports"
@@ -174,6 +175,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "ir9") redraw("ir9");
   if (page === "trustpeople") redraw("trustPeople");
   if (page === "ir6") redraw("ir6");
+  if (page === "ir7") redraw("ir7");
   if (page === "donations") redraw("donations");
   if (page === "performance") redraw("performance");
   if (page === "personalyear") redraw("personalYear");

@@ -25,6 +25,8 @@ const SMTP_HOST = Deno.env.get("SMTP_HOST") ?? "";
 const SMTP_USER = Deno.env.get("SMTP_USER") ?? "";
 const SMTP_PASSWORD = Deno.env.get("SMTP_PASSWORD") ?? "";
 const APP_URL = Deno.env.get("APP_URL") ?? "https://nbparagliding.nz/nzosa/";
+/** Where a warning goes when one person sends a lot of invitations. A secret, so the address is not in the code. */
+const ALERT_EMAIL = Deno.env.get("ALERT_EMAIL") ?? "";
 
 const CORS: Record<string, string> = {
   "access-control-allow-origin": "*",
@@ -59,15 +61,18 @@ async function asService(fn: string, args: unknown): Promise<unknown> {
   return await response.json().catch(() => null);
 }
 
-/** Who is asking, by their token: the address they signed in with. */
-async function callerEmail(jwt: string): Promise<string> {
+/** Who is asking, by their token: their id and the address they signed in with. */
+async function caller(jwt: string): Promise<{ id: string; email: string }> {
   const response = await fetch(`${SUPABASE_URL}/auth/v1/user`, {
     headers: { apikey: SERVICE_KEY, authorization: `Bearer ${jwt}` },
   });
-  if (!response.ok) return "";
-  const user = (await response.json().catch(() => null)) as { email?: string } | null;
-  return user?.email ?? "";
+  if (!response.ok) return { id: "", email: "" };
+  const user = (await response.json().catch(() => null)) as { id?: string; email?: string } | null;
+  return { id: user?.id ?? "", email: user?.email ?? "" };
 }
+
+/** Past this many in a day, the site's owner hears about it, once. */
+const ALERT_AFTER = 10;
 
 async function send(to: string, subject: string, text: string, html: string): Promise<void> {
   const client = new SMTPClient({
@@ -79,7 +84,7 @@ async function send(to: string, subject: string, text: string, html: string): Pr
     },
   });
   try {
-    await client.send({ from: `NZOSA <${SMTP_USER}>`, to, subject, content: text, html });
+    await client.send({ from: `NZOSA <${SMTP_USER}>`, to, subject, content: text, ...(html !== "" ? { html } : {}) });
   } finally {
     await client.close();
   }
@@ -89,6 +94,7 @@ const NOT_EMAILED: Record<string, string> = {
   "address-limit": "An email has already gone to that address three times today, so no more were sent.",
   "books-limit": "These books have sent their 20 invitation emails for today, so no email was sent.",
   "no-invitation": "There is no invitation waiting for that address.",
+  "person-limit": "You have sent 100 invitation emails today, the most one person may, so no more were sent.",
 };
 
 Deno.serve(async (request: Request) => {
@@ -121,18 +127,36 @@ Deno.serve(async (request: Request) => {
   }
 
   try {
-    const take = (await asService("invitation_email_take", { book, who: email })) as {
+    const who = await caller(jwt);
+    if (who.id === "") return reply({ invited: true, emailed: false, said: "No email was sent." });
+    const take = (await asService("invitation_email_take", { book, who: email, inviter: who.id })) as {
       ok: boolean;
       why?: string;
       books?: string;
       role?: string;
       email?: string;
+      sent_today?: number;
     };
     if (!take.ok) {
       return reply({ invited: true, emailed: false, said: NOT_EMAILED[take.why ?? ""] ?? "No email was sent." });
     }
-    const { subject, text, html } = letter(take.books ?? "", take.role ?? role, await callerEmail(jwt), APP_URL);
+    const { subject, text, html } = letter(take.books ?? "", take.role ?? role, who.email, APP_URL);
     await send(take.email ?? email, subject, text, html);
+    if (take.sent_today === ALERT_AFTER + 1 && ALERT_EMAIL !== "") {
+      // Told once, on the eleventh: never in the way of the invitation itself.
+      await send(
+        ALERT_EMAIL,
+        `NZOSA: ${who.email || who.id} has sent ${ALERT_AFTER + 1} invitation emails today`,
+        [
+          `${who.email || "An account"} (user ${who.id}) has now sent ${ALERT_AFTER + 1} invitation emails in the last 24 hours.`,
+          `The latest was to ${take.email ?? email}, for the books "${take.books ?? ""}".`,
+          "",
+          "One person may send at most 100 a day. If this looks like misuse, the account can be removed under",
+          "Authentication, Users in the Supabase dashboard.",
+        ].join("\n"),
+        "",
+      ).catch((error) => console.error("invite alert:", (error as Error).message));
+    }
     return reply({ invited: true, emailed: true });
   } catch (error) {
     console.error("invite email:", (error as Error).message);

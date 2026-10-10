@@ -1336,7 +1336,7 @@ export function betweenEntities(): { journals: PostedJournal[]; accounts: Betwee
 }
 
 export interface BetweenTag {
-  /** "Larch Street, paid by Both". */
+  /** "Totara Street, paid by Both". */
   label: string;
   /** What the books record for it, account by account. */
   title: string;

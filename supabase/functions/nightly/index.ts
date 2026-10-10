@@ -39,7 +39,11 @@ async function rpc<T>(fn: string, args: unknown): Promise<T> {
     body: JSON.stringify(args),
   });
   if (!response.ok) throw new Error(`${fn}: database said ${response.status}`);
-  return (await response.json()) as T;
+  // A function that returns nothing (feed_record_fetch) answers with no body
+  // at all: read as JSON, that threw, and every morning stopped there, before
+  // its result was written.
+  const text = await response.text();
+  return (text === "" ? null : JSON.parse(text)) as T;
 }
 
 async function partsOf(book: string): Promise<Record<string, { version: number; data: unknown }>> {

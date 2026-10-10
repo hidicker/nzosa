@@ -1750,7 +1750,7 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
     const fold = document.createElement("details");
     const summary = document.createElement("summary");
     summary.textContent =
-      `${others.length} more from that week that ${previousSystem()} does not have on or after ${start} ` +
+      `${others.length} more from before ${start} that ${previousSystem()} does not have on or after it ` +
       "— most likely in the opening balance already";
     fold.append(summary);
     const all = document.createElement("button");
@@ -1762,6 +1762,8 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
     if (inner !== null) fold.append(inner);
     wrap.append(fold);
   }
+  const early = broughtInEarly(start);
+  if (early.length > 0) wrap.append(broughtInSection(early, start));
   wrap.append(lookBackButton(start, mapping));
   return wrap;
 }
@@ -1830,6 +1832,114 @@ function justBeforeTable(lines: readonly Transaction[], start: string): HTMLElem
   }
   table.append(head, tbody);
   return table;
+}
+
+/** The feed's lines from before the start that were brought in, dated the start. */
+function broughtInEarly(start: string): Transaction[] {
+  return state.ledger.transactions.filter((t) => {
+    const bankDate = t.extras?.["bankDate"];
+    return typeof bankDate === "string" && bankDate < start && t.date === start;
+  });
+}
+
+/** Those lines, each with the way back out. */
+function broughtInSection(lines: readonly Transaction[], start: string): HTMLElement {
+  const fold = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = `${lines.length} brought in, dated ${start}`;
+  fold.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table owner-table match-table";
+  const head = document.createElement("thead");
+  head.innerHTML = "<tr><th>Bank date</th><th>Account</th><th>Payee</th><th>Amount</th><th></th></tr>";
+  const tbody = document.createElement("tbody");
+  for (const line of lines) {
+    const tr = document.createElement("tr");
+    tr.append(
+      nameCell(String(line.extras?.["bankDate"] ?? "")),
+      nameCell(bankLabel(line.account)),
+      nameCell(line.otherParty || line.particulars || ""),
+    );
+    const amount = document.createElement("td");
+    amount.className = "report-amount";
+    amount.textContent = (line.amount / 100).toLocaleString(booksLocale(), {
+      minimumFractionDigits: moneyPlaces(),
+      maximumFractionDigits: moneyPlaces(),
+    });
+    const actions = document.createElement("td");
+    actions.className = "report-amount";
+    const out = document.createElement("button");
+    out.type = "button";
+    out.className = "link-button";
+    out.textContent = "Leave out after all";
+    out.addEventListener("click", () => void leaveOutAfterAll(line));
+    actions.append(out);
+    tr.append(amount, actions);
+    tbody.append(tr);
+  }
+  table.append(head, tbody);
+  fold.append(table);
+  return fold;
+}
+
+/**
+ * Take a line brought in from before the start back out, and remember it as
+ * left out so no fetch brings it in again. Its coding goes with it, said
+ * first; a locked period is not touched.
+ */
+async function leaveOutAfterAll(line: Transaction): Promise<void> {
+  if (heldByLock(state.ledger.lockDates, state.ledger.entities, line)) {
+    alert(`${line.date} is locked, so this line stays. Move the lock date back first to leave it out.`);
+    return;
+  }
+  const id = line.id;
+  const coded =
+    state.ledger.overrides?.[id] !== undefined ||
+    state.ledger.splits?.[id] !== undefined ||
+    state.ledger.transfers?.[id] !== undefined ||
+    state.ledger.invoiceMatches?.[id] !== undefined;
+  const what = `${String(line.extras?.["bankDate"] ?? "")} ${formatMoney(line.amount)} ${line.otherParty || line.particulars || ""}`;
+  if (
+    !confirm(
+      `Leave out ${what}?
+
+` +
+        (coded ? "Its coding is removed with it. " : "") +
+        "It is taken out of these books and the bank feed will not bring it in again.",
+    )
+  ) {
+    return;
+  }
+  const without = <T>(record: Readonly<Record<string, T>>): Record<string, T> => {
+    const { [id]: _gone, ...rest } = record;
+    return rest;
+  };
+  const { overrides, splits, invoiceMatches } = state.ledger;
+  const partner = state.ledger.transfers?.[id];
+  const transfers = state.ledger.transfers === undefined ? undefined : without(state.ledger.transfers);
+  if (transfers !== undefined && partner !== undefined) delete transfers[partner];
+  const akahuId = String(line.extras?.["akahuId"] ?? "");
+  state.ledger = {
+    ...state.ledger,
+    transactions: state.ledger.transactions.filter((t) => t.id !== id),
+    ...(overrides !== undefined ? { overrides: without(overrides) } : {}),
+    ...(splits !== undefined ? { splits: without(splits) } : {}),
+    ...(invoiceMatches !== undefined ? { invoiceMatches: without(invoiceMatches) } : {}),
+    ...(transfers !== undefined ? { transfers } : {}),
+    beforeStartLeft: [...(state.ledger.beforeStartLeft ?? []), ...(akahuId !== "" ? [akahuId] : [])],
+  };
+  reclassify();
+  state.persistent = await save(state.ledger);
+  redraw("actionsBadge");
+  void renderFeed();
+}
+
+/** An amount for a sentence. */
+function formatMoney(cents: number): string {
+  return (cents / 100).toLocaleString(booksLocale(), {
+    minimumFractionDigits: moneyPlaces(),
+    maximumFractionDigits: moneyPlaces(),
+  });
 }
 
 /** Bring one in, dated the day the books start, or leave it out for good. */

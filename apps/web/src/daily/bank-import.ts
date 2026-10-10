@@ -720,7 +720,16 @@ async function pullFromFeed(
  * that go through exactly the same import as a downloaded file -- the same
  * duplicate check, the same review, the same coding.
  */
+/**
+ * Each drawing of the feed section, counted. Drawing waits on the feed's
+ * status, and a second drawing started meanwhile (bringing a line in starts
+ * more than one) must not add its sections after the first has added its own:
+ * only the latest draws, clearing just before it does.
+ */
+let feedDrawing = 0;
+
 export async function renderFeed(): Promise<void> {
+  const drawing = ++feedDrawing;
   const body = $("feed-body");
   body.textContent = "";
   // Wise sits beside the feed, drawn with it.
@@ -738,6 +747,8 @@ export async function renderFeed(): Promise<void> {
   }
 
   const status = await feedStatus();
+  if (drawing !== feedDrawing) return;
+  body.textContent = "";
   placeBankImport(status?.configured === true);
 
   if (status === null) {

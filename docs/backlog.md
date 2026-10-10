@@ -14,6 +14,36 @@ the commit. The larger, planned work is in [roadmap.md](roadmap.md).
   applied <version>` for each migration already in place, after checking each
   one really is there.
 
+## Ledger integrity
+
+Settings that change entries already confirmed, in past years, without
+saying so. Each is set out in [ledger-integrity.md](ledger-integrity.md), with
+whether lock dates catch it today. The principle to follow: a setting applies
+from when it is changed, and reaching what is already confirmed is a separate,
+deliberate step that says what it will change (as money between entities now
+works).
+
+- **GST registration with a date.** Unticking "GST registered" rewrites every
+  year's entries for the entity: the GST moves into the cost, and past returns
+  change. Registered from a day and deregistered from a day, as Inland Revenue
+  records it, would leave earlier lines alone. (The stored GST on confirmed
+  lines is kept, so ticking it again restores everything.)
+- **Changing an account's type or entity says what it reaches, and asks.** A
+  type change moves all its history between the profit and loss and the balance
+  sheet and can move confirmed lines between Box 5 and Box 11; an entity change
+  moves all its history to the other entity. The year lock should compare by
+  type and entity as well as code, so a finished year refuses either.
+- **Owners and shares with a date.** A change of shares rewrites past years'
+  Income by owner, IR3 shares and the owner split of money between entities.
+  Each confirmed line should keep the shares it was confirmed with, and owner
+  accounts be found by a stable id rather than the owner's name.
+- **Asset and payroll changes say which years they will change** before saving:
+  depreciation is worked out from the register every time, and pay runs from
+  the accounts chosen on Payroll.
+- **Opening balances are not covered by the year lock.**
+- **A prompt to lock a year once its return is filed**, so lock dates are the
+  usual backstop rather than an option few set.
+
 ## Tax and returns
 
 - **IR9 for an unincorporated club works out no tax.** It is assessed at

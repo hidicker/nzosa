@@ -26,6 +26,7 @@ import {
   saveManualJournals,
   journalInEntity,
   entityOfCoding,
+  betweenTagFor,
 } from "../books.js";
 import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
@@ -4291,6 +4292,7 @@ function renderExtract(body: HTMLElement, year: number): void {
   };
 
   const built = accountTransactionRows(rows, options);
+  const byId = new Map(rows.map((t) => [t.id, t]));
   const uncoded = built.filter((r) => r.relatedAccount === "(not coded)").length;
 
   body.append(
@@ -4325,7 +4327,7 @@ function renderExtract(body: HTMLElement, year: number): void {
   table.className = "extract-table";
   table.innerHTML =
     "<thead><tr><th>Date</th><th>Source</th><th>Contact</th><th>Description</th>" +
-    "<th>Gross</th><th>GST</th><th>Rate</th><th>Account</th><th>Coded to</th></tr></thead>";
+    "<th>Gross</th><th>GST</th><th>Rate</th><th>Account</th><th>Coded to</th><th>Between entities</th></tr></thead>";
   const tbody = document.createElement("tbody");
   for (const row of built.slice(0, 200)) {
     const tr = document.createElement("tr");
@@ -4336,6 +4338,14 @@ function renderExtract(body: HTMLElement, year: number): void {
     const coded = nameCell(row.relatedAccount);
     if (row.relatedAccount === "(not coded)") coded.className = "match-off";
     tr.append(coded);
+    const line = byId.get(row.transactionId);
+    const tag = line === undefined ? null : betweenTagFor(line, engine.codeOf(line) ?? null);
+    const cell = nameCell(tag?.label ?? "");
+    if (tag !== null) {
+      cell.title = tag.title;
+      cell.className = "code-between-cell";
+    }
+    tr.append(cell);
     tbody.append(tr);
   }
   table.append(tbody);

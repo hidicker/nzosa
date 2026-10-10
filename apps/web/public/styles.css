@@ -4137,3 +4137,21 @@ select.needs-choice {
   border-color: var(--warn, #b45309);
   box-shadow: 0 0 0 1px var(--warn, #b45309);
 }
+
+/* A bank line for another entity than the account's owner. */
+.code-between {
+  display: inline-block;
+  margin-top: 4px;
+  padding: 1px 8px;
+  border-radius: 999px;
+  border: 1px solid var(--accent);
+  color: var(--accent);
+  font-size: 12px;
+  font-weight: 600;
+  cursor: help;
+}
+.code-between-cell {
+  color: var(--accent);
+  font-weight: 600;
+  cursor: help;
+}

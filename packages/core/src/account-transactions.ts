@@ -27,6 +27,8 @@ import { spreadsheetCell } from "./csv.js";
  */
 
 export interface AccountTransactionRow {
+  /** The bank line this row is. */
+  transactionId: string;
   date: IsoDate;
   /** `Receive Money` or `Spend Money`, as the sign decides. */
   source: string;
@@ -131,6 +133,7 @@ export function accountTransactionRows(
         classification.treatment === "standard" && classification.side !== "none" ? 15 : 0;
 
       return {
+        transactionId: transaction.id,
         date: transaction.date,
         source: transaction.amount >= 0 ? "Receive Money" : "Spend Money",
         contact: transaction.otherParty,

@@ -88,7 +88,7 @@ import type {
   PlannedBetweenAccount,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
-import { booksCountry } from "./country.js";
+import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -530,6 +530,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     }
     if (state.reconcileFilter === "todo" && settled(one)) return false;
     if (state.reconcileFilter === "coded" && !settled(one)) return false;
+    if (state.reconcileFilter === "between" && betweenTagFor(one.transaction, one.code) === null) return false;
     // A line with no code is one no rule matched. Confirming it means deciding
     // what it is, rather than agreeing with a suggestion.
     if (state.reconcileFilter === "nocode" && !nothingHasAnswered(one)) return false;
@@ -1169,8 +1170,18 @@ export function accountRate(label: string): "0" | "15" | "100" | null {
  * What decides whose a line is: the account it is coded to. Which bank account
  * it went through says only whose money paid it.
  */
+let entityOfCodingCache: { model: unknown; chart: unknown; rules: unknown; overrides: unknown; fn: (code: string) => string | undefined } | null = null;
+
 export function entityOfCoding(): (code: string) => string | undefined {
   const model = state.ledger.entities ?? emptyEntityModel();
+  const c = entityOfCodingCache;
+  if (c !== null && c.model === model && c.chart === state.chart && c.rules === state.rules && c.overrides === state.ledger.overrides) return c.fn;
+  const fn = entityOfCodingFresh(model);
+  entityOfCodingCache = { model, chart: state.chart, rules: state.rules, overrides: state.ledger.overrides, fn };
+  return fn;
+}
+
+function entityOfCodingFresh(model: EntityModel): (code: string) => string | undefined {
   const byLabel = new Map<string, string>();
   for (const { account, label } of accountsForEditing()) {
     const id = model.accounts[accountEntityKey(account)];
@@ -1322,6 +1333,57 @@ export function betweenEntities(): { journals: PostedJournal[]; accounts: Betwee
   };
   betweenCache = { ledger: state.ledger, chart: state.chart, rules: state.rules, value };
   return value;
+}
+
+export interface BetweenTag {
+  /** "Larch Street, paid by Both". */
+  label: string;
+  /** What the books record for it, account by account. */
+  title: string;
+}
+
+let tagCache: { value: unknown; byLine: Map<string, PostedJournal> } | null = null;
+
+/**
+ * Whether a bank line is for another entity than the one whose account it went
+ * through, and if so, said plainly: whose line it is and whose money.
+ *
+ * `code` is the line's coding (a split line's parts are read from the split).
+ * Null for a line that stays with the account's owner, or whose account has no
+ * single owner.
+ */
+export function betweenTagFor(transaction: Transaction, code: string | null): BetweenTag | null {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  if (model.entities.length < 2) return null;
+  const owner = coreBankOwner(model, transaction.account);
+  if (owner === undefined) return null;
+  const entityOf = entityOfCoding();
+  const parts = (state.ledger.splits ?? {})[transaction.id];
+  const codes = parts !== undefined ? parts.map((p) => p.code ?? "").filter((c) => c !== "") : code !== null && code !== "" ? [code] : [];
+  const nameOf = (id: string): string => model.entities.find((e) => e.id === id)?.name ?? id;
+  const others = [...new Set(codes.map((c) => entityOf(c)).filter((id): id is string => id !== undefined && id !== owner))];
+  if (others.length === 0) return null;
+  const label = `${others.map(nameOf).join(", ")}, ${transaction.amount < 0 ? "paid" : "received"} by ${nameOf(owner)}`;
+
+  // The entries the books hold for it, from the ledger itself.
+  const between = betweenEntities();
+  if (tagCache === null || tagCache.value !== between) {
+    tagCache = { value: between, byLine: new Map(between.journals.map((j) => [j.transactionId, j])) };
+  }
+  const journal = tagCache.byLine.get(transaction.id);
+  const money = (cents: number): string =>
+    `$${(Math.abs(cents) / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() })}`;
+  const title =
+    journal === undefined
+      ? `Money passing between ${nameOf(owner)} and ${others.map(nameOf).join(", ")}. It is recorded once the line is coded.`
+      : "Recorded in the books:\n" +
+        journal.lines
+          .map((l) => {
+            const whose = model.accounts[accountEntityKey({ code: l.accountCode, name: l.accountName })];
+            return `${whose !== undefined ? nameOf(whose) : ""}: ${l.accountCode} ${l.accountName} ${money(l.amount)} ${l.amount > 0 ? "debit" : "credit"}`;
+          })
+          .join("\n");
+  return { label, title };
 }
 
 /** The between-entity journals for what has been posted, on the chart's accounts. */

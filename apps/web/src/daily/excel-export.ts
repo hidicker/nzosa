@@ -6,6 +6,7 @@ import {
   reportEngine,
   varianceInput,
   journalInEntity,
+  betweenTagFor,
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
@@ -661,7 +662,7 @@ function buildBankTransactionsSheet(ctx: SheetContext): string {
     overrides: engine?.overrides ?? state.ledger.overrides ?? {},
   };
 
-  const widths = [12, 18, 26, 20, 16, 20, 16, 16, 16, 14, 26, 16, 12, 16, 16, 14, 30, 20];
+  const widths = [12, 18, 26, 20, 16, 20, 16, 16, 16, 14, 26, 16, 12, 16, 16, 14, 30, 20, 34];
   const rowsXml: string[] = [];
 
   rowsXml.push(`<row r="1" ht="26" customHeight="1">
@@ -690,6 +691,7 @@ function buildBankTransactionsSheet(ctx: SheetContext): string {
     ${textCell("P3", "Matched By", 1)}
     ${textCell("Q3", "Rule / Reason", 2)}
     ${textCell("R3", "Audit Status", 1)}
+    ${textCell("S3", "Between Entities", 1)}
   </row>`);
 
   const fallbackClassification: GstClassification = { treatment: "out-of-scope", side: "none" };
@@ -741,6 +743,7 @@ function buildBankTransactionsSheet(ctx: SheetContext): string {
       ${textCell(`P${rIdx}`, cat.matchedBy ?? "none", 5)}
       ${textCell(`Q${rIdx}`, cat.reason ?? classification.reason ?? "", 4)}
       ${textCell(`R${rIdx}`, statusText, statusStyle)}
+      ${textCell(`S${rIdx}`, betweenTagFor(t, code)?.label ?? "", 4)}
     </row>`);
     rIdx++;
   }

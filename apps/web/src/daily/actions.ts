@@ -253,12 +253,10 @@ export function actionItems(): ActionItem[] {
     if (waiting.length > 0) {
       items.push({
         key: "bank-owners",
-        what: "Bank accounts to give one owner",
+        what: "Bank accounts to give an owner",
         count: waiting.length,
         urgency: "amber",
-        detail:
-          `${waiting.length === 1 ? "A bank account is" : `${waiting.length} bank accounts are`} still ticked for several entities. ` +
-          "Each now belongs to one, with a suggestion to confirm on Entities & accounts.",
+        detail: "Choose who each bank account belongs to, on Entities & accounts. A suggested owner is shown for each.",
         go: () => showPage("entities"),
       });
     }

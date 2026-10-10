@@ -236,10 +236,8 @@ function bankTable(model: EntityModel): HTMLElement {
     box.className = "journal-card";
     box.append(
       note(
-        `${waiting.length} bank account${waiting.length === 1 ? " is" : "s are"} still ticked for several entities. ` +
-          "Each now belongs to one: whose money it holds. What it pays for is decided by how each line is coded, " +
-          "so a rental's repair on the joint card is still the rental's. Check the suggested owner below, or " +
-          "confirm them all.",
+        `Choose who ${waiting.length === 1 ? "this bank account belongs" : `these ${waiting.length} bank accounts belong`} to. ` +
+          "A suggested owner is shown: change any that is wrong, or confirm them all.",
       ),
     );
     const all = document.createElement("button");
@@ -312,7 +310,7 @@ function bankTable(model: EntityModel): HTMLElement {
     const said = document.createElement("td");
     said.className = "cell-said-elsewhere";
     if (several) {
-      said.textContent = `Was ticked for ${ticked.map(nameOf).join(", ")}. Suggested: ${chosen === undefined ? "choose one" : nameOf(chosen)}.`;
+      said.textContent = "Suggested: choose to confirm";
     } else {
       const reach = bankReach(account).filter((id) => id !== ticked[0]);
       if (reach.length > 0) said.textContent = `Also pays for ${reach.map(nameOf).join(", ")}`;
@@ -350,13 +348,13 @@ function betweenSettings(model: EntityModel): HTMLElement {
   for (const key of Object.keys(model.between ?? {})) pairs.add(key);
 
   if (pairs.size === 0) {
-    wrap.append(note("Nothing has passed between entities yet: each line is for the entity whose account it went through."));
+    wrap.append(note("No money has passed between entities yet."));
   } else {
     wrap.append(
       note(
-        "Where one entity's account pays for another's line, the books record the money passing between them. " +
-          "By default: for things owned directly, the owners putting money in or taking it out, by their shares; " +
-          "with a company, trust or society, a loan. See it under Reports, Money between entities.",
+        "Where one entity's account pays for another's line, the books record the money passing between them: " +
+          "usually the owners' funds introduced and drawings, by their shares, and a loan where a company, trust " +
+          "or society is involved. Reports, Money between entities, sets it out.",
       ),
     );
     const table = document.createElement("table");
@@ -373,22 +371,22 @@ function betweenSettings(model: EntityModel): HTMLElement {
       label.textContent = `${nameOf(a)} and ${nameOf(b)}`;
       const cell = document.createElement("td");
       const pick = document.createElement("select");
-      const usual = isSeparatePerson(one) || isSeparatePerson(two) ? "a loan" : "owners' money in and out";
+      const usual: "loan" | "equity" = isSeparatePerson(one) || isSeparatePerson(two) ? "loan" : "equity";
+      const current = model.between?.[key] ?? usual;
       for (const [value, text] of [
-        ["", `As usual: ${usual}`],
+        ["equity", "Owners' funds introduced and drawings"],
         ["loan", "A loan between them"],
-        ["equity", "Owners' money in and out"],
       ] as const) {
         const option = document.createElement("option");
         option.value = value;
-        option.textContent = text;
-        option.selected = (model.between?.[key] ?? "") === value;
+        option.textContent = value === usual ? `${text} (usual)` : text;
+        option.selected = current === value;
         pick.append(option);
       }
       pick.addEventListener("change", () => {
         const live = state.ledger.entities ?? emptyEntityModel();
         const between = { ...(live.between ?? {}) };
-        if (pick.value === "") delete between[key];
+        if (pick.value === usual) delete between[key];
         else between[key] = pick.value as "loan" | "equity";
         const { between: _old, ...rest } = live;
         void saveEntities(
@@ -410,8 +408,8 @@ function betweenSettings(model: EntityModel): HTMLElement {
   box.checked = model.ownerGifts === true;
   gift.append(
     box,
-    " When one person's money pays for something another owns -- the joint account paying for a property one of " +
-      "you owns alone -- it is a gift, not owed back",
+    " When one person's money pays for something another owns, such as joint money paying for a property one " +
+      "of you owns alone, treat it as a gift rather than owed back",
   );
   box.addEventListener("change", () => {
     const live = state.ledger.entities ?? emptyEntityModel();
@@ -1094,9 +1092,9 @@ export function renderEntities(): void {
     body.append(bankHeading);
     body.append(
       note(
-        "Each bank account belongs to one entity: whose money it holds. A line on it is still for " +
-          "whichever entity it is coded to -- the household's card can pay a rental's repair -- and " +
-          "the books record the money passing between them.",
+        "Each bank account belongs to one entity: whose money it holds. A line on it is for whichever " +
+          "entity it is coded to, so the household's card can pay a rental's repair, and the books record " +
+          "the money passing between them.",
       ),
     );
     body.append(bankTable(model));

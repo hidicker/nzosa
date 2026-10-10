@@ -30,11 +30,10 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Where a line is for one entity but went through another's bank account -- a rental's repair on the joint " +
-        "card, a lease paid into the joint account -- the profit and the GST are the rental's, and the money came from, " +
-        "or went to, the account's owner. For things you own directly, that is the owners putting money in or taking " +
-        "it out, by their shares; for a company, trust or society, a loan. Change either for a pair of entities on " +
-        "Entities & accounts.",
+      "Where a line is for one entity but went through another's bank account, such as a rental's repair on the " +
+        "joint card, the profit and the GST are that entity's, and the money came from, or went to, the account's " +
+        "owner. For things owned directly, that is the owners' funds introduced and drawings, by their shares; with a " +
+        "company, trust or society, a loan. The choice for each pair of entities is on Entities & accounts.",
     ),
   );
 
@@ -42,15 +41,15 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
   if (unowned > 0) {
     body.append(
       note(
-        `${unowned} bank account${unowned === 1 ? " is" : "s are"} still ticked for several entities, so ${unowned === 1 ? "its" : "their"} ` +
-          "lines are left out here until each has one owner (Entities & accounts).",
+        `${unowned === 1 ? "A bank account has" : `${unowned} bank accounts have`} no owner chosen yet, so ${unowned === 1 ? "its" : "their"} ` +
+          "lines are left out here. Choose one on Entities & accounts.",
       ),
     );
   }
 
   const { journals, accounts } = betweenEntities();
   if (journals.length === 0) {
-    body.append(note("Nothing has passed between entities: every line is for the entity whose account it went through."));
+    body.append(note("No money has passed between entities in these books."));
     return;
   }
 
@@ -96,8 +95,8 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
   body.append(wrap);
   body.append(
     note(
-      "Positive is money put in, or owed to somebody; in brackets, money taken out, or owed by them. Funds introduced and " +
-        "drawings are the owners' own; a current account is a loan between a company and its owner.",
+      "Positive is money put in, or owed to somebody; in brackets, money taken out, or owed by them. A current " +
+        "account is a loan between a company and its owner.",
     ),
   );
 

@@ -24,6 +24,7 @@ import {
   invoicesInPlay,
   invoicesToMatch,
   bankReach,
+  betweenTagFor,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -195,6 +196,7 @@ export function renderReconcile(): void {
     ai: `${shown.length} suggested by the model, none of them agreed to yet`,
     nocode: `${shown.length} with nothing suggested`,
     coded: `${shown.length} coded`,
+    between: `${shown.length} between entities`,
     all: `${shown.length} lines`,
   };
   $("reconcile-hint").textContent =
@@ -375,6 +377,16 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     changed.textContent = `Recoded: last changed${by} ${new Date(changes.last.at).toLocaleDateString(booksLocale())}`;
     changed.title = `${changes.count} changes to this line. Each one is in History and Undo.`;
     bank.append(changed);
+  }
+  // A line for another entity than the account's owner says so, with what
+  // the books record for it.
+  const between = betweenTagFor(one.transaction, one.code);
+  if (between !== null) {
+    const tag = document.createElement("div");
+    tag.className = "code-between";
+    tag.textContent = between.label;
+    tag.title = between.title;
+    bank.append(tag);
   }
   if (state.expanded === one.transaction.id)
     bank.append(rawFields(one.transaction));

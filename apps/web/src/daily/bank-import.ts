@@ -1606,10 +1606,10 @@ function shiftDay(day: string, days: number): IsoDate {
  * the 31 March bank balance the books open with, so it belongs in these books
  * -- and dropped for its date, the account never agreed with the bank again.
  */
-async function holdJustBefore(transactions: readonly Transaction[]): Promise<void> {
+async function holdJustBefore(transactions: readonly Transaction[], days = 7): Promise<void> {
   const start = booksStartForFeed();
   if (start === undefined) return;
-  const from = shiftDay(start, -7);
+  const from = shiftDay(start, -days);
   const idOf = (t: Transaction): string => String(t.extras?.["akahuId"] ?? "");
   const known = new Set([
     ...(state.ledger.beforeStart ?? []).map(idOf),
@@ -1620,6 +1620,57 @@ async function holdJustBefore(transactions: readonly Transaction[]): Promise<voi
   if (fresh.length === 0) return;
   state.ledger = { ...state.ledger, beforeStart: [...(state.ledger.beforeStart ?? []), ...fresh] };
   state.persistent = await save(state.ledger);
+}
+
+/**
+ * How far before the start the feed has been searched, in days. A card
+ * payment can clear long after it was made (a foreign subscription, a held
+ * charge), so the week is only where the search starts.
+ */
+let lookedBack = 7;
+
+/**
+ * Search the feed further back, another 30 days each time, for a line the
+ * bank cleared on or after the start but the feed dates earlier.
+ */
+function lookBackButton(start: IsoDate, mapping: Record<string, string>): HTMLElement {
+  const wrap = document.createElement("div");
+  const ask = document.createElement("p");
+  ask.textContent = `Still can't see a transaction that should be coded on or after ${start}?`;
+  const look = document.createElement("button");
+  look.type = "button";
+  look.textContent = "Look back another 30 days";
+  const said = document.createElement("p");
+  said.className = "feed-said";
+  look.addEventListener("click", () => {
+    look.disabled = true;
+    said.textContent = "Asking the bank feed…";
+    const days = lookedBack + 30;
+    void (async () => {
+      try {
+        const before = (state.ledger.beforeStart ?? []).length;
+        const items = await feedTransactions(feedRequestFrom(start, days));
+        const fetched = fromAkahu(items, {
+          accountFor: (id) => {
+            const to = mapping[id];
+            return to === undefined || to === "" ? null : to;
+          },
+        });
+        await holdJustBefore(fetched.transactions, days);
+        lookedBack = days;
+        const found = (state.ledger.beforeStart ?? []).length - before;
+        said.textContent =
+          found === 0 ? `Nothing more in the ${days} days before ${start} that is not already decided.` : "";
+        if (found > 0) void renderFeed();
+      } catch (error) {
+        said.textContent = (error as Error).message;
+      } finally {
+        look.disabled = false;
+      }
+    })();
+  });
+  wrap.append(ask, look, said);
+  return wrap;
 }
 
 /** Where the imported Xero file has the same amount in the week from the start. */
@@ -1675,6 +1726,7 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
           said.textContent =
             found === 0 ? "Nothing dated in the week before the start that is not already decided." : "";
           if (found > 0) void renderFeed();
+          else if (!wrap.contains(further)) wrap.append(further);
         } catch (error) {
           said.textContent = (error as Error).message;
         } finally {
@@ -1682,6 +1734,7 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
         }
       })();
     });
+    const further = lookBackButton(start, mapping);
     wrap.append(look, said);
     return wrap;
   }
@@ -1709,6 +1762,7 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
     if (inner !== null) fold.append(inner);
     wrap.append(fold);
   }
+  wrap.append(lookBackButton(start, mapping));
   return wrap;
 }
 

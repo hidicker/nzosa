@@ -58,7 +58,19 @@ async function partsOf(book: string): Promise<Record<string, { version: number; 
 
 const byFetch: AiFetcher = (url, init) => fetch(url, init);
 
+interface LogEntry {
+  at: string;
+  added: number;
+  suggested: number;
+  said: string;
+  failed?: string;
+}
+
+/** How many runs the log keeps, as the page's MORNING_LOG_LENGTH. */
+const LOG_LENGTH = 30;
+
 interface Morning {
+  log?: LogEntry[];
   inbox?: { at: string; items: { _id?: string }[] };
   suggestions?: { at: string; list: unknown[] };
   unsure?: { signature: string; ids: Record<string, string> };
@@ -116,16 +128,34 @@ async function runBook(book: string): Promise<string> {
   const said = result.said + (ownKey ? "" : key !== null && detectProvider(key.key) === "jev"
     ? "; a Jev key is not asked in the morning yet"
     : "; no key of the books' own, or AI is off for them");
+  const ran = { at, added: result.added, suggested: result.suggestions.length, said };
   await rpc("nightly_put", {
     book,
     value: {
       ...(items.length > 0 ? { inbox: { at, items } } : {}),
       suggestions: { at, list: result.suggestions },
       unsure: result.unsure,
-      ran: { at, added: result.added, suggested: result.suggestions.length, said },
+      ran,
+      log: [ran, ...(morning.log ?? [])].slice(0, LOG_LENGTH),
     },
   });
   return said;
+}
+
+/**
+ * Note a run that stopped, beside the books, keeping everything else as it
+ * was: without it, a run broken for days left nothing behind to see. Best
+ * effort; the error is in the function's own log either way.
+ */
+async function logFailure(book: string, message: string): Promise<void> {
+  try {
+    const parts = await partsOf(book);
+    const morning = (parts["nightly"]?.data ?? {}) as Morning;
+    const entry: LogEntry = { at: new Date().toISOString(), added: 0, suggested: 0, said: "", failed: message };
+    await rpc("nightly_put", { book, value: { ...morning, log: [entry, ...(morning.log ?? [])].slice(0, LOG_LENGTH) } });
+  } catch (error) {
+    console.error(`morning run for ${book}: could not note the failure:`, (error as Error).message);
+  }
 }
 
 Deno.serve(async (request: Request) => {
@@ -141,6 +171,7 @@ Deno.serve(async (request: Request) => {
       return reply({ book: body.book, said: await runBook(body.book) });
     } catch (error) {
       console.error(`morning run for ${body.book}:`, (error as Error).message);
+      await logFailure(body.book, (error as Error).message);
       return reply({ book: body.book, error: (error as Error).message }, 500);
     }
   }

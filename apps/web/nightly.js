@@ -84,6 +84,9 @@ async function api(base, path, init = {}) {
   return body;
 }
 
+/** How many runs the log beside the books keeps, as the page's MORNING_LOG_LENGTH. */
+const LOG_LENGTH = 30;
+
 async function runOne(id, runner) {
   const folder = join(ledgerRoot, id);
   const { parts } = readLedger(folder);
@@ -142,16 +145,32 @@ async function runOne(id, runner) {
     const seen = new Set(result.items.map((item) => item._id));
     const items = [...waiting.filter((item) => !seen.has(item._id)), ...result.items];
     const at = new Date().toISOString();
+    const ran = { at, added: result.added, suggested: result.suggestions.length, said: result.said };
     await api(server.base, "nightly", {
       method: "PUT",
       body: JSON.stringify({
         ...(items.length > 0 ? { inbox: { at, items } } : {}),
         suggestions: { at, list: result.suggestions },
         unsure: result.unsure,
-        ran: { at, added: result.added, suggested: result.suggestions.length, said: result.said },
+        ran,
+        log: [ran, ...(morning.log ?? [])].slice(0, LOG_LENGTH),
       }),
     });
     log(`${id}: ${result.said}${ownKey ? "" : " (no key of the books' own, or AI is off for them)"}`);
+  } catch (error) {
+    // Noted beside the books, where the page shows it: a run that stopped
+    // used to leave nothing there, only a line in this script's own log.
+    try {
+      const morning = await api(server.base, "nightly");
+      const entry = { at: new Date().toISOString(), added: 0, suggested: 0, said: "", failed: error.message };
+      await api(server.base, "nightly", {
+        method: "PUT",
+        body: JSON.stringify({ ...morning, log: [entry, ...(morning.log ?? [])].slice(0, LOG_LENGTH) }),
+      });
+    } catch {
+      // The failure is still in this script's own log.
+    }
+    throw error;
   } finally {
     server.stop();
   }

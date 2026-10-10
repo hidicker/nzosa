@@ -25,9 +25,27 @@ export interface Morning {
   suggestions?: { at: string; list: AiSuggestion[] };
   /** What the last morning run did, in a line. */
   ran?: { at: string; added: number; suggested: number; said: string };
+  /**
+   * Each morning run, newest first, the last 30: what it did, or why it
+   * stopped. A run that failed used to leave nothing behind, so a run broken
+   * for days looked the same as one that had found nothing.
+   */
+  log?: MorningLogEntry[];
   /** Lines a model could not answer, left alone for a while. */
   unsure?: UnsureLines;
 }
+
+/** One morning run: what it did, or, with `failed`, why it stopped. */
+export interface MorningLogEntry {
+  at: string;
+  added: number;
+  suggested: number;
+  said: string;
+  failed?: string;
+}
+
+/** How many runs the log keeps. */
+export const MORNING_LOG_LENGTH = 30;
 
 /** What was last read, for the Actions page to say whether the morning run is running. */
 let latest: Morning = {};

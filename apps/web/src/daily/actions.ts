@@ -128,7 +128,19 @@ export function actionItems(): ActionItem[] {
   if (state.ledger.nightly === true) {
     const ran = morningNow().ran;
     const hours = ran === undefined ? Infinity : (Date.now() - Date.parse(ran.at)) / 3_600_000;
-    if (hours > 36) {
+    // A run that stopped is said at once, with why: it left the last good
+    // run standing, so waiting for 36 hours without one hid it for days.
+    const latest = morningNow().log?.[0];
+    if (latest?.failed !== undefined && (ran === undefined || latest.at > ran.at)) {
+      items.push({
+        key: "morning",
+        what: "Morning run",
+        count: 1,
+        urgency: "red",
+        detail: `The morning run on ${new Date(latest.at).toLocaleString(booksLocale())} stopped: ${latest.failed}`,
+        go: () => showPage("import"),
+      });
+    } else if (hours > 36) {
       const when = ran === undefined ? "" : new Date(ran.at).toLocaleDateString(booksLocale());
       items.push({
         key: "morning",

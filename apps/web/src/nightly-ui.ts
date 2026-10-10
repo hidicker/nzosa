@@ -1,6 +1,8 @@
 import { record } from "./books.js";
 import { aiRoute } from "./ai-backend.js";
+import { booksLocale } from "./country.js";
 import { readMorning } from "./nightly.js";
+import type { Morning } from "./nightly.js";
 import { state } from "./state.js";
 import { save } from "./store.js";
 
@@ -26,7 +28,8 @@ export function morningChoice(): HTMLElement {
   );
   const said = document.createElement("p");
   said.className = "feed-said";
-  box.append(label, said);
+  const history = document.createElement("div");
+  box.append(label, said, history);
 
   const schedule = async (on: boolean): Promise<void> => {
     if (aiRoute() !== "folder") return;
@@ -43,6 +46,7 @@ export function morningChoice(): HTMLElement {
 
   const describe = async (): Promise<void> => {
     const morning = await readMorning();
+    history.replaceChildren(...[morningLog(morning)].filter((el): el is HTMLElement => el !== null));
     const last = morning.ran
       ? `Last morning run ${new Date(morning.ran.at).toLocaleString()}: ${morning.ran.said.replace(/\.$/, "")}.`
       : "";
@@ -99,4 +103,42 @@ export function morningChoice(): HTMLElement {
   });
   void describe();
   return box;
+}
+
+/**
+ * The morning runs, newest first: when, what came in, what was suggested, and
+ * what happened, a run that stopped included.
+ */
+function morningLog(morning: Morning): HTMLElement | null {
+  const runs = morning.log ?? [];
+  if (runs.length === 0) return null;
+  const fold = document.createElement("details");
+  const summary = document.createElement("summary");
+  const stopped = runs[0]?.failed !== undefined;
+  summary.textContent = `Morning runs (${runs.length})${stopped ? ": the last one stopped" : ""}`;
+  fold.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const head = document.createElement("thead");
+  head.innerHTML = "<tr><th>When</th><th>New from the bank</th><th>Suggestions waiting</th><th>What happened</th></tr>";
+  const body = document.createElement("tbody");
+  for (const run of runs) {
+    const tr = document.createElement("tr");
+    const cells = [
+      new Date(run.at).toLocaleString(booksLocale(), { dateStyle: "medium", timeStyle: "short" }),
+      run.failed === undefined ? String(run.added) : "",
+      run.failed === undefined ? String(run.suggested) : "",
+      run.failed === undefined ? run.said.replace(/\.$/, "") : `Stopped: ${run.failed}`,
+    ];
+    for (const [i, text] of cells.entries()) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (i === 1 || i === 2) td.className = "report-amount";
+      tr.append(td);
+    }
+    body.append(tr);
+  }
+  table.append(head, body);
+  fold.append(table);
+  return fold;
 }

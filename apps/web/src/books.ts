@@ -18,6 +18,7 @@ import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
+import type { StoredLedger } from "./store.js";
 import { resetLockBaseline } from "./lock.js";
 import { applyModules } from "./modules.js";
 import { chosenStartDate } from "./migrate/onboarding-state.js";
@@ -86,6 +87,7 @@ import type {
   TripClaim,
   BetweenAccount,
   PlannedBetweenAccount,
+  LineChoice,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
@@ -1387,17 +1389,117 @@ export function betweenTagFor(transaction: Transaction, code: string | null): Be
 }
 
 /** The between-entity journals for what has been posted, on the chart's accounts. */
+let lastChoices: { ledger: unknown; choices: Map<string, LineChoice> } | null = null;
+
 function betweenJournalsFor(posted: readonly PostedJournal[]): PostedJournal[] {
   const model = state.ledger.entities ?? emptyEntityModel();
   if (model.entities.length < 2) return [];
   const held = new Set(state.ledger.transactions.map((t) => t.account));
-  return betweenEntityJournals(posted, {
+  const stored = state.ledger.betweenLines ?? {};
+  const result = betweenEntityJournals(posted, {
     model,
     bankOwner: (account) => coreBankOwner(model, account),
     isBank: (code) => held.has(code),
     overrides: model.between,
     plan: betweenPlan().filter((a) => a.exists),
-  }).journals;
+    stored: (id) => stored[id],
+  });
+  lastChoices = { ledger: state.ledger, choices: result.choices };
+  return result.journals;
+}
+
+/**
+ * Store, with each line confirmed since the last save, the choice it was
+ * posted with: whose money paid it and how the money between entities is
+ * recorded. From then on the line keeps it, whatever the settings or the
+ * account's owner become; changing it is a deliberate act (see
+ * `applyBetweenNow`). A line coded afresh to other entities is stored afresh;
+ * a line no longer confirmed loses its choice and follows the settings again.
+ *
+ * Run as the first step of every save, so the choice is written by the save
+ * that confirmed the line.
+ */
+/** Confirmed lines whose stored choice differs from what the settings say now, by test. */
+export function betweenLinesDiffering(test: (id: string, choice: LineChoice) => boolean): string[] {
+  return Object.entries(state.ledger.betweenLines ?? {})
+    .filter(([id, choice]) => test(id, choice))
+    .map(([id]) => id);
+}
+
+/**
+ * Record some confirmed lines' money between entities as the settings say now:
+ * the deliberate act a change of setting or owner needs before it reaches
+ * lines already confirmed. Lines in a locked year are left as they are.
+ * Recorded in History, and undone there.
+ */
+export async function applyBetweenNow(ids: readonly string[], what: string): Promise<{ applied: number; locked: number }> {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const yearLock = state.ledger.lockDates?.year;
+  const dateOf = new Map(state.ledger.transactions.map((t) => [t.id, t.date]));
+  const chosen = new Set(ids.filter((id) => yearLock === undefined || (dateOf.get(id) ?? "9999") > yearLock));
+  const locked = ids.length - chosen.size;
+  if (chosen.size === 0) return { applied: 0, locked };
+  const stored = state.ledger.betweenLines ?? {};
+  const held = new Set(state.ledger.transactions.map((t) => t.account));
+  const posted = postedJournals().filter((j) => j.source !== "between");
+  const fresh = betweenEntityJournals(posted, {
+    model,
+    bankOwner: (account) => coreBankOwner(model, account),
+    isBank: (code) => held.has(code),
+    overrides: model.between,
+    plan: betweenPlan().filter((a) => a.exists),
+    stored: (id) => (chosen.has(id) ? undefined : stored[id]),
+  }).choices;
+  const before = state.ledger.betweenLines ?? {};
+  const next = { ...before };
+  let applied = 0;
+  for (const id of chosen) {
+    const choice = fresh.get(id);
+    if (choice === undefined) continue;
+    next[id] = choice;
+    applied += 1;
+  }
+  state.ledger = { ...state.ledger, betweenLines: next };
+  state.persistent = await savePart(state.ledger);
+  await record("betweenLines", `${what}: ${applied} confirmed line${applied === 1 ? "" : "s"}`, before, next);
+  return { applied, locked };
+}
+
+export function storeBetweenChoices(ledger: StoredLedger): StoredLedger {
+  if (ledger !== state.ledger) return ledger;
+  const model = ledger.entities ?? emptyEntityModel();
+  if (model.entities.length < 2) return ledger;
+  postedJournals();
+  if (lastChoices === null || lastChoices.ledger !== ledger) return ledger;
+  const overrides = ledger.overrides ?? {};
+  const splits = ledger.splits ?? {};
+  const transfers = ledger.transfers ?? {};
+  const isBankLine = new Set(ledger.transactions.map((t) => t.id));
+  const confirmed = (id: string): boolean =>
+    !isBankLine.has(id) || overrides[id]?.confirmed === true || splits[id] !== undefined || transfers[id] !== undefined;
+  const before = ledger.betweenLines ?? {};
+  const next: Record<string, LineChoice> = { ...before };
+  let changed = false;
+  for (const [id, choice] of lastChoices.choices) {
+    if (!confirmed(id)) continue;
+    const had = before[id];
+    const same =
+      had !== undefined &&
+      Object.keys(had.with).sort().join("|") === Object.keys(choice.with).sort().join("|");
+    if (same) continue;
+    next[id] = choice;
+    changed = true;
+  }
+  for (const id of Object.keys(next)) {
+    if (isBankLine.has(id) && !confirmed(id)) {
+      delete next[id];
+      changed = true;
+    }
+  }
+  if (!changed) return ledger;
+  const stamped = { ...ledger, betweenLines: next };
+  state.ledger = stamped;
+  return stamped;
 }
 
 export function unregisteredCode(): (code: string) => boolean {

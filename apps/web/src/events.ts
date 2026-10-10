@@ -105,6 +105,8 @@ export type EventKind =
   | "nightly"
   /** The GST and year lock dates. */
   | "lockDates"
+  /** How confirmed lines' money between entities is recorded, applied to them deliberately. */
+  | "betweenLines"
   /** Property manager statements, whole. */
   | "agentStatements"
   /** Vehicles' business use and prepayments, whole. */
@@ -417,6 +419,13 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, incomeReturns: (event.before ?? []) as NonNullable<StoredLedger["incomeReturns"]> };
     case "irdRecords":
       return { ...ledger, irdRecords: (event.before ?? []) as NonNullable<StoredLedger["irdRecords"]> };
+    case "betweenLines": {
+      if (event.before === null || event.before === undefined) {
+        const { betweenLines: _gone, ...rest } = ledger;
+        return rest;
+      }
+      return { ...ledger, betweenLines: event.before as NonNullable<StoredLedger["betweenLines"]> };
+    }
     case "lockDates": {
       if (event.before === null || event.before === undefined) {
         const { lockDates: _gone, ...rest } = ledger;
@@ -547,6 +556,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   aiAutoSuggest: "AI suggestions when the books open",
   nightly: "Ready every morning",
   lockDates: "Lock dates",
+  betweenLines: "Money between entities on confirmed lines",
   openingDocuments: "Invoices and bills open at the start",
   agentStatements: "Property manager statement",
   yearEnd: "Year-end adjustments",

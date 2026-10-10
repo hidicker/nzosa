@@ -238,6 +238,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 6h12M4 10h12M4 14h7"/><circle cx="14.5" cy="14" r="1.5"/></svg>
                 <span>Rules</span>
               </button>
+              <div class="sidebar-sublinks" id="sidebar-rules-sublinks" hidden>
+                <a href="#rules-body" class="sidebar-sublink">Coding rules</a>
+                <a href="#rules-between" class="sidebar-sublink">Money between entities</a>
+              </div>
             </div>
           </div>
           <div class="sidebar-group" data-group="ai">
@@ -426,6 +430,7 @@
         </p>
         <div id="rules-status"></div>
         <div id="rules-body"></div>
+        <div id="rules-between"></div>
       </section>
 
       <section id="page-migration" class="page" hidden>
@@ -709,7 +714,6 @@
                 <option value="yearend" data-module="vehicle business+nz">Year-end adjustments</option>
                 <option value="ir3" data-module="personal">IR3 individual return</option>
                 <option value="owner" data-module="rentals personal">Income by owner</option>
-                <option value="between">Money between entities</option>
               </optgroup>
               <optgroup label="Analytics">
                 <option value="charts">Charts</option>

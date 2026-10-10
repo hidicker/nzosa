@@ -164,3 +164,28 @@ test("owners' money is never owed back, and a company's current account is", asy
   const said = owedBetween(lent.journals, lent.accounts, model, "2026-03-31").map((o) => `${o.kind}: ${o.from} owes ${o.to} ${o.amount}`).sort();
   assert.deepEqual(said, ["current: Rimu Ltd owes Ana 20000"], "said once, by the company");
 });
+
+test("a line keeps the choice stored when it was confirmed, whatever the settings say later", () => {
+  const repair = journal("repair", "2026-03-24", [["platinum", -115000], ["473TS", 100000], ["820TS", 15000]]);
+  // Confirmed under the usual treatment: that is what it reports, and what is to be stored.
+  const first = betweenEntityJournals([repair], options());
+  assert.deepEqual(first.choices.get("repair"), { owner: "both", with: { totara: "usual" } });
+  // The pair is later set to a loan: a line with its choice stored is unchanged...
+  const later = options({ [pairKey("totara", "both")]: "loan" });
+  const kept = betweenEntityJournals([repair], { ...later, stored: (id) => (id === "repair" ? { owner: "both", with: { totara: "usual" } } : undefined) });
+  assert.deepEqual(linesOf(kept), linesOf(first));
+  // ...and one without a stored choice follows the setting now.
+  const fresh = betweenEntityJournals([repair], later);
+  assert.deepEqual(linesOf(fresh), ["Owed between Both and Totara Street 115000", "Owed between Totara Street and Both -115000"]);
+});
+
+test("a stored owner stands even when the account is later given to someone else", () => {
+  const repair = journal("repair", "2026-03-24", [["platinum", -115000], ["473TS", 100000], ["820TS", 15000]]);
+  const moved = { ...model, banks: { ...model.banks, platinum: ["ana"] } };
+  const movedOwner = (account) => moved.banks[account]?.[0];
+  const now = betweenEntityJournals([repair], { ...options(), model: moved, bankOwner: movedOwner });
+  assert.equal(now.choices.get("repair").owner, "ana", "unstored: today's owner");
+  const kept = betweenEntityJournals([repair], { ...options(), model: moved, bankOwner: movedOwner, stored: () => ({ owner: "both", with: { totara: "usual" } }) });
+  assert.equal(kept.choices.get("repair").owner, "both");
+  assert.ok(linesOf(kept).includes("Tom: drawings 57500"), "still Both's money, half Tom's");
+});

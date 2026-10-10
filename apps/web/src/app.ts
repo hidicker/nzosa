@@ -127,6 +127,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   for (const [id, owner] of [
     ["sidebar-import-sublinks", "import"],
     ["sidebar-setup-sublinks", "setup"],
+    ["sidebar-rules-sublinks", "rules"],
   ] as const) {
     const sublinks = document.getElementById(id);
     if (sublinks === null) continue;

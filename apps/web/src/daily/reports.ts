@@ -28,7 +28,6 @@ import {
   entityOfCoding,
   betweenTagFor,
 } from "../books.js";
-import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
@@ -4060,11 +4059,6 @@ export function renderReportsPage(): void {
     }
     const owner = ownerSelect.value || owners[0];
     if (owner !== undefined && chosenYearNow !== undefined) renderIr3(body, owner, chosenYearNow);
-    return;
-  }
-
-  if (kind === "between") {
-    if (chosenYearNow !== undefined) renderBetweenReport(body, chosenYearNow);
     return;
   }
 

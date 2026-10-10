@@ -16,6 +16,8 @@ import {
   bankLabel,
   bankReach,
   betweenEntities,
+  applyBetweenNow,
+  betweenLinesDiffering,
 } from "../books.js";
 import { GST_OPTIONS } from "../reconcile.js";
 import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
@@ -315,6 +317,12 @@ function bankTable(model: EntityModel): HTMLElement {
     } else {
       const reach = bankReach(account).filter((id) => id !== ticked[0]);
       if (reach.length > 0) said.textContent = `Also pays for ${reach.map(nameOf).join(", ")}`;
+      const owner = ticked[0];
+      const lines = new Set(state.ledger.transactions.filter((t) => t.account === account).map((t) => t.id));
+      const earlier = owner === undefined ? [] : betweenLinesDiffering((id, c) => lines.has(id) && c.owner !== owner);
+      if (earlier.length > 0) {
+        said.append(" ", applyButton(earlier, `${bankLabel(account)} and its owner`, `belonging to ${nameOf(owner!)}`));
+      }
     }
     tr.append(said);
     bankBody.append(tr);
@@ -330,6 +338,27 @@ function bankTable(model: EntityModel): HTMLElement {
  * gift. The defaults follow the law: things owned directly are the owners'
  * money; a company, trust or society can only owe or be owed.
  */
+/** "Apply to N confirmed lines": the deliberate act a change needs to reach lines already confirmed. */
+function applyButton(ids: readonly string[], between: string, how: string): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "link-button";
+  button.textContent = `Apply to ${ids.length} confirmed line${ids.length === 1 ? "" : "s"}`;
+  button.title = "Lines already confirmed keep how they were recorded until this is applied to them.";
+  button.addEventListener("click", () => {
+    const sure = confirm(
+      `Record the ${ids.length} confirmed line${ids.length === 1 ? "" : "s"} between ${between} as: ${how.replace(/ \(usual\)$/, "")}?\n\n` +
+        "Lines in a locked year are left as they are. This is recorded in History, where it can be undone.",
+    );
+    if (!sure) return;
+    void applyBetweenNow(ids, `Money between ${between}, applied`).then(({ applied, locked }) => {
+      if (locked > 0) alert(`${applied} line${applied === 1 ? "" : "s"} changed. ${locked} in a locked year left as they were.`);
+      redraw("entities");
+    });
+  });
+  return button;
+}
+
 function betweenSettings(model: EntityModel): HTMLElement {
   const wrap = document.createElement("div");
   const heading = document.createElement("h4");
@@ -356,7 +385,7 @@ function betweenSettings(model: EntityModel): HTMLElement {
       note(
         "Where one entity's account pays for another's line, the books record the money passing between them: " +
           "usually the owners' funds introduced and drawings, by their shares, and a loan where a company, trust " +
-          "or society is involved. Reports, Money between entities, sets it out.",
+          "or society is involved. Rules, Money between entities, sets it out.",
       ),
     );
     const table = document.createElement("table");
@@ -397,6 +426,15 @@ function betweenSettings(model: EntityModel): HTMLElement {
         );
       });
       cell.append(pick);
+      // Confirmed lines keep what they were confirmed with; a change of
+      // setting reaches them only when asked to.
+      const setting = model.between?.[key] ?? "usual";
+      const differing = betweenLinesDiffering(
+        (_id, c) => (c.owner === a && c.with[b] !== undefined && c.with[b] !== setting) || (c.owner === b && c.with[a] !== undefined && c.with[a] !== setting),
+      );
+      if (differing.length > 0) {
+        cell.append(" ", applyButton(differing, `${nameOf(a)} and ${nameOf(b)}`, pick.selectedOptions[0]?.textContent ?? ""));
+      }
       const standing = document.createElement("td");
       standing.className = "cell-said-elsewhere";
       const owes = owed.find((o) => o.kind === "loan" && o.entityIds.includes(a) && o.entityIds.includes(b));

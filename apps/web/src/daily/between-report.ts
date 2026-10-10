@@ -1,5 +1,8 @@
-import { betweenEntities } from "../books.js";
+import { betweenEntities,
+  bookYears,
+} from "../books.js";
 import { state } from "../state.js";
+import { showPage } from "../app.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
@@ -180,4 +183,43 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
       );
     }
   }
+}
+
+let chosenYear = 0;
+
+/**
+ * Money between entities, as a section of the Rules page: the rules decide how
+ * a line is coded, and these entries follow from how it was coded.
+ */
+export function renderBetweenSection(): void {
+  const holder = document.getElementById("rules-between");
+  if (holder === null) return;
+  holder.textContent = "";
+  const model = state.ledger.entities ?? emptyEntityModel();
+  if (model.entities.length < 2) return;
+  const years = bookYears();
+  if (years.length === 0) return;
+  const today = new Date().toISOString().slice(0, 10);
+  if (!years.includes(chosenYear)) chosenYear = years.filter((y) => taxYearEnd(y) < today)[0] ?? years[0] ?? 0;
+  const pick = document.createElement("select");
+  for (const y of years) {
+    const option = document.createElement("option");
+    option.value = String(y);
+    option.textContent = `Year ended ${taxYearEndSaid(y)}`;
+    option.selected = y === chosenYear;
+    pick.append(option);
+  }
+  pick.addEventListener("change", () => {
+    chosenYear = Number(pick.value);
+    renderBetweenSection();
+  });
+  const body = document.createElement("div");
+  holder.append(pick, body);
+  renderBetweenReport(body, chosenYear);
+}
+
+/** Open the Rules page at Money between entities. */
+export function showBetween(): void {
+  showPage("rules");
+  document.getElementById("rules-between")?.scrollIntoView({ block: "start" });
 }

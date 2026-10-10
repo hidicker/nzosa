@@ -72,6 +72,20 @@ export interface BetweenAccount {
   counterparty: string;
 }
 
+/** How money between a pair is recorded: the usual way for the pair's kinds, or one chosen. */
+export type BetweenSetting = "usual" | BetweenTreatment;
+
+/**
+ * What was settled for one line when it was confirmed: whose money paid it,
+ * and how the money between that owner and each entity the line is for was to
+ * be recorded. Kept with the line, so the entries follow from what was decided
+ * then, not from whatever the settings say later.
+ */
+export interface LineChoice {
+  owner: string;
+  with: Record<string, BetweenSetting>;
+}
+
 /** A planned account: one of the chart's already, or one to add to it. */
 export interface PlannedBetweenAccount extends BetweenAccount {
   exists: boolean;
@@ -91,6 +105,11 @@ export interface BetweenOptions {
    * posted somewhere the chart does not know.
    */
   plan?: readonly BetweenAccount[] | undefined;
+  /**
+   * The choice stored with a line when it was confirmed, by its id. A line with
+   * one is posted as it says; one without, by the owner and settings now.
+   */
+  stored?: ((transactionId: string) => LineChoice | undefined) | undefined;
 }
 
 interface Share {
@@ -115,8 +134,8 @@ function split(amount: number, shares: readonly Share[]): number[] {
 
 type SideKind = "equity" | "loan-per-owner" | "loan";
 
-function sideKind(x: Entity, y: Entity, overrides: BetweenOverrides | undefined): SideKind {
-  const chosen = overrides?.[pairKey(x.id, y.id)];
+function sideKind(x: Entity, y: Entity, overrides: BetweenOverrides | undefined, setting?: BetweenSetting): SideKind {
+  const chosen = setting !== undefined ? (setting === "usual" ? undefined : setting) : overrides?.[pairKey(x.id, y.id)];
   if (isSeparatePerson(x)) {
     if (chosen === "loan") return "loan";
     return isSeparatePerson(y) ? "loan" : "loan-per-owner";
@@ -302,12 +321,13 @@ function sideLines(
 export function betweenEntityJournals(
   journals: readonly PostedJournal[],
   options: BetweenOptions,
-): { journals: PostedJournal[]; accounts: BetweenAccount[] } {
+): { journals: PostedJournal[]; accounts: BetweenAccount[]; choices: Map<string, LineChoice> } {
   const { model } = options;
   const byId = new Map(model.entities.map((e) => [e.id, e]));
   const used = new Map<string, BetweenAccount>();
   const out: PostedJournal[] = [];
-  if (model.entities.length < 2) return { journals: out, accounts: [] };
+  const choices = new Map<string, LineChoice>();
+  if (model.entities.length < 2) return { journals: out, accounts: [], choices };
 
   const planned = options.plan === undefined ? null : new Map(options.plan.map((a) => [wantKey(a.entityId, a.role, a.role === "loan" ? a.counterparty : a.person), a]));
   const find = (entityId: string, role: BetweenRole, who: string, fallback: BetweenAccount): BetweenAccount | undefined =>
@@ -321,7 +341,11 @@ export function betweenEntityJournals(
 
   for (const journal of journals) {
     if (journal.source === "between") continue;
-    const owners = journal.lines.map(entityOfLine);
+    const stored = options.stored?.(journal.transactionId);
+    // A stored choice says whose money paid it, whoever owns the account now.
+    const owners = journal.lines.map((line) =>
+      stored !== undefined && options.isBank(line.accountCode) && journal.source === "bank" ? stored.owner : entityOfLine(line),
+    );
     const bankIndex = journal.lines.findIndex((l, i) => options.isBank(l.accountCode) && owners[i] !== undefined);
     const anchor = bankIndex >= 0 ? owners[bankIndex] : owners.find((o) => o !== undefined);
     if (anchor === undefined) continue;
@@ -336,13 +360,16 @@ export function betweenEntityJournals(
     if (home === undefined) continue;
     const lines: PostedLine[] = [];
     let complete = true;
+    const choice: LineChoice = { owner: anchor, with: {} };
     for (const [whose, amount] of net) {
       if (whose === anchor || amount === 0) continue;
       const other = byId.get(whose);
       if (other === undefined) continue;
+      const setting: BetweenSetting = stored?.with[whose] ?? options.overrides?.[pairKey(anchor, whose)] ?? "usual";
+      choice.with[whose] = setting;
       // The other entity is brought back to balance; the anchor takes the opposite.
-      const theirs = sideLines(other, home, -amount, sideKind(other, home, options.overrides), find, used);
-      const mine = sideLines(home, other, amount, sideKind(home, other, options.overrides), find, used);
+      const theirs = sideLines(other, home, -amount, sideKind(other, home, options.overrides, setting), find, used);
+      const mine = sideLines(home, other, amount, sideKind(home, other, options.overrides, setting), find, used);
       if (theirs === null || mine === null) {
         complete = false;
         break;
@@ -350,6 +377,7 @@ export function betweenEntityJournals(
       lines.push(...theirs, ...mine);
     }
     if (!complete || lines.length === 0) continue;
+    choices.set(journal.transactionId, choice);
     out.push({
       transactionId: journal.transactionId,
       date: journal.date,
@@ -359,7 +387,7 @@ export function betweenEntityJournals(
       taxBasis: "both",
     });
   }
-  return { journals: out, accounts: [...used.values()] };
+  return { journals: out, accounts: [...used.values()], choices };
 }
 
 /** What one person has put in, net, across everything they own directly, up to a day. */

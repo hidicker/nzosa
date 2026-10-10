@@ -425,4 +425,4 @@ export {
   pairKey,
   personPositions,
 } from "./between-entities.js";
-export type { BetweenAccount, OwedBetween, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";
+export type { BetweenAccount, BetweenSetting, LineChoice, OwedBetween, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";

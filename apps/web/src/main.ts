@@ -23,6 +23,7 @@ import {
   reclassify,
   tidyChart,
   ensureBetweenAccounts,
+  storeBetweenChoices,
 } from "./books.js";
 import {
   renderBooks,
@@ -123,6 +124,7 @@ import {
   requestPersistence,
   savePart,
   saveUser,
+  setBeforeSave,
 } from "./store.js";
 import { renderEntityFilter } from "./widgets.js";
 
@@ -190,6 +192,15 @@ async function init(): Promise<void> {
   setLoadingStatus("Opening books…");
   // Before anything can be saved: locked periods stay as they were locked.
   installLockGuard(() => showPage(state.page));
+  // The choice for money between entities is stored with each line as it is confirmed.
+  setBeforeSave(storeBetweenChoices);
+  for (const link of document.querySelectorAll<HTMLAnchorElement>("#sidebar-rules-sublinks a")) {
+    link.addEventListener("click", (e) => {
+      e.preventDefault();
+      if (state.page !== "rules") showPage("rules");
+      document.getElementById((link.getAttribute("href") ?? "").slice(1))?.scrollIntoView({ behavior: "smooth", block: "start" });
+    });
+  }
   try {
     const loaded = await load();
     state.ledger = loaded.ledger;
@@ -202,7 +213,11 @@ async function init(): Promise<void> {
     state.chart = state.ledger.chart ?? [];
     resetLockBaseline();
     // Accounts for money between entities, where the books lack any.
-    void ensureBetweenAccounts().then((added) => {
+    void ensureBetweenAccounts().then(async (added) => {
+      // Lines confirmed before choices were kept with them get theirs now,
+      // so none is left following whatever the settings say later.
+      const before = state.ledger;
+      if (storeBetweenChoices(before) !== before) await savePart(state.ledger);
       if (added > 0) resetLockBaseline();
     });
     // Once, here -- not in reclassify, which runs on every coding change and

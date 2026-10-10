@@ -1,5 +1,6 @@
 import { anyModuleOn, moduleOn, yearEndFigure } from "../modules.js";
 import { showPage } from "../app.js";
+import { showBetween } from "./between-report.js";
 import {
   invoiceBalanceMap,
   invoicesToMatch,
@@ -280,14 +281,7 @@ export function actionItems(): ActionItem[] {
           overdrawn.map((o) => `${o.person} owes ${nameOf(o.entityId)} $${(o.amount / 100).toFixed(2)}`).join("; ") +
           ` at ${taxYearEndSaid(finished)}. A loan to an owner with no interest is a taxable benefit: charge interest at ` +
           "Inland Revenue's prescribed rate, or clear it with a salary or a dividend. Ask your accountant.",
-        go: () => {
-          showPage("reports");
-          const kind = document.getElementById("report-kind") as HTMLSelectElement | null;
-          if (kind !== null) {
-            kind.value = "between";
-            kind.dispatchEvent(new Event("change"));
-          }
-        },
+        go: () => showBetween(),
       });
     }
   }
@@ -310,14 +304,7 @@ export function actionItems(): ActionItem[] {
         detail:
           `${said}${owed.length > 3 ? `, and ${owed.length - 3} more` : ""}. ` +
           "Pay it with a transfer between their bank accounts.",
-        go: () => {
-          showPage("reports");
-          const kind = document.getElementById("report-kind") as HTMLSelectElement | null;
-          if (kind !== null) {
-            kind.value = "between";
-            kind.dispatchEvent(new Event("change"));
-          }
-        },
+        go: () => showBetween(),
       });
     }
   }

@@ -9,7 +9,7 @@ import type {
   TripLog,
   Ir3Details,
   FiledIncomeReturn,
-  Account, BalanceSection, Cents, DonationReceipt, Grant, Ir9Inputs, Ir7Inputs, Ir4Inputs, SocietyInputs, TrustInputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
+  Account, BalanceSection, Cents, LineChoice, DonationReceipt, Grant, Ir9Inputs, Ir7Inputs, Ir4Inputs, SocietyInputs, TrustInputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
   PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
 } from "@nzosa/core";
 
@@ -383,6 +383,12 @@ export interface StoredLedger {
    * was filed would otherwise change the return.
    */
   lockedArrivals?: Transaction[];
+  /**
+   * For each confirmed line that passes money between entities: whose money
+   * paid it and how it is recorded, as settled when it was confirmed. See
+   * core's between-entities.ts.
+   */
+  betweenLines?: Record<string, LineChoice>;
   /** Actions required, put off until a day: item to the day it comes back. */
   snoozed?: Record<string, string>;
   /** Unmatched lines in external reference exports (e.g. Xero) dismissed with a reason. Key is line key -> { reason, at }. */
@@ -769,6 +775,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
     ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
+    ...(ledger.betweenLines ? { betweenLines: ledger.betweenLines } : {}),
     ...(ledger.beforeStartLeft ? { beforeStartLeft: ledger.beforeStartLeft } : {}),
     ...(ledger.booksAbout ? { booksAbout: ledger.booksAbout } : {}),
   };
@@ -1281,8 +1288,18 @@ export function setSaveGuard(guard: (ledger: StoredLedger) => void): void {
   saveGuard = guard;
 }
 
+/**
+ * Asked before anything is written, and able to add to it: the choices for
+ * lines just confirmed are stored with the same save that confirmed them.
+ */
+let beforeSave: ((ledger: StoredLedger) => StoredLedger) | null = null;
+export function setBeforeSave(step: (ledger: StoredLedger) => StoredLedger): void {
+  beforeSave = step;
+}
+
 /** Write the whole ledger, every part. Used on import and first run. */
-export async function save(ledger: StoredLedger): Promise<boolean> {
+export async function save(given: StoredLedger): Promise<boolean> {
+  const ledger = beforeSave?.(given) ?? given;
   saveGuard?.(ledger);
   if (readOnly) return false;
   if (backend === "folder") return writeFolder(ledger, FOLDER_PARTS);
@@ -1334,9 +1351,10 @@ export function partChanged(...parts: readonly string[]): void {
  * chart of accounts and the general ledger along with them.
  */
 export async function savePart(
-  ledger: StoredLedger,
+  given: StoredLedger,
   ...parts: readonly LedgerPart[]
 ): Promise<boolean> {
+  const ledger = beforeSave?.(given) ?? given;
   saveGuard?.(ledger);
   if (readOnly) return false;
   if (backend === "folder") {

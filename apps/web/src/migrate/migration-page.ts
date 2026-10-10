@@ -1087,9 +1087,24 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
   // coming, and nothing to confirm that was not confirmed a screen ago.
   const single = held.onlyOne === true;
   const open = booksKey();
-  const all = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  // Still being written into these books: nothing to offer until it is. A
+  // redraw in the middle of that save found the books already holding the
+  // name, decided they were somebody else's, and offered a new set for the
+  // very entity just saved here; taking it left the name in one set of books
+  // and the person in another, with the placeholder.
+  if (saving) {
+    wrap.append(advice("Setting these books up…"));
+    return wrap;
+  }
+  // One these books already hold, by name, is theirs, whatever the answers
+  // kept say: the note of where it went is written after the books are.
+  const live = state.ledger.entities ?? emptyEntityModel();
+  const holds = (e: PlannedEntity): boolean => live.entities.some((x) => x.id === entityId(e.name));
+  const listed = (held.entities ?? []).filter((e) => e.name.trim() !== "");
+  const all = listed.map((e) => (e.book === undefined && holds(e) ? { ...e, book: open } : e));
+  if (all.some((e, i) => e !== listed[i])) rememberOnboarding({ entities: all });
   const placed = all.filter((e) => e.book !== undefined);
-  const waiting = pending(held);
+  const waiting = pending({ ...held, entities: all });
   // Several at once only where they share a set of books. Otherwise one, and
   // the next one when they come back for it.
   const group = shared ? all.filter((e) => e.book === undefined) : waiting ? [waiting] : [];

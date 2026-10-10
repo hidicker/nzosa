@@ -336,6 +336,17 @@ export const XERO_ACCOUNT_TRANSACTIONS =
   "Xero: Reporting → Account Transactions, select all columns, set grouping to None";
 
 /**
+ * How to export the trial balance the opening balances come from. All
+ * columns, because without Account Class nothing in the file says which
+ * accounts are revenue and expenses (the class is then worked out from the
+ * type, which nearly always agrees). Compare with 4 years, so the file carries
+ * the years before as well. One string, said on Setup, on the conversion guide
+ * and when a file is refused.
+ */
+export const XERO_TRIAL_BALANCE =
+  "Reporting → Trial Balance, dated the year end before the books start. Select all columns, and set Compare with to 4 years.";
+
+/**
  * Which chart bank accounts have been tied to an account in this ledger.
  *
  * A bank row in a chart carries a name and no account number, so nothing can
@@ -558,7 +569,7 @@ export function xeroMigrationFiles(): SourceFile[] {
     },
     {
       what: "Trial balance",
-      where: "Accounting → Reports → Trial Balance (previous year end)",
+      where: XERO_TRIAL_BALANCE,
       why: "Opening balances for balance sheet",
       have: led.openingBalances !== undefined,
       page: "opening",
@@ -1009,7 +1020,7 @@ export function setupSteps(
               "balances takes them from a statement on any date, or from the bank feed. Only " +
               "not needed if every account started at nothing."
             : xero
-              ? "Xero: Accounting → Reports → Trial Balance, at your previous year end"
+              ? `Xero: ${XERO_TRIAL_BALANCE}`
               : "A trial balance at the previous year end, so every account and cent is included",
       unlocks: "A balance sheet that is a position rather than a movement, and the IR10",
       page: "opening",

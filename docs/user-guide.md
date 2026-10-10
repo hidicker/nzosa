@@ -130,7 +130,7 @@ This matters more than it sounds. Money moving between two of your own accounts 
 
 ### 4. Opening balances
 
-On its own page. Load the trial balance from your previous year end, or choose **Enter opening balances** and type them in: each account's balance on the day the books start, as a debit or a credit, with a balancing line to retained earnings or owner's equity. It saves only once debits equal credits. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.
+On its own page. Load the trial balance from your previous year end (from Xero: Reporting → Trial Balance, dated the year end before the books start, with all columns selected and Compare with set to 4 years), or choose **Enter opening balances** and type them in: each account's balance on the day the books start, as a debit or a credit, with a balancing line to retained earnings or owner's equity. It saves only once debits equal credits. Skip this only if the books start at the very beginning of the business, when there is genuinely nothing to bring forward.
 
 ### 5. Let it learn your coding
 

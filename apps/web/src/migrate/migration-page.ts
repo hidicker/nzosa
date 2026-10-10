@@ -2110,8 +2110,8 @@ function xeroGuide(held: Onboarding): HTMLElement {
     "p",
     "Export each of these as CSV or Excel. The chart of accounts and the account transactions " +
       "are enough to start; each of the others fills in more of the books, and Setup ticks " +
-      "each one off as it arrives. Run the trial balance as at the day before the conversion " +
-      "date: the previous year end, when converting on 1 April.",
+      "each one off as it arrives. Run the trial balance dated the year end before the books " +
+      "start, with all columns selected and Compare with set to 4 years.",
   );
   guide.append(
     table(

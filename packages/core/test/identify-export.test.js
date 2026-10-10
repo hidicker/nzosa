@@ -196,3 +196,15 @@ test("a myIR tax account's transactions are recognised, and not as a GST summary
   ].join("\r\n");
   assert.equal(identifyExport(account).kind, "ird-export");
 });
+
+test("a trial balance exported without its Account Class column is still a trial balance", () => {
+  const text = [
+    "Trial Balance",
+    "Totara Coffee Limited",
+    "As at 31 March 2025",
+    "",
+    "Account Code,Account,Account Type,Debit - Year to date,Credit - Year to date,31 Mar 2024",
+    "200,Sales,Revenue,,10000.00,0",
+  ].join("\n");
+  assert.equal(identifyExport(text).kind, "trial-balance");
+});

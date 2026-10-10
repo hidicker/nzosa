@@ -138,3 +138,34 @@ test("multiple date columns can populate OpeningBalances with byDate", () => {
   assert.ok(byDate["2025-03-31"]);
   assert.equal(byDate["2025-03-31"]["610"], 228000);
 });
+
+// Exported without "Select all columns": no Account Class. Invented figures.
+const NO_CLASS = [
+  "Trial Balance",
+  "Totara Coffee Limited",
+  "As at 31 March 2025",
+  "",
+  "Account Code,Account,Account Type,Debit - Year to date,Credit - Year to date,31 Mar 2024",
+  "200,Sales,Revenue,,10000.00,0",
+  "310,Cost of Goods Sold,Direct Costs,4000.00,,0",
+  "404,Bank Fees,Overhead,100.00,,0",
+  "610,Accounts Receivable,Accounts Receivable,2500.00,,0",
+  "720,Computer Equipment,Fixed Asset,3000.00,,0",
+  "800,Accounts Payable,Accounts Payable,,1500.00,0",
+  "970,Owner Funds Introduced,Equity,,1000.00,0",
+  ",Business Account,Bank,2900.00,,0",
+].join("\n");
+
+test("a trial balance without its Account Class column takes each class from the account type", () => {
+  const tb = parseTrialBalance(NO_CLASS);
+  assert.equal(tb.classFromType, true);
+  assert.equal(tb.accounts.find((a) => a.code === "200").klass, "Revenue");
+  assert.equal(tb.accounts.find((a) => a.code === "404").klass, "Expense");
+  assert.equal(tb.accounts.find((a) => a.code === "720").klass, "Asset");
+  assert.equal(tb.accounts.find((a) => a.code === "800").klass, "Liability");
+  const opening = openingBalancesFrom(tb, "2025-03-31");
+  assert.deepEqual(opening.skipped.sort(), ["Bank Fees", "Cost of Goods Sold", "Sales"], "the year's profit is not carried in");
+  // Profit 10000 - 4000 - 100 = 5900 closed into retained earnings, a credit.
+  assert.equal(opening.retainedEarnings, -590000);
+  assert.equal(parseTrialBalance(NO_CLASS.replace("Account Type,", "Account Type,Account Class,").replace(/,Revenue,/, ",Revenue,Revenue,")).classFromType, false);
+});

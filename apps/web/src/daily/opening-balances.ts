@@ -1,4 +1,5 @@
 import { redraw, showPage } from "../app.js";
+import { XERO_TRIAL_BALANCE } from "../migrate/setup-wizard.js";
 import { feedStatus } from "../feed-route.js";
 import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record } from "../books.js";
 import { combobox } from "../combobox.js";
@@ -1262,10 +1263,7 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
   const text = await asCsvText(file.name, bytes);
   const parsed = parseTrialBalance(text);
   if (parsed.accounts.length === 0) {
-    alert(
-      `${file.name} is not a trial balance. Export one from Xero as ` +
-        "Accounting > Reports > Trial Balance, dated the year end this ledger opens after.",
-    );
+    alert(`${file.name} is not a trial balance. Export one from Xero: ${XERO_TRIAL_BALANCE}`);
     return false;
   }
   if (parsed.dates.length === 0) {
@@ -1330,6 +1328,12 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
 
   const built = openingBalancesFrom(parsed, chosen, { bankAccountFor });
   const accounts = built.balances.accounts;
+  // Without an Account Class column, which accounts are revenue and expenses
+  // was worked out from their types: said, with any type not recognised, which
+  // is then carried in as a balance.
+  const unclassed = parsed.classFromType
+    ? parsed.accounts.filter((a) => a.klass === "" && (a.byDate[chosen] ?? 0) !== 0).map((a) => `${a.name} (${a.type || "no type"})`)
+    : [];
   const total = Object.values(accounts).reduce((sum, c) => sum + c, 0);
   const money = (cents: number): string => (cents / 100).toFixed(2);
   const unknown = Object.keys(accounts).filter(
@@ -1350,6 +1354,14 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
       "them at nothing.\n" +
       (unknown.length > 0
         ? `\nNot recognised: ${unknown.slice(0, 5).join(", ")}${unknown.length > 5 ? ", and more" : ""}\n`
+        : "") +
+      (parsed.classFromType
+        ? "\nThis file has no Account Class column, so which accounts are revenue and expenses was worked out " +
+          "from their types." +
+          (unclassed.length > 0
+            ? ` Types not recognised, carried in as balances: ${unclassed.slice(0, 5).join(", ")}${unclassed.length > 5 ? ", and more" : ""}.`
+            : "") +
+          " For the surest result, export it again with all columns selected.\n"
         : "") +
       "\nThis replaces whatever opening balances are held now.",
   );

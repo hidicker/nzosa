@@ -39,6 +39,31 @@ export interface TrialBalance {
   dates: string[];
   accounts: TrialBalanceAccount[];
   problems: { message: string; line: number }[];
+  /**
+   * True when the export had no Account Class column, so each account's class
+   * was worked out from its Account Type instead. Said where the file is
+   * loaded, because a type nobody recognises is then left in the balances.
+   */
+  classFromType: boolean;
+}
+
+/**
+ * The class of an account, from its Xero account type: what decides whether it
+ * is carried into a new year (assets, liabilities, equity) or closed off into
+ * retained earnings (revenue and expenses). For a trial balance exported
+ * without its Account Class column. Empty for a type not recognised.
+ */
+export function classFromType(type: string): string {
+  const t = type.trim().toLowerCase();
+  if (t === "") return "";
+  if (["revenue", "sales", "other income", "income"].includes(t)) return "Revenue";
+  if (["direct costs", "expense", "expenses", "overhead", "overheads", "depreciation"].includes(t)) return "Expense";
+  if (t.includes("equity") || t === "retained earnings") return "Equity";
+  if (t.includes("liabilit") || t === "accounts payable" || t === "gst" || t === "historical" || t === "rounding" || t === "unpaid expense claims") {
+    return "Liability";
+  }
+  if (t.includes("asset") || ["bank", "inventory", "prepayment", "accounts receivable", "tracking"].includes(t)) return "Asset";
+  return "";
 }
 
 const REQUIRED = ["Account", "Account Type"];
@@ -81,6 +106,7 @@ export function parseTrialBalance(text: string): TrialBalance {
       dates: [],
       accounts: [],
       problems: [{ message: "Not a trial balance: an Account column is needed.", line: 0 }],
+      classFromType: false,
     };
   }
 
@@ -147,7 +173,10 @@ export function parseTrialBalance(text: string): TrialBalance {
       code: (fields[codeAt] ?? "").trim(),
       name,
       type: (fields[typeAt] ?? "").trim(),
-      klass: (fields[classAt] ?? "").trim(),
+      // Without an Account Class column, every row's class would be empty and
+      // its revenue and expenses carried in as opening balances, leaving
+      // retained earnings at nothing. The type says the same, nearly always.
+      klass: classAt >= 0 ? (fields[classAt] ?? "").trim() : classFromType(fields[typeAt] ?? ""),
       byDate,
     });
   }
@@ -162,6 +191,7 @@ export function parseTrialBalance(text: string): TrialBalance {
     dates: [...(ownDate !== null ? [ownDate] : []), ...dateColumns.map((c) => c.iso)],
     accounts,
     problems,
+    classFromType: classAt < 0,
   };
 }
 

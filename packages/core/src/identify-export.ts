@@ -103,6 +103,14 @@ const SIGNATURES: { kind: ExportKind; what: string; columns: string[] }[] = [
     what: "account transactions",
     columns: ["Date", "Source", "Description", "Debit", "Credit"],
   },
+  // A trial balance exported without its Account Class column. Last, so any
+  // export above that also names an account and its type is taken as itself
+  // first; the class is then worked out from the type (trial-balance.ts).
+  {
+    kind: "trial-balance",
+    what: "trial balance",
+    columns: ["Account Code", "Account", "Account Type"],
+  },
 ];
 
 /**

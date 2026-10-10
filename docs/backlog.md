@@ -69,6 +69,12 @@ works).
 
 ## Online books
 
+- **Make a copy of a set of books online.** Folder books have "Make a copy…"
+  on Books; the online list has no copy. Build it from `createBook` plus each
+  part from `loadParts`, saved with `savePart`. Not copied: the bank feed
+  connection (two sets fetching from one bank would muddle both), the AI key,
+  sharing, the morning run's part, and History, which starts with a note of
+  where the copy came from.
 - **Bring the GitHub workflows up to date.** The "Deploy website" run on
   10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
   target Node.js 20, which GitHub has deprecated (they are being run on

@@ -1,6 +1,4 @@
-import { betweenEntities,
-  bookYears,
-} from "../books.js";
+import { betweenEntities } from "../books.js";
 import { state } from "../state.js";
 import { showPage } from "../app.js";
 import { amountCell, nameCell, note } from "../ui.js";
@@ -38,7 +36,7 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
       "Where a line is for one entity but went through another's bank account, such as a rental's repair on the " +
         "joint card, the profit and the GST are that entity's, and the money came from, or went to, the account's " +
         "owner. For things owned directly, that is the owners' funds introduced and drawings, by their shares; with a " +
-        "company, trust or society, a loan. The choice for each pair of entities is on Entities & accounts.",
+        "company, trust or society, a loan. The choice for each pair of entities is under Rules, Money between entities.",
     ),
   );
 
@@ -178,48 +176,20 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
           model.ownerGifts === true
             ? `${one.to}'s money paid $${money(one.amount)} more towards what ${one.from} owns than ${one.from}'s paid towards ${one.to}'s: a gift, as these books are set.`
             : `${one.from} owes ${one.to} $${money(one.amount)}: ${one.to}'s money paid that much more towards what ${one.from} owns. ` +
-                "If it was a gift, say so on Entities & accounts.",
+                "If it was a gift, say so under Rules, Money between entities.",
         ),
       );
     }
   }
 }
 
-let chosenYear = 0;
 
-/**
- * Money between entities, as a section of the Rules page: the rules decide how
- * a line is coded, and these entries follow from how it was coded.
- */
-export function renderBetweenSection(): void {
-  const holder = document.getElementById("rules-between");
-  if (holder === null) return;
-  holder.textContent = "";
-  const model = state.ledger.entities ?? emptyEntityModel();
-  if (model.entities.length < 2) return;
-  const years = bookYears();
-  if (years.length === 0) return;
-  const today = new Date().toISOString().slice(0, 10);
-  if (!years.includes(chosenYear)) chosenYear = years.filter((y) => taxYearEnd(y) < today)[0] ?? years[0] ?? 0;
-  const pick = document.createElement("select");
-  for (const y of years) {
-    const option = document.createElement("option");
-    option.value = String(y);
-    option.textContent = `Year ended ${taxYearEndSaid(y)}`;
-    option.selected = y === chosenYear;
-    pick.append(option);
-  }
-  pick.addEventListener("change", () => {
-    chosenYear = Number(pick.value);
-    renderBetweenSection();
-  });
-  const body = document.createElement("div");
-  holder.append(pick, body);
-  renderBetweenReport(body, chosenYear);
-}
-
-/** Open the Rules page at Money between entities. */
+/** Open Reports at Money between entities. */
 export function showBetween(): void {
-  showPage("rules");
-  document.getElementById("rules-between")?.scrollIntoView({ block: "start" });
+  showPage("reports");
+  const kind = document.getElementById("report-kind") as HTMLSelectElement | null;
+  if (kind !== null) {
+    kind.value = "between";
+    kind.dispatchEvent(new Event("change"));
+  }
 }

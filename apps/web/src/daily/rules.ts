@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { persistRules, reclassify, record, useRules } from "../books.js";
-import { renderBetweenSection } from "./between-report.js";
+import { renderBetweenSettings } from "./between-settings.js";
 import { blankDraft, fromDraft, ruleImpact, toDraft, validateDraft } from "../rules-editor.js";
 import type { RuleDraft } from "../rules-editor.js";
 import { describeRules, mergeRules } from "../rules-ui.js";
@@ -178,7 +178,7 @@ function renderRulesStatus(): void {
 }
 
 export function renderRules(): void {
-  renderBetweenSection();
+  renderBetweenSettings();
   renderRulesStatus();
   const body = $("rules-body");
   body.textContent = "";

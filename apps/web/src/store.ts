@@ -687,6 +687,23 @@ export function onSaveTrouble(handler: (trouble: SaveTrouble) => void): void {
 const versions = new Map<string, number>();
 
 /**
+ * One write to the server at a time.
+ *
+ * Each write says which version of the part it was built on, and the server
+ * refuses one built on a version it no longer holds. Two saves started
+ * together -- the steps that run as the books open, a change made while one
+ * is still going -- both claimed the same version, and the second was refused
+ * as if somebody else had changed the books ("These books changed somewhere
+ * else"). Queued, each write reads the version the one before it left.
+ */
+let writing: Promise<unknown> = Promise.resolve();
+function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
+  const run = writing.then(work, work);
+  writing = run.catch(() => undefined);
+  return run;
+}
+
+/**
  * What was last sent for each part, by reference.
  *
  * The app replaces these wholesale rather than mutating them, so an unchanged
@@ -804,7 +821,11 @@ async function api(path: string, init?: RequestInit): Promise<Response> {
 }
 
 /** Write one part, unless what is in memory is the object already sent. */
-async function putPart(part: string, data: unknown): Promise<boolean> {
+function putPart(part: string, data: unknown): Promise<boolean> {
+  return oneAtATime(() => putPartNow(part, data));
+}
+
+async function putPartNow(part: string, data: unknown): Promise<boolean> {
   if (data === undefined) return true;
   if (lastWritten.get(part) === data) return true;
   try {
@@ -1000,12 +1021,15 @@ async function writeCloud(
     if (!loadedParts.has(part) && !changedParts.has(part)) continue;
     if (lastWritten.get(part) === value) continue;
 
-    const outcome = await saveCloudPart(book.id, part, value, versions.get(part) ?? 0);
-    if (outcome.kind === "saved") {
-      versions.set(part, outcome.version);
-      lastWritten.set(part, value);
-      continue;
-    }
+    const outcome = await oneAtATime(async () => {
+      const result = await saveCloudPart(book.id, part, value, versions.get(part) ?? 0);
+      if (result.kind === "saved") {
+        versions.set(part, result.version);
+        lastWritten.set(part, value);
+      }
+      return result;
+    });
+    if (outcome.kind === "saved") continue;
     // Not a write to retry: on a conflict somebody else's save is now the
     // truth, and this page is holding something built on what it replaced.
     ok = false;
@@ -1071,12 +1095,15 @@ async function putCloudPart(part: string, data: unknown): Promise<boolean> {
   if (data === undefined) return true;
   if (lastWritten.get(part) === data) return true;
 
-  const outcome = await saveCloudPart(book.id, part, data, versions.get(part) ?? 0);
-  if (outcome.kind === "saved") {
-    versions.set(part, outcome.version);
-    lastWritten.set(part, data);
-    return true;
-  }
+  const outcome = await oneAtATime(async () => {
+    const result = await saveCloudPart(book.id, part, data, versions.get(part) ?? 0);
+    if (result.kind === "saved") {
+      versions.set(part, result.version);
+      lastWritten.set(part, data);
+    }
+    return result;
+  });
+  if (outcome.kind === "saved") return true;
   tellAboutTrouble(
     outcome.kind === "conflict"
       ? {

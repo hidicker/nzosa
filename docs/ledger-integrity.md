@@ -68,7 +68,7 @@ step that says what it will change.
    from a day, as Inland Revenue has it. Lines before the date keep their GST.
 2. **Say what an account change reaches** (2, 3, 10): changing an account's type
    or entity says "N confirmed lines in M years will move from the profit and
-   loss to the balance sheet" (or "to Larch Street"), and asks. Better still,
+   loss to the balance sheet" (or "to Totara Street"), and asks. Better still,
    the year lock compares by account type and entity as well as code, so a
    finished year refuses it.
 3. **Owners and shares with a date** (4): a share held from a day, so a change of

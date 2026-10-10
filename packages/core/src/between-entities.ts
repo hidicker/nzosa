@@ -57,7 +57,7 @@ export function isSeparatePerson(entity: Entity): boolean {
 /** Every synthetic account starts with this, so it is never mistaken for a chart code. */
 export const BETWEEN_PREFIX = "between:";
 
-export type BetweenRole = "introduced" | "drawings" | "paid-for-others" | "received-for-others" | "current" | "loan";
+export type BetweenRole = "introduced" | "drawings" | "current" | "loan";
 
 export interface BetweenAccount {
   code: string;
@@ -72,6 +72,11 @@ export interface BetweenAccount {
   counterparty: string;
 }
 
+/** A planned account: one of the chart's already, or one to add to it. */
+export interface PlannedBetweenAccount extends BetweenAccount {
+  exists: boolean;
+}
+
 export interface BetweenOptions {
   model: EntityModel;
   /** Whose a bank account is, by its id; undefined when nobody has said. */
@@ -79,6 +84,13 @@ export interface BetweenOptions {
   /** The bank account ids the postings name. */
   isBank: (code: string) => boolean;
   overrides?: BetweenOverrides | undefined;
+  /**
+   * The chart account each balancing line goes to (see `betweenAccountPlan`).
+   * Without it, accounts are made up under BETWEEN_PREFIX, for tests; with it,
+   * a journal whose account is missing from the plan is left out rather than
+   * posted somewhere the chart does not know.
+   */
+  plan?: readonly BetweenAccount[] | undefined;
 }
 
 interface Share {
@@ -117,72 +129,164 @@ function sideKind(x: Entity, y: Entity, overrides: BetweenOverrides | undefined)
   return "equity";
 }
 
-/** The balancing lines on one side: `amount` is the side's own debit (positive) or credit. */
-function sideLines(x: Entity, y: Entity, amount: number, kind: SideKind, accounts: Map<string, BetweenAccount>): PostedLine[] {
-  const line = (account: BetweenAccount, value: number): PostedLine => {
-    accounts.set(account.code, account);
-    return { accountCode: account.code, accountName: account.name, amount: value as Cents, taxType: "NONE", description: `With ${y.name}` };
-  };
-  if (kind === "loan") {
-    const name = x.kind === "personal" ? `Loan with ${y.name}` : `Owed between ${x.name} and ${y.name}`;
-    return [
-      line(
-        { code: `${BETWEEN_PREFIX}${x.id}:loan:${y.id}`, name, entityId: x.id, type: "Current Liability", role: "loan", person: "", counterparty: y.id },
-        amount,
-      ),
-    ];
+/** What an account is for, as a key to find it by. */
+function wantKey(entityId: string, role: BetweenRole, who: string): string {
+  return `${entityId}|${role}|${who.trim().toLowerCase()}`;
+}
+
+/** The people who own anything directly, in the order they first appear. */
+function peopleOf(model: EntityModel): string[] {
+  const seen: string[] = [];
+  for (const entity of model.entities) {
+    if (isSeparatePerson(entity)) continue;
+    for (const share of sharesOf(entity)) if (!seen.includes(share.name)) seen.push(share.name);
   }
-  if (kind === "loan-per-owner") {
-    const shares = sharesOf(y);
-    const parts = split(amount, shares);
-    return shares.map((share, i) =>
-      line(
-        {
-          code: `${BETWEEN_PREFIX}${x.id}:current:${share.name}`,
-          name: `Current account: ${share.name}`,
-          entityId: x.id,
+  return seen;
+}
+
+/**
+ * The accounts money between entities posts to, entity by entity: each one the
+ * chart already has, or one to add.
+ *
+ * The same in every entity people own directly -- a person, a couple's joint
+ * money, a rental, a business without a company: for each owner, *funds
+ * introduced* at 95N and *drawings* at 98N, N the owner's place in the list, as
+ * a partnership's chart already has them. A company, trust or society has a
+ * *current account* at 92N for each person who owns anything directly; and a
+ * pair that keeps a loan has an *Owed between* account at 93N, N the other
+ * entity's place. Codes take the entity's suffix. An account is found by its
+ * name in the entity's own accounts first, so a partner's "capital introduced"
+ * is used as it is, and an account renamed or renumbered is not made twice.
+ */
+export function betweenAccountPlan(
+  model: EntityModel,
+  chart: readonly { code: string; name: string }[],
+  suffixOf: (entity: Entity) => string,
+  overrides?: BetweenOverrides,
+): PlannedBetweenAccount[] {
+  if (model.entities.length < 2) return [];
+  const taken = new Set(chart.map((a) => a.code.trim()));
+  const out: PlannedBetweenAccount[] = [];
+  const people = peopleOf(model);
+
+  for (const entity of model.entities) {
+    const own = chart.filter((a) => model.accounts[accountEntityKey(a)] === entity.id);
+    const byName = new Map(own.map((a) => [a.name.trim().toLowerCase(), a]));
+    const suffix = suffixOf(entity);
+    const add = (
+      base: string,
+      names: readonly string[],
+      fields: Omit<BetweenAccount, "code" | "name" | "entityId">,
+    ): void => {
+      const found = names.map((n) => byName.get(n.toLowerCase())).find((a) => a !== undefined);
+      if (found !== undefined) {
+        out.push({ ...fields, code: found.code, name: found.name, entityId: entity.id, exists: true });
+        return;
+      }
+      // The planned code, or the next free one beside it.
+      let code = `${base}${suffix}`;
+      for (let n = 2; taken.has(code); n++) code = `${base}${suffix}-${n}`;
+      taken.add(code);
+      out.push({ ...fields, code, name: names[0]!, entityId: entity.id, exists: false });
+    };
+
+    if (!isSeparatePerson(entity)) {
+      sharesOf(entity).forEach((share, i) => {
+        const n = i + 1;
+        add(`95${n}`, [`${share.name}: funds introduced`, `${share.name}: capital introduced`], {
+          type: "Equity",
+          role: "introduced",
+          person: share.name,
+          counterparty: "",
+        });
+        add(`98${n}`, [`${share.name}: drawings`], { type: "Equity", role: "drawings", person: share.name, counterparty: "" });
+      });
+    } else {
+      people.forEach((person, i) => {
+        add(`92${i + 1}`, [`Current account: ${person}`], {
           type: "Current Liability",
           role: "current",
-          person: share.name,
+          person,
           counterparty: "",
-        },
-        parts[i]!,
-      ),
-    ).filter((l) => l.amount !== 0);
+        });
+      });
+    }
+    model.entities.forEach((other, i) => {
+      if (other.id === entity.id || sideKind(entity, other, overrides) !== "loan") return;
+      add(`93${i + 1}`, [`Owed between ${entity.name} and ${other.name}`], {
+        type: "Current Liability",
+        role: "loan",
+        person: "",
+        counterparty: other.id,
+      });
+    });
   }
-  const shares = sharesOf(x);
-  const parts = split(amount, shares);
-  const personal = x.kind === "personal";
-  // A debit takes money out of the owners' side; a credit puts it in.
-  const role: BetweenRole = personal
-    ? amount > 0
-      ? "paid-for-others"
-      : "received-for-others"
-    : amount > 0
-      ? "drawings"
-      : "introduced";
-  const words: Record<string, string> = {
-    "paid-for-others": "To other entities",
-    "received-for-others": "From other entities",
-    drawings: "Drawings",
-    introduced: "Funds introduced",
+  return out;
+}
+
+/** The balancing lines on one side: `amount` is the side's own debit (positive) or credit. Null when an account is missing. */
+function sideLines(
+  x: Entity,
+  y: Entity,
+  amount: number,
+  kind: SideKind,
+  find: (entityId: string, role: BetweenRole, who: string, fallback: BetweenAccount) => BetweenAccount | undefined,
+  used: Map<string, BetweenAccount>,
+): PostedLine[] | null {
+  const lines: PostedLine[] = [];
+  let missing = false;
+  const line = (role: BetweenRole, who: string, fallback: BetweenAccount, value: number): void => {
+    if (value === 0) return;
+    const account = find(x.id, role, who, fallback);
+    if (account === undefined) {
+      missing = true;
+      return;
+    }
+    used.set(account.code, account);
+    lines.push({ accountCode: account.code, accountName: account.name, amount: value as Cents, taxType: "NONE", description: `With ${y.name}` });
   };
-  return shares
-    .map((share, i) =>
-      line(
-        {
-          code: `${BETWEEN_PREFIX}${x.id}:${role}:${share.name}`,
-          name: `${words[role]}: ${share.name}`,
-          entityId: x.id,
-          type: "Equity",
-          role,
-          person: share.name,
-          counterparty: "",
-        },
-        parts[i]!,
-      ),
-    )
-    .filter((l) => l.amount !== 0);
+  if (kind === "loan") {
+    line("loan", y.id, {
+      code: `${BETWEEN_PREFIX}${x.id}:loan:${y.id}`,
+      name: `Owed between ${x.name} and ${y.name}`,
+      entityId: x.id,
+      type: "Current Liability",
+      role: "loan",
+      person: "",
+      counterparty: y.id,
+    }, amount);
+  } else if (kind === "loan-per-owner") {
+    const shares = sharesOf(y);
+    split(amount, shares).forEach((part, i) => {
+      const person = shares[i]!.name;
+      line("current", person, {
+        code: `${BETWEEN_PREFIX}${x.id}:current:${person}`,
+        name: `Current account: ${person}`,
+        entityId: x.id,
+        type: "Current Liability",
+        role: "current",
+        person,
+        counterparty: "",
+      }, part);
+    });
+  } else {
+    // A debit takes money out to the owners; a credit is them putting it in.
+    const role: BetweenRole = amount > 0 ? "drawings" : "introduced";
+    const shares = sharesOf(x);
+    split(amount, shares).forEach((part, i) => {
+      const person = shares[i]!.name;
+      line(role, person, {
+        code: `${BETWEEN_PREFIX}${x.id}:${role}:${person}`,
+        name: `${person}: ${role === "drawings" ? "drawings" : "funds introduced"}`,
+        entityId: x.id,
+        type: "Equity",
+        role,
+        person,
+        counterparty: "",
+      }, part);
+    });
+  }
+  return missing ? null : lines;
 }
 
 /**
@@ -201,9 +305,13 @@ export function betweenEntityJournals(
 ): { journals: PostedJournal[]; accounts: BetweenAccount[] } {
   const { model } = options;
   const byId = new Map(model.entities.map((e) => [e.id, e]));
-  const accounts = new Map<string, BetweenAccount>();
+  const used = new Map<string, BetweenAccount>();
   const out: PostedJournal[] = [];
   if (model.entities.length < 2) return { journals: out, accounts: [] };
+
+  const planned = options.plan === undefined ? null : new Map(options.plan.map((a) => [wantKey(a.entityId, a.role, a.role === "loan" ? a.counterparty : a.person), a]));
+  const find = (entityId: string, role: BetweenRole, who: string, fallback: BetweenAccount): BetweenAccount | undefined =>
+    planned === null ? fallback : planned.get(wantKey(entityId, role, who));
 
   const entityOfLine = (line: PostedLine): string | undefined => {
     if (line.accountCode.startsWith(BETWEEN_PREFIX)) return undefined;
@@ -212,27 +320,36 @@ export function betweenEntityJournals(
   };
 
   for (const journal of journals) {
+    if (journal.source === "between") continue;
     const owners = journal.lines.map(entityOfLine);
     const bankIndex = journal.lines.findIndex((l, i) => options.isBank(l.accountCode) && owners[i] !== undefined);
     const anchor = bankIndex >= 0 ? owners[bankIndex] : owners.find((o) => o !== undefined);
     if (anchor === undefined) continue;
     const net = new Map<string, number>();
     journal.lines.forEach((line, i) => {
+      // A line already on one of these accounts -- a manual journal moving
+      // money between owners -- is that entity's like any other.
       const whose = owners[i] ?? anchor;
       net.set(whose, (net.get(whose) ?? 0) + line.amount);
     });
     const home = byId.get(anchor);
     if (home === undefined) continue;
     const lines: PostedLine[] = [];
+    let complete = true;
     for (const [whose, amount] of net) {
       if (whose === anchor || amount === 0) continue;
       const other = byId.get(whose);
       if (other === undefined) continue;
       // The other entity is brought back to balance; the anchor takes the opposite.
-      lines.push(...sideLines(other, home, -amount, sideKind(other, home, options.overrides), accounts));
-      lines.push(...sideLines(home, other, amount, sideKind(home, other, options.overrides), accounts));
+      const theirs = sideLines(other, home, -amount, sideKind(other, home, options.overrides), find, used);
+      const mine = sideLines(home, other, amount, sideKind(home, other, options.overrides), find, used);
+      if (theirs === null || mine === null) {
+        complete = false;
+        break;
+      }
+      lines.push(...theirs, ...mine);
     }
-    if (lines.length === 0) continue;
+    if (!complete || lines.length === 0) continue;
     out.push({
       transactionId: journal.transactionId,
       date: journal.date,
@@ -242,7 +359,7 @@ export function betweenEntityJournals(
       taxBasis: "both",
     });
   }
-  return { journals: out, accounts: [...accounts.values()] };
+  return { journals: out, accounts: [...used.values()] };
 }
 
 /** What one person has put in, net, across everything they own directly, up to a day. */

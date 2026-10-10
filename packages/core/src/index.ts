@@ -418,9 +418,10 @@ export * from "./tier3-report.js";
 export {
   BETWEEN_PREFIX,
   betweenEntityJournals,
+  betweenAccountPlan,
   isSeparatePerson,
   overdrawnCurrentAccounts,
   pairKey,
   personPositions,
 } from "./between-entities.js";
-export type { BetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";
+export type { BetweenAccount, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";

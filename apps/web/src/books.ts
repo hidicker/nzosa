@@ -2,6 +2,8 @@ import { redraw, showPage } from "./app.js";
 import { filedByPeriod, filedKey,
   betweenEntityJournals,
   bankOwner as coreBankOwner,
+  betweenAccountPlan,
+  suggestSuffix,
 } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
@@ -83,6 +85,7 @@ import type {
   TripAccounts,
   TripClaim,
   BetweenAccount,
+  PlannedBetweenAccount,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
 import { booksCountry } from "./country.js";
@@ -633,6 +636,8 @@ export async function saveEntities(
   state.ledger = { ...state.ledger, entities: model };
   state.persistent = await savePart(state.ledger, "entities");
   await record("entities", what, before ?? null, model);
+  // A new entity, owner, bank owner or loan may need accounts to post to.
+  await ensureBetweenAccounts();
   redraw("entities");
   if (options.quiet !== true) redraw("migration");
   // The picker at the top of every page lists them too, and went on offering
@@ -1237,29 +1242,100 @@ export function bankReach(account: string): string[] {
 }
 
 /**
- * Money passing between entities: worked out from the posted journals, never
- * stored. Kept apart from `postedJournals()`, whose readers know only the
- * chart's accounts; the report on it, and the year-end check of overdrawn
- * current accounts, read it from here.
+ * The suffix an entity's codes carry: the one it was given, or the one its
+ * accounts already share, or one made from its name.
  */
+function suffixOfEntity(entity: Entity): string {
+  if (entity.codeSuffix !== undefined && entity.codeSuffix !== "") return entity.codeSuffix;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const counts = new Map<string, number>();
+  for (const account of state.chart) {
+    if (model.accounts[accountEntityKey(account)] !== entity.id) continue;
+    const found = /^\d+([A-Z]{1,3})$/.exec(account.code.trim());
+    if (found?.[1] !== undefined) counts.set(found[1], (counts.get(found[1]) ?? 0) + 1);
+  }
+  const usual = [...counts.entries()].sort((x, y) => y[1] - x[1])[0]?.[0];
+  if (usual !== undefined) return usual;
+  const taken = new Set(model.entities.filter((e) => e.id !== entity.id).map((e) => e.codeSuffix ?? "").filter((x) => x !== ""));
+  return suggestSuffix(entity.name, taken);
+}
+
+/** The accounts money between entities posts to, each held in the chart or still to add. */
+export function betweenPlan(): PlannedBetweenAccount[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  return betweenAccountPlan(model, state.chart, suffixOfEntity, model.between);
+}
+
+/**
+ * Add to the chart the accounts money between entities needs and does not
+ * have yet, each assigned to its entity. Run when the books open and when the
+ * entities change: a new entity, a new owner, a bank account given an owner, a
+ * pair set to a loan. Adding an account moves no figure.
+ */
+export async function ensureBetweenAccounts(): Promise<number> {
+  const wanted = betweenPlan().filter((a) => !a.exists);
+  if (wanted.length === 0) return 0;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const added: Account[] = wanted.map((a) => ({
+    code: a.code,
+    name: a.name,
+    type: a.type,
+    taxCode: "No GST",
+    description:
+      a.role === "introduced"
+        ? `Money ${a.person} put in, from another entity's account`
+        : a.role === "drawings"
+          ? `Money ${a.person} took out, into another entity's account`
+          : a.role === "current"
+            ? `What ${a.person} has lent to it, or owes it`
+            : "A balance owed between the two entities",
+  }));
+  const accounts = { ...model.accounts };
+  for (const account of added) accounts[accountEntityKey(account)] = wanted.find((w) => w.code === account.code)!.entityId;
+  const chart = [...state.chart, ...added];
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart, entities: { ...model, accounts } };
+  state.persistent = await savePart(state.ledger, "chart", "entities");
+  await record(
+    "chart",
+    `Added ${added.length} account${added.length === 1 ? "" : "s"} for money between entities: ${added.map((x) => `${x.code} ${x.name}`).join("; ")}`,
+    null,
+    added,
+  );
+  return added.length;
+}
+
 let betweenCache: { ledger: unknown; chart: unknown; rules: unknown; value: { journals: PostedJournal[]; accounts: BetweenAccount[] } } | null = null;
 
+/**
+ * Money passing between entities, as posted: the ledger's between-entity
+ * journals and the accounts they use. Cached until the books, the chart or the
+ * rules change, because Actions required asks on every redraw.
+ */
 export function betweenEntities(): { journals: PostedJournal[]; accounts: BetweenAccount[] } {
-  // Posting the whole ledger is not free, and Actions required asks on every
-  // redraw: worked out again only when the books, the chart or the rules change.
   if (betweenCache !== null && betweenCache.ledger === state.ledger && betweenCache.chart === state.chart && betweenCache.rules === state.rules) {
     return betweenCache.value;
   }
+  const value = {
+    journals: postedJournals().filter((j) => j.source === "between"),
+    accounts: betweenPlan().filter((a) => a.exists),
+  };
+  betweenCache = { ledger: state.ledger, chart: state.chart, rules: state.rules, value };
+  return value;
+}
+
+/** The between-entity journals for what has been posted, on the chart's accounts. */
+function betweenJournalsFor(posted: readonly PostedJournal[]): PostedJournal[] {
   const model = state.ledger.entities ?? emptyEntityModel();
+  if (model.entities.length < 2) return [];
   const held = new Set(state.ledger.transactions.map((t) => t.account));
-  const value = betweenEntityJournals(postedJournals(), {
+  return betweenEntityJournals(posted, {
     model,
     bankOwner: (account) => coreBankOwner(model, account),
     isBank: (code) => held.has(code),
     overrides: model.between,
-  });
-  betweenCache = { ledger: state.ledger, chart: state.chart, rules: state.rules, value };
-  return value;
+    plan: betweenPlan().filter((a) => a.exists),
+  }).journals;
 }
 
 export function unregisteredCode(): (code: string) => boolean {
@@ -1506,7 +1582,11 @@ export function postedJournals(): PostedJournal[] {
   // The year-end adjustments come last, because they are worked out from
   // everything else: a share of what the vehicle accounts ended up holding, a
   // part of what a prepayment was coded to.
-  return [...posted, ...yearEndJournals(posted)];
+  const withYearEnd = [...posted, ...yearEndJournals(posted)];
+  // Last of all, money that passed between entities: a line coded to one
+  // entity on another's bank account leaves each of them out of balance until
+  // the owners' money in and out, or a loan, is written on both sides.
+  return [...withYearEnd, ...betweenJournalsFor(withYearEnd)];
 }
 
 /**

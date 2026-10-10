@@ -22,6 +22,7 @@ import {
   ensureDefaultEntity,
   reclassify,
   tidyChart,
+  ensureBetweenAccounts,
 } from "./books.js";
 import {
   renderBooks,
@@ -200,6 +201,10 @@ async function init(): Promise<void> {
     // The books as opened are what the locks are measured against.
     state.chart = state.ledger.chart ?? [];
     resetLockBaseline();
+    // Accounts for money between entities, where the books lack any.
+    void ensureBetweenAccounts().then((added) => {
+      if (added > 0) resetLockBaseline();
+    });
     // Once, here -- not in reclassify, which runs on every coding change and
     // would drag somebody back to the queue each time they coded a line.
     showWhatNeedsDeciding();

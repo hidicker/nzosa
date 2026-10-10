@@ -57,7 +57,9 @@ function figuresNow(locks: LockDates | undefined): LockedFigures {
 }
 
 function figuresForAll(locks: LockDates | undefined): LockedFigures {
-  const journals = locks?.year ? postedJournals() : [];
+  // The between-entity journals follow from the rest and from who owns which
+  // account; comparing them would refuse giving an account its owner.
+  const journals = locks?.year ? postedJournals().filter((j) => j.source !== "between") : [];
   let returns: ReturnType<typeof computeOurReturns> = [];
   if (locks?.gst) {
     const dates = state.ledger.transactions.map((t) => t.date);

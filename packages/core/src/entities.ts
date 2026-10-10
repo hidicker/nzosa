@@ -1,4 +1,5 @@
 import type { Account } from "./chart.js";
+import type { BetweenOverrides } from "./between-entities.js";
 import type { NonProfit } from "./non-profit.js";
 import type { Trust } from "./trust.js";
 
@@ -216,6 +217,14 @@ export interface EntityModel {
   entities: readonly Entity[];
   accounts: AccountEntities;
   banks: BankEntities;
+  /** Money between a pair of entities treated otherwise than by default: see between-entities.ts. */
+  between?: BetweenOverrides;
+  /**
+   * When one person's money pays for something another owns -- the joint
+   * account paying for a property one of them owns alone -- it is a gift, not
+   * owed back. Owed, by default.
+   */
+  ownerGifts?: boolean;
 }
 
 export function emptyEntityModel(): EntityModel {
@@ -487,4 +496,51 @@ export function sameEntityBanks(
     if (ids.some((id) => mine.includes(id))) accounts.add(bank);
   }
   return { accounts, scoped: true };
+}
+
+/**
+ * The one entity a bank account belongs to: whose money it holds.
+ *
+ * Undefined where nobody has said, or where it is still ticked for several, as
+ * books from before an account had a single owner may be (see
+ * `suggestedBankOwner`). Which entity a line is *for* is the account it is
+ * coded to; this says only whose account paid it.
+ */
+export function bankOwner(model: EntityModel, account: string): string | undefined {
+  const ids = model.banks[account] ?? [];
+  if (ids.length === 1) return ids[0];
+  if (ids.length === 0 && model.entities.length === 1) return model.entities[0]?.id;
+  return undefined;
+}
+
+/**
+ * Who an account ticked for several entities most likely belongs to.
+ *
+ * Accounts were once ticked for every entity they paid for, so a joint card
+ * that pays for two people and three rentals carried five ticks. Its owner is
+ * the people: the personal entity whose owners are exactly the people ticked
+ * ("Both", owned by the two of them), or the one person ticked. With no person
+ * ticked, the first entity ticked. A suggestion to confirm, never applied
+ * unseen.
+ */
+export function suggestedBankOwner(model: EntityModel, account: string): string | undefined {
+  const ids = model.banks[account] ?? [];
+  if (ids.length <= 1) return ids[0];
+  const ticked = model.entities.filter((e) => ids.includes(e.id));
+  const people = ticked.filter((e) => e.kind === "personal");
+  if (people.length === 0) return ticked[0]?.id;
+  const names = new Set(people.flatMap((e) => (e.owners ?? [{ name: e.name, percent: 100 }]).map((o) => o.name.trim().toLowerCase())));
+  const sameOwners = (e: Entity): boolean => {
+    const own = new Set((e.owners ?? []).map((o) => o.name.trim().toLowerCase()));
+    return own.size === names.size && [...names].every((n) => own.has(n));
+  };
+  const joint = model.entities.find((e) => e.kind === "personal" && sameOwners(e));
+  return joint?.id ?? people[0]?.id;
+}
+
+/** Bank accounts still ticked for more than one entity, each with its suggested owner. */
+export function banksNeedingOwner(model: EntityModel): { account: string; ticked: string[]; suggested: string | undefined }[] {
+  return Object.entries(model.banks)
+    .filter(([, ids]) => ids.length > 1)
+    .map(([account, ids]) => ({ account, ticked: [...ids], suggested: suggestedBankOwner(model, account) }));
 }

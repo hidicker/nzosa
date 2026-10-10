@@ -4131,3 +4131,9 @@ details.rental-year[open] > summary::before { content: "▾"; }
 .grant-line { display: flex; gap: 0.4rem; align-items: baseline; padding: 0.15rem 0; font-size: 0.9rem; }
 .grant-link-panel { margin-top: 0.6rem; padding: 0.6rem 0.8rem; border-top: 1px solid var(--border); }
 .grant-link-panel h5 { margin: 0.8rem 0 0.3rem; }
+
+/* A bank account still ticked for several entities, with its suggested owner shown. */
+select.needs-choice {
+  border-color: var(--warn, #b45309);
+  box-shadow: 0 0 0 1px var(--warn, #b45309);
+}

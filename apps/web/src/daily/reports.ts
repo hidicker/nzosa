@@ -19,13 +19,15 @@ import {
   bankLabel,
   bookYears,
   banks,
-  entityBankAccounts,
   ledgerAccountFor,
   postedJournals,
   record,
   reportEngine,
   saveManualJournals,
+  journalInEntity,
+  entityOfCoding,
 } from "../books.js";
+import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
@@ -294,17 +296,14 @@ export function currentReport(
     sectionOf,
     includeGst,
     // With no entity chosen the whole ledger is reported, which is the right
-    // default before any account has been assigned to one.
+    // default before any account has been assigned to one. With one chosen, a
+    // line is the entity's when it is coded to one of the entity's accounts,
+    // whichever bank account it went through: a rental's rates paid on the
+    // household's card are the rental's. Narrowing by the bank accounts as well
+    // left a lease paid into a joint account off the property's own figures,
+    // while the rental schedule, which went by the coding, had it.
     ...(entity
       ? { includeCode: (code: string) => entityOfCode.get(code) === entity.id }
-      : {}),
-    // A bank account serving this entity narrows it further, when one is set.
-    ...(entity && Object.keys(model.banks).length > 0
-      ? {
-          accounts: Object.entries(model.banks)
-            .filter(([, ids]) => ids.includes(entity.id))
-            .map(([account]) => account),
-        }
       : {}),
   });
 
@@ -1470,11 +1469,10 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 function renderJournal(body: HTMLElement, year: number): void {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
-  const accounts = entityBankAccounts();
+  const inEntity = journalInEntity();
   const journals = postedJournals().filter((j) => {
     if (j.date < from || j.date > to) return false;
-    if (accounts.length === 0) return true;
-    return j.lines.some((l) => accounts.includes(l.accountCode));
+    return inEntity === null || inEntity(j);
   });
 
   const heading = document.createElement("h3");
@@ -4064,6 +4062,11 @@ export function renderReportsPage(): void {
     return;
   }
 
+  if (kind === "between") {
+    if (chosenYearNow !== undefined) renderBetweenReport(body, chosenYearNow);
+    return;
+  }
+
   if (kind === "owner") {
     if (owners.length === 0) {
       body.append(
@@ -4255,10 +4258,20 @@ function renderExtract(body: HTMLElement, year: number): void {
 
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
+  // Bank accounts picked: those accounts. An entity chosen and none picked:
+  // its own accounts' lines, and lines coded to it from anybody's.
   const scope = accountsFor(state.varianceAccounts);
-  const rows = engine.transactions.filter(
-    (t) => t.date >= from && t.date <= to && (scope.length === 0 || scope.includes(t.account)),
-  );
+  const byCoding = state.entityFilter !== "" && state.varianceAccounts.length === 0;
+  const entityOf = entityOfCoding();
+  const rows = engine.transactions.filter((t) => {
+    if (t.date < from || t.date > to) return false;
+    if (byCoding) {
+      const code = engine.codeOf(t) ?? "";
+      const whose = code === "" ? undefined : entityOf(code);
+      if (whose !== undefined) return whose === state.entityFilter;
+    }
+    return scope.length === 0 || scope.includes(t.account);
+  });
 
   const entity = reportingEntity();
   const labels = banks().labels;
@@ -4472,11 +4485,12 @@ function renderCharts(body: HTMLElement, year: number): void {
 function renderGeneralLedger(body: HTMLElement, year: number): void {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
-  const scope = entityBankAccounts();
+  // The entity's journals: those through its own bank accounts, and those
+  // posting to its accounts from anybody's.
+  const inEntity = journalInEntity();
   const journals = postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
-    if (scope.length === 0) return true;
-    return journal.lines.some((line) => scope.includes(line.accountCode));
+    return inEntity === null || inEntity(journal);
   });
 
   if (journals.length === 0) {

@@ -174,6 +174,9 @@ export {
   entitiesOfBank,
   validateEntityModel,
   entityCoverage,
+  bankOwner,
+  suggestedBankOwner,
+  banksNeedingOwner,
 } from "./entities.js";
 export type {
   Entity,
@@ -411,3 +414,13 @@ export * from "./ir7.js";
 export * from "./ir4.js";
 export * from "./small-society.js";
 export * from "./tier3-report.js";
+
+export {
+  BETWEEN_PREFIX,
+  betweenEntityJournals,
+  isSeparatePerson,
+  overdrawnCurrentAccounts,
+  pairKey,
+  personPositions,
+} from "./between-entities.js";
+export type { BetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";

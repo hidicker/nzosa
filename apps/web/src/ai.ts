@@ -1,5 +1,5 @@
 import { aiSuggest } from "./ai-backend.js";
-import { accountsFor, gstLookups, invoiceBalanceMap, nothingHasAnswered, unregisteredCode } from "./books.js";
+import { accountsFor, bankReach, gstLookups, invoiceBalanceMap, nothingHasAnswered, unregisteredCode } from "./books.js";
 import { classificationToRate, knownCodes, rateLabel, suggest } from "./reconcile.js";
 import type { GstRate } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
@@ -137,7 +137,8 @@ export function suggestFromDirectory(): number {
     if (one.transaction.amount >= 0) continue;
     const business = businessOf(one.transaction);
     if (business === null) continue;
-    const serves = model.banks[one.transaction.account] ?? [];
+    // An account that pays for several entities: one shop says nothing about whose.
+    const serves = bankReach(one.transaction.account);
     if (serves.length > 1) continue;
     const owner = serves.length === 1 ? byId.get(serves[0]!) : undefined;
     if (owner?.kind === "personal") continue;
@@ -213,12 +214,19 @@ export function whatWouldBeAsked(lines: readonly Suggestion[], howMany = AI_BATC
   // could have been anybody's -- and it said so, by answering nothing, on
   // seventeen lines of twenty. The owner is what narrows the chart to the
   // accounts that could be right.
+  // Whose account it is, and who else it pays for: the household's card that
+  // also pays a rental's repairs says so, so a repair can be the rental's.
   const owners = (account: string): string => {
-    const names = (model.banks[account] ?? [])
-      .map((id) => model.entities.find((e) => e.id === id)?.name)
+    const nameOf = (id: string): string | undefined => model.entities.find((e) => e.id === id)?.name;
+    const ticked = model.banks[account] ?? [];
+    const reach = bankReach(account)
+      .map(nameOf)
       .filter((name): name is string => name !== undefined);
-    if (names.length === 0 && model.entities.length === 1) return model.entities[0]?.name ?? "";
-    return names.length === 1 ? `${names[0]}'s account` : names.length > 1 ? `shared by ${names.join(" and ")}` : "";
+    if (reach.length === 0 && model.entities.length === 1) return model.entities[0]?.name ?? "";
+    const owner = ticked.length === 1 ? nameOf(ticked[0]!) : undefined;
+    if (owner === undefined) return reach.length === 1 ? `${reach[0]}'s account` : reach.length > 1 ? `shared by ${reach.join(" and ")}` : "";
+    const others = reach.filter((name) => name !== owner);
+    return others.length === 0 ? `${owner}'s account` : `${owner}'s account, also paying for ${others.join(" and ")}`;
   };
   // The consent screen promises never a bank account number, and the account
   // a line came from is usually one. Its last digits are enough to tell two
@@ -456,7 +464,7 @@ function perLineDetail(
     .map((one) => ({ key: lead(keywordFor(one.transaction)), payee: one.transaction.otherParty.trim(), code: one.code ?? "" }));
 
   return picked.map((one) => {
-    const serves = model.banks[one.transaction.account] ?? [];
+    const serves = bankReach(one.transaction.account);
     const own = accounts.filter((a) => a.entityId !== undefined && serves.includes(a.entityId));
     const options = (own.length >= 2 ? own : accounts).map(({ label, about }) => ({ label, about }));
     // By code: a coding is stored as "Rates and water - 420", the choices may
@@ -467,7 +475,7 @@ function perLineDetail(
     const context =
       owners.length === 0
         ? ""
-        : "This bank account belongs to " +
+        : "This bank account pays for " +
           owners
             .map(
               (entity) =>

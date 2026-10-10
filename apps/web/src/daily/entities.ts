@@ -13,6 +13,9 @@ import {
   gstUsually,
   record,
   saveEntities,
+  bankLabel,
+  bankReach,
+  betweenEntities,
 } from "../books.js";
 import { GST_OPTIONS } from "../reconcile.js";
 import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
@@ -21,7 +24,7 @@ import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { escapeHtml, note } from "../ui.js";
+import { note } from "../ui.js";
 import {
   feedAccountForNumber,
   parseXeroBankAccountList,
@@ -46,6 +49,10 @@ import {
   renameProblem,
   reportsNetOfGst,
   sectionForType,
+  banksNeedingOwner,
+  suggestedBankOwner,
+  isSeparatePerson,
+  pairKey,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
@@ -218,13 +225,46 @@ export function bankEntityTable(): HTMLElement {
 
 function bankTable(model: EntityModel): HTMLElement {
   const accounts = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
+  const wrap = document.createElement("div");
+  const nameOf = (id: string): string => model.entities.find((e) => e.id === id)?.name ?? id;
+
+  // Accounts from before an account had one owner, still ticked for several:
+  // each gets a suggested owner, confirmed here, one at a time or all at once.
+  const waiting = banksNeedingOwner(model);
+  if (waiting.length > 0) {
+    const box = document.createElement("div");
+    box.className = "journal-card";
+    box.append(
+      note(
+        `${waiting.length} bank account${waiting.length === 1 ? " is" : "s are"} still ticked for several entities. ` +
+          "Each now belongs to one: whose money it holds. What it pays for is decided by how each line is coded, " +
+          "so a rental's repair on the joint card is still the rental's. Check the suggested owner below, or " +
+          "confirm them all.",
+      ),
+    );
+    const all = document.createElement("button");
+    all.type = "button";
+    all.className = "primary";
+    all.textContent = "Confirm the suggested owners";
+    all.addEventListener("click", () => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      const banks = { ...live.banks };
+      const said: string[] = [];
+      for (const one of banksNeedingOwner(live)) {
+        if (one.suggested === undefined) continue;
+        banks[one.account] = [one.suggested];
+        said.push(`${bankLabel(one.account)} → ${nameOf(one.suggested)}`);
+      }
+      void saveEntities({ ...live, banks }, `Bank accounts given one owner each: ${said.join("; ")}`);
+    });
+    box.append(all);
+    wrap.append(box);
+  }
+
   const bankTable = document.createElement("table");
   bankTable.className = "entity-table";
   const bankHead = document.createElement("thead");
-  bankHead.innerHTML =
-    "<tr><th>Bank account</th>" +
-    model.entities.map((e) => `<th>${escapeHtml(e.name)}</th>`).join("") +
-    "</tr>";
+  bankHead.innerHTML = "<tr><th>Bank account</th><th>Belongs to</th><th></th></tr>";
   const bankBody = document.createElement("tbody");
 
   for (const account of accounts) {
@@ -237,32 +277,152 @@ function bankTable(model: EntityModel): HTMLElement {
     label.textContent = named !== undefined ? `${named} (${account})` : account;
     tr.append(label);
 
+    const ticked = model.banks[account] ?? [];
+    const several = ticked.length > 1;
+    const chosen = several ? suggestedBankOwner(model, account) : ticked[0];
+    const cell = document.createElement("td");
+    const pick = document.createElement("select");
+    pick.title = "Whose money this account holds. Lines on it can still be coded to any entity.";
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "— nobody yet —";
+    pick.append(none);
     for (const entity of model.entities) {
-      const cell = document.createElement("td");
-      const box = document.createElement("input");
-      box.type = "checkbox";
-      box.checked = (model.banks[account] ?? []).includes(entity.id);
-      box.addEventListener("change", () => {
-        // Read the model as it is now, not as it was when this row was drawn.
-        // Two changes made before the redraw would otherwise see the same
-        // starting point and the second would silently undo the first.
-        const live = state.ledger.entities ?? emptyEntityModel();
-        const current = new Set(live.banks[account] ?? []);
-        if (box.checked) current.add(entity.id);
-        else current.delete(entity.id);
-        const banks = { ...live.banks };
-        if (current.size === 0) delete banks[account];
-        else banks[account] = [...current];
-        void saveEntities({ ...live, banks });
-      });
-      cell.append(box);
-      tr.append(cell);
+      const option = document.createElement("option");
+      option.value = entity.id;
+      option.textContent = entity.name;
+      option.selected = entity.id === chosen;
+      pick.append(option);
     }
+    if (several) pick.classList.add("needs-choice");
+    pick.addEventListener("change", () => {
+      // Read the model as it is now, not as it was when this row was drawn.
+      const live = state.ledger.entities ?? emptyEntityModel();
+      const banks = { ...live.banks };
+      if (pick.value === "") delete banks[account];
+      else banks[account] = [pick.value];
+      void saveEntities(
+        { ...live, banks },
+        `${bankLabel(account)} belongs to ${pick.value === "" ? "nobody yet" : nameOf(pick.value)}`,
+      );
+    });
+    cell.append(pick);
+    tr.append(cell);
+
+    const said = document.createElement("td");
+    said.className = "cell-said-elsewhere";
+    if (several) {
+      said.textContent = `Was ticked for ${ticked.map(nameOf).join(", ")}. Suggested: ${chosen === undefined ? "choose one" : nameOf(chosen)}.`;
+    } else {
+      const reach = bankReach(account).filter((id) => id !== ticked[0]);
+      if (reach.length > 0) said.textContent = `Also pays for ${reach.map(nameOf).join(", ")}`;
+    }
+    tr.append(said);
     bankBody.append(tr);
   }
   bankTable.append(bankHead, bankBody);
-  return bankTable;
+  wrap.append(bankTable);
+  return wrap;
+}
 
+/**
+ * How money passing between two entities is recorded, for the pairs it has
+ * passed between, and whether one person's money paying for another's is a
+ * gift. The defaults follow the law: things owned directly are the owners'
+ * money; a company, trust or society can only owe or be owed.
+ */
+function betweenSettings(model: EntityModel): HTMLElement {
+  const wrap = document.createElement("div");
+  const heading = document.createElement("h4");
+  heading.textContent = "Money between entities";
+  wrap.append(heading);
+  const nameOf = (id: string): string => model.entities.find((e) => e.id === id)?.name ?? id;
+  const byId = new Map(model.entities.map((e) => [e.id, e]));
+
+  // The pairs money has actually passed between.
+  const { journals, accounts } = betweenEntities();
+  const entityOf = new Map(accounts.map((a) => [a.code, a.entityId]));
+  const pairs = new Set<string>();
+  for (const journal of journals) {
+    const ids = [...new Set(journal.lines.map((l) => entityOf.get(l.accountCode)).filter((id): id is string => id !== undefined))];
+    for (let i = 0; i < ids.length; i++) for (let j = i + 1; j < ids.length; j++) pairs.add(pairKey(ids[i]!, ids[j]!));
+  }
+  for (const key of Object.keys(model.between ?? {})) pairs.add(key);
+
+  if (pairs.size === 0) {
+    wrap.append(note("Nothing has passed between entities yet: each line is for the entity whose account it went through."));
+  } else {
+    wrap.append(
+      note(
+        "Where one entity's account pays for another's line, the books record the money passing between them. " +
+          "By default: for things owned directly, the owners putting money in or taking it out, by their shares; " +
+          "with a company, trust or society, a loan. See it under Reports, Money between entities.",
+      ),
+    );
+    const table = document.createElement("table");
+    table.className = "entity-table";
+    const tbody = document.createElement("tbody");
+    for (const key of [...pairs].sort()) {
+      const [a, b] = key.split("|") as [string, string];
+      const one = byId.get(a);
+      const two = byId.get(b);
+      if (one === undefined || two === undefined) continue;
+      const tr = document.createElement("tr");
+      const label = document.createElement("td");
+      label.className = "entity-left";
+      label.textContent = `${nameOf(a)} and ${nameOf(b)}`;
+      const cell = document.createElement("td");
+      const pick = document.createElement("select");
+      const usual = isSeparatePerson(one) || isSeparatePerson(two) ? "a loan" : "owners' money in and out";
+      for (const [value, text] of [
+        ["", `As usual: ${usual}`],
+        ["loan", "A loan between them"],
+        ["equity", "Owners' money in and out"],
+      ] as const) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = text;
+        option.selected = (model.between?.[key] ?? "") === value;
+        pick.append(option);
+      }
+      pick.addEventListener("change", () => {
+        const live = state.ledger.entities ?? emptyEntityModel();
+        const between = { ...(live.between ?? {}) };
+        if (pick.value === "") delete between[key];
+        else between[key] = pick.value as "loan" | "equity";
+        const { between: _old, ...rest } = live;
+        void saveEntities(
+          Object.keys(between).length > 0 ? { ...rest, between } : rest,
+          `Money between ${nameOf(a)} and ${nameOf(b)}: ${pick.selectedOptions[0]?.textContent ?? ""}`,
+        );
+      });
+      cell.append(pick);
+      tr.append(label, cell);
+      tbody.append(tr);
+    }
+    table.append(tbody);
+    wrap.append(table);
+  }
+
+  const gift = document.createElement("label");
+  const box = document.createElement("input");
+  box.type = "checkbox";
+  box.checked = model.ownerGifts === true;
+  gift.append(
+    box,
+    " When one person's money pays for something another owns -- the joint account paying for a property one of " +
+      "you owns alone -- it is a gift, not owed back",
+  );
+  box.addEventListener("change", () => {
+    const live = state.ledger.entities ?? emptyEntityModel();
+    const { ownerGifts: _was, ...rest } = live;
+    void saveEntities(
+      box.checked ? { ...rest, ownerGifts: true } : rest,
+      box.checked ? "Money between people: a gift" : "Money between people: owed back",
+    );
+  });
+  wrap.append(gift);
+  return wrap;
 }
 
 /**
@@ -933,9 +1093,14 @@ export function renderEntities(): void {
     bankHeading.textContent = "Bank accounts";
     body.append(bankHeading);
     body.append(
-      note("A bank account can serve several entities. Tick every one it pays for."),
+      note(
+        "Each bank account belongs to one entity: whose money it holds. A line on it is still for " +
+          "whichever entity it is coded to -- the household's card can pay a rental's repair -- and " +
+          "the books record the money passing between them.",
+      ),
     );
     body.append(bankTable(model));
+    body.append(betweenSettings(model));
   }
 
   // Bank rows in a chart carry no account number, so nothing can tell which

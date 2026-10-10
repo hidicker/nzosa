@@ -109,3 +109,25 @@ test("a purchase a treatment decided is not assumed", async () => {
   };
   assert.equal(resolve(spend).assumed, undefined);
 });
+
+test("a bank account has one owner, and one ticked for several is given a suggested one", async () => {
+  const { bankOwner, suggestedBankOwner, banksNeedingOwner } = await import("../dist/index.js");
+  const model = {
+    entities: [
+      { id: "h", name: "Ana", kind: "personal", owners: [{ name: "Ana", percent: 100 }] },
+      { id: "j", name: "Tom", kind: "personal", owners: [{ name: "Tom", percent: 100 }] },
+      { id: "both", name: "Both", kind: "personal", owners: [{ name: "Ana", percent: 50 }, { name: "Tom", percent: 50 }] },
+      { id: "totara", name: "Totara Street", kind: "commercial", owners: [{ name: "Ana", percent: 50 }, { name: "Tom", percent: 50 }] },
+      { id: "kowhai", name: "Kowhai Road", kind: "residential", owners: [{ name: "Ana", percent: 100 }] },
+    ],
+    accounts: {},
+    banks: { visa: ["h", "j", "totara", "kowhai"], payment: ["h", "j", "kowhai"], totara1: ["totara"], card: ["h", "kowhai"], rentals: ["totara", "kowhai"] },
+  };
+  assert.equal(bankOwner(model, "totara1"), "totara");
+  assert.equal(bankOwner(model, "visa"), undefined, "still ticked for several");
+  assert.equal(suggestedBankOwner(model, "visa"), "both", "the two people ticked are Both's owners");
+  assert.equal(suggestedBankOwner(model, "payment"), "both");
+  assert.equal(suggestedBankOwner(model, "card"), "h", "one person ticked");
+  assert.equal(suggestedBankOwner(model, "rentals"), "totara", "no person: the first ticked");
+  assert.deepEqual(banksNeedingOwner(model).map((b) => b.account).sort(), ["card", "payment", "rentals", "visa"]);
+});

@@ -1,11 +1,11 @@
 import {
   assetProceedsInUse,
   bookYears,
-  entityBankAccounts,
   invoiceAssignments,
   postedJournals,
   reportEngine,
   varianceInput,
+  journalInEntity,
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
@@ -347,11 +347,12 @@ function buildSheetViewsXml(splitRow = 3): string {
  */
 function buildSummaryTrialBalanceSheet(ctx: SheetContext): string {
   const { year, from, to, entityName, gstNumber, exportBasis, startYear, yearLabel } = ctx;
-  const scope = entityBankAccounts();
+  // The entity's journals: those through its own bank accounts, and those
+  // posting to its accounts from anybody's.
+  const inEntity = journalInEntity();
   const journals = postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
-    if (scope.length === 0) return true;
-    return journal.lines.some((line) => scope.includes(line.accountCode));
+    return inEntity === null || inEntity(journal);
   });
 
   const byCode = new Map(state.chart.map((a) => [a.code, a]));
@@ -561,11 +562,12 @@ function buildSummaryTrialBalanceSheet(ctx: SheetContext): string {
  */
 function buildGeneralLedgerSheet(ctx: SheetContext): string {
   const { year, from, to, entityName } = ctx;
-  const scope = entityBankAccounts();
+  // The entity's journals: those through its own bank accounts, and those
+  // posting to its accounts from anybody's.
+  const inEntity = journalInEntity();
   const journals = postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
-    if (scope.length === 0) return true;
-    return journal.lines.some((line) => scope.includes(line.accountCode));
+    return inEntity === null || inEntity(journal);
   });
 
   const rows = generalLedgerRows(journals);
@@ -772,11 +774,12 @@ function buildBankTransactionsSheet(ctx: SheetContext): string {
  */
 function buildRevenueExpensesSheet(ctx: SheetContext): string {
   const { year, from, to, entityName } = ctx;
-  const scope = entityBankAccounts();
+  // The entity's journals: those through its own bank accounts, and those
+  // posting to its accounts from anybody's.
+  const inEntity = journalInEntity();
   const journals = postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
-    if (scope.length === 0) return true;
-    return journal.lines.some((line) => scope.includes(line.accountCode));
+    return inEntity === null || inEntity(journal);
   });
 
   const byCode = new Map(state.chart.map((a) => [a.code, a]));

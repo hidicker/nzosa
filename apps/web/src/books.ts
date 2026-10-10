@@ -1,5 +1,8 @@
 import { redraw, showPage } from "./app.js";
-import { filedByPeriod, filedKey } from "@nzosa/core";
+import { filedByPeriod, filedKey,
+  betweenEntityJournals,
+  bankOwner as coreBankOwner,
+} from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
@@ -79,6 +82,7 @@ import type {
   VehicleUse,
   TripAccounts,
   TripClaim,
+  BetweenAccount,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
 import { booksCountry } from "./country.js";
@@ -920,12 +924,30 @@ export function varianceInput(): VarianceInput {
     // accounts against that company's filed returns and reported the rest of
     // the household as a disagreement.
     accounts: accountsFor(state.varianceAccounts),
+    // With an entity chosen and no bank accounts picked, the entity's return is
+    // what is coded to it, from any account: a commercial lease paid into the
+    // owners' joint account is still the property's output tax. Going by the
+    // property's own accounts alone left it off.
+    ...gstBelongsTo(),
     months: gstFrequency(),
     // The private use of a vehicle gives back GST once a year, in Box 9 of
     // the return covering the balance date.
     debitAdjustments: vehicleBox9(accountsFor(state.varianceAccounts)),
     otherPurchases: otherPurchasesFor,
     settles: settlementOf,
+  };
+}
+
+function gstBelongsTo(): { belongsTo?: (account: string, code: string) => boolean } {
+  if (state.entityFilter === "" || state.varianceAccounts.length > 0) return {};
+  const entity = state.entityFilter;
+  const own = new Set(entityBankAccounts());
+  const entityOf = entityOfCoding();
+  return {
+    belongsTo: (account, code) => {
+      const whose = code === "" ? undefined : entityOf(code);
+      return whose !== undefined ? whose === entity : own.has(account);
+    },
   };
 }
 
@@ -1134,6 +1156,110 @@ export function accountRate(label: string): "0" | "15" | "100" | null {
   const file = state.rules as RuleFileShape | undefined;
   const rate = rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));
   return rate === "0" || rate === "15" || rate === "100" ? rate : null;
+}
+
+/**
+ * The entity a coding belongs to, by the account it names, or undefined.
+ *
+ * What decides whose a line is: the account it is coded to. Which bank account
+ * it went through says only whose money paid it.
+ */
+export function entityOfCoding(): (code: string) => string | undefined {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const byLabel = new Map<string, string>();
+  for (const { account, label } of accountsForEditing()) {
+    const id = model.accounts[accountEntityKey(account)];
+    if (id !== undefined) byLabel.set(label, id);
+  }
+  return (code) => {
+    const direct = byLabel.get(code);
+    if (direct !== undefined) return direct;
+    const { code: digits, name } = splitAccountLabel(code);
+    return model.accounts[accountEntityKey({ code: digits, name })];
+  };
+}
+
+/**
+ * Whether a posted journal belongs in a report narrowed to the chosen entity:
+ * it moves one of the entity's own bank accounts, or one of its lines is
+ * posted to an account of the entity's. Null when no entity is chosen.
+ */
+export function journalInEntity(): ((journal: PostedJournal) => boolean) | null {
+  if (state.entityFilter === "") return null;
+  const entity = state.entityFilter;
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const banks = new Set(entityBankAccounts());
+  const own = (line: { accountCode: string; accountName: string }): boolean =>
+    banks.has(line.accountCode) ||
+    model.accounts[accountEntityKey({ code: line.accountCode, name: line.accountName })] === entity;
+  return (journal) => journal.lines.some(own);
+}
+
+let reachCache: { overrides: unknown; model: unknown; transactions: unknown; coded: Map<string, Set<string>> } | null = null;
+
+/**
+ * The entities a bank account pays for: the one it belongs to, and every one
+ * its lines have been coded to.
+ *
+ * What the account is for, as against whose it is. The household's card is the
+ * household's, but it also pays a rental's repairs, and the AI, the order of
+ * the account list and the care taken before a coding becomes a rule all need
+ * to know it reaches that far. Read from the codings themselves rather than
+ * from ticks somebody has to keep up to date.
+ */
+export function bankReach(account: string): string[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const overrides = state.ledger.overrides ?? {};
+  if (
+    reachCache === null ||
+    reachCache.overrides !== overrides ||
+    reachCache.model !== model ||
+    reachCache.transactions !== state.ledger.transactions
+  ) {
+    const entityOf = entityOfCoding();
+    const accountOf = new Map(state.ledger.transactions.map((t) => [t.id, t.account]));
+    const coded = new Map<string, Set<string>>();
+    for (const [id, decision] of Object.entries(overrides)) {
+      const bank = accountOf.get(id);
+      const code = (decision as { code?: string } | undefined)?.code ?? "";
+      if (bank === undefined || code === "") continue;
+      const whose = entityOf(code);
+      if (whose === undefined) continue;
+      const set = coded.get(bank) ?? new Set<string>();
+      set.add(whose);
+      coded.set(bank, set);
+    }
+    reachCache = { overrides, model, transactions: state.ledger.transactions, coded };
+  }
+  const ticked = model.banks[account] ?? [];
+  const coded = reachCache.coded.get(account) ?? new Set<string>();
+  return model.entities.map((e) => e.id).filter((id) => ticked.includes(id) || coded.has(id));
+}
+
+/**
+ * Money passing between entities: worked out from the posted journals, never
+ * stored. Kept apart from `postedJournals()`, whose readers know only the
+ * chart's accounts; the report on it, and the year-end check of overdrawn
+ * current accounts, read it from here.
+ */
+let betweenCache: { ledger: unknown; chart: unknown; rules: unknown; value: { journals: PostedJournal[]; accounts: BetweenAccount[] } } | null = null;
+
+export function betweenEntities(): { journals: PostedJournal[]; accounts: BetweenAccount[] } {
+  // Posting the whole ledger is not free, and Actions required asks on every
+  // redraw: worked out again only when the books, the chart or the rules change.
+  if (betweenCache !== null && betweenCache.ledger === state.ledger && betweenCache.chart === state.chart && betweenCache.rules === state.rules) {
+    return betweenCache.value;
+  }
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const held = new Set(state.ledger.transactions.map((t) => t.account));
+  const value = betweenEntityJournals(postedJournals(), {
+    model,
+    bankOwner: (account) => coreBankOwner(model, account),
+    isBank: (code) => held.has(code),
+    overrides: model.between,
+  });
+  betweenCache = { ledger: state.ledger, chart: state.chart, rules: state.rules, value };
+  return value;
 }
 
 export function unregisteredCode(): (code: string) => boolean {

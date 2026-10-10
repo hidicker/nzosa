@@ -9,6 +9,7 @@ import {
   settledAlready,
   transferSuggestions,
   gstFrequency,
+  betweenEntities,
 } from "../books.js";
 import { DIRECTORY_VIA, aiSuggestionFor, suggestFromDirectory } from "../ai.js";
 import { feedTieNow } from "./opening-balances.js";
@@ -24,12 +25,12 @@ import { codingReconciliationWaiting, unmatchedReferenceWaiting } from "../migra
 import { bankLinkState, setupSteps } from "../migrate/setup-wizard.js";
 import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { emptyEntityModel, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
+import { banksNeedingOwner, emptyEntityModel, overdrawnCurrentAccounts, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry } from "../country.js";
 import { societyFiguresEntered } from "./society-report-page.js";
-import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearOf } from "../tax-year.js";
 
 /**
  * Everything waiting to be done, in one list, each a click from where it is
@@ -242,6 +243,53 @@ export function actionItems(): ActionItem[] {
           `${orgs.map((o) => o.name).join(", ")}: enter the operating payments, current assets and total expenses for the year ended ` +
           `${taxYearEndSaid(finished)} from the signed financial statements. They decide which reporting standard applies next.`,
         go: () => showPage("society"),
+      });
+    }
+  }
+
+  // Accounts still ticked for several entities, from before each had one owner.
+  {
+    const waiting = banksNeedingOwner(state.ledger.entities ?? emptyEntityModel());
+    if (waiting.length > 0) {
+      items.push({
+        key: "bank-owners",
+        what: "Bank accounts to give one owner",
+        count: waiting.length,
+        urgency: "amber",
+        detail:
+          `${waiting.length === 1 ? "A bank account is" : `${waiting.length} bank accounts are`} still ticked for several entities. ` +
+          "Each now belongs to one, with a suggestion to confirm on Entities & accounts.",
+        go: () => showPage("entities"),
+      });
+    }
+  }
+
+  // A company (or trust, or society) owed money by an owner at the year just
+  // finished: interest-free, that is a taxable benefit.
+  {
+    const finished = taxYearOf(new Date().toISOString().slice(0, 10)) - 1;
+    const { journals, accounts } = betweenEntities();
+    const model = state.ledger.entities ?? emptyEntityModel();
+    const overdrawn = overdrawnCurrentAccounts(journals, accounts, taxYearEnd(finished) as IsoDate);
+    if (overdrawn.length > 0) {
+      const nameOf = (id: string): string => model.entities.find((e) => e.id === id)?.name ?? id;
+      items.push({
+        key: `overdrawn-${finished}`,
+        what: "Overdrawn current accounts",
+        count: overdrawn.length,
+        urgency: "amber",
+        detail:
+          overdrawn.map((o) => `${o.person} owes ${nameOf(o.entityId)} $${(o.amount / 100).toFixed(2)}`).join("; ") +
+          ` at ${taxYearEndSaid(finished)}. A loan to an owner with no interest is a taxable benefit: charge interest at ` +
+          "Inland Revenue's prescribed rate, or clear it with a salary or a dividend. Ask your accountant.",
+        go: () => {
+          showPage("reports");
+          const kind = document.getElementById("report-kind") as HTMLSelectElement | null;
+          if (kind !== null) {
+            kind.value = "between";
+            kind.dispatchEvent(new Event("change"));
+          }
+        },
       });
     }
   }

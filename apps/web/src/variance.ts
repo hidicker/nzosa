@@ -45,6 +45,14 @@ export interface VarianceInput {
   notes: readonly VarianceNote[];
   accounts: readonly string[];
   /**
+   * Which lines are on this return, where an entity decides rather than a
+   * choice of bank accounts: given a line's bank account and its coding (empty
+   * when uncoded). A line coded to the entity is on its return whichever
+   * account it went through; an uncoded one, when it is on the entity's own
+   * account. When set, it is used in place of `accounts` to choose lines.
+   */
+  belongsTo?: (account: string, code: string) => boolean;
+  /**
    * How the chart of accounts says a code is treated, when nothing else does.
    *
    * Every other report consults this and the return did not, so an account
@@ -163,13 +171,15 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     ? { ...split, ...settledGst(split.transactions, split.overrides, input.settles) }
     : split;
   const ruleFile = input.rules as RuleFile | undefined;
-
-  const selected =
-    input.accounts.length === 0
-      ? expanded.transactions
-      : expanded.transactions.filter((t) => input.accounts.includes(t.account));
-
   const codingRules: RuleSet = { ...(ruleFile ?? {}), overrides: expanded.overrides };
+
+  const belongs = input.belongsTo;
+  const selected =
+    belongs !== undefined
+      ? expanded.transactions.filter((t) => belongs(t.account, categorise(t, codingRules).code ?? ""))
+      : input.accounts.length === 0
+        ? expanded.transactions
+        : expanded.transactions.filter((t) => input.accounts.includes(t.account));
 
   const resolve = gstResolver({
     ownAccounts: new Set(

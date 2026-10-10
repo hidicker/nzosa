@@ -23,6 +23,7 @@ import {
   accountRate,
   invoicesInPlay,
   invoicesToMatch,
+  bankReach,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -304,7 +305,7 @@ function codesByBank(codes: readonly string[]): (bank: string) => readonly strin
   return (bank) => {
     const known = cache.get(bank);
     if (known !== undefined) return known;
-    const serves = new Set(model.banks[bank] ?? []);
+    const serves = new Set(bankReach(bank));
     const own = (label: string): boolean => serves.has(entityOf.get(label) ?? "");
     const ordered =
       serves.size === 0 ? codes : [...codes.filter(own), ...codes.filter((c) => !own(c))];
@@ -2162,7 +2163,7 @@ async function ruleFromDecision(
   // hardware-store receipt made every purchase there a rental repair -- 65
   // personal lines one Accept all away from a return. So it is offered, for
   // this account only, with what it would reach.
-  const serves = (state.ledger.entities?.banks ?? {})[transaction.account] ?? [];
+  const serves = bankReach(transaction.account);
   if (serves.length > 1) {
     const offered: CategoryRule = rule;
     const decided = accountDecided();

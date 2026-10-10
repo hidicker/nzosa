@@ -101,7 +101,9 @@ export type JournalSource =
   /** A year-end adjustment: private use of a vehicle, prepayments. */
   | "adjustment"
   /** A pay run. */
-  | "payroll";
+  | "payroll"
+  /** Money passing between entities: see between-entities.ts. */
+  | "between";
 
 /**
  * Which basis this journal's tax belongs to.

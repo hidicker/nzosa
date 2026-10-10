@@ -69,6 +69,15 @@ works).
 
 ## Online books
 
+- **Bring the GitHub workflows up to date.** The "Deploy website" run on
+  10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
+  target Node.js 20, which GitHub has deprecated (they are being run on
+  Node.js 24 for now), and that `ubuntu-latest` moves to Ubuntu 26 from
+  19 October 2026. Move both actions to their current major versions in
+  `.github/workflows/deploy.yml` and `deploy-functions.yml`, and run a deploy
+  after 19 October to check nothing in the build or upload depends on the old
+  image.
+
 - **Own Supabase project: no bank feed, AI or morning run.** These are edge
   functions, and a person's own project does not have them. Deploying them
   there would need the person's own Akahu and AI keys, and a guided set-up.

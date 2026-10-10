@@ -190,29 +190,37 @@ const LOAN_FROM = {
 /**
  * A partnership's equity, partner by partner.
  *
- * Each partner has a current account -- capital put in, and their share of the
- * profit credited at year end -- and a drawings account for what they take
- * out, as an accountant's partnership chart has. A partner's drawings and any
- * "salary" are not expenses of the partnership; they come out of this. Partners
- * not yet named are numbered, to be renamed when they are.
+ * Four accounts each, as New Zealand practices' partnership charts have them
+ * (the Accountants Office, Accountants Enterprise and APS templates for Xero
+ * all agree): capital the partner put in, their share of the profit credited
+ * at year end, their private share of expenses -- the personal part of the
+ * phone or the car -- and what they drew out. A partner's drawings and any
+ * "salary" are not expenses of the partnership; they come out of this. Those
+ * templates also carry an opening balance and a profit-distribution expense
+ * per partner, which their software needs to roll a year over; the books here
+ * carry balances forward themselves, so neither is wanted.
+ *
+ * Codes 95N to 98N for partner N, up to nine. Partners not yet named are
+ * numbered, to be renamed when they are.
  */
 function partnerAccounts(partners: readonly string[]): Account[] {
   const names = partners.length > 0 ? partners.slice(0, 9) : ["Partner 1", "Partner 2"];
+  const equity = (code: string, name: string, description: string): Account => ({
+    code,
+    name,
+    type: "Equity",
+    taxCode: "No GST",
+    description,
+  });
   return names.flatMap((name, i) => [
-    {
-      code: `97${i + 1}`,
-      name: `${name}: current account`,
-      type: "Equity",
-      taxCode: "No GST",
-      description: `${name}'s capital and share of the profit, less drawings closed off at year end`,
-    },
-    {
-      code: `98${i + 1}`,
-      name: `${name}: drawings`,
-      type: "Equity",
-      taxCode: "No GST",
-      description: `What ${name} took out during the year, including private use of partnership money`,
-    },
+    equity(`95${i + 1}`, `${name}: capital introduced`, `Money and assets ${name} put into the partnership`),
+    equity(`96${i + 1}`, `${name}: share of profit`, `${name}'s share of the year's profit (or loss), credited at year end`),
+    equity(
+      `97${i + 1}`,
+      `${name}: private share of expenses`,
+      `The private part of costs the partnership paid, such as ${name}'s personal use of the phone or vehicle`,
+    ),
+    equity(`98${i + 1}`, `${name}: drawings`, `What ${name} took out during the year`),
   ]);
 }
 

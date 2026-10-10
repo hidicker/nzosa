@@ -130,9 +130,13 @@ test("a partnership's chart: no income tax or directors, and an account each for
   assert.ok(!codes(firm).includes("970AT") && !codes(firm).includes("980AT"), "no single owner's equity");
   assert.equal(firm.find((a) => a.code === "910AT")?.name, "Loans from partners");
   assert.deepEqual(
-    firm.filter((a) => /^9[78][12]AT$/.test(a.code)).map((a) => a.name),
-    ["Ana: current account", "Ana: drawings", "Tom: current account", "Tom: drawings"],
+    firm.filter((a) => /^9[5-8][12]AT$/.test(a.code)).map((a) => `${a.code} ${a.name}`),
+    [
+      "951AT Ana: capital introduced", "961AT Ana: share of profit", "971AT Ana: private share of expenses", "981AT Ana: drawings",
+      "952AT Tom: capital introduced", "962AT Tom: share of profit", "972AT Tom: private share of expenses", "982AT Tom: drawings",
+    ],
   );
+  assert.ok(firm.every((a) => !/^9[5-8][12]AT$/.test(a.code) || a.type === "Equity"));
   assert.equal(new Set(codes(firm)).size, firm.length, "no code twice");
   const unnamed = standardAccounts("business", { structure: "partnership" });
   assert.ok(unnamed.some((a) => a.name === "Partner 2: drawings"));

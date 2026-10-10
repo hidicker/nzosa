@@ -81,7 +81,7 @@ export const state = {
    * `nocode` narrows to the lines no rule could code at all -- those cannot be
    * accepted in a hurry, so they are the ones worth finding.
    */
-  reconcileFilter: "todo" as "todo" | "suggested" | "ai" | "nocode" | "coded" | "between" | "all",
+  reconcileFilter: "todo" as "todo" | "suggested" | "ai" | "nocode" | "coded" | "between" | "gstdiff" | "all",
   splitting: null as string | null,
   expanded: null as string | null,
   reference: [] as ReferenceLine[],

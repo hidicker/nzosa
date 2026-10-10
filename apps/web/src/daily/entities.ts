@@ -739,6 +739,16 @@ export function renderEntities(): void {
       "and reports include it.";
     gstWrap.append(gstBox, document.createTextNode(" GST registered"));
     gstBox.addEventListener("change", () => {
+      const sure = confirm(
+        `${entity.name} ${gstBox.checked ? "is" : "is not"} registered for GST?\n\n` +
+          `Lines not yet confirmed will be suggested ${gstBox.checked ? "with GST" : "with no GST"}. Lines already ` +
+          "confirmed keep the GST they were confirmed with: change any that need it on Reconcile, where the filter " +
+          '"GST differs from registration" lists them.',
+      );
+      if (!sure) {
+        gstBox.checked = !gstBox.checked;
+        return;
+      }
       const live = state.ledger.entities ?? emptyEntityModel();
       void saveEntities(
         {

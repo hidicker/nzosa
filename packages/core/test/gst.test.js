@@ -623,6 +623,26 @@ test("a line coded to an entity not registered for GST carries none, whatever el
   assert.equal(result.boxes.box12, 1500, "only the registered entity's purchase is claimed");
 });
 
+test("a confirmed line keeps the GST it was confirmed with, whatever the entity's registration becomes", () => {
+  const before = txn("2025-06-03", -11500, { id: "before" });
+  const unconfirmed = txn("2025-06-04", -11500, { id: "unconfirmed" });
+  const partOfSplit = txn("2025-06-05", -11500, { id: "part", extras: { splitOf: "whole" } });
+  const resolve = gstResolver({
+    codeOf: () => "Shop Repairs",
+    chartTreatment: () => ({ treatment: "standard", side: "purchases" }),
+    overrides: {
+      // Confirmed at 15% while the entity was registered; it has since been unticked.
+      before: { treatment: "standard", side: "purchases", confirmed: true, note: "confirmed" },
+      unconfirmed: { treatment: "standard", side: "purchases", note: "typed, not confirmed" },
+      part: { treatment: "standard", side: "purchases", note: "Split part 1 of 2" },
+    },
+    unregistered: () => true,
+  });
+  assert.equal(resolve(before).treatment, "standard", "confirmed: kept");
+  assert.equal(resolve(partOfSplit).treatment, "standard", "a saved split's part: kept");
+  assert.equal(resolve(unconfirmed).treatment, "out-of-scope", "not confirmed: follows the registration");
+});
+
 test("an uncoded line on an unregistered entity's bank account carries no GST", () => {
   // A household's groceries showed 15% until coded, and the year-end balances
   // carried the GST. The bank account says whose money it is before any code does.

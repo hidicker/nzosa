@@ -165,6 +165,18 @@ export interface GstRulesOptions {
 }
 
 /**
+ * The GST a line was confirmed with: an override marked confirmed, or a part
+ * of a saved split, that states a treatment.
+ */
+function keptGst(transaction: Transaction, overrides: Overrides | undefined): GstClassification | undefined {
+  const override = overrides?.[transaction.id];
+  if (override === undefined || override.treatment === undefined) return undefined;
+  const isSplitPart = transaction.extras?.["splitOf"] !== undefined;
+  if (override.confirmed !== true && !isSplitPart) return undefined;
+  return gstOverride(transaction, overrides);
+}
+
+/**
  * Exclusions that apply regardless of business.
  *
  * Money moving between accounts you own is not a supply; neither is repaying
@@ -311,10 +323,16 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
       };
     }
 
+    // A confirmed line keeps the GST it was confirmed with. Registration, like
+    // any other setting, decides what is suggested for lines not yet confirmed;
+    // a confirmed line changes only when somebody recodes it. (Ticking or
+    // unticking "GST registered" used to rewrite every year's lines.)
+    const kept = keptGst(transaction, options.overrides);
+    if (kept !== undefined) return onAccountSide(kept, transaction);
+
     // Then who the line belongs to. An entity that is not registered has no
-    // GST to account for, so nothing said about the line's tax can give it
-    // some -- not a rule, not the chart, and not an answer saved before the
-    // account was given to the entity.
+    // GST to account for, so nothing suggested for an unconfirmed line can give
+    // it some -- not a rule, not the chart.
     const owner = options.codeOf?.(transaction) ?? null;
     if (owner !== null && options.unregistered?.(owner) === true) {
       return {

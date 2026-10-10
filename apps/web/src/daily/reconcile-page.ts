@@ -197,6 +197,7 @@ export function renderReconcile(): void {
     nocode: `${shown.length} with nothing suggested`,
     coded: `${shown.length} coded`,
     between: `${shown.length} between entities`,
+    gstdiff: `${shown.length} confirmed with GST that differs from the entity's registration`,
     all: `${shown.length} lines`,
   };
   $("reconcile-hint").textContent =

@@ -17,9 +17,10 @@ property manager statements, the asset register, pay runs, vehicle use and
 prepayments, opening balances.
 
 So an entry is only as fixed as everything it is built from. Confirmed
-codings and their GST are fixed: every way of confirming stores them, and no
-rule, AI answer or account setting overrides them. The gaps below are the
-other inputs: settings that reach back over finished periods when they are
+codings and their GST are fixed: the GST is stored with every confirmed line
+(by the save that confirms it, whatever route confirmed it), and no rule, AI
+answer, account setting or GST registration overrides it. The gaps below are
+the other inputs: settings that reach back over finished periods when they are
 changed, without saying so.
 
 Lock dates are the backstop. A save that changes a figure inside a locked
@@ -30,7 +31,7 @@ catches each case today.
 
 | # | What the person does | What changes, silently | Caught by lock dates? |
 |---|---|---|---|
-| 1 | Ticks or unticks **GST registered** on an entity | GST on every line of that entity, all years, confirmed lines included: registration overrides a line's stored treatment. Past GST returns are worked out again. | Yes, both: the returns change, and so do the postings' totals by account (GST moves in or out of the cost). |
+| 1 | ~~Ticks or unticks **GST registered** on an entity~~ | Fixed 10 October 2026: registration now only decides what is suggested for lines not yet confirmed. Confirmed lines keep their stored GST; Reconcile's "GST differs from registration" filter lists the ones to review. | — |
 | 2 | Changes an account's **type** (say Expense to Current Asset) | Every line ever coded to it moves between the profit and loss and the balance sheet. A confirmed line's GST **side** (sales, Box 5, or purchases, Box 11) follows the account's type, so past returns can change boxes. | Year lock: **no** (it compares totals by account code, which do not change). GST lock: yes, for the box. |
 | 3 | Moves an account to **another entity** (Entities & accounts, entity column) | Every line coded to it, all years, moves to the other entity: its profit and loss, rental schedule, IR3 share, GST return when one entity is chosen, and now the money between entities. | **No**, where both entities have the same GST registration: the year lock compares by code, and the GST lock compares the return for all entities together. Yes where one is registered and the other not. |
 | 4 | Changes an entity's **owners or shares** | Past years' Income by owner and IR3 shares, and the split of owners' funds introduced and drawings for every line (the stored choice keeps whose money and how, not the shares). | IR3 and Income by owner: **no** (not postings). Money between entities: yes. |
@@ -64,8 +65,8 @@ The same principle as money between entities: a setting applies from when it
 is changed, and reaching what is already confirmed is a separate, deliberate
 step that says what it will change.
 
-1. **GST registration with a date** (1): registered from a day, deregistered
-   from a day, as Inland Revenue has it. Lines before the date keep their GST.
+1. ~~GST registration with a date~~ (1): done differently, by keeping each
+   confirmed line's GST and reviewing lines on Reconcile.
 2. **Say what an account change reaches** (2, 3, 10): changing an account's type
    or entity says "N confirmed lines in M years will move from the profit and
    loss to the balance sheet" (or "to Totara Street"), and asks. Better still,

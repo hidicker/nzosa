@@ -23,11 +23,6 @@ from when it is changed, and reaching what is already confirmed is a separate,
 deliberate step that says what it will change (as money between entities now
 works).
 
-- **GST registration with a date.** Unticking "GST registered" rewrites every
-  year's entries for the entity: the GST moves into the cost, and past returns
-  change. Registered from a day and deregistered from a day, as Inland Revenue
-  records it, would leave earlier lines alone. (The stored GST on confirmed
-  lines is kept, so ticking it again restores everything.)
 - **Changing an account's type or entity says what it reaches, and asks.** A
   type change moves all its history between the profit and loss and the balance
   sheet and can move confirmed lines between Box 5 and Box 11; an entity change

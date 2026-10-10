@@ -4,6 +4,7 @@ import { filedByPeriod, filedKey,
   bankOwner as coreBankOwner,
   betweenAccountPlan,
   suggestSuffix,
+  splitPartId,
 } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
@@ -88,6 +89,9 @@ import type {
   BetweenAccount,
   PlannedBetweenAccount,
   LineChoice,
+  TransactionOverride,
+  GstTreatment,
+  GstSide,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
@@ -533,6 +537,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     if (state.reconcileFilter === "todo" && settled(one)) return false;
     if (state.reconcileFilter === "coded" && !settled(one)) return false;
     if (state.reconcileFilter === "between" && betweenTagFor(one.transaction, one.code) === null) return false;
+    if (state.reconcileFilter === "gstdiff" && !gstDiffers(one)) return false;
     // A line with no code is one no rule matched. Confirming it means deciding
     // what it is, rather than agreeing with a suggestion.
     if (state.reconcileFilter === "nocode" && !nothingHasAnswered(one)) return false;
@@ -1500,6 +1505,130 @@ export function storeBetweenChoices(ledger: StoredLedger): StoredLedger {
   const stamped = { ...ledger, betweenLines: next };
   state.ledger = stamped;
   return stamped;
+}
+
+/**
+ * Store, on every confirmed line that has none, the GST it shows now.
+ *
+ * A confirmed line keeps its own GST: registration, rules and the chart only
+ * suggest it for lines not yet confirmed. That holds only if the GST is stored
+ * with the line, and some ways of confirming (bulk confirmations among them)
+ * stored the account alone. Stored as it is shown, so no figure moves.
+ * Returns the new overrides and splits, and what changed, or null if nothing.
+ */
+function confirmedGstToStore(): {
+  overrides: Record<string, TransactionOverride>;
+  splits: NonNullable<StoredLedger["splits"]>;
+  batch: { id: string; before: TransactionOverride | null }[];
+  splitIds: string[];
+} | null {
+  const current = state.ledger.overrides ?? {};
+  const currentSplits = state.ledger.splits ?? {};
+  const unregistered = unregisteredCode();
+  const missing = Object.entries(current).filter(
+    ([, o]) =>
+      o.confirmed === true &&
+      (o.treatment === undefined ||
+        // Shown with no GST only because its entity is not registered.
+        (o.code !== undefined && o.treatment !== "out-of-scope" && unregistered(o.code) && state.ledger.gstKeptFrom === undefined)),
+  );
+  const partsMissing = Object.entries(currentSplits).filter(([, parts]) => parts.some((p) => p.code !== undefined && p.treatment === undefined));
+  if (missing.length === 0 && partsMissing.length === 0) return null;
+
+  const engine = reportEngine();
+  if (engine === null) return null;
+  const byId = new Map(engine.transactions.map((t) => [t.id, t]));
+  const overrides = { ...current };
+  const batch: { id: string; before: TransactionOverride | null }[] = [];
+  for (const [id, override] of missing) {
+    let treatment: GstTreatment;
+    let side: GstSide;
+    if (override.treatment !== undefined) {
+      treatment = "out-of-scope";
+      side = "none";
+    } else {
+      const line = byId.get(id);
+      if (line === undefined) continue;
+      const shown = engine.classify(line);
+      treatment = shown.treatment;
+      side = shown.side;
+    }
+    batch.push({ id, before: override });
+    overrides[id] = { ...override, treatment, side };
+  }
+  const splits = { ...currentSplits };
+  const splitIds: string[] = [];
+  for (const [id, parts] of partsMissing) {
+    splits[id] = parts.map((part, index) => {
+      if (part.code === undefined || part.treatment !== undefined) return part;
+      const line = byId.get(splitPartId(id, index));
+      if (line === undefined) return part;
+      const shown = engine.classify(line);
+      return { ...part, treatment: shown.treatment, side: shown.side };
+    });
+    splitIds.push(id);
+  }
+  if (batch.length === 0 && splitIds.length === 0) return null;
+  return { overrides, splits, batch, splitIds };
+}
+
+/**
+ * Once, as books open: store the GST every confirmed line shows today where it
+ * has none stored. In memory; the caller saves it and records it in History.
+ * Null when there was nothing to store.
+ */
+export function keepConfirmedGst(): { batch: { id: string; before: TransactionOverride | null }[]; splitIds: string[] } | null {
+  const found = confirmedGstToStore();
+  const first = state.ledger.gstKeptFrom === undefined;
+  if (found === null) {
+    if (first) state.ledger = { ...state.ledger, gstKeptFrom: new Date().toISOString().slice(0, 10) };
+    return first ? { batch: [], splitIds: [] } : null;
+  }
+  state.ledger = {
+    ...state.ledger,
+    overrides: found.overrides,
+    splits: found.splits,
+    gstKeptFrom: state.ledger.gstKeptFrom ?? new Date().toISOString().slice(0, 10),
+  };
+  return { batch: found.batch, splitIds: found.splitIds };
+}
+
+/**
+ * Before every save: a line confirmed by any route, without its GST, gets the
+ * GST it shows stored with it, in the same save.
+ */
+export function storeConfirmedGst(ledger: StoredLedger): StoredLedger {
+  if (ledger !== state.ledger) return ledger;
+  const found = confirmedGstToStore();
+  if (found === null) return ledger;
+  const stored = { ...ledger, overrides: found.overrides, splits: found.splits };
+  state.ledger = stored;
+  return stored;
+}
+
+/**
+ * A confirmed line whose GST does not follow its entity's registration: GST on
+ * a line of an entity not registered, or no GST on a line of a registered one
+ * coded to an account that usually carries it. The lines to look at after a
+ * change of registration; most of the second kind are right (an overseas
+ * purchase), which is why each is a decision on Reconcile.
+ */
+export function gstDiffers(one: Suggestion): boolean {
+  if (one.code === null || one.code === "") return false;
+  const override = (state.ledger.overrides ?? {})[one.transaction.id];
+  if (override?.confirmed !== true) return false;
+  if ((state.ledger.transfers ?? {})[one.transaction.id] !== undefined) return false;
+  const whose = entityOfCoding()(one.code);
+  if (whose === undefined) return false;
+  const entity = (state.ledger.entities ?? emptyEntityModel()).entities.find((e) => e.id === whose);
+  if (entity === undefined) return false;
+  const carries = one.classification.treatment === "standard";
+  if (entity.gstRegistered === false) return carries;
+  if (carries) return false;
+  const file = state.rules as RuleFileShape | undefined;
+  const usual = (file?.codeTreatments ?? {})[one.code] ?? chartTreatmentOf(one.code);
+  const usualTreatment = typeof usual === "string" ? usual : (usual as { treatment?: string } | null)?.treatment;
+  return usualTreatment === "standard";
 }
 
 export function unregisteredCode(): (code: string) => boolean {

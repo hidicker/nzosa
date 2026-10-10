@@ -389,6 +389,13 @@ export interface StoredLedger {
    * core's between-entities.ts.
    */
   betweenLines?: Record<string, LineChoice>;
+  /**
+   * The day these books began keeping each confirmed line's own GST, whatever
+   * the entity's registration later says. Before it, an unregistered entity's
+   * lines showed no GST whatever was stored with them; the step that set this
+   * stored "no GST" on those lines, so nothing moved.
+   */
+  gstKeptFrom?: string;
   /** Actions required, put off until a day: item to the day it comes back. */
   snoozed?: Record<string, string>;
   /** Unmatched lines in external reference exports (e.g. Xero) dismissed with a reason. Key is line key -> { reason, at }. */
@@ -776,6 +783,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
     ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
     ...(ledger.betweenLines ? { betweenLines: ledger.betweenLines } : {}),
+    ...(ledger.gstKeptFrom ? { gstKeptFrom: ledger.gstKeptFrom } : {}),
     ...(ledger.beforeStartLeft ? { beforeStartLeft: ledger.beforeStartLeft } : {}),
     ...(ledger.booksAbout ? { booksAbout: ledger.booksAbout } : {}),
   };

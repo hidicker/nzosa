@@ -24,6 +24,9 @@ import {
   tidyChart,
   ensureBetweenAccounts,
   storeBetweenChoices,
+  keepConfirmedGst,
+  storeConfirmedGst,
+  record,
 } from "./books.js";
 import {
   renderBooks,
@@ -193,7 +196,9 @@ async function init(): Promise<void> {
   // Before anything can be saved: locked periods stay as they were locked.
   installLockGuard(() => showPage(state.page));
   // The choice for money between entities is stored with each line as it is confirmed.
-  setBeforeSave(storeBetweenChoices);
+  // Every confirmed line keeps its own GST, and its choice for money between
+  // entities, stored by the save that confirmed it.
+  setBeforeSave((ledger) => storeBetweenChoices(storeConfirmedGst(ledger)));
   for (const link of document.querySelectorAll<HTMLAnchorElement>("#sidebar-rules-sublinks a")) {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -211,7 +216,23 @@ async function init(): Promise<void> {
     reclassify();
     // The books as opened are what the locks are measured against.
     state.chart = state.ledger.chart ?? [];
+    // Once: confirmed lines keep their own GST from now on, so those showing
+    // none only because their entity is unregistered have that stored first.
+    // Before the lock baseline, so the locks measure the books as they stand.
+    const kept = keepConfirmedGst();
     resetLockBaseline();
+    if (kept !== null) {
+      await savePart(state.ledger);
+      if (kept.batch.length > 0 || kept.splitIds.length > 0) {
+        const lines = kept.batch.length + kept.splitIds.length;
+        await record(
+          "codingBatch",
+          `GST stored with ${lines} confirmed line${lines === 1 ? "" : "s"}, as each was shown`,
+          kept.batch,
+          null,
+        );
+      }
+    }
     // Accounts for money between entities, where the books lack any.
     void ensureBetweenAccounts().then(async (added) => {
       // Lines confirmed before choices were kept with them get theirs now,

@@ -55,12 +55,13 @@ import {
 } from "@nzosa/core";
 import type { Account, Entity } from "@nzosa/core";
 import { societyFiguresEntered } from "../daily/society-report-page.js";
-import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
+import { taxYearEndSaid, taxYearOf, taxYearStart } from "../tax-year.js";
 import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
 import { isDemoBuild } from "../ai-consent.js";
 import { savePart } from "../store.js";
 import { anyModuleOn, applyModules, moduleOn, modulesHere, modulesPanel } from "../modules.js";
-import { onboarding, rememberSource, sourceForTheseBooks } from "./onboarding-state.js";
+import { booksStartDate, chosenStartDate, onboarding, rememberSource, sourceForTheseBooks } from "./onboarding-state.js";
+import { xeroAgentPrompt } from "./xero-agent-prompt.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
@@ -632,6 +633,58 @@ function spreadsheetMigrationFiles(): SourceFile[] {
   ];
 }
 
+/**
+ * The Xero exports done by an AI browser agent, for anybody happy to have one
+ * click through Xero for them: the prompt to give it, shown in full so it can
+ * be read before it is used.
+ */
+function agentExportPanel(): HTMLElement {
+  const fold = document.createElement("details");
+  fold.className = "setup-migration-details";
+  const summary = document.createElement("summary");
+  summary.className = "setup-migration-summary";
+  summary.textContent = "Or let an AI browser do the exports";
+  fold.append(summary);
+  fold.append(
+    note(
+      "If you use a browser with an AI agent in it, such as Claude in Chrome, sign in to Xero there, then give " +
+        "the agent this prompt. It exports each file above with the right settings and dates, and saves it to " +
+        "your Downloads folder; you then drop the files in here. It is told to read and export only, and to stop " +
+        "and ask you at any sign-in, code or approval. While it works, the AI company sees what is on the screen.",
+    ),
+  );
+  // The day chosen in the guided start; else the start of the year the
+  // earliest bank line falls in; else this year.
+  const earliest = state.ledger.transactions.reduce<string | undefined>((min, t) => (min === undefined || t.date < min ? t.date : min), undefined);
+  const start = chosenStartDate() ?? (earliest !== undefined ? taxYearStart(taxYearOf(earliest)) : booksStartDate());
+  const text = xeroAgentPrompt(start, XERO_TRIAL_BALANCE, XERO_ACCOUNT_TRANSACTIONS);
+  const shown = document.createElement("textarea");
+  shown.readOnly = true;
+  shown.rows = 14;
+  shown.value = text;
+  shown.style.width = "100%";
+  const said = document.createElement("span");
+  said.className = "cell-said-elsewhere";
+  const copy = document.createElement("button");
+  copy.type = "button";
+  copy.className = "primary";
+  copy.textContent = "Copy the prompt";
+  copy.addEventListener("click", () => {
+    void navigator.clipboard.writeText(text).then(
+      () => {
+        said.textContent = " Copied. Paste it into your AI browser, signed in to Xero.";
+      },
+      () => {
+        shown.select();
+        said.textContent = " This browser would not copy it: it is selected above, so copy it from there.";
+      },
+    );
+  });
+  const dated = note(`The dates in it are for books starting ${new Date(`${start}T00:00:00Z`).toLocaleDateString("en-NZ", { day: "numeric", month: "long", year: "numeric", timeZone: "UTC" })}.`);
+  fold.append(dated, shown, copy, said);
+  return fold;
+}
+
 function migrationStepContent(source: string): HTMLElement {
   const wrap = document.createElement("div");
   wrap.className = "setup-migration-wrap";
@@ -677,6 +730,7 @@ function migrationStepContent(source: string): HTMLElement {
   }
   details.append(box);
   wrap.append(details);
+  if (source === "xero") wrap.append(agentExportPanel());
 
   const drop = $("setup-drop");
   if (drop) {

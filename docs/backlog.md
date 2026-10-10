@@ -6,13 +6,13 @@ the commit. The larger, planned work is in [roadmap.md](roadmap.md).
 
 ## Waiting on a decision
 
-- **Invitation email cap: deploy it.** The 100-a-day limit per person and the
-  warning email on the eleventh are written
-  (`supabase/migrations/20261012090000_invitation_caps.sql` and
-  `supabase/functions/invite`) but not yet on the live project. The migration and
-  the function go together: the new function calls the new three-argument
-  `invitation_email_take`. Set the `ALERT_EMAIL` secret first, or the warning
-  is not sent.
+- **`supabase db push` does not know the live database's history.** The
+  migrations were applied in the SQL editor, so the project's migration record
+  is empty and `db push` starts again from the first one (it fails at once on
+  "books already exists", changing nothing). Until it is fixed, apply a new
+  migration in the SQL editor. The fix is `supabase migration repair --status
+  applied <version>` for each migration already in place, after checking each
+  one really is there.
 
 ## Tax and returns
 

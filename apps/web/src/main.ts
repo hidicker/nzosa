@@ -99,6 +99,7 @@ import {
 import { renderMigration, wireMigration } from "./migrate/migration-page.js";
 import { autoSuggestOnOpen, renderAi } from "./daily/ai-page.js";
 import { installLockGuard, resetLockBaseline } from "./lock.js";
+import { showOtherTabs, watchOtherTabs } from "./other-tabs.js";
 import { renderAiCheck } from "./daily/ai-check-page.js";
 import {
   applyChartColumns,
@@ -128,6 +129,9 @@ import {
   savePart,
   saveUser,
   setBeforeSave,
+  backendKind,
+  openCloudBookId,
+  ledgerId,
 } from "./store.js";
 import { renderEntityFilter } from "./widgets.js";
 
@@ -382,6 +386,13 @@ function wireUp(): void {
     const banner = document.getElementById("save-banner");
     if (banner !== null) banner.hidden = true;
   });
+  // The same books open in another tab of this browser, said at once rather
+  // than when a save is refused.
+  const where = backendKind();
+  watchOtherTabs(
+    where === "cloud" ? (openCloudBookId() === "" ? "" : `cloud:${openCloudBookId()}`) : where === "folder" ? `folder:${ledgerId()}` : "browser",
+    showOtherTabs,
+  );
   // Said once on opening, rather than discovered on the first change refused.
   if (booksReadOnly()) {
     document.body.classList.add("read-only");

@@ -56,14 +56,6 @@ works).
 
 ## The app
 
-- **Warn when the same books are open in another tab.** Today the second tab
-  only finds out when a save is refused ("These books changed somewhere
-  else"), and an edit made there is lost until redone. Tabs can tell each
-  other they are open (BroadcastChannel, or a storage event), so the page can
-  say at once: "These books are open in another tab. Changes made here may be
-  refused; close one of them." Another device cannot be seen this way; the
-  refusal stays the backstop for that.
-
 - **A journal keeps an account's old name after the account is renamed.** Manual
   journal lines store "Name - CODE" as text; the figures follow the code, but
   the journal list shows the name as it was.

@@ -69,12 +69,23 @@ works).
 
 ## Online books
 
-- **Make a copy of a set of books online.** Folder books have "Make a copy…"
-  on Books; the online list has no copy. Build it from `createBook` plus each
-  part from `loadParts`, saved with `savePart`. Not copied: the bank feed
-  connection (two sets fetching from one bank would muddle both), the AI key,
-  sharing, the morning run's part, and History, which starts with a note of
-  where the copy came from.
+- **The two books lists offer the same things.** Books in a folder (Books
+  page, `books-page.ts`) have Open, Make a copy… and Clear…; books online
+  (`cloud-books.ts`) have Open, Rename, Delete and Start a new set. Both
+  should have Open, Rename, Make a copy…, Clear… and Delete, in the same
+  order and words, each where it makes sense:
+  - **Copy online:** `createBook` plus each part from `loadParts`, saved with
+    `savePart`. Not copied: the bank feed connection (two sets fetching from
+    one bank would muddle both), the AI key, sharing, the morning run's part,
+    and History, which starts with a note of where the copy came from.
+  - **Clear online:** empty the parts but keep the set, its name and its
+    sharing, as Clear does for a folder (which keeps a dated copy to put back).
+  - **Rename and Delete for a folder:** Delete moves the folder aside rather
+    than removing it, like Clear, so it can be put back.
+  - **When each was last opened, by the person looking.** Online this needs a
+    per-person record (a `last_opened_at` on the membership row, set on
+    opening); in a folder, a note beside the books. Shown as a column, and
+    the list sorted by it.
 - **Bring the GitHub workflows up to date.** The "Deploy website" run on
   10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
   target Node.js 20, which GitHub has deprecated (they are being run on

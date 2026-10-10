@@ -421,7 +421,8 @@ export {
   betweenAccountPlan,
   isSeparatePerson,
   overdrawnCurrentAccounts,
+  owedBetween,
   pairKey,
   personPositions,
 } from "./between-entities.js";
-export type { BetweenAccount, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";
+export type { BetweenAccount, OwedBetween, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";

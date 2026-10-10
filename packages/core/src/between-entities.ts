@@ -471,3 +471,71 @@ export function overdrawnCurrentAccounts(
       return { entityId: account.entityId, person: account.person, amount: amount as Cents };
     });
 }
+
+/** A balance still to be paid between two parties, as at a day. */
+export interface OwedBetween {
+  /** Who owes: an entity's name, or a person's for a current account. */
+  from: string;
+  to: string;
+  amount: Cents;
+  /** `loan` between two entities; `current` between a company, trust or society and a person. */
+  kind: "loan" | "current";
+  /** The entities concerned, by id: both for a loan, the company's alone for a current account. */
+  entityIds: string[];
+}
+
+/**
+ * What is still owed between entities that keep a loan, and on current
+ * accounts, up to a day.
+ *
+ * Owners' funds introduced and drawings are never owed back: they are the
+ * owners' own money. A loan is, until money moves the other way. Paying it is
+ * a transfer between the two entities' bank accounts: posted, that transfer
+ * gives the opposite entries on the same accounts, and the balance falls.
+ */
+export function owedBetween(
+  journals: readonly PostedJournal[],
+  accounts: readonly BetweenAccount[],
+  model: EntityModel,
+  asAt: IsoDate,
+): OwedBetween[] {
+  const byCode = new Map(accounts.filter((a) => a.role === "loan" || a.role === "current").map((a) => [a.code, a]));
+  const totals = new Map<string, number>();
+  for (const journal of journals) {
+    if (journal.source !== "between" || journal.date > asAt) continue;
+    for (const line of journal.lines) {
+      if (!byCode.has(line.accountCode)) continue;
+      totals.set(line.accountCode, (totals.get(line.accountCode) ?? 0) + line.amount);
+    }
+  }
+  const nameOf = (id: string): string => model.entities.find((e) => e.id === id)?.name ?? id;
+  const out: OwedBetween[] = [];
+  const seen = new Set<string>();
+  for (const [code, total] of totals) {
+    const amount = Math.round(total);
+    if (amount === 0) continue;
+    const account = byCode.get(code)!;
+    if (account.role === "loan") {
+      // A person's balance with a company that keeps it as their current
+      // account: the company's side says it, by person.
+      const mine = model.entities.find((e) => e.id === account.entityId);
+      const theirs = model.entities.find((e) => e.id === account.counterparty);
+      if (mine !== undefined && theirs !== undefined && sideKind(theirs, mine, model.between) === "loan-per-owner") continue;
+      // Both sides hold the same balance, mirrored: said once.
+      const key = pairKey(account.entityId, account.counterparty);
+      if (seen.has(key)) continue;
+      seen.add(key);
+      // A debit is owed to this entity; a credit, by it.
+      const [from, to] = amount > 0 ? [account.counterparty, account.entityId] : [account.entityId, account.counterparty];
+      out.push({ from: nameOf(from), to: nameOf(to), amount: Math.abs(amount) as Cents, kind: "loan", entityIds: [from, to] });
+    } else {
+      const company = nameOf(account.entityId);
+      out.push(
+        amount > 0
+          ? { from: account.person, to: company, amount: amount as Cents, kind: "current", entityIds: [account.entityId] }
+          : { from: company, to: account.person, amount: -amount as Cents, kind: "current", entityIds: [account.entityId] },
+      );
+    }
+  }
+  return out.sort((a, b) => b.amount - a.amount);
+}

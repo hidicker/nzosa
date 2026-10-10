@@ -25,7 +25,7 @@ import { codingReconciliationWaiting, unmatchedReferenceWaiting } from "../migra
 import { bankLinkState, setupSteps } from "../migrate/setup-wizard.js";
 import { $, state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
-import { banksNeedingOwner, emptyEntityModel, overdrawnCurrentAccounts, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
+import { banksNeedingOwner, emptyEntityModel, overdrawnCurrentAccounts, owedBetween, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry } from "../country.js";
@@ -280,6 +280,36 @@ export function actionItems(): ActionItem[] {
           overdrawn.map((o) => `${o.person} owes ${nameOf(o.entityId)} $${(o.amount / 100).toFixed(2)}`).join("; ") +
           ` at ${taxYearEndSaid(finished)}. A loan to an owner with no interest is a taxable benefit: charge interest at ` +
           "Inland Revenue's prescribed rate, or clear it with a salary or a dividend. Ask your accountant.",
+        go: () => {
+          showPage("reports");
+          const kind = document.getElementById("report-kind") as HTMLSelectElement | null;
+          if (kind !== null) {
+            kind.value = "between";
+            kind.dispatchEvent(new Event("change"));
+          }
+        },
+      });
+    }
+  }
+
+  // Loans between entities still to be paid, as things stand today.
+  {
+    const { journals, accounts } = betweenEntities();
+    const model = state.ledger.entities ?? emptyEntityModel();
+    const owed = owedBetween(journals, accounts, model, today());
+    if (owed.length > 0) {
+      const said = owed
+        .slice(0, 3)
+        .map((o) => `${o.from} owes ${o.to} $${(o.amount / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() })}`)
+        .join("; ");
+      items.push({
+        key: "owed-between",
+        what: "Money owed between entities",
+        count: owed.length,
+        urgency: "amber",
+        detail:
+          `${said}${owed.length > 3 ? `, and ${owed.length - 3} more` : ""}. ` +
+          "Pay it with a transfer between their bank accounts.",
         go: () => {
           showPage("reports");
           const kind = document.getElementById("report-kind") as HTMLSelectElement | null;

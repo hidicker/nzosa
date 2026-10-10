@@ -3,7 +3,9 @@ import { state } from "../state.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { emptyEntityModel, personPositions } from "@nzosa/core";
+import { emptyEntityModel, personPositions,
+  owedBetween,
+} from "@nzosa/core";
 
 /**
  * Money between entities: what each owner put into and took out of each
@@ -51,6 +53,37 @@ export function renderBetweenReport(body: HTMLElement, year: number): void {
   if (journals.length === 0) {
     body.append(note("No money has passed between entities in these books."));
     return;
+  }
+
+  // What is still to be paid between them: loans, and current accounts.
+  const owed = owedBetween(journals, accounts, model, to);
+  const owedHeading = document.createElement("h4");
+  owedHeading.textContent = `Still to be paid, at ${taxYearEndSaid(year)}`;
+  body.append(owedHeading);
+  if (owed.length === 0) {
+    body.append(note("Nothing is owed between entities: every loan between them is paid."));
+  } else {
+    const owedTable = document.createElement("table");
+    owedTable.className = "report-table";
+    owedTable.innerHTML = "<thead><tr><th>Owed by</th><th>To</th><th>Amount</th></tr></thead>";
+    const owedBody = document.createElement("tbody");
+    for (const one of owed) {
+      const tr = document.createElement("tr");
+      tr.append(nameCell(one.from), nameCell(one.to), amountCell(money(one.amount)));
+      owedBody.append(tr);
+    }
+    owedTable.append(owedBody);
+    const owedWrap = document.createElement("div");
+    owedWrap.className = "table-scroll";
+    owedWrap.append(owedTable);
+    body.append(owedWrap);
+    body.append(
+      note(
+        "Pay it by transferring the money from the bank account of the one that owes to the bank account of the one " +
+          "owed. Once that transfer is in the books, the balance falls by it. Owners' funds introduced and drawings are " +
+          "the owners' own money and are never owed back.",
+      ),
+    );
   }
 
   // Each account's movement in the year and its balance at the end.

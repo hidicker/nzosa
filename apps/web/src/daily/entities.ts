@@ -53,8 +53,9 @@ import {
   suggestedBankOwner,
   isSeparatePerson,
   pairKey,
+  owedBetween,
 } from "@nzosa/core";
-import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
+import type { Account, BusinessStructure, IsoDate, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
@@ -339,6 +340,7 @@ function betweenSettings(model: EntityModel): HTMLElement {
 
   // The pairs money has actually passed between.
   const { journals, accounts } = betweenEntities();
+  const owed = owedBetween(journals, accounts, model, new Date().toISOString().slice(0, 10) as IsoDate);
   const entityOf = new Map(accounts.map((a) => [a.code, a.entityId]));
   const pairs = new Set<string>();
   for (const journal of journals) {
@@ -395,7 +397,14 @@ function betweenSettings(model: EntityModel): HTMLElement {
         );
       });
       cell.append(pick);
-      tr.append(label, cell);
+      const standing = document.createElement("td");
+      standing.className = "cell-said-elsewhere";
+      const owes = owed.find((o) => o.kind === "loan" && o.entityIds.includes(a) && o.entityIds.includes(b));
+      if (owes !== undefined) {
+        const amount = (owes.amount / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+        standing.textContent = `${owes.from} owes ${owes.to} $${amount}`;
+      }
+      tr.append(label, cell, standing);
       tbody.append(tr);
     }
     table.append(tbody);

@@ -139,3 +139,28 @@ test("without its account in the plan, a journal is left out rather than posted 
   const r = betweenEntityJournals([journal("repair", "2026-03-24", [["platinum", -115000], ["473TS", 100000], ["820TS", 15000]])], { ...options(), plan: [] });
   assert.equal(r.journals.length, 0);
 });
+
+test("what is still owed on a loan, and how a transfer back pays it", async () => {
+  const { owedBetween } = await import("../dist/index.js");
+  const loan = options({ [pairKey("totara", "both")]: "loan" });
+  const loanModel = { ...model, between: { [pairKey("totara", "both")]: "loan" } };
+  const repair = journal("repair", "2026-03-24", [["platinum", -115000], ["473TS", 100000], ["820TS", 15000]]);
+  const first = betweenEntityJournals([repair], loan);
+  assert.deepEqual(owedBetween(first.journals, first.accounts, loanModel, "2026-03-31"), [
+    { from: "Totara Street", to: "Both", amount: 115000, kind: "loan", entityIds: ["totara", "both"] },
+  ]);
+  // Part of it sent back from the property's own account to the joint one.
+  const back = { ...journal("back", "2026-04-02", [["totara1", -40000], ["payment", 40000]]), source: "transfer" };
+  const both = betweenEntityJournals([repair, back], loan);
+  assert.deepEqual(owedBetween(both.journals, both.accounts, loanModel, "2026-04-30").map((o) => `${o.from} owes ${o.to} ${o.amount}`), ["Totara Street owes Both 75000"]);
+  assert.deepEqual(owedBetween(both.journals, both.accounts, loanModel, "2026-03-31").map((o) => o.amount), [115000], "as at an earlier day");
+});
+
+test("owners' money is never owed back, and a company's current account is", async () => {
+  const { owedBetween } = await import("../dist/index.js");
+  const equity = betweenEntityJournals([journal("repair", "2026-03-24", [["platinum", -115000], ["473TS", 100000], ["820TS", 15000]])], options());
+  assert.deepEqual(owedBetween(equity.journals, equity.accounts, model, "2026-03-31"), []);
+  const lent = betweenEntityJournals([journal("lend", "2026-01-10", [["ana", -20000], ["429CO", 20000]])], options());
+  const said = owedBetween(lent.journals, lent.accounts, model, "2026-03-31").map((o) => `${o.kind}: ${o.from} owes ${o.to} ${o.amount}`).sort();
+  assert.deepEqual(said, ["current: Rimu Ltd owes Ana 20000"], "said once, by the company");
+});

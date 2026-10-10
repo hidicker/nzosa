@@ -12,7 +12,7 @@ on:
       function:
         description: Which function to deploy
         type: choice
-        options: [akahu, wise, gemini, gemini-demo, all]
+        options: [akahu, wise, gemini, gemini-demo, nightly, all]
         default: akahu
 
 concurrency:
@@ -44,8 +44,11 @@ jobs:
             echo "The SUPABASE_ACCESS_TOKEN secret is not set." >&2
             exit 1
           fi
-          if [ "$CHOSEN" = "all" ]; then names="akahu wise gemini gemini-demo"; else names="$CHOSEN"; fi
+          if [ "$CHOSEN" = "all" ]; then names="akahu wise gemini gemini-demo nightly"; else names="$CHOSEN"; fi
           for name in $names; do
             echo "Deploying $name"
-            npx --yes supabase functions deploy "$name" --use-api --project-ref "$PROJECT_REF"
+            # The morning run is called by pg_cron, which has no user to sign in as.
+            flags=""
+            if [ "$name" = "nightly" ]; then flags="--no-verify-jwt"; fi
+            npx --yes supabase functions deploy "$name" $flags --use-api --project-ref "$PROJECT_REF"
           done

@@ -656,6 +656,7 @@ async function pullFromFeed(
   // started was a sentence somewhere else on the page. Pressing a button that
   // does not change is how somebody comes to press it three times.
   const label = button.textContent ?? "Fetch transactions";
+  const top = document.getElementById("import-feed")?.getBoundingClientRect().top;
   button.disabled = true;
   button.textContent = "Fetching…";
   button.classList.add("working");
@@ -707,6 +708,7 @@ async function pullFromFeed(
     button.textContent = label;
     button.classList.remove("working");
     button.removeAttribute("aria-busy");
+    void keepFeedInPlace(top);
   }
 }
 
@@ -728,14 +730,52 @@ async function pullFromFeed(
  */
 let feedDrawing = 0;
 
-export async function renderFeed(): Promise<void> {
+/** The latest drawing of the feed section, for whoever has to wait for it. */
+let latestFeedDraw: Promise<void> = Promise.resolve();
+
+export function renderFeed(): Promise<void> {
+  latestFeedDraw = drawFeed();
+  return latestFeedDraw;
+}
+
+/**
+ * Put the feed section back where it was on the screen, once the redraws a
+ * fetch sets off have finished. Lines coming in redraw the page, and on Start
+ * here the whole guided page is rebuilt around this section, so it jumped
+ * away just as the lines before the start, under it, were worth a look.
+ */
+async function keepFeedInPlace(top: number | undefined): Promise<void> {
+  if (top === undefined) return;
+  await new Promise((done) => setTimeout(done, 0));
+  for (let seen: Promise<void> | null = null; seen !== latestFeedDraw; ) {
+    seen = latestFeedDraw;
+    await seen.catch(() => undefined);
+  }
+  await new Promise((done) => requestAnimationFrame(() => done(undefined)));
+  const section = document.getElementById("import-feed");
+  if (section === null) return;
+  const moved = section.getBoundingClientRect().top - top;
+  if (Math.abs(moved) < 2) return;
+  let scroller: Element | null = section.parentElement;
+  while (scroller !== null) {
+    const overflow = getComputedStyle(scroller).overflowY;
+    if ((overflow === "auto" || overflow === "scroll") && scroller.scrollHeight > scroller.clientHeight) break;
+    scroller = scroller.parentElement;
+  }
+  (scroller ?? document.scrollingElement ?? document.documentElement).scrollBy(0, moved);
+}
+
+async function drawFeed(): Promise<void> {
   const drawing = ++feedDrawing;
   const body = $("feed-body");
-  body.textContent = "";
+  // What is there stays until its replacement is ready. Emptied first, the
+  // section vanished for as long as the server took to answer, the page
+  // shortened under whoever was reading it, and it came back somewhere else.
   // Wise sits beside the feed, drawn with it.
   void renderWise();
 
   if (!feedPossible()) {
+    body.textContent = "";
     placeBankImport(false);
     body.append(
       note(
@@ -1708,9 +1748,12 @@ function justBeforeSection(mapping: Record<string, string>): HTMLElement {
   wrap.append(heading);
   wrap.append(
     note(
-      `The feed dates a card payment on the day it was made. One made just before ${start} ` +
-        "but cleared by the bank on or after it is not in the opening bank balance, so it " +
-        `belongs in these books. Include it, dated ${start}, or leave it out.`,
+      "Check your account transactions at the start of the financial year. If any below " +
+        "belong in that year, include them.",
+    ),
+    note(
+      `(The Akahu feed dates a card payment on the day it was made. One made before ${start} ` +
+        "but cleared by the bank on or after it should be in this list to add.)",
     ),
   );
 

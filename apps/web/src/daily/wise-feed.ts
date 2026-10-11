@@ -98,8 +98,9 @@ export async function renderWise(): Promise<void> {
   const drawing = ++wiseDrawing;
   const body = document.getElementById("wise-body");
   if (body === null) return;
-  body.textContent = "";
+  // What is there stays until its replacement is ready, as the feed's does.
   if (!feedPossible()) {
+    body.textContent = "";
     body.append(
       note("Wise needs the app running on your own computer, or books kept online, where its token is kept."),
     );

@@ -646,6 +646,11 @@ export function openCloudBookId(): string {
   return (cloudBook ?? rememberedCloudBook())?.id ?? "";
 }
 
+/** What the open set of hosted books is called. */
+export function openCloudBookName(): string {
+  return (cloudBook ?? rememberedCloudBook())?.name ?? "";
+}
+
 /** Where the books this session is holding actually live. */
 export function backendKind(): Backend {
   return backend;

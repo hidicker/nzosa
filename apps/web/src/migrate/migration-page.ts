@@ -3,7 +3,7 @@ import { showPage } from "../app.js";
 import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
-import { backendKind, openCloudBook, save, switchLedger, writesToFolder } from "../store.js";
+import { backendKind, ledgerName, openCloudBook, openCloudBookName, save, switchLedger, writesToFolder } from "../store.js";
 import { note } from "../ui.js";
 import {
   BUSINESS_STRUCTURES,
@@ -543,10 +543,18 @@ function sharedQuestion(number: number): HTMLElement {
 
 // --- 5. who they are --------------------------------------------------------
 
+/** What the open books are called, where they have a name: online, or a folder. */
+function openBooksName(): string {
+  if (backendKind() === "cloud") return openCloudBookName().trim();
+  if (writesToFolder()) return ledgerName().trim();
+  return "";
+}
+
 function entityRow(
   entity: PlannedEntity | undefined,
   onChange: () => void,
   removable: boolean,
+  suggestedName = "",
 ): HTMLElement {
   const row = document.createElement("div");
   row.className = "migration-entity";
@@ -555,7 +563,7 @@ function entityRow(
   name.type = "text";
   name.className = "migration-entity-name";
   name.placeholder = "Company, trust, rental address, or your own name";
-  name.value = entity?.name ?? "";
+  name.value = entity?.name ?? suggestedName;
   name.addEventListener("input", onChange);
 
   const kind = document.createElement("select");
@@ -736,8 +744,11 @@ function entitiesQuestion(number: number, held: Onboarding): HTMLElement {
   };
 
   const existing: (PlannedEntity | undefined)[] = known.length > 0 ? [...known] : [undefined];
+  // Books for one entity are usually named after it, so the name they were
+  // given is offered, to keep or type over.
+  const suggested = held.onlyOne === true && known.length === 0 ? openBooksName() : "";
   for (const entity of one ? existing.slice(0, 1) : existing) {
-    rows.append(entityRow(entity, changed, !one));
+    rows.append(entityRow(entity, changed, !one, suggested));
   }
   inner.append(rows);
 

@@ -472,7 +472,19 @@ function dateQuestion(number: number, held: Onboarding): HTMLElement {
     (first, t) => (first === undefined || t.date < first ? t.date : first),
     undefined,
   );
-  date.value = held.startDate ?? (earliest !== undefined ? taxYearStart(taxYearOf(earliest)) : booksStartDate());
+  // With nothing here yet, somebody moving from Xero or a spreadsheet usually
+  // has last year still to finish: its return is not filed until well into
+  // this one. This year's start was offered, which leaves last year in the
+  // old system.
+  const moving = held.source === "xero" || held.source === "sheet";
+  const today = new Date().toISOString().slice(0, 10);
+  date.value =
+    held.startDate ??
+    (earliest !== undefined
+      ? taxYearStart(taxYearOf(earliest))
+      : moving
+        ? taxYearStart(taxYearOf(today) - 1)
+        : booksStartDate());
   label.append(date);
   row.append(label);
   inner.append(row);
@@ -1832,13 +1844,19 @@ function doneQuestion(number: number, held: Onboarding): HTMLElement {
   const several = (held.entities ?? []).length > 1 && held.shared === true;
   const many = state.ledger.transactions.length;
 
+  // What is actually left, by name. It said "the chart of accounts, opening
+  // balances, and the rest" whatever had been done, so somebody who had just
+  // loaded both was told they were still to do.
+  const left = remainingSteps().filter((s) => !s.done && s.optional !== true);
+  const opening = left.some((s) => s.what === "Opening balances");
+  const leftList = left.map((s) => s.what.toLowerCase()).join(", ");
   const points: string[] = [
-    many > 0
-      ? `${many} bank transaction${many === 1 ? "" : "s"} in, and these books know whose ` +
-        "they are. Setup lists what is left: the chart of accounts, opening balances, and " +
-        "the rest, each saying what it would give you."
-      : "These books know whose they are. Setup lists what is left, starting with the bank " +
-        "transactions everything else hangs off.",
+    (many > 0
+      ? `${many} bank transaction${many === 1 ? "" : "s"} in, and these books know whose they are. `
+      : "These books know whose they are. ") +
+      (left.length === 0
+        ? "Everything Setup asks for is done; Reconcile is where the daily work starts."
+        : `Still to do on Setup: ${leftList}. Each says what it would give you.`),
   ];
   if (several) {
     points.push(
@@ -1846,7 +1864,7 @@ function doneQuestion(number: number, held: Onboarding): HTMLElement {
         "to, on Entities & accounts. Until that is done the reports cannot be split by entity.",
     );
   }
-  if (held.opening === true) {
+  if (held.opening === true && opening) {
     points.push(
       "Opening balances matter most of all: without them a balance sheet shows the movement " +
         "since your first bank line rather than the position, which is wrong rather than short.",

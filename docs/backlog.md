@@ -56,6 +56,13 @@ works).
 
 ## The app
 
+- **Wise balances in other currencies.** Only balances in the books' own
+  currency can be brought in (`wise-feed.ts`): a KRW or EUR line came in as if
+  it were dollars. Bringing others in needs each line converted at the day's
+  rate (Wise's statement gives the rate on conversions, not on every line), a
+  foreign-currency bank account in the chart, and the realised gain or loss
+  on conversion posted. Xero's chart had no row for Wise KRW either, so the
+  link step needs a way to add a bank row for one.
 - **Ask on the page everywhere, not in the browser's confirm box.** An
   embedded browser (the Claude desktop app's pane, for one) answers
   `confirm()` "Cancel" at once without showing it, so whatever it guards is

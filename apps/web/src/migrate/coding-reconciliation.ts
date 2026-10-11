@@ -2711,6 +2711,14 @@ export function unmatchedCodingNames(): number {
  */
 const matchDrafts = new Map<string, string>();
 
+/**
+ * What the last Save matches did, said beside the fold's heading.
+ *
+ * Saving redraws the table closed, and the button went with it: nothing on
+ * the page said the matches had been kept. Cleared by the next pick.
+ */
+let matchesSaid = "";
+
 export function codingMatches(options: { open?: boolean } = {}): HTMLElement | null {
   const { lines, names, known } = codingNames();
   if (names.length === 0) return null;
@@ -2728,6 +2736,7 @@ export function codingMatches(options: { open?: boolean } = {}): HTMLElement | n
     unmatched.length > 0
       ? `Match the file's coding to your accounts (${unmatched.length} of ${names.length} not matched)`
       : `The file's coding, matched to your accounts (${names.length})`;
+  if (matchesSaid !== "") summary.textContent += ` · ${matchesSaid}`;
   box.append(summary);
   box.append(
     note(
@@ -2786,6 +2795,7 @@ export function codingMatches(options: { open?: boolean } = {}): HTMLElement | n
       "Search accounts…",
       () => {
         matchDrafts.set(name, picker.value);
+        matchesSaid = "";
         status.textContent = picker.value === "" ? "not matched" : "to save";
       },
       // A name the chart has no account for yet. The table keeps what has
@@ -2858,7 +2868,13 @@ export function codingMatches(options: { open?: boolean } = {}): HTMLElement | n
       changed += 1;
     }
     matchDrafts.clear();
-    if (changed === 0) return;
+    if (changed === 0) {
+      matchesSaid = "saved";
+      redraw("check");
+      redraw("migration");
+      return;
+    }
+    matchesSaid = `${changed} saved`;
     const file = (state.rules as RuleFileShape | undefined) ?? { rules: [] };
     state.rules = { ...file, aliases: next, referenceKinds: nextKinds } as RuleSet;
     state.rulesName = state.rulesName === "" ? "rules.json" : state.rulesName;
@@ -3467,6 +3483,10 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
   }
 
   const examples = codedExamples();
+  // Counted once each: a line both you and the file coded is in the examples
+  // twice, and a split once per part, which said more lines were coded than
+  // the books hold.
+  const codedLines = new Set(examples.map((e) => e.transaction.id)).size;
   if (examples.length === 0) {
     body.append(note("No transactions could be matched to a coding in that file."));
     return;
@@ -3490,7 +3510,7 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
   if (proposals.length === 0) {
     body.append(
       note(
-        `${examples.length} of your transactions have a coding in that file, and your rules ` +
+        `${codedLines} of your transactions have a coding in that file, and your rules ` +
           "already hold everything it can teach. What is left is one-off customers and " +
           "suppliers, better coded individually.",
       ),
@@ -3500,7 +3520,7 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
 
   body.append(
     note(
-      `${examples.length} of your transactions have a coding in that file. ` +
+      `${codedLines} of your transactions have a coding in that file. ` +
         `${proposals.length} new rules can be drawn from them, which would code ` +
         `${cover.covered} of ${cover.total} transactions. The rest are one-off customers and ` +
         "suppliers, better coded individually.",

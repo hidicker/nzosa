@@ -11,6 +11,7 @@ import {
   transferSuggestions,
   gstFrequency,
   betweenEntities,
+  bankLabel,
 } from "../books.js";
 import { DIRECTORY_VIA, aiSuggestionFor, suggestFromDirectory } from "../ai.js";
 import { feedTieNow } from "./opening-balances.js";
@@ -170,7 +171,7 @@ export function actionItems(): ActionItem[] {
     }
     for (const row of off) {
       if (!unagreedDiags.some((d) => d.accountId === row.bank)) {
-        details.push(`${row.bank}'s opening balance is ${dollars(row.ours - row.bankSays)} different from the bank feed's.`);
+        details.push(`${bankLabel(row.bank)}'s opening balance is ${dollars(row.ours - row.bankSays)} different from the bank feed's.`);
       }
     }
 

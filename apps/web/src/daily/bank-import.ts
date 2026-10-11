@@ -681,7 +681,7 @@ async function pullFromFeed(
   // started was a sentence somewhere else on the page. Pressing a button that
   // does not change is how somebody comes to press it three times.
   const label = button.textContent ?? "Fetch transactions";
-  const top = document.getElementById("import-feed")?.getBoundingClientRect().top;
+  const top = feedPlace();
   button.disabled = true;
   button.textContent = "Fetching…";
   button.classList.add("working");
@@ -783,6 +783,31 @@ export function renderFeed(): Promise<void> {
  * here the whole guided page is rebuilt around this section, so it jumped
  * away just as the lines before the start, under it, were worth a look.
  */
+/** What scrolls the page the feed section is on. */
+function feedScroller(section: HTMLElement): Element {
+  let scroller: Element | null = section.parentElement;
+  while (scroller !== null) {
+    const overflow = getComputedStyle(scroller).overflowY;
+    if ((overflow === "auto" || overflow === "scroll") && scroller.scrollHeight > scroller.clientHeight) break;
+    scroller = scroller.parentElement;
+  }
+  return scroller ?? document.scrollingElement ?? document.documentElement;
+}
+
+/**
+ * Where the feed section sits in the page, not on the screen.
+ *
+ * Measured on the screen, scrolling during a fetch counted as the page
+ * moving: somebody who went on down to Wise while the bank answered was
+ * scrolled back by as much when it did, and a click aimed at Wise landed on
+ * whatever had moved under it.
+ */
+function feedPlace(): number | undefined {
+  const section = document.getElementById("import-feed");
+  if (section === null) return undefined;
+  return section.getBoundingClientRect().top + feedScroller(section).scrollTop;
+}
+
 async function keepFeedInPlace(top: number | undefined): Promise<void> {
   if (top === undefined) return;
   await new Promise((done) => setTimeout(done, 0));
@@ -793,15 +818,13 @@ async function keepFeedInPlace(top: number | undefined): Promise<void> {
   await new Promise((done) => requestAnimationFrame(() => done(undefined)));
   const section = document.getElementById("import-feed");
   if (section === null) return;
-  const moved = section.getBoundingClientRect().top - top;
+  const now = feedPlace();
+  if (now === undefined) return;
+  // Only what moved the section within the page: what is above it redrawn
+  // taller or shorter.
+  const moved = now - top;
   if (Math.abs(moved) < 2) return;
-  let scroller: Element | null = section.parentElement;
-  while (scroller !== null) {
-    const overflow = getComputedStyle(scroller).overflowY;
-    if ((overflow === "auto" || overflow === "scroll") && scroller.scrollHeight > scroller.clientHeight) break;
-    scroller = scroller.parentElement;
-  }
-  (scroller ?? document.scrollingElement ?? document.documentElement).scrollBy(0, moved);
+  feedScroller(section).scrollBy(0, moved);
 }
 
 async function drawFeed(): Promise<void> {

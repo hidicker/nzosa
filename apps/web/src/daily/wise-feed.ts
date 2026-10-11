@@ -8,7 +8,7 @@ import { note } from "../ui.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { feedRequestFrom, fromWise, onOrAfter, wiseAccountId } from "@nzosa/core";
 import type { IsoDate, WiseStatementLine } from "@nzosa/core";
-import { booksLocale } from "../country.js";
+import { booksCurrency, booksLocale } from "../country.js";
 
 /**
  * Wise, connected with its own API token.
@@ -165,6 +165,13 @@ export async function renderWise(): Promise<void> {
       const tick = document.createElement("input");
       tick.type = "checkbox";
       tick.checked = (chosen[String(b.balanceId)] ?? "") !== "";
+      // The books' own currency only, for now: a line in won or euros came
+      // in as if it were dollars. One already ticked can still be unticked.
+      const ownCurrency = b.currency === booksCurrency();
+      if (!ownCurrency && !tick.checked) {
+        tick.disabled = true;
+        tick.title = `Only ${booksCurrency()} balances can be brought in.`;
+      }
       tick.addEventListener("change", () => {
         chosen[String(b.balanceId)] = tick.checked ? id : "";
         void call("/accounts", json({ accounts: chosen }));
@@ -175,6 +182,9 @@ export async function renderWise(): Promise<void> {
     }
     list.append(tbody);
     table.append(list);
+    if (balances.some((b) => b.currency !== booksCurrency())) {
+      table.append(note(`Only ${booksCurrency()} balances can be brought in.`));
+    }
 
     // From the books' start, unless another day was chosen: a Wise balance
     // used for something else before it was the business's brings that
@@ -255,9 +265,9 @@ async function fetchStatements(
   fromDay: IsoDate | undefined,
   restore: boolean,
 ): Promise<void> {
-  const wanted = balances.filter((b) => (chosen[String(b.balanceId)] ?? "") !== "");
+  const wanted = balances.filter((b) => (chosen[String(b.balanceId)] ?? "") !== "" && b.currency === booksCurrency());
   if (wanted.length === 0) {
-    said.textContent = "Tick the balances to bring in first.";
+    said.textContent = `Tick the ${booksCurrency()} balances to bring in first.`;
     return;
   }
   button.disabled = true;

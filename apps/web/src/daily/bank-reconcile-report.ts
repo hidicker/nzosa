@@ -112,7 +112,7 @@ export function isBankAccount(accountId: string): boolean {
 
 /** All bank accounts present in transactions, balances, or opening entries. */
 export function getReconcileAccounts(): BankAccountOption[] {
-  const { accounts, labels } = banks();
+  const { accounts } = banks();
   const allIds = new Set<string>();
 
   for (const acc of accounts) {
@@ -144,7 +144,9 @@ export function getReconcileAccounts(): BankAccountOption[] {
     const hasBalances = (state.ledger.dailyBalances ?? []).some(
       (s) => s.account === id || matchBalanceAccount(s, [id]) === id,
     );
-    const label = labels.get(id) ?? bankLabel(id);
+    // The chart's name first, as everywhere else: "BNZ Visa - Business Card"
+    // rather than the feed's "Arrow Rock Tradin".
+    const label = bankLabel(id);
     result.push({ id, label: label === id ? id : `${label} (${id})`, txCount, hasBalances });
   }
 
@@ -237,8 +239,7 @@ export interface ReconcileModel {
 
 /** Compute the daily reconciliation data model for an account. */
 export function buildReconcileModel(accountId: string, year?: number): ReconcileModel {
-  const { labels } = banks();
-  const accountLabel = labels.get(accountId) ?? bankLabel(accountId);
+  const accountLabel = bankLabel(accountId);
 
   // 1. Ledger transactions, and the manual journals posted to this account:
   // the account's balance in the books is both, and a journal standing in for

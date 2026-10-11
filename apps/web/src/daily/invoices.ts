@@ -767,7 +767,8 @@ export function renderInvoices(): void {
     body.append(
       note(
         moduleOn("xero")
-          ? "No invoices loaded. Export them from Xero: Business > Invoices > Export. Optionally " +
+          ? "No invoices loaded. Export them from Xero: Business > Invoices > Export, and bills from " +
+              "Business > Bills to pay > Export. Optionally " +
               "add an Account Transactions CSV for payment allocations, which show exactly which " +
               "receipts settled which invoice."
           : "No invoices yet: create one above, or load your invoices from a file.",

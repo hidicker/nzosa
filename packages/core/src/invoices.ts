@@ -147,7 +147,14 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
 
     const cells = reader.at(record.fields);
     const number = cells.get("InvoiceNumber");
-    if (number === "") continue;
+    const contact = cells.get("ContactName");
+    // A row is a line of the document its number, contact, date and type
+    // name together. Xero does not keep bill numbers unique -- a supplier's
+    // "RPT445-1" is on every monthly bill -- and leaves some blank, so the
+    // number alone merged a year of electricity into one bill and dropped
+    // the ones with none.
+    const group = JSON.stringify([cells.get("Type"), number, contact, cells.get("InvoiceDate")]);
+    if (number === "" && contact === "") continue;
 
     const net = parseAmount(cells.get("LineAmount"));
     const tax = parseAmount(cells.get("TaxAmount")) ?? 0;
@@ -160,7 +167,7 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
       continue;
     }
 
-    let invoice = byNumber.get(number);
+    let invoice = byNumber.get(group);
     if (!invoice) {
       const issued = parseDate(cells.get("InvoiceDate"));
       if (issued === null) {
@@ -171,7 +178,7 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
       invoice = {
         number,
         kind: cells.get("Type").toLowerCase().includes("bill") ? "purchase" : "sales",
-        contact: cells.get("ContactName"),
+        contact,
         reference: cells.get("Reference"),
         issued,
         due: parseDate(cells.get("DueDate")),
@@ -183,7 +190,7 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
         status: cells.get("Status"),
         lines: [],
       };
-      byNumber.set(number, invoice);
+      byNumber.set(group, invoice);
     }
 
     const quantity = Number(cells.get("Quantity"));
@@ -201,7 +208,21 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
     });
   }
 
+  // Unique within a kind, as everything that matches a payment to its
+  // document needs: a number shared by several documents, or missing, gets
+  // the date beside it -- "RPT445-1/2026-09-17".
   const invoices = [...byNumber.values()];
+  const uses = new Map<string, number>();
+  for (const invoice of invoices) {
+    const key = `${invoice.kind}:${invoice.number}`;
+    uses.set(key, (uses.get(key) ?? 0) + 1);
+  }
+  for (const invoice of invoices) {
+    if (invoice.number === "") invoice.number = `${invoice.contact}/${invoice.issued}`;
+    else if ((uses.get(`${invoice.kind}:${invoice.number}`) ?? 0) > 1) {
+      invoice.number = `${invoice.number}/${invoice.issued}`;
+    }
+  }
   problems.push(...validateInvoices(invoices));
   return { invoices, problems };
 }

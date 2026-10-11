@@ -260,8 +260,8 @@ async function loadEach(
           await loadAssets(file);
           break;
         case "invoices":
-          await loadInvoices(file);
-          break;
+          say(`${file.name} — ${await loadInvoices(file)}`);
+          continue;
         case "daily-balances":
           await checkBankBalances(file);
           break;
@@ -464,23 +464,37 @@ export async function loadAssets(file: File): Promise<void> {
   redraw("reports");
 }
 
-export async function loadInvoices(file: File): Promise<void> {
+export async function loadInvoices(file: File): Promise<string> {
   const parsed = parseXeroInvoices(await readXeroText(file));
   if (parsed.invoices.length === 0) {
-    alert(`${file.name} holds no invoices. Export one from Xero as Business > Invoices > Export.`);
-    return;
+    const none =
+      `${file.name} holds no invoices or bills. Export them from Xero as Business > Invoices > Export, ` +
+      "or Business > Bills to pay > Export.";
+    alert(none);
+    return none;
   }
-  state.ledger = { ...state.ledger, invoices: parsed.invoices };
+  // Sales invoices and bills come in separate files. Loading one replaces
+  // what was held of its own kind only: the bills file used to replace the
+  // sales invoices already loaded, and the other way round.
+  const kinds = new Set(parsed.invoices.map((i) => i.kind));
+  const kept = (state.ledger.invoices ?? []).filter((i) => !kinds.has(i.kind));
+  state.ledger = { ...state.ledger, invoices: [...kept, ...parsed.invoices] };
   state.persistent = await savePart(state.ledger, "invoices");
+  const bills = parsed.invoices.filter((i) => i.kind === "purchase").length;
+  const sales = parsed.invoices.length - bills;
+  const what = [
+    sales > 0 ? `${sales} invoice${sales === 1 ? "" : "s"}` : "",
+    bills > 0 ? `${bills} bill${bills === 1 ? "" : "s"}` : "",
+  ]
+    .filter((x) => x !== "")
+    .join(" and ");
   const issues = validateInvoices(parsed.invoices);
-  if (issues.length > 0) {
-    state.invoiceMessage =
-      `${parsed.invoices.length} invoices loaded. ${issues.length} look wrong: ` +
-      issues.slice(0, 3).map((i) => i.message).join("; ");
-  } else {
-    state.invoiceMessage = `${parsed.invoices.length} invoices loaded from ${file.name}.`;
-  }
+  state.invoiceMessage =
+    issues.length > 0
+      ? `${what} loaded. ${issues.length} look wrong: ` + issues.slice(0, 3).map((i) => i.message).join("; ")
+      : `${what} loaded from ${file.name}.`;
   redraw("invoices");
+  return issues.length > 0 ? `${what}; ${issues.length} look wrong, see Invoices.` : `${what}.`;
 }
 
 export async function loadAllocations(file: File): Promise<void> {

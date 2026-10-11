@@ -166,7 +166,9 @@ function startupFiles(): StartupFile[] {
       load: async (text) => {
         const parsed = parseXeroInvoices(text);
         if (parsed.invoices.length === 0) return null;
-        state.ledger = { ...state.ledger, invoices: parsed.invoices };
+        const kinds = new Set(parsed.invoices.map((i) => i.kind));
+        const kept = (state.ledger.invoices ?? []).filter((i) => !kinds.has(i.kind));
+        state.ledger = { ...state.ledger, invoices: [...kept, ...parsed.invoices] };
         state.persistent = await save(state.ledger);
         return `${parsed.invoices.length} invoices`;
       },
@@ -579,7 +581,14 @@ export function xeroMigrationFiles(): SourceFile[] {
       what: "Invoices",
       where: "Business → Invoices → Export",
       why: "Accrual income & receipt allocations",
-      have: (led.invoices ?? []).length > 0,
+      have: (led.invoices ?? []).some((i) => i.kind === "sales"),
+      page: "invoices",
+    },
+    {
+      what: "Bills",
+      where: "Business → Bills to pay → Export",
+      why: "Accrual expenses, and what each supplier payment paid",
+      have: (led.invoices ?? []).some((i) => i.kind === "purchase"),
       page: "invoices",
     },
     {
@@ -1193,15 +1202,17 @@ export function setupSteps(
             ],
     },
     {
-      what: "Invoices",
+      what: "Invoices and bills",
       takesFiles: true,
       done: (led.invoices ?? []).length > 0,
       optional: true,
       detail:
         (led.invoices ?? []).length > 0
-          ? `${(led.invoices ?? []).length} invoices, ${(led.allocations ?? []).length} allocations`
+          ? `${(led.invoices ?? []).filter((i) => i.kind === "sales").length} invoices, ` +
+            `${(led.invoices ?? []).filter((i) => i.kind === "purchase").length} bills, ` +
+            `${(led.allocations ?? []).length} allocations`
           : xero
-            ? "Xero: Business → Invoices → Export"
+            ? "Xero: Business → Invoices → Export, and Business → Bills to pay → Export"
             : "Your invoices, with what each one was for and when it was paid",
       unlocks: "Accrual income, and matching receipts to what they settled",
       page: "invoices",
@@ -1324,7 +1335,7 @@ export function setupSteps(
   // A step for a module that is off is not on the list: no invoices to load
   // for personal books, no Xero journal report for books from a spreadsheet.
   const moduleOf: Record<string, string> = {
-    Invoices: "business",
+    "Invoices and bills": "business",
     "Fixed assets": "assets",
     "General ledger": "xero",
     "Filed GST returns": "gst",

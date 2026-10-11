@@ -5,6 +5,7 @@ import { filedByPeriod, filedKey,
   betweenAccountPlan,
   suggestSuffix,
   splitPartId,
+  withoutStaleTreatments,
 } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
@@ -856,6 +857,24 @@ export function ledgerAccountFor(name: string, account?: Account): string | null
 
 /** The sentence that has to be typed before anything is cleared. */
 export const CLEAR_PHRASE = "Confirm this will clear all records";
+
+/**
+ * Drop GST treatments left on a name the chart no longer gives that number.
+ *
+ * Kept only while something is coded to them: a coding, a split, a manual
+ * journal or a rule. Says whether anything went, so the caller can save.
+ */
+export function tidyStaleTreatments(chart: readonly Account[] = state.chart): boolean {
+  if (chart.length === 0) return false;
+  const used = new Set<string>();
+  for (const o of Object.values(state.ledger.overrides ?? {})) if (o.code) used.add(o.code);
+  for (const parts of Object.values(state.ledger.splits ?? {})) for (const p of parts) if (p.code) used.add(p.code);
+  for (const j of state.ledger.manualJournals ?? []) for (const l of j.lines) used.add(l.code);
+  const tidied = withoutStaleTreatments(state.rules, used, chart);
+  if (tidied === state.rules) return false;
+  state.rules = tidied;
+  return true;
+}
 
 export async function useRules(rules: RuleFileShape, name: string, verb: string): Promise<void> {
   state.rules = rules;

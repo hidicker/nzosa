@@ -86,7 +86,7 @@ export function knownCodes(
     const code = account.code.trim();
     const name = account.name.trim();
     if (name === "") continue;
-    if (code !== "" && [...codes].some((c) => new RegExp(`\b${code}\b`).test(c))) continue;
+    if (code !== "" && [...codes].some((c) => new RegExp(`\\b${code}\\b`).test(c))) continue;
     codes.add(code === "" ? name : `${name} - ${code}`);
   }
 
@@ -251,4 +251,48 @@ export function splitAccountLabel(label: string): { code: string; name: string }
   // A bare number is a code with no name; anything else is a name with no code.
   if (isAccountCode(text)) return { code: text, name: text };
   return { code: "", name: text };
+}
+
+/**
+ * Rules without the GST treatments that name an account the chart now calls
+ * something else, where nothing is coded to them.
+ *
+ * Books start with a standard chart, and its treatments are kept by label:
+ * "Depreciation Recovered - 300". Loading Xero's chart, where 300 is
+ * Purchases, left that label behind -- and since a label is matched to the
+ * chart by its number, Purchases took the old name, and the profit and loss
+ * showed $2,034.78 of purchases as depreciation recovered. A treatment
+ * something is coded to is kept: that is a decision about real lines, and
+ * only a person can say it was the wrong account.
+ */
+export function withoutStaleTreatments(
+  rules: RuleSet | undefined,
+  used: ReadonlySet<string>,
+  chart: readonly Account[],
+): RuleSet | undefined {
+  const file = rules as RuleFile | undefined;
+  const treatments = file?.codeTreatments;
+  if (file === undefined || treatments === undefined) return rules;
+  const nameOf = new Map<string, string>();
+  for (const account of chart) {
+    const code = account.code.trim();
+    if (code !== "") nameOf.set(code, account.name.trim().toLowerCase());
+  }
+  const inUse = new Set(used);
+  for (const rule of file.rules ?? []) if (rule.code) inUse.add(rule.code);
+  for (const fallback of file.defaults ?? []) if (fallback.code) inUse.add(fallback.code);
+
+  const kept: Record<string, unknown> = {};
+  let dropped = 0;
+  for (const [label, treatment] of Object.entries(treatments)) {
+    const { code, name } = splitAccountLabel(label);
+    // A bare number names no account, so it cannot name the wrong one.
+    const charted = code === "" || name === code ? undefined : nameOf.get(code);
+    if (charted !== undefined && charted !== name.toLowerCase() && !inUse.has(label)) {
+      dropped += 1;
+      continue;
+    }
+    kept[label] = treatment;
+  }
+  return dropped === 0 ? rules : ({ ...file, codeTreatments: kept } as RuleSet);
 }

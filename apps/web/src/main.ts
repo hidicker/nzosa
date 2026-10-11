@@ -27,6 +27,8 @@ import {
   keepConfirmedGst,
   storeConfirmedGst,
   record,
+  tidyStaleTreatments,
+  persistRules,
 } from "./books.js";
 import {
   renderBooks,
@@ -269,6 +271,9 @@ async function init(): Promise<void> {
       state.rules = storedRules.rules;
       state.rulesName = storedRules.name;
       state.rulesLoadedAt = storedRules.loadedAt;
+      // Books whose chart replaced the standard one before this was tidied
+      // at the time still carry the standard chart's names for its numbers.
+      if (tidyStaleTreatments()) void persistRules();
     }
     // Before anything below can record what it did. `record` appends to
     // `state.events` and writes the lot back, so anything recording before the

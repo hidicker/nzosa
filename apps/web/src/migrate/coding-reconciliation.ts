@@ -78,7 +78,7 @@ import type {
 import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
 import { settleInvoicesExactly } from "../daily/reconcile-page.js";
-import { accountsForEditing, saveManualJournals } from "../books.js";
+import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../books.js";
 import { booksLocale } from "../country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
@@ -3301,6 +3301,10 @@ export async function applyChartColumns(chart: readonly Account[]): Promise<void
   const accounts = { ...model.accounts };
   const byName = new Map(entities.map((e) => [e.name.toLowerCase(), e]));
 
+  // The standard chart's names for numbers this chart gives to other
+  // accounts go first, or the labels below would be found by number under
+  // them: Xero's 300 Purchases came in as "Depreciation Recovered - 300".
+  const tidied = tidyStaleTreatments(chart);
   const file = state.rules as RuleFileShape | undefined;
   const codeTreatments = { ...(file?.codeTreatments ?? {}) };
   const known = knownCodes(state.rules, state.ledger.overrides ?? {});
@@ -3382,7 +3386,7 @@ export async function applyChartColumns(chart: readonly Account[]): Promise<void
     }
   }
 
-  if (treatmentsSet > 0) {
+  if (treatmentsSet > 0 || tidied) {
     // Again without requiring one to exist first. A chart export carries how
     // every account is treated, and reading that and then throwing it away
     // because no rule file had been loaded left a new set of books with no GST

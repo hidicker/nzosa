@@ -755,7 +755,7 @@ export function parseAccountTransactionsSheet(
    * every ledger account a code and leaves the bank accounts without one,
    * which settles it.
    */
-  isBankAccount: (name: string, accountCode: string) => boolean,
+  isBankAccount: (name: string, accountCode: string, accountType?: string) => boolean,
   isStructural: (name: string) => boolean,
   options: AccountTransactionsOptions = {},
 ): ReferenceLine[] {
@@ -821,9 +821,9 @@ export function parseAccountTransactionsSheet(
   }
 
   const isBank = (posting: SheetPosting): boolean =>
-    isBankAccount(posting.account, posting.accountCode);
+    isBankAccount(posting.account, posting.accountCode, posting.accountType);
   for (const postings of regroupByJournal(groups, options.journals, isBank)) {
-    const bank = postings.filter((p) => isBankAccount(p.account, p.accountCode));
+    const bank = postings.filter((p) => isBankAccount(p.account, p.accountCode, p.accountType));
     if (bank.length !== 1) continue;
     const first = bank[0];
     if (!first) continue;
@@ -831,7 +831,7 @@ export function parseAccountTransactionsSheet(
     // The ledger posting carries both the account and the GST rate; the bank
     // side of a payment never carries GST.
     const others = postings.filter(
-      (p) => p !== first && !isBankAccount(p.account, p.accountCode),
+      (p) => p !== first && !isBankAccount(p.account, p.accountCode, p.accountType),
     );
     const ledger = others.filter((p) => !isStructural(p.account));
 

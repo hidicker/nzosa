@@ -28,6 +28,7 @@ import type {
   SheetColumns,
   SheetRows,
 } from "@nzosa/core";
+import { state } from "./state.js";
 
 /** Read a sheet whose columns were pointed out by hand. */
 export function readChosenColumns(
@@ -47,11 +48,32 @@ export function readChosenColumns(
  * a workbook has a reconciled sheet.
  */
 
+
 const BANKISH = /\b(bnz|visa|paypal|stripe|wise|anz|asb|kiwibank|westpac)\b/i;
 const STRUCTURAL = new Set(["GST", "Accounts Receivable", "Accounts Payable", "Rounding"]);
 
-const isBankLine = (line: JournalLine): boolean =>
-  line.accountCode === "" && BANKISH.test(line.accountName);
+/**
+ * Whether an account in an export is a bank account.
+ *
+ * The chart says so first: Xero's chart export types its bank accounts Bank.
+ * Without it, an account with no code and a bank's name -- Xero gives bank
+ * accounts no code by default -- or one named like a bank account and typed
+ * as an asset or a liability. Xero's Demo Company's bank has a code, 090, and
+ * a name, "Business Bank Account", that no bank's name matched, so nothing in
+ * its export was a bank, and every payment in it was thrown away.
+ */
+export function isBankAccountNamed(name: string, accountCode: string, accountType = ""): boolean {
+  const code = accountCode.trim();
+  const named = name.trim().toLowerCase();
+  const charted = state.chart.find((a) =>
+    code !== "" ? a.code.trim() === code : a.name.trim().toLowerCase() === named,
+  );
+  if (charted !== undefined) return /bank/i.test(charted.type);
+  if (code === "" && BANKISH.test(name)) return true;
+  return /\b(bank account|cheque|savings|credit card|business card)\b/i.test(name) && /asset|liabil|bank/i.test(accountType);
+}
+
+const isBankLine = (line: JournalLine): boolean => isBankAccountNamed(line.accountName, line.accountCode);
 
 const isStructural = (line: JournalLine): boolean => STRUCTURAL.has(line.accountName);
 
@@ -202,10 +224,10 @@ export async function loadReference(
         const xero = parseAccountTransactionsSheet(
           workbook,
           file.name,
-          // A bank account by name and by having no chart code. "Stripe Fees"
-          // is an expense that matches the word, and counting it as a second
-          // bank posting threw the whole entry away.
-          (name, accountCode) => accountCode === "" && BANKISH.test(name),
+          // A bank account by the chart, or by name and having no code.
+          // "Stripe Fees" is an expense that matches the word, and counting
+          // it as a second bank posting threw the whole entry away.
+          isBankAccountNamed,
           (name) => STRUCTURAL.has(name),
           sheetOptions,
         );
@@ -266,7 +288,7 @@ export async function loadReference(
       const asReport = parseAccountTransactionsSheet(
         { sheets: [asSheet], problems: [] },
         file.name,
-        (name, accountCode) => accountCode === "" && (ours || BANKISH.test(name)),
+        (name, accountCode, accountType) => (ours && accountCode === "") || isBankAccountNamed(name, accountCode, accountType),
         (name) => STRUCTURAL.has(name),
         sheetOptions,
       );

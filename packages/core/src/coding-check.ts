@@ -1289,24 +1289,29 @@ export function compareCodings(
       // The whole day's entries, or a part of them one of which names the
       // payee: a few lines on a busy day can add up to anything by chance.
       if (found.length < list.length && !found.some((l) => nameAgreement(l, entry.transaction) > 0)) continue;
-      for (const line of found) used.add(line);
-      const principal = found.reduce((a, b) => (Math.abs(b.amount) > Math.abs(a.amount) ? b : a));
-      const settled = found.some((l) => CONTROL.test(l.code) || CONTROL.test(l.label));
-      const parts: ReferencePart[] = found.map((l) => ({
-        code: l.code,
-        label: l.label,
-        amount: l.amount,
-        gstRate: l.gstRate ?? "",
-        description: l.description ?? "",
-      }));
-      return {
-        ...principal,
-        amount,
-        combined: found.length,
-        ...(settled ? {} : { parts }),
-      };
+      return combine(found, amount);
     }
     return undefined;
+  };
+
+  /** Several reference lines taken as the one bank line they add up to. */
+  const combine = (found: ReferenceLine[], amount: Cents): ReferenceLine => {
+    for (const line of found) used.add(line);
+    const principal = found.reduce((a, b) => (Math.abs(b.amount) > Math.abs(a.amount) ? b : a));
+    const settled = found.some((l) => CONTROL.test(l.code) || CONTROL.test(l.label));
+    const parts: ReferencePart[] = found.map((l) => ({
+      code: l.code,
+      label: l.label,
+      amount: l.amount,
+      gstRate: l.gstRate ?? "",
+      description: l.description ?? "",
+    }));
+    return {
+      ...principal,
+      amount,
+      combined: found.length,
+      ...(settled ? {} : { parts }),
+    };
   };
 
   /**
@@ -1364,8 +1369,41 @@ export function compareCodings(
     used.add(one.line);
   }
 
+  /**
+   * One payer's lines on one day that together are a bank line naming them.
+   *
+   * A customer paying two invoices in one deposit -- $1,850 for INV-0062 and
+   * INV-0063 -- is two lines in Xero, $800 and $1,050. Paired one at a time
+   * by date, the $800 went to somebody else's $800 that day and the $1,050 was
+   * reported as not in the ledger, beside the deposit that held it. So before
+   * any line is paired on its date alone, a payer's lines that add up exactly
+   * to a bank line whose payee they name are taken together; a sum on a name
+   * is evidence, where a sum on a date is chance.
+   */
+  const grouped = new Map<CodedTransaction, ReferenceLine>();
   for (const entry of inOrder) {
-    if (entry.code === null || chosen.has(entry)) continue;
+    if (chosen.has(entry)) continue;
+    const groups = new Map<string, ReferenceLine[]>();
+    for (const line of reference) {
+      if (used.has(line) || near(line, entry) > windowDays) continue;
+      if (line.account !== undefined && options.accountMatches !== undefined && !options.accountMatches(entry.transaction, line)) continue;
+      if ((line.contact ?? "").trim() === "" || nameAgreement(line, entry.transaction) <= 0) continue;
+      const key = `${line.date} ${line.account ?? ""} ${(line.contact ?? "").trim().toLowerCase()}`;
+      const list = groups.get(key);
+      if (list) list.push(line);
+      else groups.set(key, [line]);
+    }
+    for (const list of groups.values()) {
+      if (list.length < 2 || list.length > 12) continue;
+      const found = subsetSumming(list, entry.transaction.amount);
+      if (found === undefined || found.length < 2) continue;
+      grouped.set(entry, combine(found, entry.transaction.amount));
+      break;
+    }
+  }
+
+  for (const entry of inOrder) {
+    if (entry.code === null || chosen.has(entry) || grouped.has(entry)) continue;
     const best = nearestOf(entry);
     if (best !== undefined) {
       chosen.set(entry, best);
@@ -1390,7 +1428,7 @@ export function compareCodings(
       continue;
     }
 
-    const best = chosen.get(entry);
+    const best = chosen.get(entry) ?? grouped.get(entry);
     if (best === undefined) {
       unreferencedEntries.push(entry);
       continue;
@@ -1431,6 +1469,7 @@ export function compareCodings(
   const looseChosen = new Map<CodedTransaction, ReferenceLine>();
   const looseNamed: { entry: CodedTransaction; line: ReferenceLine; score: number; gap: number }[] = [];
   for (const entry of unpaired) {
+    if (grouped.has(entry)) continue;
     for (const line of openTo(entry)) {
       const score = evidence(line, entry);
       if (score > 0) looseNamed.push({ entry, line, score, gap: near(line, entry) });
@@ -1443,7 +1482,7 @@ export function compareCodings(
     used.add(one.line);
   }
   for (const entry of unpaired) {
-    if (looseChosen.has(entry)) continue;
+    if (looseChosen.has(entry) || grouped.has(entry)) continue;
     const best = nearestOf(entry);
     if (best !== undefined) {
       looseChosen.set(entry, best);
@@ -1468,7 +1507,7 @@ export function compareCodings(
     else differed.push(row);
   }
   for (const entry of unpaired) {
-    const theirs = looseChosen.get(entry) ?? roundedTo(entry) ?? combinedTo(entry) ?? null;
+    const theirs = grouped.get(entry) ?? looseChosen.get(entry) ?? roundedTo(entry) ?? combinedTo(entry) ?? null;
     uncoded.push({ transaction: entry.transaction, ours: null, theirs });
   }
 

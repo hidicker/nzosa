@@ -292,3 +292,33 @@ test("a pasted bank sheet keeps the bank's fields, and its own coding column", a
   });
   assert.equal(lines[1].contact, "Kowhai Cafe");
 });
+
+test("one payer's two invoices paid in one deposit are that deposit, not another payer's", () => {
+  // The real case: $1,850 in from E J Harrison for two invoices, which the
+  // other system records as $800 and $1,050; and another customer's own $800
+  // the same day. Paired by date, the $800 went to the other customer and the
+  // $1,050 was reported as not in the ledger.
+  const deposit = txn("d", "2025-10-25", 185000, "E J HARRISON, K MCNA");
+  const other = txn("o", "2025-10-25", 80000, "WEBER BECKETT MILO");
+  const lines = [
+    line("2025-10-25", 80000, "610 Accounts Receivable", "Edward Harrison", "Payment: INV-0062"),
+    line("2025-10-25", 105000, "610 Accounts Receivable", "Edward Harrison", "Payment: INV-0063"),
+  ];
+  const result = compareCodings([{ transaction: deposit, code: null }, { transaction: other, code: null }], lines);
+  const byId = new Map(result.uncoded.map((r) => [r.transaction.id, r.theirs]));
+  assert.equal(byId.get("d")?.combined, 2, "the deposit is both invoices");
+  assert.equal(byId.get("o"), null, "the other customer's $800 is not Edward Harrison's");
+  assert.equal(result.unmatched.length, 0);
+});
+
+test("a payer's lines are not grouped onto a bank line that names somebody else", () => {
+  const t = txn("t", "2025-10-25", 185000, "SOMEONE ELSE ENTIRELY");
+  const lines = [
+    line("2025-10-25", 80000, "610 Accounts Receivable", "Edward Harrison"),
+    line("2025-10-25", 105000, "610 Accounts Receivable", "Edward Harrison"),
+  ];
+  // The day-sum rule may still take the whole day; what must not happen is
+  // the name rule claiming lines for a payee they do not name.
+  const result = compareCodings([{ transaction: t, code: "610" }], lines);
+  assert.ok(result.agreed.length + result.differed.length + result.unreferenced.length === 1);
+});

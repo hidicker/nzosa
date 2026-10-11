@@ -178,7 +178,13 @@ export function identifyExport(text: string): Identified {
   // A bank statement first: its importers score themselves against their own
   // columns and are the most confident detectors here, and a bank CSV shares
   // no heading with any of the reports below.
-  if (detect(text) !== undefined) return { kind: "bank", what: "bank statement" };
+  //
+  // Except Xero's own report of a bank account: dropped among Xero's exports
+  // it is the account transactions -- the coding to learn from -- and taken as
+  // a bank statement it put Xero's copy of every bank line beside the bank
+  // feed's. On Bank import, where it is chosen as bank lines, it is read so.
+  const statement = detect(text);
+  if (statement !== undefined && statement.importer !== "xero-bank") return { kind: "bank", what: "bank statement" };
 
   if (looksLikeDailyBalances(text)) {
     return { kind: "daily-balances", what: "daily bank balances" };

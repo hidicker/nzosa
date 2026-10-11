@@ -860,9 +860,10 @@
           <section id="dropzone" class="dropzone dropzone-compact" aria-label="Import bank files">
           <button id="pick-button" type="button" class="primary">Choose files</button>
           <span class="dropzone-sub">
-            or drop BNZ, ANZ or Wise CSV exports here, several at once. Read in this tab; nothing is uploaded.
+            or drop bank exports here, several at once: BNZ, ANZ and Wise CSVs, and Xero's bank account export (CSV or Excel). Read in this tab; nothing is uploaded.
           </span>
-          <input id="file-input" type="file" accept=".csv,.txt,.ofx,.qfx,text/csv" multiple hidden />
+          <input id="file-input" type="file" accept=".csv,.xlsx,.txt,.ofx,.qfx,text/csv" multiple hidden />
+          <div id="bank-convert"></div>
           <!-- Only one currency is kept (NZD), so there is no currency to choose. -->
           <details class="import-options">
             <summary>Options</summary>

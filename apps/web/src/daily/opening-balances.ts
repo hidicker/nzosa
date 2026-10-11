@@ -1292,7 +1292,16 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
   const text = await asCsvText(file.name, bytes);
   const parsed = parseTrialBalance(text);
   if (parsed.accounts.length === 0) {
-    alert(`${file.name} is not a trial balance. Export one from Xero: ${XERO_TRIAL_BALANCE}`);
+    // A trial balance with nothing in it -- an organisation that had no
+    // balances on that date -- is said as that, not as some other file.
+    const asAt = /As at\s+([^,\n]+)/i.exec(text)?.[1]?.trim();
+    alert(
+      /Account Code|Account Type/i.test(text)
+        ? `${file.name} is a trial balance with no balances in it${asAt ? `, as at ${asAt}` : ""}. ` +
+            "Check the date it was run for: the year end before these books start. If there really was " +
+            "nothing then, these books start with no opening balances."
+        : `${file.name} is not a trial balance. Export one from Xero: ${XERO_TRIAL_BALANCE}`,
+    );
     return false;
   }
   if (parsed.dates.length === 0) {

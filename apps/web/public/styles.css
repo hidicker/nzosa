@@ -1180,6 +1180,11 @@ button.remove:hover:not(:disabled) {
 
 /* ---------- messages ---------- */
 
+/* The prompt for converting a bank export, under Import bank files. */
+.bank-convert { margin-top: 10px; flex-basis: 100%; }
+.bank-convert summary { cursor: pointer; font-size: 0.9rem; }
+.bank-convert-text { width: 100%; font: 0.8rem/1.4 ui-monospace, monospace; margin: 6px 0; }
+
 /* A question asked on the page rather than in the browser's own box. */
 dialog.ask-on-page {
   max-width: min(34rem, calc(100vw - 32px));

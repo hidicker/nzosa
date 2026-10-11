@@ -3,7 +3,8 @@ import { morningChoice } from "../nightly-ui.js";
 import type { Morning } from "../nightly.js";
 import { PreviousSystem, previousSystem } from "../modules.js";
 import { redraw, showPage } from "../app.js";
-import { accountsForEditing, bankLabel, ensureDefaultEntity, reclassify, } from "../books.js";
+import { accountsForEditing, asCsvText, bankLabel, ensureDefaultEntity, reclassify } from "../books.js";
+import { bankConvertPanel } from "./bank-convert-prompt.js";
 import { balanceMovementSection, openingBalancesFromFeed, renderBalanceChecks } from "../daily/opening-balances.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
@@ -245,7 +246,9 @@ export async function handleFiles(files: File[]): Promise<void> {
       alert(`"${file.name}" is over 50 MB and was skipped. Bank exports are normally much smaller.`);
       continue;
     }
-    const text = await file.text();
+    // Excel as well as CSV: Xero's bank account export comes out as either,
+    // and a bank's own spreadsheet is no different to read once it is text.
+    const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
 
     try {
       const result = importFile(text, {
@@ -448,6 +451,8 @@ async function remove(transaction: Transaction): Promise<void> {
 }
 
 export function renderFormats(): void {
+  const convert = document.getElementById("bank-convert");
+  if (convert !== null && convert.childElementCount === 0) convert.append(bankConvertPanel());
   $("formats").innerHTML = importers
     .map(
       (importer) =>

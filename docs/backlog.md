@@ -56,6 +56,12 @@ works).
 
 ## The app
 
+- **Say it is working while a bulk action on Reconcile runs.** "Split N" (the
+  payment-processor split suggestions at the top of Reconcile) gives no sign
+  it has started until it is done. Use the `working` style on its button, as
+  Fetch transactions does, and a "Splitting 12 of 40…" line with the spinner
+  the file intake now uses (`files-loading`). Check the other bulk buttons
+  there (Accept all, AI suggestions) for the same.
 - **A journal keeps an account's old name after the account is renamed.** Manual
   journal lines store "Name - CODE" as text; the figures follow the code, but
   the journal list shows the name as it was.

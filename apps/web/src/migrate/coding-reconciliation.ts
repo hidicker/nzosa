@@ -2142,6 +2142,12 @@ function fileAccountHere(name: string): { kind: "here"; account: string } | { ki
   );
   if (linked !== undefined) return { kind: "here", account: (linked.ledgerAccount ?? "").trim() };
   const held = [...new Set(state.ledger.transactions.map((t) => t.account))];
+  // Or by the name itself: lines brought in from Xero's own bank export are
+  // on "business-bank-account", labelled "Business Bank Account", and that
+  // account was said to be impossible to tell about.
+  const slug = (text: string): string => text.trim().toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  const byName = held.filter((account) => slug(account) === slug(name) || slug(bankLabel(account)) === slug(name));
+  if (byName.length === 1 && byName[0] !== undefined) return { kind: "here", account: byName[0] };
   const full = /(\d{2})-(\d{4})-(\d{7})-(\d{2,3})/;
   const key = (text: string): string | null => {
     const m = full.exec(text);

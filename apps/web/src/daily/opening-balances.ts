@@ -12,7 +12,7 @@ import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } 
 import { asCsvText } from "../books.js";
 import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
-import { diagnoseAccountDailyBalances, openBankReconcileReport } from "./balance-diagnostics.js";
+import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 
@@ -481,7 +481,10 @@ function startBankDraft(): BankDraft {
  * balance are for.
  */
 function balanceAtStart(bank: string, balance: Cents, on: string, start: string): { start: Cents; between: Cents } {
-  const lines = state.ledger.transactions.filter((t) => t.account === bank);
+  // The account in the books is its bank lines and the journals posted to it:
+  // a refund the feed never had, put in by journal, is in the bank's balance
+  // too, so working back without it put the start out by exactly that.
+  const lines = [...state.ledger.transactions.filter((t) => t.account === bank), ...journalLinesFor(bank)];
   if (on >= start) {
     const between = lines.filter((t) => t.date >= start && t.date <= on).reduce((s, t) => s + t.amount, 0);
     return { start: balance - between, between };

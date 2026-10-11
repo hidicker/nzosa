@@ -1017,7 +1017,8 @@ export function xeroSettles(): Map<string, string[]> {
 /** The document a single payment line names, where it is posted to receivables or payables. */
 function xeroSettlesOne(line: ReferenceLine | null | undefined): string[] {
   if (line === null || line === undefined) return [];
-  const control = /accounts\s+(receivable|payable)|^\s*(610|800)\b/i;
+  // Expense claims too: a repayment to the person clears the claim.
+  const control = /accounts\s+(receivable|payable)|unpaid\s+expense\s+claims?|^\s*(610|800|801)\b/i;
   if (!control.test(line.code) && !control.test(line.label)) return [];
   // With no number, "" -- the payment is then matched by who was paid.
   return [(line.invoiceNumber ?? "").trim() || (line.reference ?? "").trim()];

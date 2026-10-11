@@ -426,3 +426,4 @@ export {
   personPositions,
 } from "./between-entities.js";
 export type { BetweenAccount, BetweenSetting, LineChoice, OwedBetween, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";
+export { expenseClaimsFromJournals } from "./expense-claims.js";

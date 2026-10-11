@@ -6,6 +6,7 @@ import { filedByPeriod, filedKey,
   suggestSuffix,
   splitPartId,
   withoutStaleTreatments,
+  expenseClaimsFromJournals,
 } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
@@ -1063,8 +1064,35 @@ export function controlAccountFor(
 
 /** A document's own control account, for posting; undefined keeps 610 or 800. */
 export function documentControl(invoice: Invoice): { code: string; name: string } | undefined {
+  // A claim is owed to the person in Unpaid Expense Claims, where its
+  // repayment from the bank is coded, not to suppliers in Accounts Payable.
+  if (invoice.claim === true) {
+    const claims = /unpaid\s+expense\s+claims?/i;
+    const own = state.chart.find((a) => claims.test(a.name) || claims.test(a.type));
+    return own !== undefined ? { code: own.code, name: own.name } : { code: "801", name: "Unpaid Expense Claims" };
+  }
   if (invoice.entityId === undefined) return undefined;
   return controlAccountFor(invoice.entityId, invoice.kind);
+}
+
+/**
+ * The expense claims in the journal report, kept as documents.
+ *
+ * Read again whenever the books open or a journal report arrives, so they
+ * follow it: claims are put back as the journals say, and anything else held
+ * is left alone. Only those dated from the start -- earlier ones are in the
+ * opening balance of Unpaid Expense Claims. True when they changed.
+ */
+export async function syncExpenseClaims(): Promise<boolean> {
+  const journals = state.ledger.journals ?? [];
+  const held = state.ledger.invoices ?? [];
+  const start = booksStartKnown();
+  const claims = journals.length === 0 ? [] : expenseClaimsFromJournals(journals, start as IsoDate | undefined);
+  const before = held.filter((i) => i.claim === true);
+  if (JSON.stringify(before) === JSON.stringify(claims)) return false;
+  state.ledger = { ...state.ledger, invoices: [...held.filter((i) => i.claim !== true), ...claims] };
+  state.persistent = await savePart(state.ledger, "invoices");
+  return true;
 }
 
 /**

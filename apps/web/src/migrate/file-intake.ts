@@ -1,7 +1,7 @@
 import { chosenStartDate } from "./onboarding-state.js";
 import { filedKey, isCreditNote, xeroNumberOf } from "@nzosa/core";
 import { redraw, showPage } from "../app.js";
-import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, record } from "../books.js";
+import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, record, syncExpenseClaims } from "../books.js";
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
@@ -360,6 +360,16 @@ export async function loadJournals(file: File): Promise<void> {
 
   state.ledger = { ...state.ledger, journals: merged.journals };
   state.persistent = await savePart(state.ledger, "journals");
+  // The expense claims in it, as documents owed to whoever claimed them.
+  if (await syncExpenseClaims()) {
+    const claims = (state.ledger.invoices ?? []).filter((i) => i.claim === true).length;
+    const settled = await settleInvoicesFromXero();
+    const said = document.createElement("div");
+    said.textContent =
+      `${claims} expense claim${claims === 1 ? "" : "s"} brought in from the journals, on Bills` +
+      (settled > 0 ? `; ${settled} repayment${settled === 1 ? "" : "s"} matched as Xero recorded them.` : ".");
+    $("setup-loaded").append(said);
+  }
   redraw("reports");
 
   if (merged.carried > 0) {

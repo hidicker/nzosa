@@ -29,6 +29,7 @@ import {
   record,
   tidyStaleTreatments,
   persistRules,
+  syncExpenseClaims,
 } from "./books.js";
 import {
   renderBooks,
@@ -106,6 +107,7 @@ import { renderAiCheck } from "./daily/ai-check-page.js";
 import {
   applyChartColumns,
   renderCheck,
+  settleInvoicesFromXero,
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
@@ -311,6 +313,9 @@ async function init(): Promise<void> {
     // Restoring the returns is not enough: the comparison against them is derived,
     // so without this the page has the filed figures and nothing to show.
     if (state.filed.length > 0) recomputeVariance();
+    // Claims from the journal report, kept in step with it, and their
+    // repayments settled where Xero recorded them.
+    if (await syncExpenseClaims()) await settleInvoicesFromXero();
 
     // Last, and not waited for. A feed that is slow, or a bank that is down,
     // must not hold up an app whose books are already on the screen.

@@ -87,6 +87,11 @@ export interface Invoice {
    * before the books began is not in them.
    */
   broughtForward?: Cents;
+  /**
+   * An expense claim: owed to a person who paid it themselves, held in
+   * Unpaid Expense Claims rather than Accounts Payable.
+   */
+  claim?: boolean;
 }
 
 /** A payment of an invoice or a bill that no bank line in these books shows. */

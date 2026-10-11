@@ -2478,6 +2478,28 @@ button.working:not(.primary):not(.active) {
   color: var(--muted);
   transition: border-color 0.15s, background 0.15s;
 }
+/* Files going in: the line saying which, with a small spinner. */
+.files-loading {
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  margin-top: 0.35rem;
+  color: var(--accent);
+}
+.files-loading::before {
+  content: "";
+  flex: none;
+  width: 0.9rem;
+  height: 0.9rem;
+  border: 2px solid var(--border);
+  border-top-color: var(--accent);
+  border-radius: 50%;
+  animation: loading-spin 0.85s linear infinite;
+}
+@media (prefers-reduced-motion: reduce) {
+  .files-loading::before { animation: none; border-style: dotted; }
+}
+.dropzone-mini.busy { cursor: progress; }
 .dropzone-mini.dragging {
   border-color: var(--accent);
   background: rgba(106, 75, 156, 0.08);

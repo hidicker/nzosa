@@ -18,7 +18,7 @@ import { borrow, returnBorrowed } from "../borrow.js";
 import { renderFeed, renderStatus, renderTable, showWhatNeedsDeciding } from "../daily/bank-import.js";
 import { bankLinkTable } from "../daily/entities.js";
 import { aiKeyPanel, refreshAiStatus } from "../ai-key-panel.js";
-import { loadWhatever } from "./file-intake.js";
+import { loadingFiles, loadWhatever, watchLoadingFiles } from "./file-intake.js";
 import {
   XERO_ACCOUNT_TRANSACTIONS,
   applyChosenStandardAccounts,
@@ -1306,6 +1306,23 @@ function dropZone(): HTMLElement {
   zone.addEventListener("drop", (e) => take((e as DragEvent).dataTransfer?.files));
 
   zone.append(text, pick, input);
+  // Busy for as long as files are going in, across the redraws each one sets
+  // off: this zone is rebuilt by them, so it asks, rather than remembering.
+  const busy = (): void => {
+    const loading = loadingFiles() !== null;
+    zone.classList.toggle("busy", loading);
+    pick.disabled = loading;
+    pick.classList.toggle("working", loading);
+    text.textContent = loading ? "Loading your files…" : "Drop files here, or";
+  };
+  busy();
+  const stop = watchLoadingFiles(() => {
+    if (!zone.isConnected) {
+      stop();
+      return;
+    }
+    busy();
+  });
   // What the reader says about each file it was given. It writes into one
   // element, which lives in Setup's own drop zone, so a file dropped here
   // would otherwise be read in silence.

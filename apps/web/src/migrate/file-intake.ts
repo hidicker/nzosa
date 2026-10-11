@@ -92,15 +92,86 @@ export async function loadWhatever(files: File[]): Promise<void> {
   const told = $("setup-loaded");
   told.textContent = "";
   const said: string[] = [];
-  const say = (line: string): void => {
-    said.push(line);
+  const show = (): void => {
     told.textContent = "";
     for (const one of said) {
       const row = document.createElement("div");
       row.textContent = one;
       told.append(row);
     }
+    const now = loadingFiles();
+    if (now !== null) told.append(loadingLine(now));
   };
+  const say = (line: string): void => {
+    said.push(line);
+    show();
+  };
+  const loading = (done: number, name: string): void => {
+    setLoading({ done, total: files.length, name });
+    show();
+  };
+  try {
+    await loadEach(files, say, loading);
+  } finally {
+    setLoading(null);
+    show();
+  }
+}
+
+/** Where loading dropped files is up to: how many are in, of how many, and which now. */
+export interface LoadingFiles {
+  done: number;
+  total: number;
+  name: string;
+}
+
+let loadingNow: LoadingFiles | null = null;
+const loadingWatchers = new Set<() => void>();
+
+/**
+ * The files being loaded, or null when none are. Loading a set of Xero files
+ * takes a while, and each one redraws the page, so a "Reading…" put up when
+ * they were dropped was gone at the first redraw and nothing said they were
+ * still going in. Whatever drop zone is on screen asks here instead.
+ */
+export function loadingFiles(): LoadingFiles | null {
+  return loadingNow;
+}
+
+/** Be told whenever that changes. Returns how to stop being told. */
+export function watchLoadingFiles(watcher: () => void): () => void {
+  loadingWatchers.add(watcher);
+  return () => loadingWatchers.delete(watcher);
+}
+
+function setLoading(next: LoadingFiles | null): void {
+  loadingNow = next;
+  for (const watcher of [...loadingWatchers]) watcher();
+}
+
+/** "Loading 3 of 10: the file's name…", with a spinner. */
+export function loadingLine(now: LoadingFiles): HTMLElement {
+  const line = document.createElement("div");
+  line.className = "files-loading";
+  line.setAttribute("role", "status");
+  line.textContent =
+    now.total === 1
+      ? `Loading ${now.name}…`
+      : `Loading ${Math.min(now.done + 1, now.total)} of ${now.total}${now.name !== "" ? `: ${now.name}` : ""}…`;
+  return line;
+}
+
+async function loadEach(
+  files: File[],
+  sayOut: (line: string) => void,
+  loading: (done: number, name: string) => void,
+): Promise<void> {
+  let spoken = 0;
+  const say = (line: string): void => {
+    spoken += 1;
+    sayOut(line);
+  };
+  loading(0, "");
 
   // Bank statements go through the importer together: it dedupes across the
   // files it is given, and feeding them one at a time would ask about the same
@@ -109,6 +180,7 @@ export async function loadWhatever(files: File[]): Promise<void> {
   const rest: { file: File; identified: Identified }[] = [];
 
   for (const file of files) {
+    loading(0, file.name);
     if (file.size > 50 * 1024 * 1024) {
       say(`Skipped "${file.name}": file is over 50MB.`);
       continue;
@@ -119,10 +191,11 @@ export async function loadWhatever(files: File[]): Promise<void> {
     else rest.push({ file, identified });
   }
 
+  let done = 0;
   if (banks.length > 0) {
-    say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} — importing…`);
+    loading(done, `${banks.length} bank statement${banks.length === 1 ? "" : "s"}`);
     await handleFiles(banks);
-    said.pop();
+    done += banks.length;
     say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} imported.`);
   }
 
@@ -148,6 +221,8 @@ export async function loadWhatever(files: File[]): Promise<void> {
   rest.sort((a, b) => (ORDER[a.identified.kind] ?? 2) - (ORDER[b.identified.kind] ?? 2));
 
   for (const { file, identified } of rest) {
+    loading(done, file.name);
+    done += 1;
     try {
       switch (identified.kind) {
         case "chart":
@@ -213,7 +288,7 @@ export async function loadWhatever(files: File[]): Promise<void> {
     }
   }
 
-  if (said.length === 0) say("Nothing was loaded.");
+  if (spoken === 0) say("Nothing was loaded.");
   // Only reachable from Setup today, but named by page rather than by hand for
   // the same reason as above: the next thing to call this may not be.
   showPage(state.page);

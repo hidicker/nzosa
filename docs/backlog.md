@@ -56,6 +56,13 @@ works).
 
 ## The app
 
+- **Ask on the page everywhere, not in the browser's confirm box.** An
+  embedded browser (the Claude desktop app's pane, for one) answers
+  `confirm()` "Cancel" at once without showing it, so whatever it guards is
+  refused in silence. `askOnPage` in `ui.ts` asks in the page instead; the
+  trial balance, Leave out after all and Bring in as a journal use it. About
+  46 `confirm()` calls in 28 files remain, and `alert()` and `prompt()` have
+  the same problem. Each needs its handler made async.
 - **Say it is working while a bulk action on Reconcile runs.** "Split N" (the
   payment-processor split suggestions at the top of Reconcile) gives no sign
   it has started until it is done. Use the `working` style on its button, as

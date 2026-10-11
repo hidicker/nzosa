@@ -194,12 +194,32 @@ export function myirStatus(id: MyirFileId, ctx: MyirContext, years: readonly num
   const wanted = id === "income-return" ? years.slice(-1).map((y) => y - 1) : years;
   const missing = wanted.filter((y) => !covered.has(y));
   const loaded = covered.size > 0;
+  // GST returns can be held without myIR's file: Xero's own exports of each
+  // filed return stand in for it. Said as that, rather than "Loaded" under a
+  // myIR heading, for a file nobody gave it.
+  if (id === "gst-returns" && loaded && !fromMyir(ctx)) {
+    const from = moduleOn("xero") ? "Xero" : "elsewhere";
+    const years = wanted.filter((y) => covered.has(y)).map((y) => `year to ${taxYearEndSaid(y)}`).join(", ");
+    return {
+      missing,
+      loaded,
+      said:
+        `From the GST returns loaded from ${from}${years !== "" ? `: ${years}` : ""}.` +
+        (missing.length > 0 ? ` Missing for ${missing.map((y) => `the year to ${taxYearEndSaid(y)}`).join(", ")}.` : "") +
+        " The myIR summary would check them against Inland Revenue's own record.",
+    };
+  }
   const said = !loaded
     ? "Not loaded."
     : missing.length === 0
       ? `Loaded${wanted.length > 0 ? `: ${wanted.map((y) => `year to ${taxYearEndSaid(y)}`).join(", ")}` : ""}.`
       : `Loaded, but missing for ${missing.map((y) => `the year to ${taxYearEndSaid(y)}`).join(", ")}.`;
   return { missing, loaded, said };
+}
+
+/** Whether myIR's own GST return summary has been loaded, as opposed to returns from elsewhere. */
+function fromMyir(ctx: MyirContext): boolean {
+  return (state.ledger.irdRecords ?? []).some((r) => r.kind === "gst-returns" && forEntity(r, ctx));
 }
 
 /** What a kind of file expects myIR's reader to have found in it. */

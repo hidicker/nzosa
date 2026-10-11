@@ -4,7 +4,7 @@ import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
 import { backendKind, ledgerName, openCloudBook, openCloudBookName, save, switchLedger, writesToFolder } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 import {
   BUSINESS_STRUCTURES,
   DEFAULT_ENTITY_NAME,
@@ -284,12 +284,23 @@ function tellSetup(source: Source): void {
 function startAgain(): HTMLElement {
   const row = document.createElement("div");
   row.className = "migration-restart";
-  row.append(
-    button("Start these questions again", () => {
+  // Asked first, and a quiet link well below the step: it sat just under the
+  // card, so when Next drew a shorter step the card shrank, this came up under
+  // the pointer, and a second click threw every answer away.
+  const again = button("Start these questions again", () => {
+    void askOnPage(
+      "Start these questions again from the first one?\n\n" +
+        "Only the answers here are cleared. Everything already loaded into these books stays.",
+      "Start again",
+      "Keep my answers",
+    ).then((yes) => {
+      if (!yes) return;
       forgetOnboarding();
       renderMigration();
-    }),
-  );
+    });
+  });
+  again.className = "link-button";
+  row.append(again);
   return row;
 }
 

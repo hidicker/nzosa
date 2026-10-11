@@ -2080,7 +2080,7 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-todo li { font-size: 0.85rem; line-height: 1.5; margin: 0.15rem 0; }
 .migration-folded { margin-top: 0.8rem; }
 .migration-folded .migration-guide { margin: 0.6rem 0 0.2rem; }
-.migration-restart { margin: 1.2rem 0 2rem; }
+.migration-restart { margin: 3rem 0 2rem; }
 .migration-restart button { font-size: 0.78rem; }
 .migration-guide { max-width: 54rem; margin: 1.4rem 0 2rem; }
 .migration-guide h3 { margin: 0 0 0.4rem; }

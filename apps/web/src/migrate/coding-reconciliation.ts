@@ -76,6 +76,10 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { clearCheck } from "../migrate/file-intake.js";
+import { journalLinesFor } from "../daily/balance-diagnostics.js";
+import { accountsForEditing, saveManualJournals } from "../books.js";
+import { booksLocale } from "../country.js";
+import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
 /** What the imported coding is called, mid-sentence: Xero, or the spreadsheet these books came from. */
 const imported = (): string => (moduleOn("xero") ? "Xero" : moduleOn("sheet") ? "the spreadsheet" : "the import");
@@ -998,7 +1002,10 @@ export function unmatchedReferenceWaiting(): number {
     "";
   const missing = result.unmatched.filter((line) => !(booksStart !== "" && line.date < booksStart));
   const ignored = state.ledger.ignoredReference ?? {};
-  return missing.filter((line) => !ignored[referenceLineKey(line)]).length;
+  return explainMissing(
+    missing.filter((line) => !ignored[referenceLineKey(line)]),
+    result,
+  ).rest.length;
 }
 
 export function renderCheck(): void {
@@ -1070,7 +1077,11 @@ export function renderCheck(): void {
     "";
   const beforeStart = result.unmatched.filter((line) => booksStart !== "" && line.date < booksStart);
   const missing = result.unmatched.filter((line) => !(booksStart !== "" && line.date < booksStart));
-  const unignoredMissing = missing.filter((line) => !isReferenceIgnored(line));
+  const explained = explainMissing(
+    missing.filter((line) => !isReferenceIgnored(line)),
+    result,
+  );
+  const unignoredMissing = explained.rest;
   const ignoredMissing = missing.filter((line) => isReferenceIgnored(line));
 
   // Nothing coded on our side means nothing to compare, and a row of zeros
@@ -1302,6 +1313,7 @@ export function renderCheck(): void {
     );
     const byAccount = missingByAccount(unignoredMissing);
     if (byAccount !== null) body.append(byAccount);
+    if (explained.accounted.length > 0) body.append(accountedFor(explained.accounted));
 
     if (unignoredMissing.length > 0) {
       const table = document.createElement("table");
@@ -1322,7 +1334,7 @@ export function renderCheck(): void {
         tr.append(amountCell(formatAmount(line.amount)));
         tr.append(nameCell(line.label));
         tr.append(nameCell(onAccount(line)));
-        tr.append(nameCell(fileAccountSaid(onAccount(line))));
+        tr.append(nameCell(explained.probably.get(line) ?? fileAccountSaid(onAccount(line))));
         const details = [
           line.contact,
           line.invoiceNumber ? `Inv: ${line.invoiceNumber}` : "",
@@ -1340,6 +1352,37 @@ export function renderCheck(): void {
         ignoreBtn.type = "button";
         ignoreBtn.className = "use-button";
         ignoreBtn.textContent = "Ignore";
+
+        // Where the books really lack it, the journal that brings it in: the
+        // bank account against what the file coded it to, on its date. Not
+        // for one that is probably a bank line already, dated differently.
+        const journal = explained.probably.has(line) ? null : journalFromLine(line);
+        if (journal !== null) {
+          const bring = document.createElement("button");
+          bring.type = "button";
+          bring.className = "use-button";
+          bring.textContent = "Bring in as a journal";
+          bring.addEventListener("click", () => {
+            const said = journal.lines
+              .map((l) => `  ${l.code}: ${l.amount >= 0 ? "debit" : "credit"} ${formatAmount(Math.abs(l.amount))}`)
+              .join("\n");
+            const taxed = (line.gstRate ?? "").trim() !== "" && !/no gst|exempt|zero/i.test(line.gstRate ?? "");
+            if (
+              !confirm(
+                `Add a manual journal dated ${journal.date}?\n\n${said}\n\n` +
+                  (taxed ? "A journal carries no GST of its own, so this one will not change a GST return.\n\n" : "") +
+                  "It goes in History, and can be deleted on Manual journals.",
+              )
+            ) {
+              return;
+            }
+            bring.disabled = true;
+            void saveManualJournals([...(state.ledger.manualJournals ?? []), journal], `Journal: ${journal.narration}`).then(
+              () => redraw("check"),
+            );
+          });
+          tdAction.append(bring);
+        }
 
         const formWrap = document.createElement("div");
         formWrap.className = "ignore-reason-form";
@@ -2057,6 +2100,13 @@ function codingNames(): { lines: Map<string, number>; names: string[]; known: st
  * number at all -- "ADDED AFTER RECO" -- cannot be placed, and says so.
  */
 function fileAccountHere(name: string): { kind: "here"; account: string } | { kind: "missing" } | { kind: "unknown" } {
+  // The chart says so outright where its entry of that name is linked to a
+  // bank account here: "BNZ Visa - Business Card" carries no number to read.
+  const named = name.trim().toLowerCase();
+  const linked = state.chart.find(
+    (a) => (a.ledgerAccount ?? "").trim() !== "" && a.name.trim().toLowerCase() === named,
+  );
+  if (linked !== undefined) return { kind: "here", account: (linked.ledgerAccount ?? "").trim() };
   const held = [...new Set(state.ledger.transactions.map((t) => t.account))];
   const full = /(\d{2})-(\d{4})-(\d{7})-(\d{2,3})/;
   const key = (text: string): string | null => {
@@ -2073,6 +2123,203 @@ function fileAccountHere(name: string): { kind: "here"; account: string } | { ki
   const found = held.filter((account) => new RegExp(`${last}$`).test(account) || bankLabel(account).endsWith(last));
   if (found.length === 1 && found[0] !== undefined) return { kind: "here", account: found[0] };
   return found.length === 0 ? { kind: "missing" } : { kind: "unknown" };
+}
+
+/**
+ * Lines in the file and not the ledger that are in these books another way,
+ * or never needed to be, said rather than listed as missing; and, for those
+ * that may simply be dated differently, where they probably are.
+ *
+ *  * A pair that cancels out -- a fee and its reimbursement inside one
+ *    payment -- never reached the bank at all.
+ *  * Xero's "Reconciliation adjustment" is its correction of a cent its own
+ *    coding was out by; the books hold the bank's amount, so need nothing.
+ *  * A manual journal posted to the account, of the same amount, is the line,
+ *    whatever its date: a refund the bank feed missed, put in by hand.
+ *  * The same amount on the same account, further apart than pairing allows
+ *    and on a bank line nothing else claimed, is probably it: said, not
+ *    assumed, as "Probably 16 Nov, 10 days earlier".
+ */
+interface MissingExplained {
+  accounted: { line: ReferenceLine; how: string }[];
+  probably: Map<ReferenceLine, string>;
+  rest: ReferenceLine[];
+}
+
+const XERO_ADJUSTMENT = /^\s*reconciliation adjustment\s*$/i;
+
+/** 16 Nov, with the year where it is not the year of the date beside it. */
+function shortDate(iso: string, beside: string): string {
+  return new Date(`${iso}T00:00:00Z`).toLocaleDateString(booksLocale(), {
+    day: "numeric",
+    month: "short",
+    ...(iso.slice(0, 4) !== beside.slice(0, 4) ? { year: "numeric" as const } : {}),
+    timeZone: "UTC",
+  });
+}
+
+/** Days from `b` to `a`: negative when `a` is the earlier. */
+function daysApart(a: string, b: string): number {
+  return Math.round((Date.parse(`${a}T00:00:00Z`) - Date.parse(`${b}T00:00:00Z`)) / 86_400_000);
+}
+
+function explainMissing(lines: readonly ReferenceLine[], result: CodingComparison): MissingExplained {
+  const onAccount = (line: ReferenceLine): string => line.bankAccount ?? line.account ?? "";
+  const accountOf = (line: ReferenceLine): string | null => {
+    const here = fileAccountHere(onAccount(line));
+    return here.kind === "here" ? here.account : null;
+  };
+  const accounted: MissingExplained["accounted"] = [];
+  const done = new Set<ReferenceLine>();
+
+  // Pairs that cancel out, by day, account and what ties them together.
+  const groups = new Map<string, ReferenceLine[]>();
+  for (const line of lines) {
+    const tie = (line.reference || line.invoiceNumber || line.contact || "").trim().toLowerCase();
+    if (tie === "") continue;
+    const key = [line.date, onAccount(line), tie].join("|");
+    const list = groups.get(key);
+    if (list) list.push(line);
+    else groups.set(key, [line]);
+  }
+  for (const list of groups.values()) {
+    if (list.length < 2 || list.reduce((sum, l) => sum + l.amount, 0) !== 0) continue;
+    for (const line of list) {
+      accounted.push({ line, how: "Cancels out with the line beside it, so nothing reached the bank" });
+      done.add(line);
+    }
+  }
+
+  for (const line of lines) {
+    if (done.has(line)) continue;
+    if (XERO_ADJUSTMENT.test(line.contact ?? "") || XERO_ADJUSTMENT.test(line.description ?? "")) {
+      accounted.push({
+        line,
+        how: "Xero's correction of a cent its own coding was out by; these books hold the bank's amount",
+      });
+      done.add(line);
+    }
+  }
+
+  // Manual journals posted to the account, each journal line used once.
+  const taken = new Set<string>();
+  for (const line of lines) {
+    if (done.has(line)) continue;
+    const account = accountOf(line);
+    if (account === null) continue;
+    const journal = journalLinesFor(account)
+      .filter((j) => j.amount === line.amount && !taken.has(j.id))
+      .sort((a, b) => Math.abs(daysApart(a.date, line.date)) - Math.abs(daysApart(b.date, line.date)))[0];
+    if (journal === undefined) continue;
+    taken.add(journal.id);
+    accounted.push({
+      line,
+      how: `In these books as the journal of ${shortDate(journal.date, line.date)}: ${journal.otherParty.replace(/^Journal: /, "")}`,
+    });
+    done.add(line);
+  }
+
+  // The same amount further apart than pairing allows, on a bank line nothing
+  // in the file was paired with.
+  const paired = new Set<string>();
+  for (const row of [...result.agreed, ...result.differed, ...result.uncoded]) {
+    if (row.theirs !== null) paired.add(row.transaction.id);
+  }
+  const probably = new Map<ReferenceLine, string>();
+  const claimed = new Set<string>();
+  for (const line of lines) {
+    if (done.has(line)) continue;
+    const account = accountOf(line);
+    if (account === null) continue;
+    const near = state.ledger.transactions.filter(
+      (t) =>
+        t.account === account &&
+        t.amount === line.amount &&
+        !paired.has(t.id) &&
+        !claimed.has(t.id) &&
+        Math.abs(daysApart(t.date, line.date)) <= 31,
+    );
+    const t = near[0];
+    if (near.length !== 1 || t === undefined) continue;
+    claimed.add(t.id);
+    const gap = daysApart(t.date, line.date);
+    const days = Math.abs(gap);
+    probably.set(
+      line,
+      gap === 0
+        ? `Probably ${shortDate(t.date, line.date)}`
+        : `Probably ${shortDate(t.date, line.date)}, ${days} day${days === 1 ? "" : "s"} ${gap < 0 ? "earlier" : "later"}`,
+    );
+  }
+
+  return { accounted, probably, rest: lines.filter((line) => !done.has(line)) };
+}
+
+/**
+ * The journal that brings a line in where the books lack it: the bank account
+ * against what the file coded it to, on the file's date. Null when either side
+ * cannot be named in these books.
+ */
+function journalFromLine(line: ReferenceLine): ManualJournal | null {
+  const here = fileAccountHere(line.bankAccount ?? line.account ?? "");
+  if (here.kind !== "here") return null;
+  const bankSide =
+    state.chart.find((a) => (a.ledgerAccount ?? "").trim() === here.account)?.name.trim() ?? bankLabel(here.account);
+  const rows = accountsForEditing();
+  const labelFor = (code: string): string | null => {
+    const number = /^\s*(\S+)\s/.exec(code)?.[1] ?? code.trim();
+    const row = rows.find((one) => one.account.code.trim() !== "" && one.account.code.trim() === number);
+    return row === undefined ? null : row.label;
+  };
+  const parts: { code: string; amount: number }[] =
+    line.parts !== undefined && line.parts.length > 0 ? line.parts : [{ code: line.code, amount: line.amount }];
+  const others: { code: string; amount: number }[] = [];
+  for (const part of parts) {
+    const label = labelFor(part.code);
+    if (label === null) return null;
+    others.push({ code: label, amount: -part.amount });
+  }
+  // Xero starts a description with the contact ("OpenAi - OpenAi"), so the
+  // description alone says both where it does.
+  const contact = (line.contact ?? "").trim();
+  const description = (line.description ?? "").trim();
+  const said =
+    contact !== "" && description.toLowerCase().startsWith(contact.toLowerCase())
+      ? description.toLowerCase() === contact.toLowerCase() ? contact : description
+      : [contact, description].filter((x) => x !== "").join(" - ");
+  return {
+    id: `m${Date.now().toString(36)}`,
+    date: line.date,
+    narration: `From Xero: ${said || "a line the bank feed does not have"}`,
+    lines: [{ code: bankSide, amount: line.amount }, ...others] as ManualJournal["lines"],
+  };
+}
+
+/** The lines in the file that are in these books another way, or need not be. */
+function accountedFor(lines: MissingExplained["accounted"]): HTMLElement {
+  const fold = document.createElement("details");
+  const summary = document.createElement("summary");
+  summary.textContent = `Accounted for another way (${lines.length})`;
+  fold.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table owner-table";
+  const head = document.createElement("thead");
+  head.innerHTML = "<tr><th>Date</th><th>Amount</th><th>Coded to</th><th>On their account</th><th>How</th></tr>";
+  const tbody = document.createElement("tbody");
+  for (const { line, how } of [...lines].sort((a, b) => a.line.date.localeCompare(b.line.date))) {
+    const tr = document.createElement("tr");
+    tr.append(
+      nameCell(line.date),
+      amountCell(formatAmount(line.amount)),
+      nameCell(line.label),
+      nameCell(line.bankAccount ?? line.account ?? ""),
+      nameCell(how),
+    );
+    tbody.append(tr);
+  }
+  table.append(head, tbody);
+  fold.append(table);
+  return fold;
 }
 
 function fileAccountSaid(name: string): string {

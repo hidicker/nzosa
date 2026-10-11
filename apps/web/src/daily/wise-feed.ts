@@ -94,6 +94,9 @@ function button(label: string, action: () => void, primary = false): HTMLButtonE
  */
 let wiseDrawing = 0;
 
+/** What the last Wise fetch said it did, kept for the section's next drawing. */
+let lastWiseSaid = "";
+
 export async function renderWise(): Promise<void> {
   const drawing = ++wiseDrawing;
   const body = document.getElementById("wise-body");
@@ -135,6 +138,8 @@ export async function renderWise(): Promise<void> {
   body.append(head, disconnect);
 
   const table = document.createElement("div");
+  // What the last fetch did, drawn again after the redraw its lines set off.
+  said.textContent = lastWiseSaid;
   body.append(table, said);
   const chosen: Record<string, string> = { ...status.accounts };
 
@@ -291,6 +296,8 @@ async function fetchStatements(
     said.textContent =
       `${added} new line${added === 1 ? "" : "s"} from Wise. Review them on this page, and code them on Reconcile.` +
       (problems.length > 0 ? ` ${problems.join("; ")}.` : "");
+    lastWiseSaid = said.textContent;
+    for (const shown of document.querySelectorAll<HTMLElement>("#wise-body .feed-said")) shown.textContent = lastWiseSaid;
     // Said, rather than "0 new lines" and nothing else: lines removed from
     // these books earlier are skipped on every fetch, and a removal that took
     // more than was meant left the balance looking empty with no way back.

@@ -209,14 +209,21 @@ async function loadEach(
     // The chart before the coding history: rules are made from the history as
     // it loads, and its account names only mean something once the chart does.
     chart: -1,
+    // Which bank account each of the chart's bank rows is, before anything
+    // reads a balance or a line through those rows.
+    "bank-accounts": -0.5,
     "account-transactions": 0,
     "coding-sheet": 0,
+    // The opening balances before the open invoices and bills, which are
+    // checked against the receivables and payables balances in them: read the
+    // other way round, every set said there was nothing to check against yet.
+    "trial-balance": 0.5,
     "journal-report": 1,
     "general-ledger-detail": 1,
     invoices: 2,
     allocations: 2,
     "fixed-assets": 2,
-    "trial-balance": 3,
+    "aged-detail": 2,
   };
   rest.sort((a, b) => (ORDER[a.identified.kind] ?? 2) - (ORDER[b.identified.kind] ?? 2));
 

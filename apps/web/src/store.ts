@@ -858,6 +858,10 @@ async function putPartNow(part: string, data: unknown): Promise<boolean> {
 
 /** Ask whether there is a folder behind this app, and read it if so. */
 async function loadFromFolder(): Promise<StoredLedger | null> {
+  // The folder is the app running on this computer, which is always served
+  // over plain http from localhost. Asked from a website it is never there,
+  // and every opening logged a "not found" for it.
+  if (location.protocol === "https:" && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return null;
   let status: { writable?: boolean; name?: string; ledger?: string } | null = null;
   try {
     const response = await api("status");

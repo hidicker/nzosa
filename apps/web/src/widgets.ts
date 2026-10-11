@@ -1,5 +1,5 @@
 import { showPage } from "./app.js";
-import { entityBankAccounts } from "./books.js";
+import { bankLabel, entityBankAccounts } from "./books.js";
 import { formatAmount } from "@nzosa/core";
 import { $, state } from "./state.js";
 import { emptyEntityModel } from "@nzosa/core";
@@ -41,10 +41,7 @@ export function fillAccounts(id: string, chosen: string[], onChange: () => void)
     .sort();
   holder.textContent = "";
 
-  const label = (account: string): string => {
-    const named = state.ledger.transactions.find((t) => t.account === account)?.extras?.accountLabel;
-    return named ?? account;
-  };
+  const label = (account: string): string => bankLabel(account);
 
   const all = document.createElement("button");
   all.type = "button";
@@ -61,7 +58,7 @@ export function fillAccounts(id: string, chosen: string[], onChange: () => void)
     chip.type = "button";
     chip.className = chosen.includes(account) ? "chip on" : "chip";
     chip.textContent = label(account);
-    chip.title = account;
+    chip.title = label(account);
     chip.addEventListener("click", () => {
       const at = chosen.indexOf(account);
       if (at >= 0) chosen.splice(at, 1);

@@ -1,3 +1,4 @@
+import { askOnPage } from "../ui.js";
 import { redraw, showPage } from "../app.js";
 import { XERO_TRIAL_BALANCE } from "../migrate/setup-wizard.js";
 import { feedStatus } from "../feed-route.js";
@@ -499,6 +500,31 @@ function dollars(cents: Cents): string {
     minimumFractionDigits: moneyPlaces(),
     maximumFractionDigits: moneyPlaces(),
   })}`;
+}
+
+/**
+ * The bank accounts in a trial balance against the bank feed's balance worked
+ * back to the start, in a few lines for the question that loads it. Empty
+ * where there is no feed balance to compare with.
+ */
+async function bankAgainstTrialBalance(accounts: Record<string, Cents>, start: string): Promise<string> {
+  const status = await feedStatus().catch(() => null);
+  const latest = status?.balances?.[status.balances.length - 1];
+  if (status === null || !status.configured || latest === undefined) return "";
+  const on = new Date(latest.at).toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" });
+  const lines: string[] = [];
+  for (const [akahuId, ours] of Object.entries(status.accounts ?? {})) {
+    const balance = latest.balances[akahuId];
+    const given = accounts[ours];
+    if (ours === "" || balance === undefined || given === undefined) continue;
+    const bankSays = balanceAtStart(ours, balance, on, start).start;
+    const gap = given - bankSays;
+    lines.push(
+      `${bankLabel(ours)}: ${dollars(given)}` +
+        (gap === 0 ? ", the same as the bank." : `; the bank, worked back, says ${dollars(bankSays)} (${dollars(gap)} apart).`),
+    );
+  }
+  return lines.length === 0 ? "" : `\nAgainst the bank feed:\n${lines.join("\n")}\n`;
 }
 
 /** The working for one row, in words, or "" when there is nothing to work. */
@@ -1345,10 +1371,16 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
       !state.ledger.transactions.some((t) => t.account === code),
   );
 
+  // Each bank account's figure beside the bank's own, worked back from the
+  // feed: said here, where the figures are being agreed to, rather than left
+  // on a page somebody may not visit. A difference is usually a line dated on
+  // the wrong side of the start, or one the feed does not have.
+  const againstBank = await bankAgainstTrialBalance(accounts, dayAfter(chosen));
+
   // Everything worth objecting to, before anything is written. Loading figures
   // that do not balance is allowed -- the page will keep saying so -- but it
   // should never happen without being read first.
-  const ok = confirm(
+  const ok = await askOnPage(
     `${Object.keys(accounts).length} accounts as at ${chosen}, from ${file.name}.\n\n` +
       `They sum to ${money(total)}${total === 0 ? " - balanced." : " - NOT balanced."}\n` +
       `Retained earnings ${built.retainedEarningsGiven ? "given as" : "derived as"} ` +
@@ -1366,7 +1398,10 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
             : "") +
           " For the surest result, export it again with all columns selected.\n"
         : "") +
+      againstBank +
       "\nThis replaces whatever opening balances are held now.",
+    "Use these opening balances",
+    "Not now",
   );
   if (!ok) return false;
 

@@ -146,7 +146,12 @@ export const MODULES: readonly ModuleInfo[] = [
     name: "Spreadsheet import",
     what: "Bringing in a coded spreadsheet, and checking these books' coding against it.",
     basis: "source",
-    inferred: () => source() === "sheet" || (state.ledger.reference ?? state.reference).length > 0,
+    // Coded history from Xero is the Xero module's; this one is for a
+    // spreadsheet. Loading Xero's files switched it on as well, and with it
+    // the spreadsheet's steps and menus nobody needed.
+    inferred: () =>
+      source() === "sheet" ||
+      (source() !== "xero" && !xeroHeld() && (state.ledger.reference ?? state.reference).length > 0),
   },
   {
     id: "payroll",

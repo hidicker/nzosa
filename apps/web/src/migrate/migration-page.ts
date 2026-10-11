@@ -38,7 +38,7 @@ import {
   sourceForTheseBooks,
 } from "./onboarding-state.js";
 import type { Onboarding, PlannedEntity, Source, Step } from "./onboarding-state.js";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Migration: the guided start.
@@ -140,7 +140,9 @@ export function renderMigration(): void {
   const steps = stepsFor(held);
   const reached = steps.indexOf(here);
 
-  if (held.at === undefined) body.append(haveALook());
+  // Not once these books have lines of their own: the sample is for somebody
+  // deciding whether to start, not somebody already started.
+  if (held.at === undefined && state.ledger.transactions.length === 0) body.append(haveALook());
 
   steps.forEach((step, index) => {
     if (index < reached) body.append(summary(step, held));
@@ -453,7 +455,13 @@ function dateQuestion(number: number, held: Onboarding): HTMLElement {
   label.append("Start date ");
   const date = document.createElement("input");
   date.type = "date";
-  date.value = held.startDate ?? booksStartDate();
+  // Where the bank lines already here begin, the start of their financial
+  // year: books whose feed reaches back to April 2025 were offered April 2026.
+  const earliest = state.ledger.transactions.reduce<string | undefined>(
+    (first, t) => (first === undefined || t.date < first ? t.date : first),
+    undefined,
+  );
+  date.value = held.startDate ?? (earliest !== undefined ? taxYearStart(taxYearOf(earliest)) : booksStartDate());
   label.append(date);
   row.append(label);
   inner.append(row);
@@ -1161,6 +1169,16 @@ function theirOwnBooks(held: Onboarding): HTMLElement {
     return wrap;
   }
 
+  // One entity, already written into these books: nothing to decide here, so
+  // on to the next question rather than a card saying so with a Continue.
+  if (group.length === 0 && single && placed.some((e) => e.book === open)) {
+    queueMicrotask(() => {
+      if (onboarding().at === "plan") answer({ at: nextAfter(held, "plan") });
+    });
+    wrap.append(advice(`These books are ${placed[0]?.name ?? ""}'s.`));
+    return wrap;
+  }
+
   if (group.length === 0) {
     const mine = placed[0]?.name ?? "";
     wrap.append(
@@ -1504,15 +1522,15 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     if (year !== null) {
       inner.append(
         note(
-          `You chose ${held.startDate} as the day these books start. Do you have Xero ` +
-            `records for the financial year ${year.from} to ${year.to}?`,
+          `You chose ${held.startDate} as the day these books start. Do you have a full year ` +
+            `of Xero records before it (${year.from} to ${year.to}), or did you keep using Xero after it?`,
         ),
         choices<"yes" | "no">(
           [
             [
               "yes",
-              "Yes, the whole year",
-              "Export the account transactions for it. The coding comes across with them",
+              "Yes, a full year, or more",
+              "Export the account transactions for all of it, before the start and after. The coding comes across with them",
             ],
             [
               "no",
@@ -1572,7 +1590,9 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     );
   }
 
-  inner.append(actions(button("Continue", () => answer({ at: "done" }), true)));
+  // On to the rest of the set-up, not past it: "done" skipped that walk and
+  // ticked it off unseen, with five of its twelve steps still to do.
+  inner.append(actions(button("Continue", () => answer({ at: nextAfter(held, "files") }), true)));
   return box;
 }
 

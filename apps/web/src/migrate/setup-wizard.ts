@@ -585,7 +585,7 @@ export function xeroMigrationFiles(): SourceFile[] {
     {
       what: "Aged receivables and payables",
       where:
-        "Accounting → Reports → Aged Receivables Detail, and Aged Payables Detail, each as at the day before the books start → Export",
+        "Reporting → Aged Receivables Detail, and Aged Payables Detail, each as at the day before the books start → Export",
       why: "Which earlier invoices and bills were still open",
       have: (led.openingDocuments ?? []).length > 0,
       page: "invoices",
@@ -606,7 +606,7 @@ export function xeroMigrationFiles(): SourceFile[] {
     },
     {
       what: "Journal report",
-      where: "Accounting → Reports → Journal Report (all columns)",
+      where: "Reporting → Journal Report (all columns)",
       why: "Accountant year-end journals",
       have: (led.journals ?? []).length > 0,
       page: "reports",
@@ -1230,7 +1230,7 @@ export function setupSteps(
           ? `${(led.journals ?? []).length} journals`
           : fromNew
             ? "Not needed when starting fresh."
-            : "Xero: Accounting → Reports → Journal Report, all columns, exported as " +
+            : "Xero: Reporting → Journal Report, all columns, exported as " +
             "CSV or Excel. Load it on the Reports page.",
       unlocks: "Accrual reports that reproduce a signed set of accounts exactly",
       page: "reports",

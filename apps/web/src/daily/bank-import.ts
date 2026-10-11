@@ -10,7 +10,7 @@ import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { placeBankImport } from "../menu.js";
 import { renderLockedArrivals } from "./lock-dates.js";
-import { amountCell, dollars, download, escapeHtml, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, dollars, download, escapeHtml, nameCell, note } from "../ui.js";
 import {
   feedAccounts,
   feedAutoFetch,
@@ -486,6 +486,10 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
   const table = document.createElement("div");
   const said = document.createElement("p");
   said.className = "feed-said";
+  // What the last fetch did, drawn again: the section is redrawn as the lines
+  // come in, and on Start here the whole page is, which took it away before
+  // anybody had read it.
+  said.textContent = lastFetchSaid;
 
   const chosen: Record<string, string> = { ...mapping };
 
@@ -568,10 +572,20 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
       // finds nothing and would offer to create a second account beside a
       // reconciled one. Only when unambiguous; otherwise it asks.
       const suggestion = matchLedgerAccount(account, ours()) ?? akahuAccountId(account);
-      for (const id of [...new Set([...ours(), suggestion])].sort()) {
+      // Offered by name, and only what this account could be: one of these
+      // books' accounts not already linked to another of the bank's, or its
+      // own new one. Every account was offered every id, Wise's among them.
+      const takenElsewhere = new Set(
+        Object.entries(chosen)
+          .filter(([other, to]) => other !== account._id && to !== "")
+          .map(([, to]) => to),
+      );
+      const could = ours().filter((id) => !id.startsWith("wise-") && !takenElsewhere.has(id));
+      for (const id of [...new Set([...could, suggestion])].sort((x, y) => bankLabel(x).localeCompare(bankLabel(y)))) {
         const option = document.createElement("option");
         option.value = id;
-        option.textContent = id;
+        const held = ours().includes(id);
+        option.textContent = held ? bankLabel(id) : `New in these books: ${account.name}`;
         option.selected = (chosen[account._id] ?? startsIn(account)) === id;
         select.append(option);
       }
@@ -603,6 +617,12 @@ function accountMappingSection(mapping: Record<string, string>): HTMLElement {
     // on 1 April. Empty only when nothing says when they start.
     from.value =
       feedStartDate(chosen) ?? chosenStartDate() ?? state.ledger.openingBalances?.asAt ?? "";
+    // The start, or any day after it; never before.
+    const earliest = booksStartForFeed();
+    if (earliest !== undefined) {
+      from.min = earliest;
+      if (from.value !== "" && from.value < earliest) from.value = earliest;
+    }
     const fromLabel = document.createElement("label");
     fromLabel.append("From ", from);
 
@@ -678,7 +698,13 @@ async function pullFromFeed(
     // in UTC; only those from the day chosen are kept, and those in the week
     // before the books start are held for a decision.
     await holdJustBefore(fetched.transactions);
-    const read = { ...fetched, transactions: onOrAfter(fetched.transactions, from === "" ? undefined : (from as IsoDate)) };
+    // From the day chosen, but never before the books start: a line from
+    // before then is in the opening balance already, and kept here it was
+    // counted twice -- it is held above, with the others from before the
+    // start, for a decision instead.
+    const start = booksStartForFeed();
+    const keepFrom = start !== undefined && (from === "" || from < start) ? start : from === "" ? undefined : (from as IsoDate);
+    const read = { ...fetched, transactions: onOrAfter(fetched.transactions, keepFrom) };
     const named = nameHeldAccounts(labels, mapping);
 
     if (read.transactions.length === 0) {
@@ -704,6 +730,11 @@ async function pullFromFeed(
   } catch (error) {
     said.textContent = (error as Error).message;
   } finally {
+    lastFetchSaid = said.textContent ?? "";
+    // Into whichever copy of the section is on screen now, as well.
+    for (const shown of document.querySelectorAll<HTMLElement>("#feed-body .feed-accounts .feed-said")) {
+      shown.textContent = lastFetchSaid;
+    }
     button.disabled = false;
     button.textContent = label;
     button.classList.remove("working");
@@ -711,6 +742,9 @@ async function pullFromFeed(
     void keepFeedInPlace(top);
   }
 }
+
+/** What the last fetch said it did, kept for the section's next drawing. */
+let lastFetchSaid = "";
 
 /**
  * Connecting a bank feed, and pulling from it.
@@ -1954,13 +1988,12 @@ async function leaveOutAfterAll(line: Transaction): Promise<void> {
     state.ledger.invoiceMatches?.[id] !== undefined;
   const what = `${String(line.extras?.["bankDate"] ?? "")} ${formatMoney(line.amount)} ${line.otherParty || line.particulars || ""}`;
   if (
-    !confirm(
-      `Leave out ${what}?
-
-` +
+    !(await askOnPage(
+      `Leave out ${what}?\n\n` +
         (coded ? "Its coding is removed with it. " : "") +
         "It is taken out of these books and the bank feed will not bring it in again.",
-    )
+      "Leave it out",
+    ))
   ) {
     return;
   }

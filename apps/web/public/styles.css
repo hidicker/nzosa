@@ -469,6 +469,24 @@
   .sidebar-nav {
     flex-direction: row;
     flex: 1;
+    /* Scrolls sideways when the icons outrun the window, without a scrollbar
+       of its own: at 800px wide one showed as a white bar across the menu.
+       The fade at the end says there is more. */
+    min-width: 0;
+    overflow-x: auto;
+    overflow-y: hidden;
+    scrollbar-width: none;
+    -webkit-mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+    mask-image: linear-gradient(to right, #000 calc(100% - 28px), transparent);
+  }
+  .sidebar-nav::-webkit-scrollbar {
+    display: none;
+  }
+  .sidebar {
+    scrollbar-width: none;
+  }
+  .sidebar::-webkit-scrollbar {
+    display: none;
   }
   .sidebar-nav button span {
     display: none;
@@ -696,6 +714,33 @@
   .code-form, .code-reason { grid-column: 1 / -1; }
   /* One field per line: half a dozen of them wrapping in pairs is harder to
      read than a list, and a description is the field that wants the room. */
+  .code-form { gap: 0.35rem; }
+  .code-form select,
+  .code-form input[type="text"],
+  .code-form .combo,
+  .code-contact,
+  .code-description {
+    flex: 1 1 100% !important;
+    max-width: none !important;
+    min-width: 0 !important;
+  }
+  .code-form button { flex: 0 0 auto; }
+}
+
+/* The same stacking whenever the list itself is too narrow for three columns,
+   whatever the window: just past 820px the menu is a column again and takes a
+   quarter of the width, and the coding boxes ran out of the card by up to
+   140px. Measured on the list, not the screen. */
+#reconcile-body { container-type: inline-size; }
+@container (max-width: 42rem) {
+  .code-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 0.35rem 0.6rem;
+    padding: 0.7rem 0;
+  }
+  .code-bank { grid-column: 1; grid-row: 1; }
+  .code-amount { grid-column: 2; grid-row: 1; padding-top: 0; align-self: start; }
+  .code-form, .code-reason { grid-column: 1 / -1; }
   .code-form { gap: 0.35rem; }
   .code-form select,
   .code-form input[type="text"],
@@ -1135,6 +1180,19 @@ button.remove:hover:not(:disabled) {
 
 /* ---------- messages ---------- */
 
+/* A question asked on the page rather than in the browser's own box. */
+dialog.ask-on-page {
+  max-width: min(34rem, calc(100vw - 32px));
+  padding: 18px 20px 14px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+dialog.ask-on-page::backdrop { background: rgba(0, 0, 0, 0.35); }
+.ask-on-page-text { margin: 0 0 14px; white-space: pre-line; line-height: 1.45; }
+.ask-on-page-actions { display: flex; justify-content: flex-end; gap: 8px; }
+
 /* Lines on Reconcile that each need one thing done, with the way to each. */
 .loose-ends {
   margin: 12px 0;
@@ -1147,7 +1205,13 @@ button.remove:hover:not(:disabled) {
 .loose-ends-title { margin: 0 0 2px; font-weight: 600; }
 .loose-ends .report-table { margin-top: 6px; }
 .loose-ends .report-table td { padding-top: 4px; padding-bottom: 4px; }
-.loose-ends-actions { text-align: right; white-space: nowrap; }
+.loose-ends-actions { text-align: right; }
+.loose-ends-actions button { white-space: nowrap; margin: 2px 0; }
+.loose-ends .report-table { width: 100%; }
+.loose-ends .report-table td:first-child,
+.loose-ends .report-table td.report-amount { white-space: nowrap; width: 1%; }
+/* As wide as its buttons and no wider: the payee takes what is left. */
+.loose-ends .report-table td.loose-ends-actions { width: 1%; }
 .loose-ends-actions button + button { margin-left: 6px; }
 .loose-focus { margin: 8px 0; color: var(--muted); }
 

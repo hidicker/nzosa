@@ -337,6 +337,15 @@ async function init(): Promise<void> {
 }
 
 function wireUp(): void {
+  // Each menu item named for a screen reader, and for a tip on hover, by its
+  // own label: narrowed to icons, the label is hidden, and a hidden label
+  // names nothing -- a row of buttons a screen reader could only call "button".
+  for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button")) {
+    const label = button.querySelector("span")?.textContent?.replace(/\s+/g, " ").trim() ?? "";
+    if (label === "" || button.hasAttribute("aria-label")) continue;
+    button.setAttribute("aria-label", label);
+    if (button.title === "") button.title = label;
+  }
   for (const button of document.querySelectorAll<HTMLButtonElement>(
     ".sidebar-nav button[data-page], .sidebar-foot button[data-page]",
   )) {

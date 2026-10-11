@@ -1103,8 +1103,22 @@ export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
 }
 
 export function bankLabel(account: string): string {
-  return banks().labels.get(account) ?? account;
+  // The chart's name where a bank row is linked to the account: "BNZ Visa -
+  // Business Card", which is what the person calls it, rather than the feed's
+  // "Arrow Rock Tradin" cut short, or an id like arrow-rock-tradin-4996.
+  if (chartNames.chart !== state.chart) {
+    chartNames.chart = state.chart;
+    chartNames.byAccount = new Map(
+      state.chart
+        .filter((a) => (a.ledgerAccount ?? "").trim() !== "" && a.name.trim() !== "")
+        .map((a) => [(a.ledgerAccount ?? "").trim(), a.name.trim()]),
+    );
+  }
+  return chartNames.byAccount.get(account) ?? banks().labels.get(account) ?? account;
 }
+
+/** The chart's names for bank accounts, by account, for the chart they came from. */
+const chartNames: { chart: unknown; byAccount: Map<string, string> } = { chart: null, byAccount: new Map() };
 
 export function codingProgress(): CodingCounts {
   if (

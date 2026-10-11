@@ -251,8 +251,10 @@ export function renderReconcile(): void {
           const settle = document.createElement("button");
           settle.type = "button";
           settle.className = "small primary";
-          settle.textContent = `Settle ${numbers.join(" and ")}`;
-          settle.title = "Xero recorded this payment as paying these invoices";
+          // Short, so the row keeps its room for the payee; which invoices is
+          // said on the button's own tip.
+          settle.textContent = `Settle ${numbers.length} invoices`;
+          settle.title = `Xero recorded this payment as paying ${numbers.join(" and ")}`;
           settle.addEventListener("click", () => {
             settle.disabled = true;
             void settleInvoicesExactly(t, numbers).then((done) => {

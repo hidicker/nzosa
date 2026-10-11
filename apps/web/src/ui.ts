@@ -27,6 +27,52 @@ export function note(text: string): HTMLElement {
   return p;
 }
 
+/**
+ * Ask on the page, and wait for the answer: true for the first button.
+ *
+ * The browser's own confirm box is not asked everywhere -- an embedded
+ * browser can answer it "Cancel" at once without showing it, and a trial
+ * balance loaded there was refused without a word. This is drawn in the page,
+ * so it is shown wherever the page is. Escape, or the second button, is no.
+ */
+export function askOnPage(message: string, yes = "OK", no = "Cancel"): Promise<boolean> {
+  return new Promise((resolve) => {
+    const box = document.createElement("dialog");
+    box.className = "ask-on-page";
+    const text = document.createElement("p");
+    text.className = "ask-on-page-text";
+    text.textContent = message;
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "primary";
+    ok.textContent = yes;
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = no;
+    const actions = document.createElement("div");
+    actions.className = "ask-on-page-actions";
+    actions.append(cancel, ok);
+    box.append(text, actions);
+    let answered = false;
+    const finish = (answer: boolean): void => {
+      if (answered) return;
+      answered = true;
+      box.close();
+      box.remove();
+      resolve(answer);
+    };
+    ok.addEventListener("click", () => finish(true));
+    cancel.addEventListener("click", () => finish(false));
+    box.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(false);
+    });
+    document.body.append(box);
+    box.showModal();
+    ok.focus();
+  });
+}
+
 /** A left-aligned label in a report. */
 export function nameCell(text: string): HTMLTableCellElement {
   const td = document.createElement("td");

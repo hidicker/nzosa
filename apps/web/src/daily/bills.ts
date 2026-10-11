@@ -12,7 +12,7 @@ import {
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, invoiceCell, nameCell, note } from "../ui.js";
-import { approveBill, editBill, startNewBill } from "./invoices.js";
+import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
 import {
   accountEntityKey,
@@ -102,6 +102,13 @@ export function renderBills(): void {
     .filter((r): r is { bill: Invoice; balance: InvoiceBalance; status: DocumentStatus } => r !== null);
 
   body.append(summary(rows, now));
+  // Credit notes from suppliers, each to say which bill it reduces. They
+  // could not be assigned anywhere: the list was on Invoices, of sales only.
+  creditNoteSection(
+    body,
+    new Map([...balances].filter(([, b]) => b.invoice.kind === "purchase")),
+    money,
+  );
 
   if (paying !== null) {
     const row = rows.find((r) => r.bill.number === paying);

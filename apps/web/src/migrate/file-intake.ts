@@ -1,7 +1,7 @@
 import { chosenStartDate } from "./onboarding-state.js";
-import { filedKey } from "@nzosa/core";
+import { filedKey, isCreditNote, xeroNumberOf } from "@nzosa/core";
 import { redraw, showPage } from "../app.js";
-import { asCsvText, recomputeVariance, saveManualJournals, record } from "../books.js";
+import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, record } from "../books.js";
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
@@ -496,9 +496,53 @@ export async function loadInvoices(file: File): Promise<string> {
   // The payments Xero says paid each one, settled now rather than left to be
   // found by hand -- from the Invoices page as well as from Start here.
   const settled = await settleInvoicesFromXero();
+  const credited = await creditNotesByNumber();
   redraw("invoices");
-  const paid = settled > 0 ? ` ${settled} payment${settled === 1 ? "" : "s"} matched as Xero recorded them.` : "";
+  const paid =
+    (settled > 0 ? ` ${settled} payment${settled === 1 ? "" : "s"} matched as Xero recorded them.` : "") +
+    (credited > 0 ? ` ${credited} credit note${credited === 1 ? "" : "s"} put against the document ${credited === 1 ? "it credits" : "they credit"}.` : "");
   return (issues.length > 0 ? `${what}; ${issues.length} look wrong, see Invoices.` : `${what}.`) + paid;
+}
+
+/**
+ * Each credit note against the document it credits, where Xero's numbering
+ * says so beyond doubt.
+ *
+ * A supplier's credit carries the number of the bill it reduces: PC Complete's
+ * credit of 270.36 is "720-2", like the bill for the laptop it could not
+ * supply. Same kind, same contact, same number, dated no later, and owing at
+ * least the credit -- and only where exactly one fits. Anything else waits
+ * for a person on Invoices or Bills.
+ */
+async function creditNotesByNumber(): Promise<number> {
+  const links = { ...(state.ledger.creditNotes ?? {}) };
+  const balances = invoiceBalanceMap();
+  const documents = state.ledger.invoices ?? [];
+  let made = 0;
+  for (const note of documents) {
+    if (!isCreditNote(note) || links[note.number] !== undefined) continue;
+    const number = xeroNumberOf(note.number);
+    if (!/\d/.test(number)) continue;
+    const fits = documents.filter(
+      (d) =>
+        !isCreditNote(d) &&
+        d.kind === note.kind &&
+        d.contact.trim().toLowerCase() === note.contact.trim().toLowerCase() &&
+        xeroNumberOf(d.number) === number &&
+        d.issued <= note.issued &&
+        (balances.get(d.number)?.remaining ?? 0) >= Math.abs(note.total),
+    );
+    const only = fits[0];
+    if (fits.length !== 1 || only === undefined) continue;
+    links[note.number] = only.number;
+    made += 1;
+  }
+  if (made === 0) return 0;
+  const before = state.ledger.creditNotes ?? {};
+  state.ledger = { ...state.ledger, creditNotes: links };
+  state.persistent = await savePart(state.ledger);
+  await record("invoice", `${made} credit note${made === 1 ? "" : "s"} put against what ${made === 1 ? "it credits" : "they credit"}, by number`, before, links);
+  return made;
 }
 
 export async function loadAllocations(file: File): Promise<void> {

@@ -1204,13 +1204,14 @@ export function wireInvoices(): void {
  * reversal belongs to the period the credit was raised in, not the period of
  * the sale it reverses.
  */
-function creditNoteSection(
+export function creditNoteSection(
   body: HTMLElement,
   balances: Map<string, InvoiceBalance>,
   money: (cents: number) => string,
 ): void {
   const notes = [...balances.values()].filter((b) => b.status === "credit note");
   if (notes.length === 0) return;
+  const bills = notes.every((b) => b.invoice.kind === "purchase");
 
   const links = state.ledger.creditNotes ?? {};
   const heading = document.createElement("h3");
@@ -1218,8 +1219,11 @@ function creditNoteSection(
   body.append(heading);
   body.append(
     note(
-      "Choose the invoice each credit note applies to; it then reduces what that invoice " +
-        "owes, dated on the credit note.",
+      bills
+        ? "Choose the bill each credit note applies to; it then reduces what that bill owes, " +
+            "dated on the credit note."
+        : "Choose the invoice each credit note applies to; it then reduces what that invoice " +
+            "owes, dated on the credit note.",
     ),
   );
 
@@ -1228,7 +1232,7 @@ function creditNoteSection(
   const head = document.createElement("thead");
   head.innerHTML =
     "<tr><th>Credit note</th><th>Date</th><th>Contact</th><th>Amount</th>" +
-    "<th>Reference</th><th>Credits</th></tr>";
+    `<th>Reference</th><th>${bills ? "Bill it credits" : "Credits"}</th></tr>`;
   const tbody = document.createElement("tbody");
 
   // Only invoices that could still take a credit: one already settled by money
@@ -1259,7 +1263,16 @@ function creditNoteSection(
     none.value = "";
     none.textContent = "not yet said";
     pick.append(none);
-    for (const other of open) {
+    // Its own kind only -- a supplier's credit never reduces a customer's
+    // invoice -- and the same contact's first, which is nearly always where
+    // it belongs.
+    const contact = cn.contact.trim().toLowerCase();
+    const theirs = open.filter((b) => b.invoice.kind === cn.kind);
+    const ordered = [
+      ...theirs.filter((b) => b.invoice.contact.trim().toLowerCase() === contact),
+      ...theirs.filter((b) => b.invoice.contact.trim().toLowerCase() !== contact),
+    ];
+    for (const other of ordered) {
       const option = document.createElement("option");
       option.value = other.invoice.number;
       option.textContent =

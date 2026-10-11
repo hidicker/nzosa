@@ -164,8 +164,11 @@ export function renderBills(): void {
     const tr = document.createElement("tr");
     tr.append(invoiceCell(bill, bill.number));
     if (several) tr.append(nameCell(entityName(bill.entityId)));
-    tr.append(nameCell(bill.issued));
+    const issued = nameCell(bill.issued);
+    issued.classList.add("report-date");
+    tr.append(issued);
     const due = nameCell(bill.due ?? "");
+    due.classList.add("report-date");
     if (status === "Overdue" && bill.due !== null) {
       due.classList.add("match-off");
       due.title = `${daysBetween(bill.due, now)} days overdue`;

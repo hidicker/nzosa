@@ -1806,6 +1806,11 @@ main:has(#page-check:not([hidden])) { max-width: none; }
  */
 .match-table { width: 100%; }
 .match-table td { vertical-align: top; }
+/* A date is one thing: broken over two lines, "2026-" sat above "07-11". */
+.match-table td.report-date { white-space: nowrap; width: 1%; }
+/* Seven columns and their buttons: the reports' width left dates wrapping
+   with half the page empty beside the table. */
+.bills-table { max-width: 64rem; }
 
 /* Figures should take only what they need, so the descriptive columns get the
    rest. Left to itself the browser gave every amount column the same width as

@@ -1251,7 +1251,9 @@ export function creditNoteSection(
     const cn = balance.invoice;
     const tr = document.createElement("tr");
     tr.append(invoiceCell(cn, cn.number));
-    tr.append(nameCell(cn.issued));
+    const issued = nameCell(cn.issued);
+    issued.classList.add("report-date");
+    tr.append(issued);
     tr.append(nameCell(cn.contact));
     tr.append(amountCell(money(Math.abs(cn.total))));
     tr.append(nameCell(cn.reference));

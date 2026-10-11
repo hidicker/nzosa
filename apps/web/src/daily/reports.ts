@@ -200,6 +200,11 @@ function lineRoles(): (code: string) => string {
     const named = bankLabel(account);
     held.add(named);
     held.add(`${named} ${named}`);
+    // And by its id: an account named in its import, as Xero's own bank
+    // export names "business-bank-account", is posted as id then name, and
+    // was listed as an account with no type set.
+    held.add(account);
+    held.add(`${account} ${named}`);
   }
   for (const t of state.ledger.transactions) {
     const label = String(t.extras?.["accountLabel"] ?? t.account);

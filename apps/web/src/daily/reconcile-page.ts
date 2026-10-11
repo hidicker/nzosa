@@ -1664,12 +1664,14 @@ function invoiceLineFor(
     tally.classList.toggle("invoice-tally-exact", all.length > 0 && left === 0);
     tally.classList.toggle("invoice-tally-over", left < 0);
 
+    // Counted from what pressing it would settle: one held aside with the box
+    // left empty is one, and it said "Settle 2 invoices".
     match.textContent =
-      gathered.length === 0
-        ? all.length === 1 && left > 0
+      all.length > 1
+        ? `Settle ${all.length} invoices`
+        : all.length === 1 && left > 0
           ? `Match, splitting off ${formatAmount(left)}`
-          : "Match"
-        : `Settle ${gathered.length + 1} invoices`;
+          : "Match";
     add.hidden = gathered.length === 0 && numberOf(picker.value) === "";
   };
 
@@ -1703,7 +1705,7 @@ function invoiceLineFor(
   });
 
   const openPicker = (): void => {
-    wrap.replaceChildren(label, picker.element, add, chips, tally, match);
+    wrap.replaceChildren(label, picker.element, match, add, chips, tally);
     redraw();
     picker.element.querySelector("input")?.focus();
   };
@@ -1779,7 +1781,9 @@ function invoiceLineFor(
     return wrap;
   }
 
-  wrap.append(label, picker.element, add, chips, tally, match);
+  // Match straight after the box: "and another invoice" appears once one is
+  // picked, and placed before Match it moved Match from under the pointer.
+  wrap.append(label, picker.element, match, add, chips, tally);
   redraw();
   return wrap;
 }

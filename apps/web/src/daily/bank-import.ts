@@ -1529,6 +1529,11 @@ export function renderTable(): void {
               : ""
           }
           ${(() => {
+            // An exact copy already in the books -- let in before "Keep both"
+            // stopped letting copies through -- can only be taken out.
+            if (entry.status === "duplicate") {
+              return `<div class="actions"><button data-action="remove" data-index="${index}" class="primary">Remove this one</button></div>`;
+            }
             if (entry.status !== "review") return "";
             const judgement = verdicts.get(t.id);
             const said = judgement

@@ -191,7 +191,11 @@ export function dedupe(
   transactions: readonly Transaction[],
   options: DedupeOptions = {},
 ): DedupeResult {
-  const legitimate = new Set(options.legitimateDuplicates ?? []);
+  // Compared without the separator: books kept on a server lose it, since
+  // Postgres will not store that character in JSON, and every "Keep both"
+  // saved there stopped matching after the next reload.
+  const bare = (key: string): string => key.split(SEP).join("");
+  const legitimate = new Set([...(options.legitimateDuplicates ?? [])].map(bare));
   const adjacentDays = options.adjacentDays ?? 1;
 
   const entries: DedupeEntry[] = [];
@@ -214,10 +218,15 @@ export function dedupe(
   for (const transaction of transactions) {
     const strict = dedupeKey(transaction);
     const loose = looseKey(transaction);
-    const allowed = legitimate.has(strict);
+    // Allowed past the checks that ask, never past the one that knows. "Keep
+    // both" answers a question -- two parking charges a day apart are two --
+    // and it once let the very same row through when the same export was
+    // loaded again: identical in every field, occurrence included, is the
+    // same line, whatever was said about its neighbour.
+    const allowed = legitimate.has(bare(strict));
 
     const strictMatch = seenStrict.get(strict);
-    if (strictMatch && !allowed) {
+    if (strictMatch) {
       entries.push({
         transaction,
         status: "duplicate",
@@ -345,7 +354,7 @@ export function dedupe(
     entries.push({
       transaction,
       status: "unique",
-      reason: allowed && strictMatch ? "Marked as a legitimate repeat." : "",
+      reason: allowed ? "Marked as a legitimate repeat." : "",
     });
   }
 

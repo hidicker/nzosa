@@ -89,21 +89,31 @@ test("re-importing a file with genuine repeats is still idempotent", () => {
   );
 });
 
-test("the allowlist still forces a cross-file repeat to be kept", () => {
-  // Occurrence numbering handles repeats inside one file. The allowlist remains
-  // for the case it cannot see: the same transaction legitimately arriving in
-  // two separate exports.
+test("the allowlist never lets an identical row through", () => {
+  // "Keep both" answers a review: two charges a day apart are two. Once it
+  // also let the same row through when its export was loaded again, and the
+  // books held eight parking charges twice.
   const [original] = importFile(sample("bnz-card.csv"), { file: "card.csv" }).transactions;
   const separate = { ...original, source: { ...original.source, file: "other.csv" } };
-
-  assert.equal(dedupe([original, separate]).stats.duplicate, 1);
 
   const allowed = dedupe([original, separate], {
     legitimateDuplicates: [dedupeKey(original)],
   });
-  assert.equal(allowed.stats.duplicate, 0);
-  assert.equal(allowed.kept.length, 2);
-  assert.match(allowed.entries[1].reason, /legitimate repeat/);
+  assert.equal(allowed.stats.duplicate, 1);
+  assert.equal(allowed.kept.length, 1);
+});
+
+test("a kept-both row stays kept, even with its key saved without separators", () => {
+  // Books on a server lose the separator character in what they save.
+  const [original] = importFile(sample("bnz-card.csv"), { file: "card.csv" }).transactions;
+  const nextDay = { ...original, date: "2099-01-02", id: "next" };
+  const first = { ...original, date: "2099-01-01" };
+  assert.equal(dedupe([first, nextDay]).entries[1].status, "review");
+
+  const saved = dedupeKey(nextDay).split("\u0000").join("");
+  const result = dedupe([first, nextDay], { legitimateDuplicates: [saved] });
+  assert.equal(result.entries[1].status, "unique");
+  assert.match(result.entries[1].reason, /legitimate repeat/);
 });
 
 test("a re-export with a different serial is flagged, not dropped", () => {

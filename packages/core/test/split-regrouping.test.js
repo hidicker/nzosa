@@ -45,11 +45,37 @@ test("two payments to one payee on one day are dropped without help", () => {
   // The block has two bank sides, which is indistinguishable from a transfer,
   // so the whole thing goes -- and with amounts that are ambiguous, nothing
   // can recover it. This is the loss the journal report exists to answer.
+  const pay = (amount) =>
+    row({ date: "2026-05-01", contact: "Two Ways Ltd", credit: amount / 100, gross: -amount / 100, net: -amount / 100, account: "BNZ Visa - Business Card" });
+  const cost = (amount, code, name) =>
+    row({ date: "2026-05-01", contact: "Two Ways Ltd", debit: amount / 100, gross: amount / 100, net: amount / 100, gstRate: "No GST", code, account: name });
+  // Two payments of 20.00, one for office costs and one for printing: which
+  // bank line was which cannot be known.
+  const rows = [pay(2000), pay(2000), cost(2000, "429", "Office Expenses"), cost(2000, "461", "Printing")];
+  assert.deepEqual(read(rows), []);
+});
+
+test("identical payments to one payee on one day are each recovered", () => {
+  // Three memberships of 20.00, each coded alike. Which rows go with which
+  // payment cannot be told, and cannot matter: every arrangement codes them
+  // the same. They used to be dropped as if they were a transfer.
   const rows = [
     ...dinner(5500, 2391, 2750, 359),
     ...dinner(5500, 2391, 2750, 359),
+    ...dinner(5500, 2391, 2750, 359),
   ];
-  assert.deepEqual(read(rows), []);
+  const out = read(rows);
+  assert.equal(out.length, 3, "all three payments");
+  for (const line of out) {
+    assert.equal(line.amount, -5500);
+    assert.deepEqual(
+      line.parts.map((p) => [p.code, p.amount]),
+      [["420 Entertainment", -2750], ["424 Entertainment - Non deductible", -2750]],
+    );
+  }
+  // The journal report cannot tell them apart either; the answer is the same.
+  const journals = ["1", "2", "3"].map((id) => journalFor(id, 5500, 2391, 2750, 359));
+  assert.equal(read(rows, { journals }).length, 3);
 });
 
 test("a journal report tells the two payments apart, with the export's GST rates", () => {
@@ -95,10 +121,13 @@ test("arithmetic refuses a block where two arrangements both add up", () => {
   assert.deepEqual(read(rows), [], "an ambiguous block is left whole, not guessed at");
 });
 
-test("arithmetic refuses two payments of the same amount", () => {
+test("arithmetic refuses two payments of the same amount coded differently", () => {
   // Nothing distinguishes them, so calling either arrangement unique would be
   // a lie about the one thing this promises.
-  const rows = [...dinner(5500, 2391, 2750, 359), ...dinner(5500, 2391, 2750, 359)];
+  const rows = [
+    ...dinner(5500, 2391, 2750, 359),
+    ...dinner(5500, 2391, 2750, 359).map((r) => r.replace("424,Entertainment - Non deductible", "429,Office Expenses")),
+  ];
   assert.deepEqual(read(rows), []);
 });
 

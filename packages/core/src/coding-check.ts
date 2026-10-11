@@ -625,6 +625,10 @@ function regroupByAmount(block: SheetPosting[], isBank: (p: SheetPosting) => boo
   const banks = block.filter(isBank);
   const others = block.filter((p) => !isBank(p));
   if (banks.length < 2 || others.length === 0) return null;
+
+  const identical = regroupIdentical(banks, others);
+  if (identical !== null) return identical;
+
   if (banks.length > 5 || others.length > 14) return null;
 
   const targets = banks.map((p) => -p.movement);
@@ -669,6 +673,44 @@ function regroupByAmount(block: SheetPosting[], isBank: (p: SheetPosting) => boo
   place(0);
 
   return solutions === 1 ? found : null;
+}
+
+/**
+ * Payments that are the same in every respect, taken apart.
+ *
+ * Three $20 memberships to one payee on one day, each coded alike, arrive as
+ * one block with three bank sides, and nothing tells their rows apart -- not
+ * the journal report, whose three journals look the same, and not arithmetic,
+ * since the amounts are equal. They were dropped as if they were a transfer.
+ * But where every payment is the same amount and the other rows divide into
+ * that many identical sets, which row goes with which payment cannot matter:
+ * every arrangement codes each payment the same. So they are split, a set to
+ * each. Anything short of identical is left to the rules above.
+ */
+function regroupIdentical(banks: SheetPosting[], others: SheetPosting[]): SheetPosting[][] | null {
+  const count = banks.length;
+  const first = banks[0];
+  if (first === undefined || banks.some((p) => p.movement !== first.movement)) return null;
+  if (others.length % count !== 0) return null;
+
+  const sameAs = (p: SheetPosting): string =>
+    [p.accountCode.trim(), p.account.trim(), p.movement, p.gstRate.trim(), p.description.trim()].join(" ");
+  const kinds = new Map<string, SheetPosting[]>();
+  for (const posting of others) {
+    const key = sameAs(posting);
+    const list = kinds.get(key);
+    if (list) list.push(posting);
+    else kinds.set(key, [posting]);
+  }
+  const set = banks.map((bank) => [bank]);
+  for (const list of kinds.values()) {
+    if (list.length % count !== 0) return null;
+    const each = list.length / count;
+    list.forEach((posting, i) => (set[Math.floor(i / each)] as SheetPosting[]).push(posting));
+  }
+  // Each set has to come to its own bank line, or these were not payments.
+  const balanced = set.every((one) => one.reduce((sum, p) => sum + p.movement, 0) === 0);
+  return balanced ? set : null;
 }
 
 export interface AccountTransactionsOptions {

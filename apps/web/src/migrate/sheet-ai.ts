@@ -380,7 +380,7 @@ function keep(joined: SheetConversion): HTMLElement {
           `${joined.lines.length} line${joined.lines.length === 1 ? "" : "s"} added as transactions. Review them on Bank import.`;
       } else {
         const before = state.reference.length;
-        state.reference = dedupeReference([...state.reference, ...sheetLinesToReference(joined.lines, source)]);
+        state.reference = dedupeReference(state.reference, sheetLinesToReference(joined.lines, source));
         state.ledger = { ...state.ledger, reference: state.reference };
         state.persistent = await savePart(state.ledger, "reference");
         const kept = state.reference.length - before;

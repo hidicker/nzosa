@@ -72,12 +72,17 @@ export function readAgedDetail(csv: string): { record: OpeningDocuments | null; 
   const asAt = asAtFrom(rows.slice(0, 5).map((r) => r.join(" ")).join(" "));
   if (asAt === null) return { record: null, problem: "The report's date could not be read." };
 
-  const headerAt = rows.findIndex((r) => r.some((c) => /^(invoice|bill) number$/i.test(c) || /^number$/i.test(c)));
+  // Receivables say "Invoice Number"; payables say "Invoice Reference", and a
+  // bill's reference is often left empty -- the supplier's own number, which
+  // nobody types in.
+  const headerAt = rows.findIndex((r) =>
+    r.some((c) => /^(invoice|bill) (number|reference)$/i.test(c) || /^(number|reference)$/i.test(c)),
+  );
   if (headerAt < 0) return { record: null, problem: "The report has no invoice number column." };
   const header = (rows[headerAt] ?? []).map((h) => h.toLowerCase());
   const col = (...names: string[]) => header.findIndex((h) => names.includes(h));
   const at = {
-    number: col("invoice number", "bill number", "number"),
+    number: col("invoice number", "bill number", "number", "invoice reference", "bill reference", "reference"),
     date: col("invoice date", "bill date", "date"),
     due: col("due date"),
     total: col("total"),
@@ -89,17 +94,24 @@ export function readAgedDetail(csv: string): { record: OpeningDocuments | null; 
   for (const r of rows.slice(headerAt + 1)) {
     const first = r[0] ?? "";
     const number = r[at.number] ?? "";
-    if (first !== "" && number === "") {
+    const totalText = (r[at.total] ?? "").replace(/[$,\s]/g, "");
+    // A payee's name stands on a row with no amount; a document's row has one,
+    // whether or not it carries a number. Told apart by the number alone, a
+    // bill with no reference -- its date in the first column -- was taken for
+    // a payee, and none of them came in.
+    if (first !== "" && totalText === "") {
       if (!/^(total|percentage)/i.test(first)) contact = first;
       continue;
     }
-    if (number === "") continue;
-    const owing = parseAmount((r[at.total] ?? "").replace(/[$,\s]/g, "") || "0") ?? 0;
+    if (/^(total|percentage)/i.test(first)) continue;
+    const owing = parseAmount(totalText || "0") ?? 0;
     if (owing === 0) continue;
+    const date = parseDate(r[at.date] ?? "", { dayFirst: true });
     items.push({
-      number,
+      // Without a reference, the payee and the date name it.
+      number: number !== "" ? number : `${contact} ${date ?? (r[at.date] ?? "")}`.trim(),
       contact,
-      date: parseDate(r[at.date] ?? "", { dayFirst: true }),
+      date,
       due: parseDate(r[at.due] ?? "", { dayFirst: true }),
       owing,
     });

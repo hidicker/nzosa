@@ -49,7 +49,7 @@ import type { AiSuggestion, GstSide, GstTreatment } from "@nzosa/core";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { amountCell, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
   accountTreatment,
@@ -452,7 +452,7 @@ export async function loadCheckFiles(files: File[]): Promise<void> {
   // comes back empty, which is the difference between coding suggestions and
   // silence.
   const before = state.reference.length + loaded.lines.length;
-  state.reference = dedupeReference([...state.reference, ...loaded.lines]);
+  state.reference = dedupeReference(state.reference, loaded.lines);
   const dropped = before - state.reference.length;
   // Kept with the ledger. The Check page compares against it and the rule
   // suggestions are drawn from it, and neither should need the same export
@@ -1396,17 +1396,18 @@ export function renderCheck(): void {
           bring.type = "button";
           bring.className = "small";
           bring.textContent = "Bring in as a journal";
-          bring.addEventListener("click", () => {
+          bring.addEventListener("click", async () => {
             const said = journal.lines
               .map((l) => `  ${l.code}: ${l.amount >= 0 ? "debit" : "credit"} ${formatAmount(Math.abs(l.amount))}`)
               .join("\n");
             const taxed = (line.gstRate ?? "").trim() !== "" && !/no gst|exempt|zero/i.test(line.gstRate ?? "");
             if (
-              !confirm(
+              !(await askOnPage(
                 `Add a manual journal dated ${journal.date}?\n\n${said}\n\n` +
                   (taxed ? "A journal carries no GST of its own, so this one will not change a GST return.\n\n" : "") +
                   "It goes in History, and can be deleted on Manual journals.",
-              )
+                "Add the journal",
+              ))
             ) {
               return;
             }

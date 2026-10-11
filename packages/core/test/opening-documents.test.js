@@ -58,6 +58,40 @@ test("the payables report is bills", () => {
   assert.equal(record.items.length, 2);
 });
 
+// Laid out as Xero's Aged Payables Detail really is: the column is "Invoice
+// Reference", left empty on every bill, and each bill's date stands in the
+// first column where a receivable's row has nothing.
+const PAYABLES = [
+  "Aged Payables Detail,,,,,,,,,",
+  "Kowhai Trading Limited,,,,,,,,,",
+  "As at 31 March 2025,,,,,,,,,",
+  "Ageing by due date,,,,,,,,,",
+  "Invoice Date,Due Date,Invoice Reference,Current,< 1 Month,1 Month,2 Months,3 Months,Older,Total",
+  "Rimu Supplies,,,,,,,,,",
+  "2024-08-26,2025-06-19,,6.80,0,0,0,0,0,6.80",
+  "Total Rimu Supplies,,,0,0,0,0,0,0,0",
+  "Totara Hosting,,,,,,,,,",
+  "2024-08-20,2025-06-19,,100.00,0,0,0,0,0,100.00",
+  "2024-09-02,2025-06-19,,4.99,0,0,0,0,0,4.99",
+  "Total Totara Hosting,,,0,0,0,0,0,0,0",
+  "Total,,,0,0,0,0,0,0,0",
+  "Percentage of total,,,0,0,0,0,0,0,0",
+].join("\n");
+
+test("bills with no reference, their date in the first column, are each read", () => {
+  // Read by the number column alone, every one of these was taken for a payee
+  // and the report said it had no invoice number column.
+  assert.equal(identifyExport(PAYABLES).kind, "aged-detail");
+  const { record, problem } = readAgedDetail(PAYABLES);
+  assert.equal(problem, undefined);
+  assert.equal(record.kind, "purchase");
+  assert.deepEqual(
+    record.items.map((i) => [i.contact, i.owing, i.date]),
+    [["Rimu Supplies", 680, "2024-08-26"], ["Totara Hosting", 10000, "2024-08-20"], ["Totara Hosting", 499, "2024-09-02"]],
+  );
+  assert.equal(new Set(record.items.map((i) => i.number)).size, 3, "each named, by payee and date");
+});
+
 test("before the start: open ones carried forward, the rest left out; from the start: all", () => {
   const { record } = readAgedDetail(RECEIVABLES);
   const invoices = [

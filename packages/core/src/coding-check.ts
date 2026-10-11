@@ -1030,14 +1030,23 @@ function sameRate(ours: string, theirs: string): boolean {
  *
  * Keyed on what the line is rather than on which file it came from: the same
  * posting exported twice under two filenames is still one posting.
+ *
+ * Counted, and only against what was held before: a line coming in is the
+ * same as one held only while there is a held one of its kind left to be. It
+ * used to collapse every pair alike, which kept one of three $20 memberships
+ * paid on the same day -- three real payments, from one file -- and said "6
+ * lines were already loaded from an earlier export" on the first load there
+ * ever was. A file loaded twice still adds nothing; identical payments in one
+ * file are all kept.
  */
-export function dedupeReference(lines: readonly ReferenceLine[]): ReferenceLine[] {
-  const seen = new Map<string, number[]>();
-  const out: ReferenceLine[] = [];
+export function dedupeReference(
+  held: readonly ReferenceLine[],
+  incoming: readonly ReferenceLine[] = [],
+): ReferenceLine[] {
   const fieldsKey = (line: ReferenceLine | undefined): string =>
     line?.bankFields === undefined ? "" : JSON.stringify(Object.entries(line.bankFields).sort());
-  for (const line of lines) {
-    const key = [
+  const keyOf = (line: ReferenceLine): string =>
+    [
       line.date,
       line.amount,
       line.code,
@@ -1046,12 +1055,21 @@ export function dedupeReference(lines: readonly ReferenceLine[]): ReferenceLine[
       line.gstRate ?? "",
       (line.parts ?? []).length,
     ].join("\u0000");
+
+  const out: ReferenceLine[] = [...held];
+  const byKey = new Map<string, number[]>();
+  out.forEach((line, i) => byKey.set(keyOf(line), [...(byKey.get(keyOf(line)) ?? []), i]));
+  // Each held line stands for one line coming in, once.
+  const taken = new Set<number>();
+
+  for (const line of incoming) {
+    const key = keyOf(line);
+    const ats = (byKey.get(key) ?? []).filter((i) => !taken.has(i));
     // Lines alike in everything else are the same line read twice -- unless
     // the bank's own fields say otherwise: two equal charges on one day, with
     // different serials, are two charges. A line read before the fields were
     // read takes them on from the same line read again, rather than being
     // kept beside it.
-    const ats = seen.get(key) ?? [];
     const mine = fieldsKey(line);
     const same = ats.find((i) => fieldsKey(out[i]) === mine);
     const bare = mine === "" ? undefined : ats.find((i) => out[i]?.bankFields === undefined);
@@ -1068,9 +1086,12 @@ export function dedupeReference(lines: readonly ReferenceLine[]): ReferenceLine[
           ...(kept.contact === undefined && line.contact !== undefined ? { contact: line.contact } : {}),
         };
       }
+      taken.add(at);
       continue;
     }
-    seen.set(key, [...ats, out.length]);
+    // New: kept, and taken, so a second like it in the same file is its own.
+    byKey.set(key, [...(byKey.get(key) ?? []), out.length]);
+    taken.add(out.length);
     out.push(line);
   }
   return out;

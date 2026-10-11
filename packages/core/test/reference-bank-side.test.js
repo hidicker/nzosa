@@ -131,7 +131,7 @@ test("loading the same lines again adds the bank account to the ones already hel
   const { dedupeReference } = await import("../dist/coding-check.js");
   const held = { date: "2023-08-01", amount: 79387, code: "Rent", label: "Rent", source: "a.csv" };
   const again = { ...held, source: "b.csv", bankAccount: "Kowhai - 02-1234-0056789-005" };
-  const out = dedupeReference([held, again]);
+  const out = dedupeReference([held], [again]);
   assert.equal(out.length, 1);
   assert.equal(out[0].source, "a.csv");
   assert.equal(out[0].bankAccount, "Kowhai - 02-1234-0056789-005");

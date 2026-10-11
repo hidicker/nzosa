@@ -268,10 +268,10 @@ test("reloading keeps equal lines with different bank fields, and fills in old o
   const old = line("2026-07-01", -2000, "429 General expenses", "");
   const first = { ...old, bankFields: { serial: "1001" } };
   const second = { ...old, bankFields: { serial: "1002" } };
-  const merged = dedupeReference([old, first, second]);
+  const merged = dedupeReference([old], [first, second]);
   assert.equal(merged.length, 2, "the old line took the first's fields; the second is its own");
   assert.deepEqual(merged.map((l) => l.bankFields?.serial), ["1001", "1002"]);
-  assert.equal(dedupeReference([first, { ...first }]).length, 1, "the same line twice is one");
+  assert.equal(dedupeReference([first], [{ ...first }]).length, 1, "the same line loaded again is one");
 });
 
 test("a pasted bank sheet keeps the bank's fields, and its own coding column", async () => {

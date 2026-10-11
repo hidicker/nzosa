@@ -9,14 +9,13 @@ const line = (over) => ({
 
 test("the same export loaded twice adds nothing the second time", () => {
   const once = [line(), line({ amount: 23000, code: "200" })];
-  const twice = [...once, ...once];
-  assert.equal(dedupeReference(twice).length, 2);
+  assert.equal(dedupeReference(once, once).length, 2);
 });
 
 test("the same posting under two filenames is still one posting", () => {
   const a = line({ source: "april.xlsx" });
   const b = line({ source: "april (1).xlsx" });
-  assert.equal(dedupeReference([a, b]).length, 1);
+  assert.equal(dedupeReference([a], [b]).length, 1);
 });
 
 test("genuinely different lines all survive", () => {
@@ -28,14 +27,16 @@ test("genuinely different lines all survive", () => {
     line({ account: "Credit Card" }),
     line({ gstRate: "No GST" }),
   ];
-  assert.equal(dedupeReference(lines).length, lines.length);
+  assert.equal(dedupeReference([], lines).length, lines.length);
 });
 
-test("two identical postings on one day are kept as one", () => {
-  // A real pair of identical postings is indistinguishable from the same
-  // posting loaded twice, and treating them as two is the mistake that costs
-  // something: it is what makes the account mapping ambiguous.
-  assert.equal(dedupeReference([line(), line()]).length, 1);
+test("identical postings in one file are all kept, and loading it again adds none", () => {
+  // Three $20 memberships paid on one day are three payments. Collapsed, two
+  // of them had nothing in the file to be compared with.
+  const once = dedupeReference([], [line(), line(), line()]);
+  assert.equal(once.length, 3);
+  assert.equal(dedupeReference(once, [line(), line(), line()]).length, 3, "the same file again adds nothing");
+  assert.equal(dedupeReference(once, [line(), line(), line(), line()]).length, 4, "a fourth is new");
 });
 
 test("duplicates are what stop an account being paired at all", () => {
@@ -58,7 +59,7 @@ test("duplicates are what stop an account being paired at all", () => {
   assert.ok(inferAccountMapping(ours, clean).size > 0, "a clean reference pairs the account");
   assert.equal(inferAccountMapping(ours, doubled).size, 0, "a doubled one pairs nothing");
   assert.ok(
-    inferAccountMapping(ours, dedupeReference(doubled)).size > 0,
+    inferAccountMapping(ours, dedupeReference(clean, clean)).size > 0,
     "deduplicating puts it back",
   );
 });

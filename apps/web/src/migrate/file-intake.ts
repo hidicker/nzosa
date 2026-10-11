@@ -510,28 +510,42 @@ export async function loadInvoices(file: File): Promise<string> {
  *
  * A supplier's credit carries the number of the bill it reduces: PC Complete's
  * credit of 270.36 is "720-2", like the bill for the laptop it could not
- * supply. Same kind, same contact, same number, dated no later, and owing at
- * least the credit -- and only where exactly one fits. Anything else waits
- * for a person on Invoices or Bills.
+ * supply. A customer's has its own number, and is found by the reference it
+ * shares with the invoice and the credit being exactly what that invoice
+ * still owes. Same kind and contact, dated no later, and only where exactly
+ * one fits. Anything else waits for a person on Invoices or Bills.
  */
 async function creditNotesByNumber(): Promise<number> {
   const links = { ...(state.ledger.creditNotes ?? {}) };
   const balances = invoiceBalanceMap();
   const documents = state.ledger.invoices ?? [];
   let made = 0;
+  const same = (a: string, b: string): boolean => a.trim().toLowerCase() === b.trim().toLowerCase();
   for (const note of documents) {
     if (!isCreditNote(note) || links[note.number] !== undefined) continue;
-    const number = xeroNumberOf(note.number);
-    if (!/\d/.test(number)) continue;
-    const fits = documents.filter(
+    const credit = Math.abs(note.total);
+    const candidates = documents.filter(
       (d) =>
         !isCreditNote(d) &&
         d.kind === note.kind &&
-        d.contact.trim().toLowerCase() === note.contact.trim().toLowerCase() &&
-        xeroNumberOf(d.number) === number &&
+        same(d.contact, note.contact) &&
         d.issued <= note.issued &&
-        (balances.get(d.number)?.remaining ?? 0) >= Math.abs(note.total),
+        (balances.get(d.number)?.remaining ?? 0) >= credit,
     );
+    // By number, as a supplier writes it: PC Complete's "720-2".
+    const number = xeroNumberOf(note.number);
+    const byNumber = /\d/.test(number) ? candidates.filter((d) => xeroNumberOf(d.number) === number) : [];
+    // Or by the reference both carry, where exactly one with it still owes
+    // exactly the credit: DIISR's "Yr Ref W08-143" credit of 19.95, and the
+    // one invoice of that reference with 19.95 left on it. Customers' credit
+    // notes are numbered on their own (CN-0034), so the number says nothing.
+    const byReference =
+      note.reference.trim() === ""
+        ? []
+        : candidates.filter(
+            (d) => same(d.reference, note.reference) && (balances.get(d.number)?.remaining ?? 0) === credit,
+          );
+    const fits = byNumber.length > 0 ? byNumber : byReference;
     const only = fits[0];
     if (fits.length !== 1 || only === undefined) continue;
     links[note.number] = only.number;

@@ -86,7 +86,16 @@ function button(label: string, action: () => void, primary = false): HTMLButtonE
   return b;
 }
 
+/**
+ * Each drawing of the Wise section, counted, as the bank feed's: drawing waits
+ * on Wise's status, and a second drawing started meanwhile (it is drawn with
+ * the feed, which a fetch or a line brought in redraws) added its section
+ * after the first had added its own. Only the latest draws.
+ */
+let wiseDrawing = 0;
+
 export async function renderWise(): Promise<void> {
+  const drawing = ++wiseDrawing;
   const body = document.getElementById("wise-body");
   if (body === null) return;
   body.textContent = "";
@@ -97,6 +106,8 @@ export async function renderWise(): Promise<void> {
     return;
   }
   const status = await call<WiseStatus>("").catch(() => null);
+  if (drawing !== wiseDrawing) return;
+  body.textContent = "";
   if (status === null) {
     body.append(note("Could not reach the app's server."));
     return;

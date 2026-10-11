@@ -17,7 +17,7 @@ import { state } from "../state.js";
 import { redraw } from "../app.js";
 import { banks, bankLabel } from "../books.js";
 import { amountCell, dollars, nameCell, note, download } from "../ui.js";
-import { booksStart } from "./balance-diagnostics.js";
+import { booksStart, journalLinesFor } from "./balance-diagnostics.js";
 import { feedStatus, lastFeedStatus } from "../feed-route.js";
 import type { FeedStatus } from "../feed-route.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
@@ -240,9 +240,11 @@ export function buildReconcileModel(accountId: string, year?: number): Reconcile
   const { labels } = banks();
   const accountLabel = labels.get(accountId) ?? bankLabel(accountId);
 
-  // 1. Ledger transactions
-  const allTxs = state.ledger.transactions
-    .filter((t) => t.account === accountId)
+  // 1. Ledger transactions, and the manual journals posted to this account:
+  // the account's balance in the books is both, and a journal standing in for
+  // a line the feed never had (a refund it missed) was left out, so the
+  // account showed short of the bank by exactly that journal.
+  const allTxs = [...state.ledger.transactions.filter((t) => t.account === accountId), ...journalLinesFor(accountId)]
     .sort((a, b) => a.date.localeCompare(b.date));
 
   // 2. Opening balance

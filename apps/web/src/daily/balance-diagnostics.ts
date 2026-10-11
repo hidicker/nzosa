@@ -2,6 +2,7 @@ import { yearEndFigure } from "../modules.js";
 import type { BalanceSection, Cents, IsoDate, Transaction } from "@nzosa/core";
 import { dayBefore, matchBalanceAccount } from "@nzosa/core";
 import { state } from "../state.js";
+import { bankLabel } from "../books.js";
 import { dollars } from "../ui.js";
 import { booksStartDate } from "../migrate/onboarding-state.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
@@ -214,10 +215,63 @@ export function diagnoseAccountDailyBalances(
   };
 }
 
+/**
+ * Each manual journal line posted to a bank account, as a line of it.
+ *
+ * A journal line names the account as the chart does, "Name" or "Name -
+ * CODE", and a bank account is reached through the chart entry linked to it,
+ * or by the bank's own label where nothing in the chart is linked.
+ */
+export function journalLinesFor(accountId: string): Transaction[] {
+  const names = new Set<string>([accountId, bankLabel(accountId)]);
+  for (const a of state.chart) {
+    if ((a.ledgerAccount ?? "").trim() !== accountId) continue;
+    names.add(a.name.trim());
+    if (a.code.trim() !== "") names.add(`${a.name.trim()} - ${a.code.trim()}`);
+  }
+  const currency = state.ledger.transactions.find((t) => t.account === accountId)?.currency ?? "NZD";
+  const lines: Transaction[] = [];
+  for (const journal of state.ledger.manualJournals ?? []) {
+    if (journal.deleted !== undefined) continue;
+    journal.lines.forEach((line, i) => {
+      if (line.amount === 0 || !names.has(line.code.trim())) return;
+      lines.push({
+        id: `manual:${journal.id}:${i}`,
+        date: journal.date,
+        amount: line.amount,
+        currency,
+        serial: "",
+        trn: "",
+        particulars: "",
+        code: "",
+        reference: "",
+        otherParty: `Journal: ${journal.narration}`,
+        origin: "",
+        type: "JNL",
+        batch: "",
+        otherPartyAccount: "",
+        account: accountId,
+        occurrence: 1,
+      } as Transaction);
+    });
+  }
+  return lines;
+}
+
+/**
+ * Every bank line, with the manual journals posted to bank accounts among
+ * them: what a bank account's balance in the books is made of.
+ */
+export function bankLinesWithJournals(): Transaction[] {
+  const accounts = new Set(state.ledger.transactions.map((t) => t.account));
+  for (const a of state.chart) if ((a.ledgerAccount ?? "").trim() !== "") accounts.add(a.ledgerAccount!.trim());
+  return [...state.ledger.transactions, ...[...accounts].flatMap((id) => journalLinesFor(id))];
+}
+
 /** Run diagnosis across all accounts with daily balances in the current ledger. */
 export function diagnoseAllBankBalances(): BalanceDiagnostic[] {
   const kept = state.ledger.dailyBalances ?? [];
-  const txs = state.ledger.transactions;
+  const txs = bankLinesWithJournals();
   const ob = state.ledger.openingBalances;
   const results: BalanceDiagnostic[] = [];
 
@@ -269,14 +323,16 @@ export interface FinancialYearMilestone {
  */
 export function checkFinancialYearMilestones(): FinancialYearMilestone[] {
   const openingHeld = state.ledger.openingBalances;
-  const txs = state.ledger.transactions;
+  const txs = bankLinesWithJournals();
   const accounts = getReconcileAccounts();
   const feed = lastFeedStatus();
   const milestones: FinancialYearMilestone[] = [];
 
-  const start = booksStart(openingHeld, txs);
+  // When the books start and how far they run is the bank's lines: a journal
+  // dated out of the way must not add a year end, or move the start.
+  const start = booksStart(openingHeld, state.ledger.transactions);
   const before = dayBefore(start);
-  const last = txs.reduce((max, t) => (t.date > max ? t.date : max), before);
+  const last = state.ledger.transactions.reduce((max, t) => (t.date > max ? t.date : max), before);
 
   // Every 31 March from the day before the start to the latest transaction,
   // and any year end a figure was loaded for within that span.

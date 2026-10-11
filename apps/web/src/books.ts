@@ -526,6 +526,10 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
    */
   const settled = settledAlready;
 
+  if (state.reconcileFocus !== null) {
+    return { all, shown: all.filter((one) => one.transaction.id === state.reconcileFocus) };
+  }
+
   const shown = all.filter((one) => {
     // What a model proposed and nobody has agreed to yet. Its own view
     // because it is its own kind of work: every one of these wants reading

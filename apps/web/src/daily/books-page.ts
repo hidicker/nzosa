@@ -270,7 +270,7 @@ export async function renderBooks(): Promise<void> {
 
     const clear = document.createElement("button");
     clear.type = "button";
-    clear.className = "row-remove";
+    clear.className = "small remove";
     clear.textContent = "Clear…";
     actions.append(clear);
     tr.append(actions);

@@ -852,8 +852,8 @@ function renderEmployeesTable(container: HTMLElement): void {
       <td><code>${escapeHtml(emp.bankAccount || "--")}</code></td>
       <td>${statusBadge}</td>
       <td style="text-align: right; white-space: nowrap;">
-        <button type="button" class="payroll-btn edit-emp" title="Edit employee">Edit</button>
-        <button type="button" class="payroll-btn danger del-emp" title="Delete employee">Delete</button>
+        <button type="button" class="small edit-emp" title="Edit employee">Edit</button>
+        <button type="button" class="small remove del-emp" title="Delete employee">Delete</button>
       </td>
     `;
 
@@ -911,7 +911,7 @@ function extrasRow(employeeId: string, line: PayLine, refresh: () => void): HTML
 
   const toggle = document.createElement("button");
   toggle.type = "button";
-  toggle.className = "payroll-btn";
+  toggle.className = "small";
   const open = extrasOpen.has(employeeId);
   toggle.textContent = open ? "Hide extras" : "Extras: allowances, reimbursements, deductions, bonus, corrections\u2026";
   toggle.addEventListener("click", () => {
@@ -1366,7 +1366,7 @@ function renderPayRunsList(container: HTMLElement): void {
     // 1. Download Payday Filing CSV (myIR)
     const dlBtn = document.createElement("button");
     dlBtn.type = "button";
-    dlBtn.className = "payroll-action-btn primary";
+    dlBtn.className = "primary";
     dlBtn.innerHTML = `
       <svg viewBox="0 0 20 20" width="14" height="14" aria-hidden="true" fill="currentColor">
         <path d="M10 2v10m0 0 3.5-3.5M10 12 6.5 8.5M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/>
@@ -1389,7 +1389,6 @@ function renderPayRunsList(container: HTMLElement): void {
     // 3. View / Hide Breakdown
     const viewBtn = document.createElement("button");
     viewBtn.type = "button";
-    viewBtn.className = "payroll-action-btn";
     const isExpanded = expandedPayRunId === run.id;
     viewBtn.textContent = isExpanded ? "Hide Details" : `View Details (${run.lines.length})`;
     viewBtn.addEventListener("click", () => {
@@ -1400,7 +1399,7 @@ function renderPayRunsList(container: HTMLElement): void {
     // 4. Delete Pay Run
     const delBtn = document.createElement("button");
     delBtn.type = "button";
-    delBtn.className = "payroll-action-btn danger";
+    delBtn.className = "danger";
     delBtn.textContent = "Delete";
     delBtn.title = "Delete this pay run";
     delBtn.addEventListener("click", async () => {

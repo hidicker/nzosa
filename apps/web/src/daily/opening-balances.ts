@@ -118,7 +118,7 @@ export function renderOpeningBalances(): void {
   const add = document.createElement("button");
   add.type = "button";
   add.className = "link-button";
-  add.textContent = "add an account";
+  add.textContent = "Add an account";
   add.addEventListener("click", () => openingRow("", 0));
 
   const years = balancesByFinancialYear();
@@ -366,7 +366,7 @@ export function renderOpeningBalances(): void {
       const addThisYear = document.createElement("button");
       addThisYear.type = "button";
       addThisYear.className = "link-button";
-      addThisYear.textContent = "add an account";
+      addThisYear.textContent = "Add an account";
       addThisYear.addEventListener("click", () => openingRow("", 0, selected.asAt));
       body.append(addThisYear);
     }

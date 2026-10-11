@@ -1878,7 +1878,7 @@ function justBeforeTable(lines: readonly Transaction[], start: string): HTMLElem
     const leave = document.createElement("button");
     leave.type = "button";
     leave.className = "link-button";
-    leave.textContent = "leave out";
+    leave.textContent = "Leave out";
     leave.addEventListener("click", () => void decideJustBefore(line, false));
     actions.append(include, " ", leave);
     tr.append(actions);

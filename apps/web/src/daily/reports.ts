@@ -1991,7 +1991,7 @@ function agentCard(
   const remove = document.createElement("button");
   remove.type = "button";
   remove.className = "link-button";
-  remove.textContent = "remove";
+  remove.textContent = "Remove";
   remove.addEventListener("click", () => void removeAgentStatement(statement));
   buttons.append(edit, remove);
   card.append(buttons);

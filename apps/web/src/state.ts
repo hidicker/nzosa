@@ -62,6 +62,12 @@ export const state = {
   page: "reconcile",
   reconcileAccounts: [] as string[],
   reconcileSearch: "",
+  /**
+   * One line shown on its own, by transaction id: where "Show it" on a loose
+   * end goes, whatever the filter or search, and however far down the list
+   * the line would otherwise be. Null for the list as filtered.
+   */
+  reconcileFocus: null as string | null,
   /** Reconcile's order: oldest first unless the person chose otherwise (kept in this browser). */
   reconcileSort: ((): "oldest" | "newest" => {
     try {

@@ -35,20 +35,6 @@
 #check-body .check-table .col-imported { color: #b45309; }
 .check-table th { font-size: 0.7rem; text-transform: uppercase; letter-spacing: 0.03em; }
 .check-actions { white-space: nowrap; }
-.use-button { font-size: 0.68rem; padding: 0.1rem 0.4rem; margin-left: 0.2rem; cursor: pointer;
-  border: 1px solid rgba(128,128,128,0.45); border-radius: 3px; background: transparent; color: inherit; }
-.use-button:hover { border-color: currentColor; }
-.use-button.use-recommended {
-  border-color: rgba(31, 111, 74, 0.45);
-  color: #1f6f4a;
-  background: rgba(31, 111, 74, 0.08);
-  font-weight: 600;
-}
-.use-button.use-recommended:hover {
-  border-color: #1f6f4a;
-  background: #1f6f4a;
-  color: #ffffff;
-}
 
 .check-section { margin-bottom: 2rem; }
 .check-section-actions {
@@ -73,37 +59,6 @@
 .check-select-all-label:hover {
   color: var(--text);
   background: rgba(128, 128, 128, 0.08);
-}
-.check-batch-btn {
-  font-size: 0.76rem;
-  padding: 0.28rem 0.65rem;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.12s ease;
-}
-.check-batch-btn:hover:not(:disabled) {
-  border-color: var(--accent);
-  background: var(--accent-soft);
-  color: var(--accent);
-}
-.check-batch-btn.primary-batch {
-  border-color: rgba(31, 111, 74, 0.4);
-  background: rgba(31, 111, 74, 0.08);
-  color: #1f6f4a;
-  font-weight: 600;
-}
-.check-batch-btn.primary-batch:hover:not(:disabled) {
-  background: #1f6f4a;
-  color: #fff;
-  border-color: #1f6f4a;
-}
-.check-batch-btn:disabled {
-  opacity: 0.4;
-  cursor: not-allowed;
 }
 #check-body .check-table .col-check {
   width: 2.2rem;
@@ -1159,7 +1114,42 @@ button.active {
   font-weight: 600;
 }
 
+/* The same button, smaller: for one inside a table row or a line of text,
+   where the full size crowds it. One size, so every row action across the
+   app reads the same -- they had grown five sizes of their own. */
+button.small {
+  font-size: 0.8rem;
+  padding: 3px 9px;
+  border-radius: 5px;
+}
+
+/* Removing something: quiet until pointed at, then plainly red. */
+button.remove {
+  color: var(--muted);
+}
+button.remove:hover:not(:disabled) {
+  color: var(--danger);
+  border-color: var(--danger);
+  background: var(--surface);
+}
+
 /* ---------- messages ---------- */
+
+/* Lines on Reconcile that each need one thing done, with the way to each. */
+.loose-ends {
+  margin: 12px 0;
+  padding: 10px 14px;
+  border: 1px solid var(--border);
+  border-left: 3px solid var(--warning, #c9a227);
+  border-radius: 6px;
+  background: var(--surface-2);
+}
+.loose-ends-title { margin: 0 0 2px; font-weight: 600; }
+.loose-ends .report-table { margin-top: 6px; }
+.loose-ends .report-table td { padding-top: 4px; padding-bottom: 4px; }
+.loose-ends-actions { text-align: right; white-space: nowrap; }
+.loose-ends-actions button + button { margin-left: 6px; }
+.loose-focus { margin: 8px 0; color: var(--muted); }
 
 .busy,
 .warning {
@@ -2186,16 +2176,8 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* Which ledger account a chart's bank row is, and what it serves. */
 .bank-link { max-width: 17rem; }
 .bank-serves { display: block; font-size: 0.78rem; margin-top: 0.15rem; }
-.row-remove { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
-  background: transparent; border: 1px solid var(--border); border-radius: 3px; }
-.row-remove:hover:not(:disabled) { color: var(--danger); border-color: var(--danger); }
-.row-remove:disabled { opacity: 0.35; cursor: not-allowed; }
 /* Edit sits beside Remove and shares its shape, but not its colour: one of
    them undoes a typo and the other throws an account away. */
-.row-edit { font-size: 0.7rem; padding: 0.1rem 0.45rem; cursor: pointer; color: var(--muted);
-  background: transparent; border: 1px solid var(--border); border-radius: 3px;
-  margin-right: 0.3rem; }
-.row-edit:hover { color: var(--accent); border-color: var(--accent); }
 /* What the owners box understood, under the owners box. Quiet when it agrees
    with you, and not quiet when the shares do not add up. */
 .entity-owners-wrap { display: flex; flex-direction: column; gap: 0.15rem;
@@ -2506,19 +2488,6 @@ button.working:not(.primary):not(.active) {
 }
 .dropzone-mini-text {
   font-size: 0.78rem;
-}
-.dropzone-mini-btn {
-  font-size: 0.75rem;
-  padding: 2px 8px;
-  cursor: pointer;
-  border: 1px solid var(--border);
-  border-radius: 4px;
-  background: var(--surface);
-  color: var(--text);
-}
-.dropzone-mini-btn:hover {
-  border-color: var(--accent);
-  color: var(--accent);
 }
 #setup-loaded {
   flex: 1 0 100%;
@@ -3285,18 +3254,6 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   color: #b45309;
 }
 
-.payroll-btn {
-  font-size: 0.76rem;
-  padding: 0.22rem 0.55rem;
-  border-radius: 4px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  margin-left: 0.25rem;
-}
-.payroll-btn:hover { border-color: var(--accent); color: var(--accent); }
-.payroll-btn.danger:hover { border-color: #b91c1c; color: #b91c1c; }
 
 .payroll-runs-list {
   display: flex;
@@ -3378,52 +3335,10 @@ tr.report-behind th { font-weight: 500; opacity: 0.75; }
   flex-wrap: wrap;
 }
 
-.payroll-action-btn {
-  display: inline-flex;
-  align-items: center;
-  gap: 0.4rem;
-  font-size: 0.8rem;
-  padding: 0.35rem 0.75rem;
-  border-radius: 5px;
-  border: 1px solid var(--border);
-  background: var(--surface);
-  color: var(--text);
-  cursor: pointer;
-  font-weight: 500;
-  transition: all 0.12s ease;
-}
 
-.payroll-action-btn:hover {
-  border-color: var(--accent);
-  background: var(--surface-2);
-}
 
-.payroll-action-btn.primary {
-  background: #1f6f4a;
-  border-color: #1f6f4a;
-  color: #fff;
-  font-weight: 600;
-}
-.payroll-action-btn.primary:hover {
-  background: #19583b;
-  border-color: #19583b;
-}
 
-.payroll-action-btn.secondary {
-  border-color: #6a4b9c;
-  color: #6a4b9c;
-}
-.payroll-action-btn.secondary:hover {
-  background: rgba(106, 75, 156, 0.08);
-}
 
-.payroll-action-btn.danger {
-  color: #b91c1c;
-}
-.payroll-action-btn.danger:hover {
-  border-color: #b91c1c;
-  background: rgba(185, 28, 28, 0.06);
-}
 
 .payroll-run-breakdown {
   border-top: 1px solid var(--border);

@@ -1278,7 +1278,7 @@ function dropZone(): HTMLElement {
 
   const pick = document.createElement("button");
   pick.type = "button";
-  pick.className = "dropzone-mini-btn";
+  pick.className = "small";
   pick.textContent = "Choose files";
   pick.addEventListener("click", () => input.click());
 

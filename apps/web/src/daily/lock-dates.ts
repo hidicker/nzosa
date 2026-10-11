@@ -182,7 +182,7 @@ export function renderLockedArrivals(): void {
     const leave = document.createElement("button");
     leave.type = "button";
     leave.className = "link-button";
-    leave.textContent = "leave out";
+    leave.textContent = "Leave out";
     leave.addEventListener("click", () => void decide(line, undefined));
     actions.append(leave);
     tr.append(actions);

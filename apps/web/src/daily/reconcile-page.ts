@@ -1,4 +1,5 @@
 import { changesByLine } from "../events.js";
+import { xeroSettles } from "../migrate/coding-reconciliation.js";
 import { booksLocale } from "../country.js";
 import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
@@ -204,16 +205,32 @@ export function renderReconcile(): void {
     `${showing[state.reconcileFilter]}. ${done} of ${all.length} coded. ` +
     "Accept or change each suggestion to code the line.";
 
+  // One line on its own, from "Show it": said, with the way back.
+  if (state.reconcileFocus !== null) {
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "small";
+    back.textContent = "Show all lines";
+    back.addEventListener("click", () => {
+      state.reconcileFocus = null;
+      redraw("reconcile");
+    });
+    const said = document.createElement("p");
+    said.className = "loose-focus";
+    said.append("Showing one line. ", back);
+    body.append(said);
+  }
+
   // Any made before a line could not be both. Said at the top, because the
   // account they were coded to is short by exactly these.
   const clashes = transfersAlsoCoded();
   if (clashes.length > 0) {
     body.append(
-      note(
-        `${clashes.length} line${clashes.length === 1 ? " is" : "s are"} both a transfer and coded ` +
-          "to an account; only the transfer posts: " +
-          clashes.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
-          '. Show All, find each one, and choose "not a transfer" where it is not one.',
+      looseEnds(
+        `${clashes.length} line${clashes.length === 1 ? " is" : "s are"} both a transfer and coded to an account`,
+        'Only the transfer posts. Choose "not a transfer" on any that is not one.',
+        clashes,
+        () => [],
       ),
     );
   }
@@ -222,12 +239,34 @@ export function renderReconcile(): void {
   // owing for ever. Said at the top for the same reason as the transfers.
   const unsettled = clearingWithoutInvoice();
   if (unsettled.length > 0) {
+    const fromXero = unsettled.length > 0 ? xeroSettles() : new Map<string, string[]>();
     body.append(
-      note(
-        `${unsettled.length} line${unsettled.length === 1 ? " is" : "s are"} coded to Accounts ` +
-          "Receivable or Payable but not matched to an invoice: " +
-          unsettled.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("; ") +
-          '. Show All, find each one, and match it under "Settles which invoice?".',
+      looseEnds(
+        `${unsettled.length} payment${unsettled.length === 1 ? "" : "s"} to receivables or payables with no invoice matched`,
+        "Each leaves its invoice showing as owing. Match it to the invoices it paid.",
+        unsettled,
+        (t) => {
+          const numbers = fromXero.get(t.id);
+          if (numbers === undefined || numbers.length < 2) return [];
+          const settle = document.createElement("button");
+          settle.type = "button";
+          settle.className = "small primary";
+          settle.textContent = `Settle ${numbers.join(" and ")}`;
+          settle.title = "Xero recorded this payment as paying these invoices";
+          settle.addEventListener("click", () => {
+            settle.disabled = true;
+            void settleInvoicesExactly(t, numbers).then((done) => {
+              if (!done) {
+                settle.disabled = false;
+                alert(
+                  `${numbers.join(" and ")} no longer come to ${formatAmount(t.amount)} exactly. ` +
+                    'Show it and match it under "Settles which invoice?".',
+                );
+              }
+            });
+          });
+          return [settle];
+        },
       ),
     );
   }
@@ -1959,6 +1998,70 @@ export async function settleInvoicesExactly(transaction: Transaction, numbers: r
   if (owing !== Math.abs(transaction.amount)) return false;
   await matchToInvoices(transaction, numbers);
   return true;
+}
+
+/**
+ * Lines that need one thing done, listed with the way to each.
+ *
+ * Said in a sentence before -- "Show All, find each one, and..." -- which left
+ * the finding to whoever read it, among thousands of lines. Now each is a row
+ * with Show it, which puts that line on the screen by itself, wherever the
+ * filter and search would have hidden it, and anything else that settles it
+ * there and then.
+ */
+function looseEnds(
+  title: string,
+  why: string,
+  lines: readonly Transaction[],
+  extra: (t: Transaction) => HTMLElement[],
+): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "loose-ends";
+  const head = document.createElement("p");
+  head.className = "loose-ends-title";
+  head.textContent = title;
+  box.append(head, note(why));
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const tbody = document.createElement("tbody");
+  for (const t of lines) {
+    const tr = document.createElement("tr");
+    const date = document.createElement("td");
+    date.textContent = t.date;
+    const amount = document.createElement("td");
+    amount.className = "report-amount";
+    amount.textContent = formatAmount(t.amount);
+    const who = document.createElement("td");
+    who.textContent = t.otherParty || t.particulars || "";
+    const actions = document.createElement("td");
+    actions.className = "loose-ends-actions";
+    const show = document.createElement("button");
+    show.type = "button";
+    show.className = "small";
+    show.textContent = "Show it";
+    show.addEventListener("click", () => showOneLine(t.id));
+    actions.append(...extra(t), show);
+    tr.append(date, amount, who, actions);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  box.append(table);
+  return box;
+}
+
+/** Put one line on the screen by itself, and open what it needs. */
+function showOneLine(id: string): void {
+  state.reconcileFocus = id;
+  redraw("reconcile");
+  requestAnimationFrame(() => {
+    const row = document.querySelector<HTMLElement>(`#reconcile-body [data-id="${CSS.escape(id)}"]`);
+    if (row === null) return;
+    row.scrollIntoView({ block: "center" });
+    row.classList.add("highlight-flash");
+    // The invoice picker, where the row has one: what this line is waiting for.
+    const settles = [...row.querySelectorAll("span")].find((el) => el.textContent?.startsWith("Settles"));
+    settles?.parentElement?.querySelector<HTMLInputElement>(".combo-input")?.focus();
+  });
 }
 
 /** The single account an invoice codes to, when it has only one. */

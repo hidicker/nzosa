@@ -1002,6 +1002,18 @@ export async function unignoreReferenceLine(line: ReferenceLine): Promise<void> 
  * with their invoice numbers, is what says which invoices the deposit paid.
  * Returns how many deposits it settled.
  */
+/** For each bank line Xero recorded as several invoice payments, their invoice numbers. */
+export function xeroSettles(): Map<string, string[]> {
+  const out = new Map<string, string[]>();
+  if (state.reference.length === 0 || state.ledger.transactions.length === 0) return out;
+  const { result } = compareWithReference();
+  for (const row of [...result.agreed, ...result.differed, ...result.uncoded]) {
+    const numbers = row.theirs?.settles;
+    if (numbers !== undefined && numbers.length > 0) out.set(row.transaction.id, numbers);
+  }
+  return out;
+}
+
 export async function settleInvoicesFromXero(): Promise<number> {
   if (state.reference.length === 0 || state.ledger.transactions.length === 0) return 0;
   const { result } = compareWithReference();
@@ -1189,7 +1201,7 @@ export function renderCheck(): void {
     bar.className = "check-agree-confirm";
     const accept = document.createElement("button");
     accept.type = "button";
-    accept.className = "check-batch-btn primary-batch";
+    accept.className = "primary";
     accept.textContent = `Accept the ${agreedToConfirm.length} that agree with ${imported()} (recommended)`;
     accept.addEventListener("click", () => {
       accept.disabled = true;
@@ -1372,7 +1384,7 @@ export function renderCheck(): void {
 
         const ignoreBtn = document.createElement("button");
         ignoreBtn.type = "button";
-        ignoreBtn.className = "use-button";
+        ignoreBtn.className = "small";
         ignoreBtn.textContent = "Ignore";
 
         // Where the books really lack it, the journal that brings it in: the
@@ -1382,7 +1394,7 @@ export function renderCheck(): void {
         if (journal !== null) {
           const bring = document.createElement("button");
           bring.type = "button";
-          bring.className = "use-button";
+          bring.className = "small";
           bring.textContent = "Bring in as a journal";
           bring.addEventListener("click", () => {
             const said = journal.lines
@@ -1429,13 +1441,13 @@ export function renderCheck(): void {
 
         const confirmBtn = document.createElement("button");
         confirmBtn.type = "button";
-        confirmBtn.className = "use-button use-recommended";
+        confirmBtn.className = "small primary";
         confirmBtn.textContent = "Confirm";
         confirmBtn.disabled = true;
 
         const cancelBtn = document.createElement("button");
         cancelBtn.type = "button";
-        cancelBtn.className = "use-button";
+        cancelBtn.className = "small";
         cancelBtn.textContent = "Cancel";
 
         const updateConfirm = () => {
@@ -1540,7 +1552,7 @@ export function renderCheck(): void {
         tdAction.className = "check-actions";
         const restoreBtn = document.createElement("button");
         restoreBtn.type = "button";
-        restoreBtn.className = "use-button";
+        restoreBtn.className = "small";
         restoreBtn.textContent = "Restore";
         restoreBtn.title = "Put this line back in the list above";
         restoreBtn.addEventListener("click", () => {
@@ -1671,7 +1683,7 @@ function section(
   if (totalXero > 0) {
     btnXero = document.createElement("button");
     btnXero.type = "button";
-    btnXero.className = "check-batch-btn primary-batch";
+    btnXero.className = "primary";
     actionsBar.append(btnXero);
   }
 
@@ -1679,7 +1691,7 @@ function section(
   if (totalSplits > 0) {
     btnSplits = document.createElement("button");
     btnSplits.type = "button";
-    btnSplits.className = "check-batch-btn primary-batch";
+    btnSplits.className = "primary";
     actionsBar.append(btnSplits);
   }
 
@@ -1687,7 +1699,6 @@ function section(
   if (totalRules > 0) {
     btnRules = document.createElement("button");
     btnRules.type = "button";
-    btnRules.className = "check-batch-btn";
     actionsBar.append(btnRules);
   }
 
@@ -1967,7 +1978,7 @@ function section(
     if (canUseSplit && parts) {
       const useSplit = document.createElement("button");
       useSplit.type = "button";
-      useSplit.className = "use-button use-recommended";
+      useSplit.className = "small primary";
       useSplit.textContent = (state.ledger.splits ?? {})[row.transaction.id]
         ? "reload split (recommended)"
         : "use split (recommended)";
@@ -1989,8 +2000,8 @@ function section(
     if (coded !== "") {
       const keep = document.createElement("button");
       keep.type = "button";
-      keep.className = "use-button";
-      keep.textContent = "keep mine";
+      keep.className = "small";
+      keep.textContent = "Keep mine";
       keep.title = `${coded} — records that this was checked and stands`;
       // Keeping a match keeps the coding the line already has; the words
       // "settles INV-0135" are a description, not an account to write back.
@@ -2049,7 +2060,7 @@ function useButton(
 ): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";
-  button.className = kind === "imported" ? "use-button use-recommended" : "use-button";
+  button.className = kind === "imported" ? "small primary" : "small";
   button.textContent = kind === "imported" ? `use ${imported()} (recommended)` : "use rules";
   button.title = rate === undefined ? code : `${code} · ${rate}`;
   button.addEventListener("click", () => void acceptCode(transaction, code, kind, rate));
@@ -2469,7 +2480,7 @@ function transferDiffersSection(rows: readonly CodingRow[]): HTMLElement {
       const mapped = mapToOurVocabulary(name);
       const act = document.createElement("button");
       act.type = "button";
-      act.className = "use-button";
+      act.className = "small";
       if (mapped === null) {
         act.textContent = "match the file's name";
         act.addEventListener("click", () => {
@@ -2563,7 +2574,7 @@ function fileSaysTransferSection(
   if (pairs.length > 0) {
     const all = document.createElement("button");
     all.type = "button";
-    all.className = "check-batch-btn primary-batch";
+    all.className = "primary";
     all.textContent =
       `Use ${imported()} for all — pair ${pairs.length} transfer${pairs.length === 1 ? "" : "s"} ` +
       "(recommended)";
@@ -2581,7 +2592,7 @@ function fileSaysTransferSection(
   const toReconcile = (): HTMLAnchorElement => {
     const link = document.createElement("a");
     link.href = "#page-reconcile";
-    link.textContent = "see Reconcile";
+    link.textContent = "See Reconcile";
     link.addEventListener("click", (event) => {
       event.preventDefault();
       showPage("reconcile");
@@ -2601,7 +2612,7 @@ function fileSaysTransferSection(
       } else if (partners.length === 1 && only !== undefined) {
         const pair = document.createElement("button");
         pair.type = "button";
-        pair.className = "use-button use-recommended";
+        pair.className = "small primary";
         pair.textContent = `pair with ${bankLabel(only.account)} on ${only.date}`;
         pair.addEventListener("click", () => {
           pair.disabled = true;

@@ -1641,7 +1641,7 @@ function editCell(
 ): HTMLButtonElement {
   const edit = document.createElement("button");
   edit.type = "button";
-  edit.className = "row-edit";
+  edit.className = "small";
   edit.textContent = "Edit";
   edit.title = "Change this account's code or name.";
 
@@ -1691,7 +1691,7 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
 
   const button = document.createElement("button");
   button.type = "button";
-  button.className = "row-remove";
+  button.className = "small remove";
   button.textContent = "Remove";
   if (coded > 0) {
     button.disabled = true;

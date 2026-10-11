@@ -1930,6 +1930,37 @@ function shareOf(transaction: Transaction, number: string): number {
   );
 }
 
+/**
+ * Settle the invoices the accounting system says one payment paid, where they
+ * account for it exactly.
+ *
+ * For a deposit holding several invoices' payments -- two customers' cash paid
+ * in at the branch together, or one customer paying two invoices at once --
+ * which the one-to-one matching cannot pair: Xero recorded the payments
+ * separately, and their invoice numbers are the evidence. Only where nothing
+ * has settled the payment already, none of the invoices is settled by another
+ * line, and what they still owe comes to the payment to the cent; anything
+ * less certain is left for a person to match. True when it settled them.
+ */
+export async function settleInvoicesExactly(transaction: Transaction, numbers: readonly string[]): Promise<boolean> {
+  if (numbers.length < 2) return false;
+  const assigned = invoiceAssignments();
+  if (assigned.has(transaction.id) || (state.ledger.splits ?? {})[transaction.id] !== undefined) return false;
+  const elsewhere = new Set(assigned.values());
+  if (numbers.some((number) => elsewhere.has(number))) return false;
+  const invoices = invoicesInPlay();
+  const balances = invoiceBalanceMap();
+  let owing = 0;
+  for (const number of numbers) {
+    const invoice = invoices.find((i) => i.number === number);
+    if (invoice === undefined) return false;
+    owing += Math.max(balances.get(number)?.remaining ?? invoice.total, 0);
+  }
+  if (owing !== Math.abs(transaction.amount)) return false;
+  await matchToInvoices(transaction, numbers);
+  return true;
+}
+
 /** The single account an invoice codes to, when it has only one. */
 function codeFromInvoice(invoice: Invoice): string | null {
   const codes = new Set(

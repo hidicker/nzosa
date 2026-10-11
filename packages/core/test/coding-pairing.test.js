@@ -322,3 +322,17 @@ test("a payer's lines are not grouped onto a bank line that names somebody else"
   const result = compareCodings([{ transaction: t, code: "610" }], lines);
   assert.ok(result.agreed.length + result.differed.length + result.unreferenced.length === 1);
 });
+
+test("a deposit that is several invoice payments says which invoices it paid", () => {
+  // The real case: $200 paid in at the branch, no name on it, which the other
+  // system records as two customers' payments of $151 and $49.
+  const t = txn("t", "2025-06-02", 20000, "DEPOSIT 000000000 BNZ3096 NELS");
+  const lines = [
+    { ...line("2025-06-02", 15100, "610 Accounts Receivable", "Mat Shaw", "Payment: Mat Shaw"), reference: "INV-0055" },
+    { ...line("2025-06-02", 4900, "610 Accounts Receivable", "Jeremy Reid", "Payment: Jeremy Reid"), reference: "INV-0051" },
+  ];
+  const theirs = compareCodings([{ transaction: t, code: null }], lines).uncoded[0].theirs;
+  assert.equal(theirs.combined, 2);
+  assert.deepEqual([...theirs.settles].sort(), ["INV-0051", "INV-0055"]);
+  assert.equal(theirs.parts, undefined, "still not offered as a coding: the invoices settle it");
+});

@@ -77,6 +77,7 @@ import type {
 } from "@nzosa/core";
 import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
+import { settleInvoicesExactly } from "../daily/reconcile-page.js";
 import { accountsForEditing, saveManualJournals } from "../books.js";
 import { booksLocale } from "../country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
@@ -990,6 +991,27 @@ export async function unignoreReferenceLine(line: ReferenceLine): Promise<void> 
     };
   }
   state.persistent = await savePart(state.ledger);
+}
+
+/**
+ * The deposits Xero recorded as several invoice payments, settling those
+ * invoices: last, after every one-to-one match, so it only ever takes what
+ * that left. A cash deposit of $200 at the branch held two customers'
+ * payments, $151 and $49; neither invoice had a bank line of its own to
+ * match, and nothing named either customer. Xero's record of the payments,
+ * with their invoice numbers, is what says which invoices the deposit paid.
+ * Returns how many deposits it settled.
+ */
+export async function settleInvoicesFromXero(): Promise<number> {
+  if (state.reference.length === 0 || state.ledger.transactions.length === 0) return 0;
+  const { result } = compareWithReference();
+  let settled = 0;
+  for (const row of [...result.agreed, ...result.differed, ...result.uncoded]) {
+    const numbers = row.theirs?.settles;
+    if (numbers === undefined || numbers.length < 2) continue;
+    if (await settleInvoicesExactly(row.transaction, numbers)) settled += 1;
+  }
+  return settled;
 }
 
 /** Unmatched lines in the reference file (on or after books start) that have not been dismissed with a reason. */

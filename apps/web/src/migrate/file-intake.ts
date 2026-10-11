@@ -6,7 +6,7 @@ import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
-import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
+import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
 import { ledgerName, save, savePart } from "../store.js";
 import { downloadBackupNow, restoreWithConfirm } from "../backup.js";
@@ -288,6 +288,15 @@ async function loadEach(
     }
   }
 
+  // Last, once the invoices and the coding are both in: deposits Xero says
+  // paid several invoices, settling them, where nothing one-to-one did.
+  const settled = await settleInvoicesFromXero();
+  if (settled > 0) {
+    say(
+      `${settled} deposit${settled === 1 ? "" : "s"} holding several invoice payments ` +
+        `settled as Xero recorded them.`,
+    );
+  }
   if (spoken === 0) say("Nothing was loaded.");
   // Only reachable from Setup today, but named by page rather than by hand for
   // the same reason as above: the next thing to call this may not be.

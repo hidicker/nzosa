@@ -111,6 +111,13 @@ export interface ReferenceLine {
    * surcharge and the processor's fee -- that together add up to it.
    */
   combined?: number;
+  /**
+   * The invoices the lines taken together paid, where they were invoice
+   * payments: a customer's two invoices paid in one deposit, or two customers'
+   * paid in one cash deposit at the branch. The accounting system's own record
+   * of what the money settled, so the deposit can settle the same invoices.
+   */
+  settles?: string[];
 }
 
 export interface ReferencePart {
@@ -694,7 +701,7 @@ function regroupIdentical(banks: SheetPosting[], others: SheetPosting[]): SheetP
   if (others.length % count !== 0) return null;
 
   const sameAs = (p: SheetPosting): string =>
-    [p.accountCode.trim(), p.account.trim(), p.movement, p.gstRate.trim(), p.description.trim()].join(" ");
+    [p.accountCode.trim(), p.account.trim(), p.movement, p.gstRate.trim(), p.description.trim()].join("\u0000");
   const kinds = new Map<string, SheetPosting[]>();
   for (const posting of others) {
     const key = sameAs(posting);
@@ -1306,11 +1313,18 @@ export function compareCodings(
       gstRate: l.gstRate ?? "",
       description: l.description ?? "",
     }));
+    // Which invoices, by the number each payment names: Xero puts it in the
+    // reference of a payment, or the invoice number column where there is one.
+    const settles = found
+      .filter((l) => CONTROL.test(l.code) || CONTROL.test(l.label))
+      .map((l) => (l.invoiceNumber ?? "").trim() || (l.reference ?? "").trim())
+      .filter((number) => number !== "");
     return {
       ...principal,
       amount,
       combined: found.length,
       ...(settled ? {} : { parts }),
+      ...(settles.length > 0 ? { settles } : {}),
     };
   };
 
@@ -1388,7 +1402,7 @@ export function compareCodings(
       if (used.has(line) || near(line, entry) > windowDays) continue;
       if (line.account !== undefined && options.accountMatches !== undefined && !options.accountMatches(entry.transaction, line)) continue;
       if ((line.contact ?? "").trim() === "" || nameAgreement(line, entry.transaction) <= 0) continue;
-      const key = `${line.date} ${line.account ?? ""} ${(line.contact ?? "").trim().toLowerCase()}`;
+      const key = `${line.date}\u0000${line.account ?? ""}\u0000${(line.contact ?? "").trim().toLowerCase()}`;
       const list = groups.get(key);
       if (list) list.push(line);
       else groups.set(key, [line]);

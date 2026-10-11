@@ -1856,7 +1856,7 @@ function doneQuestion(number: number, held: Onboarding): HTMLElement {
       : "These books know whose they are. ") +
       (left.length === 0
         ? "Everything Setup asks for is done; Reconcile is where the daily work starts."
-        : `Still to do on Setup: ${leftList}. Each says what it would give you.`),
+        : `Still to do on Setup: ${leftList}. ${left.length === 1 ? "It says" : "Each says"} what it would give you.`),
   ];
   if (several) {
     points.push(

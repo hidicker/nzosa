@@ -23,7 +23,7 @@ import {
   feedStatus,
   feedTransactions,
 } from "../feed-route.js";
-import type { FeedPendingItem } from "../feed-route.js";
+import type { FeedPendingItem, FeedStatus } from "../feed-route.js";
 import {
   accountEntityKey,
   accountsAtExportLimit,
@@ -850,6 +850,35 @@ async function drawFeed(): Promise<void> {
 
   const status = await feedStatus();
   if (drawing !== feedDrawing) return;
+  const restore = holdWhatIsBelow(body);
+  try {
+    fillFeed(body, status);
+  } finally {
+    restore();
+  }
+}
+
+/**
+ * Keep what is below the feed where it is while the feed is redrawn.
+ *
+ * The feed is emptied and drawn again, which the browser cannot anchor the
+ * scroll across: a fetch that added the lines dated before the start pushed
+ * Wise down by a screen, under somebody who had gone on to tick a balance
+ * there. Only when they are looking at what is below -- someone reading the
+ * feed itself is left where they are.
+ */
+function holdWhatIsBelow(body: HTMLElement): () => void {
+  const below = document.getElementById("import-wise") ?? body.parentElement?.nextElementSibling ?? null;
+  if (!(below instanceof HTMLElement) || below.offsetParent === null) return () => undefined;
+  const was = below.getBoundingClientRect().top;
+  if (was > window.innerHeight) return () => undefined;
+  return () => {
+    const moved = below.getBoundingClientRect().top - was;
+    if (Math.abs(moved) >= 2) feedScroller(below).scrollBy(0, moved);
+  };
+}
+
+function fillFeed(body: HTMLElement, status: FeedStatus | null): void {
   body.textContent = "";
   placeBankImport(status?.configured === true);
 

@@ -679,6 +679,10 @@
 .code-row { display: grid; grid-template-columns: minmax(12rem, 2fr) 7rem minmax(20rem, 3fr); gap: 0.75rem;
   align-items: start; padding: 0.6rem 0.5rem; border-bottom: 1px solid rgba(128,128,128,0.18); }
 .code-row.done { opacity: 0.55; }
+/* Opacity makes the row its own layer: a list opened in a coded line was
+   see-through, and the rows below were drawn over it and took its clicks. In
+   use, the line is shown in full. */
+.code-row.done:focus-within { opacity: 1; }
 .code-bank { min-width: 0; }
 .code-date { font-size: 0.75rem; color: var(--muted, #667); }
 .code-who { font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
@@ -1218,7 +1222,15 @@ dialog.ask-on-page::backdrop { background: rgba(0, 0, 0, 0.35); }
 /* As wide as its buttons and no wider: the payee takes what is left. */
 .loose-ends .report-table td.loose-ends-actions { width: 1%; }
 .loose-ends-actions button + button { margin-left: 6px; }
-.loose-focus { margin: 8px 0; color: var(--muted); }
+/* A bar, not a line of grey text: with one line showing, the way back to the
+   rest has to be the first thing seen. */
+.loose-focus {
+  display: flex; align-items: center; gap: 12px; flex-wrap: wrap;
+  margin: 12px 0; padding: 10px 14px;
+  border: 1px solid var(--border); border-left: 3px solid var(--accent, #1f4e79);
+  border-radius: 6px; background: var(--surface-2);
+  font-weight: 600;
+}
 
 .busy,
 .warning {
@@ -1443,9 +1455,12 @@ tr.status-review {
   font-size: 13px;
 }
 
+/* Wrapped: kept on one line, a long file name ran out of its column and
+   under the status beside it. */
 .source {
   color: var(--muted);
   max-width: 22ch;
+  white-space: normal;
   overflow-wrap: anywhere;
 }
 

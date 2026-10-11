@@ -6,7 +6,7 @@ import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { chosenStartDate, startOfFinancialYear } from "../migrate/onboarding-state.js";
+import { chosenStartDate, sourceForTheseBooks, startOfFinancialYear } from "../migrate/onboarding-state.js";
 import { amountCell, nameCell, note } from "../ui.js";
 import { accountEntityKey, emptyEntityModel, financialYearBalances, parseAmount } from "@nzosa/core";
 import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
@@ -1625,6 +1625,12 @@ export async function openingBalancesFromFeed(): Promise<string> {
   const filled = draft.rows.filter((row) => row.amount !== "");
   if (filled.length === 0) return draft.feedSaid ?? "";
   if (filled.some((row) => row.balanceTo === "")) {
+    // Moving from Xero, the trial balance is the opening position, and loading
+    // it compares each bank account with the feed. Sending somebody off to
+    // choose equity accounts now was work the next step does for them.
+    if (sourceForTheseBooks() === "xero" && state.ledger.openingBalances === undefined) {
+      return "Opening balances come from Xero's trial balance, checked against these from the feed.";
+    }
     bankDraft = draft;
     openingDraft = null;
     return "Opening balances not saved: choose the equity account for each bank account on Opening balances.";

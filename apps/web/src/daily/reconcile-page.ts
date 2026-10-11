@@ -209,7 +209,7 @@ export function renderReconcile(): void {
   if (state.reconcileFocus !== null) {
     const back = document.createElement("button");
     back.type = "button";
-    back.className = "small";
+    back.className = "small primary";
     back.textContent = "Show all lines";
     back.addEventListener("click", () => {
       state.reconcileFocus = null;
@@ -217,7 +217,7 @@ export function renderReconcile(): void {
     });
     const said = document.createElement("p");
     said.className = "loose-focus";
-    said.append("Showing one line. ", back);
+    said.append("Showing one line", back);
     body.append(said);
   }
 

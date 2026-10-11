@@ -2000,7 +2000,10 @@ export async function settleInvoicesExactly(transaction: Transaction, said: read
   if (assigned.has(transaction.id) || (state.ledger.splits ?? {})[transaction.id] !== undefined) return false;
   const numbers = resolveSettlement(transaction, said);
   if (numbers === null) return false;
-  await matchToInvoices(transaction, numbers);
+  // One is a match of its own: the split that settles several needs two parts
+  // or more, and given one it did nothing at all.
+  if (numbers.length === 1) await matchToInvoice(transaction, numbers[0] as string);
+  else await matchToInvoices(transaction, numbers);
   return true;
 }
 

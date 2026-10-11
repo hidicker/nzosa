@@ -137,8 +137,12 @@ export function invoiceCandidates(
  * particular thing than "126", which turns up in account numbers, dates and
  * amounts.
  */
-export function namesInvoice(text: string, invoiceNumber: string): boolean {
-  if (invoiceNumber === "") return false;
+export function namesInvoice(text: string, number: string): boolean {
+  // By the number the supplier wrote: "RPT445-1", not "RPT445-1/2026-09-17",
+  // the date being only what tells this month's bill from last month's. A
+  // document that had no number is named by nothing a payment writes.
+  const invoiceNumber = xeroNumberOf(number);
+  if (invoiceNumber === "" || !/\d/.test(invoiceNumber)) return false;
   const said = text.toUpperCase();
   if (said.includes(invoiceNumber.toUpperCase())) return true;
 
@@ -146,6 +150,17 @@ export function namesInvoice(text: string, invoiceNumber: string): boolean {
   if (digits.length < 3) return false;
   const runs: readonly string[] = said.match(/\d+/g) ?? [];
   return runs.includes(digits);
+}
+
+/**
+ * The number as the other system wrote it.
+ *
+ * Xero reuses a bill number every month and leaves some blank, so each is
+ * kept with its date beside it ("RPT445-1/2026-09-17"), or its contact where
+ * there was none. A payment names the bill by the part before the date.
+ */
+export function xeroNumberOf(number: string): string {
+  return number.replace(/\/\d{4}-\d{2}-\d{2}$/, "");
 }
 
 /** An invoice number split into its prefix and its number, when it has both. */

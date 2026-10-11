@@ -493,8 +493,12 @@ export async function loadInvoices(file: File): Promise<string> {
     issues.length > 0
       ? `${what} loaded. ${issues.length} look wrong: ` + issues.slice(0, 3).map((i) => i.message).join("; ")
       : `${what} loaded from ${file.name}.`;
+  // The payments Xero says paid each one, settled now rather than left to be
+  // found by hand -- from the Invoices page as well as from Start here.
+  const settled = await settleInvoicesFromXero();
   redraw("invoices");
-  return issues.length > 0 ? `${what}; ${issues.length} look wrong, see Invoices.` : `${what}.`;
+  const paid = settled > 0 ? ` ${settled} payment${settled === 1 ? "" : "s"} matched as Xero recorded them.` : "";
+  return (issues.length > 0 ? `${what}; ${issues.length} look wrong, see Invoices.` : `${what}.`) + paid;
 }
 
 export async function loadAllocations(file: File): Promise<void> {

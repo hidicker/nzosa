@@ -1008,10 +1008,19 @@ export function xeroSettles(): Map<string, string[]> {
   if (state.reference.length === 0 || state.ledger.transactions.length === 0) return out;
   const { result } = compareWithReference();
   for (const row of [...result.agreed, ...result.differed, ...result.uncoded]) {
-    const numbers = row.theirs?.settles;
-    if (numbers !== undefined && numbers.length > 0) out.set(row.transaction.id, numbers);
+    const numbers = row.theirs?.settles ?? xeroSettlesOne(row.theirs);
+    if (numbers.length > 0) out.set(row.transaction.id, numbers);
   }
   return out;
+}
+
+/** The document a single payment line names, where it is posted to receivables or payables. */
+function xeroSettlesOne(line: ReferenceLine | null | undefined): string[] {
+  if (line === null || line === undefined) return [];
+  const control = /accounts\s+(receivable|payable)|^\s*(610|800)\b/i;
+  if (!control.test(line.code) && !control.test(line.label)) return [];
+  const number = (line.invoiceNumber ?? "").trim() || (line.reference ?? "").trim();
+  return number === "" ? [] : [number];
 }
 
 export async function settleInvoicesFromXero(): Promise<number> {
@@ -1019,8 +1028,13 @@ export async function settleInvoicesFromXero(): Promise<number> {
   const { result } = compareWithReference();
   let settled = 0;
   for (const row of [...result.agreed, ...result.differed, ...result.uncoded]) {
-    const numbers = row.theirs?.settles;
-    if (numbers === undefined || numbers.length < 2) continue;
+    // Several invoices in one deposit, or one payment naming its bill or
+    // invoice: both are Xero saying which, and both are settled here when
+    // the amounts agree exactly. One-for-one payments were left to be
+    // matched by hand, and a bill Xero had numbered like last month's could
+    // not be found at all.
+    const numbers = row.theirs?.settles ?? xeroSettlesOne(row.theirs);
+    if (numbers.length === 0) continue;
     if (await settleInvoicesExactly(row.transaction, numbers)) settled += 1;
   }
   return settled;

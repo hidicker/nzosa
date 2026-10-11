@@ -33,3 +33,11 @@ test("an invoice number used once stays as it is", () => {
   const text = [HEAD, row("Totara Cafe", "INV-0001", "1/05/2026", "115.00", "15.00", "100.00", "15.00", "200", "Sales invoice")].join("\n");
   assert.deepEqual(parseXeroInvoices(text).invoices.map((i) => [i.kind, i.number]), [["sales", "INV-0001"]]);
 });
+
+test("a payment names a bill by the number the supplier wrote, not the date kept beside it", async () => {
+  const { namesInvoice, xeroNumberOf } = await import("../dist/index.js");
+  assert.equal(xeroNumberOf("RPT445-1/2026-09-17"), "RPT445-1");
+  assert.equal(namesInvoice("Payment: PowerDirect RPT445-1", "RPT445-1/2026-09-17"), true);
+  // A bill with no number is kept under its contact, which no payment names.
+  assert.equal(namesInvoice("Payment: Rimu Training", "Rimu Training/2025-09-02"), false);
+});

@@ -56,6 +56,13 @@ works).
 
 ## The app
 
+- **Xero expense claims.** A claim posts its costs to the expense accounts and
+  the total to 801 Unpaid Expense Claims when approved; the repayment from the
+  bank clears 801. Neither the invoices nor the bills export carries them, so
+  the books' own accrual figures miss the costs (the Demo Company's year was
+  56.00 short: a print job and two conference costs). The journal report holds
+  them, source "Expense Claim": bring those in as documents of their own, or
+  as manual journals, and settle the repayments against them.
 - **Wise balances in other currencies.** Only balances in the books' own
   currency can be brought in (`wise-feed.ts`): a KRW or EUR line came in as if
   it were dollars. Bringing others in needs each line converted at the day's

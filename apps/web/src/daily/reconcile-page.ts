@@ -247,18 +247,27 @@ export function renderReconcile(): void {
         "Each leaves its invoice showing as owing. Match it to the invoices it paid.",
         unsettled,
         (t) => {
-          const numbers = fromXero.get(t.id);
-          if (numbers === undefined || numbers.length === 0) return [];
+          const said = fromXero.get(t.id);
+          const numbers = said === undefined ? null : resolveSettlement(t, said);
+          if (said === undefined || numbers === null) return [];
           const settle = document.createElement("button");
           settle.type = "button";
           settle.className = "small primary";
           // Short, so the row keeps its room for the payee; which invoices is
           // said on the button's own tip.
-          settle.textContent = numbers.length > 1 ? `Settle ${numbers.length} invoices` : `Settle ${numbers[0]}`;
-          settle.title = `Xero recorded this payment as paying ${numbers.join(" and ")}`;
+          const one = xeroNumberOf(numbers[0] ?? "");
+          settle.textContent =
+            numbers.length > 1
+              ? `Settle ${numbers.length} invoices`
+              : /\d/.test(one)
+                ? `Settle ${one}`
+                : t.amount < 0
+                  ? "Settle the bill"
+                  : "Settle the invoice";
+          settle.title = `Pays ${numbers.join(" and ")}`;
           settle.addEventListener("click", () => {
             settle.disabled = true;
-            void settleInvoicesExactly(t, numbers).then((done) => {
+            void settleInvoicesExactly(t, said).then((done) => {
               if (!done) {
                 settle.disabled = false;
                 alert(
@@ -1987,56 +1996,75 @@ function shareOf(transaction: Transaction, number: string): number {
  * less certain is left for a person to match. True when it settled them.
  */
 export async function settleInvoicesExactly(transaction: Transaction, said: readonly string[]): Promise<boolean> {
-  if (said.length === 0) return false;
   const assigned = invoiceAssignments();
   if (assigned.has(transaction.id) || (state.ledger.splits ?? {})[transaction.id] !== undefined) return false;
-  const elsewhere = new Set(assigned.values());
+  const numbers = resolveSettlement(transaction, said);
+  if (numbers === null) return false;
+  await matchToInvoices(transaction, numbers);
+  return true;
+}
+
+/**
+ * The documents here a payment pays, from what Xero says it paid -- or null
+ * where that cannot be said for certain.
+ *
+ * Each number as Xero wrote it, to the document here. Most are the same; a
+ * bill number Xero reused carries its date here ("RPT445-1/2026-09-17"), so
+ * it is the open one of that number dated on or before the payment, the one
+ * owing exactly the payment where there is one, else the latest.
+ *
+ * A single payment whose reference names nothing here -- a batch payment's
+ * "FP101897", or no reference at all -- goes by who was paid: the one open
+ * document of that contact, dated on or before it, that it can pay. Only
+ * where there is one: two open bills from a supplier is a person's question.
+ *
+ * Several must add up exactly. One may be paid in part: the 900.00 paid on a
+ * 1,063.56 bill leaves what Xero says is still owing.
+ */
+export function resolveSettlement(transaction: Transaction, said: readonly string[]): string[] | null {
+  if (said.length === 0) return null;
+  const elsewhere = new Set(invoiceAssignments().values());
   const invoices = invoicesInPlay();
   const balances = invoiceBalanceMap();
   const owingOn = (invoice: { number: string; total: number }): number =>
     Math.max(balances.get(invoice.number)?.remaining ?? invoice.total, 0);
   const kind = transaction.amount < 0 ? "purchase" : "sales";
+  const paying = Math.abs(transaction.amount);
+  const usable = (i: Invoice, taken: readonly string[]): boolean =>
+    i.kind === kind && i.issued <= transaction.date && owingOn(i) > 0 && !elsewhere.has(i.number) && !taken.includes(i.number);
 
-  // Each number as Xero wrote it, to the document here. Most are the same;
-  // a bill number Xero reused carries its date here ("RPT445-1/2026-09-17"),
-  // so it is the open one of that number dated on or before the payment --
-  // the one owing exactly the payment where there is one, else the latest.
   const numbers: string[] = [];
   for (const number of said) {
-    const exact = invoices.find((i) => i.number === number);
+    const exact = number === "" ? undefined : invoices.find((i) => i.number === number);
     if (exact !== undefined) {
       numbers.push(exact.number);
       continue;
     }
     const open = invoices
-      .filter(
-        (i) =>
-          i.kind === kind &&
-          xeroNumberOf(i.number) === number &&
-          i.issued <= transaction.date &&
-          owingOn(i) > 0 &&
-          !elsewhere.has(i.number) &&
-          !numbers.includes(i.number),
-      )
+      .filter((i) => number !== "" && xeroNumberOf(i.number) === number && usable(i, numbers))
       .sort((a, b) => b.issued.localeCompare(a.issued));
-    const pick =
-      (said.length === 1 ? open.find((i) => owingOn(i) === Math.abs(transaction.amount)) : undefined) ?? open[0];
-    if (pick === undefined) return false;
+    let pick =
+      (said.length === 1 ? open.find((i) => owingOn(i) === paying) : undefined) ?? open[0];
+    if (pick === undefined && said.length === 1) {
+      const text = `${transaction.otherParty} ${transaction.particulars}`.toLowerCase();
+      const theirs = invoices.filter(
+        (i) => usable(i, numbers) && i.contact.trim() !== "" && text.includes(i.contact.trim().toLowerCase()) && owingOn(i) >= paying,
+      );
+      const exactly = theirs.filter((i) => owingOn(i) === paying);
+      pick = exactly.length === 1 ? exactly[0] : theirs.length === 1 ? theirs[0] : undefined;
+    }
+    if (pick === undefined) return null;
     numbers.push(pick.number);
   }
-  if (numbers.some((number) => elsewhere.has(number))) return false;
+  if (numbers.some((number) => elsewhere.has(number))) return null;
   let owing = 0;
   for (const number of numbers) {
     const invoice = invoices.find((i) => i.number === number);
-    if (invoice === undefined) return false;
+    if (invoice === undefined) return null;
     owing += owingOn(invoice);
   }
-  // Several must add up exactly. One named by Xero may be paid in part: the
-  // 900.00 paid on a 1,063.56 bill leaves what Xero says is still owing.
-  const paying = Math.abs(transaction.amount);
-  if (numbers.length === 1 ? owing < paying : owing !== paying) return false;
-  await matchToInvoices(transaction, numbers);
-  return true;
+  if (numbers.length === 1 ? owing < paying : owing !== paying) return null;
+  return numbers;
 }
 
 /**

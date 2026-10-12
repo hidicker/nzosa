@@ -70,12 +70,10 @@ works).
   trial balance, Leave out after all and Bring in as a journal use it. About
   46 `confirm()` calls in 28 files remain, and `alert()` and `prompt()` have
   the same problem. Each needs its handler made async.
-- **Say it is working while a bulk action on Reconcile runs.** "Split N" (the
-  payment-processor split suggestions at the top of Reconcile) gives no sign
-  it has started until it is done. Use the `working` style on its button, as
-  Fetch transactions does, and a "Splitting 12 of 40…" line with the spinner
-  the file intake now uses (`files-loading`). Check the other bulk buttons
-  there (Accept all, AI suggestions) for the same.
+- **Say it is working while the other bulk actions on Reconcile run.** "Split
+  N" now shows the `working` style and "Splitting 12 of 40…" on its button
+  until it is done. Accept all and AI suggestions may need the same: check
+  how long each takes on a large set of books.
 - **A journal keeps an account's old name after the account is renamed.** Manual
   journal lines store "Name - CODE" as text; the figures follow the code, but
   the journal list shows the name as it was.

@@ -77,6 +77,10 @@ works).
   trial balance, Leave out after all and Bring in as a journal use it. About
   46 `confirm()` calls in 28 files remain, and `alert()` and `prompt()` have
   the same problem. Each needs its handler made async.
+  First of them: Delete on the online Books page (`cloud-books.ts`) asks for
+  the set's name with `prompt()`, so in such a browser the button does
+  nothing at all. Replace everything on the server, there, and the two
+  backup restores in `backup.ts` ask with `confirm()`.
 - **Reconcile tick, stage 2: redraw only the ticked line.** Stage 1 is done: a
   tick no longer waits for its saves (about 0.3 s on books online, down from
   0.8–2.6 s), and the writes queue in order (`writeQueue` in core). What is
@@ -126,6 +130,10 @@ works).
     per-person record (a `last_opened_at` on the membership row, set on
     opening); in a folder, a note beside the books. Shown as a column, and
     the list sorted by it.
+- **Rename and Delete are offered to people who cannot use them.** The online
+  Books page shows both on every row, whatever the person's role. The server
+  lets only an owner do either, so a bookkeeper, accountant or reader is
+  refused after pressing. Show them to owners only.
 - **Bring the GitHub workflows up to date.** The "Deploy website" run on
   10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
   target Node.js 20, which GitHub has deprecated (they are being run on

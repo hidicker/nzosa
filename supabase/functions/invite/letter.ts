@@ -30,6 +30,11 @@ function escape(text: string): string {
     .replace(/"/g, "&quot;");
 }
 
+/** Line breaks (CR, LF, and the Unicode ones) as single spaces. */
+export function oneLine(text: string): string {
+  return text.replace(/[\r\n\u0085\u2028\u2029]+/g, " ").trim();
+}
+
 export function letter(
   books: string,
   role: string,
@@ -38,7 +43,9 @@ export function letter(
 ): { subject: string; text: string; html: string } {
   const who = from !== "" ? from : "Someone";
   const as = ROLES[role] ?? { name: "a member", can: "work on the books" };
-  const subject = `You're invited to ${books} in NZOSA`;
+  // A line break in the subject would start a mail header of the sender's
+  // choosing, so the books' name is one line there whatever it holds.
+  const subject = `You're invited to ${oneLine(books)} in NZOSA`;
 
   const text = [
     "Kia ora,",

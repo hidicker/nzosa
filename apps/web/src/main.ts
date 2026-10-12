@@ -129,6 +129,8 @@ import {
   loadUser,
   booksReadOnly,
   onSaveTrouble,
+  onSavedAgain,
+  hasUnsavedChanges,
   requestPersistence,
   savePart,
   saveUser,
@@ -392,21 +394,37 @@ function wireUp(): void {
 
   // Leaving while a save is still on its way: a tick on Reconcile moves on
   // before the server has answered, so closing or reloading straight after
-  // could lose it. The browser asks first, in its own words.
+  // could lose it. Or after one failed and has not been made good since:
+  // nothing is pending then, but the change is held only on this page. The
+  // browser asks first, in its own words.
   window.addEventListener("beforeunload", (event) => {
-    if (savesPending() === 0) return;
+    if (savesPending() === 0 && !hasUnsavedChanges()) return;
     event.preventDefault();
     event.returnValue = "";
   });
 
   // A save that did not happen, said across the top of the app rather than on
   // whichever page happened to be open when it failed.
+  // "offline" is tried again on its own, so it offers no Reload: reloading
+  // then would throw away the very change waiting to be saved.
+  let shownTrouble: string | null = null;
   onSaveTrouble((trouble) => {
     const banner = document.getElementById("save-banner");
     const said = document.getElementById("save-banner-text");
     if (banner === null || said === null) return;
+    // A conflict says more than "not answering", so it is not replaced by one.
+    if (trouble.kind === "offline" && shownTrouble !== null && shownTrouble !== "offline" && !banner.hidden) return;
+    shownTrouble = trouble.kind;
     said.textContent = trouble.why;
+    const reload = document.getElementById("save-banner-reload");
+    if (reload !== null) reload.hidden = trouble.kind === "offline";
     banner.hidden = false;
+  });
+  onSavedAgain(() => {
+    const banner = document.getElementById("save-banner");
+    if (banner === null || shownTrouble !== "offline") return;
+    banner.hidden = true;
+    shownTrouble = null;
   });
   document.getElementById("save-banner-reload")?.addEventListener("click", () => {
     location.reload();

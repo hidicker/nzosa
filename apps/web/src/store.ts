@@ -671,7 +671,8 @@ export function backendKind(): Backend {
  * business knowing what a banner is.
  */
 export interface SaveTrouble {
-  kind: "conflict" | "refused" | "failed";
+  /** "offline": NZOSA on this computer did not answer, and it is tried again. */
+  kind: "conflict" | "refused" | "failed" | "offline";
   why: string;
 }
 
@@ -679,6 +680,68 @@ let tellAboutTrouble: (trouble: SaveTrouble) => void = () => {};
 
 export function onSaveTrouble(handler: (trouble: SaveTrouble) => void): void {
   tellAboutTrouble = handler;
+}
+
+let tellSavedAgain: () => void = () => {};
+
+/** Told when every part that failed to save has since been saved. */
+export function onSavedAgain(handler: () => void): void {
+  tellSavedAgain = handler;
+}
+
+/**
+ * Parts whose last write failed and has not been made good since.
+ *
+ * A tick on Reconcile moves on before its save is answered, so by the time a
+ * write fails nothing is pending any more, and leaving the page would lose the
+ * change without a word. Set by a failed write, cleared by a later one of the
+ * same part that succeeds.
+ */
+const unsavedParts = new Set<string>();
+
+/** Whether a change made here has not reached where the books are kept. */
+export function hasUnsavedChanges(): boolean {
+  return unsavedParts.size > 0;
+}
+
+function markUnsaved(part: string): void {
+  unsavedParts.add(part);
+}
+
+function markSaved(part: string): void {
+  if (!unsavedParts.delete(part)) return;
+  if (unsavedParts.size === 0) tellSavedAgain();
+}
+
+/**
+ * Folder writes that failed because nothing answered, held to try again.
+ *
+ * Only those: a 409 means these books moved on somewhere else, and sending
+ * the same thing again would be refused again (or worse, overwrite it). The
+ * latest value for each part is kept, so a retry sends what is in memory now.
+ */
+const retryParts = new Map<string, unknown>();
+let retryTimer: ReturnType<typeof setTimeout> | null = null;
+const RETRY_EVERY_MS = 10_000;
+
+function retryLater(part: string, data: unknown): void {
+  retryParts.set(part, data);
+  if (retryTimer === null) retryTimer = setTimeout(() => void retryNow(), RETRY_EVERY_MS);
+}
+
+async function retryNow(): Promise<void> {
+  if (retryTimer !== null) clearTimeout(retryTimer);
+  retryTimer = null;
+  const held = [...retryParts];
+  retryParts.clear();
+  // Each goes back through putPart, which holds it again if it still fails.
+  for (const [part, data] of held) await putPart(part, data);
+}
+
+if (typeof window !== "undefined") {
+  window.addEventListener("online", () => {
+    if (retryParts.size > 0) void retryNow();
+  });
 }
 
 /**
@@ -840,26 +903,66 @@ function putPart(part: string, data: unknown): Promise<boolean> {
 
 async function putPartNow(part: string, data: unknown): Promise<boolean> {
   if (data === undefined) return true;
-  if (lastWritten.get(part) === data) return true;
+  if (lastWritten.get(part) === data) {
+    markSaved(part);
+    return true;
+  }
+  // A newer write of this part supersedes one waiting to be tried again.
+  retryParts.delete(part);
+  let response: Response;
   try {
-    const response = await api(`ledger/parts/${part}`, {
+    response = await api(`ledger/parts/${part}`, {
       method: "PUT",
       headers: { "content-type": "application/json" },
       body: JSON.stringify({ version: versions.get(part) ?? 0, data }),
     });
+  } catch {
+    // Nothing answered: NZOSA on this computer was closed, or the connection
+    // to it dropped. Said at once, and tried again until it is back.
+    markUnsaved(part);
+    retryLater(part, data);
+    tellAboutTrouble({
+      kind: "offline",
+      why:
+        "NZOSA on this computer isn't answering, so your last change is not saved yet. " +
+        "It will keep trying: leave this page open, and start NZOSA again if it was closed.",
+    });
+    return false;
+  }
+  try {
     if (response.status === 409) {
       // Someone else changed it underneath. Take their version so the next
-      // write is built on it rather than fighting.
+      // write is built on it rather than fighting. Never tried again.
       const body = (await response.json()) as { current?: { version?: number } };
       versions.set(part, body.current?.version ?? 0);
+      markUnsaved(part);
+      tellAboutTrouble({
+        kind: "conflict",
+        why:
+          "These books changed somewhere else, so your last change was not saved. " +
+          "Reload to get the latest, then make it again.",
+      });
       return false;
     }
-    if (!response.ok) return false;
+    if (!response.ok) {
+      markUnsaved(part);
+      tellAboutTrouble({
+        kind: "failed",
+        why: `Your last change could not be saved to the folder (the app said ${response.status}). Reload, then make it again.`,
+      });
+      return false;
+    }
     const body = (await response.json()) as { version: number };
     versions.set(part, body.version);
     lastWritten.set(part, data);
+    markSaved(part);
     return true;
   } catch {
+    markUnsaved(part);
+    tellAboutTrouble({
+      kind: "failed",
+      why: "Your last change could not be saved to the folder. Reload, then make it again.",
+    });
     return false;
   }
 }
@@ -1046,7 +1149,11 @@ async function writeCloud(
       }
       return result;
     });
-    if (outcome.kind === "saved") continue;
+    if (outcome.kind === "saved") {
+      markSaved(part);
+      continue;
+    }
+    markUnsaved(part);
     // Not a write to retry: on a conflict somebody else's save is now the
     // truth, and this page is holding something built on what it replaced.
     ok = false;

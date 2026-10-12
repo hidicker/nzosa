@@ -1,4 +1,4 @@
-import { entityId } from "@nzosa/core";
+import { entityId, writeQueue } from "@nzosa/core";
 import type {
   LeaveSettings,
   LeaveTaken,
@@ -701,11 +701,19 @@ const versions = new Map<string, number>();
  * as if somebody else had changed the books ("These books changed somewhere
  * else"). Queued, each write reads the version the one before it left.
  */
-let writing: Promise<unknown> = Promise.resolve();
+const writes = writeQueue();
 function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
-  const run = writing.then(work, work);
-  writing = run.catch(() => undefined);
-  return run;
+  return writes.run(work);
+}
+
+/**
+ * How many writes to the books are still queued or on their way.
+ *
+ * A tick on Reconcile no longer waits for its save before the page moves on,
+ * so leaving the page straight after has to be warned about while any is.
+ */
+export function savesPending(): number {
+  return writes.pending();
 }
 
 /**

@@ -136,6 +136,7 @@ import {
   backendKind,
   openCloudBookId,
   ledgerId,
+  savesPending,
 } from "./store.js";
 import { renderEntityFilter } from "./widgets.js";
 
@@ -388,6 +389,15 @@ function wireUp(): void {
   // those do.
   wireChrome();
   wireMenu();
+
+  // Leaving while a save is still on its way: a tick on Reconcile moves on
+  // before the server has answered, so closing or reloading straight after
+  // could lose it. The browser asks first, in its own words.
+  window.addEventListener("beforeunload", (event) => {
+    if (savesPending() === 0) return;
+    event.preventDefault();
+    event.returnValue = "";
+  });
 
   // A save that did not happen, said across the top of the app rather than on
   // whichever page happened to be open when it failed.

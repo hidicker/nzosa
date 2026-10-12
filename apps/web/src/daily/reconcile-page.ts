@@ -581,12 +581,12 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
 
       return;
     }
-    void confirmLine(
-      one,
-      codeSelect.value,
-      gstSelect.value as GstRate,
-      description.value,
-      to.value,
+    // Shown taken at once, before the page is worked out again: the row dims
+    // and stops taking clicks, and the work starts once that is on screen.
+    row.classList.add("code-row-working");
+    const chosen = [codeSelect.value, gstSelect.value as GstRate, description.value, to.value] as const;
+    requestAnimationFrame(() =>
+      setTimeout(() => void confirmLine(one, chosen[0], chosen[1], chosen[2], chosen[3]), 0),
     );
   });
 
@@ -2264,14 +2264,26 @@ export async function confirmLine(
     at: new Date().toISOString().slice(0, 10),
   };
   state.ledger = { ...state.ledger, overrides };
-  state.persistent = await save(state.ledger);
-  await record(
+  // Saved, and written to History, without waiting for the server before the
+  // page moves on: two round trips of up to a second each, on every tick.
+  // Writes go out one at a time in the order they were made, each carrying
+  // everything before it; one refused says so; and leaving the page while
+  // any is still going is warned about.
+  void save(state.ledger).then(
+    (ok) => {
+      state.persistent = ok;
+    },
+    () => {
+      state.persistent = false;
+    },
+  );
+  void record(
     "coding",
     `${one.transaction.date} ${formatAmount(one.transaction.amount)} ${one.transaction.otherParty} → ${code || "settled by its split or invoice"}`,
     wasCoded ?? null,
     overrides[one.transaction.id],
     one.transaction.id,
-  );
+  ).catch(() => undefined);
 
   // Nothing suggested a code and a person supplied one: that is a rule being
   // stated, not merely a line being coded.

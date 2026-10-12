@@ -15,7 +15,7 @@ import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalance
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksMoney } from "../country.js";
 
 /**
  * Where each year started.
@@ -107,7 +107,7 @@ export function renderOpeningBalances(): void {
   }
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const formatAccounting = (cents: Cents): string => {
     if (cents === 0) return "—";

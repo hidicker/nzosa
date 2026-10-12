@@ -29,7 +29,7 @@ import { note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
 import { entityYearReport, scheduleName } from "./reports.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksMoney } from "../country.js";
 
 /**
  * The United States' and Australia's forms, as reports.
@@ -43,7 +43,7 @@ import { booksLocale, moneyPlaces } from "../country.js";
 
 /** Grouped, with the currency's decimals: "22,200.00", or "36,000,000" for won. */
 const money = (cents: number): string =>
-  (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+  booksMoney(cents);
 
 function entities(): readonly Entity[] {
   return (state.ledger.entities ?? emptyEntityModel()).entities;

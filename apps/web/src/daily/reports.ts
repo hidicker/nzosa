@@ -122,8 +122,9 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksMoney } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
+import { balanceSheetLabel } from "./balance-sheet-label.js";
 
 /**
  * The entity and registration last applied to the GST control.
@@ -434,7 +435,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   }
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   for (const journal of [...held].sort((a, b) => a.date.localeCompare(b.date))) {
     const problems = checkManualJournal(journal);
@@ -985,7 +986,7 @@ function renderShareholders(body: HTMLElement, year: number): void {
   body.append(heading);
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const warning = overdrawnWarning(schedule);
   if (warning !== null) {
@@ -1393,7 +1394,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
 
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   if (opening === undefined) {
     const warn = document.createElement("p");
@@ -1451,7 +1452,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 
     for (const line of lines) {
       const row = document.createElement("tr");
-      row.append(nameCell(line.code === "" ? line.name : `${line.code} ${line.name}`));
+      row.append(nameCell(balanceSheetLabel(line)));
       row.append(amountCell(line.opening === 0 ? "" : money(line.opening)));
       row.append(amountCell(line.movement === 0 ? "" : money(line.movement)));
       row.append(amountCell(money(line.closing)));
@@ -1536,7 +1537,7 @@ function renderJournal(body: HTMLElement, year: number): void {
   const balance = trialBalance(journals);
   const tax = taxSummary(journals);
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   // The imbalance is the whole point: a single-entry ledger cannot tell you it
   // is complete, and this one can.
@@ -1649,7 +1650,7 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   );
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const table = document.createElement("table");
   table.className = "report-table owner-table depreciation-table";
@@ -2286,7 +2287,7 @@ function renderGstReturn(body: HTMLElement, year: number): void {
   const entity = reportingEntity();
   const filed = state.filed.find((f) => f.periodEnd === result.period.to);
   const money = (cents: Cents): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   // --- period and tabs ---
   const controls = document.createElement("div");
@@ -3233,7 +3234,7 @@ function renderOwnerReport(body: HTMLElement, owner: string, year: number): void
   }
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -3317,7 +3318,7 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
   );
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -4169,7 +4170,7 @@ export function renderReportsPage(): void {
   const tbody = document.createElement("tbody");
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const addRow = (
     label: string,

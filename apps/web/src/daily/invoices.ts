@@ -42,7 +42,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
-import { booksCurrency, booksLocale, moneyPlaces } from "../country.js";
+import { booksCurrency, booksMoney } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -802,7 +802,7 @@ export function renderInvoices(): void {
   });
 
   const money = (cents: number): string =>
-    (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+    booksMoney(cents);
 
   const summary = document.createElement("div");
   summary.className = "check-summary";

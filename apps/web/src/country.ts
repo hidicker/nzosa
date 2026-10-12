@@ -54,6 +54,20 @@ export function moneyPlaces(): number {
 }
 
 /**
+ * An amount in hundredths as the books show money: "1,234.50", "-12.00".
+ *
+ * Never "-0.00". A negated zero (an owed figure of nothing, turned round) and
+ * a small negative that rounds to nothing at the places shown both printed
+ * with a minus sign, which reads as a figure that is there.
+ */
+export function booksMoney(cents: number): string {
+  const places = moneyPlaces();
+  const value = cents / 100;
+  const shown = Math.round(Math.abs(value) * 10 ** places) === 0 ? 0 : value;
+  return shown.toLocaleString(booksLocale(), { minimumFractionDigits: places, maximumFractionDigits: places });
+}
+
+/**
  * New Zealand's returns out of the report list for books kept anywhere else.
  * Hiding them is not enough -- a hidden option is still in the list, and some
  * browsers have shown hidden options -- and they can never apply to these

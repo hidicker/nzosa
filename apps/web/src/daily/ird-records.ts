@@ -30,7 +30,7 @@ import type {
   PayrollMonth,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksMoney } from "../country.js";
 
 /**
  * IRD records: what Inland Revenue holds, beside what these books say.
@@ -51,7 +51,7 @@ const showingAll = new Set<string>();
 let message = "";
 
 const money = (cents: Cents | null): string =>
-  cents === null ? "" : (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+  cents === null ? "" : booksMoney(cents);
 
 function entities() {
   return (state.ledger.entities ?? emptyEntityModel()).entities;

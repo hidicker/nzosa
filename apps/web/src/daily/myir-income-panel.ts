@@ -5,7 +5,7 @@ import { savePart } from "../store.js";
 import { note } from "../ui.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
 import { MYIR_NOTE, myirIncomePrompt, myirTaxExtras, readMyirIncome } from "@nzosa/core";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksMoney } from "../country.js";
 import { taxYearEndSaid } from "../tax-year.js";
 
 /**
@@ -23,7 +23,7 @@ let pasted = "";
 let reading: ReturnType<typeof readMyirIncome> | null = null;
 
 function dollars(cents: number): string {
-  return (cents / 100).toLocaleString(booksLocale(), { minimumFractionDigits: moneyPlaces(), maximumFractionDigits: moneyPlaces() });
+  return booksMoney(cents);
 }
 
 async function keep(owner: string, year: number): Promise<void> {

@@ -1419,15 +1419,38 @@ export function renderCheck(): void {
             if (
               !(await askOnPage(
                 `Add a manual journal dated ${journal.date}?\n\n${said}\n\n` +
-                  (taxed ? "A journal carries no GST of its own, so this one will not change a GST return.\n\n" : "") +
                   "It goes in History, and can be deleted on Manual journals.",
                 "Add the journal",
               ))
             ) {
               return;
             }
+            // GST, only where Xero had it and only when asked for. Closing the
+            // question leaves it without: GST is not usually applied to a
+            // journal, and with it this one goes on the GST return.
+            let saved = journal;
+            if (taxed) {
+              const rate = (line.gstRate ?? "").trim();
+              const withGst = await askOnPage(
+                `Xero had "${rate}" on this line.\n\n` +
+                  "GST is not usually applied to a manual journal: most move amounts whose GST was dealt " +
+                  "with when they were first entered. Include it only for a supply no bank line shows, " +
+                  "such as a refund the bank feed missed. With GST, the account takes the amount less " +
+                  "GST and the line goes on the GST return.",
+                "Include 15% GST",
+                "No GST",
+              );
+              if (withGst) {
+                const gst = /income|sales|output/i.test(rate) ? ("OUTPUT2" as const) : ("INPUT2" as const);
+                saved = {
+                  ...journal,
+                  // Every line but the bank's, which is the money itself.
+                  lines: journal.lines.map((l, index) => (index === 0 ? l : { ...l, gst })),
+                };
+              }
+            }
             bring.disabled = true;
-            void saveManualJournals([...(state.ledger.manualJournals ?? []), journal], `Journal: ${journal.narration}`).then(
+            void saveManualJournals([...(state.ledger.manualJournals ?? []), saved], `Journal: ${saved.narration}`).then(
               () => redraw("check"),
             );
           });

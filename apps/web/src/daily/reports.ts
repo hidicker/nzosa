@@ -472,7 +472,15 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const tbody = document.createElement("tbody");
     for (const line of journal.lines) {
       const row = document.createElement("tr");
-      row.append(nameCell(line.code));
+      row.append(
+        nameCell(
+          line.gst === "INPUT2"
+            ? `${line.code} · 15% GST on expenses`
+            : line.gst === "OUTPUT2"
+              ? `${line.code} · 15% GST on income`
+              : line.code,
+        ),
+      );
       row.append(amountCell(line.amount > 0 ? money(line.amount) : ""));
       row.append(amountCell(line.amount < 0 ? money(-line.amount) : ""));
       tbody.append(row);
@@ -497,6 +505,8 @@ interface JournalDraftLine {
   debit: string;
   credit: string;
   description: string;
+  /** "" for No GST, which a journal line almost always is. */
+  gst: "" | "INPUT2" | "OUTPUT2";
 }
 
 interface JournalDraft {
@@ -514,7 +524,7 @@ interface JournalDraft {
 let journalDraft: JournalDraft | null = null;
 
 function blankJournalLine(): JournalDraftLine {
-  return { code: "", debit: "", credit: "", description: "" };
+  return { code: "", debit: "", credit: "", description: "", gst: "" };
 }
 
 /**
@@ -565,7 +575,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
 
   const columns = document.createElement("div");
   columns.className = "journal-row journal-columns";
-  for (const label of ["Account", "Debit", "Credit", "Description (optional)", ""]) {
+  for (const label of ["Account", "Debit", "Credit", "GST", "Description (optional)", ""]) {
     const cell = document.createElement("span");
     cell.textContent = label;
     columns.append(cell);
@@ -590,6 +600,17 @@ function journalEditor(draft: JournalDraft): HTMLElement {
 
   const status = document.createElement("p");
   status.className = "split-balance";
+
+  // Shown once any line has GST. It is the exception: most journals move
+  // amounts whose GST was dealt with when they were first entered, and a rate
+  // here puts the line on the GST return a second time.
+  const gstWarning = note(
+    "GST is not usually applied to a manual journal. Most journals move amounts whose GST was " +
+      "dealt with when they were first entered, and GST here puts the line on the GST return " +
+      "again. Use it only for a supply no bank line shows, such as a refund the bank feed " +
+      "missed. The amount is GST-inclusive: the account takes it less GST.",
+  );
+  gstWarning.className = "journal-gst-warning";
 
   const addLine = document.createElement("button");
   addLine.type = "button";
@@ -626,7 +647,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   const buttons = document.createElement("div");
   buttons.className = "page-actions";
   buttons.append(addLine, save, cancel);
-  wrap.append(status, buttons);
+  wrap.append(gstWarning, status, buttons);
 
   /**
    * Read-backs for the account pickers, which commit on a mousedown they have
@@ -684,6 +705,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
         code,
         amount: debit - credit,
         ...(line.description.trim() !== "" ? { description: line.description.trim() } : {}),
+        ...(line.gst !== "" ? { gst: line.gst } : {}),
       });
     });
 
@@ -703,6 +725,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   }
 
   function refresh(): void {
+    gstWarning.hidden = !draft.lines.some((l) => l.gst !== "");
     const { problems } = assemble();
     // From what is typed, not from the lines that are already complete: amounts
     // usually go in before the accounts, and totals that ignored them read
@@ -758,6 +781,25 @@ function journalEditor(draft: JournalDraft): HTMLElement {
         line.credit = v;
       });
 
+      const gst = document.createElement("select");
+      gst.className = "journal-gst";
+      gst.title = "GST on this line. Almost always No GST on a journal.";
+      for (const [value, label] of [
+        ["", "No GST"],
+        ["INPUT2", "15% GST on expenses"],
+        ["OUTPUT2", "15% GST on income"],
+      ] as const) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = label;
+        gst.append(option);
+      }
+      gst.value = line.gst;
+      gst.addEventListener("change", () => {
+        line.gst = gst.value as JournalDraftLine["gst"];
+        refresh();
+      });
+
       const description = document.createElement("input");
       description.type = "text";
       description.value = line.description;
@@ -777,7 +819,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
         draw();
       });
 
-      row.append(account.element, debit, credit, description, drop);
+      row.append(account.element, debit, credit, gst, description, drop);
       rows.append(row);
     });
     refresh();

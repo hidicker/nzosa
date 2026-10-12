@@ -2,6 +2,7 @@ import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
 import type { Journal } from "./journals.js";
 import type { PostedJournal, PostedLine, PostingOptions } from "./posting.js";
+import { gstAccountsFrom } from "./posting.js";
 
 /**
  * Journals a person writes, which no amount of bank data implies.
@@ -33,9 +34,18 @@ import type { PostedJournal, PostedLine, PostingOptions } from "./posting.js";
 export interface ManualJournalLine {
   /** Account, as this ledger writes them, e.g. `Interest Expense - 437`. */
   code: string;
-  /** Debit positive, credit negative. */
+  /** Debit positive, credit negative. GST-inclusive where `gst` is set. */
   amount: Cents;
   description?: string;
+  /**
+   * GST on this line, where it is a supply no bank line shows: a refund the
+   * bank feed missed, put in by hand. Not usually -- most journals move
+   * amounts already taxed elsewhere, and GST here would claim it twice.
+   *
+   * The amount is then GST-inclusive: the account takes it less 3/23, the GST
+   * account takes the 3/23, and the return counts both as a bank line's.
+   */
+  gst?: "INPUT2" | "OUTPUT2";
 }
 
 export interface ManualJournal {
@@ -113,21 +123,33 @@ export function postManualJournal(
   if (checkManualJournal(journal).length > 0) return null;
   const resolve = options.resolveAccount ?? ((code: string) => ({ code, name: code }));
 
-  const lines: PostedLine[] = journal.lines
-    .filter((l) => l.amount !== 0)
-    .map((line) => {
-      const account = resolve(line.code);
-      return {
-        accountCode: account.code,
-        accountName: account.name,
-        amount: line.amount,
-        // A manual journal carries no GST of its own. The tax was accounted
-        // for when the underlying entry was made, and putting a rate on the
-        // correction would claim it twice.
-        taxType: "NONE" as const,
-        description: line.description ?? journal.narration,
-      };
+  const gstFor = gstAccountsFrom(options);
+  const lines: PostedLine[] = [];
+  for (const line of journal.lines.filter((l) => l.amount !== 0)) {
+    const account = resolve(line.code);
+    const description = line.description ?? journal.narration;
+    if (line.gst === undefined) {
+      // No GST, as a journal almost always is: the tax was accounted for when
+      // the underlying entry was made, and putting a rate on a correction
+      // would claim it twice.
+      lines.push({ accountCode: account.code, accountName: account.name, amount: line.amount, taxType: "NONE", description });
+      continue;
+    }
+    // A supply in its own right: the GST content of the inclusive amount, the
+    // base given as a bank line gives it (money out negative) so the return
+    // reads it the same way.
+    const tax = Math.sign(line.amount) * Math.round((Math.abs(line.amount) * 3) / 23);
+    lines.push({
+      accountCode: account.code,
+      accountName: account.name,
+      amount: line.amount - tax,
+      taxType: line.gst,
+      taxBase: -line.amount,
+      description,
     });
+    const gst = gstFor(account.code);
+    lines.push({ accountCode: gst.code, accountName: gst.name, amount: tax, taxType: line.gst, description });
+  }
 
   return {
     transactionId: `manual:${journal.id}`,
@@ -135,7 +157,9 @@ export function postManualJournal(
     narration: journal.narration,
     lines,
     source: "manual",
-    taxBasis: "payments",
+    // GST on a journal falls due on its date, whichever basis the return is
+    // on, as a bank line's does.
+    taxBasis: journal.lines.some((l) => l.gst !== undefined) ? "both" : "payments",
   };
 }
 
@@ -157,6 +181,9 @@ export function reversalOf(journal: ManualJournal, date: IsoDate, id: string): M
       code: line.code,
       amount: -line.amount as Cents,
       ...(line.description !== undefined ? { description: line.description } : {}),
+      // With its GST, or the reversal would undo the figures and leave the
+      // GST return as it was.
+      ...(line.gst !== undefined ? { gst: line.gst } : {}),
     })),
     reverses: journal.id,
   };

@@ -212,7 +212,7 @@ export interface PostingPart {
  * fee — a single balanced journal rather than three unrelated codings.
  */
 /** The GST account for a supply posted to an account: its own where given, else the default. */
-function gstAccountsFrom(options: PostingOptions): (accountCode: string | undefined) => { code: string; name: string } {
+export function gstAccountsFrom(options: PostingOptions): (accountCode: string | undefined) => { code: string; name: string } {
   const fallback = { code: options.gstAccountCode ?? "820", name: options.gstAccountName ?? "GST" };
   return (accountCode) =>
     (accountCode === undefined || accountCode === "" ? undefined : options.gstAccountFor?.(accountCode)) ?? fallback;

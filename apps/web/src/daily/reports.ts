@@ -123,6 +123,7 @@ import type {
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
+import { type DownloadKind, hasDownload } from "./report-downloads.js";
 
 /**
  * The entity and registration last applied to the GST control.
@@ -3882,6 +3883,7 @@ export function renderReportsPage(): void {
   // a report, so they wait for one.
   const kindSelect = $<HTMLSelectElement>("report-kind");
   const home = kindSelect.value === "home";
+  $("report-download").hidden = !hasDownload(kindSelect.value);
   kindSelect.parentElement?.classList.toggle("reports-home", home);
   if (home) {
     $("reports-hint").textContent =
@@ -4297,12 +4299,13 @@ export function renderReportsPage(): void {
  * into something only this app understands. Export a year, load it on the
  * Check page, and every line agrees with itself.
  */
-function renderExtract(body: HTMLElement, year: number): void {
+/**
+ * The lines Account transactions lists for a year, and how to describe them.
+ * Null with no transactions at all.
+ */
+function extractFor(year: number) {
   const engine = reportEngine();
-  if (engine === null) {
-    body.append(note("No transactions yet. Import some bank data first."));
-    return;
-  }
+  if (engine === null) return null;
 
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
@@ -4337,6 +4340,26 @@ function renderExtract(body: HTMLElement, year: number): void {
       return number === undefined ? "" : (invoices.get(number)?.number ?? number);
     },
   };
+  return { engine, rows, options, scope, to };
+}
+
+/** Account transactions for a year as a file, or null when there are none. */
+function accountTransactionsCsv(year: number): { text: string; name: string } | null {
+  const extract = extractFor(year);
+  if (extract === null || extract.rows.length === 0) return null;
+  return {
+    text: formatAccountTransactions(extract.rows, extract.options),
+    name: `account-transactions-fy${year}.csv`,
+  };
+}
+
+function renderExtract(body: HTMLElement, year: number): void {
+  const extract = extractFor(year);
+  if (extract === null) {
+    body.append(note("No transactions yet. Import some bank data first."));
+    return;
+  }
+  const { engine, rows, options, scope, to } = extract;
 
   const built = accountTransactionRows(rows, options);
   const byId = new Map(rows.map((t) => [t.id, t]));
@@ -4358,11 +4381,8 @@ function renderExtract(body: HTMLElement, year: number): void {
   save.textContent = `Export ${built.length} lines as CSV`;
   save.disabled = built.length === 0;
   save.addEventListener("click", () => {
-    download(
-      formatAccountTransactions(rows, options),
-      `account-transactions-fy${year}.csv`,
-      "text/csv",
-    );
+    const csv = accountTransactionsCsv(year);
+    if (csv !== null) download(csv.text, csv.name, "text/csv");
   });
   body.append(save);
 
@@ -4539,27 +4559,42 @@ function renderCharts(body: HTMLElement, year: number): void {
  * transactions. If this disagrees with them the report is wrong and not the
  * books, which is the only way a listing like this is worth reading.
  */
-function renderGeneralLedger(body: HTMLElement, year: number): void {
+/** The year's entries for the chosen entity, as the journal reports list them. */
+function journalsForYear(year: number): ReturnType<typeof postedJournals> {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
   // The entity's journals: those through its own bank accounts, and those
   // posting to its accounts from anybody's.
   const inEntity = journalInEntity();
-  const journals = postedJournals().filter((journal) => {
+  return postedJournals().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
     return inEntity === null || inEntity(journal);
   });
+}
+
+function generalLedgerOptions(year: number): { entity?: string; period: { from: string; to: string } } {
+  const entity = reportingEntity();
+  return {
+    ...(entity !== undefined ? { entity: entity.name } : {}),
+    period: { from: taxYearStart(year), to: taxYearEnd(year) },
+  };
+}
+
+/** The general ledger for a year as a file, or null when nothing was posted. */
+function generalLedgerCsv(year: number): { text: string; name: string } | null {
+  const journals = journalsForYear(year);
+  if (journals.length === 0) return null;
+  return { text: formatGeneralLedger(journals, generalLedgerOptions(year)), name: `general-ledger-fy${year}.csv` };
+}
+
+function renderGeneralLedger(body: HTMLElement, year: number): void {
+  const journals = journalsForYear(year);
 
   if (journals.length === 0) {
     body.append(note("Nothing posted in this year for the chosen entity."));
     return;
   }
 
-  const entity = reportingEntity();
-  const options = {
-    ...(entity !== undefined ? { entity: entity.name } : {}),
-    period: { from, to },
-  };
   const rows = generalLedgerRows(journals);
   const totals = generalLedgerTotals(rows);
 
@@ -4586,7 +4621,8 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
   save.className = "primary";
   save.textContent = `Export ${rows.length} lines as CSV`;
   save.addEventListener("click", () => {
-    download(formatGeneralLedger(journals, options), `general-ledger-fy${year}.csv`, "text/csv");
+    const csv = generalLedgerCsv(year);
+    if (csv !== null) download(csv.text, csv.name, "text/csv");
   });
   body.append(save);
 
@@ -4622,77 +4658,100 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
   }
 }
 
+/** Said where the report is, when a download has nothing to hold. */
+function nothingToDownload(): void {
+  const body = $("reports-body");
+  body.querySelector(".report-nothing")?.remove();
+  const said = note("Nothing to download for this year.");
+  said.classList.add("report-nothing");
+  said.setAttribute("role", "status");
+  body.prepend(said);
+}
+
 export function downloadReport(): void {
   const years = bookYears();
   const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
+  const kind = $<HTMLSelectElement>("report-kind").value;
+  if (!hasDownload(kind)) return;
 
-  if ($<HTMLSelectElement>("report-kind").value === "depreciation") {
-    const assets = state.ledger.assets ?? [];
-    if (assets.length === 0 || year === undefined) return;
-    download(
-      formatDepreciationSchedule(
-        depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) }),
-        `Depreciation schedule, FY${year}`,
-      ),
-      `depreciation-schedule-fy${year}.csv`,
-      "text/csv",
-    );
-    return;
-  }
+  // Every kind with a download, and nothing else: a kind added to the table
+  // without one here does not compile.
+  const downloads: Record<DownloadKind, () => void> = {
+    pl: () => downloadProfitAndLoss(),
+    journal: () => downloadGeneralLedger(year),
+    general: () => downloadGeneralLedger(year),
+    extract: () => {
+      const csv = year === undefined ? null : accountTransactionsCsv(year);
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
+    depreciation: () => {
+      const assets = state.ledger.assets ?? [];
+      if (assets.length === 0 || year === undefined) return nothingToDownload();
+      const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) });
+      if (schedule.rows.length === 0) return nothingToDownload();
+      download(
+        formatDepreciationSchedule(schedule, `Depreciation schedule, FY${year}`),
+        `depreciation-schedule-fy${year}.csv`,
+        "text/csv",
+      );
+    },
+    agedpayables: () => {
+      const csv = agedCsv("purchase", year ?? new Date().getFullYear());
+      download(csv.text, csv.name, "text/csv");
+    },
+    agedreceivables: () => {
+      const csv = agedCsv("sales", year ?? new Date().getFullYear());
+      download(csv.text, csv.name, "text/csv");
+    },
+    bankreconcile: () => {
+      const csv = bankReconcileCsv(year);
+      download(csv.text, csv.name, "text/csv");
+    },
+    gstreturn: () => {
+      if (year === undefined) return;
+      const chosen = chosenGstReturn(year);
+      if (chosen === undefined) return;
+      download(
+        formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`),
+        `gst-return-${chosen.period.to}.csv`,
+        "text/csv",
+      );
+    },
+    rentals: () => {
+      if (year === undefined) return;
+      download(rentalSchedulesCsv(year), `rental-schedules-fy${year}.csv`, "text/csv");
+    },
+    ir3: () => {
+      const owner = $<HTMLSelectElement>("report-owner").value;
+      if (owner === "" || year === undefined) return nothingToDownload();
+      download(
+        ir3Csv(owner, year),
+        `ir3-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
+        "text/csv",
+      );
+    },
+    owner: () => {
+      const owner = $<HTMLSelectElement>("report-owner").value;
+      if (owner === "" || year === undefined) return nothingToDownload();
+      download(
+        formatOwnerSummary(ownerSummaryFor(owner, year), year),
+        `rental-income-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
+        "text/csv",
+      );
+    },
+  };
+  downloads[kind]();
+}
 
-  const agedKind = $<HTMLSelectElement>("report-kind").value;
-  if (agedKind === "agedpayables" || agedKind === "agedreceivables") {
-    const csv = agedCsv(agedKind === "agedpayables" ? "purchase" : "sales", year ?? new Date().getFullYear());
-    download(csv.text, csv.name, "text/csv");
-    return;
-  }
+function downloadGeneralLedger(year: number | undefined): void {
+  const csv = year === undefined ? null : generalLedgerCsv(year);
+  if (csv === null) return nothingToDownload();
+  download(csv.text, csv.name, "text/csv");
+}
 
-  if ($<HTMLSelectElement>("report-kind").value === "bankreconcile") {
-    const csv = bankReconcileCsv(year);
-    download(csv.text, csv.name, "text/csv");
-    return;
-  }
-
-  if ($<HTMLSelectElement>("report-kind").value === "gstreturn") {
-    if (year === undefined) return;
-    const chosen = chosenGstReturn(year);
-    if (chosen === undefined) return;
-    download(
-      formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`),
-      `gst-return-${chosen.period.to}.csv`,
-      "text/csv",
-    );
-    return;
-  }
-
-  if ($<HTMLSelectElement>("report-kind").value === "rentals") {
-    if (year === undefined) return;
-    download(rentalSchedulesCsv(year), `rental-schedules-fy${year}.csv`, "text/csv");
-    return;
-  }
-
-  if ($<HTMLSelectElement>("report-kind").value === "ir3") {
-    const owner = $<HTMLSelectElement>("report-owner").value;
-    if (owner === "" || year === undefined) return;
-    download(
-      ir3Csv(owner, year),
-      `ir3-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
-      "text/csv",
-    );
-    return;
-  }
-
-  if ($<HTMLSelectElement>("report-kind").value === "owner") {
-    const owner = $<HTMLSelectElement>("report-owner").value;
-    if (owner === "" || year === undefined) return;
-    download(
-      formatOwnerSummary(ownerSummaryFor(owner, year), year),
-      `rental-income-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
-      "text/csv",
-    );
-    return;
-  }
-
+/** The profit and loss as shown: for the P&L only. */
+function downloadProfitAndLoss(): void {
   const built = currentReport();
   if (!built) return;
 

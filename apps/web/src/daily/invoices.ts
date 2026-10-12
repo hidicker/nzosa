@@ -1311,5 +1311,8 @@ async function saveCreditNote(note: string, invoice: string): Promise<void> {
     after,
     note,
   );
+  // Both pages list credit notes: a supplier's chosen on Bills stayed on the
+  // screen, still unassigned, until the page was left and opened again.
   redraw("invoices");
+  redraw("bills");
 }

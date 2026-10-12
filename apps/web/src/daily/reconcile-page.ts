@@ -2435,8 +2435,12 @@ async function ruleFromDecision(
   if (state.rulesName === "") state.rulesName = "rules.json";
   reclassify();
   const alsoCoded = Math.max(0, codedNow() - before);
+  state.lastRule = { keyword, code, alsoCoded, account: transaction.account };
 
-  await record(
+  // Saved behind the page, as the coding that made it is: waiting for these
+  // two writes held a tick for a second and a half whenever it made a rule.
+  // They queue after the coding's own, in the order made.
+  void record(
     "rule",
     `${keyword} → ${code}, from coding one line by hand` +
       (alsoCoded > 0
@@ -2445,9 +2449,8 @@ async function ruleFromDecision(
     null,
     rule,
     String(rules.length),
-  );
-  await persistRules();
-  state.lastRule = { keyword, code, alsoCoded, account: transaction.account };
+  ).catch(() => undefined);
+  void persistRules().catch(() => undefined);
 }
 
 /** Add a rule, count what it now suggests, and say so. */

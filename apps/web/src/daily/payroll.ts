@@ -844,7 +844,7 @@ function renderEmployeesTable(container: HTMLElement): void {
 
     tr.innerHTML = `
       <td><strong>${escapeHtml(emp.name)}</strong></td>
-      <td><code>${emp.irdNumber ? formatIrdNumber(emp.irdNumber) : "none (ND)"}</code></td>
+      <td><code>${emp.irdNumber ? escapeHtml(formatIrdNumber(emp.irdNumber)) : "none (ND)"}</code></td>
       <td><span class="payroll-tax-badge">${escapeHtml(emp.taxCode)}</span></td>
       <td style="text-transform: capitalize;">${escapeHtml(emp.payFrequency)}</td>
       <td>${rateText}</td>
@@ -1151,7 +1151,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
       // Employee Info
       const nameTd = document.createElement("td");
-      nameTd.innerHTML = `<strong>${escapeHtml(emp.name)}</strong><br><small class="text-muted">${formatIrdNumber(emp.irdNumber)}</small>`;
+      nameTd.innerHTML = `<strong>${escapeHtml(emp.name)}</strong><br><small class="text-muted">${escapeHtml(formatIrdNumber(emp.irdNumber))}</small>`;
 
       // Tax Code
       const codeTd = document.createElement("td");
@@ -1444,7 +1444,7 @@ function renderPayRunsList(container: HTMLElement): void {
         const tr = document.createElement("tr");
         tr.innerHTML = `
           <td><strong>${escapeHtml(line.employeeName)}</strong></td>
-          <td><code>${formatIrdNumber(line.irdNumber)}</code></td>
+          <td><code>${escapeHtml(formatIrdNumber(line.irdNumber))}</code></td>
           <td><span class="payroll-tax-badge">${escapeHtml(line.taxCode)}</span></td>
           <td style="text-align: right;">${formatAmount(line.gross)}</td>
           <td style="text-align: right;">${formatAmount(line.paye)}</td>

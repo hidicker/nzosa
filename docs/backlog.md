@@ -70,6 +70,21 @@ works).
   trial balance, Leave out after all and Bring in as a journal use it. About
   46 `confirm()` calls in 28 files remain, and `alert()` and `prompt()` have
   the same problem. Each needs its handler made async.
+- **Reconcile tick, stage 2: redraw only the ticked line.** Stage 1 is done: a
+  tick no longer waits for its saves (about 0.3 s on books online, down from
+  0.8–2.6 s), and the writes queue in order (`writeQueue` in core). What is
+  left is the full redraw of up to 200 rows. Plan: in the plain case only --
+  a suggestion accepted, no rule made or changed, no split, invoice, transfer
+  or asset -- take the row out and update the counts; anything else redraws
+  in full as now. Held until asked for. Not yet tested by hand: cutting the
+  connection mid-tick (the "not saved" warning, and the warning on leaving
+  with saves outstanding), and two tabs on the same books.
+- **History is rewritten whole on every change.** Each coding sends the
+  entire event log (77 KB on AI Test, growing), so every write gets slower as
+  the books age. Append one event at a time instead -- a table of rows on the
+  server rather than a part, with the browser and folder backends to match.
+- **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
+  notes and the Google One journal with GST were sorted. Not yet traced.
 - **Say it is working while the other bulk actions on Reconcile run.** "Split
   N" now shows the `working` style and "Splitting 12 of 40…" on its button
   until it is done. Accept all and AI suggestions may need the same: check

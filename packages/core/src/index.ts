@@ -427,5 +427,6 @@ export {
 } from "./between-entities.js";
 export type { BetweenAccount, BetweenSetting, LineChoice, OwedBetween, PlannedBetweenAccount, BetweenOverrides, BetweenTreatment, BetweenRole, PersonPosition } from "./between-entities.js";
 export { expenseClaimsFromJournals } from "./expense-claims.js";
+export type { CarriesGst } from "./expense-claims.js";
 export { writeQueue } from "./write-queue.js";
 export type { WriteQueue } from "./write-queue.js";

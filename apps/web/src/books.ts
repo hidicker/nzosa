@@ -8,6 +8,7 @@ import { filedByPeriod, filedKey,
   withoutStaleTreatments,
   expenseClaimsFromJournals,
 } from "@nzosa/core";
+import type { CarriesGst } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
@@ -1087,12 +1088,35 @@ export async function syncExpenseClaims(): Promise<boolean> {
   const journals = state.ledger.journals ?? [];
   const held = state.ledger.invoices ?? [];
   const start = booksStartKnown();
-  const claims = journals.length === 0 ? [] : expenseClaimsFromJournals(journals, start as IsoDate | undefined);
+  const claims =
+    journals.length === 0 ? [] : expenseClaimsFromJournals(journals, start as IsoDate | undefined, claimCarriesGst());
   const before = held.filter((i) => i.claim === true);
   if (JSON.stringify(before) === JSON.stringify(claims)) return false;
   state.ledger = { ...state.ledger, invoices: [...held.filter((i) => i.claim !== true), ...claims] };
   state.persistent = await savePart(state.ledger, "invoices");
   return true;
+}
+
+/**
+ * Whether a claim's cost account carries GST, by the treatment the chart and
+ * the rules give it, so a claim's GST goes only on the costs that had any.
+ * Matched by code, or by name for an account with none.
+ */
+function claimCarriesGst(): CarriesGst {
+  const known = knownCodes(state.rules, state.ledger.overrides ?? {});
+  const file = state.rules as RuleFileShape | undefined;
+  const byCode = new Map<string, boolean>();
+  const byName = new Map<string, boolean>();
+  for (const account of state.chart) {
+    const label = labelForChartAccount(account, known);
+    const held = (file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label);
+    const treatment = typeof held === "string" ? held : (held as { treatment?: string } | null)?.treatment;
+    if (treatment === undefined) continue;
+    const carries = treatment === "standard";
+    if (account.code.trim() !== "") byCode.set(account.code.trim(), carries);
+    else byName.set(account.name.trim().toLowerCase(), carries);
+  }
+  return (line) => byCode.get(line.accountCode.trim()) ?? byName.get(line.accountName.trim().toLowerCase());
 }
 
 /**

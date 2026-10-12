@@ -35,9 +35,45 @@ function reverses(journal: Journal): string | null {
   return /reversal of id\s+(\S+)/i.exec(journal.narration)?.[1] ?? null;
 }
 
+/**
+ * Whether an account carries GST, from the chart's treatment: true for a
+ * standard-rated account, false for one with no GST, undefined when the chart
+ * does not say.
+ */
+export type CarriesGst = (account: { accountCode: string; accountName: string }) => boolean | undefined;
+
+/**
+ * Each cost's share of the claim's GST, the last taking what rounding leaves.
+ *
+ * Shared over the costs whose account carries GST, when the chart says for
+ * every one of them and at least one does: a no-GST cost beside a taxed one
+ * must not be given GST it never had. Otherwise -- nothing said, or nothing
+ * that could hold the GST -- spread over every cost in proportion, as before.
+ */
+function shareGst(costs: readonly JournalLine[], gst: number, carriesGst?: CarriesGst): number[] {
+  const said = carriesGst === undefined ? [] : costs.map((cost) => carriesGst(cost));
+  const known = said.length === costs.length && said.every((answer) => answer !== undefined);
+  const taxed = known && said.some((answer) => answer === true) ? said.map((answer) => answer === true) : costs.map(() => true);
+  // A GST figure larger than the taxed costs themselves is not theirs to hold.
+  const taxedNet = costs.reduce((sum, cost, index) => (taxed[index] ? sum + cost.amount : sum), 0);
+  const holds = taxed.every((t) => t) || (taxedNet !== 0 && Math.abs(gst) <= Math.abs(taxedNet) && Math.sign(gst) !== -Math.sign(taxedNet));
+  const over = holds ? taxed : costs.map(() => true);
+  const net = holds ? taxedNet : costs.reduce((sum, cost) => sum + cost.amount, 0);
+  const last = over.lastIndexOf(true);
+
+  let left = gst;
+  return costs.map((cost, index) => {
+    if (!over[index]) return 0;
+    const tax = index === last ? left : Math.round((gst * cost.amount) / (net === 0 ? 1 : net));
+    left -= tax;
+    return tax;
+  });
+}
+
 export function expenseClaimsFromJournals(
   journals: readonly Journal[],
   from?: IsoDate,
+  carriesGst?: CarriesGst,
 ): Invoice[] {
   const undone = new Set<string>();
   for (const journal of journals) {
@@ -64,11 +100,10 @@ export function expenseClaimsFromJournals(
     if (costs.length === 0 || net + gst !== -owed) continue;
 
     // The journal gives the GST as one figure; it is shared across the costs
-    // in proportion, the last taking what rounding leaves.
-    let left = gst;
+    // that carry GST in proportion (see shareGst).
+    const shares = shareGst(costs, gst, carriesGst);
     const lines: InvoiceLine[] = costs.map((cost, index) => {
-      const tax = index === costs.length - 1 ? left : Math.round((gst * cost.amount) / (net === 0 ? 1 : net));
-      left -= tax;
+      const tax = shares[index] ?? 0;
       return {
         description: cost.description || journal.narration,
         accountCode: cost.accountCode,

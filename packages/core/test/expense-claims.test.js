@@ -54,3 +54,68 @@ test("one dated before the books start is in the opening balance, not here", () 
   );
   assert.equal(claims.length, 0);
 });
+
+test("a claim's GST goes only on the costs whose account carries GST", () => {
+  const claimJournal = journal("500", "2026-10-01", "Aroha Smith", [
+    line("400", "Advertising", 10000),
+    line("493", "Travel - International", 5000),
+    line("820", "GST", 1500),
+    line("801", "Unpaid Expense Claims", -16500),
+  ]);
+  const carries = ({ accountCode }) => ({ "400": true, "493": false })[accountCode];
+  const [claim] = expenseClaimsFromJournals([claimJournal], undefined, carries);
+  assert.deepEqual(
+    claim.lines.map((l) => [l.accountCode, l.net, l.tax, l.gross, l.taxType]),
+    [
+      ["400", 10000, 1500, 11500, "15% GST on Expenses"],
+      ["493", 5000, 0, 5000, "No GST"],
+    ],
+  );
+  assert.equal(claim.tax, 1500);
+  assert.equal(claim.total, 16500);
+  assert.equal(claim.lines.reduce((sum, l) => sum + l.gross, 0), 16500);
+});
+
+test("rounding is left to the last cost that carries GST", () => {
+  const [claim] = expenseClaimsFromJournals(
+    [
+      journal("501", "2026-10-01", "Aroha Smith", [
+        line("400", "Advertising", 1000),
+        line("461", "Printing", 1000),
+        line("493", "Travel - International", 333),
+        line("404", "Bank Fees", 1000),
+        line("820", "GST", 301),
+        line("801", "Unpaid Expense Claims", -3634),
+      ]),
+    ],
+    undefined,
+    ({ accountCode }) => accountCode !== "404" && accountCode !== "461",
+  );
+  assert.deepEqual(claim.lines.map((l) => l.tax), [226, 0, 75, 0]);
+  assert.equal(claim.lines.reduce((sum, l) => sum + l.tax, 0), 301);
+  assert.equal(claim.lines.reduce((sum, l) => sum + l.gross, 0), 3634);
+});
+
+test("treatments that cannot account for the GST fall back to the even spread", () => {
+  const claimJournal = journal("502", "2026-10-01", "Aroha Smith", [
+    line("400", "Advertising", 10000),
+    line("493", "Travel - International", 5000),
+    line("820", "GST", 1500),
+    line("801", "Unpaid Expense Claims", -16500),
+  ]);
+  const evenly = [[10000, 1000], [5000, 500]];
+  const spread = (carries) => expenseClaimsFromJournals([claimJournal], undefined, carries)[0].lines.map((l) => [l.net, l.tax]);
+  // Nothing passed, nothing said for one account, no account carrying GST,
+  // and GST larger than the taxed cost could hold.
+  assert.deepEqual(spread(undefined), evenly);
+  assert.deepEqual(spread(({ accountCode }) => (accountCode === "400" ? true : undefined)), evenly);
+  assert.deepEqual(spread(() => false), evenly);
+  const small = journal("503", "2026-10-01", "Aroha Smith", [
+    line("400", "Advertising", 1000),
+    line("493", "Travel - International", 14000),
+    line("820", "GST", 1500),
+    line("801", "Unpaid Expense Claims", -16500),
+  ]);
+  const [claim] = expenseClaimsFromJournals([small], undefined, ({ accountCode }) => accountCode === "400");
+  assert.deepEqual(claim.lines.map((l) => l.tax), [100, 1400]);
+});

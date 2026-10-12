@@ -152,7 +152,13 @@ export function documentsInPlay(
       out.push(invoice);
       continue;
     }
-    const owing = known.get(invoice.number.trim().toLowerCase());
+    // By number, or -- for a document that had none -- by contact and date,
+    // which is how the aged report names it ("Google 2024-08-20") and how the
+    // document is known here ("Google/2024-08-20"). Matched by number alone,
+    // every numberless bill open at the start was left out of the books.
+    const owing =
+      known.get(invoice.number.trim().toLowerCase()) ??
+      known.get(`${invoice.contact} ${invoice.issued}`.trim().toLowerCase());
     if (owing !== undefined) out.push({ ...invoice, broughtForward: owing });
   }
   return out;

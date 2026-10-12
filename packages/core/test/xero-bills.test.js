@@ -41,3 +41,14 @@ test("a payment names a bill by the number the supplier wrote, not the date kept
   // A bill with no number is kept under its contact, which no payment names.
   assert.equal(namesInvoice("Payment: Rimu Training", "Rimu Training/2025-09-02"), false);
 });
+
+test("a bill with no number open at the start is found by contact and date", async () => {
+  const { documentsInPlay } = await import("../dist/index.js");
+  // Kept here as "Google/2024-08-20"; the aged payables names it "Google 2024-08-20".
+  const bill = { number: "Google/2024-08-20", kind: "purchase", contact: "Google", reference: "", issued: "2024-08-20",
+    due: null, total: 10000, tax: 1304, paid: 10000, outstanding: 0, currency: "NZD", status: "Paid", lines: [] };
+  const inPlay = documentsInPlay([bill], "2025-04-01", [
+    { asAt: "2025-03-31", kind: "purchase", source: "aged.xlsx", items: [{ number: "Google 2024-08-20", contact: "Google", date: "2024-08-20", due: null, owing: 10000 }] },
+  ]);
+  assert.deepEqual(inPlay.map((i) => [i.number, i.broughtForward]), [["Google/2024-08-20", 10000]]);
+});

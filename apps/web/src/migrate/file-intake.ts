@@ -555,7 +555,12 @@ async function creditNotesByNumber(): Promise<number> {
         : candidates.filter(
             (d) => same(d.reference, note.reference) && (balances.get(d.number)?.remaining ?? 0) === credit,
           );
-    const fits = byNumber.length > 0 ? byNumber : byReference;
+    // Or, with neither -- Xero leaves a credit note's number and reference
+    // blank as readily as a bill's -- the one document of that contact still
+    // owing exactly the credit: OpenAI's credit of 37.69 and its one bill of
+    // 37.69 open at the start.
+    const byAmount = candidates.filter((d) => (balances.get(d.number)?.remaining ?? 0) === credit);
+    const fits = byNumber.length > 0 ? byNumber : byReference.length > 0 ? byReference : byAmount;
     const only = fits[0];
     if (fits.length !== 1 || only === undefined) continue;
     links[note.number] = only.number;

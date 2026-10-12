@@ -579,14 +579,14 @@ export function xeroMigrationFiles(): SourceFile[] {
     },
     {
       what: "Invoices",
-      where: "Business → Invoices → Export",
+      where: "Business → Invoices → All → Export, from the date of the oldest invoice still unpaid when the books start",
       why: "Accrual income & receipt allocations",
       have: (led.invoices ?? []).some((i) => i.kind === "sales"),
       page: "invoices",
     },
     {
       what: "Bills",
-      where: "Business → Bills to pay → Export",
+      where: "Business → Bills to pay → All → Export, from the date of the oldest bill still unpaid when the books start",
       why: "Accrual expenses, and what each supplier payment paid",
       have: (led.invoices ?? []).some((i) => i.kind === "purchase"),
       page: "invoices",

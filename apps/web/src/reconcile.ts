@@ -68,6 +68,14 @@ export function suggest(
     sideOf?: (code: string) => "sales" | "purchases" | undefined;
     unregisteredBank?: (account: string) => boolean;
   } = {},
+  /**
+   * Lines whose split holds a part with no account and no invoice.
+   *
+   * Never confirmed, whatever an override says: a line is not finished while
+   * some of its money has not been said to be anything. They stay in the queue
+   * until the part is given an account or an invoice.
+   */
+  unfinished: ReadonlySet<string> = new Set(),
 ): Suggestion[] {
   const ruleFile = rules as RuleFile | undefined;
   const selected =
@@ -96,7 +104,7 @@ export function suggest(
         code: coded.code,
         reason: coded.reason ?? "",
         classification: resolve(transaction),
-        confirmed: override?.confirmed === true,
+        confirmed: override?.confirmed === true && !unfinished.has(transaction.id),
         note: override?.note,
         description: override?.note === undefined ? coded.description : undefined,
         // A caution is about the suggestion, so it goes once a person has

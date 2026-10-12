@@ -32,6 +32,7 @@ import {
   ruleCaution,
   gstLookups,
   accountRate,
+  linesWithUncodedPart,
 } from "../books.js";
 import {
   compareCodings,
@@ -191,8 +192,12 @@ export async function acceptAllShown(): Promise<void> {
       : said.code;
   };
 
+  // A split with a part nobody has given an account or an invoice is not finished:
+  // it is left for somebody to complete, not confirmed as it stands.
+  const unfinishedLines = linesWithUncodedPart();
+  const unfinished = shownSuggestions().filter((one) => !one.confirmed && unfinishedLines.has(one.transaction.id)).length;
   const offered = shownSuggestions().filter(
-    (one) => !one.confirmed && (codeFor(one) !== null || settledElsewhere(one)),
+    (one) => !one.confirmed && !unfinishedLines.has(one.transaction.id) && (codeFor(one) !== null || settledElsewhere(one)),
   );
   const cautioned = shownSuggestions().filter(
     (one) => !one.confirmed && modelSaid(one)?.caution !== undefined,
@@ -285,11 +290,17 @@ export async function acceptAllShown(): Promise<void> {
   }
 
   if (lines.length === 0 && pairs.length === 0) {
-    alert(
-      held.size > 0
+    await askOnPage(
+      (held.size > 0
         ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
-            "transfer with more than one possible match. Check each one individually."
-        : "Nothing to accept: every line shown is already settled or has no suggestion.",
+          "transfer with more than one possible match. Check each one individually."
+        : "Nothing to accept: every line shown is already settled or has no suggestion.") +
+        (unfinished > 0
+          ? `\n\n${unfinished} ${unfinished === 1 ? "has" : "have"} a split with a part that has no account ` +
+            "or invoice yet. Finish the split, then confirm the line."
+          : ""),
+      "OK",
+      "Close",
     );
     return;
   }
@@ -345,6 +356,10 @@ export async function acceptAllShown(): Promise<void> {
         (elsewhere > 0
           ? `${elsewhere} ${elsewhere === 1 ? "is" : "are"} settled by a split or an invoice ` +
             "and confirmed as that.\n\n"
+          : "") +
+        (unfinished > 0
+          ? `${unfinished} ${unfinished === 1 ? "has" : "have"} a split with a part that has no account or ` +
+            `invoice yet, and ${unfinished === 1 ? "is" : "are"} left for you to finish.\n\n`
           : "") +
         (pairs.length > 0
           ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} also shown. ` +

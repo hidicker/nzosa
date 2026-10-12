@@ -1,5 +1,5 @@
 import { aiSuggest } from "./ai-backend.js";
-import { accountsFor, bankReach, gstLookups, invoiceBalanceMap, nothingHasAnswered, unregisteredCode } from "./books.js";
+import { accountsFor, bankReach, gstLookups, invoiceBalanceMap, linesWithUncodedPart, nothingHasAnswered, unregisteredCode } from "./books.js";
 import { classificationToRate, knownCodes, rateLabel, suggest } from "./reconcile.js";
 import type { GstRate } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
@@ -176,6 +176,7 @@ export function allLines(): Suggestion[] {
     accountsFor([]),
     unregisteredCode(),
     gstLookups(),
+    linesWithUncodedPart(),
   );
 }
 

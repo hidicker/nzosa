@@ -290,7 +290,7 @@ export type {
 export { overrideFor, gstOverride } from "./overrides.js";
 export type { TransactionOverride, Overrides } from "./overrides.js";
 
-export { validateSplits, expandSplits, splitPartId } from "./splits.js";
+export { validateSplits, expandSplits, splitPartId, uncodedParts } from "./splits.js";
 export type { SplitPart, Splits, SplitProblem, ExpandedSplits } from "./splits.js";
 
 export {

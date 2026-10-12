@@ -181,3 +181,19 @@ test("the parts of a split still sum to the original after expansion", () => {
     .reduce((sum, t) => sum + t.amount, 0);
   assert.equal(total, COFFEE.amount);
 });
+
+// A part with no account and no invoice is money nobody has said anything about.
+test("uncodedParts finds parts with neither an account nor an invoice", async () => {
+  const { uncodedParts } = await import("../dist/splits.js");
+  const parts = [
+    { amount: 760000, code: "Sales - 200", note: "Settles INV-0156" },
+    { amount: 3000, note: "Not accounted for by the invoices chosen" },
+    { amount: 1000, note: "Settles INV-0157" },
+  ];
+  // The third settles an invoice (its part id is in the matches); the second says nothing.
+  const found = uncodedParts("abc", parts, { "abc:3": "INV-0157" });
+  assert.equal(found.length, 1);
+  assert.equal(found[0].amount, 3000);
+  assert.deepEqual(uncodedParts("abc", [parts[0]], {}), []);
+  assert.equal(uncodedParts("abc", [{ amount: 5, code: "  ", note: "" }], {}).length, 1);
+});

@@ -60,6 +60,7 @@ import {
   rateForTreatment,
   gstSideForType,
   invoiceAssignments as coreInvoiceAssignments,
+  uncodedParts,
   documentsInPlay,
   isPosted,
   outsidePurchases,
@@ -491,6 +492,22 @@ export function nothingHasAnswered(one: Suggestion): boolean {
   );
 }
 
+/**
+ * The lines split with a part that has no account and settles no invoice.
+ *
+ * Such a line is not finished -- some of its money has not been said to be
+ * anything -- so it is never counted as confirmed, and ticking it is refused,
+ * until that part is given an account or an invoice.
+ */
+export function linesWithUncodedPart(): Set<string> {
+  const matches = state.ledger.invoiceMatches ?? {};
+  const out = new Set<string>();
+  for (const [id, parts] of Object.entries(state.ledger.splits ?? {})) {
+    if (uncodedParts(id, parts, matches).length > 0) out.add(id);
+  }
+  return out;
+}
+
 export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
   const all = suggest(
     state.ledger.transactions,
@@ -499,6 +516,7 @@ export function reconcileRows(): { all: Suggestion[]; shown: Suggestion[] } {
     accountsFor(state.reconcileAccounts),
     unregisteredCode(),
     gstLookups(),
+    linesWithUncodedPart(),
   );
   // Collapsed, because the search is matched against what the row shows and
    // the row shows collapsed whitespace. A bank pads its fields -- the payee is

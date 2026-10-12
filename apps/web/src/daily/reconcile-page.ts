@@ -26,6 +26,7 @@ import {
   invoicesToMatch,
   bankReach,
   betweenTagFor,
+  linesWithUncodedPart,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -575,10 +576,23 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     const hasSplit = (state.ledger.splits ?? {})[one.transaction.id] !== undefined;
     const hasInvoice = invoiceAssignments().has(one.transaction.id);
     if (codeSelect.value.trim() === "" && !hasSplit && !hasInvoice) {
-      alert(
+      void askOnPage(
         "Choose an account, split the line, or match it to an invoice before confirming.",
+        "OK",
+        "Close",
       );
-
+      return;
+    }
+    // A split is an account by another route only when every part has one:
+    // a part left with no account and no invoice is money nobody has said
+    // anything about, and a line holding one is not finished.
+    if (hasSplit && linesWithUncodedPart().has(one.transaction.id)) {
+      void askOnPage(
+        "Part of this payment has no account yet. Give each part of the split an account " +
+          "or an invoice, then confirm the line.",
+        "OK",
+        "Close",
+      );
       return;
     }
     // Shown taken at once, before the page is worked out again: the row dims
@@ -2229,6 +2243,9 @@ export async function confirmLine(
   const hasSplit = (state.ledger.splits ?? {})[one.transaction.id] !== undefined;
   const hasInvoice = invoiceAssignments().has(one.transaction.id);
   if (code.trim() === "" && !hasSplit && !hasInvoice) return;
+  // And a split with a part that names no account and settles no invoice is
+  // not finished, whichever route confirmed it.
+  if (hasSplit && linesWithUncodedPart().has(one.transaction.id)) return;
 
   const { treatment, side } = rateToClassification(
     rate,

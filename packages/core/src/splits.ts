@@ -65,6 +65,28 @@ export function splitPartId(transactionId: string, index: number): string {
 }
 
 /**
+ * The parts of a split that say nothing about where their money went.
+ *
+ * A part is accounted for by an account of its own, or by the invoice it
+ * settles. One with neither -- what an invoice match leaves over, "not
+ * accounted for by the invoices chosen" -- is money nobody has said what it
+ * was, and a line holding one is not finished however it was ticked.
+ *
+ * `invoiceMatches` is the ledger's, keyed by transaction id and by part id.
+ */
+export function uncodedParts(
+  transactionId: string,
+  parts: readonly SplitPart[],
+  invoiceMatches: Readonly<Record<string, string>> = {},
+): SplitPart[] {
+  return parts.filter(
+    (part, index) =>
+      (part.code ?? "").trim() === "" &&
+      (invoiceMatches[splitPartId(transactionId, index)] ?? "") === "",
+  );
+}
+
+/**
  * Check every split against its transaction.
  *
  * Returns a problem per split that does not balance, names a transaction that

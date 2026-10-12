@@ -45,7 +45,7 @@ import { $, state } from "../state.js";
 import { startNewAccount } from "./entities.js";
 import { DIRECTORY_VIA, aiSuggestionFor, rateForSuggestion, suggestFromDirectory } from "../ai.js";
 import { save, savePart } from "../store.js";
-import { dollars, note } from "../ui.js";
+import { askOnPage, dollars, note } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
 import {
   accountEntityKey,
@@ -1040,19 +1040,21 @@ function payoutBanner(): HTMLElement | null {
   button.type = "button";
   button.className = "primary";
   button.textContent = `Split ${waiting.length}`;
-  button.addEventListener("click", () => void applyAllPayouts());
+  button.addEventListener("click", () => void applyAllPayouts(button));
   wrap.append(button);
   return wrap;
 }
 
-async function applyAllPayouts(): Promise<void> {
+async function applyAllPayouts(button: HTMLButtonElement): Promise<void> {
   const waiting = payoutsToApply();
   if (waiting.length === 0) return;
   const invoices = waiting.filter((w) =>
     w.payouts.some((p) => p.invoices.length > 0),
   ).length;
   const shared = waiting.filter((w) => w.payouts.length > 1).length;
-  const ok = confirm(
+  // Asked on the page: a browser that answers confirm() by itself refused the
+  // split without a word.
+  const ok = await askOnPage(
     `Split ${waiting.length} payout${waiting.length === 1 ? "" : "s"} into their parts?\n\n` +
       `${invoices} name the invoice they settle; those invoices will be closed.\n` +
       (shared > 0
@@ -1060,10 +1062,24 @@ async function applyAllPayouts(): Promise<void> {
         : "") +
       "Fees go to the fee account named in the export and surcharges to sales.\n\n" +
       "Each bank line keeps its total.",
+    `Split ${waiting.length}`,
+    "Not now",
   );
   if (!ok) return;
-  for (const { payouts, transaction } of waiting)
+  // Working, on the button itself, for as long as it takes: forty payouts take
+  // a while, and a button that does not change is pressed again.
+  button.disabled = true;
+  button.classList.add("working");
+  button.setAttribute("aria-busy", "true");
+  let done = 0;
+  for (const { payouts, transaction } of waiting) {
+    button.textContent = `Splitting ${done + 1} of ${waiting.length}…`;
     await applyPayout(payouts, transaction);
+    done += 1;
+  }
+  button.disabled = false;
+  button.classList.remove("working");
+  button.removeAttribute("aria-busy");
   redraw("reconcile");
 }
 

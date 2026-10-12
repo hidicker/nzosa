@@ -222,6 +222,13 @@ async function init(): Promise<void> {
     state.ledger = loaded.ledger;
     applyCountry();
     state.persistent = loaded.persistent;
+    // Before anything below can record what it did. `record` appends to
+    // `state.events` and writes the lot back, so anything recording before the
+    // log is read would save a log of one and lose what was there. The step
+    // below that stores each confirmed line's GST did exactly that: opened
+    // once, older books kept one event of their history.
+    state.events = await loadEvents();
+    state.who = await loadUser();
 
     // Classify what is already stored, so the review queue survives a reload.
     reclassify();
@@ -280,13 +287,6 @@ async function init(): Promise<void> {
       // at the time still carry the standard chart's names for its numbers.
       if (tidyStaleTreatments()) void persistRules();
     }
-    // Before anything below can record what it did. `record` appends to
-    // `state.events` and writes the lot back, so anything recording before the
-    // log is read would save a log of one and lose what was there -- which the
-    // entity setup below has always been one changed ledger away from doing.
-    state.events = await loadEvents();
-    state.who = await loadUser();
-
     // A new set of books starts with a chart rather than with nothing.
     await seedStarterChart();
     // A ledger folder holds the chart with its entity columns, but the model

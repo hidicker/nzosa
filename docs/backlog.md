@@ -94,14 +94,6 @@ works).
   entire event log (77 KB on AI Test, growing), so every write gets slower as
   the books age. Append one event at a time instead -- a table of rows on the
   server rather than a part, with the browser and folder backends to match.
-- **Opening books saved before the "GST stored with each confirmed line" step
-  loses their history.** Seen on a copy of Personal and Rentals (195 events,
-  397 KB): the first open recorded one 175 KB coding batch and the history
-  then held that one event, the 195 gone. It looks like the size cap on the
-  log counting the new batch against everything older. The step is the one
-  `Coding (batch): GST stored with 1176 confirmed lines, as each was shown`.
-  Look at the cap, and at whether a step the person did not ask for should
-  be allowed to push their history out.
 - **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
   notes and the Google One journal with GST were sorted. Not yet traced.
 - **Say it is working while the other bulk actions on Reconcile run.** "Split

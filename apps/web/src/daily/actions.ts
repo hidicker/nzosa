@@ -15,6 +15,7 @@ import {
 } from "../books.js";
 import { DIRECTORY_VIA, aiSuggestionFor, suggestFromDirectory } from "../ai.js";
 import { feedTieNow } from "./opening-balances.js";
+import { lastFeedStatus } from "../feed-route.js";
 import { justBeforeWaiting } from "./bank-import.js";
 import {
   checkFinancialYearMilestones,
@@ -734,7 +735,11 @@ export function renderActions(): void {
   if (ran !== undefined && Date.now() - Date.parse(ran.at) <= 36 * 3_600_000) {
     body.append(note(`Morning run, ${new Date(ran.at).toLocaleString(booksLocale())}: ${ran.said.replace(/\.$/, "")}.`));
   }
-  body.append(renderMilestonesSection());
+  // Nothing to say about a year end until there is a bank line or a feed to
+  // say it about: a new set of books started with this card telling somebody
+  // that no year ends yet.
+  const hasBank = state.ledger.transactions.length > 0 || lastFeedStatus()?.configured === true;
+  if (hasBank) body.append(renderMilestonesSection());
 }
 
 /** Each bank account's 31 March balance against Xero's and the bank feed's. */

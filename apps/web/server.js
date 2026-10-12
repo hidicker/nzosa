@@ -186,12 +186,23 @@ function releaseLock(folder) {
   rmSync(lockFile(folder), { force: true });
 }
 
+/**
+ * Pages are never shown inside another site's frame: a page framing this one
+ * could otherwise lay its own buttons over the app's and have a click land on
+ * "Clear" or "Archive". Both headers, for browsers that read only the older.
+ */
+const NO_FRAMING = {
+  "x-frame-options": "DENY",
+  "content-security-policy": "frame-ancestors 'none'",
+};
+
 function send(response, status, body, type = "application/json; charset=utf-8") {
   response.writeHead(status, {
     "content-type": type,
     // The page and the API are the same origin, so nothing here is a cross
     // origin request. Said explicitly so it stays that way.
     "cache-control": "no-store",
+    ...NO_FRAMING,
   });
   response.end(typeof body === "string" ? body : JSON.stringify(body));
 }
@@ -200,6 +211,19 @@ async function readBody(request) {
   const chunks = [];
   for await (const chunk of request) chunks.push(chunk);
   return Buffer.concat(chunks).toString("utf8");
+}
+
+/** A request this server cannot read: answered 400, not taken for its own fault. */
+class BadRequest extends Error {}
+
+/** The request's body as JSON, or BadRequest when it is not. */
+async function readJson(request, empty) {
+  const text = await readBody(request);
+  try {
+    return JSON.parse(text === "" && empty !== undefined ? empty : text);
+  } catch {
+    throw new BadRequest("the request body is not JSON");
+  }
 }
 
 /**
@@ -219,7 +243,14 @@ function isLedgerName(id) {
 /** Serve a built file, refusing anything that tries to climb out of dist. */
 function sendFile(response, urlPath) {
   const wanted = urlPath === "/" ? "/index.html" : urlPath;
-  const file = resolve(join(outdir, decodeURIComponent(wanted)));
+  let decoded;
+  try {
+    decoded = decodeURIComponent(wanted);
+  } catch {
+    send(response, 400, { error: "a malformed % escape in the address" });
+    return;
+  }
+  const file = resolve(join(outdir, decoded));
   // The separator matters: without it a sibling folder called "dist-backup"
   // starts with "dist" and would be served from.
   const served = resolve(outdir);
@@ -234,6 +265,7 @@ function sendFile(response, urlPath) {
   response.writeHead(200, {
     "content-type": TYPES[extname(file)] ?? "application/octet-stream",
     "cache-control": "no-store",
+    ...NO_FRAMING,
   });
   createReadStream(file).pipe(response);
 }
@@ -535,6 +567,19 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         return;
       }
 
+      // Two GETs that are not only reads: each fetches from the bank (or
+      // Wise) and writes the feed file. Origin is not sent on a plain GET, so
+      // the browser's own word for where it came from is checked instead. A
+      // request with no such header -- an older browser, the command line --
+      // is let through, as before.
+      if (
+        (path === "/api/feed/transactions" || path === "/api/wise/statement") &&
+        request.headers["sec-fetch-site"] === "cross-site"
+      ) {
+        send(response, 403, { error: "that request did not come from this app" });
+        return;
+      }
+
       // What the page asks first: is there a folder behind this at all? A no
       // is a real answer -- the hosted copy has no server, and the app falls
       // back to keeping everything in the browser.
@@ -560,7 +605,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 415, { error: "expected application/json" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         if (body === null || typeof body !== "object" || Array.isArray(body)) {
           send(response, 400, { error: "expected an object" });
           return;
@@ -586,7 +631,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 415, { error: "expected application/json" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         try {
           if (body.on === true) scheduleMorning(ledgerRoot);
           else if (morningTaskExists()) unscheduleMorning();
@@ -609,7 +654,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 404, { error: `no such part: ${part}` });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const result = writePart(
           folderOf(current),
           part,
@@ -651,7 +696,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         // and refused if another NZOSA has them: clearing a folder somebody
         // else is writing to is how two processes disagree about what the
         // books are.
-        const body = JSON.parse((await readBody(request)) || "{}");
+        const body = await readJson(request, "{}");
         const named = String(body.ledger ?? "").trim();
         const target = named === "" ? current : named;
         if (!isLedgerName(target)) {
@@ -701,7 +746,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 415, { error: "expected application/json" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const appToken = String(body.appToken ?? "").trim();
         const userToken = String(body.userToken ?? "").trim();
         if (!appToken.startsWith("app_token_") || !userToken.startsWith("user_token_")) {
@@ -752,7 +797,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "no bank feed is connected" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         writeFeed(ledgerRoot, current, { ...feed, accounts: body.accounts ?? {} });
         send(response, 200, { accounts: body.accounts ?? {} });
         return;
@@ -768,7 +813,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "no bank feed is connected" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         writeFeed(ledgerRoot, current, { ...feed, autoFetch: body.autoFetch !== false });
         send(response, 200, { autoFetch: body.autoFetch !== false });
         return;
@@ -909,7 +954,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 415, { error: "expected application/json" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const token = String(body.token ?? "").trim();
         if (token.length < 20) {
           send(response, 400, { error: "that does not look like a Wise API token" });
@@ -977,7 +1022,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "Wise is not connected" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const from = typeof body.from === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.from) ? body.from : held.from;
         writeWise(ledgerRoot, current, {
           ...held,
@@ -1054,7 +1099,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 415, { error: "expected application/json" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const key = String(body.key ?? "").trim();
         const wanted = String(body.model ?? "").trim();
         const existing = readAi(ledgerRoot, current);
@@ -1122,7 +1167,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           ai.model = pickAiModel(detectProvider(ai.key), offered, "");
           writeAi(ledgerRoot, current, ai);
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const prompt = String(body.prompt ?? "");
         const asking = Number(body.asking ?? 0);
         if (prompt === "" || !Number.isInteger(asking) || asking < 1) {
@@ -1227,7 +1272,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "A Jev key cannot read a spreadsheet. Use a Claude, Gemini or OpenAI key." });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const prompt = String(body.prompt ?? "");
         if (prompt === "") {
           send(response, 400, { error: "nothing to ask" });
@@ -1282,7 +1327,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "A Jev key cannot read a document. Use a Claude, Gemini or OpenAI key." });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const prompt = String(body.prompt ?? "");
         const pdf = String(body.pdf ?? "");
         const filename = String(body.filename ?? "document.pdf").slice(0, 120);
@@ -1332,7 +1377,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 400, { error: "no key set for these books" });
           return;
         }
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const contents = Array.isArray(body.contents) ? body.contents : [];
         const tools = Array.isArray(body.tools) ? body.tools : [];
         if (detectProvider(ai.key) !== "gemini") {
@@ -1388,7 +1433,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
       }
 
       if (path === "/api/ledger/restore" && request.method === "POST") {
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const named = String(body.ledger ?? "").trim();
         const target = named === "" ? current : named;
         if (!isLedgerName(target)) {
@@ -1410,7 +1455,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
       }
 
       if (path === "/api/ledger/copy" && request.method === "POST") {
-        const body = JSON.parse((await readBody(request)) || "{}");
+        const body = await readJson(request, "{}");
         const from = String(body.from ?? "").trim() || current;
         const to = String(body.ledger ?? "").trim();
         const name = typeof body.name === "string" && body.name.trim() !== "" ? body.name.trim() : to;
@@ -1428,7 +1473,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
       }
 
       if (path === "/api/ledger/switch" && request.method === "POST") {
-        const body = JSON.parse(await readBody(request));
+        const body = await readJson(request);
         const id = String(body.ledger ?? "").trim();
         if (!isLedgerName(id)) {
           send(response, 400, { error: "a ledger name may hold letters, digits, dot, dash and underscore" });
@@ -1456,7 +1501,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 
       send(response, 404, { error: "no such endpoint" });
     } catch (error) {
-      send(response, 500, { error: error.message });
+      send(response, error instanceof BadRequest ? 400 : 500, { error: error.message });
     }
   });
 

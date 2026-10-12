@@ -9,6 +9,7 @@ import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
 import { ledgerName, save, savePart } from "../store.js";
+import { askOnPage } from "../ui.js";
 import { downloadBackupNow, restoreWithConfirm } from "../backup.js";
 import { readFiledReturns } from "../variance.js";
 import { readIrdFiles } from "../daily/ird-records.js";
@@ -424,7 +425,9 @@ async function offerManualJournals(journals: readonly Journal[]): Promise<void> 
   if (found.length === 0) return;
 
   const many = found.length !== 1;
-  const listed = found.map((j) => `  ${j.date}  ${j.narration.slice(0, 64)}`).join("\n");
+  const listed = found
+    .map((j) => `${j.date}  ${j.narration.length > 80 ? `${j.narration.slice(0, 80)}…` : j.narration}`)
+    .join("\n");
   const ask =
     `${found.length} manual journal${many ? "s" : ""} in that report ${many ? "are" : "is"} ` +
     `not in your books:\n\n${listed}\n\n` +
@@ -434,7 +437,9 @@ async function offerManualJournals(journals: readonly Journal[]): Promise<void> 
       ? `\n\n${earlier} more from before ${start} are left out: the opening balances ` +
         "already include them."
       : "");
-  if (!confirm(ask)) return;
+  // Asked on the page, as the trial balance is: a browser that answers confirm()
+  // by itself refused these without a word.
+  if (!(await askOnPage(ask, many ? "Take them" : "Take it", "Not now"))) return;
 
   await saveManualJournals(
     [...held, ...found],

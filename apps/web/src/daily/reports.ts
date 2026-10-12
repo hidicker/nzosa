@@ -33,7 +33,7 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
 import { downloadExcelReport } from "./excel-export.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
@@ -953,13 +953,21 @@ async function importManualJournals(): Promise<void> {
     (j) => !held.some((existing) => existing.id === j.id),
   );
   if (found.length === 0) {
-    alert("No manual journals in the report that are not already held.");
+    await askOnPage("No manual journals in the report that are not already held.", "OK", "Close");
     return;
   }
+  const many = found.length !== 1;
   const listed = found
-    .map((j) => `  ${j.date}  ${j.narration.slice(0, 60)}`)
+    .map((j) => `${j.date}  ${j.narration.length > 80 ? `${j.narration.slice(0, 80)}…` : j.narration}`)
     .join("\n");
-  if (!confirm(`Take ${found.length} manual journal${found.length === 1 ? "" : "s"}?\n\n${listed}`)) return;
+  const ok = await askOnPage(
+    `${found.length} manual journal${many ? "s" : ""} in the report ${many ? "are" : "is"} not in your books:\n\n` +
+      `${listed}\n\n` +
+      "These are year-end adjustments, and they change the profit and the balance sheet. Take them?",
+    many ? "Take them" : "Take it",
+    "Not now",
+  );
+  if (!ok) return;
   await saveManualJournals([...held, ...found], `Read ${found.length} manual journals from the report`);
 }
 

@@ -23,6 +23,13 @@ from when it is changed, and reaching what is already confirmed is a separate,
 deliberate step that says what it will change (as money between entities now
 works).
 
+- **Lock dates enforced on the server, not only the lock dates themselves.**
+  Since 20261012120000_deleted_books_and_locks.sql, save_part refuses a
+  bookkeeper's save that moves the lock dates. What they lock is still guarded
+  by the page alone: a save that changes a coding, journal or invoice dated on
+  or before a lock is not refused by the server. Doing it there means
+  comparing the locked figures (`lockedFigures` in core's lock-dates.ts) in the
+  database, or in an edge function every save goes through.
 - **Changing an account's type or entity says what it reaches, and asks.** A
   type change moves all its history between the profit and loss and the balance
   sheet and can move confirmed lines between Box 5 and Box 11; an entity change

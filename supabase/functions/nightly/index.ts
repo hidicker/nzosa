@@ -56,6 +56,20 @@ async function partsOf(book: string): Promise<Record<string, { version: number; 
   return Object.fromEntries(rows.map((row) => [row.part, { version: row.version, data: row.data }]));
 }
 
+/**
+ * Whether the set is still there. One deleted after the morning's list was
+ * made, or asked for by id, is skipped: not fetched for, and not a failure.
+ */
+async function bookLive(book: string): Promise<boolean> {
+  const response = await fetch(
+    `${SUPABASE_URL}/rest/v1/books?id=eq.${encodeURIComponent(book)}&select=deleted_at`,
+    { headers: service },
+  );
+  if (!response.ok) throw new Error(`reading the books: database said ${response.status}`);
+  const rows = (await response.json()) as { deleted_at: string | null }[];
+  return rows.length === 1 && rows[0]?.deleted_at === null;
+}
+
 const byFetch: AiFetcher = (url, init) => fetch(url, init);
 
 interface LogEntry {
@@ -77,6 +91,7 @@ interface Morning {
 }
 
 async function runBook(book: string): Promise<string> {
+  if (!(await bookLive(book))) return "deleted, so skipped";
   const parts = await partsOf(book);
   const decisions = (parts["decisions"]?.data ?? {}) as Record<string, unknown>;
   if (decisions["nightly"] !== true) return "not turned on";

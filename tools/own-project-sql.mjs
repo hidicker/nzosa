@@ -25,6 +25,7 @@ export const MIGRATIONS = [
   "20260919090000_lock_tables_and_invitations",
   "20261008090000_roles",
   "20261010090000_delete_books",
+  "20261012120000_deleted_books_and_locks",
 ];
 
 /** Parts a function adds later; a value added to a type is used by the app, not by this script. */

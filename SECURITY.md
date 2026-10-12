@@ -32,6 +32,14 @@ What follows is checked in each security review; the last was on 5 October 2026.
 
 - Every table has row-level security: you reach only books you are a member
   of, with the role you were given.
+- Invitations to a set of books are matched on the email address in the
+  person's sign-in token, so the Supabase project must have **Confirm email**
+  turned on (Authentication, Email). With it off, anybody could sign up as an
+  address they do not own and accept what was sent to it. Anyone hosting their
+  own copy should check this setting.
+- A deleted set of books can no longer be read or saved, by members either,
+  until an owner restores it. Lock dates can be moved only by an owner or the
+  accountant: the server refuses a bookkeeper's save that changes them.
 - Bank feed tokens and AI keys are kept server-side. The functions that read
   them can be called by the server alone, and every server function checks the
   caller's role on the books first.

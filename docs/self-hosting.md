@@ -171,8 +171,10 @@ It should answer `not signed in` (or a 401).
 1. **URL Configuration.** Set **Site URL** to where the app will live, e.g.
    `https://books.example.co.nz/`, and add the same under **Redirect URLs**.
    The confirmation email links back here.
-2. **Email.** Keep **Confirm email** on: an account should belong to somebody
-   who can read that inbox.
+2. **Email.** Keep **Confirm email** on. It is not only tidiness: an invitation
+   to a set of books is matched on the email address in the person's sign-in,
+   so with it off anybody could sign up as an address they do not own and
+   accept that address's invitations. Check it is on before inviting anyone.
 3. **SMTP (optional, recommended).** Under **SMTP Settings**, enter your email
    provider's host, port (465 or 587), username and password, and the sender
    address. Two traps: the host name must match the server's certificate (your
@@ -321,6 +323,9 @@ Your books are in your database and are not touched by an update.
 - **Tokens and keys live in Vault**, encrypted. Only the Edge Functions, using
   the service role, can read them — and only after checking the person asking
   has a role in those books.
+- **Confirm email must stay on** (Authentication, section 6): invitations are
+  matched on the signed-in email address, which means nothing unless the
+  address was confirmed.
 - **The service role key** never leaves Supabase. If it ever appears in a
   browser, a file, or a chat, rotate it in the dashboard.
 - **Revoking** is always yours: disconnect in NZOSA, and also revoke the token

@@ -1383,8 +1383,48 @@ function dropZone(): HTMLElement {
   // element, which lives in Setup's own drop zone, so a file dropped here
   // would otherwise be read in silence.
   const told = borrow("setup-loaded");
-  if (told !== null) zone.append(told);
+  if (told !== null) zone.append(readReport(told));
   return zone;
+}
+
+/**
+ * What the reader said about the last files dropped, folded up.
+ *
+ * It is one report for the whole drop, and every step that takes files shows
+ * it, so a step about bank balances was listing eighteen Xero files. One line
+ * says how many were read and whether any need a look; the list is under it,
+ * and open by itself when a file was not recognised or could not be read.
+ */
+function readReport(told: HTMLElement): HTMLElement {
+  const details = document.createElement("details");
+  details.className = "files-read";
+  const summary = document.createElement("summary");
+  details.append(summary, told);
+
+  const problem = /not recognised|could not be read|^Skipped |^Nothing was loaded/;
+  const update = (): void => {
+    const rows = [...told.children].map((row) => row.textContent ?? "");
+    const files = rows.filter((row) => /\.(csv|xlsx|txt)\s+—/i.test(row)).length;
+    const bad = rows.filter((row) => problem.test(row)).length;
+    const loading = told.querySelector(".files-loading") !== null;
+    details.hidden = rows.length === 0;
+    summary.textContent = loading
+      ? "Reading your files…"
+      : files === 0
+        ? "What was read"
+        : `What was read: ${files} file${files === 1 ? "" : "s"}` + (bad > 0 ? `, ${bad} to look at` : "");
+    if (bad > 0) details.open = true;
+  };
+  update();
+  const watch = new MutationObserver(() => {
+    if (!details.isConnected) {
+      watch.disconnect();
+      return;
+    }
+    update();
+  });
+  watch.observe(told, { childList: true, characterData: true, subtree: true });
+  return details;
 }
 
 /**

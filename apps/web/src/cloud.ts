@@ -174,7 +174,7 @@ export async function signUp(
         ok: false,
         why:
           "Online accounts are limited at this stage. Please contact me at nzosa@proton.me " +
-          "and I will check if I can include you.",
+          "and I will check if I can include you. Run NZOSA on your own computer and there is no limit.",
       };
     }
     return { ok: false, why: problem };

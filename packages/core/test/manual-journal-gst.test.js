@@ -52,3 +52,22 @@ test("GST on income: a sale no bank line shows", () => {
   assert.equal(boxes.box5, 11500);
   assert.equal(boxes.box8, 1500);
 });
+
+// The page draws a GST-inclusive line as its net and its GST; it must be what is posted.
+test("splitManualGst gives the net and GST that the journal posts", async () => {
+  const { splitManualGst, postManualJournal } = await import("../dist/index.js");
+  assert.deepEqual(splitManualGst(-3182), { net: -2767, tax: -415 });
+  assert.deepEqual(splitManualGst(3182), { net: 2767, tax: 415 });
+  const posted = postManualJournal({
+    id: "g1",
+    date: "2025-04-01",
+    narration: "From Xero: Google - 10 Jan 2025 Google One Received",
+    lines: [
+      { code: "BNZ Visa - Business Card", amount: 3182 },
+      { code: "Subscriptions - 485", amount: -3182, gst: "INPUT2" },
+    ],
+  });
+  const amounts = posted.lines.map((l) => l.amount);
+  assert.deepEqual(amounts, [3182, -2767, -415]);
+  assert.equal(amounts.reduce((a, b) => a + b, 0), 0);
+});

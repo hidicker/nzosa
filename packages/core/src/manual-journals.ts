@@ -108,6 +108,16 @@ export function checkManualJournal(journal: ManualJournal): ManualJournalProblem
 }
 
 /**
+ * A GST-inclusive journal amount, split the way it is posted: the account takes it
+ * less 3/23, the GST account takes the 3/23. One place, so a page drawing the
+ * journal and the ledger posting it cannot disagree.
+ */
+export function splitManualGst(amount: Cents): { net: Cents; tax: Cents } {
+  const tax = (Math.sign(amount) * Math.round((Math.abs(amount) * 3) / 23)) as Cents;
+  return { net: (amount - tax) as Cents, tax };
+}
+
+/**
  * Post a manual journal.
  *
  * Refuses an unbalanced one by returning null rather than posting it and
@@ -138,11 +148,11 @@ export function postManualJournal(
     // A supply in its own right: the GST content of the inclusive amount, the
     // base given as a bank line gives it (money out negative) so the return
     // reads it the same way.
-    const tax = Math.sign(line.amount) * Math.round((Math.abs(line.amount) * 3) / 23);
+    const { net, tax } = splitManualGst(line.amount);
     lines.push({
       accountCode: account.code,
       accountName: account.name,
-      amount: line.amount - tax,
+      amount: net,
       taxType: line.gst,
       taxBase: -line.amount,
       description,

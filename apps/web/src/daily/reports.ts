@@ -27,6 +27,7 @@ import {
   journalInEntity,
   entityOfCoding,
   betweenTagFor,
+  manualJournalGstAccount,
 } from "../books.js";
 import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
@@ -57,6 +58,7 @@ import {
   balanceSheetRole,
   accrualProfitAndLoss,
   checkManualJournal,
+  splitManualGst,
   dayAfter,
   reversalOf,
   computeBalanceSheet,
@@ -472,20 +474,27 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const table = document.createElement("table");
     table.className = "report-table opening-table";
     const tbody = document.createElement("tbody");
-    for (const line of journal.lines) {
+    // Drawn as it posts: a line carrying GST is its net amount and, beneath it,
+    // the GST on the GST account, so the debits and credits can be read to balance.
+    const drawLine = (label: string, amount: number): void => {
       const row = document.createElement("tr");
-      row.append(
-        nameCell(
-          line.gst === "INPUT2"
-            ? `${line.code} · 15% GST on expenses`
-            : line.gst === "OUTPUT2"
-              ? `${line.code} · 15% GST on income`
-              : line.code,
-        ),
-      );
-      row.append(amountCell(line.amount > 0 ? money(line.amount) : ""));
-      row.append(amountCell(line.amount < 0 ? money(-line.amount) : ""));
+      row.append(nameCell(label));
+      row.append(amountCell(amount > 0 ? money(amount as Cents) : ""));
+      row.append(amountCell(amount < 0 ? money(-amount as Cents) : ""));
       tbody.append(row);
+    };
+    for (const line of journal.lines) {
+      if (line.gst === undefined || line.amount === 0) {
+        drawLine(line.code, line.amount);
+        continue;
+      }
+      const { net, tax } = splitManualGst(line.amount);
+      const gstAccount = manualJournalGstAccount(line.code);
+      drawLine(
+        `${line.code} · ${line.gst === "INPUT2" ? "15% GST on expenses" : "15% GST on income"}`,
+        net,
+      );
+      drawLine(`${gstAccount.name} - ${gstAccount.code}`, tax);
     }
     table.append(tbody);
     card.append(table);

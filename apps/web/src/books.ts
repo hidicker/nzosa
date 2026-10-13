@@ -2177,6 +2177,15 @@ function gstAccountForEntities(): (accountCode: string) => { code: string; name:
   };
 }
 
+/**
+ * The GST account a manual journal line's GST is posted to, for a line that
+ * carries GST: the control account of the entity that owns the chart account,
+ * where it has one of its own, and otherwise the books' GST account.
+ */
+export function manualJournalGstAccount(label: string): { code: string; name: string } {
+  return gstAccountForEntities()(splitAccountLabel(label).code) ?? gstAccount();
+}
+
 function prepaymentsAccount(): { code: string; name: string } {
   const account =
     state.chart.find((a) => /prepayment/i.test(a.name)) ?? state.chart.find((a) => a.code === "620");

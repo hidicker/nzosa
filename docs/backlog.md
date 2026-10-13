@@ -75,9 +75,11 @@ works).
   `confirm()` "Cancel" at once without showing it, so whatever it guards is
   refused in silence. `askOnPage` in `ui.ts` asks in the page instead; the
   trial balance, Leave out after all, Bring in as a journal and taking the
-  year-end journals from the journal report use it. About 44 `confirm()`
-  calls in 28 files remain, and `alert()` and `prompt()` have the same
-  problem. Each needs its handler made async.
+  year-end journals from the journal report use it, and `askTextOnPage`
+  (the same box with a field) asks for the name of a new set of books and of
+  a copy. About 44 `confirm()` calls in 28 files remain, and `alert()` and
+  `prompt()` (entity names, donation reasons, asset and opening amounts) have
+  the same problem. Each needs its handler made async.
   First of them: Delete on the online Books page (`cloud-books.ts`) asks for
   the set's name with `prompt()`, so in such a browser the button does
   nothing at all. Replace everything on the server, there, and the two

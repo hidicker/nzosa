@@ -12,7 +12,7 @@ import {
   switchLedger,
   writesToFolder,
 } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, askTextOnPage, note } from "../ui.js";
 import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
 import { cloudConfigured } from "../cloud-config.js";
@@ -136,23 +136,25 @@ export async function chooseLedger(value: string): Promise<void> {
   let id = value;
   let label: string | undefined;
   if (id === "\u0000new") {
-    const name = prompt(
+    const name = await askTextOnPage(
       "Name for the new set of books.\n\nIt becomes a folder beside the others, " +
         "and starts empty.",
       "",
+      "Create",
+      "Cancel",
     );
     if (name === null || name.trim() === "") return;
     // A folder name, so only what a folder name may hold.
     label = name.trim();
     id = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
     if (id === "") {
-      alert("That name has nothing in it a folder can be called.");
+      await askOnPage("That name has nothing in it a folder can be called.", "OK", "Close");
       return;
     }
   }
 
   if (!(await switchLedger(id, label))) {
-    alert("Could not open that set of books.");
+    await askOnPage("Could not open that set of books.", "OK", "Close");
     return;
   }
   // Everything on screen belongs to the ledger that was open, so the honest
@@ -162,21 +164,23 @@ export async function chooseLedger(value: string): Promise<void> {
 
 /** Ask for a name, copy the books under it, and show the list with the copy in it. */
 async function copyBooks(id: string, name: string): Promise<void> {
-  const wanted = prompt(
+  const wanted = await askTextOnPage(
     `Name for the copy of ${name}.\n\nIt becomes a set of books of its own: changing ` +
       "one never changes the other.",
     `${name} copy`,
+    "Make the copy",
+    "Cancel",
   );
   if (wanted === null || wanted.trim() === "") return;
   const label = wanted.trim();
   const to = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
   if (to === "") {
-    alert("That name has nothing in it a folder can be called.");
+    await askOnPage("That name has nothing in it a folder can be called.", "OK", "Close");
     return;
   }
   const result = await copyLedger(id, to, label);
   if (!result.ok) {
-    alert(result.why);
+    await askOnPage(result.why, "OK", "Close");
     return;
   }
   await renderBooks();

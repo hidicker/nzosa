@@ -1209,6 +1209,7 @@ dialog.ask-on-page {
 dialog.ask-on-page::backdrop { background: rgba(0, 0, 0, 0.35); }
 .ask-on-page-text { margin: 0 0 14px; white-space: pre-line; line-height: 1.45; }
 .ask-on-page-actions { display: flex; justify-content: flex-end; gap: 8px; }
+.ask-on-page-input { width: 100%; box-sizing: border-box; margin: 0 0 14px; padding: 8px 10px; font: inherit; }
 
 /* Lines on Reconcile that each need one thing done, with the way to each. */
 .loose-ends {

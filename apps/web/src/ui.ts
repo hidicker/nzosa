@@ -73,6 +73,68 @@ export function askOnPage(message: string, yes = "OK", no = "Cancel"): Promise<b
   });
 }
 
+/**
+ * Ask for a line of text on the page, and wait for it: the typed text, or null
+ * when it is dismissed. The same box as askOnPage, for what prompt() was used
+ * for -- which an embedded browser also answers without showing.
+ *
+ * Enter is the first button, Escape the second. The field starts holding
+ * `initial`, selected, so typing replaces it.
+ */
+export function askTextOnPage(
+  message: string,
+  initial = "",
+  yes = "OK",
+  no = "Cancel",
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const box = document.createElement("dialog");
+    box.className = "ask-on-page";
+    const text = document.createElement("p");
+    text.className = "ask-on-page-text";
+    text.textContent = message;
+    const field = document.createElement("input");
+    field.type = "text";
+    field.className = "ask-on-page-input";
+    field.value = initial;
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "primary";
+    ok.textContent = yes;
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = no;
+    const actions = document.createElement("div");
+    actions.className = "ask-on-page-actions";
+    actions.append(cancel, ok);
+    box.append(text, field, actions);
+    let answered = false;
+    const finish = (answer: string | null): void => {
+      if (answered) return;
+      answered = true;
+      box.close();
+      box.remove();
+      resolve(answer);
+    };
+    ok.addEventListener("click", () => finish(field.value));
+    cancel.addEventListener("click", () => finish(null));
+    field.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        finish(field.value);
+      }
+    });
+    box.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(null);
+    });
+    document.body.append(box);
+    box.showModal();
+    field.focus();
+    field.select();
+  });
+}
+
 /** A left-aligned label in a report. */
 export function nameCell(text: string): HTMLTableCellElement {
   const td = document.createElement("td");

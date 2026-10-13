@@ -1372,7 +1372,7 @@ export function renderCheck(): void {
       note(
         "These match none of your transactions. Either they are missing from your import, " +
           "or they never went through the bank: a journal, an adjustment, or an account " +
-          "not imported. Lines can be ignored with a stated reason.",
+          "not imported. For each, either bring it in as a journal or ignore it with a stated reason.",
       ),
     );
     const byAccount = missingByAccount(unignoredMissing);
@@ -1424,7 +1424,7 @@ export function renderCheck(): void {
         if (journal !== null) {
           const bring = document.createElement("button");
           bring.type = "button";
-          bring.className = "small";
+          bring.className = "small primary";
           bring.textContent = "Bring in as a journal";
           bring.addEventListener("click", async () => {
             const said = journal.lines

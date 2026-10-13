@@ -8,7 +8,7 @@ import { save, saveEvents } from "../store.js";
 import { note } from "../ui.js";
 import type { RuleSet } from "@nzosa/core";
 import { postedJournals } from "../books.js";
-import { daysWork, formatAmount, localDay, sourceIdsOf } from "@nzosa/core";
+import { daysWork, formatAmount, localDay, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
 import type { PostedJournal } from "@nzosa/core";
 import { amountCell, nameCell } from "../ui.js";
 import { applyModules } from "../modules.js";
@@ -224,7 +224,22 @@ function todaySection(body: HTMLElement): void {
     }
   }
 
-  for (const transaction of work.transactions) {
+  // Most recently decided first, like the change log below: the work's lines
+  // come in bank-date order, and the one just done was far down the list.
+  const decidedAt = new Map<string, string>();
+  for (const event of work.events) {
+    for (const id of transactionIdsIn(event)) {
+      if (!decidedAt.has(id) || event.at > (decidedAt.get(id) ?? "")) decidedAt.set(id, event.at);
+    }
+  }
+  const newestFirst = [...work.transactions].sort(
+    (a, b) =>
+      (decidedAt.get(b.id) ?? "").localeCompare(decidedAt.get(a.id) ?? "") ||
+      b.date.localeCompare(a.date) ||
+      a.id.localeCompare(b.id),
+  );
+
+  for (const transaction of newestFirst) {
     const journals = byTransaction.get(transaction.id) ?? [];
     const rows = journals.flatMap((j) => j.lines);
     // A line with no journal of its own is worth seeing rather than hiding. A

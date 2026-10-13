@@ -129,6 +129,10 @@ const GENERIC_PAYEES = new Set([
  */
 
 export function renderReconcile(): void {
+  // The AI suggestions button counts what is waiting. It was worked out once,
+  // when the books opened, so lines arriving after that left it saying
+  // "Nothing to ask about" and disabled until the page was reloaded.
+  document.dispatchEvent(new Event("nzosa:reconcile-drawn"));
   // Free suggestions from the list of known businesses, before anything is
   // drawn; worked out again only when the books or chart change.
   suggestFromDirectory();

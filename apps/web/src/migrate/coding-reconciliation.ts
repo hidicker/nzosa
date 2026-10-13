@@ -3970,6 +3970,12 @@ function wireAiButton(): void {
   // A key added, changed or removed on the AI page: find out again, rather
   // than go on offering the key that was there when these books opened.
   document.addEventListener(AI_CHANGED, () => void learn());
+  // The lines waiting change as lines arrive and are coded, and AI may have
+  // been turned on or off since: say again each time the page is drawn.
+  document.addEventListener("nzosa:reconcile-drawn", () => {
+    if (aiOff !== !aiAllowed()) void learn();
+    else say();
+  });
 
   /** Off: say so where the button is, with the way to turn it on. */
   const sayItIsOff = (): void => {

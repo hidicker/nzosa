@@ -263,8 +263,16 @@ function actions(...buttons: readonly HTMLButtonElement[]): HTMLElement {
 }
 
 function answer(patch: Onboarding): void {
+  const before = onboarding().at;
   rememberOnboarding(patch);
   renderMigration();
+  // A new question is drawn where the last one's long panels used to be, so
+  // the page is left scrolled to somewhere below it. Bring the question to
+  // the top of the view.
+  if (patch.at !== undefined && patch.at !== before) {
+    const cards = document.querySelectorAll<HTMLElement>("#migration-body .migration-card");
+    cards[cards.length - 1]?.scrollIntoView({ block: "start" });
+  }
 }
 
 /**

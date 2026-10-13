@@ -13,7 +13,7 @@ set search_path = public, pg_temp
 as $$
 begin
   if (select count(*) from auth.users) >= 15 then
-    raise exception 'NZOSA online accounts are limited to 15 at this stage'
+    raise exception 'Online accounts are limited at this stage. Please contact nzosa@proton.me.'
       using errcode = 'PT429';
   end if;
   return new;

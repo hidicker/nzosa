@@ -166,7 +166,19 @@ export async function signUp(
   }
   // No session and no error means it worked and is waiting on the email.
   const problem = reply.error_description ?? reply.msg ?? reply.message;
-  if (problem !== undefined) return { ok: false, why: problem };
+  if (problem !== undefined) {
+    // The site caps its accounts. The database refuses the new one, and the
+    // sign-up service says only that it could not save the user.
+    if (/database error saving new user/i.test(problem)) {
+      return {
+        ok: false,
+        why:
+          "Online accounts are limited at this stage. Please contact me at nzosa@proton.me " +
+          "and I will check if I can include you.",
+      };
+    }
+    return { ok: false, why: problem };
+  }
   return { ok: true, confirm: true };
 }
 

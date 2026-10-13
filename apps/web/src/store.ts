@@ -565,6 +565,8 @@ let backend: Backend = "browser";
 let folderName = "";
 // The folder itself, which the display name is free to differ from.
 let folderId = "";
+// When that folder was made: a deleted folder remade under the same name is a new set.
+let folderCreated = "";
 
 /**
  * Which hosted books are open, when the books are hosted.
@@ -973,11 +975,11 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
   // over plain http from localhost. Asked from a website it is never there,
   // and every opening logged a "not found" for it.
   if (location.protocol === "https:" && !/^(localhost|127\.0\.0\.1|\[::1\])$/.test(location.hostname)) return null;
-  let status: { writable?: boolean; name?: string; ledger?: string } | null = null;
+  let status: { writable?: boolean; name?: string; ledger?: string; created?: string } | null = null;
   try {
     const response = await api("status");
     if (!response.ok) return null;
-    status = (await response.json()) as { writable?: boolean; name?: string; ledger?: string };
+    status = (await response.json()) as { writable?: boolean; name?: string; ledger?: string; created?: string };
   } catch {
     return null;
   }
@@ -994,6 +996,7 @@ async function loadFromFolder(): Promise<StoredLedger | null> {
   backend = "folder";
   folderName = status.name ?? "";
   folderId = status.ledger ?? "";
+  folderCreated = status.created ?? "";
   return ledger;
 }
 
@@ -1387,6 +1390,11 @@ export function ledgerName(): string {
 /** Which folder, as opposed to what it is called. Empty when there is no folder. */
 export function ledgerId(): string {
   return folderId;
+}
+
+/** When the open folder was made, or empty when that is not known. */
+export function ledgerCreated(): string {
+  return folderCreated;
 }
 
 /** True when there is a folder behind the app rather than only a browser. */

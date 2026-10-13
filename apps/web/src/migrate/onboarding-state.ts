@@ -1,4 +1,4 @@
-import { backendKind, ledgerId, openCloudBookId } from "../store.js";
+import { backendKind, ledgerCreated, ledgerId, openCloudBookId } from "../store.js";
 import { state } from "../state.js";
 import type { BusinessStructure, EntityKind } from "@nzosa/core";
 import { taxYearStart } from "../tax-year.js";
@@ -76,6 +76,31 @@ export interface Onboarding {
 
 const KEY = "nzosa.onboarding";
 const SOURCE_KEY = "nzosa.migration.source.";
+const MADE_KEY = "nzosa.folder.made.";
+
+/**
+ * Answers belong to a folder, not to a name. Delete a folder and make another
+ * with the same name and it would otherwise pick up the old one's answers and
+ * open part-way through. The folder's creation time is kept beside the
+ * answers; when the folder in front of us was made at another time, they are
+ * of a folder that has gone and are dropped.
+ */
+function forgetAnswersOfAnotherFolder(): void {
+  const made = ledgerCreated();
+  if (made === "" || backendKind() !== "folder") return;
+  const key = MADE_KEY + booksKey();
+  const held = read(key);
+  if (held === made) return;
+  if (held !== null) {
+    try {
+      localStorage.removeItem(`${KEY}.${booksKey()}`);
+      localStorage.removeItem(SOURCE_KEY + booksKey());
+    } catch {
+      // Nothing to remove if storage is blocked.
+    }
+  }
+  write(key, made);
+}
 
 function read(key: string): string | null {
   try {
@@ -130,6 +155,7 @@ function booksAreEmpty(): boolean {
 }
 
 export function onboarding(): Onboarding {
+  forgetAnswersOfAnotherFolder();
   const own = parse(read(keyFor(booksKey())));
   if (own !== null) return own;
   // Answers kept before they were kept for each set of books. Books that hold
@@ -172,6 +198,7 @@ export function forgetOnboarding(): void {
 
 /** Where this set of books is coming from. Asked of each set, not of the person. */
 export function sourceForTheseBooks(): Source | undefined {
+  forgetAnswersOfAnotherFolder();
   const value = read(SOURCE_KEY + booksKey());
   return value === "xero" || value === "sheet" || value === "new" ? value : undefined;
 }

@@ -505,6 +505,16 @@ async function akahu(feed, path, search = "") {
   return body;
 }
 
+function madeAt(folder) {
+  const stamped = readMeta(folder).created;
+  if (stamped) return stamped;
+  try {
+    return statSync(folder).birthtime.toISOString();
+  } catch {
+    return "";
+  }
+}
+
 export function startServer({ port, ledgerRoot, ledgerId }) {
   const folderOf = (id) => join(ledgerRoot, id);
   let current = ledgerId;
@@ -588,6 +598,9 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           writable: true,
           ledger: current,
           name: readMeta(folderOf(current)).name || current,
+          // When this folder came to be, so answers kept in the browser for a
+          // folder of the same name that was deleted are not taken for its own.
+          created: madeAt(folderOf(current)),
           folder: folderOf(current),
           ledgers: listLedgers(ledgerRoot),
           parts: PARTS,

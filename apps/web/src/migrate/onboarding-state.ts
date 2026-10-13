@@ -91,7 +91,12 @@ function forgetAnswersOfAnotherFolder(): void {
   const key = MADE_KEY + booksKey();
   const held = read(key);
   if (held === made) return;
-  if (held !== null) {
+  // No stamp yet: answers from before folders were stamped. Taken as this
+  // folder's own, unless the folder is only minutes old -- nobody has been
+  // answering in a folder that new in an older version of the page, so they
+  // belong to a folder of the same name that was deleted.
+  const brandNew = held === null && Date.now() - Date.parse(made) < 30 * 60 * 1000;
+  if (held !== null || brandNew) {
     try {
       localStorage.removeItem(`${KEY}.${booksKey()}`);
       localStorage.removeItem(SOURCE_KEY + booksKey());

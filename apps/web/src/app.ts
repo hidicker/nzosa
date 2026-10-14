@@ -29,6 +29,7 @@ export type PageName =
   | "bills"
   | "books"
   | "check"
+  | "contacts"
   | "entities"
   | "entityFilter"
   | "feed"
@@ -175,6 +176,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "payroll") redraw("payroll");
   if (page === "tenancies") redraw("tenancies");
   if (page === "grants") redraw("grants");
+  if (page === "contacts") redraw("contacts");
   if (page === "ir9") redraw("ir9");
   if (page === "trustpeople") redraw("trustPeople");
   if (page === "ir6") redraw("ir6");

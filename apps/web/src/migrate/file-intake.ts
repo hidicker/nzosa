@@ -5,7 +5,7 @@ import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, re
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
-import { loadQuickBooksBankLines } from "./quickbooks.js";
+import { loadContactList, loadQuickBooksBankLines } from "./quickbooks.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
@@ -246,6 +246,10 @@ async function loadEach(
           await loadCheckFiles([file]);
           const lines = await loadQuickBooksBankLines(file);
           say(`${file.name} — ${identified.what}: ${lines}`);
+          continue;
+        }
+        case "contact-list": {
+          say(`${file.name} — ${await loadContactList(file)}`);
           continue;
         }
         case "chart":

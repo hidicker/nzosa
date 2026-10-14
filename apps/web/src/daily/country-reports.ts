@@ -11,6 +11,7 @@ import {
   contractorTotals,
   emptyEntityModel,
   estimatedTaxDates,
+  findContact,
   formSchedule,
   isRental,
   medicareLevy,
@@ -147,6 +148,9 @@ export function renderContractors(body: HTMLElement, year: number): void {
   title.textContent = `Contractors and 1099-NEC — ${year}`;
   body.append(title);
   const payments: ContractorPayment[] = [];
+  // A bill posts under its number and the supplier's name; the supplier is the
+  // payee, so that three bills to one contractor are one total.
+  const contactOf = new Map((state.ledger.invoices ?? []).map((i) => [i.number, i.contact]));
   for (const journal of postedJournals()) {
     if (!journal.date.startsWith(String(year))) continue;
     for (const line of journal.lines) {
@@ -155,7 +159,8 @@ export function renderContractors(body: HTMLElement, year: number): void {
       const code = line.accountCode.trim();
       const name = state.chart.find((one) => one.code.trim() === code)?.name ?? scheduleName(code);
       if (!/contract|subcontract|freelanc/.test(name.toLowerCase())) continue;
-      payments.push({ payee: journal.narration || "(no payee)", date: journal.date, amount: line.amount });
+      const billed = journal.source === "bill" ? contactOf.get(journal.transactionId) : undefined;
+      payments.push({ payee: billed ?? (journal.narration || "(no payee)"), date: journal.date, amount: line.amount });
     }
   }
   const totals = contractorTotals(payments, year);
@@ -165,7 +170,11 @@ export function renderContractors(body: HTMLElement, year: number): void {
   }
   const table = document.createElement("table");
   table.className = "report-table";
-  table.innerHTML = "<thead><tr><th>Payee</th><th>Payments</th><th>Total</th><th>1099-NEC</th></tr></thead>";
+  const records = state.ledger.contacts ?? [];
+  table.innerHTML =
+    "<thead><tr><th>Payee</th><th>Payments</th><th>Total</th><th>1099-NEC</th>" +
+    (records.length > 0 ? "<th>W-9</th>" : "") +
+    "</tr></thead>";
   const tbody = document.createElement("tbody");
   for (const one of totals) {
     const tr = document.createElement("tr");
@@ -174,6 +183,9 @@ export function renderContractors(body: HTMLElement, year: number): void {
       [String(one.payments), "report-amount"],
       [money(one.total), "report-amount"],
       [one.due ? "Due" : "Not due", "report-note"],
+      ...(records.length > 0
+        ? ([[findContact(records, one.payee)?.w9 === true ? "On file" : one.due ? "Missing" : "", "report-note"]] as const)
+        : []),
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;

@@ -56,6 +56,8 @@ export type EventKind =
   | "transferBatch"
   /** A transaction split into parts. `id` is the transaction. */
   | "split"
+  /** The customers and vendors, whole. */
+  | "contacts"
   /** One account in the chart. `id` is its code and name. */
   | "chart"
   /** Entities, their owners and their account assignments, whole. */
@@ -274,6 +276,8 @@ export function canReverse(
  */
 export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger {
   switch (event.kind) {
+    case "contacts":
+      return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
     case "manualJournal": {
       // The whole set, because a journal is only meaningful beside the others.
       return { ...ledger, manualJournals: (event.before ?? []) as ManualJournal[] };
@@ -537,6 +541,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   coding: "Coding",
   split: "Split",
   chart: "Chart of accounts",
+  contacts: "Customers and vendors",
   entities: "Entities",
   codingBatch: "Coding (batch)",
   transferBatch: "Transfers (batch)",

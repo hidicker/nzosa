@@ -5,6 +5,7 @@ import { detect } from "./importers/index.js";
 import { isGstReturnSummary } from "./gst-summary.js";
 import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
+import { isContactList } from "./contact-lists.js";
 
 /**
  * What kind of export a file is, worked out from its columns.
@@ -46,6 +47,7 @@ export type ExportKind =
   | "ird-export"
   | "quickbooks-chart"
   | "quickbooks-ledger"
+  | "contact-list"
   | "unknown";
 
 export interface Identified {
@@ -175,6 +177,10 @@ export function identifyExport(text: string): Identified {
   }
   if (isQuickBooksLedger(text)) {
     return { kind: "quickbooks-ledger", what: "QuickBooks general ledger" };
+  }
+  // A list of customers or vendors: names and details, and no dates or amounts.
+  if (isContactList(text)) {
+    return { kind: "contact-list", what: "customers or vendors" };
   }
   // Xero's list of its bank accounts, from the uncoded statement lines export.
   // Before the bank statements: its sections carry Date and Payee columns.

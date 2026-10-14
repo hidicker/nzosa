@@ -30,6 +30,7 @@ import {
   invoiceEmail,
   cleanDocumentLink,
   emailForContact,
+  findContact,
   isPosted,
   matchInvoices,
   nextInvoiceNumber,
@@ -253,6 +254,21 @@ export function renderInvoiceEditor(): void {
 
   const contact = text(draft.contact, asBill ? "Who sent the bill" : "Who it is to, or from");
   field(asBill ? "Supplier" : "Contact", contact);
+  // The customers or vendors on record, offered as the name is typed.
+  const known = (state.ledger.contacts ?? []).filter(
+    (c) => c.active !== false && (c.kind === "both" || c.kind === (asBill ? "vendor" : "customer")),
+  );
+  if (known.length > 0) {
+    const list = document.createElement("datalist");
+    list.id = "invoice-contacts";
+    for (const one of known) {
+      const option = document.createElement("option");
+      option.value = one.name;
+      list.append(option);
+    }
+    contact.setAttribute("list", list.id);
+    contact.after(list);
+  }
 
   // Where the "email" button sends it. Sales only: a bill's sender is not
   // somebody these books write to.
@@ -263,7 +279,10 @@ export function renderInvoiceEditor(): void {
   // empty box is filled: one typed by hand is a decision.
   contact.addEventListener("change", () => {
     if (asBill || email.value.trim() !== "") return;
-    const remembered = emailForContact(state.ledger.invoices ?? [], contact.value);
+    const remembered =
+      emailForContact(state.ledger.invoices ?? [], contact.value) ??
+      findContact(state.ledger.contacts ?? [], contact.value)?.email ??
+      null;
     if (remembered !== null) email.value = remembered;
   });
 
@@ -770,7 +789,10 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         );
         // An invoice raised before addresses were kept borrows its
         // customer's most recent one.
-        const known = emailForContact(state.ledger.invoices ?? [], invoice.contact);
+        const known =
+          emailForContact(state.ledger.invoices ?? [], invoice.contact) ??
+          findContact(state.ledger.contacts ?? [], invoice.contact)?.email ??
+          null;
         const message = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,

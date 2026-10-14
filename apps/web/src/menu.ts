@@ -140,6 +140,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   reconcile: "code coding categorise transactions review",
   import: "bank feed akahu csv statements balances upload",
   invoices: "sales customers receivables owed allocations",
+  contacts: "customers vendors suppliers clients address email phone w-9 w9 1099 contact list",
   tenancies: "rent tenants bond overdue arrears tenancy rental information",
   rentalyear: "rental year end property manager statements agent management fees rent mileage trips vehicle kilometre rates schedule ir3r",
   personalyear: "ir3 individual income tax return personal year end pack provisional tax pie kiwisaver interest dividends",

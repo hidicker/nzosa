@@ -4465,3 +4465,14 @@ select.needs-choice {
     bottom: auto;
   }
 }
+
+/* Customers & vendors */
+.contacts-controls { display: flex; gap: .6rem; flex-wrap: wrap; align-items: center; margin: 0 0 1rem; }
+.contacts-controls input[type="search"] { flex: 1 1 14rem; min-width: 0; }
+.contact-form { display: grid; gap: .6rem; grid-template-columns: repeat(auto-fit, minmax(14rem, 1fr)); padding: 1rem; margin: 0 0 1rem; border: 1px solid var(--border); border-radius: 8px; background: var(--surface); }
+.contact-field { display: grid; gap: .25rem; font-size: .9rem; }
+.contact-field input, .contact-field select, .contact-field textarea { width: 100%; box-sizing: border-box; }
+.contact-ticks { display: flex; gap: 1.2rem; flex-wrap: wrap; align-items: center; }
+.contact-form .cloud-said, .contact-form .migration-actions { grid-column: 1 / -1; }
+.contacts-table td:last-child { white-space: nowrap; }
+

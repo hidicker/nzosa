@@ -1,4 +1,4 @@
-import { mergeContacts, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { mergeContacts, parseContactList, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency } from "../country.js";
@@ -158,4 +158,25 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     (contactCount > 0 ? `, ${contactCount} customers and vendors` : "") +
     "."
   );
+}
+
+/**
+ * A list of customers or vendors, brought in as contact records.
+ *
+ * By name, adding to what is held: a record already there keeps what it has
+ * and takes the details the list adds. Whether it is a customer or a vendor
+ * comes from the list's own headings, then from its file name.
+ */
+export async function loadContactList(file: File): Promise<string> {
+  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+  const hint = /vendor|supplier/i.test(file.name) ? "vendor" : /customer|client/i.test(file.name) ? "customer" : null;
+  const read = parseContactList(text, hint);
+  if (read.contacts.length === 0) return "no customers or vendors found in it.";
+  const before = (state.ledger.contacts ?? []).length;
+  const merged = mergeContacts(state.ledger.contacts ?? [], read.contacts);
+  state.ledger = { ...state.ledger, contacts: merged };
+  state.persistent = await savePart(state.ledger);
+  const added = merged.length - before;
+  const word = read.kind === "vendor" ? "vendor" : read.kind === "customer" ? "customer" : "contact";
+  return `${read.contacts.length} ${word}${read.contacts.length === 1 ? "" : "s"}, ${added} new, ${read.contacts.length - added} already held and filled in.`;
 }

@@ -1,6 +1,7 @@
 import { entityId, writeQueue } from "@nzosa/core";
 import type {
   Item,
+  StockCount,
   TimeEntry,
   BankReconciliation,
   Contact,
@@ -220,6 +221,8 @@ export interface StoredLedger {
   classes?: { names: string[]; assigned: Record<string, string> };
   /** Time worked for customers, until it is invoiced. */
   timeEntries?: TimeEntry[];
+  /** Stock counted, and the journal each put the inventory account to. */
+  stockCounts?: StockCount[];
   /** What an individual's return needs that the books cannot know, by owner and year. */
   ir3Details?: Ir3Details[];
   /**
@@ -855,6 +858,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.budgets && Object.keys(ledger.budgets).length > 0 ? { budgets: ledger.budgets } : {}),
     ...(ledger.items && ledger.items.length > 0 ? { items: ledger.items } : {}),
     ...(ledger.timeEntries && ledger.timeEntries.length > 0 ? { timeEntries: ledger.timeEntries } : {}),
+    ...(ledger.stockCounts && ledger.stockCounts.length > 0 ? { stockCounts: ledger.stockCounts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),

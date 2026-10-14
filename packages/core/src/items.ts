@@ -15,6 +15,8 @@ export interface Item {
   /** The chart code a sale of it is coded to. */
   accountCode?: string;
   active?: boolean;
+  /** A product kept in stock: counted, and valued at this cost a unit, in cents. */
+  unitCost?: Cents;
 }
 
 export function itemKey(name: string): string {

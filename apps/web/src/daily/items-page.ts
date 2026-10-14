@@ -1,11 +1,11 @@
 import { redraw } from "../app.js";
-import { record } from "../books.js";
+import { postedJournals, record, saveManualJournals } from "../books.js";
 import { booksCurrency, booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
-import { itemKey, parseAmount } from "@nzosa/core";
-import type { Item } from "@nzosa/core";
+import { itemKey, parseAmount, stockAdjustment, stockValue } from "@nzosa/core";
+import type { Item, StockCount } from "@nzosa/core";
 
 /** Products and services: a price list that fills in an invoice line from a name. */
 
@@ -59,6 +59,11 @@ function form(existing: Item | null): HTMLElement {
   price.type = "text";
   price.inputMode = "decimal";
   price.value = existing?.price === undefined ? "" : (existing.price / 100).toFixed(2);
+  const cost = document.createElement("input");
+  cost.type = "text";
+  cost.inputMode = "decimal";
+  cost.placeholder = "Not kept in stock";
+  cost.value = existing?.unitCost === undefined ? "" : (existing.unitCost / 100).toFixed(2);
   const account = document.createElement("select");
   const none = document.createElement("option");
   none.value = "";
@@ -92,7 +97,13 @@ function form(existing: Item | null): HTMLElement {
       problem.textContent = "A price as a number, such as 49.50.";
       return;
     }
+    const unit = cost.value.trim() === "" ? null : parseAmount(cost.value, booksCurrency());
+    if (unit === null && cost.value.trim() !== "") {
+      problem.textContent = "A cost as a number, such as 4.50.";
+      return;
+    }
     const fields = {
+      ...(unit !== null && kind.value === "product" ? { unitCost: unit } : {}),
       name: said,
       kind: kind.value as Item["kind"],
       ...(description.value.trim() !== "" ? { description: description.value.trim() } : {}),
@@ -128,6 +139,7 @@ function form(existing: Item | null): HTMLElement {
     label("Line description", description),
     label("Usual price", price),
     label("Sale coded to", account),
+    label("Cost a unit, for products kept in stock", cost),
     problem,
     row,
   );
@@ -209,4 +221,190 @@ export function renderItems(): void {
   scroller.className = "table-scroll";
   scroller.append(table);
   body.append(scroller);
+  stockSection(body);
+}
+
+let counting = false;
+
+/** The inventory and cost of sales accounts a count is posted between. */
+function stockAccounts(): { inventory?: { code: string; name: string }; cost?: { code: string; name: string } } {
+  const inventory = state.chart.find((a) => /inventory|stock on hand/i.test(a.name) && !/expense|adjust/i.test(a.name) && /asset|inventory/i.test(a.type));
+  const cost =
+    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type) && /cost of (goods|sales)|purchases/i.test(a.name)) ??
+    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type));
+  return {
+    ...(inventory !== undefined ? { inventory: { code: inventory.code.trim(), name: inventory.name } } : {}),
+    ...(cost !== undefined ? { cost: { code: cost.code.trim(), name: cost.name } } : {}),
+  };
+}
+
+/** What the books hold in an account at the end of a day. */
+function bookedAt(code: string, date: string): number {
+  const opening = state.ledger.openingBalances;
+  let sum = opening !== undefined && opening.asAt <= date ? (opening.accounts[code] ?? 0) : 0;
+  for (const journal of postedJournals()) {
+    if (journal.date > date || (opening !== undefined && journal.date <= opening.asAt)) continue;
+    for (const line of journal.lines) if (line.accountCode.trim() === code) sum += line.amount;
+  }
+  return sum;
+}
+
+/**
+ * Stock: products kept in stock are counted at a date and valued at their
+ * unit cost, and the inventory account is put to that value.
+ */
+function stockSection(body: HTMLElement): void {
+  const stocked = held().filter((i) => i.kind === "product" && i.unitCost !== undefined && i.active !== false);
+  const title = document.createElement("h3");
+  title.textContent = "Stock";
+  body.append(title);
+  if (stocked.length === 0) {
+    body.append(note("Give a product a cost a unit to keep it in stock and count it here."));
+    return;
+  }
+  const counts = state.ledger.stockCounts ?? [];
+  const last = [...counts].sort((a, b) => a.date.localeCompare(b.date)).pop();
+  if (last !== undefined) {
+    body.append(note(`Last counted ${last.date}: ${booksMoney(stockValue(last))} on hand${last.journalId === undefined ? ", not posted" : ""}.`));
+  }
+  const start = document.createElement("button");
+  start.type = "button";
+  start.className = "primary";
+  start.textContent = "Count stock";
+  start.hidden = counting;
+  start.addEventListener("click", () => {
+    counting = true;
+    redraw("items");
+  });
+  body.append(start);
+  if (!counting) return;
+
+  const { inventory, cost } = stockAccounts();
+  const box = document.createElement("div");
+  box.className = "contact-form";
+  const date = document.createElement("input");
+  date.type = "date";
+  date.value = new Date().toLocaleDateString("en-CA");
+  const dateLabel = document.createElement("label");
+  dateLabel.className = "contact-field";
+  dateLabel.append(Object.assign(document.createElement("span"), { textContent: "Counted on" }), date);
+  box.append(dateLabel);
+  const table = document.createElement("table");
+  table.className = "report-table owner-table";
+  table.innerHTML = "<thead><tr><th>Product</th><th>Cost a unit</th><th>Counted</th><th>Value</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  const boxes: { item: Item; input: HTMLInputElement; value: HTMLTableCellElement }[] = [];
+  const before = new Map((last?.lines ?? []).map((l) => [l.itemId, l.quantity]));
+  for (const item of stocked) {
+    const tr = document.createElement("tr");
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = item.name;
+    const unit = document.createElement("td");
+    unit.className = "report-amount";
+    unit.textContent = booksMoney(item.unitCost ?? 0);
+    const cell = document.createElement("td");
+    const input = document.createElement("input");
+    input.type = "text";
+    input.inputMode = "decimal";
+    input.placeholder = String(before.get(item.id) ?? 0);
+    cell.append(input);
+    const value = document.createElement("td");
+    value.className = "report-amount";
+    tr.append(name, unit, cell, value);
+    tbody.append(tr);
+    boxes.push({ item, input, value });
+  }
+  table.append(tbody);
+  box.append(table);
+  const said = document.createElement("p");
+  said.className = "page-hint";
+  box.append(said);
+  const problem = document.createElement("p");
+  problem.className = "cloud-said";
+  box.append(problem);
+
+  const lines = (): StockCount["lines"] | null => {
+    const out: StockCount["lines"] = [];
+    for (const { item, input } of boxes) {
+      const text = input.value.trim() === "" ? input.placeholder : input.value.trim();
+      const quantity = Number(text.replace(",", "."));
+      if (!Number.isFinite(quantity) || quantity < 0) return null;
+      out.push({ itemId: item.id, quantity, unitCost: item.unitCost ?? 0 });
+    }
+    return out;
+  };
+  const refresh = (): void => {
+    const read = lines();
+    for (const { item, input, value } of boxes) {
+      const q = Number((input.value.trim() === "" ? input.placeholder : input.value).replace(",", "."));
+      value.textContent = Number.isFinite(q) ? booksMoney(Math.round(q * (item.unitCost ?? 0))) : "";
+    }
+    if (read === null) {
+      said.textContent = "";
+      return;
+    }
+    const counted = stockValue({ lines: read });
+    said.textContent =
+      inventory === undefined
+        ? `Counted ${booksMoney(counted)}.`
+        : `Counted ${booksMoney(counted)}. ${inventory.code} ${inventory.name} holds ${booksMoney(bookedAt(inventory.code, date.value))} on that day.`;
+  };
+  for (const { input } of boxes) input.addEventListener("input", refresh);
+  date.addEventListener("change", refresh);
+  refresh();
+
+  const post = document.createElement("button");
+  post.type = "button";
+  post.className = "primary";
+  post.textContent = "Save the count and post it";
+  post.title = "Put the inventory account to the counted value, the difference to cost of goods sold.";
+  post.addEventListener("click", () => {
+    const read = lines();
+    if (read === null) {
+      problem.textContent = "Each count as a number, such as 12.";
+      return;
+    }
+    if (inventory === undefined || cost === undefined) {
+      problem.textContent =
+        "Add an Inventory asset account and a cost of goods sold account on Entities & accounts first.";
+      return;
+    }
+    void (async () => {
+      const count: StockCount = { id: `count-${Date.now().toString(36)}`, date: date.value, lines: read };
+      const counted = stockValue(count);
+      const booked = bookedAt(inventory.code, date.value);
+      const adjust = stockAdjustment(counted, booked, `${inventory.name} - ${inventory.code}`, `${cost.name} - ${cost.code}`);
+      if (adjust.length > 0) {
+        const journal = {
+          id: `stock-${count.id}`,
+          date: count.date,
+          narration: `Stock count ${count.date}: ${booksMoney(counted)} on hand`,
+          lines: adjust,
+          source: "Stock count",
+        };
+        await saveManualJournals([...(state.ledger.manualJournals ?? []), journal], `Stock count ${count.date}`);
+        count.journalId = journal.id;
+      }
+      const before = state.ledger.stockCounts ?? [];
+      const next = [...before, count];
+      state.ledger = { ...state.ledger, stockCounts: next };
+      state.persistent = await savePart(state.ledger);
+      await record("stock", `Stock counted ${count.date}: ${booksMoney(counted)}`, before, next);
+      counting = false;
+      redraw("items");
+    })();
+  });
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  cancel.addEventListener("click", () => {
+    counting = false;
+    redraw("items");
+  });
+  const row = document.createElement("div");
+  row.className = "migration-actions";
+  row.append(post, cancel);
+  box.append(problem, row);
+  body.append(box);
 }

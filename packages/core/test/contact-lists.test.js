@@ -81,3 +81,15 @@ test("an estimate is a document that is not in the books until it is made an inv
   assert.equal(isPosted({ ...base, status: "Awaiting Payment" }), true);
   assert.equal(isEstimate({ ...base, status: "Draft" }), false);
 });
+
+import { findItem } from "../dist/index.js";
+
+test("an item is found by its name, not case or spacing, unless it is inactive", () => {
+  const items = [
+    { id: "1", name: "Logo design", kind: "service", price: 125000 },
+    { id: "2", name: "Old thing", kind: "product", active: false },
+  ];
+  assert.equal(findItem(items, "  logo   DESIGN ").id, "1");
+  assert.equal(findItem(items, "old thing"), undefined);
+  assert.equal(findItem(items, ""), undefined);
+});

@@ -64,6 +64,7 @@ export type PageName =
   | "setupProgress"
   | "statements"
   | "budgets"
+  | "items"
   | "variance";
 
 export type Pages = Record<PageName, () => void>;
@@ -181,6 +182,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "contacts") redraw("contacts");
   if (page === "statements") redraw("statements");
   if (page === "budgets") redraw("budgets");
+  if (page === "items") redraw("items");
   if (page === "ir9") redraw("ir9");
   if (page === "trustpeople") redraw("trustPeople");
   if (page === "ir6") redraw("ir6");

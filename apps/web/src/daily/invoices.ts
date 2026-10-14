@@ -31,6 +31,7 @@ import {
   cleanDocumentLink,
   emailForContact,
   findContact,
+  findItem,
   isPosted,
   isEstimate,
   matchInvoices,
@@ -425,6 +426,19 @@ export function renderInvoiceEditor(): void {
 
     const description = text(line.description, "What it is for");
     description.className = "line-description";
+    // The products and services on record, offered as the line is written.
+    if (!asBill && (state.ledger.items ?? []).length > 0) {
+      const list = document.createElement("datalist");
+      list.id = "invoice-items";
+      for (const one of state.ledger.items ?? []) {
+        if (one.active === false) continue;
+        const option = document.createElement("option");
+        option.value = one.name;
+        list.append(option);
+      }
+      description.setAttribute("list", list.id);
+      row.append(list);
+    }
 
     const account = combobox(
       accounts,
@@ -469,6 +483,24 @@ export function renderInvoiceEditor(): void {
     tax.hidden = noSalesTax();
     row.append(description, account.element, tax, gross, drop);
     lineHost.append(row);
+    // A name that is an item's fills in what is still empty: its account, its
+    // price, and the words the line should say.
+    description.addEventListener("change", () => {
+      const found = findItem(state.ledger.items ?? [], description.value);
+      if (found === undefined) return;
+      const box = account.element.querySelector("input");
+      if (found.accountCode !== undefined && box !== null && box.value.trim() === "") {
+        box.value = accountLabelFor(found.accountCode);
+        box.dispatchEvent(new Event("input", { bubbles: true }));
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+      if (found.price !== undefined && parseMoney(gross.value) === 0) {
+        gross.value = (found.price / 100).toFixed(2);
+        gross.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (found.description !== undefined) description.value = found.description;
+      refreshTotals();
+    });
     for (const control of [description, tax, gross]) {
       control.addEventListener("input", refreshTotals);
       control.addEventListener("change", refreshTotals);

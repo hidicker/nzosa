@@ -1,5 +1,5 @@
 import { redraw } from "../app.js";
-import { postedJournals, record, saveManualJournals } from "../books.js";
+import { postedJournals, record, saveManualJournals, stockAccounts, stockTracked } from "../books.js";
 import { booksCurrency, booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
@@ -226,18 +226,6 @@ export function renderItems(): void {
 
 let counting = false;
 
-/** The inventory and cost of sales accounts a count is posted between. */
-function stockAccounts(): { inventory?: { code: string; name: string }; cost?: { code: string; name: string } } {
-  const inventory = state.chart.find((a) => /inventory|stock on hand/i.test(a.name) && !/expense|adjust/i.test(a.name) && /asset|inventory/i.test(a.type));
-  const cost =
-    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type) && /cost of (goods|sales)|purchases/i.test(a.name)) ??
-    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type));
-  return {
-    ...(inventory !== undefined ? { inventory: { code: inventory.code.trim(), name: inventory.name } } : {}),
-    ...(cost !== undefined ? { cost: { code: cost.code.trim(), name: cost.name } } : {}),
-  };
-}
-
 /** What the books hold in an account at the end of a day. */
 function bookedAt(code: string, date: string): number {
   const opening = state.ledger.openingBalances;
@@ -261,6 +249,51 @@ function stockSection(body: HTMLElement): void {
   if (stocked.length === 0) {
     body.append(note("Give a product a cost a unit to keep it in stock and count it here."));
     return;
+  }
+  // What is on hand now, from the bills, invoices and counts.
+  const tracked = stockTracked();
+  if (tracked !== null) {
+    const table = document.createElement("table");
+    table.className = "report-table owner-table";
+    table.innerHTML = "<thead><tr><th>Product</th><th>On hand</th><th>Average cost</th><th>Value</th></tr></thead>";
+    const tbody = document.createElement("tbody");
+    let total = 0;
+    for (const item of stocked) {
+      const held = tracked.onHand.get(item.id) ?? { quantity: 0, value: 0 };
+      total += held.value;
+      const tr = document.createElement("tr");
+      for (const [text, cls] of [
+        [item.name, "report-name"],
+        [String(Math.round(held.quantity * 100) / 100), "report-amount"],
+        [held.quantity > 0 ? booksMoney(Math.round(held.value / held.quantity)) : booksMoney(item.unitCost ?? 0), "report-amount"],
+        [booksMoney(held.value), "report-amount"],
+      ] as const) {
+        const td = document.createElement("td");
+        td.className = cls;
+        td.textContent = text;
+        tr.append(td);
+      }
+      tbody.append(tr);
+    }
+    const foot = document.createElement("tr");
+    foot.className = "report-total";
+    foot.innerHTML = '<td class="report-name">Total</td><td></td><td></td>';
+    const sum = document.createElement("td");
+    sum.className = "report-amount";
+    sum.textContent = booksMoney(total);
+    foot.append(sum);
+    tbody.append(foot);
+    table.append(tbody);
+    body.append(table);
+    const { inventory, cost } = stockAccounts();
+    body.append(
+      note(
+        inventory === undefined || cost === undefined
+          ? "Add an Inventory asset account and a cost of goods sold account to post the cost of what is sold."
+          : `Bought on a bill line with the product's name: into ${inventory.code} ${inventory.name}. ` +
+              `Sold on an invoice line: its cost moves to ${cost.code} ${cost.name} on the invoice's date, at the average cost.`,
+      ),
+    );
   }
   const counts = state.ledger.stockCounts ?? [];
   const last = [...counts].sort((a, b) => a.date.localeCompare(b.date)).pop();

@@ -1870,6 +1870,10 @@ main:has(#page-check:not([hidden])) { max-width: none; }
   align-items: center;
 }
 
+/* No sales tax: no treatment column. A product kept in stock: a quantity beside its name. */
+.invoice-line:has(> .line-tax[hidden]) { grid-template-columns: minmax(10rem, 2fr) minmax(11rem, 1.4fr) 7rem 2rem; }
+.invoice-line:has(> .line-qty:not([hidden])) { grid-template-columns: minmax(10rem, 2fr) 4.5rem minmax(11rem, 1.4fr) 9rem 7rem 2rem; }
+.invoice-line:has(> .line-qty:not([hidden])):has(> .line-tax[hidden]) { grid-template-columns: minmax(10rem, 2fr) 4.5rem minmax(11rem, 1.4fr) 7rem 2rem; }
 .invoice-line .combo { min-width: 0; max-width: none; }
 .invoice-line input, .invoice-line select { width: 100%; font-size: 0.85rem; }
 .invoice-amount { text-align: right; font-variant-numeric: tabular-nums; }

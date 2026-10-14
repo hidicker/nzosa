@@ -22,6 +22,12 @@ export interface Combobox {
    * next one without being rebuilt and losing focus.
    */
   clear(): void;
+  /**
+   * Choose an option from code, as if it had been picked: for a box filled in
+   * from something else -- a product's account, a vendor's usual one. Setting
+   * the input's text does not choose it. False when it is not an option.
+   */
+  choose(option: string): boolean;
 }
 
 /**
@@ -227,6 +233,11 @@ export function combobox(
       input.value = "";
       close();
       onChange();
+    },
+    choose(option: string) {
+      if (!options.includes(option)) return false;
+      pick(option);
+      return true;
     },
   };
 }

@@ -11,6 +11,7 @@ import {
   invoicesInPlay,
   proposalOpen,
   proposalState,
+  stockAccounts,
 } from "../books.js";
 import { combobox } from "../combobox.js";
 import { renderRecurring } from "./recurring.js";
@@ -46,6 +47,7 @@ import type {
   InvoiceKind,
   InvoiceLine,
   InvoiceSupplier,
+  Item,
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
@@ -283,12 +285,9 @@ export function renderInvoiceEditor(): void {
     // A vendor's usual account, on a first line that has none yet.
     if (asBill) {
       const usual = findContact(state.ledger.contacts ?? [], contact.value)?.defaultAccount;
-      const box = lineHost.querySelector<HTMLInputElement>(".invoice-line .combo-input");
-      if (usual !== undefined && box !== null && box.value.trim() === "") {
-        box.value = accountLabelFor(usual);
-        box.dispatchEvent(new Event("input", { bubbles: true }));
-        box.dispatchEvent(new Event("change", { bubbles: true }));
-      }
+      const first = lineHost.querySelector<HTMLElement>(".invoice-line");
+      const picker = first === null ? undefined : lineAccounts.get(first);
+      if (usual !== undefined && picker !== undefined && picker.value === "") picker.choose(accountLabelFor(usual));
     }
     if (asBill || email.value.trim() !== "") return;
     const remembered =
@@ -402,6 +401,13 @@ export function renderInvoiceEditor(): void {
   const accounts = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const lineAccounts = new Map<HTMLElement, Combobox>();
 
+  // Products kept in stock, whose lines carry a quantity. None in New
+  // Zealand's books, which keep no products page.
+  const stockedItems: Item[] =
+    booksCountry().id === "nz"
+      ? []
+      : (state.ledger.items ?? []).filter((i) => i.kind === "product" && i.unitCost !== undefined && i.active !== false);
+
   function readLines(): InvoiceLine[] {
     return [...lineHost.querySelectorAll<HTMLElement>(".invoice-line")].map((row) => {
       const description = row.querySelector<HTMLInputElement>(".line-description")?.value ?? "";
@@ -416,7 +422,13 @@ export function renderInvoiceEditor(): void {
       // rather than added on -- the same 3/23 the returns use.
       const rate = rateOf(taxType);
       const tax = rate === 15 ? gstContent(gross) : 0;
-      return { description, accountCode: code, taxType, net: gross - tax, tax, gross };
+      // A stocked product's line says which, and how many.
+      const item = row.dataset["item"];
+      const quantity = Number(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
+      return {
+        description, accountCode: code, taxType, net: gross - tax, tax, gross,
+        ...(item !== undefined ? { itemCode: item, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1 } : {}),
+      };
     });
   }
 
@@ -436,11 +448,12 @@ export function renderInvoiceEditor(): void {
 
     const description = text(line.description, "What it is for");
     description.className = "line-description";
-    // The products and services on record, offered as the line is written.
-    if (!asBill && (state.ledger.items ?? []).length > 0) {
+    // The products and services on record, offered as the line is written;
+    // on a bill, the products kept in stock.
+    if ((!asBill || stockedItems.length > 0) && (state.ledger.items ?? []).length > 0) {
       const list = document.createElement("datalist");
       list.id = "invoice-items";
-      for (const one of state.ledger.items ?? []) {
+      for (const one of asBill ? stockedItems : (state.ledger.items ?? [])) {
         if (one.active === false) continue;
         const option = document.createElement("option");
         option.value = one.name;
@@ -489,22 +502,57 @@ export function renderInvoiceEditor(): void {
       refreshTotals();
     });
 
+    // How many, for a product kept in stock: shown only on such a line.
+    const qty = document.createElement("input");
+    qty.type = "text";
+    qty.inputMode = "decimal";
+    qty.className = "line-qty invoice-amount";
+    qty.title = "How many";
+    qty.placeholder = "Qty";
+    qty.hidden = true;
+    const stockedLine = (item: Item | undefined, quantity: number): void => {
+      if (item === undefined) {
+        delete row.dataset["item"];
+        qty.hidden = true;
+        return;
+      }
+      row.dataset["item"] = item.id;
+      qty.hidden = false;
+      qty.value = String(quantity);
+    };
+    const already = stockedItems.find((i) => i.id === line.itemCode || i.name === line.itemCode);
+    if (already !== undefined) stockedLine(already, line.quantity ?? 1);
+    // The unit a quantity is multiplied by: the price on an invoice, the cost on a bill.
+    const unitOf = (item: Item): number | undefined => (asBill ? item.unitCost : item.price);
+    qty.addEventListener("input", () => {
+      const item = stockedItems.find((i) => i.id === row.dataset["item"]);
+      const unit = item === undefined ? undefined : unitOf(item);
+      const n = Number(qty.value.replace(",", "."));
+      if (unit !== undefined && Number.isFinite(n) && n > 0) gross.value = ((Math.round(unit * n)) / 100).toFixed(2);
+      refreshTotals();
+    });
+
     // Where there is no sales tax there is no treatment to choose.
     tax.hidden = noSalesTax();
-    row.append(description, account.element, tax, gross, drop);
+    row.append(description, qty, account.element, tax, gross, drop);
     lineHost.append(row);
     // A name that is an item's fills in what is still empty: its account, its
     // price, and the words the line should say.
     description.addEventListener("change", () => {
       const found = findItem(state.ledger.items ?? [], description.value);
-      if (found === undefined) return;
-      const box = account.element.querySelector("input");
-      if (found.accountCode !== undefined && box !== null && box.value.trim() === "") {
-        box.value = accountLabelFor(found.accountCode);
-        box.dispatchEvent(new Event("input", { bubbles: true }));
-        box.dispatchEvent(new Event("change", { bubbles: true }));
+      const stocked = found === undefined ? undefined : stockedItems.find((i) => i.id === found.id);
+      if (found === undefined || stocked !== undefined || row.dataset["item"] !== undefined) {
+        stockedLine(stocked, 1);
       }
-      if (found.price !== undefined && parseMoney(gross.value) === 0) {
+      if (found === undefined) return;
+      // A stocked product bought goes into the inventory account.
+      const into = asBill ? (stocked !== undefined ? stockAccounts().inventory?.code : undefined) : found.accountCode;
+      if (asBill && stocked !== undefined && stocked.unitCost !== undefined && parseMoney(gross.value) === 0) {
+        gross.value = (stocked.unitCost / 100).toFixed(2);
+        gross.dispatchEvent(new Event("input", { bubbles: true }));
+      }
+      if (into !== undefined && account.value === "") account.choose(accountLabelFor(into));
+      if (!asBill && found.price !== undefined && parseMoney(gross.value) === 0) {
         gross.value = (found.price / 100).toFixed(2);
         gross.dispatchEvent(new Event("input", { bubbles: true }));
       }

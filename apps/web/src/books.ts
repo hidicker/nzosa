@@ -63,6 +63,8 @@ import {
   uncodedParts,
   documentsInPlay,
   isPosted,
+  isCreditNote as isCreditDocument,
+  trackStock,
   outsidePurchases,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
@@ -1940,6 +1942,64 @@ export function agentStatementJournals(): ManualJournal[] {
     .map((statement) => agentStatementJournal(statement));
 }
 
+/** The inventory and cost of sales accounts stock is posted between, where the chart has them. */
+export function stockAccounts(): { inventory?: { code: string; name: string }; cost?: { code: string; name: string } } {
+  const inventory = state.chart.find(
+    (a) => /inventory|stock on hand/i.test(a.name) && !/expense|adjust/i.test(a.name) && /asset|inventory/i.test(a.type),
+  );
+  const cost =
+    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type) && /cost of (goods|sales)|purchases/i.test(a.name)) ??
+    state.chart.find((a) => /direct cost|cost of (goods|sales)/i.test(a.type));
+  return {
+    ...(inventory !== undefined ? { inventory: { code: inventory.code.trim(), name: inventory.name } } : {}),
+    ...(cost !== undefined ? { cost: { code: cost.code.trim(), name: cost.name } } : {}),
+  };
+}
+
+/** Each stocked product's invoices and bills, as the stock tracking reads them. */
+export function stockTracked(): ReturnType<typeof trackStock> | null {
+  // Not in New Zealand's books, which keep no products page.
+  if (booksCountry().id === "nz") return null;
+  const items = state.ledger.items ?? [];
+  if (!items.some((i) => i.kind === "product" && i.unitCost !== undefined)) return null;
+  const documents = invoicesInPlay()
+    .filter(isPosted)
+    .map((i) => ({
+      number: i.number,
+      kind: i.kind,
+      issued: i.issued,
+      credit: isCreditDocument(i),
+      lines: i.lines.map((l) => ({
+        ...(l.itemCode !== undefined ? { itemCode: l.itemCode } : {}),
+        ...(l.quantity !== undefined ? { quantity: l.quantity } : {}),
+        net: l.net,
+        description: l.description,
+      })),
+    }));
+  return trackStock(items, documents, state.ledger.stockCounts ?? []);
+}
+
+/**
+ * The cost of stocked products sold, from inventory to cost of goods sold, on
+ * each invoice's date. Derived each time, as depreciation is.
+ */
+function stockCostJournals(): PostedJournal[] {
+  const tracked = stockTracked();
+  const { inventory, cost } = stockAccounts();
+  if (tracked === null || inventory === undefined || cost === undefined) return [];
+  return tracked.costs.map((c) => ({
+    transactionId: c.transactionId,
+    date: c.date as IsoDate,
+    narration: `Cost of stock sold on ${c.number}`,
+    lines: [
+      { accountCode: cost.code, accountName: cost.name, amount: c.cost, taxType: "NONE", description: `Stock sold, ${c.number}` },
+      { accountCode: inventory.code, accountName: inventory.name, amount: -c.cost, taxType: "NONE", description: `Stock sold, ${c.number}` },
+    ],
+    source: "adjustment",
+    taxBasis: "both",
+  }));
+}
+
 export function postedJournals(): PostedJournal[] {
   // Composition is in core, where the three rules that go expensively wrong --
   // a settled invoice not counting as a fresh sale, a transfer posting once
@@ -1985,6 +2045,7 @@ export function postedJournals(): PostedJournal[] {
       ...depreciationJournals(),
       ...disposalJournals({ resolveAccount }),
       ...payrollJournals(),
+      ...stockCostJournals(),
     ],
   });
   // The year-end adjustments come last, because they are worked out from

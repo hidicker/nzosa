@@ -15,11 +15,12 @@ export const UNCLASSIFIED = "Unclassified";
 
 /**
  * The source a posted journal is classed by: the bank line, invoice, or manual
- * journal it came from. An invoice's payment is classed with the invoice.
+ * journal it came from. An invoice's payment, and the cost of the stock it
+ * sold, are classed with the invoice.
  */
 export function classSource(journal: Pick<PostedJournal, "transactionId">): string {
   const id = journal.transactionId;
-  const paid = /^(.*):paid:\d+$/.exec(id);
+  const paid = /^(.*):(?:paid:\d+|cost)$/.exec(id);
   return paid !== null && paid[1] !== undefined ? paid[1] : id;
 }
 

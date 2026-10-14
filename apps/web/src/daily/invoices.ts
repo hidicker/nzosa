@@ -47,7 +47,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
-import { booksCurrency, booksMoney } from "../country.js";
+import { booksCurrency, booksMoney, documentOptions } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -762,7 +762,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier),
+          invoiceDocument(invoice, supplier, documentOptions()),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -783,7 +783,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier),
+          invoiceDocument(invoice, supplier, documentOptions()),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -796,6 +796,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         const message = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
+          documentOptions(),
         );
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +

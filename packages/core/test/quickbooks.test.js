@@ -164,3 +164,23 @@ test("a whole ledger comes back as bank lines, a transfer, documents and the jou
   assert.equal(books.transfers.length, 1);
   assert.equal(books.reference.some((r) => r.code === "Savings" || r.code === "Checking"), false);
 });
+
+import { invoiceDocument, invoiceEmail } from "../dist/index.js";
+
+test("an invoice document for books with no sales tax has no GST column and writes dates month first", () => {
+  const invoice = {
+    number: "1001", kind: "sales", contact: "Acme", reference: "", issued: "2026-03-04", due: "2026-04-03",
+    total: 15000, tax: 0, paid: 0, outstanding: 15000, currency: "USD", status: "Authorised",
+    lines: [{ description: "Work", accountCode: "4000", taxType: "No GST", net: 15000, tax: 0, gross: 15000 }],
+  };
+  const supplier = { name: "Ellis Design" };
+  const nz = invoiceDocument(invoice, supplier);
+  assert.match(nz, />GST</);
+  assert.match(nz, /04\/03\/2026/);
+  const us = invoiceDocument(invoice, supplier, { noTax: true, dateStyle: "mdy", lang: "en-US" });
+  assert.doesNotMatch(us, />GST</);
+  assert.match(us, /03\/04\/2026/);
+  assert.match(us, /lang="en-US"/);
+  assert.match(us, /<h1>Invoice<\/h1>/);
+  assert.match(invoiceEmail(invoice, supplier, { noTax: true, dateStyle: "mdy" }).body, /Due: 04\/03\/2026/);
+});

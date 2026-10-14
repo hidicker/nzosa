@@ -39,6 +39,21 @@ export function noSalesTax(): boolean {
   return salesTaxFraction().num === 0;
 }
 
+/**
+ * What an invoice or bill document needs to know of the country: no tax
+ * column where there is no sales tax, and dates written the way its readers
+ * write them. Nothing for New Zealand, whose document is the default.
+ */
+export function documentOptions(): { noTax?: boolean; dateStyle?: "dmy" | "mdy" | "ymd"; lang?: string } {
+  const country = booksCountry();
+  if (country.id === "nz") return {};
+  return {
+    ...(noSalesTax() ? { noTax: true } : {}),
+    dateStyle: country.id === "us" ? "mdy" : country.id === "kr" ? "ymd" : "dmy",
+    lang: country.locale,
+  };
+}
+
 /** How numbers and dates are written: "en-NZ" for New Zealand. */
 export function booksLocale(): string {
   return booksCountry().locale;

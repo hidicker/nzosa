@@ -65,6 +65,15 @@ export interface InvoiceDocumentOptions {
   title?: string;
   /** Anything the sender wants at the foot: terms, a thank you, a reference. */
   note?: string;
+  /**
+   * Where there is no sales tax: no GST column, no subtotal and tax rows, and
+   * the plain title. Left off, the document is a New Zealand tax invoice.
+   */
+  noTax?: boolean;
+  /** How dates are written: day first (the default), month first, or year first. */
+  dateStyle?: "dmy" | "mdy" | "ymd";
+  /** The document's language tag, for readers and print dialogues; en-NZ by default. */
+  lang?: string;
 }
 
 function escapeHtml(value: string): string {
@@ -85,20 +94,23 @@ function asLines(value: string): string {
     .join("<br>");
 }
 
-/** A date as a New Zealander writes it. */
-function nzDate(iso: string): string {
+/** A date as the reader writes it: a New Zealander's day first unless said. */
+function written(iso: string, style: "dmy" | "mdy" | "ymd" = "dmy"): string {
   const [year, month, day] = iso.split("-");
-  return year && month && day ? `${day}/${month}/${year}` : iso;
+  if (!(year && month && day)) return iso;
+  if (style === "mdy") return `${month}/${day}/${year}`;
+  if (style === "ymd") return `${year}/${month}/${day}`;
+  return `${day}/${month}/${year}`;
 }
 
-function lineRow(line: InvoiceLine): string {
+function lineRow(line: InvoiceLine, noTax = false): string {
   const quantity = line.quantity === undefined ? "" : String(line.quantity);
   return (
     "<tr>" +
     `<td>${escapeHtml(line.description)}</td>` +
     `<td class="n">${escapeHtml(quantity)}</td>` +
     `<td class="n">${formatAmount(line.net)}</td>` +
-    `<td class="n">${formatAmount(line.tax)}</td>` +
+    (noTax ? "" : `<td class="n">${formatAmount(line.tax)}</td>`) +
     `<td class="n">${formatAmount(line.gross)}</td>` +
     "</tr>"
   );
@@ -157,9 +169,13 @@ export function invoiceDocument(
   supplier: InvoiceSupplier,
   options: InvoiceDocumentOptions = {},
 ): string {
-  const gstNumber = (supplier.gstNumber ?? "").trim();
+  const noTax = options.noTax === true;
+  const nzDate = (iso: string): string => written(iso, options.dateStyle);
+  const gstNumber = noTax ? "" : (supplier.gstNumber ?? "").trim();
   const registered = gstNumber !== "";
-  const title = options.title ?? (registered || invoice.tax !== 0 ? "Tax invoice" : "Invoice");
+  const title = options.title ?? (!noTax && (registered || invoice.tax !== 0) ? "Tax invoice" : "Invoice");
+  // Columns before the total: description, quantity, amount, and GST where there is any.
+  const span = noTax ? 3 : 4;
   const logo = cleanLogo(supplier.logo);
 
   const net = invoice.lines.reduce((sum: Cents, line) => sum + line.net, 0);
@@ -170,13 +186,13 @@ export function invoiceDocument(
     value === "" ? "" : `<div><span class="k">${label}</span>${value}</div>`;
 
   const totals = invoice.paid !== 0
-    ? `<tr><td colspan="4" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
-      <tr><td colspan="4" class="n">Already paid</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
-      <tr class="due"><td colspan="4" class="n">Amount due</td><td class="n">${formatAmount(invoice.outstanding)}</td></tr>`
-    : `<tr class="due"><td colspan="4" class="n">Total due</td><td class="n">${formatAmount(invoice.total)}</td></tr>`;
+    ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
+      <tr><td colspan="${span}" class="n">Already paid</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
+      <tr class="due"><td colspan="${span}" class="n">Amount due</td><td class="n">${formatAmount(invoice.outstanding)}</td></tr>`
+    : `<tr class="due"><td colspan="${span}" class="n">Total due</td><td class="n">${formatAmount(invoice.total)}</td></tr>`;
 
   return `<!doctype html>
-<html lang="en-NZ">
+<html lang="${escapeHtml(options.lang ?? "en-NZ")}">
 <head>
 <meta charset="utf-8">
 <title>${escapeHtml(title)} ${escapeHtml(invoice.number)}</title>
@@ -208,16 +224,20 @@ export function invoiceDocument(
     <thead>
       <tr>
         <th>Description</th><th class="n">Qty</th>
-        <th class="n">Amount</th><th class="n">GST</th>
+        <th class="n">Amount</th>${noTax ? "" : '<th class="n">GST</th>'}
         <th class="n">Total ${escapeHtml(invoice.currency)}</th>
       </tr>
     </thead>
     <tbody>
-      ${invoice.lines.map(lineRow).join("\n      ")}
+      ${invoice.lines.map((line) => lineRow(line, noTax)).join("\n      ")}
     </tbody>
     <tfoot>
-      <tr><td colspan="4" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
-      <tr><td colspan="4" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>
+      ${
+        noTax
+          ? ""
+          : `<tr><td colspan="4" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
+      <tr><td colspan="4" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
+      }
       ${totals}
     </tfoot>
   </table>
@@ -248,8 +268,8 @@ export function invoiceEmail(
   supplier: InvoiceSupplier,
   options: InvoiceDocumentOptions = {},
 ): { to: string; subject: string; body: string } {
-  const registered = (supplier.gstNumber ?? "").trim() !== "";
-  const title = options.title ?? (registered || invoice.tax !== 0 ? "Tax invoice" : "Invoice");
+  const registered = options.noTax !== true && (supplier.gstNumber ?? "").trim() !== "";
+  const title = options.title ?? (registered || (options.noTax !== true && invoice.tax !== 0) ? "Tax invoice" : "Invoice");
   const number = invoice.number.trim();
   const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
 
@@ -260,7 +280,7 @@ export function invoiceEmail(
     "",
     `Amount due: ${formatAmount(owing)}`,
   ];
-  if (invoice.due !== null) lines.push(`Due: ${nzDate(invoice.due)}`);
+  if (invoice.due !== null) lines.push(`Due: ${written(invoice.due, options.dateStyle)}`);
   if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
   const payTo = (supplier.payTo ?? "").trim();
   if (payTo !== "") lines.push("", `Payment details: ${payTo}`);

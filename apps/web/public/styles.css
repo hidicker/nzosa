@@ -4280,24 +4280,112 @@ select.needs-choice {
 .tut-books {
   display: grid;
   gap: 8px;
+  padding: 14px;
+  margin-bottom: 8px;
+  border-radius: 12px;
+  background: var(--bg);
+  border: 1px solid var(--border);
 }
-.tut-book {
+.tut-books-summary {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  cursor: pointer;
+  list-style: none;
+}
+.tut-books-summary::-webkit-details-marker {
+  display: none;
+}
+.tut-books-said {
   display: grid;
   gap: 2px;
+}
+.tut-books-label {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tut-books-change {
+  flex: none;
+  padding: 4px 12px;
+  border-radius: 999px;
+  border: 1px solid var(--border);
+  background: var(--surface);
+  font-size: 0.88rem;
+  font-weight: 600;
+}
+.tut-books[open] .tut-books-change {
+  visibility: hidden;
+}
+.tut-books-hint {
+  margin: 4px 0 0;
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.tut-book-list {
+  display: grid;
+  gap: 6px;
+}
+.tut-book {
+  display: flex;
+  align-items: center;
+  gap: 10px;
   text-align: left;
-  padding: 10px 12px;
+  padding: 9px 12px;
   border: 1px solid var(--border);
   border-radius: 10px;
   background: var(--surface);
   color: var(--text);
 }
-.tut-book span {
+.tut-book-text {
+  display: grid;
+  gap: 1px;
+  flex: 1;
+}
+.tut-book-text span {
   color: var(--muted);
-  font-size: 0.88rem;
+  font-size: 0.85rem;
+}
+.tut-book-mark {
+  flex: none;
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  border: 2px solid var(--muted);
 }
 .tut-book-on {
   border-color: var(--accent);
-  background: var(--accent-soft);
+  box-shadow: inset 0 0 0 1px var(--accent);
+}
+.tut-book-on .tut-book-mark {
+  border-color: var(--accent);
+  background: radial-gradient(circle, var(--accent) 0 4px, transparent 5px);
+}
+.tut-book-now {
+  flex: none;
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.tut-lessons-head {
+  display: flex;
+  align-items: baseline;
+  gap: 8px;
+  margin-top: 6px;
+  padding-top: 14px;
+  border-top: 1px solid var(--border);
+}
+.tut-lessons-head .tut-section-title {
+  font-size: 1.05rem;
+}
+.tut-lessons-for {
+  color: var(--muted);
+  font-size: 0.88rem;
 }
 .tut-ring {
   position: fixed;

@@ -92,21 +92,39 @@ function lessonCard(lesson: Lesson, held: Progress[string] | undefined, nextUp: 
 function booksChooser(): HTMLElement | null {
   const ready = DEMO_PERSONAS.filter((p) => p.ready === true);
   if (ready.length < 2) return null;
-  const wrap = el("section", "tut-books");
-  wrap.append(el("h3", "tut-section-title", "Which books would you like to look at?"));
   const current = currentDemoPersona();
+  const open = ready.find((p) => p.id === current) ?? ready[0];
+  // The set that is open, said plainly, with the others one press away: the
+  // choice of books is a different thing from the lessons below it.
+  const wrap = el("details", "tut-books");
+  const summary = el("summary", "tut-books-summary");
+  const said = el("span", "tut-books-said");
+  said.append(el("span", "tut-books-label", "Demo books"), el("strong", "", open?.label ?? ""));
+  summary.append(said, el("span", "tut-books-change", "Change"));
+  wrap.append(summary, el("p", "tut-books-hint", "Whose invented books to explore. Each set has lessons of its own."));
+  const list = el("div", "tut-book-list");
+  list.setAttribute("role", "radiogroup");
   for (const persona of ready) {
-    const choice = el("button", persona.id === current ? "tut-book tut-book-on" : "tut-book");
+    const on = persona.id === current;
+    const choice = el("button", on ? "tut-book tut-book-on" : "tut-book");
     choice.type = "button";
-    choice.append(el("strong", "", persona.label), el("span", "", persona.shows));
+    choice.setAttribute("role", "radio");
+    choice.setAttribute("aria-checked", on ? "true" : "false");
+    const text = el("span", "tut-book-text");
+    text.append(el("strong", "", persona.label), el("span", "", persona.shows));
+    choice.append(el("span", "tut-book-mark"), text);
+    if (on) choice.append(el("span", "tut-book-now", "Open now"));
     choice.addEventListener("click", () => {
-      if (persona.id === current) return;
+      if (on) return;
       closeTutorials();
       const busy = document.createElement("button");
-      void loadDemoData(busy, persona.id);
+      // Back to the lessons once the new books are in, or straight back if
+      // the change was called off: the panel is where the choice was made.
+      void loadDemoData(busy, persona.id).finally(() => openTutorials());
     });
-    wrap.append(choice);
+    list.append(choice);
   }
+  wrap.append(list);
   return wrap;
 }
 
@@ -142,6 +160,12 @@ export function openTutorials(): void {
   const held = progress();
   const books = currentDemoPersona();
   const lessons = LESSONS.filter((l) => l.books === undefined || l.books.includes(books));
+  if (chooser !== null) {
+    const label = DEMO_PERSONAS.find((p) => p.id === books)?.label ?? "";
+    const heading = el("div", "tut-lessons-head");
+    heading.append(el("h3", "tut-section-title", "Lessons"), el("span", "tut-lessons-for", `for ${label.charAt(0).toLowerCase()}${label.slice(1)}`));
+    body.append(heading);
+  }
   const nextUp = lessons.find((l) => held[l.id]?.status !== "done");
   for (const lesson of lessons) body.append(lessonCard(lesson, held[lesson.id], lesson === nextUp));
 

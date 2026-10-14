@@ -7207,6 +7207,32 @@
   {
    "id": "payroll-0278",
    "occurrence": 1,
+   "date": "2026-03-27",
+   "amount": -3840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courier bags",
+   "code": "",
+   "reference": "",
+   "otherParty": "NZ Post",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "02-0712-0067890-000",
+   "extras": {
+    "accountLabel": "Māpua Bakehouse Trading"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "payroll.csv",
+    "line": 278
+   }
+  },
+  {
+   "id": "payroll-0279",
+   "occurrence": 1,
    "date": "2026-03-28",
    "amount": -1200,
    "currency": "NZD",
@@ -7227,11 +7253,11 @@
    "source": {
     "importer": "invented",
     "file": "payroll.csv",
-    "line": 278
+    "line": 279
    }
   },
   {
-   "id": "payroll-0279",
+   "id": "payroll-0280",
    "occurrence": 1,
    "date": "2026-03-30",
    "amount": 737500,
@@ -7253,11 +7279,11 @@
    "source": {
     "importer": "invented",
     "file": "payroll.csv",
-    "line": 279
+    "line": 280
    }
   },
   {
-   "id": "payroll-0280",
+   "id": "payroll-0281",
    "occurrence": 1,
    "date": "2026-03-31",
    "amount": -199125,
@@ -7279,7 +7305,7 @@
    "source": {
     "importer": "invented",
     "file": "payroll.csv",
-    "line": 280
+    "line": 281
    }
   }
  ],
@@ -9484,7 +9510,7 @@
    "note": "Net pay",
    "at": "2026-03-25"
   },
-  "payroll-0278": {
+  "payroll-0279": {
    "confirmed": true,
    "code": "Bank fees - 404",
    "treatment": "exempt",
@@ -9492,7 +9518,7 @@
    "note": "Account fee",
    "at": "2026-03-28"
   },
-  "payroll-0279": {
+  "payroll-0280": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -9500,7 +9526,7 @@
    "note": "Week's EFTPOS takings",
    "at": "2026-03-30"
   },
-  "payroll-0280": {
+  "payroll-0281": {
    "confirmed": true,
    "code": "Ingredients - 310",
    "treatment": "standard",
@@ -9544,10 +9570,12 @@
    "200": "mapua-bakehouse-limited",
    "310": "mapua-bakehouse-limited",
    "315": "mapua-bakehouse-limited",
+   "400": "mapua-bakehouse-limited",
    "404": "mapua-bakehouse-limited",
    "405": "mapua-bakehouse-limited",
    "412": "mapua-bakehouse-limited",
    "416": "mapua-bakehouse-limited",
+   "425": "mapua-bakehouse-limited",
    "433": "mapua-bakehouse-limited",
    "445": "mapua-bakehouse-limited",
    "469": "mapua-bakehouse-limited",
@@ -9604,6 +9632,16 @@
    "entityKind": "business"
   },
   {
+   "code": "400",
+   "name": "Advertising",
+   "type": "Overhead",
+   "taxCode": "15% GST on Expenses",
+   "description": "",
+   "entity": "Māpua Bakehouse Limited",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
    "code": "404",
    "name": "Bank fees",
    "type": "Overhead",
@@ -9616,6 +9654,16 @@
   {
    "code": "405",
    "name": "EFTPOS terminal fees",
+   "type": "Overhead",
+   "taxCode": "15% GST on Expenses",
+   "description": "",
+   "entity": "Māpua Bakehouse Limited",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "425",
+   "name": "Freight & Courier",
    "type": "Overhead",
    "taxCode": "15% GST on Expenses",
    "description": "",
@@ -9874,6 +9922,21 @@
  "taxExtras": [],
  "singleEntityConfirmed": true,
  "aiEnabled": true,
+ "exampleAiSuggestions": [
+  {
+   "id": "payroll-0262",
+   "code": "473",
+   "confidence": 0.64,
+   "because": "Shelving brackets from a hardware store.",
+   "caution": "If this is new shelving rather than a repair, it may belong in Plant and Equipment."
+  },
+  {
+   "id": "payroll-0273",
+   "code": "400",
+   "confidence": 0.88,
+   "because": "Window signage from a sign maker: promoting the shop."
+  }
+ ],
  "ir4Returns": {
   "mapua-bakehouse-limited:2026": {
    "classes": {},

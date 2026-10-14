@@ -1513,6 +1513,32 @@
   {
    "id": "trust-0059",
    "occurrence": 1,
+   "date": "2026-03-24",
+   "amount": -1430,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Registered letter to tenant",
+   "code": "",
+   "reference": "",
+   "otherParty": "NZ Post",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "trust-0060",
+   "occurrence": 1,
    "date": "2026-03-28",
    "amount": -500,
    "currency": "NZD",
@@ -1533,11 +1559,11 @@
    "source": {
     "importer": "invented",
     "file": "trust.csv",
-    "line": 59
+    "line": 60
    }
   },
   {
-   "id": "trust-0060",
+   "id": "trust-0061",
    "occurrence": 1,
    "date": "2026-03-31",
    "amount": 90282,
@@ -1559,7 +1585,7 @@
    "source": {
     "importer": "invented",
     "file": "trust.csv",
-    "line": 60
+    "line": 61
    }
   }
  ],
@@ -2012,7 +2038,7 @@
    "note": "Loan interest, interest only",
    "at": "2026-03-15"
   },
-  "trust-0059": {
+  "trust-0060": {
    "confirmed": true,
    "code": "Bank fees - 404",
    "treatment": "exempt",
@@ -2020,7 +2046,7 @@
    "note": "Account fee",
    "at": "2026-03-28"
   },
-  "trust-0060": {
+  "trust-0061": {
    "confirmed": true,
    "code": "Interest received - 270",
    "treatment": "exempt",
@@ -2099,6 +2125,7 @@
    "445": "whitcombe-family-trust",
    "473": "whitcombe-family-trust",
    "490": "whitcombe-family-trust",
+   "495": "whitcombe-family-trust",
    "610": "whitcombe-family-trust",
    "720": "whitcombe-family-trust",
    "811": "whitcombe-family-trust",
@@ -2199,6 +2226,16 @@
   {
    "code": "490",
    "name": "Property management fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "495",
+   "name": "Postage and courier",
    "type": "Expense",
    "taxCode": "No GST",
    "description": "",
@@ -2315,6 +2352,21 @@
  "taxExtras": [],
  "singleEntityConfirmed": true,
  "aiEnabled": true,
+ "exampleAiSuggestions": [
+  {
+   "id": "trust-0056",
+   "code": "473",
+   "confidence": 0.9,
+   "because": "Fence palings for the rental: mending the existing fence.",
+   "caution": "A whole new fence would be capital, not a repair."
+  },
+  {
+   "id": "trust-0058",
+   "code": "473",
+   "confidence": 0.82,
+   "because": "The yearly smoke alarm check at 8 Totara Place, a landlord's obligation."
+  }
+ ],
  "manualJournals": [
   {
    "id": "trust-allocation-2026",

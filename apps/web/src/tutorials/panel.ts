@@ -1,6 +1,7 @@
 import { DEMO_PERSONAS, currentDemoPersona } from "../demo-personas.js";
 import { loadDemoData } from "../migrate/setup-wizard.js";
 import { runLesson } from "./engine.js";
+import { placeExampleSuggestions } from "./examples.js";
 import type { Lesson } from "./engine.js";
 import { LESSONS } from "./lessons.js";
 
@@ -119,7 +120,10 @@ function booksChooser(): HTMLElement | null {
       const busy = document.createElement("button");
       // Back to the lessons once the new books are in, or straight back if
       // the change was called off: the panel is where the choice was made.
-      void loadDemoData(busy, persona.id).finally(() => openTutorials());
+      void loadDemoData(busy, persona.id).finally(() => {
+        placeExampleSuggestions();
+        openTutorials();
+      });
     });
     list.append(choice);
   }
@@ -191,6 +195,7 @@ export function openTutorialsOnArrival(): void {
     const gone = loading === null || loading.hidden || loading.offsetParent === null;
     if (gone) {
       window.clearInterval(check);
+      placeExampleSuggestions();
       window.setTimeout(() => openTutorials(), 400);
     } else if (Date.now() - began > 20_000) {
       window.clearInterval(check);

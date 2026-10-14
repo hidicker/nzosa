@@ -335,6 +335,32 @@ const ir3Details = [
   { owner: "Tom Whitcombe", year: 2026, provisionalTaxPaid: cents(3500), ietcEligible: true },
 ];
 
+// Example AI answers, written by hand in the shape a model returns, so a
+// visitor sees what one looks like without asking a model. The demo labels
+// them as examples; nothing outside the demo reads this field.
+const exampleAiSuggestions = [
+  {
+    id: one((t) => t.date === "2025-04-17" && t.otherParty === "Espresso Supply NZ", "grinder").id,
+    code: "710KC",
+    confidence: 0.74,
+    because: "A coffee grinder at $2,500 before GST is equipment the roastery will use for years: an asset, not a cost.",
+    caution: "Over $1,000, so it is depreciated rather than written off. Add it to the fixed asset register.",
+  },
+  {
+    id: one((t) => t.date === "2025-06-11" && t.otherParty === "Totara Garden Care", "lawn").id,
+    code: "473RL",
+    confidence: 0.91,
+    because: "Lawn mowing at 17 Rimu Lane, paid from the rental account: upkeep of the property.",
+  },
+  {
+    id: one((t) => t.date === "2026-01-29" && t.otherParty === "A Whitcombe", "transfer").id,
+    code: "980KC",
+    confidence: 0.55,
+    because: "Money paid to a shareholder with no invoice or payslip behind it.",
+    caution: "If it was wages, it belongs in payroll with PAYE; if a loan, in her current account. Ask Ana.",
+  },
+];
+
 const ledger = {
   version: 1,
   legitimateDuplicates: [],
@@ -359,6 +385,7 @@ const ledger = {
   // anyway, so the only thing it turns on is the prompt somebody copies and
   // carries themselves, which sends nothing anywhere until they paste it.
   aiEnabled: true,
+  exampleAiSuggestions,
 };
 writeFileSync(join(out, "ledger.json"), JSON.stringify(ledger, null, 2));
 

@@ -6281,5 +6281,27 @@
       "ietcEligible": true
     }
   ],
-  "aiEnabled": true
+  "aiEnabled": true,
+  "exampleAiSuggestions": [
+    {
+      "id": "3be726384a8b18f4",
+      "code": "710KC",
+      "confidence": 0.74,
+      "because": "A coffee grinder at $2,500 before GST is equipment the roastery will use for years: an asset, not a cost.",
+      "caution": "Over $1,000, so it is depreciated rather than written off. Add it to the fixed asset register."
+    },
+    {
+      "id": "885ff31eb089221b",
+      "code": "473RL",
+      "confidence": 0.91,
+      "because": "Lawn mowing at 17 Rimu Lane, paid from the rental account: upkeep of the property."
+    },
+    {
+      "id": "2c7d4ba3ea919fd6",
+      "code": "980KC",
+      "confidence": 0.55,
+      "because": "Money paid to a shareholder with no invoice or payslip behind it.",
+      "caution": "If it was wages, it belongs in payroll with PAYE; if a loan, in her current account. Ask Ana."
+    }
+  ]
 }

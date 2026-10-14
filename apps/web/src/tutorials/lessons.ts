@@ -20,6 +20,11 @@ let watchedLine = "";
 const suggested = (): boolean =>
   (firstLine()?.querySelector<HTMLInputElement>(".combo-input")?.value.trim() ?? "") !== "";
 
+/** The first line on Reconcile whose suggestion came from a given place. */
+const lineSuggestedBy = (said: RegExp) => (): Element | null =>
+  [...document.querySelectorAll("#reconcile-body .code-row .code-reason-ai")].find((e) => said.test(e.textContent ?? ""))
+    ?.closest(".code-row") ?? null;
+
 /** Show a report on the Reports page: only what is on screen changes. */
 const report = (kind: string) => (): void => {
   const choose = document.getElementById("report-kind");
@@ -157,10 +162,25 @@ export const LESSONS: readonly Lesson[] = [
         },
       },
       {
+        title: "Suggested by AI",
+        body:
+          "Where nothing you have coded before fits, an AI model you choose can suggest the account, and says how " +
+          "sure it is, why, and anything to check. The ones in this demo are examples, written by hand. Nothing " +
+          "is used until you confirm it.",
+        target: lineSuggestedBy(/^AI suggestion/),
+      },
+      {
+        title: "A known New Zealand business",
+        body:
+          "NZOSA also recognises well-known New Zealand businesses, such as fuel stations, phone companies and " +
+          "couriers, and suggests the one account in your chart that fits. It needs no AI and sends nothing anywhere.",
+        target: lineSuggestedBy(/^Known NZ business/),
+      },
+      {
         title: "Done",
         body:
-          "That line is in the books. The next line from the same payee will be suggested the same way. When the " +
-          "suggestions on a page all look right, Accept all confirms them in one go.",
+          "The line you confirmed is in the books, and the next line from the same payee will be suggested the " +
+          "same way. When the suggestions on a page all look right, Accept all confirms them in one go.",
         target: q("#accept-all"),
       },
     ],

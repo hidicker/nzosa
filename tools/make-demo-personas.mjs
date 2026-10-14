@@ -145,6 +145,9 @@ class Book {
         };
       }
     });
+    // Example AI answers, on the lines they were written for.
+    const exampleAiSuggestions = sorted.flatMap((line, i) =>
+      line.example === undefined ? [] : [{ id: transactions[i].id, ...line.example }]);
     for (const [bank, [least, when]] of low) {
       if (least < 0 && process.env.DEMO_TOTALS !== this.slug) throw new Error(`${this.slug}: ${bank} goes overdrawn, to ${dollars(least)} on ${when}`);
     }
@@ -183,6 +186,7 @@ class Book {
         taxExtras: [],
         singleEntityConfirmed: this.entities.length === 1,
         aiEnabled: true,
+        ...(exampleAiSuggestions.length > 0 ? { exampleAiSuggestions } : {}),
         ...more,
       },
     };
@@ -233,6 +237,7 @@ function write(name, built) {
       ["560", "Affiliation fees", "Expense", "e"],
       ["570", "Printing and stationery", "Expense", "e"],
       ["580", "Bank fees", "Expense", "e"],
+      ["585", "Telephone and internet", "Expense", "e"],
       ["810", "Grants received in advance", "Current Liability", "o"],
       ["960", "Accumulated funds", "Retained Earnings", "o"],
     ],
@@ -284,9 +289,26 @@ function write(name, built) {
   b.line(bank, "2026-01-16", -34_200, "Trophy World Nelson", "550", "Regatta trophies and prizes");
   b.line(bank, "2025-06-02", -28_000, "Yachting New Zealand", "560", "Club affiliation");
   // Left to code.
-  b.line(bank, "2026-03-04", -14_600, "Mitre 10 Nelson", undefined, undefined, { particulars: "Paint and varnish" });
-  b.line(bank, "2026-03-11", -9_500, "Anchor Printing", undefined, undefined, { particulars: "Regatta programmes" });
-  b.line(bank, "2026-03-19", 12_000, "B Hartley Ltd", undefined, undefined, { particulars: "Programme advert" });
+  b.line(bank, "2026-03-04", -14_600, "Mitre 10 Nelson", undefined, undefined, {
+    particulars: "Paint and varnish",
+    example: { code: "510", confidence: 0.86, because: "Paint and varnish from a hardware store: most likely for the boats or the clubroom." },
+  });
+  b.line(bank, "2026-03-11", -9_500, "Anchor Printing", undefined, undefined, {
+    particulars: "Regatta programmes",
+    example: {
+      code: "550", confidence: 0.71, because: "Printed programmes are part of putting on the regatta.",
+      caution: "Printing and stationery would do as well; keep it with the regatta if you report on it.",
+    },
+  });
+  b.line(bank, "2026-03-19", 12_000, "B Hartley Ltd", undefined, undefined, {
+    particulars: "Programme advert",
+    example: {
+      code: "430", confidence: 0.48, because: "Money in from a local business, with a programme advert as the reference.",
+      caution: "An advert is sponsorship, not a gift: something was given in return. A Sponsorship account would be better.",
+    },
+  });
+  // The clubroom's new broadband: a payee on the list of known NZ businesses.
+  b.line(bank, "2026-03-26", -5_999, "Spark", undefined, undefined, { particulars: "Clubroom broadband" });
 
   const built = b.build({
     // The figures the reporting standard is decided by, as each year's signed
@@ -296,7 +318,7 @@ function write(name, built) {
       [`${club.id}:2024`]: { figures: { operatingPayments: 1_587_210, currentAssets: 2_170_580, totalExpenses: 1_587_210 } },
       [`${club.id}:2025`]: { figures: { operatingPayments: 1_694_050, currentAssets: 2_428_640, totalExpenses: 1_694_050 } },
       [`${club.id}:2026`]: {
-        figures: { operatingPayments: 1_845_720, currentAssets: 3_569_920, totalExpenses: 1_845_720 },
+        figures: { operatingPayments: 1_851_719, currentAssets: 3_563_921, totalExpenses: 1_851_719 },
         signers: ["Kate Rowe, Commodore", "Tom Hira, Treasurer"],
       },
     },
@@ -365,6 +387,7 @@ function write(name, built) {
       ["445", "Rates", "Expense", "e"],
       ["473", "Repairs and maintenance", "Expense", "e"],
       ["490", "Property management fees", "Expense", "e"],
+      ["495", "Postage and courier", "Expense", "e"],
       ["610", "Term deposit, Kiwibank", "Current Asset", "o"],
       ["720", "Land and buildings, 8 Totara Place", "Fixed Asset", "o"],
       ["811", "Beneficiary current account, Ana Whitcombe", "Current Liability", "o"],
@@ -410,8 +433,18 @@ function write(name, built) {
     b.line(bank, date, tdGross - tdRwt, "Kiwibank", "270", `Term deposit interest ${dollars(tdGross)} less RWT ${dollars(tdRwt)}`);
   }
   // Left to code.
-  b.line(bank, "2026-03-06", -36_700, "Bunnings Nelson", undefined, undefined, { particulars: "Fence palings" });
-  b.line(bank, "2026-03-18", -9_600, "Smoke Alarm Services NZ", undefined, undefined, { particulars: "Annual check" });
+  b.line(bank, "2026-03-06", -36_700, "Bunnings Nelson", undefined, undefined, {
+    particulars: "Fence palings",
+    example: {
+      code: "473", confidence: 0.9, because: "Fence palings for the rental: mending the existing fence.",
+      caution: "A whole new fence would be capital, not a repair.",
+    },
+  });
+  b.line(bank, "2026-03-18", -9_600, "Smoke Alarm Services NZ", undefined, undefined, {
+    particulars: "Annual check",
+    example: { code: "473", confidence: 0.82, because: "The yearly smoke alarm check at 8 Totara Place, a landlord's obligation." },
+  });
+  b.line(bank, "2026-03-24", -1_430, "NZ Post", undefined, undefined, { particulars: "Registered letter to tenant" });
 
   // Each beneficiary is allocated $1,500 of the year's income, credited to
   // their account rather than paid: the trustees' resolution at balance date.
@@ -494,6 +527,7 @@ function write(name, built) {
       ["437R", "Mortgage interest", "Expense", "e", flat.id],
       ["445R", "Rates", "Expense", "e", flat.id],
       ["473R", "Repairs and maintenance", "Expense", "e", flat.id],
+      ["449R", "Motor vehicle expenses", "Expense", "e", flat.id],
       ["720R", "Flat 2, 14 Kawai Street", "Fixed Asset", "o", flat.id],
       ["900R", "Rental loan, ASB", "Non-current Liability", "o", flat.id],
       ["970R", "Owner's capital, Kawai Street", "Equity", "o", flat.id],
@@ -597,8 +631,16 @@ function write(name, built) {
   b.line(rental, "2025-12-19", -300_000, "Sam Taylor", "980R", "Rental surplus moved to the everyday account");
   b.line(everyday, "2025-12-19", 300_000, "Sam Taylor", "960", "From the rental account");
   // Left to code.
-  b.line(everyday, "2026-03-08", -23_900, "Briscoes Nelson", undefined, undefined, { particulars: "Bedding" });
-  b.line(rental, "2026-03-14", -12_650, "Mitre 10 Richmond", undefined, undefined, { particulars: "Tap washers and silicone" });
+  b.line(everyday, "2026-03-08", -23_900, "Briscoes Nelson", undefined, undefined, {
+    particulars: "Bedding",
+    example: { code: "470", confidence: 0.77, because: "Bedding from a homeware store, paid from the everyday account: household spending." },
+  });
+  b.line(rental, "2026-03-14", -12_650, "Mitre 10 Richmond", undefined, undefined, {
+    particulars: "Tap washers and silicone",
+    example: { code: "473R", confidence: 0.93, because: "Tap washers and silicone paid from the rental account: a small repair at the flat." },
+  });
+  // Fuel for a trip to the flat, paid from its account: a known NZ business.
+  b.line(rental, "2026-03-21", -6_230, "Z Energy Richmond", undefined, undefined, { particulars: "Fuel" });
 
   const built = b.build({
     taxExtras: [
@@ -640,8 +682,10 @@ function write(name, built) {
       ["200", "Sales", "Revenue", "s"],
       ["310", "Ingredients", "Direct Costs", "s"],
       ["315", "Packaging", "Direct Costs", "s"],
+      ["400", "Advertising", "Overhead", "s"],
       ["404", "Bank fees", "Overhead", "e"],
       ["405", "EFTPOS terminal fees", "Overhead", "s"],
+      ["425", "Freight & Courier", "Overhead", "s"],
       ["412", "Consulting & Accounting", "Overhead", "s"],
       ["416", "Depreciation", "Overhead", "o"],
       ["433", "Insurance", "Overhead", "s"],
@@ -805,8 +849,18 @@ function write(name, built) {
   b.open("960", -Object.values(b.opening).reduce((s, v) => s + v, 0));
 
   // Left to code.
-  b.line(bank, "2026-03-10", -18_970, "Mitre 10 Mega Nelson", undefined, undefined, { particulars: "Shelving brackets" });
-  b.line(bank, "2026-03-24", -46_000, "Kiwi Signs", undefined, undefined, { particulars: "Window signage" });
+  b.line(bank, "2026-03-10", -18_970, "Mitre 10 Mega Nelson", undefined, undefined, {
+    particulars: "Shelving brackets",
+    example: {
+      code: "473", confidence: 0.64, because: "Shelving brackets from a hardware store.",
+      caution: "If this is new shelving rather than a repair, it may belong in Plant and Equipment.",
+    },
+  });
+  b.line(bank, "2026-03-24", -46_000, "Kiwi Signs", undefined, undefined, {
+    particulars: "Window signage",
+    example: { code: "400", confidence: 0.88, because: "Window signage from a sign maker: promoting the shop." },
+  });
+  b.line(bank, "2026-03-27", -3_840, "NZ Post", undefined, undefined, { particulars: "Courier bags" });
 
   const built = b.build({
     assets,

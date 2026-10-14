@@ -5,6 +5,7 @@ import { backendKind } from "./store.js";
 import { isDemoBuild } from "./ai-consent.js";
 import { loadDemoData } from "./migrate/setup-wizard.js";
 import { openTutorials, openTutorialsOnArrival } from "./tutorials/panel.js";
+import { placeExampleSuggestions } from "./tutorials/examples.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -126,6 +127,7 @@ export function wireChrome(): void {
       again.textContent = "Start the demo again";
       again.addEventListener("click", () => {
         void loadDemoData(again).finally(() => {
+          placeExampleSuggestions();
           again.disabled = false;
           again.textContent = "Start the demo again";
         });

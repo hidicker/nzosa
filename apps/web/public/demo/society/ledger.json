@@ -1929,6 +1929,32 @@
   {
    "id": "society-0075",
    "occurrence": 1,
+   "date": "2026-03-26",
+   "amount": -5999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom broadband",
+   "code": "",
+   "reference": "",
+   "otherParty": "Spark",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "society-0076",
+   "occurrence": 1,
    "date": "2026-03-28",
    "amount": -500,
    "currency": "NZD",
@@ -1949,7 +1975,7 @@
    "source": {
     "importer": "invented",
     "file": "society.csv",
-    "line": 75
+    "line": 76
    }
   }
  ],
@@ -2522,7 +2548,7 @@
    "note": "Clubroom power",
    "at": "2026-03-22"
   },
-  "society-0075": {
+  "society-0076": {
    "confirmed": true,
    "code": "Bank fees - 580",
    "treatment": "exempt",
@@ -2566,6 +2592,7 @@
    "560": "harbourside-sailing-club",
    "570": "harbourside-sailing-club",
    "580": "harbourside-sailing-club",
+   "585": "harbourside-sailing-club",
    "810": "harbourside-sailing-club",
    "960": "harbourside-sailing-club"
   },
@@ -2737,6 +2764,16 @@
    "entityKind": "nonprofit"
   },
   {
+   "code": "585",
+   "name": "Telephone and internet",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
    "code": "810",
    "name": "Grants received in advance",
    "type": "Current Liability",
@@ -2770,6 +2807,28 @@
  "taxExtras": [],
  "singleEntityConfirmed": true,
  "aiEnabled": true,
+ "exampleAiSuggestions": [
+  {
+   "id": "society-0070",
+   "code": "510",
+   "confidence": 0.86,
+   "because": "Paint and varnish from a hardware store: most likely for the boats or the clubroom."
+  },
+  {
+   "id": "society-0072",
+   "code": "550",
+   "confidence": 0.71,
+   "because": "Printed programmes are part of putting on the regatta.",
+   "caution": "Printing and stationery would do as well; keep it with the regatta if you report on it."
+  },
+  {
+   "id": "society-0073",
+   "code": "430",
+   "confidence": 0.48,
+   "because": "Money in from a local business, with a programme advert as the reference.",
+   "caution": "An advert is sponsorship, not a gift: something was given in return. A Sponsorship account would be better."
+  }
+ ],
  "societyReports": {
   "harbourside-sailing-club:2024": {
    "figures": {
@@ -2787,9 +2846,9 @@
   },
   "harbourside-sailing-club:2026": {
    "figures": {
-    "operatingPayments": 1845720,
-    "currentAssets": 3569920,
-    "totalExpenses": 1845720
+    "operatingPayments": 1851719,
+    "currentAssets": 3563921,
+    "totalExpenses": 1851719
    },
    "signers": [
     "Kate Rowe, Commodore",

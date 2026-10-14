@@ -4009,6 +4009,32 @@
   {
    "id": "personal-0155",
    "occurrence": 1,
+   "date": "2026-03-21",
+   "amount": -6230,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Z Energy Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 155
+   }
+  },
+  {
+   "id": "personal-0156",
+   "occurrence": 1,
    "date": "2026-03-28",
    "amount": -500,
    "currency": "NZD",
@@ -4029,11 +4055,11 @@
    "source": {
     "importer": "invented",
     "file": "personal.csv",
-    "line": 155
+    "line": 156
    }
   },
   {
-   "id": "personal-0156",
+   "id": "personal-0157",
    "occurrence": 1,
    "date": "2026-03-31",
    "amount": 22512,
@@ -4055,7 +4081,7 @@
    "source": {
     "importer": "invented",
     "file": "personal.csv",
-    "line": 156
+    "line": 157
    }
   }
  ],
@@ -5276,7 +5302,7 @@
    "note": "Rent, two weeks",
    "at": "2026-03-20"
   },
-  "personal-0155": {
+  "personal-0156": {
    "confirmed": true,
    "code": "Bank fees - 404R",
    "treatment": "exempt",
@@ -5284,7 +5310,7 @@
    "note": "Account fee",
    "at": "2026-03-28"
   },
-  "personal-0156": {
+  "personal-0157": {
    "confirmed": true,
    "code": "Interest (after RWT) - 270",
    "treatment": "exempt",
@@ -5347,6 +5373,7 @@
    "437R": "flat-2-kawai-street",
    "445R": "flat-2-kawai-street",
    "473R": "flat-2-kawai-street",
+   "449R": "flat-2-kawai-street",
    "720R": "flat-2-kawai-street",
    "900R": "flat-2-kawai-street",
    "970R": "flat-2-kawai-street",
@@ -5553,6 +5580,16 @@
    "entityKind": "residential"
   },
   {
+   "code": "449R",
+   "name": "Motor vehicle expenses",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
    "code": "720R",
    "name": "Flat 2, 14 Kawai Street",
    "type": "Fixed Asset",
@@ -5638,6 +5675,20 @@
  ],
  "singleEntityConfirmed": false,
  "aiEnabled": true,
+ "exampleAiSuggestions": [
+  {
+   "id": "personal-0145",
+   "code": "470",
+   "confidence": 0.77,
+   "because": "Bedding from a homeware store, paid from the everyday account: household spending."
+  },
+  {
+   "id": "personal-0147",
+   "code": "473R",
+   "confidence": 0.93,
+   "because": "Tap washers and silicone paid from the rental account: a small repair at the flat."
+  }
+ ],
  "ir3Details": [
   {
    "owner": "Sam Taylor",

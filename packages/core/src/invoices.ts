@@ -100,6 +100,26 @@ export interface Invoice {
   email?: string;
 }
 
+/**
+ * The address last used for a contact, by name.
+ *
+ * Names are compared without case or spacing, because the same customer is
+ * typed "Kea Cafe" on one invoice and "kea cafe " on the next. The newest
+ * sales invoice that has an address wins, so a customer who changes address
+ * is followed by the next invoice rather than held to the first one.
+ */
+export function emailForContact(invoices: readonly Invoice[], contact: string): string | null {
+  const wanted = contact.trim().toLowerCase().replace(/\s+/g, " ");
+  if (wanted === "") return null;
+  let best: Invoice | undefined;
+  for (const invoice of invoices) {
+    if (invoice.kind !== "sales" || cleanEmailAddress(invoice.email) === null) continue;
+    if (invoice.contact.trim().toLowerCase().replace(/\s+/g, " ") !== wanted) continue;
+    if (best === undefined || invoice.issued >= best.issued) best = invoice;
+  }
+  return best === undefined ? null : cleanEmailAddress(best.email);
+}
+
 /** An address a mail program could be given, or null when it is not one. */
 export function cleanEmailAddress(raw: string | undefined): string | null {
   const value = (raw ?? "").trim();

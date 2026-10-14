@@ -300,6 +300,7 @@ export {
   invoiceGross,
   allocateAcrossLines,
   invoiceBalances,
+  emailForContact,
   isCreditNote,
   isPosted,
   paidOutsideTotal,

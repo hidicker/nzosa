@@ -27,6 +27,7 @@ import {
   gstContent,
   invoiceDocument,
   invoiceEmail,
+  emailForContact,
   isPosted,
   matchInvoices,
   nextInvoiceNumber,
@@ -256,6 +257,13 @@ export function renderInvoiceEditor(): void {
   const email = text(draft.email ?? "", "customer@example.com");
   email.type = "email";
   if (!asBill) field("Email", email, "Optional. Used to address the message when you email the invoice.");
+  // A customer already written to keeps the address used last time. Only an
+  // empty box is filled: one typed by hand is a decision.
+  contact.addEventListener("change", () => {
+    if (asBill || email.value.trim() !== "") return;
+    const remembered = emailForContact(state.ledger.invoices ?? [], contact.value);
+    if (remembered !== null) email.value = remembered;
+  });
 
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
   field(
@@ -733,7 +741,13 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
-        const message = invoiceEmail(invoice, supplier);
+        // An invoice raised before addresses were kept borrows its
+        // customer's most recent one.
+        const known = emailForContact(state.ledger.invoices ?? [], invoice.contact);
+        const message = invoiceEmail(
+          invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
+          supplier,
+        );
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +
           `&body=${encodeURIComponent(message.body)}`;

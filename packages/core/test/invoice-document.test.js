@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { invoiceDocument, invoiceEmail } from "../dist/index.js";
+import { emailForContact, invoiceDocument, invoiceEmail } from "../dist/index.js";
 
 const line = (over) => ({
   description: "Tandem flight", accountCode: "200", taxType: "15% GST on Income",
@@ -102,6 +102,19 @@ test("the email is addressed to the customer's saved address, and only a real on
   assert.equal(invoiceEmail(invoice({ email: " accounts@kea.example " }), supplier).to, "accounts@kea.example");
   assert.equal(invoiceEmail(invoice({ email: "not an address" }), supplier).to, "");
   assert.equal(invoiceEmail(invoice(), supplier).to, "");
+});
+
+test("a customer's address is remembered by name, newest first", () => {
+  const books = [
+    invoice({ number: "A", issued: "2026-01-01", email: "old@kea.example" }),
+    invoice({ number: "B", issued: "2026-03-01", contact: " kea  cafe group", email: "new@kea.example" }),
+    invoice({ number: "C", issued: "2026-04-01" }),
+    invoice({ number: "D", issued: "2026-05-01", contact: "Other", email: "other@x.example" }),
+    invoice({ number: "E", issued: "2026-06-01", kind: "purchase", email: "bill@kea.example" }),
+  ];
+  assert.equal(emailForContact(books, "Kea Cafe Group"), "new@kea.example");
+  assert.equal(emailForContact(books, "Nobody"), null);
+  assert.equal(emailForContact(books, ""), null);
 });
 
 test("an unregistered supplier's email says invoice, not tax invoice", () => {

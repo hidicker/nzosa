@@ -1,0 +1,5648 @@
+{
+ "version": 1,
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "personal-0001",
+   "occurrence": 1,
+   "date": "2025-04-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "personal-0002",
+   "occurrence": 1,
+   "date": "2025-04-04",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "personal-0003",
+   "occurrence": 1,
+   "date": "2025-04-07",
+   "amount": -16800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "personal-0004",
+   "occurrence": 1,
+   "date": "2025-04-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "personal-0005",
+   "occurrence": 1,
+   "date": "2025-04-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "personal-0006",
+   "occurrence": 1,
+   "date": "2025-04-16",
+   "amount": -64943,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "personal-0007",
+   "occurrence": 1,
+   "date": "2025-04-16",
+   "amount": -185057,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "personal-0008",
+   "occurrence": 1,
+   "date": "2025-04-18",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "personal-0009",
+   "occurrence": 1,
+   "date": "2025-04-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "personal-0010",
+   "occurrence": 1,
+   "date": "2025-04-20",
+   "amount": -68400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "personal-0011",
+   "occurrence": 1,
+   "date": "2025-04-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "personal-0012",
+   "occurrence": 1,
+   "date": "2025-05-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "personal-0013",
+   "occurrence": 1,
+   "date": "2025-05-02",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "personal-0014",
+   "occurrence": 1,
+   "date": "2025-05-07",
+   "amount": -18700,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "personal-0015",
+   "occurrence": 1,
+   "date": "2025-05-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "personal-0016",
+   "occurrence": 1,
+   "date": "2025-05-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "personal-0017",
+   "occurrence": 1,
+   "date": "2025-05-16",
+   "amount": -65235,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "personal-0018",
+   "occurrence": 1,
+   "date": "2025-05-16",
+   "amount": -184765,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "personal-0019",
+   "occurrence": 1,
+   "date": "2025-05-16",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "personal-0020",
+   "occurrence": 1,
+   "date": "2025-05-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "personal-0021",
+   "occurrence": 1,
+   "date": "2025-05-20",
+   "amount": -71200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "personal-0022",
+   "occurrence": 1,
+   "date": "2025-05-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "personal-0023",
+   "occurrence": 1,
+   "date": "2025-05-30",
+   "amount": -96500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Home rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "personal-0024",
+   "occurrence": 1,
+   "date": "2025-05-30",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "personal-0025",
+   "occurrence": 1,
+   "date": "2025-05-30",
+   "amount": -71000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flat rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "personal-0026",
+   "occurrence": 1,
+   "date": "2025-06-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "personal-0027",
+   "occurrence": 1,
+   "date": "2025-06-07",
+   "amount": -21400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "personal-0028",
+   "occurrence": 1,
+   "date": "2025-06-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "personal-0029",
+   "occurrence": 1,
+   "date": "2025-06-11",
+   "amount": -164800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Landlord insurance, annual",
+   "code": "",
+   "reference": "",
+   "otherParty": "AMI Insurance",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "personal-0030",
+   "occurrence": 1,
+   "date": "2025-06-13",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "personal-0031",
+   "occurrence": 1,
+   "date": "2025-06-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "personal-0032",
+   "occurrence": 1,
+   "date": "2025-06-16",
+   "amount": -65528,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "personal-0033",
+   "occurrence": 1,
+   "date": "2025-06-16",
+   "amount": -184472,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "personal-0034",
+   "occurrence": 1,
+   "date": "2025-06-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "personal-0035",
+   "occurrence": 1,
+   "date": "2025-06-20",
+   "amount": -66900,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "personal-0036",
+   "occurrence": 1,
+   "date": "2025-06-27",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "personal-0037",
+   "occurrence": 1,
+   "date": "2025-06-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "personal-0038",
+   "occurrence": 1,
+   "date": "2025-07-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "personal-0039",
+   "occurrence": 1,
+   "date": "2025-07-07",
+   "amount": -22100,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "personal-0040",
+   "occurrence": 1,
+   "date": "2025-07-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "personal-0041",
+   "occurrence": 1,
+   "date": "2025-07-11",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "personal-0042",
+   "occurrence": 1,
+   "date": "2025-07-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "personal-0043",
+   "occurrence": 1,
+   "date": "2025-07-16",
+   "amount": -65822,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "personal-0044",
+   "occurrence": 1,
+   "date": "2025-07-16",
+   "amount": -184178,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "personal-0045",
+   "occurrence": 1,
+   "date": "2025-07-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "personal-0046",
+   "occurrence": 1,
+   "date": "2025-07-20",
+   "amount": -73800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "personal-0047",
+   "occurrence": 1,
+   "date": "2025-07-25",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "personal-0048",
+   "occurrence": 1,
+   "date": "2025-07-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "personal-0049",
+   "occurrence": 1,
+   "date": "2025-08-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "personal-0050",
+   "occurrence": 1,
+   "date": "2025-08-07",
+   "amount": -20900,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "personal-0051",
+   "occurrence": 1,
+   "date": "2025-08-08",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "personal-0052",
+   "occurrence": 1,
+   "date": "2025-08-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "personal-0053",
+   "occurrence": 1,
+   "date": "2025-08-14",
+   "amount": -6500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "GP visit",
+   "code": "",
+   "reference": "",
+   "otherParty": "Richmond Medical Centre",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "personal-0054",
+   "occurrence": 1,
+   "date": "2025-08-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "personal-0055",
+   "occurrence": 1,
+   "date": "2025-08-16",
+   "amount": -66118,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "personal-0056",
+   "occurrence": 1,
+   "date": "2025-08-16",
+   "amount": -183882,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "personal-0057",
+   "occurrence": 1,
+   "date": "2025-08-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "personal-0058",
+   "occurrence": 1,
+   "date": "2025-08-20",
+   "amount": -69500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "personal-0059",
+   "occurrence": 1,
+   "date": "2025-08-22",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "personal-0060",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -96500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Home rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "personal-0061",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "personal-0062",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -71000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flat rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "personal-0063",
+   "occurrence": 1,
+   "date": "2025-09-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "personal-0064",
+   "occurrence": 1,
+   "date": "2025-09-05",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "personal-0065",
+   "occurrence": 1,
+   "date": "2025-09-07",
+   "amount": -17600,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "personal-0066",
+   "occurrence": 1,
+   "date": "2025-09-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "personal-0067",
+   "occurrence": 1,
+   "date": "2025-09-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "personal-0068",
+   "occurrence": 1,
+   "date": "2025-09-16",
+   "amount": -66415,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "personal-0069",
+   "occurrence": 1,
+   "date": "2025-09-16",
+   "amount": -183585,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "personal-0070",
+   "occurrence": 1,
+   "date": "2025-09-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "personal-0071",
+   "occurrence": 1,
+   "date": "2025-09-19",
+   "amount": 40200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Dividend after imputation credits and RWT",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "personal-0072",
+   "occurrence": 1,
+   "date": "2025-09-19",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "personal-0073",
+   "occurrence": 1,
+   "date": "2025-09-20",
+   "amount": -70100,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "personal-0074",
+   "occurrence": 1,
+   "date": "2025-09-22",
+   "amount": -38500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Replace rangehood",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tasman Electrical",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "personal-0075",
+   "occurrence": 1,
+   "date": "2025-09-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "personal-0076",
+   "occurrence": 1,
+   "date": "2025-09-30",
+   "amount": 20100,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Savings interest 300.00 less RWT 99.00",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 76
+   }
+  },
+  {
+   "id": "personal-0077",
+   "occurrence": 1,
+   "date": "2025-10-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 77
+   }
+  },
+  {
+   "id": "personal-0078",
+   "occurrence": 1,
+   "date": "2025-10-03",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 78
+   }
+  },
+  {
+   "id": "personal-0079",
+   "occurrence": 1,
+   "date": "2025-10-07",
+   "amount": -14300,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 79
+   }
+  },
+  {
+   "id": "personal-0080",
+   "occurrence": 1,
+   "date": "2025-10-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 80
+   }
+  },
+  {
+   "id": "personal-0081",
+   "occurrence": 1,
+   "date": "2025-10-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 81
+   }
+  },
+  {
+   "id": "personal-0082",
+   "occurrence": 1,
+   "date": "2025-10-16",
+   "amount": -66713,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 82
+   }
+  },
+  {
+   "id": "personal-0083",
+   "occurrence": 1,
+   "date": "2025-10-16",
+   "amount": -183287,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 83
+   }
+  },
+  {
+   "id": "personal-0084",
+   "occurrence": 1,
+   "date": "2025-10-17",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 84
+   }
+  },
+  {
+   "id": "personal-0085",
+   "occurrence": 1,
+   "date": "2025-10-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 85
+   }
+  },
+  {
+   "id": "personal-0086",
+   "occurrence": 1,
+   "date": "2025-10-20",
+   "amount": -72600,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 86
+   }
+  },
+  {
+   "id": "personal-0087",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 87
+   }
+  },
+  {
+   "id": "personal-0088",
+   "occurrence": 1,
+   "date": "2025-10-31",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 88
+   }
+  },
+  {
+   "id": "personal-0089",
+   "occurrence": 1,
+   "date": "2025-11-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 89
+   }
+  },
+  {
+   "id": "personal-0090",
+   "occurrence": 1,
+   "date": "2025-11-03",
+   "amount": -28200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Dentist",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson Dental",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 90
+   }
+  },
+  {
+   "id": "personal-0091",
+   "occurrence": 1,
+   "date": "2025-11-07",
+   "amount": -12100,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 91
+   }
+  },
+  {
+   "id": "personal-0092",
+   "occurrence": 1,
+   "date": "2025-11-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 92
+   }
+  },
+  {
+   "id": "personal-0093",
+   "occurrence": 1,
+   "date": "2025-11-14",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 93
+   }
+  },
+  {
+   "id": "personal-0094",
+   "occurrence": 1,
+   "date": "2025-11-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 94
+   }
+  },
+  {
+   "id": "personal-0095",
+   "occurrence": 1,
+   "date": "2025-11-16",
+   "amount": -67013,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 95
+   }
+  },
+  {
+   "id": "personal-0096",
+   "occurrence": 1,
+   "date": "2025-11-16",
+   "amount": -182987,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 96
+   }
+  },
+  {
+   "id": "personal-0097",
+   "occurrence": 1,
+   "date": "2025-11-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 97
+   }
+  },
+  {
+   "id": "personal-0098",
+   "occurrence": 1,
+   "date": "2025-11-20",
+   "amount": -74300,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 98
+   }
+  },
+  {
+   "id": "personal-0099",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -96500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Home rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 99
+   }
+  },
+  {
+   "id": "personal-0100",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 100
+   }
+  },
+  {
+   "id": "personal-0101",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 101
+   }
+  },
+  {
+   "id": "personal-0102",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -71000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flat rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 102
+   }
+  },
+  {
+   "id": "personal-0103",
+   "occurrence": 1,
+   "date": "2025-12-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 103
+   }
+  },
+  {
+   "id": "personal-0104",
+   "occurrence": 1,
+   "date": "2025-12-05",
+   "amount": -10000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Donation",
+   "code": "",
+   "reference": "",
+   "otherParty": "Cancer Society",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 104
+   }
+  },
+  {
+   "id": "personal-0105",
+   "occurrence": 1,
+   "date": "2025-12-07",
+   "amount": -11400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 105
+   }
+  },
+  {
+   "id": "personal-0106",
+   "occurrence": 1,
+   "date": "2025-12-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 106
+   }
+  },
+  {
+   "id": "personal-0107",
+   "occurrence": 1,
+   "date": "2025-12-12",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 107
+   }
+  },
+  {
+   "id": "personal-0108",
+   "occurrence": 1,
+   "date": "2025-12-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 108
+   }
+  },
+  {
+   "id": "personal-0109",
+   "occurrence": 1,
+   "date": "2025-12-16",
+   "amount": -67314,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 109
+   }
+  },
+  {
+   "id": "personal-0110",
+   "occurrence": 1,
+   "date": "2025-12-16",
+   "amount": -182686,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 110
+   }
+  },
+  {
+   "id": "personal-0111",
+   "occurrence": 1,
+   "date": "2025-12-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "personal-0112",
+   "occurrence": 1,
+   "date": "2025-12-19",
+   "amount": 300000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "From the rental account",
+   "code": "",
+   "reference": "",
+   "otherParty": "Sam Taylor",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 112
+   }
+  },
+  {
+   "id": "personal-0113",
+   "occurrence": 1,
+   "date": "2025-12-19",
+   "amount": -300000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rental surplus moved to the everyday account",
+   "code": "",
+   "reference": "",
+   "otherParty": "Sam Taylor",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 113
+   }
+  },
+  {
+   "id": "personal-0114",
+   "occurrence": 1,
+   "date": "2025-12-20",
+   "amount": -88900,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 114
+   }
+  },
+  {
+   "id": "personal-0115",
+   "occurrence": 1,
+   "date": "2025-12-26",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 115
+   }
+  },
+  {
+   "id": "personal-0116",
+   "occurrence": 1,
+   "date": "2025-12-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 116
+   }
+  },
+  {
+   "id": "personal-0117",
+   "occurrence": 1,
+   "date": "2026-01-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 117
+   }
+  },
+  {
+   "id": "personal-0118",
+   "occurrence": 1,
+   "date": "2026-01-07",
+   "amount": -11900,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 118
+   }
+  },
+  {
+   "id": "personal-0119",
+   "occurrence": 1,
+   "date": "2026-01-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 119
+   }
+  },
+  {
+   "id": "personal-0120",
+   "occurrence": 1,
+   "date": "2026-01-09",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 120
+   }
+  },
+  {
+   "id": "personal-0121",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 121
+   }
+  },
+  {
+   "id": "personal-0122",
+   "occurrence": 1,
+   "date": "2026-01-16",
+   "amount": -67616,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 122
+   }
+  },
+  {
+   "id": "personal-0123",
+   "occurrence": 1,
+   "date": "2026-01-16",
+   "amount": -182384,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 123
+   }
+  },
+  {
+   "id": "personal-0124",
+   "occurrence": 1,
+   "date": "2026-01-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 124
+   }
+  },
+  {
+   "id": "personal-0125",
+   "occurrence": 1,
+   "date": "2026-01-20",
+   "amount": -71400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 125
+   }
+  },
+  {
+   "id": "personal-0126",
+   "occurrence": 1,
+   "date": "2026-01-23",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 126
+   }
+  },
+  {
+   "id": "personal-0127",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 127
+   }
+  },
+  {
+   "id": "personal-0128",
+   "occurrence": 1,
+   "date": "2026-02-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 128
+   }
+  },
+  {
+   "id": "personal-0129",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 129
+   }
+  },
+  {
+   "id": "personal-0130",
+   "occurrence": 1,
+   "date": "2026-02-07",
+   "amount": -12300,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 130
+   }
+  },
+  {
+   "id": "personal-0131",
+   "occurrence": 1,
+   "date": "2026-02-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 131
+   }
+  },
+  {
+   "id": "personal-0132",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 132
+   }
+  },
+  {
+   "id": "personal-0133",
+   "occurrence": 1,
+   "date": "2026-02-16",
+   "amount": -67920,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 133
+   }
+  },
+  {
+   "id": "personal-0134",
+   "occurrence": 1,
+   "date": "2026-02-16",
+   "amount": -182080,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 134
+   }
+  },
+  {
+   "id": "personal-0135",
+   "occurrence": 1,
+   "date": "2026-02-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 135
+   }
+  },
+  {
+   "id": "personal-0136",
+   "occurrence": 1,
+   "date": "2026-02-20",
+   "amount": -67800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 136
+   }
+  },
+  {
+   "id": "personal-0137",
+   "occurrence": 1,
+   "date": "2026-02-20",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 137
+   }
+  },
+  {
+   "id": "personal-0138",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -96500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Home rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 138
+   }
+  },
+  {
+   "id": "personal-0139",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -71000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flat rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 139
+   }
+  },
+  {
+   "id": "personal-0140",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 140
+   }
+  },
+  {
+   "id": "personal-0141",
+   "occurrence": 1,
+   "date": "2026-03-01",
+   "amount": -12400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Life and income protection",
+   "code": "",
+   "reference": "",
+   "otherParty": "AIA New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 141
+   }
+  },
+  {
+   "id": "personal-0142",
+   "occurrence": 1,
+   "date": "2026-03-02",
+   "amount": -15000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Donation",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson Tasman Hospice",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 142
+   }
+  },
+  {
+   "id": "personal-0143",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 143
+   }
+  },
+  {
+   "id": "personal-0144",
+   "occurrence": 1,
+   "date": "2026-03-07",
+   "amount": -14200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 144
+   }
+  },
+  {
+   "id": "personal-0145",
+   "occurrence": 1,
+   "date": "2026-03-08",
+   "amount": -23900,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bedding",
+   "code": "",
+   "reference": "",
+   "otherParty": "Briscoes Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 145
+   }
+  },
+  {
+   "id": "personal-0146",
+   "occurrence": 1,
+   "date": "2026-03-09",
+   "amount": -8999,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fibre and mobile",
+   "code": "",
+   "reference": "",
+   "otherParty": "One NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 146
+   }
+  },
+  {
+   "id": "personal-0147",
+   "occurrence": 1,
+   "date": "2026-03-14",
+   "amount": -12650,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Tap washers and silicone",
+   "code": "",
+   "reference": "",
+   "otherParty": "Mitre 10 Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 147
+   }
+  },
+  {
+   "id": "personal-0148",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": 516517,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Salary, after PAYE and KiwiSaver",
+   "code": "",
+   "reference": "",
+   "otherParty": "Te Whatu Ora Nelson Marlborough",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 148
+   }
+  },
+  {
+   "id": "personal-0149",
+   "occurrence": 1,
+   "date": "2026-03-16",
+   "amount": -68225,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Principal",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 149
+   }
+  },
+  {
+   "id": "personal-0150",
+   "occurrence": 1,
+   "date": "2026-03-16",
+   "amount": -181775,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB home loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 150
+   }
+  },
+  {
+   "id": "personal-0151",
+   "occurrence": 1,
+   "date": "2026-03-18",
+   "amount": -188417,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB rental loan",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 151
+   }
+  },
+  {
+   "id": "personal-0152",
+   "occurrence": 1,
+   "date": "2026-03-20",
+   "amount": 36850,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Dividend after imputation credits and RWT",
+   "code": "",
+   "reference": "",
+   "otherParty": "Fisher & Paykel Healthcare",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 152
+   }
+  },
+  {
+   "id": "personal-0153",
+   "occurrence": 1,
+   "date": "2026-03-20",
+   "amount": -70500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Groceries",
+   "code": "",
+   "reference": "",
+   "otherParty": "Woolworths Richmond",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 153
+   }
+  },
+  {
+   "id": "personal-0154",
+   "occurrence": 1,
+   "date": "2026-03-20",
+   "amount": 112000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, two weeks",
+   "code": "",
+   "reference": "",
+   "otherParty": "J Ruatapu",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 154
+   }
+  },
+  {
+   "id": "personal-0155",
+   "occurrence": 1,
+   "date": "2026-03-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-050",
+   "extras": {
+    "accountLabel": "Kawai Street Rental"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 155
+   }
+  },
+  {
+   "id": "personal-0156",
+   "occurrence": 1,
+   "date": "2026-03-31",
+   "amount": 22512,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Savings interest 336.00 less RWT 110.88",
+   "code": "",
+   "reference": "",
+   "otherParty": "ASB",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "12-3140-0456789-000",
+   "extras": {
+    "accountLabel": "Sam Taylor Everyday"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "personal.csv",
+    "line": 156
+   }
+  }
+ ],
+ "overrides": {
+  "personal-0001": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-04-01"
+  },
+  "personal-0002": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-04-04"
+  },
+  "personal-0003": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-04-07"
+  },
+  "personal-0004": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-04-09"
+  },
+  "personal-0005": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-04-15"
+  },
+  "personal-0006": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-04-16"
+  },
+  "personal-0007": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-04-16"
+  },
+  "personal-0008": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-04-18"
+  },
+  "personal-0009": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-04-18"
+  },
+  "personal-0010": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-04-20"
+  },
+  "personal-0011": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-04-28"
+  },
+  "personal-0012": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-05-01"
+  },
+  "personal-0013": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-05-02"
+  },
+  "personal-0014": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-05-07"
+  },
+  "personal-0015": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-05-09"
+  },
+  "personal-0016": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-05-15"
+  },
+  "personal-0017": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-05-16"
+  },
+  "personal-0018": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-05-16"
+  },
+  "personal-0019": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-05-16"
+  },
+  "personal-0020": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-05-18"
+  },
+  "personal-0021": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-05-20"
+  },
+  "personal-0022": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-05-28"
+  },
+  "personal-0023": {
+   "confirmed": true,
+   "code": "Rates, home - 455",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Home rates instalment",
+   "at": "2025-05-30"
+  },
+  "personal-0024": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-05-30"
+  },
+  "personal-0025": {
+   "confirmed": true,
+   "code": "Rates - 445R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Flat rates instalment",
+   "at": "2025-05-30"
+  },
+  "personal-0026": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-06-01"
+  },
+  "personal-0027": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-06-07"
+  },
+  "personal-0028": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-06-09"
+  },
+  "personal-0029": {
+   "confirmed": true,
+   "code": "Insurance - 433R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Landlord insurance, annual",
+   "at": "2025-06-11"
+  },
+  "personal-0030": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-06-13"
+  },
+  "personal-0031": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-06-15"
+  },
+  "personal-0032": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-06-16"
+  },
+  "personal-0033": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-06-16"
+  },
+  "personal-0034": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-06-18"
+  },
+  "personal-0035": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-06-20"
+  },
+  "personal-0036": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-06-27"
+  },
+  "personal-0037": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-06-28"
+  },
+  "personal-0038": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-07-01"
+  },
+  "personal-0039": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-07-07"
+  },
+  "personal-0040": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-07-09"
+  },
+  "personal-0041": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-07-11"
+  },
+  "personal-0042": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-07-15"
+  },
+  "personal-0043": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-07-16"
+  },
+  "personal-0044": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-07-16"
+  },
+  "personal-0045": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-07-18"
+  },
+  "personal-0046": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-07-20"
+  },
+  "personal-0047": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-07-25"
+  },
+  "personal-0048": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-07-28"
+  },
+  "personal-0049": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-08-01"
+  },
+  "personal-0050": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-08-07"
+  },
+  "personal-0051": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-08-08"
+  },
+  "personal-0052": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-08-09"
+  },
+  "personal-0053": {
+   "confirmed": true,
+   "code": "Health and dental - 430",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "GP visit",
+   "at": "2025-08-14"
+  },
+  "personal-0054": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-08-15"
+  },
+  "personal-0055": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-08-16"
+  },
+  "personal-0056": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-08-16"
+  },
+  "personal-0057": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-08-18"
+  },
+  "personal-0058": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-08-20"
+  },
+  "personal-0059": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-08-22"
+  },
+  "personal-0060": {
+   "confirmed": true,
+   "code": "Rates, home - 455",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Home rates instalment",
+   "at": "2025-08-28"
+  },
+  "personal-0061": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-08-28"
+  },
+  "personal-0062": {
+   "confirmed": true,
+   "code": "Rates - 445R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Flat rates instalment",
+   "at": "2025-08-28"
+  },
+  "personal-0063": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-09-01"
+  },
+  "personal-0064": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-09-05"
+  },
+  "personal-0065": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-09-07"
+  },
+  "personal-0066": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-09-09"
+  },
+  "personal-0067": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-09-15"
+  },
+  "personal-0068": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-09-16"
+  },
+  "personal-0069": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-09-16"
+  },
+  "personal-0070": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-09-18"
+  },
+  "personal-0071": {
+   "confirmed": true,
+   "code": "Dividends (cash received) - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Dividend after imputation credits and RWT",
+   "at": "2025-09-19"
+  },
+  "personal-0072": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-09-19"
+  },
+  "personal-0073": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-09-20"
+  },
+  "personal-0074": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 473R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Replace rangehood",
+   "at": "2025-09-22"
+  },
+  "personal-0075": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-09-28"
+  },
+  "personal-0076": {
+   "confirmed": true,
+   "code": "Interest (after RWT) - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Savings interest 300.00 less RWT 99.00",
+   "at": "2025-09-30"
+  },
+  "personal-0077": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-10-01"
+  },
+  "personal-0078": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-10-03"
+  },
+  "personal-0079": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-10-07"
+  },
+  "personal-0080": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-10-09"
+  },
+  "personal-0081": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-10-15"
+  },
+  "personal-0082": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-10-16"
+  },
+  "personal-0083": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-10-16"
+  },
+  "personal-0084": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-10-17"
+  },
+  "personal-0085": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-10-18"
+  },
+  "personal-0086": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-10-20"
+  },
+  "personal-0087": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-10-28"
+  },
+  "personal-0088": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-10-31"
+  },
+  "personal-0089": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-11-01"
+  },
+  "personal-0090": {
+   "confirmed": true,
+   "code": "Health and dental - 430",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Dentist",
+   "at": "2025-11-03"
+  },
+  "personal-0091": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-11-07"
+  },
+  "personal-0092": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-11-09"
+  },
+  "personal-0093": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-11-14"
+  },
+  "personal-0094": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-11-15"
+  },
+  "personal-0095": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-11-16"
+  },
+  "personal-0096": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-11-16"
+  },
+  "personal-0097": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-11-18"
+  },
+  "personal-0098": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-11-20"
+  },
+  "personal-0099": {
+   "confirmed": true,
+   "code": "Rates, home - 455",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Home rates instalment",
+   "at": "2025-11-28"
+  },
+  "personal-0100": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-11-28"
+  },
+  "personal-0101": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-11-28"
+  },
+  "personal-0102": {
+   "confirmed": true,
+   "code": "Rates - 445R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Flat rates instalment",
+   "at": "2025-11-28"
+  },
+  "personal-0103": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2025-12-01"
+  },
+  "personal-0104": {
+   "confirmed": true,
+   "code": "Donations - 420",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Donation",
+   "at": "2025-12-05"
+  },
+  "personal-0105": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2025-12-07"
+  },
+  "personal-0106": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2025-12-09"
+  },
+  "personal-0107": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-12-12"
+  },
+  "personal-0108": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2025-12-15"
+  },
+  "personal-0109": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2025-12-16"
+  },
+  "personal-0110": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2025-12-16"
+  },
+  "personal-0111": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2025-12-18"
+  },
+  "personal-0112": {
+   "confirmed": true,
+   "code": "Net worth - 960",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "From the rental account",
+   "at": "2025-12-19"
+  },
+  "personal-0113": {
+   "confirmed": true,
+   "code": "Capital withdrawn, Kawai Street - 980R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rental surplus moved to the everyday account",
+   "at": "2025-12-19"
+  },
+  "personal-0114": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2025-12-20"
+  },
+  "personal-0115": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2025-12-26"
+  },
+  "personal-0116": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-12-28"
+  },
+  "personal-0117": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2026-01-01"
+  },
+  "personal-0118": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2026-01-07"
+  },
+  "personal-0119": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2026-01-09"
+  },
+  "personal-0120": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-01-09"
+  },
+  "personal-0121": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2026-01-15"
+  },
+  "personal-0122": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2026-01-16"
+  },
+  "personal-0123": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2026-01-16"
+  },
+  "personal-0124": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2026-01-18"
+  },
+  "personal-0125": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2026-01-20"
+  },
+  "personal-0126": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-01-23"
+  },
+  "personal-0127": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-01-28"
+  },
+  "personal-0128": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2026-02-01"
+  },
+  "personal-0129": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-02-06"
+  },
+  "personal-0130": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2026-02-07"
+  },
+  "personal-0131": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2026-02-09"
+  },
+  "personal-0132": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2026-02-15"
+  },
+  "personal-0133": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2026-02-16"
+  },
+  "personal-0134": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2026-02-16"
+  },
+  "personal-0135": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2026-02-18"
+  },
+  "personal-0136": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2026-02-20"
+  },
+  "personal-0137": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-02-20"
+  },
+  "personal-0138": {
+   "confirmed": true,
+   "code": "Rates, home - 455",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Home rates instalment",
+   "at": "2026-02-27"
+  },
+  "personal-0139": {
+   "confirmed": true,
+   "code": "Rates - 445R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Flat rates instalment",
+   "at": "2026-02-27"
+  },
+  "personal-0140": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-02-28"
+  },
+  "personal-0141": {
+   "confirmed": true,
+   "code": "Insurance - 440",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Life and income protection",
+   "at": "2026-03-01"
+  },
+  "personal-0142": {
+   "confirmed": true,
+   "code": "Donations - 420",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Donation",
+   "at": "2026-03-02"
+  },
+  "personal-0143": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-03-06"
+  },
+  "personal-0144": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Power",
+   "at": "2026-03-07"
+  },
+  "personal-0146": {
+   "confirmed": true,
+   "code": "Power and internet - 450",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Fibre and mobile",
+   "at": "2026-03-09"
+  },
+  "personal-0148": {
+   "confirmed": true,
+   "code": "Salary (net pay) - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Salary, after PAYE and KiwiSaver",
+   "at": "2026-03-15"
+  },
+  "personal-0149": {
+   "confirmed": true,
+   "code": "Home loan, ASB - 900",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Principal",
+   "at": "2026-03-16"
+  },
+  "personal-0150": {
+   "confirmed": true,
+   "code": "Home loan interest - 460",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest",
+   "at": "2026-03-16"
+  },
+  "personal-0151": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Interest only",
+   "at": "2026-03-18"
+  },
+  "personal-0152": {
+   "confirmed": true,
+   "code": "Dividends (cash received) - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Dividend after imputation credits and RWT",
+   "at": "2026-03-20"
+  },
+  "personal-0153": {
+   "confirmed": true,
+   "code": "Groceries and household - 470",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Groceries",
+   "at": "2026-03-20"
+  },
+  "personal-0154": {
+   "confirmed": true,
+   "code": "Rent received - 200R",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, two weeks",
+   "at": "2026-03-20"
+  },
+  "personal-0155": {
+   "confirmed": true,
+   "code": "Bank fees - 404R",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-03-28"
+  },
+  "personal-0156": {
+   "confirmed": true,
+   "code": "Interest (after RWT) - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Savings interest 336.00 less RWT 110.88",
+   "at": "2026-03-31"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "sam-taylor",
+    "name": "Sam Taylor",
+    "note": "Sam's own accounts",
+    "about": "A physiotherapist at Nelson Hospital on $83,200, with a home loan, some shares, and a rented flat.",
+    "kind": "personal",
+    "gstRegistered": false,
+    "owners": [
+     {
+      "name": "Sam Taylor",
+      "percent": 100
+     }
+    ]
+   },
+   {
+    "id": "flat-2-kawai-street",
+    "name": "Flat 2, 14 Kawai Street",
+    "note": "Residential rental, Sam's alone",
+    "about": "A two-bedroom flat let at $560 a week, managed by Sam. Interest-only loan.",
+    "kind": "residential",
+    "gstRegistered": false,
+    "owners": [
+     {
+      "name": "Sam Taylor",
+      "percent": 100
+     }
+    ]
+   }
+  ],
+  "accounts": {
+   "200": "sam-taylor",
+   "270": "sam-taylor",
+   "275": "sam-taylor",
+   "420": "sam-taylor",
+   "430": "sam-taylor",
+   "440": "sam-taylor",
+   "450": "sam-taylor",
+   "455": "sam-taylor",
+   "460": "sam-taylor",
+   "470": "sam-taylor",
+   "720": "sam-taylor",
+   "900": "sam-taylor",
+   "960": "sam-taylor",
+   "200R": "flat-2-kawai-street",
+   "404R": "flat-2-kawai-street",
+   "433R": "flat-2-kawai-street",
+   "437R": "flat-2-kawai-street",
+   "445R": "flat-2-kawai-street",
+   "473R": "flat-2-kawai-street",
+   "720R": "flat-2-kawai-street",
+   "900R": "flat-2-kawai-street",
+   "970R": "flat-2-kawai-street",
+   "980R": "flat-2-kawai-street"
+  },
+  "banks": {
+   "12-3140-0456789-000": [
+    "sam-taylor"
+   ],
+   "12-3140-0456789-050": [
+    "flat-2-kawai-street"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "200",
+   "name": "Salary (net pay)",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "270",
+   "name": "Interest (after RWT)",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "275",
+   "name": "Dividends (cash received)",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "420",
+   "name": "Donations",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "430",
+   "name": "Health and dental",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "440",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "450",
+   "name": "Power and internet",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "455",
+   "name": "Rates, home",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "460",
+   "name": "Home loan interest",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "470",
+   "name": "Groceries and household",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "exempt",
+   "entityKind": "personal"
+  },
+  {
+   "code": "720",
+   "name": "Home, 9 Ngaio Rise",
+   "type": "Fixed Asset",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "personal"
+  },
+  {
+   "code": "900",
+   "name": "Home loan, ASB",
+   "type": "Non-current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "personal"
+  },
+  {
+   "code": "960",
+   "name": "Net worth",
+   "type": "Retained Earnings",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Sam Taylor",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "personal"
+  },
+  {
+   "code": "200R",
+   "name": "Rent received",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "404R",
+   "name": "Bank fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "433R",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "437R",
+   "name": "Mortgage interest",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "445R",
+   "name": "Rates",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "473R",
+   "name": "Repairs and maintenance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "720R",
+   "name": "Flat 2, 14 Kawai Street",
+   "type": "Fixed Asset",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "residential"
+  },
+  {
+   "code": "900R",
+   "name": "Rental loan, ASB",
+   "type": "Non-current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "residential"
+  },
+  {
+   "code": "970R",
+   "name": "Owner's capital, Kawai Street",
+   "type": "Equity",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "residential"
+  },
+  {
+   "code": "980R",
+   "name": "Capital withdrawn, Kawai Street",
+   "type": "Equity",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Flat 2, 14 Kawai Street",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "residential"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2025-04-01",
+  "source": "Last year's signed accounts",
+  "accounts": {
+   "720": 72000000,
+   "900": -41200000,
+   "960": -31285020,
+   "12-3140-0456789-000": 485020,
+   "12-3140-0456789-050": 460000,
+   "720R": 54500000,
+   "900R": -38000000,
+   "970R": -16960000
+  }
+ },
+ "assets": [],
+ "invoices": [],
+ "taxExtras": [
+  {
+   "owner": "Sam Taylor",
+   "year": 2026,
+   "category": "salary",
+   "payer": "Te Whatu Ora",
+   "gross": 8319996,
+   "credits": 1872204
+  },
+  {
+   "owner": "Sam Taylor",
+   "year": 2026,
+   "category": "interest",
+   "payer": "ASB",
+   "gross": 63600,
+   "credits": 20988
+  },
+  {
+   "owner": "Sam Taylor",
+   "year": 2026,
+   "category": "dividends",
+   "payer": "Contact Energy, Fisher & Paykel Healthcare",
+   "gross": 115000,
+   "credits": 5750,
+   "imputation": 32200
+  }
+ ],
+ "singleEntityConfirmed": false,
+ "aiEnabled": true,
+ "ir3Details": [
+  {
+   "owner": "Sam Taylor",
+   "year": 2026,
+   "provisionalTaxPaid": 0
+  }
+ ]
+}

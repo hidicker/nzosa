@@ -11,7 +11,8 @@ import { showPage } from "../app.js";
 
 export interface LessonStep {
   title: string;
-  body: string;
+  /** Said on the card. Worked out as the step starts where it depends on the screen. */
+  body: string | (() => string);
   /** Go to this page first. */
   page?: string;
   /** What to circle. Nothing, or nothing found, shows the card alone. */
@@ -20,10 +21,12 @@ export interface LessonStep {
    * A hands-on step: what to do, said in bold. The lesson waits until
    * `done` says it has happened, or the person skips it.
    */
-  task?: string;
+  task?: string | (() => string);
   done?: () => boolean;
   /** Run as the step starts: remember what to watch, for `done`. */
   before?: () => void;
+  /** Left out when this says no, as the lesson starts: a part these books do not have. */
+  when?: () => boolean;
 }
 
 export interface Lesson {
@@ -32,6 +35,8 @@ export interface Lesson {
   /** One sentence for the Tutorials page. */
   summary: string;
   minutes: number;
+  /** The demo books it is written for, by persona id; every set when absent. */
+  books?: readonly string[];
   steps: LessonStep[];
 }
 
@@ -44,9 +49,43 @@ export interface LessonEnd {
 
 let running: (() => void) | null = null;
 
+const shown = (e: Element): e is HTMLElement =>
+  e instanceof HTMLElement && e.offsetParent !== null && e.getBoundingClientRect().width > 0;
+
+/**
+ * Where a target is on screen, or null when it is not on screen at all.
+ *
+ * Some targets have no box of their own -- a menu group on a narrow screen is
+ * laid out as its buttons alone -- so the box around whatever of it is shown
+ * stands in for it.
+ */
+function boxOf(target: Element | null): DOMRect | null {
+  if (target === null) return null;
+  if (shown(target)) return target.getBoundingClientRect();
+  const parts = [...target.querySelectorAll("*")].filter(shown).map((e) => e.getBoundingClientRect());
+  if (parts.length === 0) return null;
+  const left = Math.min(...parts.map((r) => r.left));
+  const top = Math.min(...parts.map((r) => r.top));
+  const right = Math.max(...parts.map((r) => r.right));
+  const bottom = Math.max(...parts.map((r) => r.bottom));
+  return new DOMRect(left, top, right - left, bottom - top);
+}
+
+/** The part of a target that can be scrolled to. */
+function scrollable(target: Element | null): HTMLElement | null {
+  if (target === null) return null;
+  if (shown(target)) return target;
+  return [...target.querySelectorAll("*")].find(shown) ?? null;
+}
+
 /** Stop whatever lesson is running, as if "Continue later" were pressed. */
 export function stopLesson(): void {
   running?.();
+}
+
+/** Whether a target is anywhere on screen, for a step's `when`. */
+export function onScreen(target: Element | null): boolean {
+  return boxOf(target) !== null;
 }
 
 export function lessonRunning(): boolean {
@@ -61,8 +100,9 @@ function el<K extends keyof HTMLElementTagNameMap>(tag: K, className: string, te
 }
 
 /** Run a lesson from a step. Resolves once it ends, however it ends. */
-export function runLesson(lesson: Lesson, from = 0): Promise<LessonEnd> {
+export function runLesson(given: Lesson, from = 0): Promise<LessonEnd> {
   stopLesson();
+  const lesson: Lesson = { ...given, steps: given.steps.filter((s) => s.when?.() ?? true) };
 
   return new Promise((resolve) => {
     let index = Math.min(Math.max(from, 0), lesson.steps.length - 1);
@@ -96,8 +136,7 @@ export function runLesson(lesson: Lesson, from = 0): Promise<LessonEnd> {
     /** Keep the ring on its target as the page scrolls, redraws or resizes. */
     const follow = (): void => {
       const step = lesson.steps[index];
-      const target = step?.target?.() ?? null;
-      const box = target instanceof HTMLElement && target.offsetParent !== null ? target.getBoundingClientRect() : null;
+      const box = boxOf(step?.target?.() ?? null);
       if (box === null || box.width === 0) {
         ring.hidden = true;
         card.classList.remove("tut-card-top");
@@ -127,8 +166,9 @@ export function runLesson(lesson: Lesson, from = 0): Promise<LessonEnd> {
       card.textContent = "";
       const top = el("div", "tut-card-head");
       top.append(el("span", "tut-card-lesson", lesson.title), el("span", "tut-card-count", `${index + 1} of ${lesson.steps.length}`));
-      card.append(top, el("h3", "tut-card-title", step.title), el("p", "tut-card-body", step.body));
-      if (step.task !== undefined) card.append(el("p", "tut-card-task", step.task));
+      const said = (text: string | (() => string)): string => (typeof text === "function" ? text() : text);
+      card.append(top, el("h3", "tut-card-title", step.title), el("p", "tut-card-body", said(step.body)));
+      if (step.task !== undefined) card.append(el("p", "tut-card-task", said(step.task)));
 
       const buttons = el("div", "tut-card-buttons");
       const back = el("button", "", "Back");
@@ -171,8 +211,7 @@ export function runLesson(lesson: Lesson, from = 0): Promise<LessonEnd> {
       buttons.append(back, later, skip, next);
       card.append(buttons);
 
-      const target = step.target?.();
-      if (target instanceof HTMLElement) target.scrollIntoView({ block: "center", behavior: "smooth" });
+      scrollable(step.target?.() ?? null)?.scrollIntoView({ block: "center", behavior: "smooth" });
       (waiting ? skip : next).focus({ preventScroll: true });
     };
 

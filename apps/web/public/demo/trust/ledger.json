@@ -1,0 +1,2378 @@
+{
+ "version": 1,
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "trust-0001",
+   "occurrence": 1,
+   "date": "2025-04-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "trust-0002",
+   "occurrence": 1,
+   "date": "2025-04-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "trust-0003",
+   "occurrence": 1,
+   "date": "2025-04-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "trust-0004",
+   "occurrence": 1,
+   "date": "2025-04-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "trust-0005",
+   "occurrence": 1,
+   "date": "2025-05-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "trust-0006",
+   "occurrence": 1,
+   "date": "2025-05-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "trust-0007",
+   "occurrence": 1,
+   "date": "2025-05-14",
+   "amount": -218400,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "House and landlord insurance, annual",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tower Insurance",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "trust-0008",
+   "occurrence": 1,
+   "date": "2025-05-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "trust-0009",
+   "occurrence": 1,
+   "date": "2025-05-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "trust-0010",
+   "occurrence": 1,
+   "date": "2025-05-30",
+   "amount": -103000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "trust-0011",
+   "occurrence": 1,
+   "date": "2025-06-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "trust-0012",
+   "occurrence": 1,
+   "date": "2025-06-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "trust-0013",
+   "occurrence": 1,
+   "date": "2025-06-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "trust-0014",
+   "occurrence": 1,
+   "date": "2025-06-20",
+   "amount": -172500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Last year's accounts and IR6",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson Tax & Accounting",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "trust-0015",
+   "occurrence": 1,
+   "date": "2025-06-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "trust-0016",
+   "occurrence": 1,
+   "date": "2025-07-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "trust-0017",
+   "occurrence": 1,
+   "date": "2025-07-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "trust-0018",
+   "occurrence": 1,
+   "date": "2025-07-08",
+   "amount": -41200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water cylinder valve",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tasman Plumbing",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "trust-0019",
+   "occurrence": 1,
+   "date": "2025-07-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "trust-0020",
+   "occurrence": 1,
+   "date": "2025-07-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "trust-0021",
+   "occurrence": 1,
+   "date": "2025-08-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "trust-0022",
+   "occurrence": 1,
+   "date": "2025-08-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "trust-0023",
+   "occurrence": 1,
+   "date": "2025-08-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "trust-0024",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "trust-0025",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -103000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "trust-0026",
+   "occurrence": 1,
+   "date": "2025-09-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "trust-0027",
+   "occurrence": 1,
+   "date": "2025-09-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "trust-0028",
+   "occurrence": 1,
+   "date": "2025-09-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "trust-0029",
+   "occurrence": 1,
+   "date": "2025-09-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "trust-0030",
+   "occurrence": 1,
+   "date": "2025-09-30",
+   "amount": 90282,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Term deposit interest 1,347.50 less RWT 444.68",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "trust-0031",
+   "occurrence": 1,
+   "date": "2025-10-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "trust-0032",
+   "occurrence": 1,
+   "date": "2025-10-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "trust-0033",
+   "occurrence": 1,
+   "date": "2025-10-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "trust-0034",
+   "occurrence": 1,
+   "date": "2025-10-21",
+   "amount": -28800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Section tidy between tenants",
+   "code": "",
+   "reference": "",
+   "otherParty": "Glen's Gardens",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "trust-0035",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "trust-0036",
+   "occurrence": 1,
+   "date": "2025-11-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "trust-0037",
+   "occurrence": 1,
+   "date": "2025-11-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "trust-0038",
+   "occurrence": 1,
+   "date": "2025-11-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "trust-0039",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "trust-0040",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -103000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "trust-0041",
+   "occurrence": 1,
+   "date": "2025-12-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "trust-0042",
+   "occurrence": 1,
+   "date": "2025-12-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "trust-0043",
+   "occurrence": 1,
+   "date": "2025-12-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "trust-0044",
+   "occurrence": 1,
+   "date": "2025-12-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "trust-0045",
+   "occurrence": 1,
+   "date": "2026-01-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "trust-0046",
+   "occurrence": 1,
+   "date": "2026-01-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "trust-0047",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "trust-0048",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "trust-0049",
+   "occurrence": 1,
+   "date": "2026-02-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "trust-0050",
+   "occurrence": 1,
+   "date": "2026-02-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "trust-0051",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "trust-0052",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -103000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rates instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson City Council",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "trust-0053",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "trust-0054",
+   "occurrence": 1,
+   "date": "2026-03-05",
+   "amount": 338000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent, 8 Totara Place",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "trust-0055",
+   "occurrence": 1,
+   "date": "2026-03-05",
+   "amount": -31096,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% plus GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harcourts Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "trust-0056",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": -36700,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fence palings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bunnings Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "trust-0057",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -222840,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest, interest only",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "trust-0058",
+   "occurrence": 1,
+   "date": "2026-03-18",
+   "amount": -9600,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Annual check",
+   "code": "",
+   "reference": "",
+   "otherParty": "Smoke Alarm Services NZ",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "trust-0059",
+   "occurrence": 1,
+   "date": "2026-03-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "trust-0060",
+   "occurrence": 1,
+   "date": "2026-03-31",
+   "amount": 90282,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Term deposit interest 1,347.50 less RWT 444.68",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "38-9014-0789012-000",
+   "extras": {
+    "accountLabel": "Whitcombe Family Trust"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "trust.csv",
+    "line": 60
+   }
+  }
+ ],
+ "overrides": {
+  "trust-0001": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-04-05"
+  },
+  "trust-0002": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-04-05"
+  },
+  "trust-0003": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-04-15"
+  },
+  "trust-0004": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-04-28"
+  },
+  "trust-0005": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-05-05"
+  },
+  "trust-0006": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-05-05"
+  },
+  "trust-0007": {
+   "confirmed": true,
+   "code": "Insurance - 433",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "House and landlord insurance, annual",
+   "at": "2025-05-14"
+  },
+  "trust-0008": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-05-15"
+  },
+  "trust-0009": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-05-28"
+  },
+  "trust-0010": {
+   "confirmed": true,
+   "code": "Rates - 445",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rates instalment",
+   "at": "2025-05-30"
+  },
+  "trust-0011": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-06-05"
+  },
+  "trust-0012": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-06-05"
+  },
+  "trust-0013": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-06-15"
+  },
+  "trust-0014": {
+   "confirmed": true,
+   "code": "Accounting fees - 412",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Last year's accounts and IR6",
+   "at": "2025-06-20"
+  },
+  "trust-0015": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-06-28"
+  },
+  "trust-0016": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-07-05"
+  },
+  "trust-0017": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-07-05"
+  },
+  "trust-0018": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 473",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Hot water cylinder valve",
+   "at": "2025-07-08"
+  },
+  "trust-0019": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-07-15"
+  },
+  "trust-0020": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-07-28"
+  },
+  "trust-0021": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-08-05"
+  },
+  "trust-0022": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-08-05"
+  },
+  "trust-0023": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-08-15"
+  },
+  "trust-0024": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-08-28"
+  },
+  "trust-0025": {
+   "confirmed": true,
+   "code": "Rates - 445",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rates instalment",
+   "at": "2025-08-28"
+  },
+  "trust-0026": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-09-05"
+  },
+  "trust-0027": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-09-05"
+  },
+  "trust-0028": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-09-15"
+  },
+  "trust-0029": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-09-28"
+  },
+  "trust-0030": {
+   "confirmed": true,
+   "code": "Interest received - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Term deposit interest 1,347.50 less RWT 444.68",
+   "at": "2025-09-30"
+  },
+  "trust-0031": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-10-05"
+  },
+  "trust-0032": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-10-05"
+  },
+  "trust-0033": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-10-15"
+  },
+  "trust-0034": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 473",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Section tidy between tenants",
+   "at": "2025-10-21"
+  },
+  "trust-0035": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-10-28"
+  },
+  "trust-0036": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-11-05"
+  },
+  "trust-0037": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-11-05"
+  },
+  "trust-0038": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-11-15"
+  },
+  "trust-0039": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-11-28"
+  },
+  "trust-0040": {
+   "confirmed": true,
+   "code": "Rates - 445",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rates instalment",
+   "at": "2025-11-28"
+  },
+  "trust-0041": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2025-12-05"
+  },
+  "trust-0042": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2025-12-05"
+  },
+  "trust-0043": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2025-12-15"
+  },
+  "trust-0044": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-12-28"
+  },
+  "trust-0045": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2026-01-05"
+  },
+  "trust-0046": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2026-01-05"
+  },
+  "trust-0047": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2026-01-15"
+  },
+  "trust-0048": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-01-28"
+  },
+  "trust-0049": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2026-02-05"
+  },
+  "trust-0050": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2026-02-05"
+  },
+  "trust-0051": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2026-02-15"
+  },
+  "trust-0052": {
+   "confirmed": true,
+   "code": "Rates - 445",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rates instalment",
+   "at": "2026-02-27"
+  },
+  "trust-0053": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-02-28"
+  },
+  "trust-0054": {
+   "confirmed": true,
+   "code": "Rent received - 200",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent, 8 Totara Place",
+   "at": "2026-03-05"
+  },
+  "trust-0055": {
+   "confirmed": true,
+   "code": "Property management fees - 490",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% plus GST",
+   "at": "2026-03-05"
+  },
+  "trust-0057": {
+   "confirmed": true,
+   "code": "Mortgage interest - 437",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest, interest only",
+   "at": "2026-03-15"
+  },
+  "trust-0059": {
+   "confirmed": true,
+   "code": "Bank fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-03-28"
+  },
+  "trust-0060": {
+   "confirmed": true,
+   "code": "Interest received - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Term deposit interest 1,347.50 less RWT 444.68",
+   "at": "2026-03-31"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "whitcombe-family-trust",
+    "name": "Whitcombe Family Trust",
+    "note": "A complying trust",
+    "about": "Settled by Joan Whitcombe in 2014. Owns 8 Totara Place, a rental let at $780 a week through Harcourts, and a term deposit. The house was sold to the trust for a loan Joan holds. Income is allocated to Ana and Tom each year.",
+    "kind": "trust",
+    "gstRegistered": false,
+    "owners": [],
+    "trust": {
+     "type": "complying",
+     "deed": "2014-06-12",
+     "irdNumber": "118-442-008",
+     "registered": true,
+     "settlors": [
+      {
+       "id": "s1",
+       "name": "Joan Whitcombe",
+       "residence": "NZ"
+      }
+     ],
+     "appointers": [
+      {
+       "id": "a1",
+       "name": "Joan Whitcombe",
+       "since": "2014-06-12",
+       "residence": "NZ"
+      }
+     ],
+     "beneficiaries": [
+      {
+       "id": "b1",
+       "name": "Ana Whitcombe",
+       "born": "1984-03-02",
+       "residence": "NZ",
+       "irdNumber": "104-220-304",
+       "accountCode": "811"
+      },
+      {
+       "id": "b2",
+       "name": "Tom Whitcombe",
+       "born": "1982-09-19",
+       "residence": "NZ",
+       "irdNumber": "104-330-401",
+       "accountCode": "812"
+      },
+      {
+       "id": "b3",
+       "name": "Maia Whitcombe",
+       "born": "2012-07-30",
+       "residence": "NZ"
+      }
+     ]
+    }
+   }
+  ],
+  "accounts": {
+   "200": "whitcombe-family-trust",
+   "270": "whitcombe-family-trust",
+   "404": "whitcombe-family-trust",
+   "412": "whitcombe-family-trust",
+   "433": "whitcombe-family-trust",
+   "437": "whitcombe-family-trust",
+   "445": "whitcombe-family-trust",
+   "473": "whitcombe-family-trust",
+   "490": "whitcombe-family-trust",
+   "610": "whitcombe-family-trust",
+   "720": "whitcombe-family-trust",
+   "811": "whitcombe-family-trust",
+   "812": "whitcombe-family-trust",
+   "900": "whitcombe-family-trust",
+   "910": "whitcombe-family-trust",
+   "960": "whitcombe-family-trust",
+   "970": "whitcombe-family-trust",
+   "975": "whitcombe-family-trust"
+  },
+  "banks": {
+   "38-9014-0789012-000": [
+    "whitcombe-family-trust"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "200",
+   "name": "Rent received",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "270",
+   "name": "Interest received",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "404",
+   "name": "Bank fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "412",
+   "name": "Accounting fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "433",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "437",
+   "name": "Mortgage interest",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "445",
+   "name": "Rates",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "473",
+   "name": "Repairs and maintenance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "490",
+   "name": "Property management fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "exempt",
+   "entityKind": "trust"
+  },
+  {
+   "code": "610",
+   "name": "Term deposit, Kiwibank",
+   "type": "Current Asset",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "720",
+   "name": "Land and buildings, 8 Totara Place",
+   "type": "Fixed Asset",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "811",
+   "name": "Beneficiary current account, Ana Whitcombe",
+   "type": "Current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "812",
+   "name": "Beneficiary current account, Tom Whitcombe",
+   "type": "Current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "900",
+   "name": "Westpac loan",
+   "type": "Non-current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "910",
+   "name": "Loan from Joan Whitcombe",
+   "type": "Non-current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "960",
+   "name": "Accumulated trust income",
+   "type": "Retained Earnings",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "970",
+   "name": "Trust capital",
+   "type": "Equity",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  },
+  {
+   "code": "975",
+   "name": "Beneficiary income allocated",
+   "type": "Equity",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Whitcombe Family Trust",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "trust"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2025-04-01",
+  "source": "Last year's signed accounts",
+  "accounts": {
+   "610": 5500000,
+   "720": 68500000,
+   "900": -43200000,
+   "910": -25000000,
+   "960": -6774015,
+   "970": -10000,
+   "38-9014-0789012-000": 984015
+  }
+ },
+ "assets": [],
+ "invoices": [],
+ "taxExtras": [],
+ "singleEntityConfirmed": true,
+ "aiEnabled": true,
+ "manualJournals": [
+  {
+   "id": "trust-allocation-2026",
+   "date": "2026-03-31",
+   "narration": "Beneficiary income allocated by trustees' resolution of 31 March 2026",
+   "lines": [
+    {
+     "code": "Beneficiary income allocated - 975",
+     "amount": 300000,
+     "description": "Income allocated"
+    },
+    {
+     "code": "Beneficiary current account, Ana Whitcombe - 811",
+     "amount": -150000,
+     "description": "Ana Whitcombe"
+    },
+    {
+     "code": "Beneficiary current account, Tom Whitcombe - 812",
+     "amount": -150000,
+     "description": "Tom Whitcombe"
+    }
+   ]
+  }
+ ],
+ "trustReturns": {
+  "whitcombe-family-trust:2026": {
+   "classes": {
+    "200": "residential"
+   },
+   "placements": {
+    "433": "residential",
+    "437": "residential",
+    "445": "residential",
+    "473": "residential",
+    "490": "residential"
+   },
+   "rwtInterest": 88936,
+   "allocations": {
+    "b1": 150000,
+    "b2": 150000
+   },
+   "otherIncome": {
+    "b1": 7248000,
+    "b2": 5860000
+   },
+   "taxableDistributions": {},
+   "openingBalances": {
+    "b1": 0,
+    "b2": 0
+   },
+   "distributionsTaxable": {},
+   "distributionsNotTaxable": {},
+   "withdrawals": {},
+   "settlements": {},
+   "placementsOfBalances": {
+    "720": "land",
+    "910": "associated"
+   }
+  }
+ }
+}

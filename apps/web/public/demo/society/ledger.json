@@ -1,0 +1,2819 @@
+{
+ "version": 1,
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "society-0001",
+   "occurrence": 1,
+   "date": "2025-04-02",
+   "amount": 42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "society-0002",
+   "occurrence": 1,
+   "date": "2025-04-07",
+   "amount": 486000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Senior subscriptions, 32",
+   "code": "",
+   "reference": "",
+   "otherParty": "Members' subscriptions",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "society-0003",
+   "occurrence": 1,
+   "date": "2025-04-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "society-0004",
+   "occurrence": 1,
+   "date": "2025-04-22",
+   "amount": 216000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Junior and family subscriptions",
+   "code": "",
+   "reference": "",
+   "otherParty": "Members' subscriptions",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "society-0005",
+   "occurrence": 1,
+   "date": "2025-04-22",
+   "amount": -11240,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "society-0006",
+   "occurrence": 1,
+   "date": "2025-04-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "society-0007",
+   "occurrence": 1,
+   "date": "2025-05-03",
+   "amount": 26000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "society-0008",
+   "occurrence": 1,
+   "date": "2025-05-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "society-0009",
+   "occurrence": 1,
+   "date": "2025-05-12",
+   "amount": 330000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Senior subscriptions, 22",
+   "code": "",
+   "reference": "",
+   "otherParty": "Members' subscriptions",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "society-0010",
+   "occurrence": 1,
+   "date": "2025-05-12",
+   "amount": -184000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Boats, clubroom and liability, annual",
+   "code": "",
+   "reference": "",
+   "otherParty": "Marsden Marine Insurance",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "society-0011",
+   "occurrence": 1,
+   "date": "2025-05-22",
+   "amount": -12810,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "society-0012",
+   "occurrence": 1,
+   "date": "2025-05-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "society-0013",
+   "occurrence": 1,
+   "date": "2025-05-29",
+   "amount": -48000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar stock",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gilmour Beverages",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "society-0014",
+   "occurrence": 1,
+   "date": "2025-06-02",
+   "amount": -28000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Club affiliation",
+   "code": "",
+   "reference": "",
+   "otherParty": "Yachting New Zealand",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "society-0015",
+   "occurrence": 1,
+   "date": "2025-06-03",
+   "amount": -72000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Learn-to-sail coaching block",
+   "code": "",
+   "reference": "",
+   "otherParty": "Mel Turei Coaching",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "society-0016",
+   "occurrence": 1,
+   "date": "2025-06-04",
+   "amount": 18000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "society-0017",
+   "occurrence": 1,
+   "date": "2025-06-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "society-0018",
+   "occurrence": 1,
+   "date": "2025-06-18",
+   "amount": 600000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grant to replace two training dinghies",
+   "code": "",
+   "reference": "Grant 2025/114",
+   "otherParty": "Tasman Community Trust",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "society-0019",
+   "occurrence": 1,
+   "date": "2025-06-22",
+   "amount": -14150,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "society-0020",
+   "occurrence": 1,
+   "date": "2025-06-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "society-0021",
+   "occurrence": 1,
+   "date": "2025-07-02",
+   "amount": 16000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "society-0022",
+   "occurrence": 1,
+   "date": "2025-07-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "society-0023",
+   "occurrence": 1,
+   "date": "2025-07-22",
+   "amount": -14720,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "society-0024",
+   "occurrence": 1,
+   "date": "2025-07-24",
+   "amount": -318500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Two training dinghies, from the grant",
+   "code": "",
+   "reference": "",
+   "otherParty": "Sunburst Sailboats Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "society-0025",
+   "occurrence": 1,
+   "date": "2025-07-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "society-0026",
+   "occurrence": 1,
+   "date": "2025-08-03",
+   "amount": 19000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "society-0027",
+   "occurrence": 1,
+   "date": "2025-08-09",
+   "amount": -64200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Sails and fittings for the new dinghies",
+   "code": "",
+   "reference": "",
+   "otherParty": "Sunburst Sailboats Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "society-0028",
+   "occurrence": 1,
+   "date": "2025-08-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "society-0029",
+   "occurrence": 1,
+   "date": "2025-08-14",
+   "amount": -52500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar stock",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gilmour Beverages",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "society-0030",
+   "occurrence": 1,
+   "date": "2025-08-22",
+   "amount": -13930,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "society-0031",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "society-0032",
+   "occurrence": 1,
+   "date": "2025-09-04",
+   "amount": 31000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "society-0033",
+   "occurrence": 1,
+   "date": "2025-09-08",
+   "amount": -72000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Learn-to-sail coaching block",
+   "code": "",
+   "reference": "",
+   "otherParty": "Mel Turei Coaching",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "society-0034",
+   "occurrence": 1,
+   "date": "2025-09-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "society-0035",
+   "occurrence": 1,
+   "date": "2025-09-15",
+   "amount": 298000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Season start, seniors and families",
+   "code": "",
+   "reference": "",
+   "otherParty": "Members' subscriptions",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "society-0036",
+   "occurrence": 1,
+   "date": "2025-09-22",
+   "amount": -11860,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "society-0037",
+   "occurrence": 1,
+   "date": "2025-09-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "society-0038",
+   "occurrence": 1,
+   "date": "2025-10-02",
+   "amount": 52000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "society-0039",
+   "occurrence": 1,
+   "date": "2025-10-06",
+   "amount": 286000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Late joiners",
+   "code": "",
+   "reference": "",
+   "otherParty": "Members' subscriptions",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "society-0040",
+   "occurrence": 1,
+   "date": "2025-10-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "society-0041",
+   "occurrence": 1,
+   "date": "2025-10-22",
+   "amount": -9640,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "society-0042",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "society-0043",
+   "occurrence": 1,
+   "date": "2025-10-30",
+   "amount": -22800,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rescue boat engine service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Marine Services",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "society-0044",
+   "occurrence": 1,
+   "date": "2025-11-03",
+   "amount": 64000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "society-0045",
+   "occurrence": 1,
+   "date": "2025-11-05",
+   "amount": 25000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Donation toward the youth programme",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nelson Rotary Club",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "society-0046",
+   "occurrence": 1,
+   "date": "2025-11-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "society-0047",
+   "occurrence": 1,
+   "date": "2025-11-20",
+   "amount": -39000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar stock",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gilmour Beverages",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "society-0048",
+   "occurrence": 1,
+   "date": "2025-11-22",
+   "amount": -8420,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "society-0049",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "society-0050",
+   "occurrence": 1,
+   "date": "2025-12-04",
+   "amount": 72000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "society-0051",
+   "occurrence": 1,
+   "date": "2025-12-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "society-0052",
+   "occurrence": 1,
+   "date": "2025-12-10",
+   "amount": -96000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Learn-to-sail coaching block",
+   "code": "",
+   "reference": "",
+   "otherParty": "Mel Turei Coaching",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "society-0053",
+   "occurrence": 1,
+   "date": "2025-12-22",
+   "amount": -7910,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "society-0054",
+   "occurrence": 1,
+   "date": "2025-12-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "society-0055",
+   "occurrence": 1,
+   "date": "2026-01-02",
+   "amount": 88000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "society-0056",
+   "occurrence": 1,
+   "date": "2026-01-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "society-0057",
+   "occurrence": 1,
+   "date": "2026-01-10",
+   "amount": -86500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Marquee and tables for the regatta",
+   "code": "",
+   "reference": "",
+   "otherParty": "Top Tent Hire",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "society-0058",
+   "occurrence": 1,
+   "date": "2026-01-12",
+   "amount": 77000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "22 entries, online",
+   "code": "",
+   "reference": "",
+   "otherParty": "Regatta entries",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "society-0059",
+   "occurrence": 1,
+   "date": "2026-01-16",
+   "amount": -34200,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Regatta trophies and prizes",
+   "code": "",
+   "reference": "",
+   "otherParty": "Trophy World Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "society-0060",
+   "occurrence": 1,
+   "date": "2026-01-17",
+   "amount": 84000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "24 entries, on the day",
+   "code": "",
+   "reference": "",
+   "otherParty": "Regatta entries",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "society-0061",
+   "occurrence": 1,
+   "date": "2026-01-22",
+   "amount": -8830,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "society-0062",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "society-0063",
+   "occurrence": 1,
+   "date": "2026-02-03",
+   "amount": 76000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "society-0064",
+   "occurrence": 1,
+   "date": "2026-02-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "society-0065",
+   "occurrence": 1,
+   "date": "2026-02-12",
+   "amount": -61000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar stock",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gilmour Beverages",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "society-0066",
+   "occurrence": 1,
+   "date": "2026-02-21",
+   "amount": 8000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Donation",
+   "code": "",
+   "reference": "",
+   "otherParty": "A Pennington",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "society-0067",
+   "occurrence": 1,
+   "date": "2026-02-22",
+   "amount": -9140,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "society-0068",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "society-0069",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": 61000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bar and canteen, banked monthly",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clubroom bar takings",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "society-0070",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": -14600,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Paint and varnish",
+   "code": "",
+   "reference": "",
+   "otherParty": "Mitre 10 Nelson",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "society-0071",
+   "occurrence": 1,
+   "date": "2026-03-10",
+   "amount": -42000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom ground lease",
+   "code": "",
+   "reference": "",
+   "otherParty": "Port Nelson Ltd",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "society-0072",
+   "occurrence": 1,
+   "date": "2026-03-11",
+   "amount": -9500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Regatta programmes",
+   "code": "",
+   "reference": "",
+   "otherParty": "Anchor Printing",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "society-0073",
+   "occurrence": 1,
+   "date": "2026-03-19",
+   "amount": 12000,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Programme advert",
+   "code": "",
+   "reference": "",
+   "otherParty": "B Hartley Ltd",
+   "origin": "",
+   "type": "CR",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "society-0074",
+   "occurrence": 1,
+   "date": "2026-03-22",
+   "amount": -10270,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Clubroom power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Contact Energy",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "society-0075",
+   "occurrence": 1,
+   "date": "2026-03-28",
+   "amount": -500,
+   "currency": "NZD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Account fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kiwibank",
+   "origin": "",
+   "type": "DB",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "03-0702-0345678-000",
+   "extras": {
+    "accountLabel": "Harbourside Sailing Club Cheque"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "society.csv",
+    "line": 75
+   }
+  }
+ ],
+ "overrides": {
+  "society-0001": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-04-02"
+  },
+  "society-0002": {
+   "confirmed": true,
+   "code": "Subscriptions - 400",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Senior subscriptions, 32",
+   "at": "2025-04-07"
+  },
+  "society-0003": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-04-10"
+  },
+  "society-0004": {
+   "confirmed": true,
+   "code": "Subscriptions - 400",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Junior and family subscriptions",
+   "at": "2025-04-22"
+  },
+  "society-0005": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-04-22"
+  },
+  "society-0006": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-04-28"
+  },
+  "society-0007": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-05-03"
+  },
+  "society-0008": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-05-10"
+  },
+  "society-0009": {
+   "confirmed": true,
+   "code": "Subscriptions - 400",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Senior subscriptions, 22",
+   "at": "2025-05-12"
+  },
+  "society-0010": {
+   "confirmed": true,
+   "code": "Insurance - 500",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Boats, clubroom and liability, annual",
+   "at": "2025-05-12"
+  },
+  "society-0011": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-05-22"
+  },
+  "society-0012": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-05-28"
+  },
+  "society-0013": {
+   "confirmed": true,
+   "code": "Bar and canteen stock - 540",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bar stock",
+   "at": "2025-05-29"
+  },
+  "society-0014": {
+   "confirmed": true,
+   "code": "Affiliation fees - 560",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Club affiliation",
+   "at": "2025-06-02"
+  },
+  "society-0015": {
+   "confirmed": true,
+   "code": "Coaching - 520",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Learn-to-sail coaching block",
+   "at": "2025-06-03"
+  },
+  "society-0016": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-06-04"
+  },
+  "society-0017": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-06-10"
+  },
+  "society-0018": {
+   "confirmed": true,
+   "code": "Grants - 420",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Grant to replace two training dinghies",
+   "at": "2025-06-18"
+  },
+  "society-0019": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-06-22"
+  },
+  "society-0020": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-06-28"
+  },
+  "society-0021": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-07-02"
+  },
+  "society-0022": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-07-10"
+  },
+  "society-0023": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-07-22"
+  },
+  "society-0024": {
+   "confirmed": true,
+   "code": "Training fleet purchases - 515",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Two training dinghies, from the grant",
+   "at": "2025-07-24"
+  },
+  "society-0025": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-07-28"
+  },
+  "society-0026": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-08-03"
+  },
+  "society-0027": {
+   "confirmed": true,
+   "code": "Training fleet purchases - 515",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Sails and fittings for the new dinghies",
+   "at": "2025-08-09"
+  },
+  "society-0028": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-08-10"
+  },
+  "society-0029": {
+   "confirmed": true,
+   "code": "Bar and canteen stock - 540",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bar stock",
+   "at": "2025-08-14"
+  },
+  "society-0030": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-08-22"
+  },
+  "society-0031": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-08-28"
+  },
+  "society-0032": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-09-04"
+  },
+  "society-0033": {
+   "confirmed": true,
+   "code": "Coaching - 520",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Learn-to-sail coaching block",
+   "at": "2025-09-08"
+  },
+  "society-0034": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-09-10"
+  },
+  "society-0035": {
+   "confirmed": true,
+   "code": "Subscriptions - 400",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Season start, seniors and families",
+   "at": "2025-09-15"
+  },
+  "society-0036": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-09-22"
+  },
+  "society-0037": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-09-28"
+  },
+  "society-0038": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-10-02"
+  },
+  "society-0039": {
+   "confirmed": true,
+   "code": "Subscriptions - 400",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Late joiners",
+   "at": "2025-10-06"
+  },
+  "society-0040": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-10-10"
+  },
+  "society-0041": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-10-22"
+  },
+  "society-0042": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-10-28"
+  },
+  "society-0043": {
+   "confirmed": true,
+   "code": "Boat repairs and maintenance - 510",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Rescue boat engine service",
+   "at": "2025-10-30"
+  },
+  "society-0044": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-11-03"
+  },
+  "society-0045": {
+   "confirmed": true,
+   "code": "Donations - 430",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Donation toward the youth programme",
+   "at": "2025-11-05"
+  },
+  "society-0046": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-11-10"
+  },
+  "society-0047": {
+   "confirmed": true,
+   "code": "Bar and canteen stock - 540",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bar stock",
+   "at": "2025-11-20"
+  },
+  "society-0048": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-11-22"
+  },
+  "society-0049": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-11-28"
+  },
+  "society-0050": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2025-12-04"
+  },
+  "society-0051": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2025-12-10"
+  },
+  "society-0052": {
+   "confirmed": true,
+   "code": "Coaching - 520",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Learn-to-sail coaching block",
+   "at": "2025-12-10"
+  },
+  "society-0053": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2025-12-22"
+  },
+  "society-0054": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2025-12-28"
+  },
+  "society-0055": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2026-01-02"
+  },
+  "society-0056": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2026-01-10"
+  },
+  "society-0057": {
+   "confirmed": true,
+   "code": "Regatta costs - 550",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Marquee and tables for the regatta",
+   "at": "2026-01-10"
+  },
+  "society-0058": {
+   "confirmed": true,
+   "code": "Regatta entry fees - 440",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "22 entries, online",
+   "at": "2026-01-12"
+  },
+  "society-0059": {
+   "confirmed": true,
+   "code": "Regatta costs - 550",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Regatta trophies and prizes",
+   "at": "2026-01-16"
+  },
+  "society-0060": {
+   "confirmed": true,
+   "code": "Regatta entry fees - 440",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "24 entries, on the day",
+   "at": "2026-01-17"
+  },
+  "society-0061": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2026-01-22"
+  },
+  "society-0062": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-01-28"
+  },
+  "society-0063": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2026-02-03"
+  },
+  "society-0064": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2026-02-10"
+  },
+  "society-0065": {
+   "confirmed": true,
+   "code": "Bar and canteen stock - 540",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bar stock",
+   "at": "2026-02-12"
+  },
+  "society-0066": {
+   "confirmed": true,
+   "code": "Donations - 430",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Donation",
+   "at": "2026-02-21"
+  },
+  "society-0067": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2026-02-22"
+  },
+  "society-0068": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-02-28"
+  },
+  "society-0069": {
+   "confirmed": true,
+   "code": "Bar and canteen sales - 410",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Bar and canteen, banked monthly",
+   "at": "2026-03-04"
+  },
+  "society-0071": {
+   "confirmed": true,
+   "code": "Clubroom lease - 530",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom ground lease",
+   "at": "2026-03-10"
+  },
+  "society-0074": {
+   "confirmed": true,
+   "code": "Clubroom power - 535",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Clubroom power",
+   "at": "2026-03-22"
+  },
+  "society-0075": {
+   "confirmed": true,
+   "code": "Bank fees - 580",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Account fee",
+   "at": "2026-03-28"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "harbourside-sailing-club",
+    "name": "Harbourside Sailing Club Incorporated",
+    "note": "An incorporated society",
+    "about": "A volunteer-run sailing club on Nelson's waterfront: 124 members, junior learn-to-sail, a clubroom bar, one regatta a year, and a grant this year to renew the training fleet.",
+    "kind": "nonprofit",
+    "gstRegistered": false,
+    "owners": [],
+    "nonprofit": {
+     "form": "society"
+    }
+   }
+  ],
+  "accounts": {
+   "400": "harbourside-sailing-club",
+   "410": "harbourside-sailing-club",
+   "420": "harbourside-sailing-club",
+   "430": "harbourside-sailing-club",
+   "440": "harbourside-sailing-club",
+   "500": "harbourside-sailing-club",
+   "510": "harbourside-sailing-club",
+   "515": "harbourside-sailing-club",
+   "520": "harbourside-sailing-club",
+   "530": "harbourside-sailing-club",
+   "535": "harbourside-sailing-club",
+   "540": "harbourside-sailing-club",
+   "550": "harbourside-sailing-club",
+   "560": "harbourside-sailing-club",
+   "570": "harbourside-sailing-club",
+   "580": "harbourside-sailing-club",
+   "810": "harbourside-sailing-club",
+   "960": "harbourside-sailing-club"
+  },
+  "banks": {
+   "03-0702-0345678-000": [
+    "harbourside-sailing-club"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "400",
+   "name": "Subscriptions",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "410",
+   "name": "Bar and canteen sales",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "420",
+   "name": "Grants",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "430",
+   "name": "Donations",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "440",
+   "name": "Regatta entry fees",
+   "type": "Revenue",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "500",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "510",
+   "name": "Boat repairs and maintenance",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "515",
+   "name": "Training fleet purchases",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "520",
+   "name": "Coaching",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "530",
+   "name": "Clubroom lease",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "535",
+   "name": "Clubroom power",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "540",
+   "name": "Bar and canteen stock",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "550",
+   "name": "Regatta costs",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "560",
+   "name": "Affiliation fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "570",
+   "name": "Printing and stationery",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "580",
+   "name": "Bank fees",
+   "type": "Expense",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "exempt",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "810",
+   "name": "Grants received in advance",
+   "type": "Current Liability",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "nonprofit"
+  },
+  {
+   "code": "960",
+   "name": "Accumulated funds",
+   "type": "Retained Earnings",
+   "taxCode": "No GST",
+   "description": "",
+   "entity": "Harbourside Sailing Club Incorporated",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "nonprofit"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2025-04-01",
+  "source": "Last year's signed accounts",
+  "accounts": {
+   "960": -2428640,
+   "03-0702-0345678-000": 2428640
+  }
+ },
+ "assets": [],
+ "invoices": [],
+ "taxExtras": [],
+ "singleEntityConfirmed": true,
+ "aiEnabled": true,
+ "societyReports": {
+  "harbourside-sailing-club:2024": {
+   "figures": {
+    "operatingPayments": 1587210,
+    "currentAssets": 2170580,
+    "totalExpenses": 1587210
+   }
+  },
+  "harbourside-sailing-club:2025": {
+   "figures": {
+    "operatingPayments": 1694050,
+    "currentAssets": 2428640,
+    "totalExpenses": 1694050
+   }
+  },
+  "harbourside-sailing-club:2026": {
+   "figures": {
+    "operatingPayments": 1845720,
+    "currentAssets": 3569920,
+    "totalExpenses": 1845720
+   },
+   "signers": [
+    "Kate Rowe, Commodore",
+    "Tom Hira, Treasurer"
+   ]
+  }
+ },
+ "grants": [
+  {
+   "id": "tct-2025-114",
+   "entityId": "harbourside-sailing-club",
+   "funder": "Tasman Community Trust",
+   "purpose": "Replace two worn training dinghies and fit them out",
+   "amount": 600000,
+   "from": "2025-06-01",
+   "to": "2026-12-31",
+   "conditions": "To be spent on the training fleet. A report with receipts is due once it is spent; any unspent money is returned.",
+   "conditional": true,
+   "reportDue": "2027-01-31"
+  }
+ ],
+ "grantLinks": {
+  "society-0018": "tct-2025-114",
+  "society-0024": "tct-2025-114",
+  "society-0027": "tct-2025-114"
+ }
+}

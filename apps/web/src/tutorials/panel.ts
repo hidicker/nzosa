@@ -140,8 +140,10 @@ export function openTutorials(): void {
   if (chooser !== null) body.append(chooser);
 
   const held = progress();
-  const nextUp = LESSONS.find((l) => held[l.id]?.status !== "done");
-  for (const lesson of LESSONS) body.append(lessonCard(lesson, held[lesson.id], lesson === nextUp));
+  const books = currentDemoPersona();
+  const lessons = LESSONS.filter((l) => l.books === undefined || l.books.includes(books));
+  const nextUp = lessons.find((l) => held[l.id]?.status !== "done");
+  for (const lesson of lessons) body.append(lessonCard(lesson, held[lesson.id], lesson === nextUp));
 
   box.append(head, body);
   box.addEventListener("cancel", (event) => {

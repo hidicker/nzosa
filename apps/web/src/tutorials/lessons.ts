@@ -630,7 +630,7 @@ export const LESSONS: readonly Lesson[] = [
   {
     id: "us-quickbooks",
     title: "Moving from QuickBooks",
-    summary: "Bring a QuickBooks Online company's accounts and bank lines across with two exports.",
+    summary: "Bring a QuickBooks company across: two exports from QuickBooks Online, or an IIF file from QuickBooks Desktop.",
     minutes: 2,
     books: ["us"],
     steps: [
@@ -645,7 +645,9 @@ export const LESSONS: readonly Lesson[] = [
         title: "Drop them in",
         body:
           "Drop both files on Setup, or on Start here. NZOSA works out what each one is: the chart becomes the " +
-          "chart, and the bank and card postings become bank lines.",
+          "chart, the bank and card postings become bank lines, invoices and bills come in with their payments, " +
+          "and the rest of the entries become journals. From QuickBooks Desktop, drop its IIF file instead: it " +
+          "holds the accounts, customers, vendors and transactions in one.",
         target: visible("#setup-drop, .dropzone"),
       },
       {
@@ -656,10 +658,47 @@ export const LESSONS: readonly Lesson[] = [
         page: "check",
       },
       {
-        title: "What QuickBooks does not hold",
+        title: "What comes out different",
         body:
-          "Account codes: QuickBooks has none, so they are made, in ranges by type. Split entries come across " +
-          "uncoded for you to split here.",
+          "Account codes: QuickBooks Online has none, so they are made, in ranges by type. A credit card shows " +
+          "as a bank account with a negative balance, as it does in Xero; net assets are the same.",
+      },
+    ],
+  },
+  {
+    id: "us-customers",
+    title: "Customers, time and getting paid",
+    summary: "Customer records, hours turned into an invoice, and a reminder for an invoice past due.",
+    minutes: 3,
+    books: ["us"],
+    steps: [
+      {
+        title: "Customers and vendors",
+        body:
+          "Each customer and vendor has a record: email, address, terms and a credit limit, and for a vendor " +
+          "whether a W-9 is on file and a 1099-NEC is due. What each owes or is owed is beside them.",
+        page: "contacts",
+      },
+      {
+        title: "Past due",
+        body:
+          "Lakeside Realty has an invoice weeks past due. Reminder makes a letter to print or email, firmer the " +
+          "later it is. Late fee drafts an invoice for a percentage of what is past due, for you to approve.",
+        page: "contacts",
+      },
+      {
+        title: "Time",
+        body:
+          "Hours worked for a customer, at a rate. Northwind Dental has some not invoiced yet: Make invoice " +
+          "drafts the invoice with a line for each entry.",
+        page: "time",
+      },
+      {
+        title: "Classes",
+        body:
+          "Give bank lines and invoices a class, such as a job or a department, and the Profit and loss by " +
+          "class report shows what each one made.",
+        page: "classes",
       },
     ],
   },

@@ -22,10 +22,13 @@ ledger with their payments applied; a sales tax report; a payroll tax
 worksheet for Form 941; self-employment and estimated tax; estimates made
 into invoices; purchase orders that post nothing until approved; products and
 services that fill an invoice line; budgets and budget vs actual; customer
-statements; classes with a profit and loss by class; and QuickBooks Desktop
-IIF import (chart, customers, vendors and transactions). Still not built:
-stock quantities, jobs and job costing, time, collection letters and late
-fees, a US payroll engine (941, 940, W-2), and the nonprofit statements.
+statements; classes with a profit and loss by class; QuickBooks Desktop
+IIF import (chart, customers, vendors, transactions and classes); time
+entries invoiced by customer; reminder letters, late fees and writing off
+small balances; credit limits; a vendor's usual account. Jobs are classes
+(time can carry one, and its invoice goes under it). Still not built: stock
+quantities, a US payroll engine (941, 940, W-2), and the nonprofit
+statements.
 
 ## Sales (money in)
 

@@ -147,6 +147,9 @@ Shown for books kept outside New Zealand:
 - **Budgets** (`budgets-page.ts`): one figure per income or expense account per year, and a **Budget vs actual** report with the year to date.
 - **Estimates and purchase orders**: an invoice saved as an estimate, or a bill kept as a purchase order, posts nothing until it is made an invoice or approved. An estimate prints and emails as an estimate.
 - **Customer statements**: from Customers & vendors, a printable statement of what a customer owes, aged.
+- **Getting paid**: from Customers & vendors, a reminder letter for what is past due (a first reminder, second notice or final notice by how late the oldest invoice is), a late fee drafted as an invoice to approve, and small balances written off to a bad debts account in one go. A customer can have a credit limit, which warns when an invoice would go over it; a vendor a usual account, which fills a new bill.
+- **Time** (`time-page.ts`, core `time-entries.ts`): hours for a customer at a rate, optionally for a class; what is not invoiced is gathered by customer and drafted into an invoice with a line per entry.
+- **Classes** (`classes-page.ts`, core `classes.ts`): a class given to a bank line, invoice or journal, and a **Profit and loss by class** report. An invoice's payment goes with the invoice.
 - **Invoice documents** drop the GST column and write dates month first where there is no sales tax.
 - **Reports**: Schedule C, Schedule E, Contractors and 1099-NEC (with W-9 on file), Self-employment and estimated tax, Sales tax collected and paid (read from the liability accounts), and a Payroll tax worksheet for Form 941 (read from the wage and payroll tax accounts, by quarter).
 

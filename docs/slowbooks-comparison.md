@@ -12,6 +12,18 @@ through SlowBooks' own screens, so a detail may differ in use.
 
 "No" means NZOSA has nothing like it. "Partly" says what it has.
 
+## Since this was written
+
+Built after it, for non-New Zealand books: customer and vendor records (name,
+company, email, phone, address, terms, tax ID, W-9, 1099 flag), imported from
+QuickBooks lists and from the names on a QuickBooks ledger; statement-by-
+statement bank reconciliation; invoices and bills read from a QuickBooks
+ledger with their payments applied; a sales tax report; a payroll tax
+worksheet for Form 941; self-employment and estimated tax. Still not built:
+estimates, purchase orders, items and stock, jobs, classes, time, budgets,
+statements and collection letters, a US payroll engine (941, 940, W-2), and
+the nonprofit statements.
+
 ## Sales (money in)
 
 | SlowBooks | NZOSA |

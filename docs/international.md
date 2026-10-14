@@ -112,22 +112,28 @@ The guides are guidance, not certified figures: confirm each rate with the ATO, 
 
 ## Moving from QuickBooks Online
 
-Two exports, dropped on Setup (or Start here) together or one at a time:
+Two exports, dropped on Setup (or Start here) together or one at a time, and
+optionally the customer and vendor lists:
+
 - **Chart of accounts** (Accounting > Chart of accounts > Export): account name, type and detail type. QuickBooks has no account codes, so they are made: 1100s receivables, 1200s other current assets, 1500s fixed assets, 2000s payables, 2100s other current liabilities, 2500s long-term, 3000s equity, 4000s income, 5000s cost of goods sold, 6000s expenses. Banks and cards get none, as Xero's do. A sub-account keeps its whole name (`Automobile:Fuel`).
-- **General ledger** (Reports > General ledger > Export, all accounts): the postings of the bank and card accounts become bank lines, with a card's sign turned round, and the account on the other side (the Split column) is read as the coding, so the coding check and the rules work as they do for Xero. An entry split across accounts says `-Split-` and is left for you to split.
+- **General ledger** (Reports > General ledger > Export, all accounts). Every posting in it is put back into the entry it came from, and the entries become:
+  - **Bank and card lines**, with a card's sign turned round, coded from the Split column so the coding check and the rules work as they do for Xero.
+  - **Invoices and bills as documents**, with their payments applied to them oldest first: matched where a payment settled one, split where it settled several, recorded as paid outside the bank for a deposit to undeposited funds or a credit memo. They age, can be emailed and are matched like any other. Receivables and payables post to the chart's own accounts.
+  - **Splits** on a bank line QuickBooks spread over several accounts; **transfers** paired between your own accounts; **journals** for the rest (stock adjustments, journal entries, sales receipts).
+  - **Customers and vendors**, from the names on the entries, as records.
+- **Customers and Vendors lists** (the Export on each page): addresses, emails, phone, terms, W-9 and 1099 flags, read by heading, by name, into the same records.
 
-It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: invoices, bills, customers, the trial balance, tax reports.
+Checked against QuickBooks' own reports for the sample company: profit and loss, balance sheet net assets, receivables and payables all agree to the cent. A credit card is shown as a negative asset (as Xero's are), not a liability; net assets are the same.
 
-## Testing
+It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts` and `contact-lists.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: the trial balance, tax reports, estimates, purchase orders, items and classes.
 
-- `npm test`: the core tests, including:
-  - `jurisdiction`, `sales-tax`, `country-forms`, `country-charts` and `ofx`
-  - New Zealand's GST rounding, checked cent for cent across half a million cents
-- **Parity with `main`**, New Zealand unchanged:
-  - `node tools/parity.mjs --a ../nzosa --b . --ledgers ../nzosa/ledgers --books <sets>`
-  - Run `main` against itself first: it must report identical.
-- **Invented books** for each country:
-  - `node tools/make-country-books.mjs <folder>`, then open one with `--ledgers <folder> --ledger us-books` (or `au-books`, `kr-books`).
+## United States pages
+
+Shown for books kept outside New Zealand:
+
+- **Customers & vendors** (`contacts-page.ts`): records looked up by name from invoices and bills; names are offered when an invoice is written, and an invoice takes the customer's email.
+- **Reconcile a statement** (`statements-page.ts`, core `reconciliation.ts`): type the statement's ending balance, tick the lines it cleared, finish when the difference is nothing. Each finished statement keeps its lines, so the next starts where it ended.
+- **Reports**: Schedule C, Schedule E, Contractors and 1099-NEC (with W-9 on file), Self-employment and estimated tax, Sales tax collected and paid (read from the liability accounts), and a Payroll tax worksheet for Form 941 (read from the wage and payroll tax accounts, by quarter).
 
 ## The United States demo
 

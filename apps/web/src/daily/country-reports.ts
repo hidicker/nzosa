@@ -140,6 +140,185 @@ export function renderScheduleC(body: HTMLElement, year: number): void {
 }
 
 /**
+ * Sales tax: what was collected and what was paid, by the account it sits in.
+ *
+ * Sales tax in the United States is a liability account for each authority --
+ * a state, a county, a district -- and not a rate on each line, so this reads
+ * the accounts rather than the lines: every posting to an account whose name
+ * says it holds sales tax, credits as collected and debits as paid, with what
+ * is still owed. A payment to an authority is a bank line coded to its account.
+ */
+export function renderSalesTax(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `Sales tax — ${year}`;
+  body.append(title);
+  const holds = /sales tax|tax payable|board of equalization|dept\. of revenue|department of revenue|use tax/i;
+  const accounts = state.chart.filter((a) => /liab/i.test(a.type) && holds.test(a.name));
+  if (accounts.length === 0) {
+    body.append(note("No sales tax accounts in the chart. A liability account with Sales tax in its name will be read here."));
+    return;
+  }
+  const codes = new Map(accounts.map((a) => [a.code.trim(), a.name]));
+  const start = `${year}-01-01`;
+  const end = `${year}-12-31`;
+  const rows = new Map<string, { before: number; collected: number; paid: number; lines: { date: string; text: string; amount: number }[] }>();
+  for (const [, name] of codes) rows.set(name, { before: 0, collected: 0, paid: 0, lines: [] });
+  for (const journal of postedJournals()) {
+    for (const line of journal.lines) {
+      const name = codes.get(line.accountCode.trim());
+      const row = name === undefined ? undefined : rows.get(name);
+      if (row === undefined) continue;
+      // Credit negative in the journals: what is owed is the credit side.
+      const owed = -line.amount;
+      if (journal.date < start) row.before += owed;
+      else if (journal.date <= end) {
+        if (owed > 0) row.collected += owed;
+        else row.paid += -owed;
+        row.lines.push({ date: journal.date, text: journal.narration, amount: owed });
+      }
+    }
+  }
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    "<thead><tr><th>Account</th><th>Owed at 1 January</th><th>Collected</th><th>Paid</th><th>Owed at 31 December</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  let totalOwed = 0;
+  for (const [name, row] of rows) {
+    const owedAtEnd = row.before + row.collected - row.paid;
+    totalOwed += owedAtEnd;
+    const tr = document.createElement("tr");
+    for (const [text, cls] of [
+      [name, "report-name"],
+      [money(row.before), "report-amount"],
+      [money(row.collected), "report-amount"],
+      [money(row.paid), "report-amount"],
+      [money(owedAtEnd), "report-amount"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(
+    table,
+    note(
+      `Owed to the authorities at 31 December ${year}: ${money(totalOwed)}. ` +
+        "Collected is what customers were charged on invoices and sales; paid is what has gone to the " +
+        "state or district. Which sales are taxable, and at what rate for each address, is not worked out " +
+        "here: the figures are what the books hold in these accounts.",
+    ),
+  );
+}
+
+/**
+ * Payroll tax by quarter, for Form 941: the wages paid, the tax withheld from
+ * them, the employer's share, and the deposits made.
+ *
+ * A worksheet from the books' own accounts, not a payroll engine: it reads
+ * what was posted to the accounts named for wages and for each payroll tax,
+ * by quarter. The employee-by-employee limits (the Social Security wage base)
+ * and the rounding a payroll service does are not here, so the figures are
+ * what the books hold and not what a 941 will say to the cent.
+ */
+export function renderPayrollTax(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `Payroll tax worksheet (Form 941) — ${year}`;
+  body.append(title);
+  const kinds: { id: "wages" | "income" | "social" | "medicare" | "futa"; pattern: RegExp; label: string }[] = [
+    { id: "wages", pattern: /(wages?|salar(y|ies)|payroll expenses?)/i, label: "Wages and salaries" },
+    { id: "income", pattern: /federal (income )?(tax )?withh|fit|federal income tax/i, label: "Federal income tax withheld" },
+    { id: "social", pattern: /social security|oasdi|fica/i, label: "Social Security tax" },
+    { id: "medicare", pattern: /medicare/i, label: "Medicare tax" },
+    { id: "futa", pattern: /futa|federal unemployment/i, label: "Federal unemployment (FUTA)" },
+  ];
+  const byCode = new Map<string, (typeof kinds)[number]["id"]>();
+  for (const account of state.chart) {
+    const liability = /liab/i.test(account.type);
+    const expense = /expense|overhead|direct/i.test(account.type);
+    const found = kinds.find((k) => k.pattern.test(account.name));
+    if (found === undefined) continue;
+    // Wages are an expense; each tax is read from its payable account.
+    if (found.id === "wages" ? expense : liability || expense) byCode.set(account.code.trim(), found.id);
+  }
+  if (!byCode.size || ![...byCode.values()].includes("wages")) {
+    body.append(
+      note(
+        "No wage account found. Name the expense account for wages \"Wages\" or \"Salaries\", and a payable " +
+          "account for each tax withheld (\"Federal income tax withheld\", \"Social Security\", \"Medicare\"), " +
+          "and they are read here by quarter.",
+      ),
+    );
+    return;
+  }
+  const quarters = [1, 2, 3, 4].map(() => ({ wages: 0, income: 0, social: 0, medicare: 0, futa: 0, deposits: 0 }));
+  for (const journal of postedJournals()) {
+    if (!journal.date.startsWith(String(year))) continue;
+    const quarter = Math.min(3, Math.floor((Number(journal.date.slice(5, 7)) - 1) / 3));
+    const q = quarters[quarter];
+    if (q === undefined) continue;
+    for (const line of journal.lines) {
+      const id = byCode.get(line.accountCode.trim());
+      if (id === undefined) continue;
+      if (id === "wages") q.wages += line.amount;
+      // A payable account: the credit is the tax, a debit is a deposit of it.
+      else if (line.amount < 0) q[id] += -line.amount;
+      else q.deposits += line.amount;
+    }
+  }
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    "<thead><tr><th></th><th>Q1</th><th>Q2</th><th>Q3</th><th>Q4</th><th>Year</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  const rows: [string, (q: (typeof quarters)[number]) => number, boolean?][] = [
+    ["Wages paid (line 2)", (q) => q.wages],
+    ["Federal income tax withheld (line 3)", (q) => q.income],
+    ["Social Security tax, employee and employer (line 5a)", (q) => q.social],
+    ["Medicare tax, employee and employer (line 5c)", (q) => q.medicare],
+    ["Total tax (line 6, without adjustments)", (q) => q.income + q.social + q.medicare, true],
+    ["Deposits made (line 13)", (q) => q.deposits],
+    ["Still to deposit (line 14)", (q) => q.income + q.social + q.medicare - q.deposits, true],
+    ["Federal unemployment tax (Form 940)", (q) => q.futa],
+  ];
+  for (const [label, of, total] of rows) {
+    const tr = document.createElement("tr");
+    if (total === true) tr.className = "report-total";
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = label;
+    tr.append(name);
+    let sum = 0;
+    for (const q of quarters) {
+      const td = document.createElement("td");
+      td.className = "report-amount";
+      const value = of(q);
+      sum += value;
+      td.textContent = money(value);
+      tr.append(td);
+    }
+    const year4 = document.createElement("td");
+    year4.className = "report-amount";
+    year4.textContent = money(sum);
+    tr.append(year4);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(
+    table,
+    note(
+      "Read from the accounts named for wages and for each payroll tax; Social Security and Medicare include " +
+        "the employer's share only if it was posted to the same account. Limits that depend on each employee " +
+        "(the Social Security wage base, the additional Medicare tax) and the number of employees are not worked " +
+        "out: use this to check a payroll service's 941, not to file from. Deposits are debits to those accounts.",
+    ),
+  );
+}
+
+/**
  * Contractors paid over the year's 1099-NEC threshold: every payment posted to
  * an account Schedule C puts on line 11 (contract labor), by payee.
  */
@@ -352,6 +531,8 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["schedulec", "Schedule C (business)"],
       ["contractors", "Contractors and 1099-NEC"],
       ["ustax", "Self-employment and estimated tax"],
+      ["salestax", "Sales tax collected and paid"],
+      ["payrolltax", "Payroll tax worksheet (Form 941)"],
     ],
   },
   au: {

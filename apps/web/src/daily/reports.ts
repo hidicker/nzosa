@@ -1,4 +1,4 @@
-import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
@@ -3495,6 +3495,8 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   schedulec: "The business on Schedule C's lines, with the estimated tax dates.",
   contractors: "Who was paid for contract labor, and whether a 1099-NEC is due.",
   ustax: "Self-employment tax on the business, federal income tax, and the four estimated payments.",
+  salestax: "Sales tax collected and paid, by the account it sits in, and what is still owed.",
+  payrolltax: "Wages and the payroll taxes withheld, by quarter, read from the payroll accounts, for checking a 941.",
   aurental: "Each rental on the ATO's rental property schedule labels.",
   bas: "GST for each quarter as the BAS asks for it: G1, 1A and 1B.",
   krbusiness: "The business on the standard income statement headings (표준손익계산서).",
@@ -4102,6 +4104,8 @@ export function renderReportsPage(): void {
     schedulec: renderScheduleC,
     contractors: renderContractors,
     ustax: renderUsTax,
+    salestax: renderSalesTax,
+    payrolltax: renderPayrollTax,
     aurental: renderAuRentalSchedule,
     bas: renderBas,
     krbusiness: renderKrBusiness,

@@ -1489,15 +1489,21 @@ function renderSetupIntro(): void {
 /**
  * Which country these books are kept in.
  *
- * Only in the international edition, or for books already set to another
- * country: NZOSA as it ships keeps New Zealand's books and never asks. The
- * country decides the tax year, the currency, the rate of GST or VAT, and
- * which returns and pages there are; changing it reloads the app so that
- * everything is drawn again under the new country.
+ * New Zealand is what books are kept in until this is changed. The country
+ * decides the tax year, the currency, the rate of GST or VAT, and which
+ * returns and pages there are; changing it reloads the app so that everything
+ * is drawn again under the new country.
+ *
+ * New Zealand and the United States are offered to everyone. Australia and
+ * South Korea are marked as work in progress, and the international edition
+ * (and any books already set to another country) still lists the rest.
  */
+const WORK_IN_PROGRESS = new Set(["au", "kr"]);
+const OFFERED = new Set(["nz", "us", ...WORK_IN_PROGRESS]);
+const ORDER = (id: string): number => ["nz", "us", "au", "kr"].indexOf(id) + 1 || 99;
+
 function countryBox(): HTMLElement | null {
   const set = state.ledger.jurisdiction;
-  if (edition() !== "international" && (set === undefined || set === "nz")) return null;
   const box = document.createElement("section");
   box.id = "setup-country";
   box.className = "modules-box";
@@ -1505,17 +1511,41 @@ function countryBox(): HTMLElement | null {
   heading.textContent = "Country";
   const select = document.createElement("select");
   select.setAttribute("aria-label", "Country these books are kept in");
-  for (const one of Object.values(JURISDICTIONS)) {
+  const here0 = jurisdictionOf(set).id;
+  for (const one of [...Object.values(JURISDICTIONS)].sort((a, b) => ORDER(a.id) - ORDER(b.id))) {
+    // The others only for the international edition, or books already there.
+    if (!OFFERED.has(one.id) && edition() !== "international" && one.id !== here0) continue;
     const option = document.createElement("option");
     option.value = one.id;
-    option.textContent = one.name;
+    option.textContent = WORK_IN_PROGRESS.has(one.id) ? `${one.name} (work in progress)` : one.name;
     select.append(option);
   }
-  select.value = jurisdictionOf(set).id;
+  select.value = here0;
   select.addEventListener("change", () => {
-    state.ledger = { ...state.ledger, jurisdiction: select.value };
-    select.disabled = true;
-    void savePart(state.ledger).then(() => location.reload());
+    const chosen = select.value;
+    const to = jurisdictionOf(chosen);
+    const previous = jurisdictionOf(state.ledger.jurisdiction);
+    select.value = previous.id;
+    void askOnPage(
+      `Keep these books in ${to.name}?
+
+` +
+        "The tax year, the currency, the sales tax and the returns follow the country. Nothing already in the " +
+        "books is converted or deleted, and you can change it back." +
+        (WORK_IN_PROGRESS.has(chosen)
+          ? `
+
+The ${to.name} pack is still work in progress: reports and rates may be missing or wrong.`
+          : ""),
+      "Change country",
+      "Keep " + previous.name,
+    ).then((yes) => {
+      if (!yes) return;
+      state.ledger = { ...state.ledger, jurisdiction: chosen };
+      select.value = chosen;
+      select.disabled = true;
+      void savePart(state.ledger).then(() => location.reload());
+    });
   });
   const here = jurisdictionOf(set);
   box.append(

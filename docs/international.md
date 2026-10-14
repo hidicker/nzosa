@@ -127,6 +127,16 @@ Checked against QuickBooks' own reports for the sample company: profit and loss,
 
 It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts` and `contact-lists.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: the trial balance, tax reports, estimates, purchase orders, items and classes.
 
+## Moving from QuickBooks Desktop (IIF)
+
+QuickBooks Desktop's IIF export (File > Utilities > Export > Lists to IIF Files, and transactions from an IIF-producing tool) is dropped on Start here like any other export. One file can hold everything:
+
+- `!ACCNT` rows become the chart. An account's own number is kept as its code; one without is given a code from its type, in the same ranges as QuickBooks Online's. `CCARD` accounts are cards.
+- `!CUST` and `!VEND` rows become customer and vendor records, with address, email, phone, terms, tax ID and the 1099 flag.
+- `TRNS`/`SPL`/`ENDTRNS` blocks are entries, debits positive. They go the same way as QuickBooks Online's general ledger: postings to bank and card accounts become bank lines with their coding offered on the coding check, invoices and bills become documents with payments applied, money between your own accounts is paired as transfers, and the rest are journals. An entry that does not balance is left out and listed.
+
+Dates are read month first. Code: `packages/core/src/iif.ts`, sharing `quickBooksBooksFrom` in `quickbooks.ts`. The `CLASS` column is read but not yet given to the Classes page.
+
 ## United States pages
 
 Shown for books kept outside New Zealand:

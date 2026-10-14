@@ -1328,7 +1328,7 @@ function dropZone(): HTMLElement {
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".csv,.xlsx,.txt";
+  input.accept = ".csv,.xlsx,.txt,.iif";
   input.multiple = true;
   input.hidden = true;
 

@@ -9,6 +9,8 @@ import {
   parseQuickBooksLedger,
   parseQuickBooksBooks,
   quickBooksChartFrom,
+  isIif,
+  parseIifBooks,
   parseXeroAllocations,
   parseXeroAccountTransactions,
   payoutGroups,
@@ -257,6 +259,16 @@ export async function loadReference(
       // QuickBooks Online's chart of accounts and general ledger. Read here so
       // they go the same way Xero's do: the chart into the chart, and what each
       // bank line was coded to into the reference the coding is checked against.
+      // QuickBooks Desktop's IIF: its accounts into the chart, and what each
+      // bank line was coded to into the reference, as for QuickBooks Online.
+      if (isIif(text)) {
+        const known = chart.length > 0 ? chart : state.chart;
+        const read = parseIifBooks(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
+        if (read.chart.accounts !== known) chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        lines.push(...read.reference);
+        for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
+        continue;
+      }
       if (isQuickBooksChart(text)) {
         chart.push(...parseQuickBooksChart(text).accounts);
         continue;

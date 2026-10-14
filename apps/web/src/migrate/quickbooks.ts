@@ -1,4 +1,4 @@
-import { mergeContacts, parseContactList, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { isIif, mergeContacts, parseContactList, parseIifBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency } from "../country.js";
@@ -26,7 +26,8 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
   const options = { dayFirst: booksCountry().dayFirst, currency: booksCurrency(), file: file.name };
 
-  if (state.chart.length === 0) {
+  const iif = isIif(text);
+  if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
     await addTransactions(only.transactions, { importer: "quickbooks-ledger", file: file.name, problems: only.problems });
@@ -36,10 +37,14 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     );
   }
 
-  const books = parseQuickBooksBooks(text, quickBooksChartFrom(state.chart), options);
+  const chart = state.chart.length > 0 ? quickBooksChartFrom(state.chart) : null;
+  const fromIif = iif ? parseIifBooks(text, chart, { currency: booksCurrency(), file: file.name }) : null;
+  const books = fromIif ?? parseQuickBooksBooks(text, chart ?? quickBooksChartFrom([]), options);
+  // An IIF file lists its customers and vendors with their details.
+  if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: "quickbooks-ledger",
+      importer: iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });

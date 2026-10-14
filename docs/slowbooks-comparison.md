@@ -19,10 +19,13 @@ company, email, phone, address, terms, tax ID, W-9, 1099 flag), imported from
 QuickBooks lists and from the names on a QuickBooks ledger; statement-by-
 statement bank reconciliation; invoices and bills read from a QuickBooks
 ledger with their payments applied; a sales tax report; a payroll tax
-worksheet for Form 941; self-employment and estimated tax. Still not built:
-estimates, purchase orders, items and stock, jobs, classes, time, budgets,
-statements and collection letters, a US payroll engine (941, 940, W-2), and
-the nonprofit statements.
+worksheet for Form 941; self-employment and estimated tax; estimates made
+into invoices; purchase orders that post nothing until approved; products and
+services that fill an invoice line; budgets and budget vs actual; customer
+statements; classes with a profit and loss by class; and QuickBooks Desktop
+IIF import (chart, customers, vendors and transactions). Still not built:
+stock quantities, jobs and job costing, time, collection letters and late
+fees, a US payroll engine (941, 940, W-2), and the nonprofit statements.
 
 ## Sales (money in)
 

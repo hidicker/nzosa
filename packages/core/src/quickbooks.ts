@@ -38,7 +38,7 @@ export function isQuickBooksLedger(text: string): boolean {
 }
 
 /** Where each of QuickBooks' account types goes in the chart this app keeps. */
-interface Placement {
+export interface Placement {
   type: string;
   /** First code of the range; null for accounts that carry none, as Xero's bank accounts do. */
   base: number | null;
@@ -50,7 +50,7 @@ interface Placement {
   debit: boolean;
 }
 
-function placementOf(type: string, detail: string): Placement {
+export function quickBooksPlacement(type: string, detail: string): Placement {
   const place = placeOf(type, detail);
   const t = type.toLowerCase();
   const debit =
@@ -124,7 +124,7 @@ export function parseQuickBooksChart(text: string): QuickBooksChart {
     const name = cells.get("Account name").trim();
     if (name === "" || seen.has(name)) continue;
     seen.add(name);
-    const place = placementOf(cells.get("Account type"), cells.get("Detail type"));
+    const place = quickBooksPlacement(cells.get("Account type"), cells.get("Detail type"));
     let code = "";
     if (place.base !== null) {
       const n = next.get(place.base) ?? place.base;
@@ -192,7 +192,7 @@ function dateOrderOf(
 }
 
 /** `Business Checking` as `business-checking`, the id an account the file names is given. */
-function accountId(name: string): string {
+export function quickBooksAccountId(name: string): string {
   return (
     name
       .toLowerCase()
@@ -261,7 +261,7 @@ export function parseQuickBooksLedger(text: string, options: QuickBooksLedgerOpt
     const kind = cells.get("Transaction type").trim();
     const number = cells.get("Num").trim();
     const split = cells.get("Split").trim();
-    const id = accountId(name);
+    const id = quickBooksAccountId(name);
 
     transactions.push({
       id: "",
@@ -515,7 +515,21 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
     cardNames: chart.cardNames,
     codes,
   });
-  const parsed = parseQuickBooksEntries(text, chart, options);
+  return quickBooksBooksFrom(ledger, parseQuickBooksEntries(text, chart, options), chart, options);
+}
+
+/**
+ * The books, from QuickBooks' entries and the bank and card lines among them,
+ * however they were read: from QuickBooks Online's general ledger, or from a
+ * QuickBooks Desktop IIF file.
+ */
+export function quickBooksBooksFrom(
+  ledger: QuickBooksLedger,
+  parsed: QuickBooksEntries,
+  chart: QuickBooksChart,
+  options: QuickBooksLedgerOptions = {},
+): QuickBooksBooks {
+  const codes = options.codes ?? new Map(chart.accounts.map((a) => [a.name, a.code]));
   const banks = new Set(chart.bankNames);
   const label = (name: string): string => {
     const code = codes.get(name) ?? "";
@@ -637,7 +651,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
     const rest = others.filter((leg) => leg !== control);
     if (bankLegs.length === 1 && rest.length === 0 && bankLegs[0] !== undefined) {
       const only = bankLegs[0];
-      const id = accountId(only.account);
+      const id = quickBooksAccountId(only.account);
       const found = ledger.transactions.find(
         (t) => t.date === entry.date && t.account === id && t.amount === only.debit && t.type === entry.type && t.code === entry.num,
       );
@@ -728,7 +742,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
       if (a !== undefined && b !== undefined && a.account !== b.account && a.debit === -b.debit) {
         const find = (leg: QuickBooksLeg) =>
           ledger.transactions.find(
-            (x) => x.date === entry.date && x.account === accountId(leg.account) && x.amount === leg.debit && x.type === entry.type && x.code === entry.num,
+            (x) => x.date === entry.date && x.account === quickBooksAccountId(leg.account) && x.amount === leg.debit && x.type === entry.type && x.code === entry.num,
           );
         const ta = find(a);
         const tb = find(b);
@@ -749,7 +763,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
         const at = free.findIndex((o) => o.debit === -leg.debit);
         if (at < 0) continue;
         const target = free.splice(at, 1)[0]?.account ?? "";
-        const id = accountId(leg.account);
+        const id = quickBooksAccountId(leg.account);
         const t = ledger.transactions.find(
           (x) => x.date === entry.date && x.account === id && x.amount === leg.debit && x.type === entry.type && x.code === entry.num,
         );
@@ -773,7 +787,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
     if (accountsOut.size === 1) {
       const target = others[0]?.account ?? "";
       for (const leg of bankLegs) {
-        const id = accountId(leg.account);
+        const id = quickBooksAccountId(leg.account);
         const t = ledger.transactions.find(
           (x) => x.date === entry.date && x.account === id && x.amount === leg.debit && x.type === entry.type && x.code === entry.num,
         );
@@ -797,7 +811,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
     // One bank line spread over several accounts: split it the same way.
     const only = bankLegs.length === 1 ? bankLegs[0] : undefined;
     if (only !== undefined && others.length >= 2) {
-      const accountId2 = accountId(only.account);
+      const accountId2 = quickBooksAccountId(only.account);
       const found = ledger.transactions.find(
         (t) =>
           t.date === entry.date &&

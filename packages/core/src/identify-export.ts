@@ -5,6 +5,7 @@ import { detect } from "./importers/index.js";
 import { isGstReturnSummary } from "./gst-summary.js";
 import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
+import { isIif } from "./iif.js";
 import { isContactList } from "./contact-lists.js";
 
 /**
@@ -47,6 +48,7 @@ export type ExportKind =
   | "ird-export"
   | "quickbooks-chart"
   | "quickbooks-ledger"
+  | "quickbooks-iif"
   | "contact-list"
   | "unknown";
 
@@ -172,6 +174,11 @@ export function identifyExport(text: string): Identified {
   // QuickBooks Online's own two exports. Before everything else: the general
   // ledger carries a date and an amount like any statement, and read as one it
   // would put every account's postings in as bank lines.
+  // QuickBooks Desktop's IIF: tab-separated blocks that no other reader here
+  // knows, holding the chart, the lists and every transaction at once.
+  if (isIif(text)) {
+    return { kind: "quickbooks-iif", what: "QuickBooks Desktop IIF file" };
+  }
   if (isQuickBooksChart(text)) {
     return { kind: "quickbooks-chart", what: "QuickBooks chart of accounts" };
   }

@@ -4,8 +4,7 @@ import type { Theme } from "./ui.js";
 import { backendKind } from "./store.js";
 import { isDemoBuild } from "./ai-consent.js";
 import { loadDemoData } from "./migrate/setup-wizard.js";
-import { DEMO_PERSONAS, currentDemoPersona } from "./demo-personas.js";
-import { showPage } from "./app.js";
+import { openTutorials, openTutorialsOnFirstVisit } from "./tutorials/panel.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -131,47 +130,15 @@ export function wireChrome(): void {
           again.textContent = "Start the demo again";
         });
       });
-      const content = demoBanner.querySelector(".demo-banner-content");
-
-      // Which invented books to look at. Pages only exist for the books that
-      // use them, so a visitor to the roastery never learns that a society's
-      // grants or a trust's IR6 are there; this is how they find out.
-      const who = document.createElement("label");
-      who.className = "demo-banner-persona";
-      const whoText = document.createElement("span");
-      whoText.textContent = "View the demo as ";
-      const choose = document.createElement("select");
-      choose.id = "demo-persona";
-      for (const persona of DEMO_PERSONAS) {
-        const option = document.createElement("option");
-        option.value = persona.id;
-        option.textContent = persona.label;
-        option.title = persona.shows;
-        choose.append(option);
-      }
-      choose.value = currentDemoPersona();
-      choose.addEventListener("change", () => {
-        const wanted = choose.value;
-        choose.disabled = true;
-        void loadDemoData(again, wanted).finally(() => {
-          choose.disabled = false;
-          again.disabled = false;
-          again.textContent = "Start the demo again";
-          choose.value = currentDemoPersona();
-        });
-      });
-      who.append(whoText, choose);
-
-      const start = document.createElement("a");
-      start.href = "#";
-      start.className = "demo-banner-start";
-      start.textContent = "New here? Start here";
-      start.addEventListener("click", (event) => {
-        event.preventDefault();
-        showPage("migration");
-      });
-
-      content?.append(who, start, again);
+      // The lessons: short tours of the real app over the demo books, opened
+      // by themselves on a first visit and from here after that.
+      const tutorials = document.createElement("button");
+      tutorials.type = "button";
+      tutorials.className = "demo-banner-again";
+      tutorials.textContent = "Take a tutorial";
+      tutorials.addEventListener("click", () => openTutorials());
+      demoBanner.querySelector(".demo-banner-content")?.append(tutorials, again);
+      openTutorialsOnFirstVisit();
     }
   }
 

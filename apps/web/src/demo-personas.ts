@@ -15,6 +15,8 @@ export interface DemoPersona {
   shows: string;
   /** Where to land after loading: the page that is this one's own. */
   page: string;
+  /** Offered to visitors. Books still being built are not. */
+  ready?: boolean;
 }
 
 export const DEMO_PERSONAS: readonly DemoPersona[] = [
@@ -23,6 +25,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     label: "A coffee roastery with two rentals",
     shows: "Invoices, GST returns, rental schedules, bank feeds",
     page: "reconcile",
+    ready: true,
   },
   {
     id: "society",

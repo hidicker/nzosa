@@ -2995,25 +2995,6 @@ button.working:not(.primary):not(.active) {
 .demo-banner-again:hover {
   background: rgba(0, 0, 0, 0.45);
 }
-.demo-banner-persona {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  font-weight: 600;
-}
-.demo-banner-persona select {
-  font: inherit;
-  max-width: 100%;
-  padding: 1px 6px;
-  border-radius: 3px;
-  border: 1px solid rgba(255, 255, 255, 0.6);
-  background: rgba(0, 0, 0, 0.28);
-  color: #ffffff;
-}
-.demo-banner-persona select option {
-  color: #111111;
-  background: #ffffff;
-}
 .demo-banner-close {
   position: absolute;
   right: 12px;
@@ -4208,4 +4189,191 @@ select.needs-choice {
   color: var(--accent);
   font-weight: 600;
   cursor: help;
+}
+
+/* --- Tutorials (demo only): the lesson list, and the card and ring a lesson
+   draws over the real app. The ring takes no clicks, so whatever it circles
+   works as it always does. ------------------------------------------------ */
+.tut-panel {
+  margin: 0 0 0 auto;
+  height: 100vh;
+  max-height: none;
+  width: min(440px, 100vw);
+  padding: 0;
+  border: 0;
+  border-left: 1px solid var(--border);
+  background: var(--surface);
+  color: var(--text);
+  box-shadow: -12px 0 32px rgba(10, 37, 64, 0.18);
+}
+.tut-panel::backdrop {
+  background: rgba(10, 37, 64, 0.35);
+}
+.tut-panel-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 20px;
+  border-bottom: 1px solid var(--border);
+  position: sticky;
+  top: 0;
+  background: var(--surface);
+}
+.tut-panel-head h2 {
+  margin: 0;
+  font-size: 1.25rem;
+}
+.tut-panel-close {
+  border-radius: 999px;
+}
+.tut-panel-body {
+  padding: 16px 20px 32px;
+  display: grid;
+  gap: 12px;
+}
+.tut-panel-intro {
+  margin: 0 0 4px;
+  color: var(--muted);
+  line-height: 1.5;
+}
+.tut-section-title {
+  margin: 4px 0;
+  font-size: 0.95rem;
+}
+.tut-lesson {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 14px;
+  padding: 14px 16px;
+  border: 1px solid var(--border);
+  border-radius: 12px;
+}
+.tut-lesson-next {
+  background: var(--accent-soft);
+  border-color: var(--accent);
+}
+.tut-lesson-text {
+  display: grid;
+  gap: 4px;
+}
+.tut-lesson-flag {
+  font-size: 0.72rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--accent);
+}
+.tut-lesson-title {
+  margin: 0;
+  font-size: 1.02rem;
+}
+.tut-lesson-summary {
+  margin: 0;
+  color: var(--muted);
+  line-height: 1.45;
+}
+.tut-lesson-meta {
+  font-size: 0.82rem;
+  color: var(--muted);
+}
+.tut-books {
+  display: grid;
+  gap: 8px;
+}
+.tut-book {
+  display: grid;
+  gap: 2px;
+  text-align: left;
+  padding: 10px 12px;
+  border: 1px solid var(--border);
+  border-radius: 10px;
+  background: var(--surface);
+  color: var(--text);
+}
+.tut-book span {
+  color: var(--muted);
+  font-size: 0.88rem;
+}
+.tut-book-on {
+  border-color: var(--accent);
+  background: var(--accent-soft);
+}
+.tut-ring {
+  position: fixed;
+  z-index: 9998;
+  pointer-events: none;
+  border-radius: 10px;
+  border: 3px solid #f08a3c;
+  box-shadow: 0 0 0 9999px rgba(10, 37, 64, 0.32);
+  transition: left 0.18s, top 0.18s, width 0.18s, height 0.18s;
+}
+.tut-card {
+  position: fixed;
+  z-index: 9999;
+  right: 24px;
+  bottom: 24px;
+  width: min(400px, calc(100vw - 32px));
+  padding: 16px 18px 14px;
+  border-radius: 14px;
+  background: var(--surface);
+  color: var(--text);
+  border: 1px solid var(--border);
+  box-shadow: 0 16px 40px rgba(10, 37, 64, 0.28);
+}
+.tut-card-top {
+  bottom: auto;
+  top: 24px;
+}
+.tut-card-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 0.75rem;
+  font-weight: 700;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--muted);
+}
+.tut-card-title {
+  margin: 6px 0 4px;
+  font-size: 1.15rem;
+}
+.tut-card-body {
+  margin: 0;
+  line-height: 1.5;
+}
+.tut-card-task {
+  margin: 10px 0 0;
+  font-weight: 700;
+}
+.tut-card-done .tut-card-task::after {
+  content: "  Done";
+  color: var(--in);
+}
+.tut-card-buttons {
+  display: flex;
+  flex-wrap: wrap;
+  justify-content: flex-end;
+  gap: 6px;
+  margin-top: 14px;
+}
+.tut-card-buttons .tut-quiet {
+  background: none;
+  border-color: transparent;
+  color: var(--muted);
+}
+.tut-card-buttons button:first-child {
+  margin-right: auto;
+}
+@media (max-width: 640px) {
+  .tut-card {
+    right: 16px;
+    left: 16px;
+    bottom: 16px;
+    width: auto;
+  }
+  .tut-card-top {
+    top: 16px;
+    bottom: auto;
+  }
 }

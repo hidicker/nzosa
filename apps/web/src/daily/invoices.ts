@@ -280,6 +280,16 @@ export function renderInvoiceEditor(): void {
   // A customer already written to keeps the address used last time. Only an
   // empty box is filled: one typed by hand is a decision.
   contact.addEventListener("change", () => {
+    // A vendor's usual account, on a first line that has none yet.
+    if (asBill) {
+      const usual = findContact(state.ledger.contacts ?? [], contact.value)?.defaultAccount;
+      const box = lineHost.querySelector<HTMLInputElement>(".invoice-line .combo-input");
+      if (usual !== undefined && box !== null && box.value.trim() === "") {
+        box.value = accountLabelFor(usual);
+        box.dispatchEvent(new Event("input", { bubbles: true }));
+        box.dispatchEvent(new Event("change", { bubbles: true }));
+      }
+    }
     if (asBill || email.value.trim() !== "") return;
     const remembered =
       emailForContact(state.ledger.invoices ?? [], contact.value) ??
@@ -634,6 +644,27 @@ function accountLabelFor(code: string): string {
   return canonicalCodeFor(code, codes) ?? code;
 }
 
+/**
+ * Whether a customer's credit limit, where one is set, lets this invoice go
+ * in: over it, the person is asked. A limit is a warning, not a refusal.
+ */
+function creditLimitAllows(built: Invoice, existing: Invoice | undefined): boolean {
+  if (built.kind !== "sales" || !isPosted(built)) return true;
+  const limit = findContact(state.ledger.contacts ?? [], built.contact)?.creditLimit;
+  if (limit === undefined) return true;
+  let owed = 0;
+  for (const balance of invoiceBalanceMap().values()) {
+    const other = balance.invoice;
+    if (other === existing || other.kind !== "sales" || !isPosted(other)) continue;
+    if (other.contact.trim().toLowerCase() === built.contact.trim().toLowerCase()) owed += balance.remaining;
+  }
+  const after = owed + built.total - built.paid;
+  if (after <= limit) return true;
+  return confirm(
+    `${built.contact} would owe ${booksMoney(after)}, over their credit limit of ${booksMoney(limit)}.\n\nSave it anyway?`,
+  );
+}
+
 async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promise<void> {
   const noun = built.kind === "purchase" ? "bill" : "invoice";
   if (built.number === "") {
@@ -641,6 +672,7 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     return;
   }
   if (!(await billReady(built))) return;
+  if (!creditLimitAllows(built, existing)) return;
   const invoices = [...(state.ledger.invoices ?? [])];
   const clash = invoices.findIndex((i) => i.number === built.number);
   if (clash >= 0 && invoices[clash] !== existing) {

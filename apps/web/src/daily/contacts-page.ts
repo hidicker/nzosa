@@ -260,6 +260,21 @@ function form(existing: Contact | null): HTMLElement {
   w9.checked = existing?.w9 === true;
   const is1099 = input(undefined, "checkbox");
   is1099.checked = existing?.is1099 === true;
+  const limit = input(existing?.creditLimit === undefined ? "" : (existing.creditLimit / 100).toFixed(2));
+  limit.inputMode = "decimal";
+  limit.placeholder = "None";
+  const usual = document.createElement("select");
+  const noAccount = document.createElement("option");
+  noAccount.value = "";
+  noAccount.textContent = "None";
+  usual.append(noAccount);
+  for (const a of state.chart.filter((one) => /expense|overhead|direct|cost|asset/i.test(one.type))) {
+    const option = document.createElement("option");
+    option.value = a.code.trim();
+    option.textContent = `${a.code} ${a.name}`.trim();
+    option.selected = existing?.defaultAccount === a.code.trim();
+    usual.append(option);
+  }
   const notes = document.createElement("textarea");
   notes.rows = 2;
   notes.value = existing?.notes ?? "";
@@ -285,6 +300,11 @@ function form(existing: Contact | null): HTMLElement {
       problem.textContent = "A name, as it appears on invoices and bills.";
       return;
     }
+    const limitCents = limit.value.trim() === "" ? null : parseAmount(limit.value, booksCurrency());
+    if (limit.value.trim() !== "" && (limitCents === null || limitCents < 0)) {
+      problem.textContent = "A credit limit as an amount, such as 5000, or nothing.";
+      return;
+    }
     const clash = held().find((c) => contactKey(c.name) === contactKey(said) && c.id !== existing?.id);
     if (clash !== undefined) {
       problem.textContent = `${clash.name} is already here.`;
@@ -302,6 +322,8 @@ function form(existing: Contact | null): HTMLElement {
       ...(notes.value.trim() !== "" ? { notes: notes.value.trim() } : {}),
       ...(w9.checked ? { w9: true } : {}),
       ...(is1099.checked ? { is1099: true } : {}),
+      ...(limitCents !== null && limitCents > 0 ? { creditLimit: limitCents } : {}),
+      ...(usual.value !== "" ? { defaultAccount: usual.value } : {}),
     };
     editing = null;
     if (existing === null) {
@@ -332,6 +354,8 @@ function form(existing: Contact | null): HTMLElement {
     field("Address", address),
     field("Payment terms", terms),
     field("Tax ID (EIN, SSN or IRD number)", taxId),
+    field("Credit limit (customers)", limit),
+    field("Bills usually coded to (vendors)", usual),
     ticks,
     field("Notes", notes),
     problem,

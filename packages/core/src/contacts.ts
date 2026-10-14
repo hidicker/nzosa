@@ -31,6 +31,10 @@ export interface Contact {
   w9?: boolean;
   /** To be sent a 1099-NEC when paid over the threshold. */
   is1099?: boolean;
+  /** For a customer: the most they should owe at once, in cents. A warning, not a refusal. */
+  creditLimit?: number;
+  /** For a vendor: the chart code their bills are usually coded to. */
+  defaultAccount?: string;
   notes?: string;
   /** Left off lists and pickers when false; never deleted, so history keeps its name. */
   active?: boolean;

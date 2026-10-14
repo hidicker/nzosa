@@ -344,6 +344,8 @@ export function renderInvoiceEditor(): void {
   const statusChoice = document.createElement("select");
   for (const [value, label] of [
     ["Draft", "Draft: not in the books yet"],
+    // An order placed with a supplier: not owed until the bill comes.
+    ...(booksCountry().id === "nz" ? [] : ([["Purchase order", "Purchase order: ordered, not owed yet"]] as const)),
     ["Awaiting Payment", "Approved: in the books"],
     ["Voided", "Voided: taken back out"],
   ] as const) {
@@ -354,7 +356,9 @@ export function renderInvoiceEditor(): void {
   }
   const said = draft.status.trim().toLowerCase();
   statusChoice.value =
-    said === "draft" || said === "submitted" || said === "awaiting approval"
+    said === "purchase order"
+      ? "Purchase order"
+      : said === "draft" || said === "submitted" || said === "awaiting approval"
       ? "Draft"
       : said === "voided" || said === "deleted"
         ? "Voided"
@@ -541,12 +545,12 @@ export function renderInvoiceEditor(): void {
   approve.className = "primary";
   approve.textContent = "Approve";
   approve.title = "Post it: the cost and GST on the bill date, the amount owing in Accounts Payable.";
-  approve.hidden = !asBill || statusChoice.value !== "Draft";
+  approve.hidden = !asBill || (statusChoice.value !== "Draft" && statusChoice.value !== "Purchase order");
   approve.addEventListener("click", () => {
     void saveInvoice(build("Awaiting Payment"), existing);
   });
   statusChoice.addEventListener("change", () => {
-    approve.hidden = !asBill || statusChoice.value !== "Draft";
+    approve.hidden = !asBill || (statusChoice.value !== "Draft" && statusChoice.value !== "Purchase order");
   });
 
   const cancel = document.createElement("button");

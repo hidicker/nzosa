@@ -6,6 +6,7 @@ import { isGstReturnSummary } from "./gst-summary.js";
 import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
+import { isSlowBooksLedger } from "./slowbooks.js";
 import { isContactList } from "./contact-lists.js";
 
 /**
@@ -49,6 +50,7 @@ export type ExportKind =
   | "quickbooks-chart"
   | "quickbooks-ledger"
   | "quickbooks-iif"
+  | "slowbooks-ledger"
   | "contact-list"
   | "unknown";
 
@@ -178,6 +180,10 @@ export function identifyExport(text: string): Identified {
   // knows, holding the chart, the lists and every transaction at once.
   if (isIif(text)) {
     return { kind: "quickbooks-iif", what: "QuickBooks Desktop IIF file" };
+  }
+  // SlowBooks Pro's general ledger: one row a posting, with its source.
+  if (isSlowBooksLedger(text)) {
+    return { kind: "slowbooks-ledger", what: "SlowBooks general ledger" };
   }
   if (isQuickBooksChart(text)) {
     return { kind: "quickbooks-chart", what: "QuickBooks chart of accounts" };

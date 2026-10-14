@@ -214,6 +214,7 @@ async function loadEach(
     "quickbooks-chart": -1,
     "quickbooks-ledger": 0,
     "quickbooks-iif": -1,
+    "slowbooks-ledger": -1,
     // Which bank account each of the chart's bank rows is, before anything
     // reads a balance or a line through those rows.
     "bank-accounts": -0.5,
@@ -249,6 +250,7 @@ async function loadEach(
           say(`${file.name} — ${identified.what}: ${lines}`);
           continue;
         }
+        case "slowbooks-ledger":
         case "quickbooks-iif": {
           // The chart and the coding first, the way a chart and a ledger go;
           // then the bank lines, documents and journals.

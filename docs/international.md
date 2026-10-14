@@ -127,6 +127,12 @@ Checked against QuickBooks' own reports for the sample company: profit and loss,
 
 It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts` and `contact-lists.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: the trial balance, tax reports, estimates, purchase orders, items and classes.
 
+## Moving from SlowBooks Pro
+
+SlowBooks Pro's **General Ledger** report saved as CSV (Reports > General Ledger > CSV) holds every posting with its account number and name, debit, credit and source type, and is read on its own: account types come from the numbers (1000s assets, 2000s liabilities, 3000s equity, 4000s income, 5000s cost of sales, 6000s and on expenses) and the names (checking, savings, receivables, payables, credit cards); rows sharing a date, source, reference and description are one entry, and go the same way as QuickBooks' entries. Its IIF export is not the file to use: it leaves out journal entries and bill payments.
+
+Checked on 15 October 2026 against SlowBooks Pro 2.23.0 with eight entries entered in it: profit and loss, bank, receivables, payables and equity all agree. Code: `packages/core/src/slowbooks.ts`.
+
 ## Moving from QuickBooks Desktop (IIF)
 
 QuickBooks Desktop's IIF export (File > Utilities > Export > Lists to IIF Files, and transactions from an IIF-producing tool) is dropped on Start here like any other export. One file can hold everything:

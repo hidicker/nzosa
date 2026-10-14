@@ -267,19 +267,35 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
  * Everything an IIF file holds, as this app keeps it. `chart` is the books'
  * own, for a file that carries transactions but not the accounts they use.
  */
-export function parseIifBooks(
-  text: string,
-  chart: QuickBooksChart | null,
-  options: QuickBooksLedgerOptions = {},
-): QuickBooksBooks & {
+export type ReadBooks = QuickBooksBooks & {
   chart: QuickBooksChart;
   listed: Omit<Contact, "id">[];
   /** Products and services the file lists, with the account's code where the chart has it. */
   items: Omit<Item, "id">[];
   /** The class each bank line and document was given, where the file gave one. */
   classOf: { transactions: Map<Transaction, string>; invoices: Map<string, string> };
-} {
+};
+
+export function parseIifBooks(
+  text: string,
+  chart: QuickBooksChart | null,
+  options: QuickBooksLedgerOptions = {},
+): ReadBooks {
   const file = parseIif(text, options.currency !== undefined ? { currency: options.currency } : {});
+  return booksFromEntries(file, chart, { ...options, file: options.file ?? "quickbooks.iif" }, "quickbooks-iif");
+}
+
+/**
+ * The books, from entries however they were read -- an IIF file, another
+ * program's general ledger -- with the chart that came with them, or the
+ * books' own where none did.
+ */
+export function booksFromEntries(
+  file: IifFile,
+  chart: QuickBooksChart | null,
+  options: QuickBooksLedgerOptions,
+  importer: string,
+): ReadBooks {
   const used = file.chart.accounts.length > 0 || chart === null ? file.chart : chart;
   const known = new Set(used.accounts.map((a) => a.name));
   const banks = new Set(used.bankNames);
@@ -295,7 +311,7 @@ export function parseIifBooks(
   // card would show it: a debit is money in. A card's charge is a credit to
   // it, so it comes out as money going out, which is what it was.
   const currency = options.currency ?? "USD";
-  const name = options.file ?? "quickbooks.iif";
+  const name = options.file ?? "books.csv";
   const transactions: Transaction[] = [];
   const classOfLine = new Map<Transaction, string>();
   for (const entry of entries) {
@@ -321,7 +337,7 @@ export function parseIifBooks(
         otherPartyAccount: "",
         account: quickBooksAccountId(leg.account),
         extras: { accountLabel: leg.account },
-        source: { importer: "quickbooks-iif", file: name, line: 0 },
+        source: { importer, file: name, line: 0 },
       } as Transaction);
       const made = transactions[transactions.length - 1];
       if (klass !== undefined && made !== undefined) classOfLine.set(made, klass);

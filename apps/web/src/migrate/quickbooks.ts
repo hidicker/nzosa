@@ -1,4 +1,4 @@
-import { isIif, mergeContacts, parseContactList, parseIifBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { isIif, isSlowBooksLedger, mergeContacts, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency } from "../country.js";
@@ -26,7 +26,8 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
   const options = { dayFirst: booksCountry().dayFirst, currency: booksCurrency(), file: file.name };
 
-  const iif = isIif(text);
+  const slowBooks = isSlowBooksLedger(text);
+  const iif = isIif(text) || slowBooks;
   if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
@@ -38,13 +39,15 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   }
 
   const chart = state.chart.length > 0 ? quickBooksChartFrom(state.chart) : null;
-  const fromIif = iif ? parseIifBooks(text, chart, { currency: booksCurrency(), file: file.name }) : null;
+  const fromIif = iif
+    ? (slowBooks ? parseSlowBooksBooks : parseIifBooks)(text, chart, { currency: booksCurrency(), file: file.name })
+    : null;
   const books = fromIif ?? parseQuickBooksBooks(text, chart ?? quickBooksChartFrom([]), options);
   // An IIF file lists its customers and vendors with their details.
   if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: iif ? "quickbooks-iif" : "quickbooks-ledger",
+      importer: slowBooks ? "slowbooks-ledger" : iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });

@@ -48,7 +48,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
-import { booksCountry, booksCurrency, booksMoney, documentOptions } from "../country.js";
+import { booksCountry, booksCurrency, booksMoney, documentOptions, noSalesTax } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -138,7 +138,7 @@ function blankInvoice(): Invoice {
       currency: booksCurrency(),
       status: "Draft",
       lines: [{
-        description: "", accountCode: "", taxType: registered ? "15% GST on Expenses" : "No GST",
+        description: "", accountCode: "", taxType: registered && !noSalesTax() ? "15% GST on Expenses" : "No GST",
         net: 0, tax: 0, gross: 0,
       }],
       ...(entity !== undefined ? { entityId: entity.id } : {}),
@@ -157,7 +157,7 @@ function blankInvoice(): Invoice {
     outstanding: 0,
     currency: booksCurrency(),
     status: "Awaiting Payment",
-    lines: [{ description: "", accountCode: "", taxType: "15% GST on Income", net: 0, tax: 0, gross: 0 }],
+    lines: [{ description: "", accountCode: "", taxType: noSalesTax() ? "No GST" : "15% GST on Income", net: 0, tax: 0, gross: 0 }],
   };
 }
 
@@ -413,9 +413,10 @@ export function renderInvoiceEditor(): void {
     const lines = readLines();
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
-    totals.textContent =
-      `Total ${formatAmount(total)} · GST ${formatAmount(tax)} · ` +
-      `excluding GST ${formatAmount(total - tax)}`;
+    totals.textContent = noSalesTax()
+      ? `Total ${formatAmount(total)}`
+      : `Total ${formatAmount(total)} · GST ${formatAmount(tax)} · ` +
+        `excluding GST ${formatAmount(total - tax)}`;
   }
 
   function addLine(line: InvoiceLine): void {
@@ -464,6 +465,8 @@ export function renderInvoiceEditor(): void {
       refreshTotals();
     });
 
+    // Where there is no sales tax there is no treatment to choose.
+    tax.hidden = noSalesTax();
     row.append(description, account.element, tax, gross, drop);
     lineHost.append(row);
     for (const control of [description, tax, gross]) {
@@ -482,7 +485,7 @@ export function renderInvoiceEditor(): void {
     const first = readLines()[0]?.taxType;
     addLine({
       description: "", accountCode: "",
-      taxType: first ?? (asBill ? "15% GST on Expenses" : "15% GST on Income"),
+      taxType: noSalesTax() ? "No GST" : (first ?? (asBill ? "15% GST on Expenses" : "15% GST on Income")),
       net: 0, tax: 0, gross: 0,
     });
     refreshTotals();

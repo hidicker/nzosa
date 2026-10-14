@@ -1,0 +1,4257 @@
+{
+ "version": 1,
+ "jurisdiction": "us",
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "us-0001",
+   "occurrence": 1,
+   "date": "2026-01-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "us-0002",
+   "occurrence": 1,
+   "date": "2026-01-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "us-0003",
+   "occurrence": 1,
+   "date": "2026-01-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "us-0004",
+   "occurrence": 1,
+   "date": "2026-01-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "us-0005",
+   "occurrence": 1,
+   "date": "2026-01-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "us-0006",
+   "occurrence": 1,
+   "date": "2026-01-09",
+   "amount": 420000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Northwind Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "us-0007",
+   "occurrence": 1,
+   "date": "2026-01-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "us-0008",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -48600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Quarterly premium",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harbor Mutual (business insurance)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "us-0009",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "us-0010",
+   "occurrence": 1,
+   "date": "2026-01-21",
+   "amount": -21240,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Printer paper and toner",
+   "code": "",
+   "reference": "",
+   "otherParty": "Staples",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "us-0011",
+   "occurrence": 1,
+   "date": "2026-01-23",
+   "amount": 285000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pioneer Coffee Co",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "us-0012",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "us-0013",
+   "occurrence": 1,
+   "date": "2026-02-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "us-0014",
+   "occurrence": 1,
+   "date": "2026-02-03",
+   "amount": -6130,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Shell",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "us-0015",
+   "occurrence": 1,
+   "date": "2026-02-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "us-0016",
+   "occurrence": 1,
+   "date": "2026-02-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "us-0017",
+   "occurrence": 1,
+   "date": "2026-02-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "us-0018",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": 560000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lakeside Realty",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "us-0019",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "us-0020",
+   "occurrence": 1,
+   "date": "2026-02-10",
+   "amount": -35000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Advertising",
+   "code": "",
+   "reference": "",
+   "otherParty": "Local Business Journal",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "us-0021",
+   "occurrence": 1,
+   "date": "2026-02-11",
+   "amount": -142000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Annual premium",
+   "code": "",
+   "reference": "",
+   "otherParty": "Midwest Mutual (landlord insurance)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "us-0022",
+   "occurrence": 1,
+   "date": "2026-02-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "us-0023",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "us-0024",
+   "occurrence": 1,
+   "date": "2026-02-19",
+   "amount": -110000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Illustration work",
+   "code": "",
+   "reference": "",
+   "otherParty": "Priya Nair (illustration)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "us-0025",
+   "occurrence": 1,
+   "date": "2026-02-20",
+   "amount": 180000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pioneer Coffee Co",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "us-0026",
+   "occurrence": 1,
+   "date": "2026-02-24",
+   "amount": -64000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bookkeeping and tax prep",
+   "code": "",
+   "reference": "",
+   "otherParty": "Whitlock & Co CPA",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "us-0027",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "us-0028",
+   "occurrence": 1,
+   "date": "2026-03-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "us-0029",
+   "occurrence": 1,
+   "date": "2026-03-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "us-0030",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": 640000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Northwind Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "us-0031",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "us-0032",
+   "occurrence": 1,
+   "date": "2026-03-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "us-0033",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "us-0034",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": -4680,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Client lunch",
+   "code": "",
+   "reference": "",
+   "otherParty": "Birchwood Bistro",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "us-0035",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": -180000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Website build",
+   "code": "",
+   "reference": "",
+   "otherParty": "Marco Bellini (web development)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "us-0036",
+   "occurrence": 1,
+   "date": "2026-03-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "us-0037",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "us-0038",
+   "occurrence": 1,
+   "date": "2026-03-18",
+   "amount": 320000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Greenfield Hardware",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "us-0039",
+   "occurrence": 1,
+   "date": "2026-03-20",
+   "amount": -38540,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A water heater valve",
+   "code": "",
+   "reference": "",
+   "otherParty": "Handy Pro Repairs",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "us-0040",
+   "occurrence": 1,
+   "date": "2026-03-26",
+   "amount": -18000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Portfolio prints",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lakeshore Print Co",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "us-0041",
+   "occurrence": 1,
+   "date": "2026-03-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "us-0042",
+   "occurrence": 1,
+   "date": "2026-04-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "us-0043",
+   "occurrence": 1,
+   "date": "2026-04-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "us-0044",
+   "occurrence": 1,
+   "date": "2026-04-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "us-0045",
+   "occurrence": 1,
+   "date": "2026-04-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "us-0046",
+   "occurrence": 1,
+   "date": "2026-04-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "us-0047",
+   "occurrence": 1,
+   "date": "2026-04-08",
+   "amount": 475000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lakeside Realty",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "us-0048",
+   "occurrence": 1,
+   "date": "2026-04-10",
+   "amount": -210000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Property tax, first half",
+   "code": "",
+   "reference": "",
+   "otherParty": "County treasurer",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "us-0049",
+   "occurrence": 1,
+   "date": "2026-04-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "us-0050",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -48600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Quarterly premium",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harbor Mutual (business insurance)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "us-0051",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "us-0052",
+   "occurrence": 1,
+   "date": "2026-04-17",
+   "amount": -85000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Illustration work",
+   "code": "",
+   "reference": "",
+   "otherParty": "Priya Nair (illustration)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "us-0053",
+   "occurrence": 1,
+   "date": "2026-04-24",
+   "amount": 230000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Marlow & Finch LLP",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "us-0054",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "us-0055",
+   "occurrence": 1,
+   "date": "2026-04-29",
+   "amount": -38420,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flight to client visit",
+   "code": "",
+   "reference": "",
+   "otherParty": "Delta Air Lines",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "us-0056",
+   "occurrence": 1,
+   "date": "2026-04-30",
+   "amount": -41200,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Two nights, client visit",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lakeview Hotel",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "us-0057",
+   "occurrence": 1,
+   "date": "2026-05-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "us-0058",
+   "occurrence": 1,
+   "date": "2026-05-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "us-0059",
+   "occurrence": 1,
+   "date": "2026-05-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "us-0060",
+   "occurrence": 1,
+   "date": "2026-05-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "us-0061",
+   "occurrence": 1,
+   "date": "2026-05-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "us-0062",
+   "occurrence": 1,
+   "date": "2026-05-09",
+   "amount": -5874,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Shell",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "us-0063",
+   "occurrence": 1,
+   "date": "2026-05-12",
+   "amount": 510000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Greenfield Hardware",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "us-0064",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "us-0065",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "us-0066",
+   "occurrence": 1,
+   "date": "2026-05-16",
+   "amount": -9635,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Supplies",
+   "code": "",
+   "reference": "",
+   "otherParty": "Staples",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "us-0067",
+   "occurrence": 1,
+   "date": "2026-05-22",
+   "amount": -8215,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Client dinner",
+   "code": "",
+   "reference": "",
+   "otherParty": "Sorrento Kitchen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "us-0068",
+   "occurrence": 1,
+   "date": "2026-05-27",
+   "amount": 390000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pioneer Coffee Co",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "us-0069",
+   "occurrence": 1,
+   "date": "2026-05-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "us-0070",
+   "occurrence": 1,
+   "date": "2026-06-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "us-0071",
+   "occurrence": 1,
+   "date": "2026-06-03",
+   "amount": -32000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Quarterly advice",
+   "code": "",
+   "reference": "",
+   "otherParty": "Whitlock & Co CPA",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "us-0072",
+   "occurrence": 1,
+   "date": "2026-06-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "us-0073",
+   "occurrence": 1,
+   "date": "2026-06-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "us-0074",
+   "occurrence": 1,
+   "date": "2026-06-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "us-0075",
+   "occurrence": 1,
+   "date": "2026-06-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "us-0076",
+   "occurrence": 1,
+   "date": "2026-06-10",
+   "amount": 620000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Northwind Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 76
+   }
+  },
+  {
+   "id": "us-0077",
+   "occurrence": 1,
+   "date": "2026-06-12",
+   "amount": -94000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Lawn and tree work",
+   "code": "",
+   "reference": "",
+   "otherParty": "Greenleaf Landscaping",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 77
+   }
+  },
+  {
+   "id": "us-0078",
+   "occurrence": 1,
+   "date": "2026-06-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 78
+   }
+  },
+  {
+   "id": "us-0079",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 79
+   }
+  },
+  {
+   "id": "us-0080",
+   "occurrence": 1,
+   "date": "2026-06-18",
+   "amount": -50000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Advertising",
+   "code": "",
+   "reference": "",
+   "otherParty": "Meta ads",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 80
+   }
+  },
+  {
+   "id": "us-0081",
+   "occurrence": 1,
+   "date": "2026-06-25",
+   "amount": 275000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Marlow & Finch LLP",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 81
+   }
+  },
+  {
+   "id": "us-0082",
+   "occurrence": 1,
+   "date": "2026-06-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 82
+   }
+  },
+  {
+   "id": "us-0083",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": -45000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Copy edit",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tess Whitfield (proofreading)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 83
+   }
+  },
+  {
+   "id": "us-0084",
+   "occurrence": 1,
+   "date": "2026-07-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 84
+   }
+  },
+  {
+   "id": "us-0085",
+   "occurrence": 1,
+   "date": "2026-07-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 85
+   }
+  },
+  {
+   "id": "us-0086",
+   "occurrence": 1,
+   "date": "2026-07-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 86
+   }
+  },
+  {
+   "id": "us-0087",
+   "occurrence": 1,
+   "date": "2026-07-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 87
+   }
+  },
+  {
+   "id": "us-0088",
+   "occurrence": 1,
+   "date": "2026-07-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 88
+   }
+  },
+  {
+   "id": "us-0089",
+   "occurrence": 1,
+   "date": "2026-07-09",
+   "amount": -90000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Illustration work",
+   "code": "",
+   "reference": "",
+   "otherParty": "Priya Nair (illustration)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 89
+   }
+  },
+  {
+   "id": "us-0090",
+   "occurrence": 1,
+   "date": "2026-07-14",
+   "amount": 480000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lakeside Realty",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 90
+   }
+  },
+  {
+   "id": "us-0091",
+   "occurrence": 1,
+   "date": "2026-07-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 91
+   }
+  },
+  {
+   "id": "us-0092",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -48600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Quarterly premium",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harbor Mutual (business insurance)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 92
+   }
+  },
+  {
+   "id": "us-0093",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 93
+   }
+  },
+  {
+   "id": "us-0094",
+   "occurrence": 1,
+   "date": "2026-07-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 94
+   }
+  },
+  {
+   "id": "us-0095",
+   "occurrence": 1,
+   "date": "2026-07-29",
+   "amount": 335000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harborview Clinic",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 95
+   }
+  },
+  {
+   "id": "us-0096",
+   "occurrence": 1,
+   "date": "2026-08-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 96
+   }
+  },
+  {
+   "id": "us-0097",
+   "occurrence": 1,
+   "date": "2026-08-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 97
+   }
+  },
+  {
+   "id": "us-0098",
+   "occurrence": 1,
+   "date": "2026-08-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 98
+   }
+  },
+  {
+   "id": "us-0099",
+   "occurrence": 1,
+   "date": "2026-08-05",
+   "amount": -3890,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Client lunch",
+   "code": "",
+   "reference": "",
+   "otherParty": "Birchwood Bistro",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 99
+   }
+  },
+  {
+   "id": "us-0100",
+   "occurrence": 1,
+   "date": "2026-08-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 100
+   }
+  },
+  {
+   "id": "us-0101",
+   "occurrence": 1,
+   "date": "2026-08-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 101
+   }
+  },
+  {
+   "id": "us-0102",
+   "occurrence": 1,
+   "date": "2026-08-11",
+   "amount": 540000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Greenfield Hardware",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 102
+   }
+  },
+  {
+   "id": "us-0103",
+   "occurrence": 1,
+   "date": "2026-08-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 103
+   }
+  },
+  {
+   "id": "us-0104",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 104
+   }
+  },
+  {
+   "id": "us-0105",
+   "occurrence": 1,
+   "date": "2026-08-18",
+   "amount": -6602,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Shell",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 105
+   }
+  },
+  {
+   "id": "us-0106",
+   "occurrence": 1,
+   "date": "2026-08-20",
+   "amount": -12900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 106
+   }
+  },
+  {
+   "id": "us-0107",
+   "occurrence": 1,
+   "date": "2026-08-26",
+   "amount": 295000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Harborview Clinic",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 107
+   }
+  },
+  {
+   "id": "us-0108",
+   "occurrence": 1,
+   "date": "2026-08-27",
+   "amount": -21275,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B door lock",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes Hardware",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 108
+   }
+  },
+  {
+   "id": "us-0109",
+   "occurrence": 1,
+   "date": "2026-08-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 109
+   }
+  },
+  {
+   "id": "us-0110",
+   "occurrence": 1,
+   "date": "2026-09-01",
+   "amount": 185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit A rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Okafor household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 110
+   }
+  },
+  {
+   "id": "us-0111",
+   "occurrence": 1,
+   "date": "2026-09-03",
+   "amount": -31000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Rivera Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "us-0112",
+   "occurrence": 1,
+   "date": "2026-09-03",
+   "amount": 170000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Unit B rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reyes household",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 112
+   }
+  },
+  {
+   "id": "us-0113",
+   "occurrence": 1,
+   "date": "2026-09-04",
+   "amount": -28400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8%",
+   "code": "",
+   "reference": "",
+   "otherParty": "Buckeye Property Management",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 113
+   }
+  },
+  {
+   "id": "us-0114",
+   "occurrence": 1,
+   "date": "2026-09-05",
+   "amount": -5499,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design software",
+   "code": "",
+   "reference": "",
+   "otherParty": "Figma subscription",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 114
+   }
+  },
+  {
+   "id": "us-0115",
+   "occurrence": 1,
+   "date": "2026-09-06",
+   "amount": -1440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Email and documents",
+   "code": "",
+   "reference": "",
+   "otherParty": "Google Workspace",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 115
+   }
+  },
+  {
+   "id": "us-0116",
+   "occurrence": 1,
+   "date": "2026-09-08",
+   "amount": 430000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Northwind Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 116
+   }
+  },
+  {
+   "id": "us-0117",
+   "occurrence": 1,
+   "date": "2026-09-10",
+   "amount": -210000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Property tax, second half",
+   "code": "",
+   "reference": "",
+   "otherParty": "County treasurer",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 117
+   }
+  },
+  {
+   "id": "us-0118",
+   "occurrence": 1,
+   "date": "2026-09-12",
+   "amount": -7440,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "USPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 118
+   }
+  },
+  {
+   "id": "us-0119",
+   "occurrence": 1,
+   "date": "2026-09-14",
+   "amount": -7900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio internet",
+   "code": "",
+   "reference": "",
+   "otherParty": "Metro Fiber internet",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 119
+   }
+  },
+  {
+   "id": "us-0120",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -61250,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mortgage interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "First Lakes Bank (mortgage interest)",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 120
+   }
+  },
+  {
+   "id": "us-0121",
+   "occurrence": 1,
+   "date": "2026-09-16",
+   "amount": 25000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Venmo transfer",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 121
+   }
+  },
+  {
+   "id": "us-0122",
+   "occurrence": 1,
+   "date": "2026-09-17",
+   "amount": -16500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Clearwater Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-rental",
+   "extras": {
+    "accountLabel": "Rental Checking ••7733"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 122
+   }
+  },
+  {
+   "id": "us-0123",
+   "occurrence": 1,
+   "date": "2026-09-19",
+   "amount": -4800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Zoom",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 123
+   }
+  },
+  {
+   "id": "us-0124",
+   "occurrence": 1,
+   "date": "2026-09-22",
+   "amount": 360000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Design fees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pioneer Coffee Co",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 124
+   }
+  },
+  {
+   "id": "us-0125",
+   "occurrence": 1,
+   "date": "2026-09-24",
+   "amount": -21500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tony's Garage",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 125
+   }
+  },
+  {
+   "id": "us-0126",
+   "occurrence": 1,
+   "date": "2026-09-28",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner draw",
+   "code": "",
+   "reference": "",
+   "otherParty": "Owner draw",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "us-business",
+   "extras": {
+    "accountLabel": "Business Checking ••4821"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-demo.csv",
+    "line": 126
+   }
+  }
+ ],
+ "overrides": {
+  "us-0001": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-01-01"
+  },
+  "us-0002": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-01-03"
+  },
+  "us-0003": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-01-04"
+  },
+  "us-0004": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-01-05"
+  },
+  "us-0005": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-01-06"
+  },
+  "us-0006": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-01-09"
+  },
+  "us-0007": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-01-14"
+  },
+  "us-0008": {
+   "confirmed": true,
+   "code": "Insurance - 6050",
+   "note": "Quarterly premium",
+   "at": "2026-01-15"
+  },
+  "us-0009": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-01-15"
+  },
+  "us-0010": {
+   "confirmed": true,
+   "code": "Office expense - 6090",
+   "note": "Printer paper and toner",
+   "at": "2026-01-21"
+  },
+  "us-0011": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-01-23"
+  },
+  "us-0012": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-01-28"
+  },
+  "us-0013": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-02-01"
+  },
+  "us-0014": {
+   "confirmed": true,
+   "code": "Car and truck expenses - 6010",
+   "note": "Fuel",
+   "at": "2026-02-03"
+  },
+  "us-0015": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-02-03"
+  },
+  "us-0016": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-02-04"
+  },
+  "us-0017": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-02-05"
+  },
+  "us-0018": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-02-06"
+  },
+  "us-0019": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-02-06"
+  },
+  "us-0020": {
+   "confirmed": true,
+   "code": "Advertising - 6000",
+   "note": "Advertising",
+   "at": "2026-02-10"
+  },
+  "us-0021": {
+   "confirmed": true,
+   "code": "Landlord insurance - 6055",
+   "note": "Annual premium",
+   "at": "2026-02-11"
+  },
+  "us-0022": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-02-14"
+  },
+  "us-0023": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-02-15"
+  },
+  "us-0024": {
+   "confirmed": true,
+   "code": "Contract labor - 6030",
+   "note": "Illustration work",
+   "at": "2026-02-19"
+  },
+  "us-0025": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-02-20"
+  },
+  "us-0026": {
+   "confirmed": true,
+   "code": "Legal and professional services - 6080",
+   "note": "Bookkeeping and tax prep",
+   "at": "2026-02-24"
+  },
+  "us-0027": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-02-28"
+  },
+  "us-0028": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-03-01"
+  },
+  "us-0029": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-03-03"
+  },
+  "us-0030": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-03-04"
+  },
+  "us-0031": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-03-04"
+  },
+  "us-0032": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-03-05"
+  },
+  "us-0033": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-03-06"
+  },
+  "us-0034": {
+   "confirmed": true,
+   "code": "Business meals - 6160",
+   "note": "Client lunch",
+   "at": "2026-03-06"
+  },
+  "us-0035": {
+   "confirmed": true,
+   "code": "Contract labor - 6030",
+   "note": "Website build",
+   "at": "2026-03-12"
+  },
+  "us-0036": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-03-14"
+  },
+  "us-0037": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-03-15"
+  },
+  "us-0038": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-03-18"
+  },
+  "us-0039": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 6120",
+   "note": "Unit A water heater valve",
+   "at": "2026-03-20"
+  },
+  "us-0040": {
+   "confirmed": true,
+   "code": "Supplies - 6130",
+   "note": "Portfolio prints",
+   "at": "2026-03-26"
+  },
+  "us-0041": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-03-28"
+  },
+  "us-0042": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-04-01"
+  },
+  "us-0043": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-04-03"
+  },
+  "us-0044": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-04-04"
+  },
+  "us-0045": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-04-05"
+  },
+  "us-0046": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-04-06"
+  },
+  "us-0047": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-04-08"
+  },
+  "us-0048": {
+   "confirmed": true,
+   "code": "Property taxes - 6140",
+   "note": "Property tax, first half",
+   "at": "2026-04-10"
+  },
+  "us-0049": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-04-14"
+  },
+  "us-0050": {
+   "confirmed": true,
+   "code": "Insurance - 6050",
+   "note": "Quarterly premium",
+   "at": "2026-04-15"
+  },
+  "us-0051": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-04-15"
+  },
+  "us-0052": {
+   "confirmed": true,
+   "code": "Contract labor - 6030",
+   "note": "Illustration work",
+   "at": "2026-04-17"
+  },
+  "us-0053": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-04-24"
+  },
+  "us-0054": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-04-28"
+  },
+  "us-0055": {
+   "confirmed": true,
+   "code": "Travel - 6150",
+   "note": "Flight to client visit",
+   "at": "2026-04-29"
+  },
+  "us-0056": {
+   "confirmed": true,
+   "code": "Travel - 6150",
+   "note": "Two nights, client visit",
+   "at": "2026-04-30"
+  },
+  "us-0057": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-05-01"
+  },
+  "us-0058": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-05-03"
+  },
+  "us-0059": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-05-04"
+  },
+  "us-0060": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-05-05"
+  },
+  "us-0061": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-05-06"
+  },
+  "us-0062": {
+   "confirmed": true,
+   "code": "Car and truck expenses - 6010",
+   "note": "Fuel",
+   "at": "2026-05-09"
+  },
+  "us-0063": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-05-12"
+  },
+  "us-0064": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-05-14"
+  },
+  "us-0065": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-05-15"
+  },
+  "us-0066": {
+   "confirmed": true,
+   "code": "Supplies - 6130",
+   "note": "Supplies",
+   "at": "2026-05-16"
+  },
+  "us-0067": {
+   "confirmed": true,
+   "code": "Business meals - 6160",
+   "note": "Client dinner",
+   "at": "2026-05-22"
+  },
+  "us-0068": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-05-27"
+  },
+  "us-0069": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-05-28"
+  },
+  "us-0070": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-06-01"
+  },
+  "us-0071": {
+   "confirmed": true,
+   "code": "Legal and professional services - 6080",
+   "note": "Quarterly advice",
+   "at": "2026-06-03"
+  },
+  "us-0072": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-06-03"
+  },
+  "us-0073": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-06-04"
+  },
+  "us-0074": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-06-05"
+  },
+  "us-0075": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-06-06"
+  },
+  "us-0076": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-06-10"
+  },
+  "us-0077": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 6120",
+   "note": "Lawn and tree work",
+   "at": "2026-06-12"
+  },
+  "us-0078": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-06-14"
+  },
+  "us-0079": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-06-15"
+  },
+  "us-0080": {
+   "confirmed": true,
+   "code": "Advertising - 6000",
+   "note": "Advertising",
+   "at": "2026-06-18"
+  },
+  "us-0081": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-06-25"
+  },
+  "us-0082": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-06-28"
+  },
+  "us-0083": {
+   "confirmed": true,
+   "code": "Contract labor - 6030",
+   "note": "Copy edit",
+   "at": "2026-06-30"
+  },
+  "us-0084": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-07-01"
+  },
+  "us-0085": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-07-03"
+  },
+  "us-0086": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-07-04"
+  },
+  "us-0087": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-07-05"
+  },
+  "us-0088": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-07-06"
+  },
+  "us-0089": {
+   "confirmed": true,
+   "code": "Contract labor - 6030",
+   "note": "Illustration work",
+   "at": "2026-07-09"
+  },
+  "us-0090": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-07-14"
+  },
+  "us-0091": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-07-14"
+  },
+  "us-0092": {
+   "confirmed": true,
+   "code": "Insurance - 6050",
+   "note": "Quarterly premium",
+   "at": "2026-07-15"
+  },
+  "us-0093": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-07-15"
+  },
+  "us-0094": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-07-28"
+  },
+  "us-0095": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-07-29"
+  },
+  "us-0096": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-08-01"
+  },
+  "us-0097": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-08-03"
+  },
+  "us-0098": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-08-04"
+  },
+  "us-0099": {
+   "confirmed": true,
+   "code": "Business meals - 6160",
+   "note": "Client lunch",
+   "at": "2026-08-05"
+  },
+  "us-0100": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-08-05"
+  },
+  "us-0101": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-08-06"
+  },
+  "us-0102": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-08-11"
+  },
+  "us-0103": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-08-14"
+  },
+  "us-0104": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-08-15"
+  },
+  "us-0105": {
+   "confirmed": true,
+   "code": "Car and truck expenses - 6010",
+   "note": "Fuel",
+   "at": "2026-08-18"
+  },
+  "us-0107": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-08-26"
+  },
+  "us-0108": {
+   "confirmed": true,
+   "code": "Repairs and maintenance - 6120",
+   "note": "Unit B door lock",
+   "at": "2026-08-27"
+  },
+  "us-0109": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-08-28"
+  },
+  "us-0110": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit A rent",
+   "at": "2026-09-01"
+  },
+  "us-0112": {
+   "confirmed": true,
+   "code": "Rent received - 4100",
+   "note": "Unit B rent",
+   "at": "2026-09-03"
+  },
+  "us-0113": {
+   "confirmed": true,
+   "code": "Property management fees - 6190",
+   "note": "Management fee, 8%",
+   "at": "2026-09-04"
+  },
+  "us-0114": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Design software",
+   "at": "2026-09-05"
+  },
+  "us-0115": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Email and documents",
+   "at": "2026-09-06"
+  },
+  "us-0116": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-09-08"
+  },
+  "us-0117": {
+   "confirmed": true,
+   "code": "Property taxes - 6140",
+   "note": "Property tax, second half",
+   "at": "2026-09-10"
+  },
+  "us-0119": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Studio internet",
+   "at": "2026-09-14"
+  },
+  "us-0120": {
+   "confirmed": true,
+   "code": "Mortgage interest - 6060",
+   "note": "Mortgage interest",
+   "at": "2026-09-15"
+  },
+  "us-0124": {
+   "confirmed": true,
+   "code": "Sales - 4000",
+   "note": "Design fees",
+   "at": "2026-09-22"
+  },
+  "us-0126": {
+   "confirmed": true,
+   "code": "Owner draws - 3100",
+   "note": "Owner draw",
+   "at": "2026-09-28"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "studio",
+    "name": "Ellis Design Studio",
+    "kind": "business",
+    "structure": "sole-trader",
+    "owners": [
+     {
+      "name": "Jordan Ellis",
+      "percent": 100
+     }
+    ],
+    "gstRegistered": false
+   },
+   {
+    "id": "duplex",
+    "name": "48 Larch Court (duplex)",
+    "kind": "residential",
+    "owners": [
+     {
+      "name": "Jordan Ellis",
+      "percent": 100
+     }
+    ],
+    "gstRegistered": false
+   }
+  ],
+  "accounts": {
+   "3100": "studio",
+   "3900": "studio",
+   "4000": "studio",
+   "4100": "duplex",
+   "6000": "studio",
+   "6010": "studio",
+   "6030": "studio",
+   "6050": "studio",
+   "6055": "duplex",
+   "6060": "duplex",
+   "6080": "studio",
+   "6090": "studio",
+   "6095": "studio",
+   "6120": "duplex",
+   "6130": "studio",
+   "6140": "duplex",
+   "6150": "studio",
+   "6160": "studio",
+   "6170": "studio",
+   "6190": "duplex"
+  },
+  "banks": {
+   "us-business": [
+    "studio"
+   ],
+   "us-rental": [
+    "duplex"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "4000",
+   "name": "Sales",
+   "type": "Revenue",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "4100",
+   "name": "Rent received",
+   "type": "Revenue",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "6000",
+   "name": "Advertising",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6010",
+   "name": "Car and truck expenses",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6030",
+   "name": "Contract labor",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6050",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6055",
+   "name": "Landlord insurance",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "6060",
+   "name": "Mortgage interest",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "6080",
+   "name": "Legal and professional services",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6090",
+   "name": "Office expense",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6095",
+   "name": "Software and subscriptions",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6120",
+   "name": "Repairs and maintenance",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "6130",
+   "name": "Supplies",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6140",
+   "name": "Property taxes",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "6150",
+   "name": "Travel",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6160",
+   "name": "Business meals",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6170",
+   "name": "Utilities",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "6190",
+   "name": "Property management fees",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "48 Larch Court (duplex)",
+   "entityKind": "residential"
+  },
+  {
+   "code": "3100",
+   "name": "Owner draws",
+   "type": "Equity",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
+   "code": "3900",
+   "name": "Retained earnings",
+   "type": "Equity",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2026-01-01",
+  "source": "Last year's records",
+  "accounts": {
+   "3900": -1870000,
+   "us-business": 1450000,
+   "us-rental": 420000
+  }
+ },
+ "assets": [],
+ "invoices": [],
+ "taxExtras": [],
+ "singleEntityConfirmed": false,
+ "aiEnabled": true
+}

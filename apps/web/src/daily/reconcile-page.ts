@@ -1,6 +1,6 @@
 import { changesByLine } from "../events.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, noSalesTax } from "../country.js";
 import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import { lastFeedStatus } from "../feed-route.js";
@@ -520,6 +520,12 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     option.selected = rate.value === (draft.gst ?? currentRate);
     gstSelect.append(option);
   }
+  // Where there is no sales tax there is no rate to choose: the line is 0%,
+  // and the box is not drawn.
+  if (noSalesTax()) {
+    gstSelect.value = "0";
+    gstSelect.hidden = true;
+  }
   gstSelect.addEventListener("change", () => {
     keep({ gst: gstSelect.value });
     sayChosen();
@@ -641,7 +647,9 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
               `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`) +
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`) +
           (fromHistory === null ? "" : ` · GST ${fromHistory.why}`)
-        : `${rateLabel(one.classification)} · ${one.reason}`;
+        : noSalesTax()
+          ? one.reason
+          : `${rateLabel(one.classification)} · ${one.reason}`;
   if (fromModel !== undefined) reason.classList.add("code-reason-ai");
 
   /**
@@ -652,7 +660,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
    * "15% GST on Income" beneath a row that no longer said so.
    */
   function sayChosen(): void {
-    if (one.confirmed) return;
+    if (one.confirmed || noSalesTax()) return;
     const rate = gstSelect.value as GstRate;
     const words =
       rate === "0"

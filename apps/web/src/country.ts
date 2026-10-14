@@ -1,4 +1,4 @@
-import { NO_SALES_TAX, jurisdictionOf, minorUnits, setSalesTaxFraction } from "@nzosa/core";
+import { NO_SALES_TAX, jurisdictionOf, minorUnits, salesTaxFraction, setSalesTaxFraction } from "@nzosa/core";
 import type { Jurisdiction } from "@nzosa/core";
 import { state } from "./state.js";
 import { addCountryReports } from "./daily/country-reports.js";
@@ -32,6 +32,11 @@ export function applyCountryRules(): Jurisdiction {
   const tax = country.salesTax;
   setSalesTaxFraction(tax === null ? NO_SALES_TAX : tax.fraction);
   return country;
+}
+
+/** Whether these books are kept where there is no national sales tax, so no GST to show or choose. */
+export function noSalesTax(): boolean {
+  return salesTaxFraction().num === 0;
 }
 
 /** How numbers and dates are written: "en-NZ" for New Zealand. */

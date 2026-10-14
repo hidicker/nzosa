@@ -31,7 +31,7 @@ import { amountCell, nameCell, note } from "../ui.js";
 import { banksNeedingOwner, emptyEntityModel, overdrawnCurrentAccounts, owedBetween, gstDueDate, gstPeriods, isCreditNote, isPosted, matchInvoices, overdueTasks, endedWithMoneyLeft, grantOpen, reportsDue } from "@nzosa/core";
 import type { IsoDate } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
-import { booksCountry } from "../country.js";
+import { booksCountry, noSalesTax } from "../country.js";
 import { societyFiguresEntered } from "./society-report-page.js";
 import { taxYearEnd, taxYearEndSaid, taxYearOf } from "../tax-year.js";
 
@@ -378,10 +378,12 @@ export function actionItems(): ActionItem[] {
   if (open.length + proposals > 0) {
     // Red once a line sits in a GST period that has ended: that return is
     // being worked out, or was filed, without it.
-    const ended = gstPeriods(
-      { from: open.reduce((min, one) => (one.transaction.date < min ? one.transaction.date : min), now), to: now },
-      { months: gstFrequency(), anchorMonth: booksCountry().yearEnd.endMonth },
-    ).filter((p) => p.to < now);
+    const ended = noSalesTax()
+      ? []
+      : gstPeriods(
+          { from: open.reduce((min, one) => (one.transaction.date < min ? one.transaction.date : min), now), to: now },
+          { months: gstFrequency(), anchorMonth: booksCountry().yearEnd.endMonth },
+        ).filter((p) => p.to < now);
     const lastEnded = ended.length > 0 ? ended[ended.length - 1]!.to : "";
     const late = open.filter((one) => lastEnded !== "" && one.transaction.date <= lastEnded).length;
     items.push({

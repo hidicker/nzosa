@@ -4,6 +4,7 @@ import { isAccountNumber } from "./accounts.js";
 import type { Transaction } from "./types.js";
 import type { Overrides } from "./overrides.js";
 import { gstOverride } from "./overrides.js";
+import { salesTaxFraction } from "./sales-tax.js";
 
 /**
  * Deciding how each transaction is treated for GST.
@@ -313,6 +314,15 @@ export function gstResolver(options: GstRulesOptions = {}): GstResolver {
   };
 
   return (transaction: Transaction): GstClassification => {
+    // Books kept where there is no national sales tax have none to account
+    // for: nothing is a taxable supply, whatever the chart or the rules say.
+    if (salesTaxFraction().num === 0) {
+      return {
+        treatment: "out-of-scope",
+        side: "none",
+        reason: "No national sales tax in the country these books are kept in",
+      };
+    }
     // First, as it is in the postings: a leg of a recorded transfer is not a
     // supply, whatever else has been said about it.
     if (transfers[transaction.id] !== undefined) {

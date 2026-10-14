@@ -56,7 +56,7 @@ import {
   cleanLogo,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -168,7 +168,8 @@ export function addEntityForm(): HTMLElement {
   gstWrap.className = "entity-add-gst";
   const gst = document.createElement("input");
   gst.type = "checkbox";
-  gst.checked = true;
+  gst.checked = !noSalesTax();
+  gstWrap.hidden = noSalesTax();
   gstWrap.append(gst, document.createTextNode(" GST registered"));
   // The usual answer for the kind chosen, still a tick to change: a household
   // is never registered and a residential rental almost never is, and a tick
@@ -740,6 +741,7 @@ export function renderEntities(): void {
       "Registered: reports exclude GST. Not registered: GST paid is part of the cost, " +
       "and reports include it.";
     gstWrap.append(gstBox, document.createTextNode(" GST registered"));
+    gstWrap.hidden = noSalesTax();
     gstBox.addEventListener("change", () => {
       const sure = confirm(
         `${entity.name} ${gstBox.checked ? "is" : "is not"} registered for GST?\n\n` +
@@ -881,7 +883,7 @@ export function renderEntities(): void {
         : entity.kind === "nonprofit" && entity.nonprofit !== undefined
           ? nonProfitFormName(entity.nonprofit.form)
           : KIND_CAPTION[entity.kind ?? "business"],
-      reportsNetOfGst(entity) ? "GST registered" : "not GST registered",
+      noSalesTax() ? "" : reportsNetOfGst(entity) ? "GST registered" : "not GST registered",
       formatOwners(entity.owners ?? []),
     ]
       .filter((part) => part !== "")
@@ -1124,7 +1126,7 @@ export function renderEntities(): void {
     body.append(
       note(
         `${accountRows.length} accounts${entityPart}` +
-          (untreated > 0 ? `, ${untreated} with no GST treatment set` : "") +
+          (untreated > 0 && !noSalesTax() ? `, ${untreated} with no GST treatment set` : "") +
           (model.entities.length === 0 ? "." : ". An account belongs to one entity only."),
       ),
     );
@@ -1350,6 +1352,12 @@ export function renderEntities(): void {
     chartBody.append(tr);
   }
   chartTable.append(chartHead, chartBody);
+  // No sales tax, no GST column: taken out by its heading, wherever the
+  // column has come to sit.
+  if (noSalesTax()) {
+    const at = [...chartHead.querySelectorAll("th")].findIndex((th) => th.textContent === "GST");
+    if (at >= 0) for (const row of chartTable.rows) row.cells[at]?.remove();
+  }
   body.append(chartTable);
   body.append(addAccountForm(model, accountRows));
 }

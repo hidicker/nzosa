@@ -1,4 +1,5 @@
 import type { Account } from "./chart.js";
+import { salesTaxFraction } from "./sales-tax.js";
 import type { BetweenOverrides } from "./between-entities.js";
 import type { NonProfit } from "./non-profit.js";
 import type { Trust } from "./trust.js";
@@ -264,7 +265,8 @@ export function defaultEntityModel(
   const entity: Entity = {
     id: entityId(DEFAULT_ENTITY_NAME),
     name: DEFAULT_ENTITY_NAME,
-    gstRegistered: true,
+    // Not where there is no sales tax to be registered for.
+    gstRegistered: salesTaxFraction().num !== 0,
   };
   const byAccount: Record<string, string> = {};
   for (const account of accounts) byAccount[accountEntityKey(account)] = entity.id;

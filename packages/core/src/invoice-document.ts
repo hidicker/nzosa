@@ -1,6 +1,7 @@
 import type { Cents } from "./money.js";
 import { formatAmount } from "./money.js";
 import type { Invoice, InvoiceLine } from "./invoices.js";
+import { cleanEmailAddress } from "./invoices.js";
 
 /**
  * An invoice as a document you could actually send somebody.
@@ -215,7 +216,7 @@ export function invoiceEmail(
   invoice: Invoice,
   supplier: InvoiceSupplier,
   options: InvoiceDocumentOptions = {},
-): { subject: string; body: string } {
+): { to: string; subject: string; body: string } {
   const registered = (supplier.gstNumber ?? "").trim() !== "";
   const title = options.title ?? (registered || invoice.tax !== 0 ? "Tax invoice" : "Invoice");
   const number = invoice.number.trim();
@@ -236,6 +237,7 @@ export function invoiceEmail(
   lines.push("", "Thank you,", supplier.name);
 
   return {
+    to: cleanEmailAddress(invoice.email) ?? "",
     subject: `${title} ${number} from ${supplier.name}`.replace(/\s+/g, " "),
     body: lines.join("\r\n"),
   };

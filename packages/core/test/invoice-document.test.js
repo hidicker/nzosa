@@ -98,6 +98,12 @@ test("the email names the invoice, what is owing and how to pay", () => {
   assert.ok(!body.includes("230.00"));
 });
 
+test("the email is addressed to the customer's saved address, and only a real one", () => {
+  assert.equal(invoiceEmail(invoice({ email: " accounts@kea.example " }), supplier).to, "accounts@kea.example");
+  assert.equal(invoiceEmail(invoice({ email: "not an address" }), supplier).to, "");
+  assert.equal(invoiceEmail(invoice(), supplier).to, "");
+});
+
 test("an unregistered supplier's email says invoice, not tax invoice", () => {
   const { subject } = invoiceEmail(invoice({ tax: 0 }), { name: "Sole Trader" });
   assert.equal(subject, "Invoice INV-1042 from Sole Trader");

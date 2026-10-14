@@ -251,6 +251,12 @@ export function renderInvoiceEditor(): void {
   const contact = text(draft.contact, asBill ? "Who sent the bill" : "Who it is to, or from");
   field(asBill ? "Supplier" : "Contact", contact);
 
+  // Where the "email" button sends it. Sales only: a bill's sender is not
+  // somebody these books write to.
+  const email = text(draft.email ?? "", "customer@example.com");
+  email.type = "email";
+  if (!asBill) field("Email", email, "Optional. Used to address the message when you email the invoice.");
+
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
   field(
     asBill ? "Supplier's invoice number" : "Reference",
@@ -448,7 +454,8 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, ...rest } = draft;
+    const { entityId: _was, email: _email, ...rest } = draft;
+    const emailValue = asBill ? "" : email.value.trim();
     return {
       ...rest,
       number: number.value.trim(),
@@ -466,6 +473,7 @@ export function renderInvoiceEditor(): void {
       currency: draft.currency,
       status: statusValue,
       lines,
+      ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined
@@ -727,7 +735,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         );
         const message = invoiceEmail(invoice, supplier);
         window.location.href =
-          `mailto:?subject=${encodeURIComponent(message.subject)}` +
+          `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +
           `&body=${encodeURIComponent(message.body)}`;
       });
     }

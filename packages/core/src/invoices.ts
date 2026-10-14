@@ -92,6 +92,18 @@ export interface Invoice {
    * Unpaid Expense Claims rather than Accounts Payable.
    */
   claim?: boolean;
+  /**
+   * Where to send it: the customer's email address, kept on the invoice so
+   * the "email" button can address the message. Never needed by the books --
+   * nothing is posted or matched from it.
+   */
+  email?: string;
+}
+
+/** An address a mail program could be given, or null when it is not one. */
+export function cleanEmailAddress(raw: string | undefined): string | null {
+  const value = (raw ?? "").trim();
+  return /^[^\s@,;:<>()"]+@[^\s@,;:<>()"]+\.[^\s@,;:<>()"]+$/.test(value) ? value : null;
 }
 
 /** A payment of an invoice or a bill that no bank line in these books shows. */
@@ -175,6 +187,7 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
     let invoice = byNumber.get(group);
     if (!invoice) {
       const issued = parseDate(cells.get("InvoiceDate"));
+      const email = cleanEmailAddress(cells.get("EmailAddress"));
       if (issued === null) {
         problems.push({ number, message: `unreadable InvoiceDate ${JSON.stringify(cells.get("InvoiceDate"))}` });
         continue;
@@ -194,6 +207,7 @@ export function parseXeroInvoices(text: string): InvoiceImportResult {
         currency: cells.get("Currency") || "NZD",
         status: cells.get("Status"),
         lines: [],
+        ...(email !== null ? { email } : {}),
       };
       byNumber.set(group, invoice);
     }

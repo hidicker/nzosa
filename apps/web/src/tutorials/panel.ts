@@ -7,12 +7,11 @@ import { LESSONS } from "./lessons.js";
 /**
  * The Tutorials page: short lessons on the real app, in any order.
  *
- * Shown by itself the first time somebody arrives at the demo, and from the
+ * Shown by itself whenever somebody arrives at the demo, and from the
  * banner after that. Progress is kept in this browser and nowhere else.
  */
 
 const PROGRESS = "nzosa:tutorials";
-const SEEN = "nzosa:tutorials-seen";
 
 type Progress = Record<string, { status: "started" | "done"; step: number }>;
 
@@ -130,11 +129,6 @@ function booksChooser(): HTMLElement | null {
 
 export function openTutorials(): void {
   closeTutorials();
-  try {
-    localStorage.setItem(SEEN, "yes");
-  } catch {
-    // Seen or not, the panel is open now.
-  }
 
   const box = document.createElement("dialog");
   box.className = "tut-panel";
@@ -184,20 +178,13 @@ export function openTutorials(): void {
 }
 
 /**
- * Open the Tutorials page on a first visit, once the books have loaded.
+ * Open the Tutorials page whenever somebody arrives at the demo, once the
+ * books have loaded: it is where the demo starts, and Close is one press.
  *
  * Waits for the loading screen to go, so it opens over the real app rather
  * than over a spinner; gives up quietly if that never happens.
  */
-export function openTutorialsOnFirstVisit(): void {
-  let seen = true;
-  try {
-    seen = localStorage.getItem(SEEN) !== null;
-  } catch {
-    seen = true;
-  }
-  if (seen) return;
-
+export function openTutorialsOnArrival(): void {
   const began = Date.now();
   const check = window.setInterval(() => {
     const loading = document.getElementById("app-loading");

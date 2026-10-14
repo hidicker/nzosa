@@ -4,7 +4,7 @@ import type { Theme } from "./ui.js";
 import { backendKind } from "./store.js";
 import { isDemoBuild } from "./ai-consent.js";
 import { loadDemoData } from "./migrate/setup-wizard.js";
-import { openTutorials, openTutorialsOnFirstVisit } from "./tutorials/panel.js";
+import { openTutorials, openTutorialsOnArrival } from "./tutorials/panel.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -131,14 +131,14 @@ export function wireChrome(): void {
         });
       });
       // The lessons: short tours of the real app over the demo books, opened
-      // by themselves on a first visit and from here after that.
+      // by themselves whenever the demo is opened, and from here after that.
       const tutorials = document.createElement("button");
       tutorials.type = "button";
       tutorials.className = "demo-banner-again";
       tutorials.textContent = "Take a tutorial";
       tutorials.addEventListener("click", () => openTutorials());
       demoBanner.querySelector(".demo-banner-content")?.append(tutorials, again);
-      openTutorialsOnFirstVisit();
+      openTutorialsOnArrival();
     }
   }
 

@@ -1763,13 +1763,19 @@ export async function loadDemoData(button: HTMLButtonElement, persona?: string):
     return;
   }
 
+  // On the demo site the books are invented, so changing them loses nothing
+  // but the visitor's own clicks: said that way rather than as a warning.
+  const label = DEMO_PERSONAS.find((p) => p.id === which)?.label ?? "";
+  const question = !isDemoBuild()
+    ? `This replaces everything in the browser: ${state.ledger.transactions.length} ` +
+      `transactions and the coding on them. There is no undo.\n\nGo ahead?`
+    : which === currentDemoPersona() || label === ""
+      ? "Start these demo books again? Anything you changed in them goes back to how it was."
+      : `Switch to the demo books for ${label.charAt(0).toLowerCase()}${label.slice(1)}? ` +
+        "Anything you changed in these ones goes back to how it was.";
   if (
     state.ledger.transactions.length > 0 &&
-    !(await askOnPage(
-      `This replaces everything in the browser: ${state.ledger.transactions.length} ` +
-        `transactions and the coding on them. There is no undo.\n\nGo ahead?`,
-      "Replace",
-    ))
+    !(await askOnPage(question, isDemoBuild() ? "Go ahead" : "Replace"))
   ) {
     return;
   }

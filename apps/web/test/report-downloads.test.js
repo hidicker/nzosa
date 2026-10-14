@@ -52,6 +52,7 @@ const NO_DOWNLOAD = new Set([
   "schedulee",
   "schedulec",
   "contractors",
+  "ustax",
   "aurental",
   "bas",
   "krbusiness",

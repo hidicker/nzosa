@@ -196,3 +196,115 @@ export function contractorTotals(payments: readonly ContractorPayment[], year: n
   for (const one of totals.values()) one.due = one.total >= threshold;
   return [...totals.values()].sort((a, b) => b.total - a.total);
 }
+
+/**
+ * Social Security's wage base by year: the most of a person's earnings that
+ * the 12.4% applies to. 2026 as announced by the SSA in October 2025.
+ */
+const SS_WAGE_BASE: Readonly<Record<number, Cents>> = {
+  2025: 17_610_000,
+  2026: 18_450_000,
+};
+
+export interface SelfEmploymentTax {
+  /** Net earnings from self-employment, as given. */
+  earnings: Cents;
+  /** 92.35% of it: what the tax is worked on. */
+  taxable: Cents;
+  socialSecurity: Cents;
+  medicare: Cents;
+  /** The 0.9% above $200,000, for a single filer. */
+  additionalMedicare: Cents;
+  /** What goes on Schedule SE line 12, plus the additional Medicare. */
+  total: Cents;
+  /** Half of the 15.3% (not the additional Medicare): deducted from income. */
+  deduction: Cents;
+}
+
+/**
+ * Self-employment tax on net earnings from self-employment (Schedule SE).
+ *
+ * Nothing under $400 net. Otherwise 92.35% of the earnings, with 12.4% on up
+ * to the wage base and 2.9% on all of it. Null for a year whose wage base is
+ * not held, rather than a figure from last year's.
+ */
+export function selfEmploymentTax(earnings: Cents, year: number): SelfEmploymentTax | null {
+  const base = SS_WAGE_BASE[year];
+  if (base === undefined) return null;
+  if (earnings < 40_000) {
+    return { earnings, taxable: 0, socialSecurity: 0, medicare: 0, additionalMedicare: 0, total: 0, deduction: 0 };
+  }
+  const taxable = Math.round(earnings * 0.9235);
+  const socialSecurity = Math.round(Math.min(taxable, base) * 0.124);
+  const medicare = Math.round(taxable * 0.029);
+  const additionalMedicare = Math.round(Math.max(0, taxable - 20_000_000) * 0.009);
+  return {
+    earnings,
+    taxable,
+    socialSecurity,
+    medicare,
+    additionalMedicare,
+    total: socialSecurity + medicare + additionalMedicare,
+    deduction: Math.round((socialSecurity + medicare) / 2),
+  };
+}
+
+interface Bracket {
+  /** The top of the bracket, in cents; null for the last. */
+  upTo: Cents | null;
+  rate: number;
+}
+
+/** Single filers' ordinary income brackets and standard deduction, by year. */
+const SINGLE: Readonly<Record<number, { standardDeduction: Cents; brackets: readonly Bracket[] }>> = {
+  2025: {
+    standardDeduction: 1_575_000,
+    brackets: [
+      { upTo: 1_192_500, rate: 0.1 },
+      { upTo: 4_847_500, rate: 0.12 },
+      { upTo: 10_335_000, rate: 0.22 },
+      { upTo: 19_730_000, rate: 0.24 },
+      { upTo: 25_052_500, rate: 0.32 },
+      { upTo: 62_635_000, rate: 0.35 },
+      { upTo: null, rate: 0.37 },
+    ],
+  },
+  2026: {
+    standardDeduction: 1_610_000,
+    brackets: [
+      { upTo: 1_240_000, rate: 0.1 },
+      { upTo: 5_040_000, rate: 0.12 },
+      { upTo: 10_570_000, rate: 0.22 },
+      { upTo: 20_177_500, rate: 0.24 },
+      { upTo: 25_622_500, rate: 0.32 },
+      { upTo: 64_060_000, rate: 0.35 },
+      { upTo: null, rate: 0.37 },
+    ],
+  },
+};
+
+export interface UsIncomeTax {
+  standardDeduction: Cents;
+  taxableIncome: Cents;
+  tax: Cents;
+}
+
+/**
+ * Federal income tax on taxable income for a single filer, with the standard
+ * deduction. An estimate: other income, the 20% qualified business income
+ * deduction, credits and a different filing status are the return's. Null for
+ * a year whose brackets are not held.
+ */
+export function usIncomeTaxSingle(income: Cents, year: number): UsIncomeTax | null {
+  const table = SINGLE[year];
+  if (table === undefined) return null;
+  const taxableIncome = Math.max(0, income - table.standardDeduction);
+  let tax = 0;
+  let from = 0;
+  for (const bracket of table.brackets) {
+    const top = bracket.upTo ?? Number.POSITIVE_INFINITY;
+    if (taxableIncome > from) tax += (Math.min(taxableIncome, top) - from) * bracket.rate;
+    from = top;
+  }
+  return { standardDeduction: table.standardDeduction, taxableIncome, tax: Math.round(tax) };
+}

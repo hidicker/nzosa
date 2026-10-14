@@ -20,7 +20,9 @@ import {
   krVatPeriods,
   krVatReturn,
   nec1099Threshold,
+  selfEmploymentTax,
   simplerBas,
+  usIncomeTaxSingle,
 } from "@nzosa/core";
 import type { ContractorPayment, Entity, FormDefinition, FormSchedule } from "@nzosa/core";
 import { postedJournals, varianceInput } from "../books.js";
@@ -337,6 +339,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["schedulee", "Schedule E (rentals)"],
       ["schedulec", "Schedule C (business)"],
       ["contractors", "Contractors and 1099-NEC"],
+      ["ustax", "Self-employment and estimated tax"],
     ],
   },
   au: {
@@ -381,8 +384,10 @@ export function addCountryReports(country: string): void {
  * the owner's percentage, net. The base for an owner's income tax, before
  * anything the books do not hold (salary, interest, deductions).
  */
-function ownerIncome(year: number): { owner: string; parts: { entity: string; share: number }[]; total: number }[] {
-  const byOwner = new Map<string, { entity: string; share: number }[]>();
+function ownerIncome(
+  year: number,
+): { owner: string; parts: { entity: string; share: number; rental: boolean }[]; total: number }[] {
+  const byOwner = new Map<string, { entity: string; share: number; rental: boolean }[]>();
   for (const entity of entities()) {
     if (entity.kind === "personal") continue;
     if (!isRental(entity) && entity.structure === "company") continue;
@@ -390,7 +395,11 @@ function ownerIncome(year: number): { owner: string; parts: { entity: string; sh
     if (report === null) continue;
     for (const owner of entity.owners ?? []) {
       const list = byOwner.get(owner.name) ?? [];
-      list.push({ entity: entity.name, share: Math.round((report.netProfit * owner.percent) / 100) });
+      list.push({
+        entity: entity.name,
+        share: Math.round((report.netProfit * owner.percent) / 100),
+        rental: isRental(entity),
+      });
       byOwner.set(owner.name, list);
     }
   }
@@ -419,6 +428,64 @@ function estimateTable(rows: readonly (readonly [string, string, boolean?])[]): 
   }
   table.append(tbody);
   return table;
+}
+
+/**
+ * United States: self-employment tax on each owner's business share, federal
+ * income tax on the whole at single-filer rates, and the four payments.
+ */
+export function renderUsTax(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `Self-employment and estimated tax — ${year}`;
+  body.append(title);
+  const owners = ownerIncome(year);
+  if (owners.length === 0) {
+    body.append(note("No owners set. On Entities & accounts, give each rental and business its owners and their shares."));
+    return;
+  }
+  const dates = estimatedTaxDates(year);
+  for (const one of owners) {
+    const heading = document.createElement("h4");
+    heading.textContent = one.owner;
+    const business = one.parts.filter((part) => !part.rental).reduce((sum, part) => sum + part.share, 0);
+    const se = selfEmploymentTax(Math.max(0, business), year);
+    const gross = one.total;
+    const afterHalf = gross - (se?.deduction ?? 0);
+    const income = usIncomeTaxSingle(Math.max(0, afterHalf), year);
+    const seTotal = se?.total ?? 0;
+    const due = (income?.tax ?? 0) + seTotal;
+    const rows: (readonly [string, string, boolean?])[] = [
+      ...one.parts.map((part) => [`${part.rental ? "Schedule E" : "Schedule C"}: ${part.entity}`, money(part.share)] as const),
+      ["Net income from these books", money(gross), true],
+      [
+        "Self-employment tax (Schedule SE)",
+        se === null ? "rates not held for this year" : money(seTotal),
+      ],
+      ["Half of it, deducted from income", se === null ? "—" : `-${money(se.deduction)}`],
+      ["Standard deduction (single)", income === null ? "—" : `-${money(Math.min(income.standardDeduction, Math.max(0, afterHalf)))}`],
+      ["Taxable income", income === null ? "—" : money(income.taxableIncome)],
+      ["Federal income tax", income === null ? "rates not held for this year" : money(income.tax)],
+      ["Estimated tax for the year", se === null || income === null ? "—" : money(due), true],
+    ];
+    body.append(heading, estimateTable(rows));
+    if (se !== null && income !== null && dates.length === 4) {
+      const quarter = Math.round(due / 4);
+      body.append(
+        estimateTable(
+          dates.map((day, i) => [`Payment ${i + 1}, due ${day}`, money(i === 3 ? due - quarter * 3 : quarter)] as const),
+        ),
+      );
+    }
+  }
+  body.append(
+    note(
+      "Only the income these books hold, for a single filer taking the standard deduction. Wages, interest, " +
+        "dividends, the 20% qualified business income deduction, credits, other deductions and state tax are " +
+        "the return's, as is a different filing status. Self-employment tax is on Schedule C profit only, not " +
+        "rental income. The four payments are the year's total in equal parts; safe-harbour rules may allow " +
+        "less. Rates and thresholds per the IRS for 2025 and 2026: confirm them before paying.",
+    ),
+  );
 }
 
 /** Australia: each owner's share, resident tax on it and the Medicare levy. */

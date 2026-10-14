@@ -107,6 +107,10 @@
                 <a href="#import-files" class="sidebar-sublink">Import bank files</a>
                 <a href="#import-table" class="sidebar-sublink">Differences &amp; review</a>
               </div>
+              <button type="button" data-page="statements" hidden data-module="us au kr generic">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 3h12v14H4z"/><path d="M7 7l1.5 1.5L12 5.5M7 12l1.5 1.5L12 10.5"/></svg>
+                <span>Reconcile a statement</span>
+              </button>
               <button type="button" data-page="invoices" data-module="business nonprofit">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h7l3 3v11H5z"/><path d="M8 9h5M8 12h5"/></svg>
                 <span>Invoices</span>
@@ -640,6 +644,16 @@
           A partnership or look-through company's income tax return, worked out from the books, with each partner or owner's share. This page does not change the books.
         </p>
         <div id="ir7-body"></div>
+      </section>
+
+      <section id="page-statements" class="page" hidden>
+        <div class="page-head">
+          <h2>Reconcile a statement</h2>
+        </div>
+        <p class="page-hint">
+          Check a bank or card account against its statement: type the ending balance, tick the lines it has cleared, and finish when the difference is nothing. This page does not change any figure.
+        </p>
+        <div id="statements-body"></div>
       </section>
 
       <section id="page-contacts" class="page" hidden>

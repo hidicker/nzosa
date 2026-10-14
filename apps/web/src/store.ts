@@ -1,5 +1,6 @@
 import { entityId, writeQueue } from "@nzosa/core";
 import type {
+  BankReconciliation,
   Contact,
   LeaveSettings,
   LeaveTaken,
@@ -207,6 +208,8 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Bank statements an account has been reconciled to, and the lines each cleared. */
+  reconciliations?: BankReconciliation[];
   /** What an individual's return needs that the books cannot know, by owner and year. */
   ir3Details?: Ir3Details[];
   /**
@@ -838,6 +841,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     varianceAccounts: ledger.varianceAccounts ?? [],
     taxExtras: ledger.taxExtras ?? [],
     ...(ledger.contacts && ledger.contacts.length > 0 ? { contacts: ledger.contacts } : {}),
+    ...(ledger.reconciliations && ledger.reconciliations.length > 0 ? { reconciliations: ledger.reconciliations } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

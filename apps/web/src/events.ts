@@ -58,6 +58,8 @@ export type EventKind =
   | "split"
   /** The customers and vendors, whole. */
   | "contacts"
+  /** The statements a bank account has been reconciled to, whole. */
+  | "reconciliation"
   /** One account in the chart. `id` is its code and name. */
   | "chart"
   /** Entities, their owners and their account assignments, whole. */
@@ -276,6 +278,8 @@ export function canReverse(
  */
 export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger {
   switch (event.kind) {
+    case "reconciliation":
+      return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
     case "manualJournal": {
@@ -542,6 +546,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   split: "Split",
   chart: "Chart of accounts",
   contacts: "Customers and vendors",
+  reconciliation: "Bank statement reconciled",
   entities: "Entities",
   codingBatch: "Coding (batch)",
   transferBatch: "Transfers (batch)",

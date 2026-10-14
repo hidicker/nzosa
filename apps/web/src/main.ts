@@ -75,6 +75,7 @@ import { renderIrdRecords, wireIrdRecords } from "./daily/ird-records.js";
 import { renderRentalsPage } from "./daily/rentals-page.js";
 import { renderGrantsPage } from "./daily/grants-page.js";
 import { renderContacts } from "./daily/contacts-page.js";
+import { renderStatements } from "./daily/statements-page.js";
 import { renderIr9Page } from "./daily/ir9-page.js";
 import { renderTrustPeoplePage } from "./daily/trust-people-page.js";
 import { renderIr6Page } from "./daily/ir6-page.js";
@@ -171,6 +172,7 @@ async function init(): Promise<void> {
     books: renderBooks,
     check: renderCheck,
     contacts: renderContacts,
+    statements: renderStatements,
     entities: renderEntities,
     entityFilter: renderEntityFilter,
     feed: renderFeed,

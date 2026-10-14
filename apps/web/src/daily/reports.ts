@@ -1,4 +1,4 @@
-import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
@@ -3497,6 +3497,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   ustax: "Self-employment tax on the business, federal income tax, and the four estimated payments.",
   salestax: "Sales tax collected and paid, by the account it sits in, and what is still owed.",
   payrolltax: "Wages and the payroll taxes withheld, by quarter, read from the payroll accounts, for checking a 941.",
+  byclass: "Income and expense for the year, a column for each class and one for what has none.",
   budget: "Each account's budget for the year beside what the books hold, and the year to date.",
   aurental: "Each rental on the ATO's rental property schedule labels.",
   bas: "GST for each quarter as the BAS asks for it: G1, 1A and 1B.",
@@ -4108,6 +4109,7 @@ export function renderReportsPage(): void {
     salestax: renderSalesTax,
     payrolltax: renderPayrollTax,
     budget: renderBudgetVsActual,
+    byclass: renderProfitByClass,
     aurental: renderAuRentalSchedule,
     bas: renderBas,
     krbusiness: renderKrBusiness,

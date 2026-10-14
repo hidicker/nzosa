@@ -21,6 +21,7 @@ import {
   krVatPeriods,
   krVatReturn,
   nec1099Threshold,
+  profitAndLossByClass,
   selfEmploymentTax,
   simplerBas,
   usIncomeTaxSingle,
@@ -618,6 +619,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["salestax", "Sales tax collected and paid"],
       ["payrolltax", "Payroll tax worksheet (Form 941)"],
       ["budget", "Budget vs actual"],
+      ["byclass", "Profit and loss by class"],
     ],
   },
   au: {
@@ -626,6 +628,8 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["aurental", "Rental property schedule"],
       ["bas", "GST on the BAS"],
       ["autax", "Income tax estimate"],
+      ["budget", "Budget vs actual"],
+      ["byclass", "Profit and loss by class"],
     ],
   },
   kr: {
@@ -635,6 +639,8 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["krrental", "부동산임대 Rental income"],
       ["krvat", "부가가치세 VAT return"],
       ["krtax", "종합소득세 Income tax estimate"],
+      ["budget", "Budget vs actual"],
+      ["byclass", "Profit and loss by class"],
     ],
   },
 };
@@ -855,4 +861,80 @@ export function renderKrTax(body: HTMLElement, year: number): void {
         "Korean income tax guide (Yeong Min Lee); confirm them on Hometax.",
     ),
   );
+}
+
+/**
+ * Income and expense for the year, a column for each class and one for what
+ * has none, and the books' total beside them so the columns can be seen to add
+ * up to the profit and loss.
+ */
+export function renderProfitByClass(body: HTMLElement, year: number): void {
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
+  const title = document.createElement("h3");
+  title.textContent = `Profit and loss by class — ${from} to ${to}`;
+  body.append(title);
+  const incomeType = /revenue|income|sales/i;
+  const costType = /expense|overhead|direct|cost/i;
+  const accounts = state.chart.filter((a) => incomeType.test(a.type) || costType.test(a.type));
+  const codes = new Set(accounts.map((a) => a.code.trim()));
+  const columns = profitAndLossByClass(postedJournals(), state.ledger.classes?.assigned ?? {}, (code) => codes.has(code), {
+    from,
+    to,
+  });
+  if (columns.length === 0) {
+    body.append(note("Nothing posted to income or expense in this year."));
+    return;
+  }
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const text of ["Account", ...columns.map((c) => c.name), "Total"]) {
+    const th = document.createElement("th");
+    th.textContent = text;
+    headRow.append(th);
+  }
+  head.append(headRow);
+  const tbody = document.createElement("tbody");
+  const row = (label: string, figures: number[], total = false): void => {
+    const tr = document.createElement("tr");
+    if (total) tr.className = "report-total";
+    const name = document.createElement("td");
+    name.className = "report-name";
+    name.textContent = label;
+    tr.append(name);
+    for (const figure of [...figures, figures.reduce((s, f) => s + f, 0)]) {
+      const td = document.createElement("td");
+      td.className = "report-amount";
+      td.textContent = money(figure);
+      tr.append(td);
+    }
+    tbody.append(tr);
+  };
+  const net = columns.map(() => 0);
+  for (const side of ["income", "cost"] as const) {
+    const rows = accounts.filter((a) =>
+      side === "income" ? incomeType.test(a.type) : !incomeType.test(a.type) && costType.test(a.type),
+    );
+    const sums = columns.map(() => 0);
+    for (const account of rows) {
+      // Credits are negative in the journals: income is turned round.
+      const figures = columns.map((c) => {
+        const got = c.byAccount.get(account.code.trim()) ?? 0;
+        return side === "income" ? -got : got;
+      });
+      if (figures.every((f) => f === 0)) continue;
+      row(`${account.code} ${account.name}`.trim(), figures);
+      figures.forEach((f, i) => (sums[i] = (sums[i] ?? 0) + f));
+    }
+    row(side === "income" ? "Total income" : "Total expenses", sums, true);
+    sums.forEach((f, i) => (net[i] = (net[i] ?? 0) + (side === "income" ? f : -f)));
+  }
+  row("Net profit", net, true);
+  table.append(head, tbody);
+  const scroller = document.createElement("div");
+  scroller.className = "table-scroll";
+  scroller.append(table);
+  body.append(scroller, note("Classes are given on the Classes page. An invoice's payment goes with the invoice."));
 }

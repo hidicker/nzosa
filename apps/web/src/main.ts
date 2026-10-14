@@ -78,6 +78,7 @@ import { renderContacts } from "./daily/contacts-page.js";
 import { renderStatements } from "./daily/statements-page.js";
 import { renderBudgets } from "./daily/budgets-page.js";
 import { renderItems } from "./daily/items-page.js";
+import { renderClasses } from "./daily/classes-page.js";
 import { renderIr9Page } from "./daily/ir9-page.js";
 import { renderTrustPeoplePage } from "./daily/trust-people-page.js";
 import { renderIr6Page } from "./daily/ir6-page.js";
@@ -177,6 +178,7 @@ async function init(): Promise<void> {
     statements: renderStatements,
     budgets: renderBudgets,
     items: renderItems,
+    classes: renderClasses,
     entities: renderEntities,
     entityFilter: renderEntityFilter,
     feed: renderFeed,

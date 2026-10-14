@@ -456,3 +456,4 @@ export * from "./contacts.js";
 export * from "./contact-lists.js";
 export * from "./reconciliation.js";
 export * from "./items.js";
+export * from "./classes.js";

@@ -215,6 +215,8 @@ export interface StoredLedger {
   budgets?: Record<string, Record<string, number>>;
   /** Products and services, offered when an invoice line is written. */
   items?: Item[];
+  /** Classes: their names, and the class each source of income or expense is given. */
+  classes?: { names: string[]; assigned: Record<string, string> };
   /** What an individual's return needs that the books cannot know, by owner and year. */
   ir3Details?: Ir3Details[];
   /**
@@ -849,6 +851,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.reconciliations && ledger.reconciliations.length > 0 ? { reconciliations: ledger.reconciliations } : {}),
     ...(ledger.budgets && Object.keys(ledger.budgets).length > 0 ? { budgets: ledger.budgets } : {}),
     ...(ledger.items && ledger.items.length > 0 ? { items: ledger.items } : {}),
+    ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

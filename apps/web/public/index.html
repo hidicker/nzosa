@@ -119,6 +119,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="7.5" cy="7" r="2.5"/><circle cx="14" cy="8" r="2"/><path d="M2.5 16c0-3 2-4.5 5-4.5S12.5 13 12.5 16M12.5 12c2.5-.4 5 .6 5 3.5"/></svg>
                 <span>Customers &amp; vendors</span>
               </button>
+              <button type="button" data-page="budgets" hidden data-module="us au kr generic">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 16h14M5 16V9M9 16V5M13 16v-5"/></svg>
+                <span>Budgets</span>
+              </button>
               <button type="button" data-page="bills" hidden data-module="business company nonprofit">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M5 3h10v14l-2-1.5L11 17l-2-1.5L7 17l-2-1.5z"/><path d="M8 7h4M8 10h4"/></svg>
                 <span>Bills</span>
@@ -654,6 +658,16 @@
           Check a bank or card account against its statement: type the ending balance, tick the lines it has cleared, and finish when the difference is nothing. This page does not change any figure.
         </p>
         <div id="statements-body"></div>
+      </section>
+
+      <section id="page-budgets" class="page" hidden>
+        <div class="page-head">
+          <h2>Budgets</h2>
+        </div>
+        <p class="page-hint">
+          What each income and expense account is expected to come to in a year. The Budget vs actual report sets it beside what the books hold. This page does not change the books.
+        </p>
+        <div id="budgets-body"></div>
       </section>
 
       <section id="page-contacts" class="page" hidden>

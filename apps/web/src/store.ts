@@ -210,6 +210,8 @@ export interface StoredLedger {
   contacts?: Contact[];
   /** Bank statements an account has been reconciled to, and the lines each cleared. */
   reconciliations?: BankReconciliation[];
+  /** Annual budgets in cents: year, then account code. */
+  budgets?: Record<string, Record<string, number>>;
   /** What an individual's return needs that the books cannot know, by owner and year. */
   ir3Details?: Ir3Details[];
   /**
@@ -842,6 +844,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     taxExtras: ledger.taxExtras ?? [],
     ...(ledger.contacts && ledger.contacts.length > 0 ? { contacts: ledger.contacts } : {}),
     ...(ledger.reconciliations && ledger.reconciliations.length > 0 ? { reconciliations: ledger.reconciliations } : {}),
+    ...(ledger.budgets && Object.keys(ledger.budgets).length > 0 ? { budgets: ledger.budgets } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

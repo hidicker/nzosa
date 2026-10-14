@@ -319,6 +319,90 @@ export function renderPayrollTax(body: HTMLElement, year: number): void {
 }
 
 /**
+ * Budget against actual for a calendar year: each account's budget, what the
+ * books hold in it, the difference, and the year to date as the budget spread
+ * evenly over the months gone.
+ */
+export function renderBudgetVsActual(body: HTMLElement, year: number): void {
+  const title = document.createElement("h3");
+  title.textContent = `Budget vs actual — ${year}`;
+  body.append(title);
+  const budgets = state.ledger.budgets?.[String(year)] ?? {};
+  if (Object.keys(budgets).length === 0) {
+    body.append(note(`No budget for ${year}. Set one on the Budgets page.`));
+    return;
+  }
+  const incomeType = /revenue|income|sales/i;
+  const costType = /expense|overhead|direct|cost/i;
+  const accounts = state.chart.filter((a) => incomeType.test(a.type) || costType.test(a.type));
+  const actual = new Map<string, number>();
+  const today = new Date();
+  for (const journal of postedJournals()) {
+    if (!journal.date.startsWith(String(year))) continue;
+    for (const line of journal.lines) {
+      const code = line.accountCode.trim();
+      actual.set(code, (actual.get(code) ?? 0) + line.amount);
+    }
+  }
+  // The months gone: all twelve for a year past, none for one not begun.
+  const months = today.getFullYear() > year ? 12 : today.getFullYear() < year ? 0 : today.getMonth() + 1;
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    "<thead><tr><th>Account</th><th>Budget</th><th>Actual</th><th>Difference</th><th>Budget to date</th><th>Actual less to date</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  let net = { budget: 0, actual: 0, toDate: 0 };
+  const rowFor = (label: string, budget: number, got: number, income: boolean, total = false): void => {
+    const toDate = Math.round((budget * months) / 12);
+    const tr = document.createElement("tr");
+    if (total) tr.className = "report-total";
+    const cells: [string, string][] = [
+      [label, "report-name"],
+      [money(budget), "report-amount"],
+      [money(got), "report-amount"],
+      // For income more than budget is good; for a cost, less is. Said as
+      // the actual less the budget, so the sign has one meaning down the page.
+      [money(got - budget), "report-amount"],
+      [money(toDate), "report-amount"],
+      [money(got - toDate), "report-amount"],
+    ];
+    void income;
+    for (const [text, cls] of cells) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    tbody.append(tr);
+  };
+  for (const side of ["income", "cost"] as const) {
+    const rows = accounts.filter((a) => (side === "income" ? incomeType.test(a.type) : !incomeType.test(a.type) && costType.test(a.type)));
+    let b = 0;
+    let a2 = 0;
+    for (const account of rows) {
+      const budget = budgets[account.code] ?? 0;
+      // Credits are negative in the journals: income is the other way round.
+      const got = side === "income" ? -(actual.get(account.code.trim()) ?? 0) : (actual.get(account.code.trim()) ?? 0);
+      if (budget === 0 && got === 0) continue;
+      rowFor(`${account.code} ${account.name}`.trim(), budget, got, side === "income");
+      b += budget;
+      a2 += got;
+    }
+    rowFor(side === "income" ? "Total income" : "Total expenses", b, a2, side === "income", true);
+    net = side === "income" ? { ...net, budget: net.budget + b, actual: net.actual + a2 } : { ...net, budget: net.budget - b, actual: net.actual - a2 };
+  }
+  rowFor("Net (income less expenses)", net.budget, net.actual, true, true);
+  table.append(tbody);
+  body.append(
+    table,
+    note(
+      `Difference is actual less budget. The year to date is the budget spread evenly over ${months} of 12 months; ` +
+        "a budget with a season in it is better judged against the full year.",
+    ),
+  );
+}
+
+/**
  * Contractors paid over the year's 1099-NEC threshold: every payment posted to
  * an account Schedule C puts on line 11 (contract labor), by payee.
  */
@@ -533,6 +617,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["ustax", "Self-employment and estimated tax"],
       ["salestax", "Sales tax collected and paid"],
       ["payrolltax", "Payroll tax worksheet (Form 941)"],
+      ["budget", "Budget vs actual"],
     ],
   },
   au: {

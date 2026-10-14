@@ -432,3 +432,21 @@ export { expenseClaimsFromJournals } from "./expense-claims.js";
 export type { CarriesGst } from "./expense-claims.js";
 export { writeQueue } from "./write-queue.js";
 export type { WriteQueue } from "./write-queue.js";
+export {
+  MAX_CATCH_UP,
+  MAX_SCHEDULES,
+  MAX_SCHEDULE_LINES,
+  RECURRING_FREQUENCIES,
+  addDays,
+  generateDue,
+  nextDate,
+  occurrence,
+  scheduleFromInvoice,
+  scheduleProblem,
+} from "./recurring-invoices.js";
+export type {
+  RecurringFrequency,
+  RecurringInvoice,
+  RecurringRun,
+  ScheduleProblem,
+} from "./recurring-invoices.js";

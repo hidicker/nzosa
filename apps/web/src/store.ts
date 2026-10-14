@@ -10,7 +10,7 @@ import type {
   Ir3Details,
   FiledIncomeReturn,
   Account, BalanceSection, Cents, LineChoice, DonationReceipt, Grant, Ir9Inputs, Ir7Inputs, Ir4Inputs, SocietyInputs, TrustInputs, PerformanceInputs, PropertyCare, Tier4Line, Employee, EntityModel, FixedAsset, Invoice, Journal, LockDates, ManualJournal, OpeningDocuments,
-  PayRun, PaymentAllocation, Payout, PayrollContact, TaxExtra,
+  PayRun, PaymentAllocation, Payout, PayrollContact, RecurringInvoice, TaxExtra,
 } from "@nzosa/core";
 
 import type {
@@ -403,6 +403,8 @@ export interface StoredLedger {
   /** What these books are, for the briefing that goes with every question. */
   booksAbout?: string;
   payroll?: PayrollData;
+  /** Invoices set to repeat. Kept with the decisions: a person chose them. */
+  recurring?: RecurringInvoice[];
 }
 
 export function emptyLedger(): StoredLedger {
@@ -881,6 +883,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.gstKeptFrom ? { gstKeptFrom: ledger.gstKeptFrom } : {}),
     ...(ledger.beforeStartLeft ? { beforeStartLeft: ledger.beforeStartLeft } : {}),
     ...(ledger.booksAbout ? { booksAbout: ledger.booksAbout } : {}),
+    ...(ledger.recurring && ledger.recurring.length > 0 ? { recurring: ledger.recurring } : {}),
   };
 }
 

@@ -13,6 +13,7 @@ import {
   proposalState,
 } from "../books.js";
 import { combobox } from "../combobox.js";
+import { renderRecurring } from "./recurring.js";
 import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
@@ -815,6 +816,7 @@ function bankCell(transaction: Transaction | undefined): HTMLTableCellElement {
 }
 
 export function renderInvoices(): void {
+  renderRecurring();
   const body = $("invoices-body");
   body.textContent = "";
 

@@ -380,3 +380,111 @@ export function customerStatement(
 </html>
 `;
 }
+
+/** How firm a reminder is: a first reminder, a second notice, a final notice. */
+export type ReminderStage = 1 | 2 | 3;
+
+/** The stage that suits a debt this many days past due: a first reminder within 30 days, a second within 60, a final notice after. */
+export function reminderStageFor(daysLate: number): ReminderStage {
+  return daysLate <= 30 ? 1 : daysLate <= 60 ? 2 : 3;
+}
+
+const REMINDER: Record<ReminderStage, { title: string; words: (owing: string) => string }> = {
+  1: {
+    title: "Payment reminder",
+    words: (owing) =>
+      `Our records show the invoices below are past due, ${owing} in all. If you have already paid, thank you, ` +
+      "and please disregard this letter. Otherwise we would be grateful for payment at your earliest convenience.",
+  },
+  2: {
+    title: "Second notice",
+    words: (owing) =>
+      `The invoices below, ${owing} in all, remain unpaid after our earlier reminder. Please arrange payment ` +
+      "within 7 days, or contact us if there is a problem with any of them so we can sort it out.",
+  },
+  3: {
+    title: "Final notice",
+    words: (owing) =>
+      `Despite earlier reminders, ${owing} remains unpaid on the invoices below. Unless payment is received within ` +
+      "7 days of the date of this letter, or you contact us to agree a way to pay it, we will have to consider " +
+      "further steps to recover it.",
+  },
+};
+
+/**
+ * A letter asking a customer to pay what is past due: the overdue invoices
+ * only, worded more firmly at each stage. Like the statement, a page to print
+ * or save as PDF.
+ */
+export function collectionLetter(
+  customer: string,
+  lines: readonly StatementLine[],
+  asAt: string,
+  supplier: InvoiceSupplier,
+  stage: ReminderStage,
+  options: InvoiceDocumentOptions = {},
+): string {
+  const date = (iso: string): string => written(iso, options.dateStyle);
+  const logo = cleanLogo(supplier.logo);
+  const late = lines
+    .filter((l) => l.owing > 0 && (l.due ?? l.issued) < asAt)
+    .sort((a, b) => a.issued.localeCompare(b.issued));
+  const owing = late.reduce((sum, l) => sum + l.owing, 0);
+  const days = (from: string): number =>
+    Math.round((Date.parse(`${asAt}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+  const said = REMINDER[stage];
+  const rows = late.map(
+    (l) =>
+      "<tr>" +
+      `<td>${escapeHtml(l.number)}</td>` +
+      `<td>${date(l.issued)}</td>` +
+      `<td>${l.due === null ? "" : date(l.due)}</td>` +
+      `<td class="n">${days(l.due ?? l.issued)}</td>` +
+      `<td class="n">${formatAmount(l.owing)}</td>` +
+      "</tr>",
+  );
+  return `<!doctype html>
+<html lang="${escapeHtml(options.lang ?? "en-NZ")}">
+<head>
+<meta charset="utf-8">
+<title>${escapeHtml(said.title)} ${escapeHtml(customer)}</title>
+<style>${STYLE}</style>
+</head>
+<body>
+  <div class="head">
+    <div class="who">
+      ${logo === null ? "" : `<img class="logo" src="${logo}" alt="">`}
+      <strong>${escapeHtml(supplier.name)}</strong>
+      ${supplier.address ? asLines(supplier.address) : ""}
+    </div>
+    <div class="meta">
+      <h1>${escapeHtml(said.title)}</h1>
+      <div><span class="k">Date</span>${date(asAt)}</div>
+    </div>
+  </div>
+  <div class="to"><span class="k-block">To</span>${escapeHtml(customer)}</div>
+  <p>${escapeHtml(said.words(formatAmount(owing)))}</p>
+  ${
+    late.length === 0
+      ? '<p class="note">Nothing is past due.</p>'
+      : `<table>
+    <thead><tr><th>Invoice</th><th>Date</th><th>Due</th><th class="n">Days late</th><th class="n">Owing</th></tr></thead>
+    <tbody>${rows.join("\n")}</tbody>
+    <tfoot><tr class="due"><td colspan="4" class="n">Past due</td><td class="n">${formatAmount(owing)}</td></tr></tfoot>
+  </table>`
+  }
+  ${supplier.payTo ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
+  ${options.note ? `<div class="note">${asLines(options.note)}</div>` : ""}
+</body>
+</html>
+`;
+}
+
+/**
+ * A late fee on what is past due: a percentage of it, never less than a
+ * minimum, rounded to the cent. Nothing when nothing is past due.
+ */
+export function lateFee(pastDue: number, percent: number, minimum = 0): number {
+  if (pastDue <= 0 || percent <= 0) return 0;
+  return Math.max(Math.round((pastDue * percent) / 100), minimum);
+}

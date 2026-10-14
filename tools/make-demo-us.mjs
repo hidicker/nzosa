@@ -46,6 +46,7 @@ const ACCOUNTS = [
   ["6160", "Business meals", "Expense", studio],
   ["6170", "Utilities", "Expense", studio],
   ["6190", "Property management fees", "Expense", duplex],
+  ["1100", "Accounts Receivable", "Accounts Receivable", studio],
   ["3100", "Owner draws", "Equity", studio],
   ["3900", "Retained earnings", "Equity", studio],
 ];
@@ -193,6 +194,43 @@ const chart = ACCOUNTS.map(([code, name, type, entity]) => ({
   entityKind: entity.kind,
 }));
 
+// Invoices still unpaid at the end of the period: one well past due, one just
+// past due, so the customer pages have a reminder and a late fee to show.
+const invoices = [
+  ["INV-0101", "Lakeside Realty", "2026-07-20", "2026-08-19", 1650, "Brochure and signage design"],
+  ["INV-0102", "Harborview Clinic", "2026-09-10", "2026-10-10", 2400, "Patient forms redesign"],
+].map(([number, contact, issued, due, dollars, words]) => ({
+  number,
+  kind: "sales",
+  contact,
+  reference: "",
+  issued,
+  due,
+  total: cents(dollars),
+  tax: 0,
+  paid: 0,
+  outstanding: cents(dollars),
+  currency: "USD",
+  status: "Awaiting Payment",
+  lines: [{ description: words, accountCode: "4000", taxType: "No GST", net: cents(dollars), tax: 0, gross: cents(dollars) }],
+}));
+
+// Who the books deal with. Invented, like everything else here.
+const contact = (name, kind, extra = {}) => ({ id: `c-${name.toLowerCase().replace(/[^a-z0-9]+/g, "-")}`, name, kind, ...extra });
+const contacts = [
+  contact("Northwind Dental", "customer", { email: "office@northwind-dental.example", terms: "Net 30", address: "220 Elm Street\nMadison, WI 53703" }),
+  contact("Pioneer Coffee Co", "customer", { email: "hello@pioneercoffee.example", terms: "Net 15" }),
+  contact("Lakeside Realty", "customer", { email: "accounts@lakesiderealty.example", phone: "608-555-0142", terms: "Net 30", address: "15 Shore Drive\nMadison, WI 53704" }),
+  contact("Greenfield Hardware", "customer", { email: "ap@greenfieldhw.example", terms: "Net 30" }),
+  contact("Marlow & Finch LLP", "customer", { email: "billing@marlowfinch.example", terms: "Net 30" }),
+  contact("Harborview Clinic", "customer", { email: "finance@harborview.example", terms: "Net 30", address: "9 Harbor Road\nMonona, WI 53716" }),
+  contact("Priya Nair (illustration)", "vendor", { email: "priya@nair-illustration.example", w9: true, is1099: true }),
+  contact("Marco Bellini (web development)", "vendor", { email: "marco@bellini.example", w9: true, is1099: true }),
+  contact("Tess Whitfield (proofreading)", "vendor", { w9: true }),
+  contact("Whitlock & Co CPA", "vendor", { email: "team@whitlockcpa.example", terms: "Due on receipt" }),
+  contact("Buckeye Property Management", "vendor", { phone: "608-555-0188" }),
+];
+
 const ledger = {
   version: 1,
   jurisdiction: "us",
@@ -210,7 +248,8 @@ const ledger = {
   chart,
   openingBalances: { asAt: FROM, source: "Last year's records", accounts: opening },
   assets: [],
-  invoices: [],
+  invoices,
+  contacts,
   taxExtras: [],
   singleEntityConfirmed: false,
   aiEnabled: true,

@@ -94,8 +94,8 @@ export { isSuffix, standardAccounts, suggestSuffix, suffixedCode } from "./stand
 export { ACCOUNT_CODE, codeIn, isAccountCode } from "./account-code.js";
 export { identifyExport } from "./identify-export.js";
 export type { ExportKind, Identified } from "./identify-export.js";
-export { invoiceDocument, invoiceEmail, customerStatement, cleanLogo, LOGO_MAX_BYTES } from "./invoice-document.js";
-export type { InvoiceSupplier, InvoiceDocumentOptions, StatementLine } from "./invoice-document.js";
+export { invoiceDocument, invoiceEmail, customerStatement, collectionLetter, reminderStageFor, lateFee, cleanLogo, LOGO_MAX_BYTES } from "./invoice-document.js";
+export type { InvoiceSupplier, InvoiceDocumentOptions, StatementLine, ReminderStage } from "./invoice-document.js";
 export { mergeAccount, renameAccount, renameProblem } from "./rename-account.js";
 export type { AccountReferences, RenameResult } from "./rename-account.js";
 export type { RuleFile, ImpliedTreatment } from "./chart-codes.js";

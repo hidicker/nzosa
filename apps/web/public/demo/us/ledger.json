@@ -4028,6 +4028,7 @@
    }
   ],
   "accounts": {
+   "1100": "studio",
    "3100": "studio",
    "3900": "studio",
    "4000": "studio",
@@ -4222,6 +4223,15 @@
    "entityKind": "residential"
   },
   {
+   "code": "1100",
+   "name": "Accounts Receivable",
+   "type": "Accounts Receivable",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
+  },
+  {
    "code": "3100",
    "name": "Owner draws",
    "type": "Equity",
@@ -4250,7 +4260,139 @@
   }
  },
  "assets": [],
- "invoices": [],
+ "invoices": [
+  {
+   "number": "INV-0101",
+   "kind": "sales",
+   "contact": "Lakeside Realty",
+   "reference": "",
+   "issued": "2026-07-20",
+   "due": "2026-08-19",
+   "total": 165000,
+   "tax": 0,
+   "paid": 0,
+   "outstanding": 165000,
+   "currency": "USD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Brochure and signage design",
+     "accountCode": "4000",
+     "taxType": "No GST",
+     "net": 165000,
+     "tax": 0,
+     "gross": 165000
+    }
+   ]
+  },
+  {
+   "number": "INV-0102",
+   "kind": "sales",
+   "contact": "Harborview Clinic",
+   "reference": "",
+   "issued": "2026-09-10",
+   "due": "2026-10-10",
+   "total": 240000,
+   "tax": 0,
+   "paid": 0,
+   "outstanding": 240000,
+   "currency": "USD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Patient forms redesign",
+     "accountCode": "4000",
+     "taxType": "No GST",
+     "net": 240000,
+     "tax": 0,
+     "gross": 240000
+    }
+   ]
+  }
+ ],
+ "contacts": [
+  {
+   "id": "c-northwind-dental",
+   "name": "Northwind Dental",
+   "kind": "customer",
+   "email": "office@northwind-dental.example",
+   "terms": "Net 30",
+   "address": "220 Elm Street\nMadison, WI 53703"
+  },
+  {
+   "id": "c-pioneer-coffee-co",
+   "name": "Pioneer Coffee Co",
+   "kind": "customer",
+   "email": "hello@pioneercoffee.example",
+   "terms": "Net 15"
+  },
+  {
+   "id": "c-lakeside-realty",
+   "name": "Lakeside Realty",
+   "kind": "customer",
+   "email": "accounts@lakesiderealty.example",
+   "phone": "608-555-0142",
+   "terms": "Net 30",
+   "address": "15 Shore Drive\nMadison, WI 53704"
+  },
+  {
+   "id": "c-greenfield-hardware",
+   "name": "Greenfield Hardware",
+   "kind": "customer",
+   "email": "ap@greenfieldhw.example",
+   "terms": "Net 30"
+  },
+  {
+   "id": "c-marlow-finch-llp",
+   "name": "Marlow & Finch LLP",
+   "kind": "customer",
+   "email": "billing@marlowfinch.example",
+   "terms": "Net 30"
+  },
+  {
+   "id": "c-harborview-clinic",
+   "name": "Harborview Clinic",
+   "kind": "customer",
+   "email": "finance@harborview.example",
+   "terms": "Net 30",
+   "address": "9 Harbor Road\nMonona, WI 53716"
+  },
+  {
+   "id": "c-priya-nair-illustration-",
+   "name": "Priya Nair (illustration)",
+   "kind": "vendor",
+   "email": "priya@nair-illustration.example",
+   "w9": true,
+   "is1099": true
+  },
+  {
+   "id": "c-marco-bellini-web-development-",
+   "name": "Marco Bellini (web development)",
+   "kind": "vendor",
+   "email": "marco@bellini.example",
+   "w9": true,
+   "is1099": true
+  },
+  {
+   "id": "c-tess-whitfield-proofreading-",
+   "name": "Tess Whitfield (proofreading)",
+   "kind": "vendor",
+   "w9": true
+  },
+  {
+   "id": "c-whitlock-co-cpa",
+   "name": "Whitlock & Co CPA",
+   "kind": "vendor",
+   "email": "team@whitlockcpa.example",
+   "terms": "Due on receipt"
+  },
+  {
+   "id": "c-buckeye-property-management",
+   "name": "Buckeye Property Management",
+   "kind": "vendor",
+   "phone": "608-555-0188"
+  }
+ ],
  "taxExtras": [],
  "singleEntityConfirmed": false,
  "aiEnabled": true

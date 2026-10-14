@@ -5,8 +5,18 @@ import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { download, note } from "../ui.js";
-import { contactKey, customerStatement, isPosted, mergeContacts } from "@nzosa/core";
-import type { Contact, ContactKind } from "@nzosa/core";
+import {
+  collectionLetter,
+  contactKey,
+  customerStatement,
+  isPosted,
+  lateFee,
+  mergeContacts,
+  nextInvoiceNumber,
+  reminderStageFor,
+} from "@nzosa/core";
+import type { Contact, ContactKind, Invoice } from "@nzosa/core";
+import { booksCurrency } from "../country.js";
 
 /**
  * Customers and vendors: who the books deal with.
@@ -39,19 +49,114 @@ async function keep(next: Contact[], what: string): Promise<void> {
 }
 
 /** What each name is owed or owes, from the documents in play. */
-function owing(): Map<string, { owedToUs: number; weOwe: number; documents: number }> {
-  const out = new Map<string, { owedToUs: number; weOwe: number; documents: number }>();
+interface Owing {
+  owedToUs: number;
+  weOwe: number;
+  documents: number;
+  /** What a customer owes on invoices past their due date. */
+  pastDue: number;
+  /** Days past due of the oldest of them. */
+  lateDays: number;
+}
+
+// The day where the person is: these books are kept in their own country.
+const today = (): string => new Date().toLocaleDateString("en-CA");
+
+function owing(): Map<string, Owing> {
+  const out = new Map<string, Owing>();
+  const now = today();
   for (const balance of invoiceBalanceMap().values()) {
     // An estimate or a draft is not owed yet.
     if (!isPosted(balance.invoice)) continue;
     const key = contactKey(balance.invoice.contact);
-    const one = out.get(key) ?? { owedToUs: 0, weOwe: 0, documents: 0 };
+    const one = out.get(key) ?? { owedToUs: 0, weOwe: 0, documents: 0, pastDue: 0, lateDays: 0 };
     one.documents += 1;
-    if (balance.invoice.kind === "sales") one.owedToUs += balance.remaining;
-    else one.weOwe += balance.remaining;
+    if (balance.invoice.kind === "sales") {
+      one.owedToUs += balance.remaining;
+      const due = balance.invoice.due ?? balance.invoice.issued;
+      if (balance.remaining > 0 && due < now) {
+        one.pastDue += balance.remaining;
+        const days = Math.round((Date.parse(`${now}T00:00:00Z`) - Date.parse(`${due}T00:00:00Z`)) / 86_400_000);
+        one.lateDays = Math.max(one.lateDays, days);
+      }
+    } else one.weOwe += balance.remaining;
     out.set(key, one);
   }
   return out;
+}
+
+/** A customer's posted invoices and what is left on each. */
+function salesFor(name: string): { invoice: Invoice; remaining: number }[] {
+  return [...invoiceBalanceMap().values()].filter(
+    (b) => b.invoice.kind === "sales" && isPosted(b.invoice) && contactKey(b.invoice.contact) === contactKey(name),
+  );
+}
+
+function statementLines(mine: readonly { invoice: Invoice; remaining: number }[]) {
+  return mine.map((b) => ({
+    number: b.invoice.number,
+    issued: b.invoice.issued,
+    due: b.invoice.due,
+    total: b.invoice.total,
+    owing: b.remaining,
+    reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
+  }));
+}
+
+/**
+ * A late fee, drafted as an invoice: a percentage of what is past due, coded
+ * to a late fee or finance charge account where the chart has one. A draft
+ * posts nothing until it is approved on Invoices.
+ */
+async function draftLateFee(customer: string, pastDue: number): Promise<void> {
+  const said = window.prompt(
+    `Late fee for ${customer}, as a percentage of the ${booksMoney(pastDue)} past due:`,
+    "1.5",
+  );
+  if (said === null) return;
+  const percent = Number(said.replace("%", "").trim());
+  if (!Number.isFinite(percent) || percent <= 0) {
+    window.alert("A percentage, such as 1.5.");
+    return;
+  }
+  const amount = lateFee(pastDue, percent);
+  const income = state.chart.filter((a) => /revenue|income|sales/i.test(a.type));
+  const account =
+    income.find((a) => /late fee|finance charge|interest/i.test(a.name)) ??
+    income.find((a) => /other income/i.test(a.type)) ??
+    income[0];
+  const late = salesFor(customer).filter((b) => b.remaining > 0 && (b.invoice.due ?? b.invoice.issued) < today());
+  const issued = today();
+  const draft: Invoice = {
+    number: nextInvoiceNumber("sales", state.ledger.invoices ?? []),
+    kind: "sales",
+    contact: customer,
+    reference: "Late fee",
+    issued,
+    due: issued,
+    total: amount,
+    tax: 0,
+    paid: 0,
+    outstanding: amount,
+    currency: booksCurrency(),
+    status: "Draft",
+    lines: [
+      {
+        description: `Late fee, ${percent}% of ${booksMoney(pastDue)} past due on ${late.map((b) => b.invoice.number).join(", ")}`,
+        accountCode: account?.code.trim() ?? "",
+        taxType: "No GST",
+        net: amount,
+        tax: 0,
+        gross: amount,
+      },
+    ],
+  };
+  state.ledger = { ...state.ledger, invoices: [...(state.ledger.invoices ?? []), draft] };
+  state.persistent = await savePart(state.ledger, "invoices");
+  await record("invoice", `Created ${draft.number} — ${customer} late fee ${booksMoney(amount)}`, null, draft, draft.number);
+  window.alert(`${draft.number} for ${booksMoney(amount)} is drafted on Invoices. Approve it there to post it.`);
+  redraw("contacts");
+  redraw("invoices");
 }
 
 function field(label: string, control: HTMLElement): HTMLElement {
@@ -291,36 +396,47 @@ export function renderContacts(): void {
       void keep(next, `${contact.name} made ${contact.active === false ? "active" : "inactive"}`);
     });
     actions.append(edit, toggle);
+    if (contact.kind !== "vendor" && sums !== undefined && sums.pastDue > 0) {
+      const remind = document.createElement("button");
+      remind.type = "button";
+      remind.className = "small";
+      remind.textContent = "Reminder";
+      const stage = reminderStageFor(sums.lateDays);
+      remind.title =
+        stage === 1 ? "A first, friendly reminder" : stage === 2 ? "A second notice" : "A final notice";
+      remind.addEventListener("click", () => {
+        const mine = salesFor(contact.name);
+        const supplier = mine[0] === undefined ? null : supplierFor(mine[0].invoice);
+        if (supplier === null) {
+          window.alert("Say which entity is sending it first: add an entity on Entities & accounts.");
+          return;
+        }
+        const html = collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions());
+        download(html, `reminder-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+      });
+      const fee = document.createElement("button");
+      fee.type = "button";
+      fee.className = "small";
+      fee.textContent = "Late fee";
+      fee.title = "Draft an invoice for a late fee on what is past due, to check and approve on Invoices.";
+      const pastDue = sums.pastDue;
+      fee.addEventListener("click", () => void draftLateFee(contact.name, pastDue));
+      actions.append(remind, fee);
+    }
     if (contact.kind !== "vendor" && sums !== undefined && sums.owedToUs !== 0) {
       const statement = document.createElement("button");
       statement.type = "button";
       statement.className = "small";
       statement.textContent = "Statement";
       statement.addEventListener("click", () => {
-        const mine = [...invoiceBalanceMap().values()].filter(
-          (b) => b.invoice.kind === "sales" && contactKey(b.invoice.contact) === contactKey(contact.name),
-        );
+        const mine = salesFor(contact.name);
         const first = mine[0]?.invoice;
         const supplier = first === undefined ? null : supplierFor(first);
         if (supplier === null) {
           window.alert("Say which entity is sending it first: add an entity on Entities & accounts.");
           return;
         }
-        const today = new Date().toISOString().slice(0, 10);
-        const html = customerStatement(
-          contact.name,
-          mine.map((b) => ({
-            number: b.invoice.number,
-            issued: b.invoice.issued,
-            due: b.invoice.due,
-            total: b.invoice.total,
-            owing: b.remaining,
-            reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
-          })),
-          today,
-          supplier,
-          documentOptions(),
-        );
+        const html = customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
         download(html, `statement-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
       });
       actions.append(statement);

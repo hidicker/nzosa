@@ -18,7 +18,7 @@ import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, download, invoiceCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, invoiceCell, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
   billWarnings,
@@ -32,6 +32,7 @@ import {
   emailForContact,
   findContact,
   isPosted,
+  isEstimate,
   matchInvoices,
   nextInvoiceNumber,
   splitAccountLabel,
@@ -556,7 +557,20 @@ export function renderInvoiceEditor(): void {
     renderInvoiceEditor();
   });
 
-  actions.append(...(asBill ? [approve] : []), save, cancel);
+  // A quote: kept, printed and emailed like an invoice, and posting nothing
+  // until it is made into one.
+  const estimate = document.createElement("button");
+  estimate.type = "button";
+  estimate.textContent = "Save as estimate";
+  estimate.title = "Keep it as an estimate: it is not in the books until you make it an invoice.";
+  estimate.hidden = asBill;
+  estimate.addEventListener("click", () => {
+    const built = build("Estimate");
+    const stem = built.number.replace(/^INV/i, "EST");
+    void saveInvoice({ ...built, number: stem === built.number && existing === undefined ? `EST-${built.number}` : stem }, existing);
+  });
+
+  actions.append(...(asBill ? [approve] : []), save, ...(asBill ? [] : [estimate]), cancel);
 
   if (existing) {
     const remove = document.createElement("button");
@@ -762,13 +776,40 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, documentOptions()),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
       });
     }
     td.append(send);
+
+    if (isEstimate(invoice)) {
+      const make = document.createElement("button");
+      make.type = "button";
+      make.className = "invoice-send";
+      make.textContent = "make invoice";
+      make.title = "Turn this estimate into an invoice: it takes the next invoice number and goes into the books.";
+      make.addEventListener("click", () => {
+        void askOnPage(
+          `Make ${invoice.number} for ${invoice.contact} an invoice?
+
+` +
+            "It takes the next invoice number and is posted to the books on its date.",
+          "Make the invoice",
+        ).then(async (yes) => {
+          if (!yes) return;
+          const number = suggestInvoiceNumber("sales");
+          const made: Invoice = { ...invoice, number, status: "Awaiting Payment", outstanding: invoice.total - invoice.paid };
+          const all = (state.ledger.invoices ?? []).map((i) => (i === invoice ? made : i));
+          state.ledger = { ...state.ledger, invoices: all };
+          state.persistent = await savePart(state.ledger, "invoices");
+          await record("invoice", `${invoice.number} made invoice ${number} — ${invoice.contact}`, invoice, made, number);
+          redraw("invoices");
+        });
+      });
+      td.append(make);
+    }
 
     const mail = document.createElement("button");
     mail.type = "button";
@@ -783,7 +824,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, documentOptions()),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -796,7 +837,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         const message = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
-          documentOptions(),
+          { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) },
         );
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +

@@ -71,3 +71,13 @@ test("a statement lists what is owing, oldest first, aged from the due date", ()
   // 1025 is 44 days past due; 1019 is not yet due.
   assert.match(html, /<td class="n">80\.00<\/td><td class="n">105\.00<\/td><td class="n">0\.00<\/td><td class="n">0\.00<\/td>|<td class="n">80\.00<\/td>/);
 });
+
+import { isEstimate, isPosted } from "../dist/index.js";
+
+test("an estimate is a document that is not in the books until it is made an invoice", () => {
+  const base = { number: "EST-1", kind: "sales", contact: "A", reference: "", issued: "2026-01-01", due: null, total: 100, tax: 0, paid: 0, outstanding: 100, currency: "USD", lines: [] };
+  assert.equal(isEstimate({ ...base, status: "Estimate" }), true);
+  assert.equal(isPosted({ ...base, status: "Estimate" }), false);
+  assert.equal(isPosted({ ...base, status: "Awaiting Payment" }), true);
+  assert.equal(isEstimate({ ...base, status: "Draft" }), false);
+});

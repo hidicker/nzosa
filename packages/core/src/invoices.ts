@@ -599,7 +599,12 @@ export function isCreditNote(invoice: Invoice): boolean {
  * bill the other system never recorded -- on real books a draft for 25.00 was
  * the whole difference in Sales between the two.
  */
-const NOT_POSTED = new Set(["draft", "submitted", "awaiting approval", "voided", "deleted"]);
+const NOT_POSTED = new Set(["draft", "submitted", "awaiting approval", "voided", "deleted", "estimate"]);
+
+/** Whether a document is an estimate (a quote): offered to a customer, not yet an invoice. */
+export function isEstimate(invoice: Invoice): boolean {
+  return invoice.status.trim().toLowerCase() === "estimate";
+}
 
 /**
  * Whether an invoice belongs in the ledger.

@@ -5,7 +5,7 @@ import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { download, note } from "../ui.js";
-import { contactKey, customerStatement, mergeContacts } from "@nzosa/core";
+import { contactKey, customerStatement, isPosted, mergeContacts } from "@nzosa/core";
 import type { Contact, ContactKind } from "@nzosa/core";
 
 /**
@@ -42,6 +42,8 @@ async function keep(next: Contact[], what: string): Promise<void> {
 function owing(): Map<string, { owedToUs: number; weOwe: number; documents: number }> {
   const out = new Map<string, { owedToUs: number; weOwe: number; documents: number }>();
   for (const balance of invoiceBalanceMap().values()) {
+    // An estimate or a draft is not owed yet.
+    if (!isPosted(balance.invoice)) continue;
     const key = contactKey(balance.invoice.contact);
     const one = out.get(key) ?? { owedToUs: 0, weOwe: 0, documents: 0 };
     one.documents += 1;

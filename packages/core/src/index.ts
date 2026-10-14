@@ -304,6 +304,7 @@ export {
   cleanDocumentLink,
   isCreditNote,
   isPosted,
+  isEstimate,
   paidOutsideTotal,
 } from "./invoices.js";
 export type {

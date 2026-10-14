@@ -133,6 +133,14 @@ export interface Entity {
    */
   payTo?: string;
   /**
+   * A logo for the top of an invoice, as an image data URI.
+   *
+   * Held as text inside the entity rather than as a file, so there is no
+   * file store to fill: it is capped at one megabyte of image when it is
+   * chosen, and only PNG, JPEG, WebP and GIF are taken (an SVG is code).
+   */
+  logo?: string;
+  /**
    * What this entity does, in the owner's own words.
    *
    * Nothing in a chart of accounts says whether "Supplies" means green beans

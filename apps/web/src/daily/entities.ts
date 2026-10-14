@@ -52,6 +52,8 @@ import {
   sectionForType,
   banksNeedingOwner,
   suggestedBankOwner,
+  LOGO_MAX_BYTES,
+  cleanLogo,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksLocale, moneyPlaces } from "../country.js";
@@ -981,6 +983,65 @@ export function renderEntities(): void {
       wrap.append(caption, input);
       billing.append(wrap);
     }
+    // The logo: one small image, kept inside the entity as text rather than
+    // as a file, so there is no upload to fill anybody's storage.
+    const logoWrap = document.createElement("div");
+    logoWrap.className = "entity-billing-field wide";
+    const logoCaption = document.createElement("span");
+    logoCaption.textContent = "Logo";
+    const logoPick = document.createElement("input");
+    logoPick.type = "file";
+    logoPick.accept = "image/png,image/jpeg,image/webp,image/gif";
+    const logoSay = document.createElement("small");
+    logoSay.textContent = "PNG, JPEG, WebP or GIF, up to 1 MB. Printed at the top of invoices.";
+    const saveLogo = (value: string | null): void => {
+      const live = state.ledger.entities ?? emptyEntityModel();
+      void saveEntities({
+        ...live,
+        entities: live.entities.map((e) => {
+          if (e.id !== entity.id) return e;
+          const { logo: _drop, ...rest } = e;
+          return value === null ? rest : { ...rest, logo: value };
+        }),
+      });
+    };
+    logoPick.addEventListener("change", () => {
+      const file = logoPick.files?.[0];
+      if (file === undefined) return;
+      if (file.size > LOGO_MAX_BYTES) {
+        logoSay.textContent = "That image is over 1 MB. Choose a smaller one.";
+        logoPick.value = "";
+        return;
+      }
+      const reader = new FileReader();
+      reader.addEventListener("load", () => {
+        const clean = cleanLogo(typeof reader.result === "string" ? reader.result : "");
+        if (clean === null) {
+          logoSay.textContent = "That file is not a PNG, JPEG, WebP or GIF image.";
+          return;
+        }
+        saveLogo(clean);
+      });
+      reader.readAsDataURL(file);
+    });
+    logoWrap.append(logoCaption);
+    if (entity.logo !== undefined && cleanLogo(entity.logo) !== null) {
+      const preview = document.createElement("img");
+      preview.src = entity.logo;
+      preview.alt = "Logo";
+      preview.style.maxHeight = "3.5rem";
+      preview.style.maxWidth = "12rem";
+      preview.style.display = "block";
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.textContent = "Remove logo";
+      remove.addEventListener("click", () => saveLogo(null));
+      logoWrap.append(preview, remove);
+    } else {
+      logoWrap.append(logoPick);
+    }
+    logoWrap.append(logoSay);
+    billing.append(logoWrap);
     billingDetails.append(billing);
     // Only where invoices are sent: the Business module.
     if (moduleOn("business")) settings.append(billingDetails);

@@ -98,6 +98,24 @@ export interface Invoice {
    * nothing is posted or matched from it.
    */
   email?: string;
+  /**
+   * A link to the document this one came from -- the bill as a PDF in the
+   * owner's Google Drive or Dropbox, say. Only the link is kept: the books
+   * hold no files, and the file stays in the owner's own storage.
+   */
+  documentLink?: string;
+}
+
+/** A link worth keeping: an http(s) address with no spaces, else null. */
+export function cleanDocumentLink(raw: string | undefined): string | null {
+  const value = (raw ?? "").trim();
+  if (value === "" || value.length > 2000 || /\s/.test(value)) return null;
+  try {
+    const url = new URL(value);
+    return url.protocol === "https:" || url.protocol === "http:" ? url.href : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

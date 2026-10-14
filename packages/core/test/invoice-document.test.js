@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { emailForContact, invoiceDocument, invoiceEmail } from "../dist/index.js";
+import { cleanDocumentLink, cleanLogo, emailForContact, invoiceDocument, invoiceEmail } from "../dist/index.js";
 
 const line = (over) => ({
   description: "Tandem flight", accountCode: "200", taxType: "15% GST on Income",
@@ -120,4 +120,27 @@ test("a customer's address is remembered by name, newest first", () => {
 test("an unregistered supplier's email says invoice, not tax invoice", () => {
   const { subject } = invoiceEmail(invoice({ tax: 0 }), { name: "Sole Trader" });
   assert.equal(subject, "Invoice INV-1042 from Sole Trader");
+});
+
+const PIXEL = "data:image/png;base64,iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAYAAAAfFcSJAAAADUlEQVR42mP8z8BQDwAEhQGAhKmMIQAAAABJRU5ErkJggg==";
+
+test("a logo is a small raster image data URI and nothing else", () => {
+  assert.equal(cleanLogo(PIXEL), PIXEL);
+  assert.equal(cleanLogo("data:image/svg+xml;base64,PHN2Zz48L3N2Zz4="), null);
+  assert.equal(cleanLogo("https://example.com/logo.png"), null);
+  assert.equal(cleanLogo('data:image/png;base64,AAAA"><script>'), null);
+  const big = "data:image/png;base64," + "A".repeat(1_400_000);
+  assert.equal(cleanLogo(big), null);
+});
+
+test("the document shows the logo, and drops one that is not safe", () => {
+  assert.ok(invoiceDocument(invoice(), { ...supplier, logo: PIXEL }).includes('<img class="logo"'));
+  assert.ok(!invoiceDocument(invoice(), { ...supplier, logo: "javascript:alert(1)" }).includes("<img"));
+});
+
+test("a document link must be an http(s) address", () => {
+  assert.equal(cleanDocumentLink(" https://drive.google.com/file/d/abc/view "), "https://drive.google.com/file/d/abc/view");
+  assert.equal(cleanDocumentLink("javascript:alert(1)"), null);
+  assert.equal(cleanDocumentLink("not a link"), null);
+  assert.equal(cleanDocumentLink(undefined), null);
 });

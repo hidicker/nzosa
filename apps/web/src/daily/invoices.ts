@@ -27,6 +27,7 @@ import {
   gstContent,
   invoiceDocument,
   invoiceEmail,
+  cleanDocumentLink,
   emailForContact,
   isPosted,
   matchInvoices,
@@ -265,6 +266,16 @@ export function renderInvoiceEditor(): void {
     if (remembered !== null) email.value = remembered;
   });
 
+  // Only the link is kept: the file stays in the owner's own Drive or Dropbox.
+  const documentLink = text(draft.documentLink ?? "", "https://drive.google.com/…");
+  documentLink.type = "url";
+  field(
+    "Document link",
+    documentLink,
+    "Optional. A share link to the PDF or receipt in your own Google Drive or Dropbox. " +
+      "The books keep the link, not the file.",
+  );
+
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
   field(
     asBill ? "Supplier's invoice number" : "Reference",
@@ -462,7 +473,8 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, ...rest } = draft;
+    const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
       ...rest,
@@ -482,6 +494,7 @@ export function renderInvoiceEditor(): void {
       status: statusValue,
       lines,
       ...(emailValue !== "" ? { email: emailValue } : {}),
+      ...(linkValue !== null ? { documentLink: linkValue } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined
@@ -679,6 +692,7 @@ function supplierFor(invoice: Invoice): InvoiceSupplier | null {
     ...(entity.address === undefined ? {} : { address: entity.address }),
     ...(entity.gstNumber === undefined ? {} : { gstNumber: entity.gstNumber }),
     ...(entity.payTo === undefined ? {} : { payTo: entity.payTo }),
+    ...(entity.logo === undefined ? {} : { logo: entity.logo }),
   };
 }
 
@@ -697,6 +711,18 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
     $("invoice-editor").scrollIntoView({ block: "nearest" });
   });
   td.append(edit);
+
+  const link = cleanDocumentLink(invoice.documentLink);
+  if (link !== null) {
+    const open = document.createElement("a");
+    open.href = link;
+    open.target = "_blank";
+    open.rel = "noopener noreferrer";
+    open.className = "invoice-send";
+    open.textContent = "file";
+    open.title = "Open the saved document in your own Drive or Dropbox.";
+    td.append(open);
+  }
 
   // Only a sales invoice: a bill somebody sent you is not yours to issue.
   if (invoice.kind === "sales") {

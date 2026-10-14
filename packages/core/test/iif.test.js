@@ -82,3 +82,22 @@ test("an entry's class goes with its bank lines and its document", () => {
   assert.deepEqual([...books.classOf.invoices], [["1001", "Shop"]]);
   assert.equal(books.classOf.transactions.size, 0);
 });
+
+test("a customer's credit limit and the products and services list", () => {
+  const T = (...cells) => cells.join("\t");
+  const text = [
+    T("!ACCNT", "NAME", "ACCNTTYPE", "ACCNUM"),
+    T("ACCNT", "Service Income", "INC", "4000"),
+    T("!CUST", "NAME", "EMAIL", "LIMIT"),
+    T("CUST", "Acme Co", "ap@acme.test", "2500.00"),
+    T("!INVITEM", "NAME", "INVITEMTYPE", "DESC", "ACCNT", "PRICE", "TAXABLE"),
+    T("INVITEM", "Design hour", "SERV", "Design work", "Service Income", "95.00", "N"),
+    T("INVITEM", "Poster", "PART", "", "", "12.50", "Y"),
+  ].join("\r\n");
+  const books = parseIifBooks(text, null);
+  assert.equal(books.listed[0].creditLimit, 250000);
+  assert.deepEqual(books.items, [
+    { name: "Design hour", kind: "service", description: "Design work", price: 9500, accountCode: "4000" },
+    { name: "Poster", kind: "product", price: 1250 },
+  ]);
+});

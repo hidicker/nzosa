@@ -128,6 +128,21 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     }
   }
 
+  // Products and services an IIF file lists, added to those held by name.
+  let itemCount = 0;
+  if (fromIif !== null && fromIif.items.length > 0) {
+    const held = state.ledger.items ?? [];
+    const names = new Set(held.map((i) => i.name.trim().toLowerCase()));
+    const added = fromIif.items
+      .filter((i) => !names.has(i.name.trim().toLowerCase()))
+      .map((i, n) => ({ ...i, id: `item-iif-${Date.now().toString(36)}-${n}` }));
+    if (added.length > 0) {
+      state.ledger = { ...state.ledger, items: [...held, ...added] };
+      state.persistent = await savePart(state.ledger);
+      itemCount = added.length;
+    }
+  }
+
   // Customers and vendors, from the names on the entries.
   let contactCount = 0;
   if (books.contacts.length > 0) {
@@ -186,6 +201,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     (journalCount > 0 ? `, ${journalCount} journals for the rest` : "") +
     (contactCount > 0 ? `, ${contactCount} customers and vendors` : "") +
     (classCount > 0 ? `, ${classCount} given a class` : "") +
+    (itemCount > 0 ? `, ${itemCount} products and services` : "") +
     "."
   );
 }

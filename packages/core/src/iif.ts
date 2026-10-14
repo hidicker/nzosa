@@ -1,5 +1,6 @@
 import type { Account } from "./chart.js";
 import type { Contact } from "./contacts.js";
+import type { Item } from "./items.js";
 import { parseDate } from "./dates.js";
 import { parseAmount } from "./money.js";
 import type { ImportProblem, Transaction } from "./types.js";
@@ -90,6 +91,8 @@ export interface IifFile {
   contacts: Omit<Contact, "id">[];
   /** Class each entry was given, by its position in `entries`, where it gave one. */
   classes: Map<QuickBooksEntry, string>;
+  /** Products and services from `!INVITEM`, the account named rather than coded. */
+  items: (Omit<Item, "id" | "accountCode"> & { account?: string })[];
   problems: ImportProblem[];
 }
 
@@ -105,6 +108,7 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
   const contacts: Omit<Contact, "id">[] = [];
   const entries: QuickBooksEntry[] = [];
   const classes = new Map<QuickBooksEntry, string>();
+  const items: IifFile["items"] = [];
   const problems: ImportProblem[] = [];
   const lines = text.split(/\r?\n/);
   let open: QuickBooksEntry | null = null;
@@ -184,6 +188,7 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
       const company = get("COMPANYNAME");
       const terms = get("TERMS");
       const taxId = get("TAXID");
+      const creditLimit = get("LIMIT") === "" ? null : parseAmount(get("LIMIT"), currency);
       contacts.push({
         name,
         kind: kind === "CUST" ? "customer" : "vendor",
@@ -195,6 +200,23 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
         ...(terms !== "" ? { terms } : {}),
         ...(taxId !== "" ? { taxId } : {}),
         ...(kind === "VEND" && /^y/i.test(get("1099")) ? { is1099: true } : {}),
+        ...(kind === "CUST" && creditLimit !== null && creditLimit > 0 ? { creditLimit } : {}),
+      });
+      return;
+    }
+
+    if (kind === "INVITEM") {
+      const name = get("NAME");
+      if (name === "" || items.some((i) => i.name === name)) return;
+      const price = parseAmount(get("PRICE") || "", currency);
+      const description = get("DESC");
+      const account = get("ACCNT");
+      items.push({
+        name,
+        kind: /^(PART|INVENTORY|INVENTORY PART|NON-INVENTORY|NONINVENTORY)/i.test(get("INVITEMTYPE")) ? "product" : "service",
+        ...(description !== "" ? { description } : {}),
+        ...(price !== null && price !== 0 ? { price } : {}),
+        ...(account !== "" ? { account } : {}),
       });
       return;
     }
@@ -238,7 +260,7 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
   });
   close();
 
-  return { chart: { accounts, debitNormal, bankNames, cardNames }, entries, contacts, classes, problems };
+  return { chart: { accounts, debitNormal, bankNames, cardNames }, entries, contacts, classes, items, problems };
 }
 
 /**
@@ -252,6 +274,8 @@ export function parseIifBooks(
 ): QuickBooksBooks & {
   chart: QuickBooksChart;
   listed: Omit<Contact, "id">[];
+  /** Products and services the file lists, with the account's code where the chart has it. */
+  items: Omit<Item, "id">[];
   /** The class each bank line and document was given, where the file gave one. */
   classOf: { transactions: Map<Transaction, string>; invoices: Map<string, string> };
 } {
@@ -323,6 +347,10 @@ export function parseIifBooks(
     problems: [...problems, ...books.problems],
     chart: used,
     listed: file.contacts,
+    items: file.items.map(({ account, ...rest }) => {
+      const code = account === undefined ? undefined : used.accounts.find((a) => a.name === account)?.code;
+      return { ...rest, ...(code !== undefined && code !== "" ? { accountCode: code } : {}) };
+    }),
     classOf: { transactions: classOfLine, invoices: classOfDocument },
   };
 }

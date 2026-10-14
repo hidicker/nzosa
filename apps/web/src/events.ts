@@ -66,6 +66,8 @@ export type EventKind =
   | "items"
   /** Classes and what each is given to, whole. */
   | "classes"
+  /** Time entries, whole. */
+  | "time"
   /** One account in the chart. `id` is its code and name. */
   | "chart"
   /** Entities, their owners and their account assignments, whole. */
@@ -284,6 +286,8 @@ export function canReverse(
  */
 export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger {
   switch (event.kind) {
+    case "time":
+      return { ...ledger, timeEntries: (event.before ?? []) as NonNullable<StoredLedger["timeEntries"]> };
     case "classes":
       return { ...ledger, classes: (event.before ?? { names: [], assigned: {} }) as NonNullable<StoredLedger["classes"]> };
     case "items":
@@ -562,6 +566,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   budgets: "Budgets",
   items: "Products and services",
   classes: "Classes",
+  time: "Time",
   entities: "Entities",
   codingBatch: "Coding (batch)",
   transferBatch: "Transfers (batch)",

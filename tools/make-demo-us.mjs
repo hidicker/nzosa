@@ -231,6 +231,14 @@ const contacts = [
   contact("Buckeye Property Management", "vendor", { phone: "608-555-0188" }),
 ];
 
+// Hours worked at the end of the period, not invoiced yet.
+const timeEntries = [
+  ["2026-09-23", "Northwind Dental", 2, "Kick-off call and brief"],
+  ["2026-09-25", "Northwind Dental", 3.5, "Website wireframes"],
+  ["2026-09-29", "Northwind Dental", 1.25, "Revisions after review"],
+  ["2026-09-26", "Greenfield Hardware", 1.5, "Spring flyer layout"],
+].map(([date, customer, hours, description], i) => ({ id: `time-demo-${i + 1}`, date, customer, hours, rate: cents(95), description }));
+
 const ledger = {
   version: 1,
   jurisdiction: "us",
@@ -250,6 +258,7 @@ const ledger = {
   assets: [],
   invoices,
   contacts,
+  timeEntries,
   taxExtras: [],
   singleEntityConfirmed: false,
   aiEnabled: true,

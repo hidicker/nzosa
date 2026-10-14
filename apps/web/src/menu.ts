@@ -141,6 +141,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   import: "bank feed akahu csv statements balances upload",
   invoices: "sales customers receivables owed allocations",
   statements: "bank statement reconcile tick cleared difference ending balance",
+  time: "time tracking hours timesheet billable rate unbilled invoice time",
   classes: "class classes department location job project segment tag profit and loss by class",
   items: "products services price list catalog inventory sku",
   budgets: "budget plan forecast target spend limit variance",

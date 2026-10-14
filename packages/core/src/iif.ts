@@ -249,7 +249,12 @@ export function parseIifBooks(
   text: string,
   chart: QuickBooksChart | null,
   options: QuickBooksLedgerOptions = {},
-): QuickBooksBooks & { chart: QuickBooksChart; listed: Omit<Contact, "id">[] } {
+): QuickBooksBooks & {
+  chart: QuickBooksChart;
+  listed: Omit<Contact, "id">[];
+  /** The class each bank line and document was given, where the file gave one. */
+  classOf: { transactions: Map<Transaction, string>; invoices: Map<string, string> };
+} {
   const file = parseIif(text, options.currency !== undefined ? { currency: options.currency } : {});
   const used = file.chart.accounts.length > 0 || chart === null ? file.chart : chart;
   const known = new Set(used.accounts.map((a) => a.name));
@@ -268,7 +273,9 @@ export function parseIifBooks(
   const currency = options.currency ?? "USD";
   const name = options.file ?? "quickbooks.iif";
   const transactions: Transaction[] = [];
+  const classOfLine = new Map<Transaction, string>();
   for (const entry of entries) {
+    const klass = file.classes.get(entry);
     for (const leg of entry.legs) {
       if (!banks.has(leg.account) || leg.debit === 0) continue;
       const words = leg.memo ?? entry.memo;
@@ -292,6 +299,8 @@ export function parseIifBooks(
         extras: { accountLabel: leg.account },
         source: { importer: "quickbooks-iif", file: name, line: 0 },
       } as Transaction);
+      const made = transactions[transactions.length - 1];
+      if (klass !== undefined && made !== undefined) classOfLine.set(made, klass);
     }
   }
   const books = quickBooksBooksFrom(
@@ -300,5 +309,20 @@ export function parseIifBooks(
     used,
     { ...options, file: name },
   );
-  return { ...books, problems: [...problems, ...books.problems], chart: used, listed: file.contacts };
+  // A document is the entry of its date, name and number.
+  const classOfDocument = new Map<string, string>();
+  for (const invoice of books.invoices) {
+    const entry = entries.find(
+      (e) => e.date === invoice.issued && e.name === invoice.contact && e.num !== "" && invoice.number.startsWith(e.num),
+    );
+    const klass = entry === undefined ? undefined : file.classes.get(entry);
+    if (klass !== undefined) classOfDocument.set(invoice.number, klass);
+  }
+  return {
+    ...books,
+    problems: [...problems, ...books.problems],
+    chart: used,
+    listed: file.contacts,
+    classOf: { transactions: classOfLine, invoices: classOfDocument },
+  };
 }

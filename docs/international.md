@@ -135,7 +135,7 @@ QuickBooks Desktop's IIF export (File > Utilities > Export > Lists to IIF Files,
 - `!CUST` and `!VEND` rows become customer and vendor records, with address, email, phone, terms, tax ID and the 1099 flag.
 - `TRNS`/`SPL`/`ENDTRNS` blocks are entries, debits positive. They go the same way as QuickBooks Online's general ledger: postings to bank and card accounts become bank lines with their coding offered on the coding check, invoices and bills become documents with payments applied, money between your own accounts is paired as transfers, and the rest are journals. An entry that does not balance is left out and listed.
 
-Dates are read month first. Code: `packages/core/src/iif.ts`, sharing `quickBooksBooksFrom` in `quickbooks.ts`. The `CLASS` column is read but not yet given to the Classes page.
+Dates are read month first. Code: `packages/core/src/iif.ts`, sharing `quickBooksBooksFrom` in `quickbooks.ts`. The `CLASS` column is given to the Classes page for bank lines and invoices and bills; a journal's is not carried yet.
 
 ## United States pages
 

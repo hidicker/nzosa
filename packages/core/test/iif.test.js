@@ -76,3 +76,9 @@ test("the books: an invoice part paid, a card charge, a transfer, a journal", ()
   assert.equal(books.journals.length, 1);
   assert.ok(books.reference.some((r) => r.amount === -4250 && /Supplies/.test(r.code)));
 });
+
+test("an entry's class goes with its bank lines and its document", () => {
+  const books = parseIifBooks(FILE, null);
+  assert.deepEqual([...books.classOf.invoices], [["1001", "Shop"]]);
+  assert.equal(books.classOf.transactions.size, 0);
+});

@@ -104,6 +104,30 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     state.persistent = await savePart(state.ledger);
   }
 
+  // Classes, where an IIF file gave them: to the Classes page, as if given there.
+  let classCount = 0;
+  if (fromIif !== null) {
+    const held = state.ledger.classes ?? { names: [], assigned: {} };
+    const assigned = { ...held.assigned };
+    const names = new Set(held.names);
+    for (const [t, klass] of fromIif.classOf.transactions) {
+      if (t.id === "" || assigned[t.id] !== undefined) continue;
+      assigned[t.id] = klass;
+      names.add(klass);
+      classCount += 1;
+    }
+    for (const [number, klass] of fromIif.classOf.invoices) {
+      if (assigned[number] !== undefined) continue;
+      assigned[number] = klass;
+      names.add(klass);
+      classCount += 1;
+    }
+    if (classCount > 0) {
+      state.ledger = { ...state.ledger, classes: { names: [...names].sort((x, y) => x.localeCompare(y)), assigned } };
+      state.persistent = await savePart(state.ledger);
+    }
+  }
+
   // Customers and vendors, from the names on the entries.
   let contactCount = 0;
   if (books.contacts.length > 0) {
@@ -161,6 +185,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     (invoiceCount > 0 ? `, ${invoiceCount} invoices and bills with ${paymentCount} payments applied` : "") +
     (journalCount > 0 ? `, ${journalCount} journals for the rest` : "") +
     (contactCount > 0 ? `, ${contactCount} customers and vendors` : "") +
+    (classCount > 0 ? `, ${classCount} given a class` : "") +
     "."
   );
 }

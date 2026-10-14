@@ -293,3 +293,90 @@ export function invoiceEmail(
     body: lines.join("\r\n"),
   };
 }
+
+export interface StatementLine {
+  number: string;
+  issued: string;
+  due: string | null;
+  total: Cents;
+  /** What is still owing on it. */
+  owing: Cents;
+  reference: string;
+}
+
+/**
+ * A customer's statement: what they have not paid, as one document.
+ *
+ * Open invoices only, oldest first, aged by how long past due (or past the
+ * invoice date, where no due date was given) as of the statement's date. The
+ * figures are the books' own balances, passed in, not worked out again here.
+ */
+export function customerStatement(
+  customer: string,
+  lines: readonly StatementLine[],
+  asAt: string,
+  supplier: InvoiceSupplier,
+  options: InvoiceDocumentOptions = {},
+): string {
+  const date = (iso: string): string => written(iso, options.dateStyle);
+  const logo = cleanLogo(supplier.logo);
+  const open = lines.filter((l) => l.owing !== 0).sort((a, b) => a.issued.localeCompare(b.issued));
+  const days = (from: string, to: string): number =>
+    Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000);
+  const buckets = [0, 0, 0, 0, 0]; // current, 1-30, 31-60, 61-90, older
+  const rows = open.map((l) => {
+    const late = days(l.due ?? l.issued, asAt);
+    const at = late <= 0 ? 0 : late <= 30 ? 1 : late <= 60 ? 2 : late <= 90 ? 3 : 4;
+    buckets[at] = (buckets[at] ?? 0) + l.owing;
+    return (
+      "<tr>" +
+      `<td>${escapeHtml(l.number)}</td>` +
+      `<td>${date(l.issued)}</td>` +
+      `<td>${l.due === null ? "" : date(l.due)}</td>` +
+      `<td>${escapeHtml(l.reference)}</td>` +
+      `<td class="n">${formatAmount(l.total)}</td>` +
+      `<td class="n">${formatAmount(l.owing)}</td>` +
+      "</tr>"
+    );
+  });
+  const owing = open.reduce((sum, l) => sum + l.owing, 0);
+  const aging = ["Current", "1–30 days", "31–60 days", "61–90 days", "Over 90 days"];
+  return `<!doctype html>
+<html lang="${escapeHtml(options.lang ?? "en-NZ")}">
+<head>
+<meta charset="utf-8">
+<title>Statement ${escapeHtml(customer)}</title>
+<style>${STYLE}</style>
+</head>
+<body>
+  <div class="head">
+    <div class="who">
+      ${logo === null ? "" : `<img class="logo" src="${logo}" alt="">`}
+      <strong>${escapeHtml(supplier.name)}</strong>
+      ${supplier.address ? asLines(supplier.address) : ""}
+    </div>
+    <div class="meta">
+      <h1>Statement</h1>
+      <div><span class="k">As at</span>${date(asAt)}</div>
+    </div>
+  </div>
+  <div class="to"><span class="k-block">For</span>${escapeHtml(customer)}</div>
+  ${
+    open.length === 0
+      ? '<p class="note">Nothing is owing.</p>'
+      : `<table>
+    <thead><tr><th>Invoice</th><th>Date</th><th>Due</th><th>Reference</th><th class="n">Amount</th><th class="n">Owing</th></tr></thead>
+    <tbody>${rows.join("\n")}</tbody>
+    <tfoot><tr class="due"><td colspan="5" class="n">Total owing</td><td class="n">${formatAmount(owing)}</td></tr></tfoot>
+  </table>
+  <table>
+    <thead><tr>${aging.map((a) => `<th class="n">${a}</th>`).join("")}</tr></thead>
+    <tbody><tr>${buckets.map((b) => `<td class="n">${formatAmount(b)}</td>`).join("")}</tr></tbody>
+  </table>`
+  }
+  ${supplier.payTo ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
+  ${options.note ? `<div class="note">${asLines(options.note)}</div>` : ""}
+</body>
+</html>
+`;
+}

@@ -49,3 +49,25 @@ test("contacts merge by name, keeping what is held and adding what is new", () =
   const jobs = mergeContacts([], [{ name: "Freeman Sporting Goods", kind: "customer" }]);
   assert.equal(findContact(jobs, "Freeman Sporting Goods:55 Twin Lane").name, "Freeman Sporting Goods");
 });
+
+import { customerStatement } from "../dist/index.js";
+
+test("a statement lists what is owing, oldest first, aged from the due date", () => {
+  const html = customerStatement(
+    "Amy's Bird Sanctuary",
+    [
+      { number: "1025", issued: "2026-08-01", due: "2026-08-31", total: 10500, owing: 10500, reference: "" },
+      { number: "1001", issued: "2026-06-01", due: "2026-07-01", total: 5000, owing: 0, reference: "" },
+      { number: "1019", issued: "2026-09-16", due: "2026-10-16", total: 8000, owing: 8000, reference: "PO 7" },
+    ],
+    "2026-10-14",
+    { name: "Ellis Design Studio" },
+    { noTax: true, dateStyle: "mdy" },
+  );
+  assert.match(html, /Amy&#39;s|Amy's/);
+  assert.match(html, /Total owing<\/td><td class="n">185\.00/);
+  assert.doesNotMatch(html, /1001/);
+  assert.ok(html.indexOf("1025") < html.indexOf("1019"));
+  // 1025 is 44 days past due; 1019 is not yet due.
+  assert.match(html, /<td class="n">80\.00<\/td><td class="n">105\.00<\/td><td class="n">0\.00<\/td><td class="n">0\.00<\/td>|<td class="n">80\.00<\/td>/);
+});

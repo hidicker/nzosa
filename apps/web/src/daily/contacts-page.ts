@@ -1,10 +1,11 @@
 import { redraw } from "../app.js";
 import { invoiceBalanceMap, record } from "../books.js";
-import { booksMoney } from "../country.js";
+import { supplierFor } from "./invoices.js";
+import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
-import { contactKey, mergeContacts } from "@nzosa/core";
+import { download, note } from "../ui.js";
+import { contactKey, customerStatement, mergeContacts } from "@nzosa/core";
 import type { Contact, ContactKind } from "@nzosa/core";
 
 /**
@@ -288,6 +289,40 @@ export function renderContacts(): void {
       void keep(next, `${contact.name} made ${contact.active === false ? "active" : "inactive"}`);
     });
     actions.append(edit, toggle);
+    if (contact.kind !== "vendor" && sums !== undefined && sums.owedToUs !== 0) {
+      const statement = document.createElement("button");
+      statement.type = "button";
+      statement.className = "small";
+      statement.textContent = "Statement";
+      statement.addEventListener("click", () => {
+        const mine = [...invoiceBalanceMap().values()].filter(
+          (b) => b.invoice.kind === "sales" && contactKey(b.invoice.contact) === contactKey(contact.name),
+        );
+        const first = mine[0]?.invoice;
+        const supplier = first === undefined ? null : supplierFor(first);
+        if (supplier === null) {
+          window.alert("Say which entity is sending it first: add an entity on Entities & accounts.");
+          return;
+        }
+        const today = new Date().toISOString().slice(0, 10);
+        const html = customerStatement(
+          contact.name,
+          mine.map((b) => ({
+            number: b.invoice.number,
+            issued: b.invoice.issued,
+            due: b.invoice.due,
+            total: b.invoice.total,
+            owing: b.remaining,
+            reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
+          })),
+          today,
+          supplier,
+          documentOptions(),
+        );
+        download(html, `statement-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+      });
+      actions.append(statement);
+    }
     tr.append(actions);
     tbody.append(tr);
     if (editing === contact.id) {

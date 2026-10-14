@@ -690,7 +690,7 @@ async function deleteInvoice(invoice: Invoice): Promise<void> {
  * ledger. With one entity there is nothing to work out, and with none the
  * books have no name to put at the top -- which is what the button says.
  */
-function supplierFor(invoice: Invoice): InvoiceSupplier | null {
+export function supplierFor(invoice: Invoice): InvoiceSupplier | null {
   const model = state.ledger.entities ?? emptyEntityModel();
   if (model.entities.length === 0) return null;
 

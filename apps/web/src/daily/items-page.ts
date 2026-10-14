@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { record } from "../books.js";
-import { booksMoney } from "../country.js";
+import { booksCurrency, booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -87,7 +87,7 @@ function form(existing: Item | null): HTMLElement {
       problem.textContent = `${said} is already here.`;
       return;
     }
-    const cents = price.value.trim() === "" ? null : parseAmount(price.value, "USD");
+    const cents = price.value.trim() === "" ? null : parseAmount(price.value, booksCurrency());
     if (cents === null && price.value.trim() !== "") {
       problem.textContent = "A price as a number, such as 49.50.";
       return;

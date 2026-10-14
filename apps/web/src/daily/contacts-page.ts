@@ -13,6 +13,7 @@ import {
   lateFee,
   mergeContacts,
   nextInvoiceNumber,
+  parseAmount,
   reminderStageFor,
 } from "@nzosa/core";
 import type { Contact, ContactKind, Invoice } from "@nzosa/core";
@@ -155,6 +156,65 @@ async function draftLateFee(customer: string, pastDue: number): Promise<void> {
   state.persistent = await savePart(state.ledger, "invoices");
   await record("invoice", `Created ${draft.number} — ${customer} late fee ${booksMoney(amount)}`, null, draft, draft.number);
   window.alert(`${draft.number} for ${booksMoney(amount)} is drafted on Invoices. Approve it there to post it.`);
+  redraw("contacts");
+  redraw("invoices");
+}
+
+/**
+ * Small balances left on customers' invoices -- a few cents short, a bank fee
+ * the customer took off -- written off in one go to a bad debts account. Each
+ * is recorded on its invoice as settled outside the bank, so it posts bad
+ * debts against receivables on today's date, and each can be undone on its own
+ * in History.
+ */
+async function writeOffSmall(): Promise<void> {
+  const said = window.prompt("Write off what customers still owe on an invoice when it is no more than:", "5.00");
+  if (said === null) return;
+  const limit = parseAmount(said, booksCurrency());
+  if (limit === null || limit <= 0) {
+    window.alert("An amount, such as 5.00.");
+    return;
+  }
+  const expense = state.chart.filter((a) => /expense|overhead/i.test(a.type));
+  const account = expense.find((a) => /bad debt|write.?off|uncollect/i.test(a.name));
+  if (account === undefined) {
+    window.alert("Add an expense account for bad debts on Entities & accounts first, such as Bad debts.");
+    return;
+  }
+  const small = [...invoiceBalanceMap().values()].filter(
+    (b) => b.invoice.kind === "sales" && isPosted(b.invoice) && b.remaining > 0 && b.remaining <= limit,
+  );
+  if (small.length === 0) {
+    window.alert(`No invoice has ${booksMoney(limit)} or less left to pay.`);
+    return;
+  }
+  const total = small.reduce((sum, b) => sum + b.remaining, 0);
+  if (
+    !window.confirm(
+      `Write off ${small.length} balance${small.length === 1 ? "" : "s"}, ${booksMoney(total)} in all, ` +
+        `to ${account.code} ${account.name}?\n\n` +
+        small.map((b) => `${b.invoice.number} ${b.invoice.contact}: ${booksMoney(b.remaining)}`).join("\n"),
+    )
+  ) {
+    return;
+  }
+  const on = today();
+  const label = `${account.name} - ${account.code.trim()}`;
+  const changed = new Map<Invoice, Invoice>();
+  for (const b of small) {
+    changed.set(b.invoice, {
+      ...b.invoice,
+      paidOutside: [...(b.invoice.paidOutside ?? []), { date: on, amount: b.remaining, accountCode: label, note: "Written off" }],
+      paid: b.invoice.paid + b.remaining,
+      outstanding: Math.max(0, b.invoice.outstanding - b.remaining),
+    });
+  }
+  state.ledger = { ...state.ledger, invoices: (state.ledger.invoices ?? []).map((i) => changed.get(i) ?? i) };
+  state.persistent = await savePart(state.ledger, "invoices");
+  for (const [before, after] of changed) {
+    const amount = (after.paidOutside ?? []).at(-1)?.amount ?? 0;
+    await record("invoice", `${after.number} — ${after.contact}: ${booksMoney(amount)} written off`, before, after, after.number);
+  }
   redraw("contacts");
   redraw("invoices");
 }
@@ -324,7 +384,12 @@ export function renderContacts(): void {
     editing = "new";
     redraw("contacts");
   });
-  controls.append(choose, search, add);
+  const writeOff = document.createElement("button");
+  writeOff.type = "button";
+  writeOff.textContent = "Write off small balances";
+  writeOff.title = "Clear what is left on invoices under an amount you choose, to a bad debts account.";
+  writeOff.addEventListener("click", () => void writeOffSmall());
+  controls.append(choose, search, add, writeOff);
   body.append(controls);
 
   if (editing === "new") body.append(form(null));

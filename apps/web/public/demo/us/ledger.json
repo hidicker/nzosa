@@ -4048,7 +4048,8 @@
    "6150": "studio",
    "6160": "studio",
    "6170": "studio",
-   "6190": "duplex"
+   "6190": "duplex",
+   "6200": "studio"
   },
   "banks": {
    "us-business": [
@@ -4221,6 +4222,15 @@
    "description": "",
    "entity": "48 Larch Court (duplex)",
    "entityKind": "residential"
+  },
+  {
+   "code": "6200",
+   "name": "Bad debts",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Ellis Design Studio",
+   "entityKind": "business"
   },
   {
    "code": "1100",

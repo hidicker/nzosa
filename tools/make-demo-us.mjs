@@ -46,6 +46,7 @@ const ACCOUNTS = [
   ["6160", "Business meals", "Expense", studio],
   ["6170", "Utilities", "Expense", studio],
   ["6190", "Property management fees", "Expense", duplex],
+  ["6200", "Bad debts", "Expense", studio],
   ["1100", "Accounts Receivable", "Accounts Receivable", studio],
   ["3100", "Owner draws", "Equity", studio],
   ["3900", "Retained earnings", "Equity", studio],

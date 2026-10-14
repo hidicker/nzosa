@@ -110,6 +110,14 @@ The guides are guidance, not certified figures: confirm each rate with the ATO, 
 - **The bank's FITID** is kept as the reference.
 - **"Day first"** on Bank import follows the country.
 
+## Moving from QuickBooks Online
+
+Two exports, dropped on Setup (or Start here) together or one at a time:
+- **Chart of accounts** (Accounting > Chart of accounts > Export): account name, type and detail type. QuickBooks has no account codes, so they are made: 1100s receivables, 1200s other current assets, 1500s fixed assets, 2000s payables, 2100s other current liabilities, 2500s long-term, 3000s equity, 4000s income, 5000s cost of goods sold, 6000s expenses. Banks and cards get none, as Xero's do. A sub-account keeps its whole name (`Automobile:Fuel`).
+- **General ledger** (Reports > General ledger > Export, all accounts): the postings of the bank and card accounts become bank lines, with a card's sign turned round, and the account on the other side (the Split column) is read as the coding, so the coding check and the rules work as they do for Xero. An entry split across accounts says `-Split-` and is left for you to split.
+
+It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: invoices, bills, customers, the trial balance, tax reports.
+
 ## Testing
 
 - `npm test`: the core tests, including:

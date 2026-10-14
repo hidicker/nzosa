@@ -3,6 +3,10 @@ import {
   inferAccountMapping,
   parseAccountTransactionsSheet,
   parseChartOfAccounts,
+  isQuickBooksChart,
+  isQuickBooksLedger,
+  parseQuickBooksChart,
+  parseQuickBooksLedger,
   parseXeroAllocations,
   parseXeroAccountTransactions,
   payoutGroups,
@@ -247,6 +251,30 @@ export async function loadReference(
       }
 
       const text = one.text ?? "";
+      // QuickBooks Online's chart of accounts and general ledger. Read here so
+      // they go the same way Xero's do: the chart into the chart, and what each
+      // bank line was coded to into the reference the coding is checked against.
+      if (isQuickBooksChart(text)) {
+        chart.push(...parseQuickBooksChart(text).accounts);
+        continue;
+      }
+      if (isQuickBooksLedger(text)) {
+        const known = chart.length > 0 ? chart : state.chart;
+        const bank = known.filter((a) => a.type === "Bank");
+        const read = parseQuickBooksLedger(text, {
+          ...(bank.length > 0
+            ? {
+                bankNames: bank.map((a) => a.name),
+                cardNames: bank.filter((a) => a.description === "Credit Card").map((a) => a.name),
+              }
+            : {}),
+          codes: new Map(known.map((a) => [a.name, a.code])),
+          file: file.name,
+        });
+        lines.push(...read.reference);
+        for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
+        continue;
+      }
       if (/^\*?Code,/m.test(text) || text.startsWith("*Code")) {
         const parsed = parseChartOfAccounts(text);
         chart.push(...parsed.accounts);

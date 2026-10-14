@@ -4,6 +4,7 @@ import { isAgedDetail } from "./opening-documents.js";
 import { detect } from "./importers/index.js";
 import { isGstReturnSummary } from "./gst-summary.js";
 import { readIrdExport } from "./ird-records.js";
+import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 
 /**
  * What kind of export a file is, worked out from its columns.
@@ -43,6 +44,8 @@ export type ExportKind =
   | "coding-sheet"
   | "gst-summary"
   | "ird-export"
+  | "quickbooks-chart"
+  | "quickbooks-ledger"
   | "unknown";
 
 export interface Identified {
@@ -164,6 +167,15 @@ const CODING_SHEET = { kind: "coding-sheet", what: "coded spreadsheet" } as cons
  * by the caller, which is how every reader here takes them.
  */
 export function identifyExport(text: string): Identified {
+  // QuickBooks Online's own two exports. Before everything else: the general
+  // ledger carries a date and an amount like any statement, and read as one it
+  // would put every account's postings in as bank lines.
+  if (isQuickBooksChart(text)) {
+    return { kind: "quickbooks-chart", what: "QuickBooks chart of accounts" };
+  }
+  if (isQuickBooksLedger(text)) {
+    return { kind: "quickbooks-ledger", what: "QuickBooks general ledger" };
+  }
   // Xero's list of its bank accounts, from the uncoded statement lines export.
   // Before the bank statements: its sections carry Date and Payee columns.
   if (isAgedDetail(text)) {

@@ -5,6 +5,7 @@ import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, re
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
+import { loadQuickBooksBankLines } from "./quickbooks.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
@@ -210,6 +211,8 @@ async function loadEach(
     // The chart before the coding history: rules are made from the history as
     // it loads, and its account names only mean something once the chart does.
     chart: -1,
+    "quickbooks-chart": -1,
+    "quickbooks-ledger": 0,
     // Which bank account each of the chart's bank rows is, before anything
     // reads a balance or a line through those rows.
     "bank-accounts": -0.5,
@@ -233,6 +236,18 @@ async function loadEach(
     done += 1;
     try {
       switch (identified.kind) {
+        case "quickbooks-chart":
+          await loadCheckFiles([file]);
+          break;
+        case "quickbooks-ledger": {
+          // The coding it holds goes the way Xero's does, and its bank and card
+          // postings come in as bank lines: with no bank feed they are all
+          // there is, and with one the duplicates are found as usual.
+          await loadCheckFiles([file]);
+          const lines = await loadQuickBooksBankLines(file);
+          say(`${file.name} — ${identified.what}: ${lines}`);
+          continue;
+        }
         case "chart":
         case "account-transactions":
         case "coding-sheet":

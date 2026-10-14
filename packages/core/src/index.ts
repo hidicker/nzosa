@@ -450,3 +450,4 @@ export type {
   RecurringRun,
   ScheduleProblem,
 } from "./recurring-invoices.js";
+export * from "./quickbooks.js";

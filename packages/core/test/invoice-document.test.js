@@ -1,6 +1,6 @@
 import assert from "node:assert/strict";
 import test from "node:test";
-import { invoiceDocument } from "../dist/index.js";
+import { invoiceDocument, invoiceEmail } from "../dist/index.js";
 
 const line = (over) => ({
   description: "Tandem flight", accountCode: "200", taxType: "15% GST on Income",
@@ -87,4 +87,18 @@ test("it is one file, with its styles inside it", () => {
   const html = invoiceDocument(invoice(), supplier);
   assert.equal(/<link|<img|src=/.test(html), false, "nothing to fetch from elsewhere");
   assert.ok(html.startsWith("<!doctype html>"));
+});
+
+test("the email names the invoice, what is owing and how to pay", () => {
+  const { subject, body } = invoiceEmail(invoice({ paid: 5000, outstanding: 18000 }), supplier);
+  assert.equal(subject, "Tax invoice INV-1042 from Kereru Gliders Ltd");
+  for (const wanted of ["INV-1042", "180.00", "31/05/2026", "PO 88", "02-1100-0022001-000", "Kereru Gliders Ltd"]) {
+    assert.ok(body.includes(wanted), `missing ${wanted}`);
+  }
+  assert.ok(!body.includes("230.00"));
+});
+
+test("an unregistered supplier's email says invoice, not tax invoice", () => {
+  const { subject } = invoiceEmail(invoice({ tax: 0 }), { name: "Sole Trader" });
+  assert.equal(subject, "Invoice INV-1042 from Sole Trader");
 });

@@ -26,6 +26,7 @@ import {
   formatAmount,
   gstContent,
   invoiceDocument,
+  invoiceEmail,
   isPosted,
   matchInvoices,
   nextInvoiceNumber,
@@ -706,6 +707,31 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
       });
     }
     td.append(send);
+
+    const mail = document.createElement("button");
+    mail.type = "button";
+    mail.className = "invoice-send";
+    mail.textContent = "email";
+    if (supplier === null) {
+      mail.disabled = true;
+      mail.title = send.title;
+    } else {
+      mail.title =
+        "Opens a new message in your own mail program and saves the invoice " +
+        "file to attach to it. Nothing is sent from here.";
+      mail.addEventListener("click", () => {
+        download(
+          invoiceDocument(invoice, supplier),
+          `${invoice.number || "invoice"}.html`,
+          "text/html;charset=utf-8",
+        );
+        const message = invoiceEmail(invoice, supplier);
+        window.location.href =
+          `mailto:?subject=${encodeURIComponent(message.subject)}` +
+          `&body=${encodeURIComponent(message.body)}`;
+      });
+    }
+    td.append(mail);
   }
 
   return td;

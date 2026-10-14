@@ -201,3 +201,42 @@ export function invoiceDocument(
 </html>
 `;
 }
+
+/**
+ * The subject and message for emailing an invoice.
+ *
+ * Plain text, because it goes into a `mailto:` link: the person's own mail
+ * program sends it, so the app makes no network request and holds no mail
+ * credentials. A link cannot carry an attachment, so the message says the
+ * invoice is attached and the app saves the file beside it. The amount is the
+ * invoice's own outstanding figure, never one added up again here.
+ */
+export function invoiceEmail(
+  invoice: Invoice,
+  supplier: InvoiceSupplier,
+  options: InvoiceDocumentOptions = {},
+): { subject: string; body: string } {
+  const registered = (supplier.gstNumber ?? "").trim() !== "";
+  const title = options.title ?? (registered || invoice.tax !== 0 ? "Tax invoice" : "Invoice");
+  const number = invoice.number.trim();
+  const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
+
+  const lines = [
+    "Hello,",
+    "",
+    `Please find ${title.toLowerCase()} ${number} attached.`.replace("  ", " "),
+    "",
+    `Amount due: ${formatAmount(owing)}`,
+  ];
+  if (invoice.due !== null) lines.push(`Due: ${nzDate(invoice.due)}`);
+  if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
+  const payTo = (supplier.payTo ?? "").trim();
+  if (payTo !== "") lines.push("", `Payment details: ${payTo}`);
+  if (options.note !== undefined && options.note.trim() !== "") lines.push("", options.note.trim());
+  lines.push("", "Thank you,", supplier.name);
+
+  return {
+    subject: `${title} ${number} from ${supplier.name}`.replace(/\s+/g, " "),
+    body: lines.join("\r\n"),
+  };
+}

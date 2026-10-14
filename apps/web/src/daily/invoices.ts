@@ -48,7 +48,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
-import { booksCurrency, booksMoney, documentOptions } from "../country.js";
+import { booksCountry, booksCurrency, booksMoney, documentOptions } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -563,7 +563,8 @@ export function renderInvoiceEditor(): void {
   estimate.type = "button";
   estimate.textContent = "Save as estimate";
   estimate.title = "Keep it as an estimate: it is not in the books until you make it an invoice.";
-  estimate.hidden = asBill;
+  // Not offered to New Zealand books yet; the rest of the app is the same.
+  estimate.hidden = asBill || booksCountry().id === "nz";
   estimate.addEventListener("click", () => {
     const built = build("Estimate");
     const stem = built.number.replace(/^INV/i, "EST");

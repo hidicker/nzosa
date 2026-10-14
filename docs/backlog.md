@@ -61,6 +61,27 @@ works).
   and an unregistered one cannot be told apart until it is coded, so it is held
   back. Coding it first, then deciding, would be more precise.
 
+## QuickBooks and the United States
+
+- **QuickBooks invoices, bills and customers as documents.** The general ledger
+  brings in every invoice and bill as a journal, so the profit and loss and
+  balance sheet match, but they are journals, not invoices: no due dates, no
+  customer list, no aged receivables or payables, and a customer payment is
+  coded to receivables rather than matched to an invoice. QuickBooks' own
+  exports (A/R and A/P aging detail, Customer and Vendor lists, Invoice list,
+  Trial balance, Product/Service list) hold what is missing.
+- **Other expense on the profit and loss.** QuickBooks puts "Other expense"
+  below net operating income; here it sits among operating expenses. Net
+  profit agrees, the subtotal does not.
+- **A credit card sits under assets** (as negative) in the balance sheet, as
+  Xero's do, where QuickBooks has it under liabilities. Net assets agree.
+- **Sample QuickBooks exports in the US demo**, for the "Moving from
+  QuickBooks" lesson to offer.
+- **US income tax** stops at the single filer with the standard deduction: no
+  QBI deduction, credits, other filing statuses or state tax.
+- **Form 941/940, W-2 and sales tax payable reports** exist in QuickBooks and
+  SlowBooks Pro; none here.
+
 ## The app
 
 - **Wise balances in other currencies.** Only balances in the books' own

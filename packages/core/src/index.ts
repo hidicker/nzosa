@@ -451,3 +451,4 @@ export type {
   ScheduleProblem,
 } from "./recurring-invoices.js";
 export * from "./quickbooks.js";
+export * from "./contacts.js";

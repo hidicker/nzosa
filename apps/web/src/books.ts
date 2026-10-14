@@ -1090,7 +1090,15 @@ export function documentControl(invoice: Invoice): { code: string; name: string 
     const own = state.chart.find((a) => claims.test(a.name) || claims.test(a.type));
     return own !== undefined ? { code: own.code, name: own.name } : { code: "801", name: "Unpaid Expense Claims" };
   }
-  if (invoice.entityId === undefined) return undefined;
+  if (invoice.entityId === undefined) {
+    // Books kept elsewhere than New Zealand bring their own chart, whose
+    // receivables and payables are not numbered 610 and 800: the one account of
+    // that type is the control. New Zealand's keep 610 and 800 as they were.
+    if (booksCountry().id === "nz") return undefined;
+    const type = invoice.kind === "sales" ? "accounts receivable" : "accounts payable";
+    const own = state.chart.filter((a) => a.type.trim().toLowerCase() === type);
+    return own.length === 1 && own[0] !== undefined ? { code: own[0].code, name: own[0].name } : undefined;
+  }
   return controlAccountFor(invoice.entityId, invoice.kind);
 }
 

@@ -1,4 +1,4 @@
-import { parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom } from "@nzosa/core";
+import { mergeContacts, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency } from "../country.js";
@@ -61,6 +61,54 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     }
   }
 
+  // Invoices and bills as documents, replacing the last drop's, and what was
+  // paid against them: a match where a payment settled one, a split where it
+  // settled several.
+  let invoiceCount = 0;
+  if (books.invoices.length > 0) {
+    const keep = (state.ledger.invoices ?? []).filter((i) => i.reference !== "QuickBooks");
+    state.ledger = { ...state.ledger, invoices: [...keep, ...books.invoices] };
+    invoiceCount = books.invoices.length;
+    state.persistent = await savePart(state.ledger, "invoices");
+  }
+  let paymentCount = 0;
+  if (books.payments.length > 0) {
+    const matches: Record<string, string> = { ...(state.ledger.invoiceMatches ?? {}) };
+    const splits: Record<string, readonly SplitPart[]> = { ...(state.ledger.splits ?? {}) };
+    for (const pay of books.payments) {
+      const id = pay.transaction.id;
+      if (id === "") continue;
+      const only = pay.parts.length === 1 ? pay.parts[0] : undefined;
+      if (only !== undefined && only.invoiceNumber !== null && only.amount === pay.transaction.amount) {
+        matches[id] = only.invoiceNumber;
+      } else {
+        splits[id] = pay.parts.map((p) => ({ amount: p.amount, code: p.code, note: p.note }));
+        pay.parts.forEach((p, index) => {
+          if (p.invoiceNumber !== null) matches[splitPartId(id, index)] = p.invoiceNumber;
+        });
+      }
+      paymentCount += 1;
+    }
+    // Every other line of the file is said not to pay a document: QuickBooks
+    // has applied each payment already, and left to guess by amount and date
+    // the matcher would settle a bill with the card payment that cleared it.
+    for (const t of books.transactions) {
+      if (t.id !== "" && matches[t.id] === undefined) matches[t.id] = "";
+    }
+    state.ledger = { ...state.ledger, invoiceMatches: matches, splits };
+    state.persistent = await savePart(state.ledger);
+  }
+
+  // Customers and vendors, from the names on the entries.
+  let contactCount = 0;
+  if (books.contacts.length > 0) {
+    const before = (state.ledger.contacts ?? []).length;
+    const merged = mergeContacts(state.ledger.contacts ?? [], books.contacts);
+    contactCount = merged.length - before;
+    state.ledger = { ...state.ledger, contacts: merged };
+    state.persistent = await savePart(state.ledger);
+  }
+
   // Transfers between the books' own accounts, paired as they are paired
   // everywhere else, so neither side is coded to an account.
   let transferCount = 0;
@@ -105,7 +153,9 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     `on ${accounts} account${accounts === 1 ? "" : "s"}` +
     (splitCount > 0 ? `, ${splitCount} split${splitCount === 1 ? "" : "s"}` : "") +
     (transferCount > 0 ? `, ${transferCount} transfer${transferCount === 1 ? "" : "s"} between accounts` : "") +
-    (journalCount > 0 ? `, ${journalCount} journals (invoices, bills and the rest)` : "") +
+    (invoiceCount > 0 ? `, ${invoiceCount} invoices and bills with ${paymentCount} payments applied` : "") +
+    (journalCount > 0 ? `, ${journalCount} journals for the rest` : "") +
+    (contactCount > 0 ? `, ${contactCount} customers and vendors` : "") +
     "."
   );
 }

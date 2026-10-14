@@ -1,5 +1,6 @@
 import { entityId, writeQueue } from "@nzosa/core";
 import type {
+  Contact,
   LeaveSettings,
   LeaveTaken,
   AgentStatement,
@@ -204,6 +205,8 @@ export interface StoredLedger {
   assets?: FixedAsset[];
   /** Income that never reaches these accounts, entered by hand. */
   taxExtras?: TaxExtra[];
+  /** Customers and vendors, looked up by name from invoices and bills. */
+  contacts?: Contact[];
   /** What an individual's return needs that the books cannot know, by owner and year. */
   ir3Details?: Ir3Details[];
   /**
@@ -834,6 +837,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     varianceNotes: ledger.varianceNotes ?? [],
     varianceAccounts: ledger.varianceAccounts ?? [],
     taxExtras: ledger.taxExtras ?? [],
+    ...(ledger.contacts && ledger.contacts.length > 0 ? { contacts: ledger.contacts } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

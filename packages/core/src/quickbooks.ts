@@ -7,6 +7,8 @@ import type { ReferenceLine } from "./coding-check.js";
 import type { IsoDate } from "./dates.js";
 import type { Cents } from "./money.js";
 import type { ImportProblem, Transaction } from "./types.js";
+import type { Invoice, InvoiceLine } from "./invoices.js";
+import type { Contact } from "./contacts.js";
 
 /**
  * QuickBooks Online's two exports that move a business across: the chart of
@@ -316,6 +318,8 @@ export interface QuickBooksLeg {
   account: string;
   /** Debit positive, credit negative. */
   debit: Cents;
+  /** What this posting says, which for an invoice is the line's description. */
+  memo?: string;
 }
 
 /** One entry as QuickBooks posted it: every account it touched, gathered from the report's sections. */
@@ -448,7 +452,7 @@ export function parseQuickBooksEntries(text: string, chart: QuickBooksChart, opt
       entries.push(entry);
     }
     if (entry.memo === "" && memo !== "") entry.memo = memo;
-    entry.legs.push({ account, debit });
+    entry.legs.push({ account, debit, ...(memo !== "" ? { memo } : {}) });
   }
   return { entries, problems };
 }
@@ -466,7 +470,21 @@ export interface QuickBooksJournal {
   lines: { code: string; amount: Cents; description?: string }[];
 }
 
+/** One payment against open invoices or bills, said by customer or vendor. */
+export interface QuickBooksPayment {
+  /** The bank or card line. */
+  transaction: Transaction;
+  /** Who it was applied to, oldest first; a part with no number is what was left over. */
+  parts: { invoiceNumber: string | null; amount: Cents; code: string; note: string }[];
+}
+
 export interface QuickBooksBooks {
+  /** Invoices and bills as documents, with what the payments below leave owing. */
+  invoices: Invoice[];
+  /** Payments applied to them, as matches (and splits where one payment paid several). */
+  payments: QuickBooksPayment[];
+  /** Everyone the ledger names, as a customer, a vendor or both. */
+  contacts: Omit<Contact, "id">[];
   /** Pairs of lines that are one movement between the books' own accounts. */
   transfers: [Transaction, Transaction][];
   /** Bank and card lines. */
@@ -510,7 +528,179 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
   const reference: ReferenceLine[] = [...ledger.reference];
   const problems: ImportProblem[] = [...ledger.problems, ...parsed.problems];
 
+  // Invoices and bills become documents, as they are in any set of books that
+  // has them, instead of journals: they then age, can be emailed and matched.
+  const receivable = new Set(chart.accounts.filter((a) => a.type === "Accounts Receivable").map((a) => a.name));
+  const payable = new Set(chart.accounts.filter((a) => a.type === "Accounts Payable").map((a) => a.name));
+  const invoices: Invoice[] = [];
+  const documented = new Set<QuickBooksEntry>();
+  const taken = new Set<string>();
+  const currency = options.currency ?? "USD";
+  const numbered = (stem: string, date: string, given: string, sales: boolean): string => {
+    let number = given !== "" ? given : `${stem}-${date.replace(/-/g, "")}`;
+    for (let n = 2; taken.has(`${sales ? "s" : "p"}:${number}`); n += 1) number = `${stem}-${n}`;
+    taken.add(`${sales ? "s" : "p"}:${number}`);
+    return number;
+  };
   for (const entry of parsed.entries) {
+    if (entry.type !== "Invoice" && entry.type !== "Bill") continue;
+    if (entry.legs.some((leg) => banks.has(leg.account))) continue;
+    const sales = entry.type === "Invoice";
+    const isControl = (account: string): boolean => (sales ? receivable : payable).has(account);
+    const controls = entry.legs.filter((leg) => isControl(leg.account) && leg.debit !== 0);
+    const rest = entry.legs.filter((leg) => !isControl(leg.account) && leg.debit !== 0);
+    if (controls.length === 0 || rest.length === 0) continue;
+    const stem = entry.num !== "" ? entry.num : sales ? "INV" : "BILL";
+
+    const make = (total: number, using: QuickBooksLeg[]): void => {
+      const lines: InvoiceLine[] = using.map((leg) => {
+        const net = sales ? -leg.debit : leg.debit;
+        return {
+          description: leg.memo ?? entry.memo ?? "",
+          accountCode: codes.get(leg.account) ?? leg.account,
+          taxType: "No GST",
+          net,
+          tax: 0,
+          gross: net,
+        };
+      });
+      invoices.push({
+        number: numbered(stem, entry.date, entry.num, sales),
+        kind: sales ? "sales" : "purchase",
+        contact: entry.name,
+        reference: "QuickBooks",
+        issued: entry.date,
+        due: null,
+        total,
+        tax: 0,
+        paid: 0,
+        outstanding: total,
+        currency,
+        status: "Authorised",
+        lines,
+      });
+    };
+
+    if (controls.length === 1 && controls[0] !== undefined) {
+      const total = sales ? controls[0].debit : -controls[0].debit;
+      if (rest.reduce((sum, l) => sum + (sales ? -l.debit : l.debit), 0) !== total) continue;
+      make(total, rest);
+      documented.add(entry);
+      continue;
+    }
+    // Several documents under one date, type, number and name: each control
+    // leg with the other leg of the same size is one of them.
+    const free = [...rest];
+    const made: [number, QuickBooksLeg][] = [];
+    for (const control of controls) {
+      const total = sales ? control.debit : -control.debit;
+      const at = free.findIndex((l) => (sales ? -l.debit : l.debit) === total);
+      if (at < 0) break;
+      const leg = free.splice(at, 1)[0];
+      if (leg !== undefined) made.push([total, leg]);
+    }
+    if (made.length !== controls.length || free.length > 0) continue;
+    for (const [total, leg] of made) make(total, [leg]);
+    documented.add(entry);
+  }
+
+  // Payments. A bank or card line whose only other leg is receivables or
+  // payables is a customer paying, or a vendor being paid; so is a deposit
+  // into undeposited funds and a credit memo, which touch no bank account.
+  // Each is applied to that name's open documents, oldest first, so what is
+  // owing on each document is what QuickBooks would say.
+  const open = new Map<string, { invoice: Invoice; left: Cents }[]>();
+  for (const invoice of [...invoices].sort((a, b) => a.issued.localeCompare(b.issued))) {
+    const key = `${invoice.kind}\u0000${invoice.contact.toLowerCase()}`;
+    open.set(key, [...(open.get(key) ?? []), { invoice, left: invoice.total }]);
+  }
+  const payments: QuickBooksPayment[] = [];
+  const applied = new Set<QuickBooksEntry>();
+  interface Paying {
+    entry: QuickBooksEntry;
+    sales: boolean;
+    control: string;
+    /** The bank line, or the account a payment outside the bank came from. */
+    transaction: Transaction | null;
+    account: string;
+    amount: Cents;
+  }
+  const paying: Paying[] = [];
+  for (const entry of parsed.entries) {
+    if (documented.has(entry) || entry.name === "") continue;
+    const bankLegs = entry.legs.filter((leg) => banks.has(leg.account));
+    const others = entry.legs.filter((leg) => !banks.has(leg.account));
+    const controls = others.filter((leg) => receivable.has(leg.account) || payable.has(leg.account));
+    if (controls.length !== 1 || controls[0] === undefined) continue;
+    const control = controls[0];
+    const sales = receivable.has(control.account);
+    const rest = others.filter((leg) => leg !== control);
+    if (bankLegs.length === 1 && rest.length === 0 && bankLegs[0] !== undefined) {
+      const only = bankLegs[0];
+      const id = accountId(only.account);
+      const found = ledger.transactions.find(
+        (t) => t.date === entry.date && t.account === id && t.amount === only.debit && t.type === entry.type && t.code === entry.num,
+      );
+      if (found !== undefined) paying.push({ entry, sales, control: control.account, transaction: found, account: only.account, amount: Math.abs(only.debit) });
+    } else if (bankLegs.length === 0 && rest.length === 1 && rest[0] !== undefined) {
+      paying.push({ entry, sales, control: control.account, transaction: null, account: rest[0].account, amount: Math.abs(control.debit) });
+    }
+  }
+  paying.sort((a, b) => a.entry.date.localeCompare(b.entry.date));
+  for (const pay of paying) {
+    const list = open.get(`${pay.sales ? "sales" : "purchase"}\u0000${pay.entry.name.toLowerCase()}`) ?? [];
+    const available = list.reduce((sum, one) => sum + Math.max(0, one.left), 0);
+    // A payment outside the bank is only taken in whole: part of it would
+    // leave a journal for the rest that nobody could explain.
+    if (pay.transaction === null && available < pay.amount) continue;
+    let rest = pay.amount;
+    const direction = pay.transaction !== null && pay.transaction.amount < 0 ? -1 : 1;
+    const parts: QuickBooksPayment["parts"] = [];
+    for (const one of list) {
+      if (rest === 0) break;
+      if (one.left <= 0) continue;
+      const take = Math.min(rest, one.left);
+      one.left -= take;
+      rest -= take;
+      if (pay.transaction === null) {
+        one.invoice.paidOutside = [
+          ...(one.invoice.paidOutside ?? []),
+          { date: pay.entry.date, amount: take, accountCode: label(pay.account), note: `${pay.entry.type} ${pay.entry.num}`.trim() },
+        ];
+      } else {
+        parts.push({
+          invoiceNumber: one.invoice.number,
+          amount: direction * take,
+          code: label(pay.control),
+          note: `Payment, ${one.invoice.number}`,
+        });
+      }
+    }
+    if (pay.transaction === null) {
+      applied.add(pay.entry);
+      continue;
+    }
+    if (parts.length === 0) continue;
+    if (rest > 0) {
+      parts.push({ invoiceNumber: null, amount: direction * rest, code: label(pay.control), note: "Not applied to a document" });
+    }
+    payments.push({ transaction: pay.transaction, parts });
+  }
+  for (const list of open.values()) {
+    for (const one of list) {
+      const outside = (one.invoice.paidOutside ?? []).reduce((sum, p) => sum + p.amount, 0);
+      const byBank = one.invoice.total - one.left - outside;
+      one.invoice.paid = byBank + outside;
+      one.invoice.outstanding = one.left;
+    }
+  }
+
+  for (const entry of parsed.entries) {
+    if (documented.has(entry) || applied.has(entry)) continue;
+    // A posting of nothing says nothing: QuickBooks lists them (a zero
+    // payment, a stock count that did not change) and a journal of them
+    // would be a page of zeros.
+    if (entry.legs.every((leg) => leg.debit === 0)) continue;
     const bankLegs = entry.legs.filter((leg) => banks.has(leg.account));
     const others = entry.legs.filter((leg) => !banks.has(leg.account));
     const named = `${entry.type}${entry.num !== "" ? ` ${entry.num}` : ""}${entry.name !== "" ? `, ${entry.name}` : ""}`;
@@ -524,7 +714,7 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
       journals.push({
         date: entry.date,
         narration: `From QuickBooks: ${named}`,
-        lines: entry.legs.map((leg) => ({
+        lines: entry.legs.filter((leg) => leg.debit !== 0).map((leg) => ({
           code: label(leg.account),
           amount: leg.debit,
           ...(entry.memo !== "" ? { description: entry.memo } : {}),
@@ -626,7 +816,32 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
       }
     }
   }
-  return { transactions: ledger.transactions, reference, splits, transfers, journals, problems };
+  // Everyone named, by what they were to us.
+  const seen = new Map<string, Omit<Contact, "id">>();
+  const noteName = (name: string, kind: "customer" | "vendor"): void => {
+    const key = name.trim();
+    if (key === "") return;
+    const there = seen.get(key.toLowerCase());
+    if (there === undefined) seen.set(key.toLowerCase(), { name: key, kind, source: "QuickBooks" });
+    else if (there.kind !== kind) there.kind = "both";
+  };
+  for (const entry of parsed.entries) {
+    const type = entry.type.toLowerCase();
+    if (/^bill|vendor credit|purchase order|expense|^check|cheque/.test(type)) noteName(entry.name, "vendor");
+    else if (/invoice|sales receipt|^payment|credit memo|refund|estimate/.test(type)) noteName(entry.name, "customer");
+  }
+
+  return {
+    transactions: ledger.transactions,
+    reference,
+    splits,
+    transfers,
+    journals,
+    invoices,
+    payments,
+    contacts: [...seen.values()],
+    problems,
+  };
 }
 
 /**
@@ -635,10 +850,13 @@ export function parseQuickBooksBooks(text: string, chart: QuickBooksChart, optio
  */
 export function quickBooksChartFrom(accounts: readonly Account[]): QuickBooksChart {
   const debit = new Set(["Bank", "Accounts Receivable", "Current Asset", "Fixed Asset", "Non-current Asset", "Direct Costs", "Overhead", "Expense"]);
+  const cardNames = accounts.filter((a) => a.type === "Bank" && a.description === "Credit Card").map((a) => a.name);
+  const cards = new Set(cardNames);
   return {
     accounts: [...accounts],
-    debitNormal: accounts.filter((a) => debit.has(a.type)).map((a) => a.name),
+    // A card holds what is owed: a credit raises it, so it is not one of these.
+    debitNormal: accounts.filter((a) => debit.has(a.type) && !cards.has(a.name)).map((a) => a.name),
     bankNames: accounts.filter((a) => a.type === "Bank").map((a) => a.name),
-    cardNames: accounts.filter((a) => a.type === "Bank" && a.description === "Credit Card").map((a) => a.name),
+    cardNames,
   };
 }

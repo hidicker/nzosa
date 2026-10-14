@@ -138,20 +138,28 @@ const FULL_LEDGER =
   "Total for Labor,,,,,,,,$150.00,\n" +
   "Total for Landscaping with sub-accounts,,,,,,,,$150.00,\n";
 
-test("a whole ledger comes back as bank lines, a transfer and the journals that touch no bank", () => {
+test("a whole ledger comes back as bank lines, a transfer, documents and the journals for the rest", () => {
   const chart = parseQuickBooksChart(FULL_CHART);
   const entries = parseQuickBooksEntries(FULL_LEDGER, chart);
   for (const e of entries.entries) {
     assert.equal(e.legs.reduce((s, l) => s + l.debit, 0), 0, `${e.type} ${e.num} balances`);
   }
   const books = parseQuickBooksBooks(FULL_LEDGER, chart);
-  // The sub-account is found under its whole name, though its section says only "Labor".
-  assert.equal(books.journals.length, 1);
-  const invoice = books.journals[0];
-  assert.match(invoice.narration, /Invoice 1001, Acme/);
-  const byCode = Object.fromEntries(invoice.lines.map((l) => [l.code, l.amount]));
-  assert.equal(byCode["Accounts Receivable (A/R) - 1100"], 15000);
-  assert.equal(byCode["Landscaping:Labor - 4020"], -15000);
+  // The invoice is a document, found under its whole sub-account name though
+  // its section says only "Labor", and what Acme paid has been applied to it.
+  assert.equal(books.invoices.length, 1);
+  const invoice = books.invoices[0];
+  assert.equal(invoice.number, "1001");
+  assert.equal(invoice.kind, "sales");
+  assert.equal(invoice.contact, "Acme");
+  assert.equal(invoice.total, 15000);
+  assert.deepEqual(invoice.lines.map((l) => [l.accountCode, l.net]), [["4020", 15000]]);
+  assert.equal(invoice.outstanding, 0);
+  assert.equal(books.payments.length, 1);
+  assert.equal(books.payments[0].parts[0].invoiceNumber, "1001");
+  // Nothing is left over to be a journal, and Acme is a customer.
+  assert.equal(books.journals.length, 0);
+  assert.deepEqual(books.contacts.map((c) => [c.name, c.kind]), [["Acme", "customer"]]);
   // The move between its own accounts is a transfer, not coded to an account.
   assert.equal(books.transfers.length, 1);
   assert.equal(books.reference.some((r) => r.code === "Savings" || r.code === "Checking"), false);

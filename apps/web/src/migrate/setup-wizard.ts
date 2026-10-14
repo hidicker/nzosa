@@ -40,7 +40,8 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, switchLedger, writesToFolder } from "../store.js";
 import type { StoredLedger } from "../store.js";
-import { note, setLoadingStatus } from "../ui.js";
+import { askOnPage, note, setLoadingStatus } from "../ui.js";
+import { DEMO_PERSONAS, currentDemoPersona, demoFolder, rememberDemoPersona } from "../demo-personas.js";
 import {
   DEFAULT_ENTITY_NAME,
   accountEntityKey,
@@ -1743,7 +1744,9 @@ export function clearHereControl(): HTMLElement {
   return wrap;
 }
 
-export async function loadDemoData(button: HTMLButtonElement): Promise<void> {
+export async function loadDemoData(button: HTMLButtonElement, persona?: string): Promise<void> {
+  const which = persona ?? currentDemoPersona();
+  const landing = DEMO_PERSONAS.find((p) => p.id === which)?.page ?? "reconcile";
   if (writesToFolder()) {
     button.disabled = true;
     button.textContent = "Opening…";
@@ -1762,10 +1765,11 @@ export async function loadDemoData(button: HTMLButtonElement): Promise<void> {
 
   if (
     state.ledger.transactions.length > 0 &&
-    !confirm(
+    !(await askOnPage(
       `This replaces everything in the browser: ${state.ledger.transactions.length} ` +
         `transactions and the coding on them. There is no undo.\n\nGo ahead?`,
-    )
+      "Replace",
+    ))
   ) {
     return;
   }
@@ -1774,10 +1778,12 @@ export async function loadDemoData(button: HTMLButtonElement): Promise<void> {
   button.textContent = "Loading…";
   try {
     await wipe();
-    await loadStartupFiles("demo", true);
+    await loadStartupFiles(demoFolder(which), true);
+    // Only once it has loaded: a choice that failed must not be remembered.
+    if (state.ledger.transactions.length > 0) rememberDemoPersona(which);
     reclassify();
     state.entityFilter = "";
-    showPage("reconcile");
+    showPage(landing);
   } catch (error) {
     alert(`Could not load the demo data: ${(error as Error).message}`);
     button.disabled = false;

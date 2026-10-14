@@ -2995,6 +2995,25 @@ button.working:not(.primary):not(.active) {
 .demo-banner-again:hover {
   background: rgba(0, 0, 0, 0.45);
 }
+.demo-banner-persona {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  font-weight: 600;
+}
+.demo-banner-persona select {
+  font: inherit;
+  max-width: 100%;
+  padding: 1px 6px;
+  border-radius: 3px;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+}
+.demo-banner-persona select option {
+  color: #111111;
+  background: #ffffff;
+}
 .demo-banner-close {
   position: absolute;
   right: 12px;

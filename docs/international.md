@@ -150,6 +150,7 @@ Shown for books kept outside New Zealand:
 - **Customers & vendors** (`contacts-page.ts`): records looked up by name from invoices and bills; names are offered when an invoice is written, and an invoice takes the customer's email.
 - **Reconcile a statement** (`statements-page.ts`, core `reconciliation.ts`): type the statement's ending balance, tick the lines it cleared, finish when the difference is nothing. Each finished statement keeps its lines, so the next starts where it ended.
 - **Products & services** (`items-page.ts`): a price list; an invoice line written with an item's name takes its account and price.
+- **Stock** (core `stock.ts`, `stockCostJournals` in `books.ts`): a product with a cost a unit is kept in stock. A bill line naming it, with a quantity, goes into the Inventory account; an invoice line takes it out at the average cost, posted from Inventory to cost of goods sold on the invoice's date. A stock count values what is on hand, resets the quantities, and posts the difference as a journal. Products & services shows what is on hand.
 - **Budgets** (`budgets-page.ts`): one figure per income or expense account per year, and a **Budget vs actual** report with the year to date.
 - **Estimates and purchase orders**: an invoice saved as an estimate, or a bill kept as a purchase order, posts nothing until it is made an invoice or approved. An estimate prints and emails as an estimate.
 - **Customer statements**: from Customers & vendors, a printable statement of what a customer owes, aged.

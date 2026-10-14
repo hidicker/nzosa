@@ -26,11 +26,11 @@ statements; classes with a profit and loss by class; QuickBooks Desktop
 IIF import (chart, customers, vendors, transactions and classes); time
 entries invoiced by customer; reminder letters, late fees and writing off
 small balances; credit limits; a vendor's usual account. Jobs are classes
-(time can carry one, and its invoice goes under it). Stock is counted and
-valued (the periodic method), not tracked line by line. SlowBooks' own
+(time can carry one, and its invoice goes under it). Stock is tracked line
+by line at average cost, and counted. SlowBooks' own
 General Ledger CSV is read whole, and was checked against SlowBooks with
-entries entered in it. Still not built: perpetual stock, a US payroll engine
-(941, 940, W-2), and the nonprofit statements.
+entries entered in it. Still not built: reorder points and stock reports by
+movement, a US payroll engine (941, 940, W-2), and the nonprofit statements.
 
 ## Sales (money in)
 

@@ -4,7 +4,9 @@ import {
   identifyExport,
   isQuickBooksChart,
   isQuickBooksLedger,
+  parseQuickBooksBooks,
   parseQuickBooksChart,
+  parseQuickBooksEntries,
   parseQuickBooksLedger,
 } from "../dist/index.js";
 
@@ -100,4 +102,57 @@ test("a day past 12 settles which way round the dates go", () => {
     ",Checking,03/04/2026,Deposit,,,x,Design income,10.00,10.00\n";
   assert.equal(parseQuickBooksLedger(ambiguous, { bankNames: ["Checking"], dayFirst: true }).transactions[0].date, "2026-04-03");
   assert.equal(parseQuickBooksLedger(ambiguous, { bankNames: ["Checking"], dayFirst: false }).transactions[0].date, "2026-03-04");
+});
+
+const FULL_CHART =
+  "Account name,Account type,Detail type\n" +
+  "Checking,Bank,Checking\n" +
+  "Savings,Bank,Savings\n" +
+  "Accounts Receivable (A/R),Accounts receivable (A/R),Accounts Receivable (A/R)\n" +
+  "Services,Income,Service/Fee Income\n" +
+  "Landscaping,Income,Other Primary Income\n" +
+  "Landscaping:Labor,Income,Other Primary Income\n" +
+  "Opening Balance Equity,Equity,Opening Balance Equity\n";
+
+const FULL_LEDGER =
+  ",Distribution account,Transaction date,Transaction type,Num,Name,Description,Split,Amount,Balance\n" +
+  "Checking,,,,,,,,,\n" +
+  ',Checking,05/05/2026,Deposit,,,Opening Balance,Opening Balance Equity,"1,000.00","1,000.00"\n' +
+  ',Checking,06/01/2026,Payment,5,Acme,,Accounts Receivable (A/R),150.00,"1,150.00"\n' +
+  ",Checking,06/02/2026,Transfer,,,To savings,Savings,-200.00,950.00\n" +
+  "Total for Checking,,,,,,,,$950.00,\n" +
+  "Savings,,,,,,,,,\n" +
+  ",Savings,06/02/2026,Transfer,,,To savings,Checking,200.00,200.00\n" +
+  "Total for Savings,,,,,,,,$200.00,\n" +
+  "Accounts Receivable (A/R),,,,,,,,,\n" +
+  ",Accounts Receivable (A/R),05/30/2026,Invoice,1001,Acme,,Landscaping:Labor,150.00,150.00\n" +
+  ",Accounts Receivable (A/R),06/01/2026,Payment,5,Acme,,Checking,-150.00,0.00\n" +
+  "Total for Accounts Receivable (A/R),,,,,,,,$0.00,\n" +
+  "Opening Balance Equity,,,,,,,,,\n" +
+  ",Opening Balance Equity,05/05/2026,Deposit,,,Opening Balance,Checking,1000.00,1000.00\n" +
+  'Total for Opening Balance Equity,,,,,,,,"$1,000.00",\n' +
+  "Landscaping,,,,,,,,,\n" +
+  "Total for Landscaping,,,,,,,,$0.00,\n" +
+  "Labor,,,,,,,,,\n" +
+  ",Labor,05/30/2026,Invoice,1001,Acme,,Accounts Receivable (A/R),150.00,150.00\n" +
+  "Total for Labor,,,,,,,,$150.00,\n" +
+  "Total for Landscaping with sub-accounts,,,,,,,,$150.00,\n";
+
+test("a whole ledger comes back as bank lines, a transfer and the journals that touch no bank", () => {
+  const chart = parseQuickBooksChart(FULL_CHART);
+  const entries = parseQuickBooksEntries(FULL_LEDGER, chart);
+  for (const e of entries.entries) {
+    assert.equal(e.legs.reduce((s, l) => s + l.debit, 0), 0, `${e.type} ${e.num} balances`);
+  }
+  const books = parseQuickBooksBooks(FULL_LEDGER, chart);
+  // The sub-account is found under its whole name, though its section says only "Labor".
+  assert.equal(books.journals.length, 1);
+  const invoice = books.journals[0];
+  assert.match(invoice.narration, /Invoice 1001, Acme/);
+  const byCode = Object.fromEntries(invoice.lines.map((l) => [l.code, l.amount]));
+  assert.equal(byCode["Accounts Receivable (A/R) - 1100"], 15000);
+  assert.equal(byCode["Landscaping:Labor - 4020"], -15000);
+  // The move between its own accounts is a transfer, not coded to an account.
+  assert.equal(books.transfers.length, 1);
+  assert.equal(books.reference.some((r) => r.code === "Savings" || r.code === "Checking"), false);
 });

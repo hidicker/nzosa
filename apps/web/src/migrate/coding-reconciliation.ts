@@ -555,6 +555,9 @@ function sameAccount(ours: Transaction, theirs: ReferenceLine): boolean {
   if (theirs.account === undefined) return true;
   const expected = state.accountMap.get(ours.account);
   if (expected !== undefined) return expected === theirs.account;
+  // The account's own name, where the line came from a file that names its
+  // accounts (QuickBooks's general ledger does): no need to infer anything.
+  if (ours.extras?.accountLabel !== undefined && ours.extras.accountLabel === theirs.account) return true;
   // No pairing was inferred for this account. When the reference produced
   // pairings for other accounts it has had its chance, so silence here means
   // the reference does not cover this account at all -- Xero holds one entity
@@ -3482,6 +3485,7 @@ function codedExamples(): CodedExample[] {
   const sameAccount = (ours: Transaction, theirs: { account?: string }) => {
     if (theirs.account === undefined) return true;
     const expected = mapping.get(ours.account);
+    if (expected === undefined && (ours as Transaction).extras?.accountLabel === theirs.account) return true;
     return expected !== undefined ? expected === theirs.account : mapping.size === 0;
   };
   const result = compareCodings(coded, state.reference, {

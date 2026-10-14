@@ -7,6 +7,8 @@ import {
   isQuickBooksLedger,
   parseQuickBooksChart,
   parseQuickBooksLedger,
+  parseQuickBooksBooks,
+  quickBooksChartFrom,
   parseXeroAllocations,
   parseXeroAccountTransactions,
   payoutGroups,
@@ -33,6 +35,7 @@ import type {
   SheetRows,
 } from "@nzosa/core";
 import { state } from "./state.js";
+import { booksCountry } from "./country.js";
 
 /** Read a sheet whose columns were pointed out by hand. */
 export function readChosenColumns(
@@ -261,16 +264,12 @@ export async function loadReference(
       if (isQuickBooksLedger(text)) {
         const known = chart.length > 0 ? chart : state.chart;
         const bank = known.filter((a) => a.type === "Bank");
-        const read = parseQuickBooksLedger(text, {
-          ...(bank.length > 0
-            ? {
-                bankNames: bank.map((a) => a.name),
-                cardNames: bank.filter((a) => a.description === "Credit Card").map((a) => a.name),
-              }
-            : {}),
-          codes: new Map(known.map((a) => [a.name, a.code])),
-          file: file.name,
-        });
+        // With the chart, the whole ledger is read, so an entry whose bank
+        // side names no account is still coded from its other legs.
+        const read =
+          bank.length > 0
+            ? parseQuickBooksBooks(text, quickBooksChartFrom(known), { file: file.name, dayFirst: booksCountry().dayFirst })
+            : parseQuickBooksLedger(text, { file: file.name, dayFirst: booksCountry().dayFirst });
         lines.push(...read.reference);
         for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
         continue;

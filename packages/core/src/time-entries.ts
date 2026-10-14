@@ -16,6 +16,8 @@ export interface TimeEntry {
   description: string;
   /** Not billable: kept for the record only. */
   nonBillable?: boolean;
+  /** The class (a job, a department) it is for, which its invoice is given. */
+  className?: string;
   /** The invoice it went on, once it has. */
   invoice?: string;
 }

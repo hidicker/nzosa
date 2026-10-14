@@ -85,6 +85,13 @@ async function invoiceTime(customer: string, entries: readonly TimeEntry[]): Pro
   const before = state.ledger.timeEntries ?? [];
   const after = held().map((e) => (ids.has(e.id) ? { ...e, invoice: number } : e));
   state.ledger = { ...state.ledger, invoices: [...(state.ledger.invoices ?? []), draft], timeEntries: after };
+  // Time all for one class: the invoice goes under it too.
+  const classNames = new Set(entries.map((e) => e.className ?? ""));
+  const only = classNames.size === 1 ? [...classNames][0] : "";
+  if (only !== undefined && only !== "" && state.ledger.classes !== undefined) {
+    const classes = state.ledger.classes;
+    state.ledger = { ...state.ledger, classes: { ...classes, assigned: { ...classes.assigned, [number]: only } } };
+  }
   state.persistent = await savePart(state.ledger, "invoices");
   state.persistent = await savePart(state.ledger);
   await record("invoice", `Created ${number} — ${customer} ${booksMoney(total)} from time`, null, draft, number);
@@ -140,6 +147,15 @@ function entryForm(body: HTMLElement): void {
   const description = document.createElement("input");
   description.type = "text";
   description.placeholder = "What was done";
+  // A class, where the books have them: the job or department the time is for.
+  const classNames = state.ledger.classes?.names ?? [];
+  const klass = document.createElement("select");
+  for (const name of ["", ...classNames]) {
+    const option = document.createElement("option");
+    option.value = name;
+    option.textContent = name === "" ? "No class" : name;
+    klass.append(option);
+  }
   const billable = document.createElement("input");
   billable.type = "checkbox";
   billable.checked = true;
@@ -167,6 +183,7 @@ function entryForm(body: HTMLElement): void {
         hours: Math.round(h * 100) / 100,
         rate: r,
         description: description.value.trim(),
+        ...(klass.value !== "" ? { className: klass.value } : {}),
         ...(billable.checked ? {} : { nonBillable: true }),
       };
       void keep([...held(), entry], `${hoursSaid(entry.hours)} h for ${who}`);
@@ -182,6 +199,7 @@ function entryForm(body: HTMLElement): void {
     label("Hours", hours),
     label("Rate per hour", rate),
     label("Description", description),
+    ...(classNames.length > 0 ? [label("Class", klass)] : []),
     billableLabel,
     problem,
     row,
@@ -251,7 +269,7 @@ export function renderTime(): void {
     for (const [text, cls] of [
       [entry.date, "report-name"],
       [entry.customer, "report-name"],
-      [entry.description, "report-name"],
+      [entry.description + (entry.className !== undefined ? ` · ${entry.className}` : ""), "report-name"],
       [hoursSaid(entry.hours), "report-amount"],
       [booksMoney(entry.rate), "report-amount"],
       [booksMoney(timeValue(entry)), "report-amount"],

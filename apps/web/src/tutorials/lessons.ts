@@ -1,4 +1,5 @@
 import { DEMO_PERSONAS, currentDemoPersona } from "../demo-personas.js";
+import { noSalesTax } from "../country.js";
 import { onScreen } from "./engine.js";
 import type { Lesson } from "./engine.js";
 
@@ -53,8 +54,11 @@ export const LESSONS: readonly Lesson[] = [
       {
         title: "Welcome",
         body: () =>
-          "NZOSA turns your bank files into a coded, double-entry set of books, and from those your GST returns, " +
-          "financial statements and tax returns. " +
+          (noSalesTax()
+            ? "NZOSA turns your bank files into a coded, double-entry set of books, and from those your " +
+              "financial statements and the figures for Schedule C, Schedule E and 1099-NEC. "
+            : "NZOSA turns your bank files into a coded, double-entry set of books, and from those your GST returns, " +
+              "financial statements and tax returns. ") +
           (DEMO_PERSONAS.find((p) => p.id === currentDemoPersona())?.about ?? ""),
         page: "reconcile",
       },
@@ -67,9 +71,10 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: "Actions required",
-        body:
-          "What needs you, in the order it matters: lines left to code, a GST return coming due, an invoice " +
-          "overdue. The number beside it is how many.",
+        body: () =>
+          "What needs you, in the order it matters: lines left to code, " +
+          (noSalesTax() ? "" : "a GST return coming due, ") +
+          "an invoice overdue. The number beside it is how many.",
         target: visible('.sidebar-nav [data-page="actions"]'),
       },
       {
@@ -81,15 +86,20 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: "Year end",
-        body: "The year-end work: rental schedules, the IR3, IR4 or IR10, and a pack your accountant can check.",
+        body: () =>
+          noSalesTax()
+            ? "The year-end work, and a pack your accountant can check."
+            : "The year-end work: rental schedules, the IR3, IR4 or IR10, and a pack your accountant can check.",
         target: q('.sidebar-group[data-group="yearend"]'),
         when: () => onScreen(document.querySelector('.sidebar-group[data-group="yearend"]')),
       },
       {
         title: "Set up",
-        body:
-          "Done once and then rarely: your entities, chart of accounts, GST settings, opening balances and coding " +
-          "rules. Pages only appear for what your books use, so a sole trader never sees a trust's.",
+        body: () =>
+          "Done once and then rarely: your entities, chart of accounts, " +
+          (noSalesTax() ? "" : "GST settings, ") +
+          "opening balances and coding rules. Pages only appear for what your books use, so a sole trader " +
+          "never sees a trust's.",
         target: q('.sidebar-group[data-group="setup"]'),
       },
       {
@@ -109,7 +119,11 @@ export const LESSONS: readonly Lesson[] = [
   {
     id: "code-a-line",
     title: "Code a bank line",
-    summary: "Give a bank line its account and GST, confirm it, and see what NZOSA learns from it.",
+    get summary() {
+      return noSalesTax()
+        ? "Give a bank line its account, confirm it, and see what NZOSA learns from it."
+        : "Give a bank line its account and GST, confirm it, and see what NZOSA learns from it.";
+    },
     minutes: 3,
     steps: [
       {
@@ -146,10 +160,15 @@ export const LESSONS: readonly Lesson[] = [
           "15% for an ordinary purchase or sale, 0% for anything with no GST in it, such as bank fees or wages. " +
           "The GST return adds these up for you.",
         target: () => firstLine()?.querySelector(".gst-select") ?? null,
+        // Where there is no sales tax there is no rate to choose.
+        when: () => !noSalesTax(),
       },
       {
         title: "Confirm it",
-        body: "Confirming puts the line in the books: it now counts in the reports and the GST return.",
+        body: () =>
+          noSalesTax()
+            ? "Confirming puts the line in the books: it now counts in the reports and the tax schedules."
+            : "Confirming puts the line in the books: it now counts in the reports and the GST return.",
         task: () => (suggested() ? "Press ✓ on this line." : "Choose an account, then press ✓."),
         target: () => firstLine()?.querySelector(".code-tick") ?? null,
         before: () => {
@@ -555,6 +574,92 @@ export const LESSONS: readonly Lesson[] = [
         page: "reports",
         before: report("ir3"),
         target: q("#reports-body"),
+      },
+    ],
+  },
+  {
+    id: "us-schedules",
+    title: "Schedule C, Schedule E and 1099-NEC",
+    summary: "The business's profit, the duplex's rental income, and which contractors need a 1099-NEC.",
+    minutes: 3,
+    books: ["us"],
+    steps: [
+      {
+        title: "One set of books, two returns' worth",
+        body:
+          "The studio is a sole proprietorship and the duplex is a rental, each its own entity in the same books. " +
+          "Their figures are kept apart, and each has the schedule it goes on.",
+        page: "reports",
+        before: report("home"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "Schedule C: the business",
+        body:
+          "Gross receipts, then each expense on the line the form gives it: car and truck, contract labor, " +
+          "supplies, and so on. Meals are shown in full beside the half the form allows.",
+        before: report("schedulec"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "Schedule E: the rental",
+        body:
+          "Rents received, then mortgage interest, property taxes, insurance, repairs and the management fee on " +
+          "their lines. Depreciation and personal-use days are for you to add before filing.",
+        before: report("schedulee"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "Contractors and 1099-NEC",
+        body:
+          "Everybody paid for contract labor, with what each was paid in the year. Anyone paid $2,000 or more " +
+          "from 2026 needs a 1099-NEC; those below are listed too, so you can see how close they are.",
+        before: report("contractors"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "Open a figure",
+        body: "Every figure opens to the bank lines behind it, so you can check it before it goes on a return.",
+        task: "Press any account name in the report.",
+        before: report("pl"),
+        target: withText("#reports-body button.link-button", /./),
+        done: opened,
+      },
+    ],
+  },
+  {
+    id: "us-quickbooks",
+    title: "Moving from QuickBooks",
+    summary: "Bring a QuickBooks Online company's accounts and bank lines across with two exports.",
+    minutes: 2,
+    books: ["us"],
+    steps: [
+      {
+        title: "Two exports",
+        body:
+          "In QuickBooks Online, export the Chart of accounts, and run the General ledger report for all accounts " +
+          "and export that. Both come out as CSV or Excel.",
+        page: "setup",
+      },
+      {
+        title: "Drop them in",
+        body:
+          "Drop both files on Setup, or on Start here. NZOSA works out what each one is: the chart becomes the " +
+          "chart, and the bank and card postings become bank lines.",
+        target: visible("#setup-drop, .dropzone"),
+      },
+      {
+        title: "The coding comes with them",
+        body:
+          "The account on the other side of each posting is read as the coding. It is checked against the books " +
+          "on Coding reconciliation, and what is the same every time becomes a rule, so the next lines are suggested.",
+        page: "check",
+      },
+      {
+        title: "What QuickBooks does not hold",
+        body:
+          "Account codes: QuickBooks has none, so they are made, in ranges by type. Split entries come across " +
+          "uncoded for you to split here.",
       },
     ],
   },

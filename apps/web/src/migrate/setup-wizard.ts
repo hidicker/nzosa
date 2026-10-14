@@ -1783,11 +1783,19 @@ export async function loadDemoData(button: HTMLButtonElement, persona?: string):
   button.disabled = true;
   button.textContent = "Loading…";
   try {
+    const countryBefore = booksCountry().id;
     await wipe();
     await loadStartupFiles(demoFolder(which), true);
     // Only once it has loaded: a choice that failed must not be remembered.
     if (state.ledger.transactions.length > 0) rememberDemoPersona(which);
     reclassify();
+    // Another country's books come with another country's reports, tax and
+    // currency, set as the app opens: drawn again from the start, so none of
+    // the last books' pages is left behind. What was loaded is already kept.
+    if (booksCountry().id !== countryBefore) {
+      location.reload();
+      return;
+    }
     state.entityFilter = "";
     showPage(landing);
   } catch (error) {

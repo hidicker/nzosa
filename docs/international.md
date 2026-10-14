@@ -128,3 +128,7 @@ It is not limited to one country: the exports have the same shape wherever Quick
   - Run `main` against itself first: it must report identical.
 - **Invented books** for each country:
   - `node tools/make-country-books.mjs <folder>`, then open one with `--ledgers <folder> --ledger us-books` (or `au-books`, `kr-books`).
+
+## The United States demo
+
+`apps/web/public/demo/us/ledger.json`, made by `node tools/make-demo-us.mjs`: Ellis Design Studio (a sole proprietor, Schedule C) and a rented duplex (Schedule E), January to September 2026, 126 bank lines on two accounts, seven left uncoded, and three contractors for the 1099-NEC report. It is a demo persona like the others (`demo-personas.ts`, id `us`), so it is chosen from "Demo books" on the Tutorials page; switching between it and the New Zealand books reloads the page, because the country sets the reports, tax and currency as the app opens. Its lessons are `us-schedules` and `us-quickbooks`; the welcome and code-a-line lessons read differently where there is no sales tax.

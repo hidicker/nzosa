@@ -62,6 +62,16 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     page: "personalyear",
     ready: true,
   },
+  {
+    id: "us",
+    label: "A US freelancer with a rental (United States)",
+    shows: "US books: Schedule C, Schedule E, 1099-NEC contractors, no sales tax",
+    about:
+      "These demo books are invented and kept as United States books: Ellis Design Studio, a sole proprietor " +
+      "design business, and a rented duplex, for January to September 2026.",
+    page: "reconcile",
+    ready: true,
+  },
 ];
 
 const KEY = "nzosa:demo-persona";

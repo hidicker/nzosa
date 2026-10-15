@@ -1,3 +1,4 @@
+import { askForColumns, looksLikeBankFile, rememberedLayout, renderColumnChooser } from "./bank-columns.js";
 import { clearInbox, inboxIsFresh } from "../nightly.js";
 import { morningChoice } from "../nightly-ui.js";
 import type { Morning } from "../nightly.js";
@@ -44,6 +45,10 @@ import {
   onOrAfter,
   hash,
   importFile,
+  detect,
+  isOfx,
+  bankFileSignature,
+  importWithLayout,
   importers,
   isQuickBooksBankExport,
   judgeDuplicates,
@@ -255,12 +260,37 @@ export async function handleFiles(files: File[]): Promise<void> {
     if (isQuickBooksBankExport(text)) coded.push(file);
 
     try {
-      const result = importFile(text, {
-        file: file.name,
-        defaultCurrency: currency,
-        dayFirst,
-        ...(account !== "" ? { account } : {}),
-      });
+      // A layout pointed out by hand before, for a file no importer knows.
+      const known = detect(text) === undefined && !isOfx(text) ? rememberedLayout(bankFileSignature(text)) : undefined;
+      if (detect(text) === undefined && !isOfx(text) && known === undefined) {
+        if (looksLikeBankFile(text)) {
+          askForColumns(file, text);
+          state.reports.push({
+            name: file.name,
+            importer: "",
+            account: "",
+            count: 0,
+            problems: [],
+            error: "A layout NZOSA doesn't know yet: point out its columns below, and it comes in.",
+          });
+          continue;
+        }
+      }
+      const result =
+        known !== undefined
+          ? importWithLayout(text, known.layout, {
+              file: file.name,
+              account: account !== "" ? account : known.account,
+              accountLabel: known.accountLabel,
+              currency,
+              dayFirst,
+            })
+          : importFile(text, {
+              file: file.name,
+              defaultCurrency: currency,
+              dayFirst,
+              ...(account !== "" ? { account } : {}),
+            });
 
       const kept = onOrAfter(result.transactions, booksStart);
       const earlier = result.transactions.length - kept.length;
@@ -1217,6 +1247,7 @@ export function render(): void {
   renderStatus();
   renderLockedArrivals();
   renderReports();
+  renderColumnChooser($("bank-columns"), handleFiles);
   renderBalanceEntry();
   redraw("importRows");
   // The guided start shows this section inside one of its steps, and counts

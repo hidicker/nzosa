@@ -1,3 +1,4 @@
+import { looksLikeBankFile } from "../daily/bank-columns.js";
 import { chosenStartDate } from "./onboarding-state.js";
 import { filedKey, isCreditNote, xeroNumberOf } from "@nzosa/core";
 import { redraw, showPage } from "../app.js";
@@ -313,6 +314,13 @@ async function loadEach(
           say(`${file.name} \u2014 ${await loadOpeningDocuments(file)}`);
           continue;
         default:
+          // Dates and amounts, in a layout nothing knows: a bank's file, to
+          // have its columns pointed out on Bank import.
+          if (looksLikeBankFile(await asCsvText(file.name, new Uint8Array(await file.arrayBuffer())))) {
+            await handleFiles([file]);
+            say(`${file.name} — a bank file in a layout NZOSA doesn't know yet: point out its columns under Bank import.`);
+            continue;
+          }
           say(`${file.name} — not recognised, so nothing was done with it.`);
           continue;
       }

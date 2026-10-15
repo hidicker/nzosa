@@ -4499,3 +4499,21 @@ select.needs-choice {
 .contact-form .cloud-said, .contact-form .migration-actions { grid-column: 1 / -1; }
 .contacts-table td:last-child { white-space: nowrap; }
 
+
+/* A bank file in an unknown layout, its columns being pointed out. */
+.column-chooser {
+  background: var(--surface);
+  border: 1px solid var(--accent);
+  border-radius: 12px;
+  padding: 16px 18px;
+  margin-bottom: 16px;
+}
+.column-chooser h3 { margin: 0 0 0.3rem; font-size: 1rem; }
+.column-chooser-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fill, minmax(13rem, 1fr));
+  gap: 0.6rem 1rem;
+  margin: 0.6rem 0 0.8rem;
+}
+
+.contact-field[hidden] { display: none; }

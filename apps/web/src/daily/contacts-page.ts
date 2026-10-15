@@ -17,7 +17,7 @@ import {
   reminderStageFor,
 } from "@nzosa/core";
 import type { Contact, ContactKind, Invoice } from "@nzosa/core";
-import { booksCurrency } from "../country.js";
+import { booksCountry, booksCurrency, noSalesTax } from "../country.js";
 
 /**
  * Customers and vendors: who the books deal with.
@@ -145,7 +145,8 @@ async function draftLateFee(customer: string, pastDue: number): Promise<void> {
       {
         description: `Late fee, ${percent}% of ${booksMoney(pastDue)} past due on ${late.map((b) => b.invoice.number).join(", ")}`,
         accountCode: account?.code.trim() ?? "",
-        taxType: "No GST",
+        // A percentage of what is overdue is interest: exempt from GST.
+        taxType: noSalesTax() ? "No GST" : "GST Exempt",
         net: amount,
         tax: 0,
         gross: amount,
@@ -204,7 +205,10 @@ async function writeOffSmall(): Promise<void> {
   for (const b of small) {
     changed.set(b.invoice, {
       ...b.invoice,
-      paidOutside: [...(b.invoice.paidOutside ?? []), { date: on, amount: b.remaining, accountCode: label, note: "Written off" }],
+      paidOutside: [
+        ...(b.invoice.paidOutside ?? []),
+        { date: on, amount: b.remaining, accountCode: label, note: "Written off", writeOff: true },
+      ],
       paid: b.invoice.paid + b.remaining,
       outstanding: Math.max(0, b.invoice.outstanding - b.remaining),
     });
@@ -353,10 +357,11 @@ function form(existing: Contact | null): HTMLElement {
     field("Phone", phone),
     field("Address", address),
     field("Payment terms", terms),
-    field("Tax ID (EIN, SSN or IRD number)", taxId),
+    field(booksCountry().id === "us" ? "Tax ID (EIN or SSN)" : booksCountry().id === "nz" ? "IRD or GST number" : "Tax ID", taxId),
     field("Credit limit (customers)", limit),
     field("Bills usually coded to (vendors)", usual),
-    ticks,
+    // The W-9 and the 1099-NEC are the United States' own.
+    ...(booksCountry().id === "us" ? [ticks] : []),
     field("Notes", notes),
     problem,
   );

@@ -1958,8 +1958,6 @@ export function stockAccounts(): { inventory?: { code: string; name: string }; c
 
 /** Each stocked product's invoices and bills, as the stock tracking reads them. */
 export function stockTracked(): ReturnType<typeof trackStock> | null {
-  // Not in New Zealand's books, which keep no products page.
-  if (booksCountry().id === "nz") return null;
   const items = state.ledger.items ?? [];
   if (!items.some((i) => i.kind === "product" && i.unitCost !== undefined)) return null;
   const documents = invoicesInPlay()

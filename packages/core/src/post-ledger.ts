@@ -6,6 +6,7 @@ import { outsidePaymentJournals } from "./bills.js";
 import type { ManualJournal } from "./manual-journals.js";
 import { postManualJournal } from "./manual-journals.js";
 import {
+  gstAccountsFrom,
   postInvoice,
   postTransaction,
   postTransfer,
@@ -221,6 +222,7 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
         {
         control: controlOf(invoice),
         ...(posting.resolveAccount ? { resolveAccount: posting.resolveAccount } : {}),
+        gst: gstAccountsFrom(posting)(invoice.lines[0]?.accountCode),
         },
       ),
     ),

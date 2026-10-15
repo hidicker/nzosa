@@ -53,7 +53,12 @@ export type TaxType =
   /** Exempt: financial services, residential rent. Never on the return. */
   | "EXEMPTOUTPUT"
   /** Deliberately outside GST: transfers, drawings, loan principal. */
-  | "NONE";
+  | "NONE"
+  /**
+   * The GST in a bad debt written off, claimed back. The line is the tax;
+   * Box 13 whole, as a credit adjustment, on the invoice basis only.
+   */
+  | "BADDEBT";
 
 /** The GST treatment and side, as the tag an accounting system would write. */
 export function taxTypeFor(classification: GstClassification): TaxType {
@@ -509,7 +514,7 @@ export function taxSummary(
           if (!posted.has("INPUT2")) summary.box12 += gstContent(-line.taxBase);
         }
         if (isTaxLine) summary.box12 += line.amount;
-      } else if (line.taxType === "GSTONIMPORTS") {
+      } else if (line.taxType === "GSTONIMPORTS" || line.taxType === "BADDEBT") {
         summary.box13 += line.amount;
       }
     }

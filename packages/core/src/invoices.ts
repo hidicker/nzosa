@@ -152,6 +152,12 @@ export interface OutsidePayment {
   /** Where the money came from, or went to: a chart code or its label. */
   accountCode: string;
   note?: string;
+  /**
+   * Not paid but written off as a bad debt, to `accountCode`. Nothing was
+   * received, so on the payments basis no GST falls due on it; on the invoice
+   * basis the GST already returned comes back as a credit adjustment.
+   */
+  writeOff?: boolean;
 }
 
 /** What has been paid on a document other than through a bank line. */

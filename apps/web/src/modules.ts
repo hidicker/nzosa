@@ -76,23 +76,22 @@ const count = (n: number, one: string, many = `${one}s`): string | null => (n ==
 const xeroHeld = (): boolean => Object.keys(state.ledger.xeroBankNumbers ?? {}).length > 0;
 const businesses = () => entities().filter((e) => (e.kind ?? "business") === "business");
 
-/** Outside New Zealand for now: these write invoices with no GST on them. */
-const BEYOND_NZ: readonly JurisdictionId[] = ["us", "au", "kr", "generic"];
+
 
 export const MODULES: readonly ModuleInfo[] = [
   {
     id: "contacts",
-    countries: BEYOND_NZ,
     name: "Customers & vendors",
     what: "Who the books deal with: addresses, terms and credit limits, statements, reminders and late fees.",
     basis: "data",
-    inferred: () => (state.ledger.contacts ?? []).length > 0 || businesses().length > 0,
+    // On for businesses outside New Zealand, where it came first; asked for in New Zealand.
+    inferred: () =>
+      (state.ledger.contacts ?? []).length > 0 || (booksCountry().id !== "nz" && businesses().length > 0),
     holds: () => count((state.ledger.contacts ?? []).length, "customer or vendor", "customers and vendors"),
     opens: "contacts",
   },
   {
     id: "items",
-    countries: BEYOND_NZ,
     name: "Products & stock",
     what: "A price list that fills in invoice lines, and products kept in stock, tracked and counted.",
     basis: "data",
@@ -102,7 +101,6 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "time",
-    countries: BEYOND_NZ,
     name: "Time",
     what: "Hours worked for customers, and the invoice drafted from what is not billed yet.",
     basis: "data",

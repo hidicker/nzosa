@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { postedJournals, record, saveManualJournals, stockAccounts, stockTracked } from "../books.js";
-import { booksCurrency, booksMoney } from "../country.js";
+import { booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -137,9 +137,9 @@ function form(existing: Item | null): HTMLElement {
     label("Name", name),
     label("Product or service", kind),
     label("Line description", description),
-    label("Usual price", price),
+    label(noSalesTax() ? "Usual price" : "Usual price, including GST", price),
     label("Sale coded to", account),
-    label("Cost a unit, for products kept in stock", cost),
+    label(noSalesTax() ? "Cost a unit, for products kept in stock" : "Cost a unit before GST, for products kept in stock", cost),
     problem,
     row,
   );

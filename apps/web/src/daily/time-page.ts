@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { record } from "../books.js";
-import { booksCurrency, booksMoney } from "../country.js";
+import { booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -60,8 +60,15 @@ function addDays(iso: string, days: number): string {
 async function invoiceTime(customer: string, entries: readonly TimeEntry[]): Promise<void> {
   const income = state.chart.filter((a) => /revenue|income|sales/i.test(a.type));
   const account = income.find((a) => /service|fee|consult|labou?r/i.test(a.name)) ?? income[0];
-  const lines = timeInvoiceLines(entries, account?.code.trim() ?? "", booksMoney);
+  // GST on top of the hourly rate, where there is GST.
+  const lines = timeInvoiceLines(
+    entries,
+    account?.code.trim() ?? "",
+    booksMoney,
+    noSalesTax() ? undefined : { taxType: "15% GST on Income", rate: 0.15 },
+  );
   const total = lines.reduce((sum, l) => sum + l.gross, 0);
+  const gst = lines.reduce((sum, l) => sum + l.tax, 0);
   const issued = today();
   const number = nextInvoiceNumber("sales", state.ledger.invoices ?? []);
   const draft: Invoice = {
@@ -72,7 +79,7 @@ async function invoiceTime(customer: string, entries: readonly TimeEntry[]): Pro
     issued,
     due: addDays(issued, termsDays(customer)),
     total,
-    tax: 0,
+    tax: gst,
     paid: 0,
     outstanding: total,
     currency: booksCurrency(),

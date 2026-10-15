@@ -402,12 +402,10 @@ export function renderInvoiceEditor(): void {
   const accounts = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const lineAccounts = new Map<HTMLElement, Combobox>();
 
-  // Products kept in stock, whose lines carry a quantity. None in New
-  // Zealand's books, which keep no products page.
-  const stockedItems: Item[] =
-    booksCountry().id === "nz"
-      ? []
-      : (state.ledger.items ?? []).filter((i) => i.kind === "product" && i.unitCost !== undefined && i.active !== false);
+  // Products kept in stock, whose lines carry a quantity.
+  const stockedItems: Item[] = (state.ledger.items ?? []).filter(
+    (i) => i.kind === "product" && i.unitCost !== undefined && i.active !== false,
+  );
 
   function readLines(): InvoiceLine[] {
     return [...lineHost.querySelectorAll<HTMLElement>(".invoice-line")].map((row) => {
@@ -523,8 +521,15 @@ export function renderInvoiceEditor(): void {
     };
     const already = stockedItems.find((i) => i.id === line.itemCode || i.name === line.itemCode);
     if (already !== undefined) stockedLine(already, line.quantity ?? 1);
-    // The unit a quantity is multiplied by: the price on an invoice, the cost on a bill.
-    const unitOf = (item: Item): number | undefined => (asBill ? item.unitCost : item.price);
+    // The unit a quantity is multiplied by: the price on an invoice, which is
+    // what the customer pays; on a bill the cost, which is before GST, with the
+    // line's GST added on.
+    const unitOf = (item: Item): number | undefined =>
+      asBill
+        ? item.unitCost === undefined
+          ? undefined
+          : Math.round(item.unitCost * (1 + rateOf(tax.value) / 100))
+        : item.price;
     qty.addEventListener("input", () => {
       const item = stockedItems.find((i) => i.id === row.dataset["item"]);
       const unit = item === undefined ? undefined : unitOf(item);
@@ -549,7 +554,7 @@ export function renderInvoiceEditor(): void {
       // A stocked product bought goes into the inventory account.
       const into = asBill ? (stocked !== undefined ? stockAccounts().inventory?.code : undefined) : found.accountCode;
       if (asBill && stocked !== undefined && stocked.unitCost !== undefined && parseMoney(gross.value) === 0) {
-        gross.value = (stocked.unitCost / 100).toFixed(2);
+        gross.value = ((unitOf(stocked) ?? 0) / 100).toFixed(2);
         gross.dispatchEvent(new Event("input", { bubbles: true }));
       }
       if (into !== undefined && account.value === "") account.choose(accountLabelFor(into));

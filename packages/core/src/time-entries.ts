@@ -37,18 +37,27 @@ export function unbilledTime(entries: readonly TimeEntry[]): Map<string, TimeEnt
   return out;
 }
 
-/** One invoice line an entry, saying the date, the hours and the rate. */
-export function timeInvoiceLines(entries: readonly TimeEntry[], accountCode: string, money: (cents: Cents) => string): InvoiceLine[] {
+/**
+ * One invoice line an entry, saying the date, the hours and the rate. A rate
+ * is before any sales tax, as hourly rates are quoted: `tax` adds it on.
+ */
+export function timeInvoiceLines(
+  entries: readonly TimeEntry[],
+  accountCode: string,
+  money: (cents: Cents) => string,
+  tax: { taxType: string; rate: number } = { taxType: "No GST", rate: 0 },
+): InvoiceLine[] {
   return entries.map((entry) => {
     const value = timeValue(entry);
+    const gst = Math.round(value * tax.rate);
     const hours = Number.isInteger(entry.hours) ? String(entry.hours) : entry.hours.toFixed(2);
     return {
       description: `${entry.date} ${entry.description} (${hours} h at ${money(entry.rate)})`.trim(),
       accountCode,
-      taxType: "No GST",
+      taxType: tax.taxType,
       net: value,
-      tax: 0,
-      gross: value,
+      tax: gst,
+      gross: value + gst,
       quantity: entry.hours,
     };
   });

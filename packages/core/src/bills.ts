@@ -268,6 +268,8 @@ export function outsidePaymentJournals(
     /** The receivable or payable the document sits in. */
     control: { code: string; name: string };
     resolveAccount?: (code: string) => { code: string; name: string };
+    /** The GST account the document's tax sits in, for a bad debt's GST to come back out of. */
+    gst?: { code: string; name: string };
   },
 ): PostedJournal[] {
   if (!isPosted(invoice)) return [];
@@ -275,6 +277,7 @@ export function outsidePaymentJournals(
   const purchase = invoice.kind === "purchase";
   const taxType = taxTypeFromRate(invoice.lines[0]?.taxType ?? "", invoice.kind);
   return (invoice.paidOutside ?? []).map((payment, index) => {
+    if (payment.writeOff === true && !purchase) return writtenOff(invoice, payment, index, resolve, options);
     const amount = Math.abs(payment.amount);
     // Signed as a bank line would be: money out of the business is negative.
     const moved = purchase ? -amount : amount;
@@ -305,6 +308,63 @@ export function outsidePaymentJournals(
       taxBasis: "payments",
     };
   });
+}
+
+/**
+ * A customer's debt written off as bad:
+ *
+ *     Dr  Bad debts                        100.00   NONE
+ *     Dr  820 GST                           15.00   BADDEBT
+ *     Cr  610 Accounts Receivable          115.00   NONE
+ *
+ * The GST in the part written off goes back out of the GST account, and on
+ * the invoice basis it is claimed on the return as a credit adjustment; on
+ * the payments basis it was never returned, so the journal counts on the
+ * invoice basis only. Nothing is received, so nothing reaches Box 5.
+ */
+function writtenOff(
+  invoice: Invoice,
+  payment: NonNullable<Invoice["paidOutside"]>[number],
+  index: number,
+  resolve: (code: string) => { code: string; name: string },
+  options: { control: { code: string; name: string }; gst?: { code: string; name: string } },
+): PostedJournal {
+  const amount = Math.abs(payment.amount);
+  const tax = options.gst === undefined ? 0 : shareOf(amount, invoice.total, invoice.tax);
+  const to = resolve(payment.accountCode);
+  const lines: PostedLine[] = [
+    {
+      accountCode: options.control.code,
+      accountName: options.control.name,
+      amount: -amount,
+      taxType: "NONE",
+      description: `Written off, ${invoice.number}`,
+    },
+    {
+      accountCode: to.code,
+      accountName: to.name,
+      amount: amount - tax,
+      taxType: "NONE",
+      description: payment.note ?? `${invoice.number} ${invoice.contact} written off`.trim(),
+    },
+  ];
+  if (tax !== 0 && options.gst !== undefined) {
+    lines.push({
+      accountCode: options.gst.code,
+      accountName: options.gst.name,
+      amount: tax,
+      taxType: "BADDEBT",
+      description: `GST in ${invoice.number} written off`,
+    });
+  }
+  return {
+    transactionId: `${invoice.number}:paid:${index + 1}`,
+    date: payment.date,
+    narration: `${invoice.number} ${invoice.contact} written off as a bad debt`,
+    lines,
+    source: "invoice",
+    taxBasis: "invoice",
+  };
 }
 
 export interface BillWarning {

@@ -103,10 +103,10 @@ export const LESSONS: readonly Lesson[] = [
         target: q('.sidebar-group[data-group="setup"]'),
       },
       {
-        title: "Apps",
+        title: "Modules",
         body:
-          "What these books use: invoices, payroll, rentals and the rest. Turn an app on and its pages appear in " +
-          "the menu; most turn on by themselves once the books hold anything for them.",
+          "What these books use: invoices, payroll, rentals and the rest. Turn a module on and its pages appear " +
+          "in the menu; most turn on by themselves once the books hold anything for them.",
         target: visible('.sidebar-nav [data-page="apps"]'),
       },
       {

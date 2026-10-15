@@ -7,6 +7,7 @@ import { bnzTransactionList } from "./bnz-transaction-list.js";
 import { anzLoan } from "./anz-loan.js";
 import { wise } from "./wise.js";
 import { xeroBank } from "./xero-bank.js";
+import { quickBooksBank, isQuickBooksBankExport, quickBooksBankCoding } from "./quickbooks-bank.js";
 import { importOfx, isOfx } from "../ofx.js";
 import type { ReadonlyCsvRecord } from "../csv.js";
 import type {
@@ -16,7 +17,7 @@ import type {
   ImportResult,
 } from "../types.js";
 
-export { bnzAccount, bnzCard, bnzTransactionList, anzLoan, wise, xeroBank };
+export { bnzAccount, bnzCard, bnzTransactionList, anzLoan, wise, xeroBank, quickBooksBank, isQuickBooksBankExport, quickBooksBankCoding };
 
 /** Every importer, in no particular order. Detection decides which is used. */
 export const importers: readonly Importer[] = [
@@ -26,6 +27,7 @@ export const importers: readonly Importer[] = [
   anzLoan,
   wise,
   xeroBank,
+  quickBooksBank,
 ];
 
 export function getImporter(id: string): Importer | undefined {

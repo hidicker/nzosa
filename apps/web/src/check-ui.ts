@@ -12,6 +12,8 @@ import {
   isIif,
   parseIifBooks,
   isSlowBooksLedger,
+  isQuickBooksBankExport,
+  quickBooksBankCoding,
   parseSlowBooksBooks,
   parseXeroAllocations,
   parseXeroAccountTransactions,
@@ -263,6 +265,11 @@ export async function loadReference(
       // bank line was coded to into the reference the coding is checked against.
       // QuickBooks Desktop's IIF: its accounts into the chart, and what each
       // bank line was coded to into the reference, as for QuickBooks Online.
+      // QuickBooks' bank register: the account each line was put to.
+      if (isQuickBooksBankExport(text)) {
+        lines.push(...quickBooksBankCoding(text, file.name, booksCountry().dayFirst));
+        continue;
+      }
       if (isIif(text) || isSlowBooksLedger(text)) {
         const known = chart.length > 0 ? chart : state.chart;
         const read = (isIif(text) ? parseIifBooks : parseSlowBooksBooks)(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });

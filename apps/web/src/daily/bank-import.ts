@@ -45,6 +45,7 @@ import {
   hash,
   importFile,
   importers,
+  isQuickBooksBankExport,
   judgeDuplicates,
   matchLedgerAccount,
   parseAmount,
@@ -237,6 +238,8 @@ export async function handleFiles(files: File[]): Promise<void> {
   const dayFirst = $<HTMLInputElement>("day-first").checked;
 
   const incoming: Transaction[] = [];
+  // QuickBooks' bank register, whose lines say the account each was put to.
+  const coded: File[] = [];
   // Lines from before the books start belong to the previous system's year:
   // left out, and said, rather than added to a year these books do not keep.
   const booksStart = booksStartForFeed();
@@ -249,6 +252,7 @@ export async function handleFiles(files: File[]): Promise<void> {
     // Excel as well as CSV: Xero's bank account export comes out as either,
     // and a bank's own spreadsheet is no different to read once it is text.
     const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+    if (isQuickBooksBankExport(text)) coded.push(file);
 
     try {
       const result = importFile(text, {
@@ -305,6 +309,11 @@ export async function handleFiles(files: File[]): Promise<void> {
   await ensureDefaultEntity();
   state.busy = false;
   render();
+  // QuickBooks' coding of those lines, for the coding check to offer.
+  if (coded.length > 0) {
+    const { loadCheckFiles } = await import("../migrate/coding-reconciliation.js");
+    await loadCheckFiles(coded);
+  }
 }
 
 /**

@@ -268,7 +268,18 @@ export const MODULES: readonly ModuleInfo[] = [
 ];
 
 /** The modules Start here asks about: the ones nothing else answers. */
-export const ASKED: readonly ModuleId[] = ["payroll", "vehicle", "assets", "business"];
+export const ASKED: readonly ModuleId[] = [
+  "payroll",
+  "vehicle",
+  "assets",
+  "business",
+  "contacts",
+  "items",
+  "time",
+  "classes",
+  "budgets",
+  "statements",
+];
 
 const info = (id: ModuleId): ModuleInfo | undefined => MODULES.find((m) => m.id === id);
 
@@ -367,7 +378,11 @@ const BASIS: Record<Basis, string> = {
  * says whether it follows the books or was chosen, and a chosen one can go
  * back to following them.
  */
-export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HTMLElement {
+/**
+ * `opening`: an Open button on each tile that is on, for the Modules page. Not
+ * in Start here or Setup, where it would take somebody away part way through.
+ */
+export function modulesPanel(redraw: () => void, only?: readonly ModuleId[], opening = false): HTMLElement {
   const grid = document.createElement("div");
   grid.className = "module-tiles";
   for (const module of modulesHere().filter((m) => only === undefined || only.includes(m.id))) {
@@ -418,7 +433,7 @@ export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HT
       foot.append("Chosen · ", reset);
       tile.append(foot);
     }
-    if (on && module.opens !== undefined) {
+    if (opening && on && module.opens !== undefined) {
       const opens = module.opens;
       const go = document.createElement("button");
       go.type = "button";

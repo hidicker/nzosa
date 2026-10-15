@@ -198,6 +198,7 @@ async function loadEach(
     loading(done, `${banks.length} bank statement${banks.length === 1 ? "" : "s"}`);
     await handleFiles(banks);
     done += banks.length;
+
     say(`${banks.length} bank statement${banks.length === 1 ? "" : "s"} imported.`);
   }
 

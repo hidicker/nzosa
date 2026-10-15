@@ -1,6 +1,7 @@
 import { ASKED, MODULES, moduleOn, modulesPanel, previousSystem } from "../modules.js";
 import { showPage } from "../app.js";
 import { countryBox } from "./setup-wizard.js";
+import { booksCountry } from "../country.js";
 import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
@@ -1522,7 +1523,9 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   // A feed unless they say otherwise. It is the way in that cannot mistype a
   // figure or miss a week, so it is what the step should be showing when
   // somebody arrives at it rather than a choice between two blanks.
-  const how = held.bank ?? "feed";
+  // A live connection is Akahu's, and Akahu is New Zealand's banks only.
+  const feedHere = booksCountry().id === "nz";
+  const how = held.bank ?? (feedHere ? "feed" : "files");
 
   inner.append(
     advice(
@@ -1535,15 +1538,22 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   inner.append(
     choices<"feed" | "files">(
       [
-        [
-          "feed",
-          "Connect your NZ bank accounts directly",
-          "A live connection: transactions arrive on their own, and nothing is typed or mistyped",
-        ],
+        ...(feedHere
+          ? ([
+              [
+                "feed",
+                "Connect your NZ bank accounts directly",
+                "A live connection: transactions arrive on their own, and nothing is typed or mistyped",
+              ],
+            ] as [ "feed", string, string ][])
+          : []),
         [
           "files",
           "Import from a file",
-          "CSV exports from your bank. Several at once is fine, and duplicates are caught",
+          feedHere
+            ? "CSV exports from your bank. Several at once is fine, and duplicates are caught"
+            : "CSV, OFX or QFX exports from your bank, or the bank register exported from QuickBooks. Several at " +
+              "once is fine, and duplicates are caught",
         ],
       ],
       (value) => answer({ bank: value }),
@@ -2118,7 +2128,7 @@ function modulesQuestion(number: number, held: Onboarding): HTMLElement {
         (following.length > 0
           ? `From your entities and where these books came from, they cover: ${following.join(", ")}. `
           : "") +
-        "Tick anything else they need. All of it can be changed later under Setup, What these books cover.",
+        "Tick anything else they need. All of it can be changed later under Set up, Modules.",
     ),
   );
   const hasBusiness = (state.ledger.entities?.entities ?? []).some((e) => (e.kind ?? "business") === "business");

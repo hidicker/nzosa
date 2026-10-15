@@ -1,6 +1,6 @@
 import { booksCountry } from "../country.js";
 import { jurisdictionOf } from "@nzosa/core";
-import { countryChoices, starterChartForNewCountry, WORK_IN_PROGRESS } from "../new-books-country.js";
+import { countryChoices, countryLocked, starterChartForNewCountry, WORK_IN_PROGRESS } from "../new-books-country.js";
 import { redraw, showPage } from "../app.js";
 import { allMyirCards } from "../daily/myir-cards.js";
 import {
@@ -1506,6 +1506,20 @@ export function countryBox(): HTMLElement | null {
   box.className = "modules-box";
   const heading = document.createElement("h3");
   heading.textContent = "Country";
+  // Fixed once the books hold anything: said, not offered.
+  if (countryLocked()) {
+    const here = jurisdictionOf(set);
+    box.append(
+      heading,
+      note(
+        `Kept in ${here.name}: year to ${here.yearEnd.endDay}/${here.yearEnd.endMonth}, ${here.currency}` +
+          (here.salesTax === null ? ", no national sales tax." : `, ${here.salesTax.name} ${Math.round(here.salesTax.rate * 100)}%.`) +
+          " The country can't be changed once the books hold anything. To keep books in another country, " +
+          "start a new set of books on the Books page.",
+      ),
+    );
+    return box;
+  }
   const select = document.createElement("select");
   select.setAttribute("aria-label", "Country these books are kept in");
   const here0 = jurisdictionOf(set).id;
@@ -1525,8 +1539,8 @@ export function countryBox(): HTMLElement | null {
       `Keep these books in ${to.name}?
 
 ` +
-        "The tax year, the currency, the sales tax and the returns follow the country. Nothing already in the " +
-        "books is converted or deleted, and you can change it back." +
+        "The tax year, the currency, the sales tax and the returns follow the country, and the starter chart " +
+        "changes with it. Once the books hold anything, the country is fixed." +
         (WORK_IN_PROGRESS.has(chosen)
           ? `
 

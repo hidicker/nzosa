@@ -1,4 +1,6 @@
 import { record } from "./books.js";
+import { showPage } from "./app.js";
+import type { PageName } from "./app.js";
 import { onboarding, sourceForTheseBooks } from "./migrate/onboarding-state.js";
 import { state } from "./state.js";
 import { savePart } from "./store.js";
@@ -33,7 +35,13 @@ export type ModuleId =
   | "assets"
   | "nonprofit"
   | "trust"
-  | "ir7";
+  | "ir7"
+  | "contacts"
+  | "items"
+  | "time"
+  | "classes"
+  | "budgets"
+  | "statements";
 
 /** Where an automatic answer comes from, said beside it. */
 type Basis = "entities" | "source" | "data";
@@ -51,6 +59,8 @@ interface ModuleInfo {
    * New Zealand's IR3, PAYE, GST return. Absent where it works anywhere.
    */
   countries?: readonly JurisdictionId[];
+  /** The page it adds, opened from the Apps page. */
+  opens?: string;
 }
 
 function entities() {
@@ -66,9 +76,71 @@ const count = (n: number, one: string, many = `${one}s`): string | null => (n ==
 const xeroHeld = (): boolean => Object.keys(state.ledger.xeroBankNumbers ?? {}).length > 0;
 const businesses = () => entities().filter((e) => (e.kind ?? "business") === "business");
 
+/** Outside New Zealand for now: these write invoices with no GST on them. */
+const BEYOND_NZ: readonly JurisdictionId[] = ["us", "au", "kr", "generic"];
+
 export const MODULES: readonly ModuleInfo[] = [
   {
+    id: "contacts",
+    countries: BEYOND_NZ,
+    name: "Customers & vendors",
+    what: "Who the books deal with: addresses, terms and credit limits, statements, reminders and late fees.",
+    basis: "data",
+    inferred: () => (state.ledger.contacts ?? []).length > 0 || businesses().length > 0,
+    holds: () => count((state.ledger.contacts ?? []).length, "customer or vendor", "customers and vendors"),
+    opens: "contacts",
+  },
+  {
+    id: "items",
+    countries: BEYOND_NZ,
+    name: "Products & stock",
+    what: "A price list that fills in invoice lines, and products kept in stock, tracked and counted.",
+    basis: "data",
+    inferred: () => (state.ledger.items ?? []).length > 0,
+    holds: () => count((state.ledger.items ?? []).length, "product or service", "products and services"),
+    opens: "items",
+  },
+  {
+    id: "time",
+    countries: BEYOND_NZ,
+    name: "Time",
+    what: "Hours worked for customers, and the invoice drafted from what is not billed yet.",
+    basis: "data",
+    inferred: () => (state.ledger.timeEntries ?? []).length > 0,
+    holds: () => count((state.ledger.timeEntries ?? []).length, "time entry", "time entries"),
+    opens: "time",
+  },
+  {
+    id: "classes",
+    name: "Classes",
+    what: "A second way to cut the profit and loss: by department, location or job.",
+    basis: "data",
+    inferred: () => (state.ledger.classes?.names ?? []).length > 0,
+    holds: () => count((state.ledger.classes?.names ?? []).length, "class", "classes"),
+    opens: "classes",
+  },
+  {
+    id: "budgets",
+    name: "Budgets",
+    what: "A budget for each income and expense account, and the budget beside what the books hold.",
+    basis: "data",
+    inferred: () => Object.keys(state.ledger.budgets ?? {}).length > 0,
+    holds: () => count(Object.keys(state.ledger.budgets ?? {}).length, "year's budget", "years' budgets"),
+    opens: "budgets",
+  },
+  {
+    id: "statements",
+    name: "Statement reconciliation",
+    what: "Tick a bank statement's lines off against the books until the difference is nothing.",
+    basis: "data",
+    // New Zealand's books check each day's balance instead, so it is asked for there.
+    inferred: () => booksCountry().id !== "nz" || (state.ledger.reconciliations ?? []).length > 0,
+    holds: () => count((state.ledger.reconciliations ?? []).length, "statement"),
+    opens: "statements",
+  },
+  {
     id: "ir7",
+    opens: "ir7",
     countries: ["nz"],
     name: "Partnerships and look-through companies",
     what: "The IR7 return and each partner or owner's share of the income.",
@@ -77,6 +149,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "trust",
+    opens: "trustpeople",
     countries: ["nz"],
     name: "Trusts and estates",
     what: "A trust's people, beneficiary accounts and the IR6 return.",
@@ -86,6 +159,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "nonprofit",
+    opens: "grants",
     countries: ["nz"],
     name: "Non-profit",
     what: "Grants and what became of them, and the reports a charity, society or club files.",
@@ -95,6 +169,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "rentals",
+    opens: "tenancies",
     countries: ["nz"],
     name: "Rentals",
     what: "Rental year end, rental information, property manager statements and rental schedules.",
@@ -103,6 +178,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "personal",
+    opens: "personalyear",
     countries: ["nz"],
     name: "Personal",
     what: "Personal year end and each person's IR3.",
@@ -111,14 +187,16 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "business",
+    opens: "invoices",
     name: "Business",
-    what: "Invoices, money owed to you, the IR10 and prepayments.",
+    what: "Invoices, money owed to you, prepayments, and the business's own tax return.",
     basis: "entities",
     inferred: () => businesses().length > 0,
     holds: () => count((state.ledger.invoices ?? []).length, "invoice"),
   },
   {
     id: "company",
+    opens: "bills",
     name: "Company",
     what: "Shareholders and their current accounts, and bills.",
     basis: "entities",
@@ -128,6 +206,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "gst",
+    opens: "gst",
     countries: ["nz"],
     name: "GST",
     what: "GST returns, and reconciling them with what was filed.",
@@ -136,6 +215,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "xero",
+    opens: "check",
     name: "Xero import and check",
     what: "Bringing books across from Xero, and checking these against it.",
     basis: "source",
@@ -143,6 +223,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "sheet",
+    opens: "check",
     name: "Spreadsheet import",
     what: "Bringing in a coded spreadsheet, and checking these books' coding against it.",
     basis: "source",
@@ -155,6 +236,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "payroll",
+    opens: "payroll",
     countries: ["nz"],
     name: "Payroll",
     what: "Employees, pay runs, PAYE and employer filing.",
@@ -173,6 +255,7 @@ export const MODULES: readonly ModuleInfo[] = [
   },
   {
     id: "assets",
+    opens: "assets",
     name: "Fixed assets",
     what: "The asset register and depreciation.",
     basis: "data",
@@ -251,6 +334,8 @@ export function applyModules(): void {
   for (const group of document.querySelectorAll<HTMLElement>(".sidebar-group")) {
     group.hidden = ![...group.querySelectorAll<HTMLElement>(".sidebar-group-items > button")].some((b) => !b.hidden);
   }
+  // Whatever else follows the modules: the reports a module adds.
+  window.dispatchEvent(new Event("nzosa:modules-changed"));
 }
 
 /** How these books came, in words for a sentence: "Xero", "your spreadsheet". */
@@ -332,6 +417,15 @@ export function modulesPanel(redraw: () => void, only?: readonly ModuleId[]): HT
       });
       foot.append("Chosen · ", reset);
       tile.append(foot);
+    }
+    if (on && module.opens !== undefined) {
+      const opens = module.opens;
+      const go = document.createElement("button");
+      go.type = "button";
+      go.className = "small module-open";
+      go.textContent = "Open";
+      go.addEventListener("click", () => showPage(opens as PageName));
+      tile.append(go);
     }
     const held = on ? null : (module.holds?.() ?? null);
     if (held !== null) {

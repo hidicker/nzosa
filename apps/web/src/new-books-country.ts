@@ -91,3 +91,24 @@ export function starterChartForNewCountry(from: string, to: string): { chart: Ac
   if (only !== undefined) for (const a of chart) accounts[accountEntityKey(a)] = only.id;
   return { chart, accounts };
 }
+
+/**
+ * Whether the books' country is settled for good: once they hold anything.
+ *
+ * The country decides how every line is posted -- the tax year, the currency,
+ * GST or none, the returns, the date order files are read in -- and nothing
+ * already in the books is converted when it changes. Changed on books with a
+ * year in them, it would leave them half one country and half another, with
+ * figures that look right and are not. So it is chosen as the books are made,
+ * changeable while they are empty, and fixed after that.
+ */
+export function countryLocked(): boolean {
+  const led = state.ledger;
+  return (
+    led.transactions.length > 0 ||
+    (led.invoices ?? []).length > 0 ||
+    (led.manualJournals ?? []).length > 0 ||
+    led.openingBalances !== undefined ||
+    (led.filedReturns ?? []).length > 0
+  );
+}

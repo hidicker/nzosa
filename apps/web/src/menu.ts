@@ -142,6 +142,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   invoices: "sales customers receivables owed allocations",
   statements: "bank statement reconcile tick cleared difference ending balance",
   time: "time tracking hours timesheet billable rate unbilled invoice time",
+  apps: "apps modules features turn on off menu all apps",
   classes: "class classes department location job project segment tag profit and loss by class",
   items: "products services price list catalog inventory sku",
   budgets: "budget plan forecast target spend limit variance",
@@ -376,7 +377,7 @@ export function placeBankImport(connected: boolean): void {
     else setup?.prepend(...moving);
     return;
   }
-  const daily = document.querySelector('.sidebar-group[data-group="daily"] .sidebar-group-items');
+  const daily = document.querySelector('.sidebar-group[data-group="today"] .sidebar-group-items');
   const after =
     daily?.querySelector('button[data-page="actions"]') ?? daily?.querySelector('button[data-page="reconcile"]');
   if (after) after.after(...moving);

@@ -66,6 +66,7 @@ export type PageName =
   | "budgets"
   | "items"
   | "classes"
+  | "apps"
   | "time"
   | "variance";
 
@@ -186,6 +187,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "budgets") redraw("budgets");
   if (page === "items") redraw("items");
   if (page === "classes") redraw("classes");
+  if (page === "apps") redraw("apps");
   if (page === "time") redraw("time");
   if (page === "ir9") redraw("ir9");
   if (page === "trustpeople") redraw("trustPeople");

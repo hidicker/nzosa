@@ -4459,6 +4459,11 @@
    "caution": "Only income if a client paid it. A personal payment from a friend or family is not, and Venmo may report business payments on a 1099-K."
   }
  ],
+ "modules": {
+  "classes": true,
+  "budgets": true,
+  "items": true
+ },
  "taxExtras": [],
  "singleEntityConfirmed": false,
  "aiEnabled": true

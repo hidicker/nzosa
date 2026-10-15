@@ -407,6 +407,10 @@
 .page > .page-head > h2 {
   display: none;
 }
+/* And a head that held only the heading would be an empty card. */
+.page > .page-head:not(:has(> :not(h2))) {
+  display: none;
+}
 
 /* ---------- cards ---------- */
 

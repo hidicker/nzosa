@@ -1,3 +1,4 @@
+import { moduleOn } from "../modules.js";
 import {
   AU_RENTAL_SCHEDULE,
   KR_BUSINESS_STATEMENT,
@@ -618,8 +619,6 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["ustax", "Self-employment and estimated tax"],
       ["salestax", "Sales tax collected and paid"],
       ["payrolltax", "Payroll tax worksheet (Form 941)"],
-      ["budget", "Budget vs actual"],
-      ["byclass", "Profit and loss by class"],
     ],
   },
   au: {
@@ -628,8 +627,6 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["aurental", "Rental property schedule"],
       ["bas", "GST on the BAS"],
       ["autax", "Income tax estimate"],
-      ["budget", "Budget vs actual"],
-      ["byclass", "Profit and loss by class"],
     ],
   },
   kr: {
@@ -639,13 +636,41 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
       ["krrental", "부동산임대 Rental income"],
       ["krvat", "부가가치세 VAT return"],
       ["krtax", "종합소득세 Income tax estimate"],
-      ["budget", "Budget vs actual"],
-      ["byclass", "Profit and loss by class"],
     ],
   },
 };
 
+/**
+ * Budget vs actual and the profit and loss by class, where their modules are
+ * on: in any country. Drawn again whenever a module is turned on or off.
+ */
+export function syncPlanningReports(): void {
+  const select = document.getElementById("report-kind");
+  if (select === null) return;
+  select.querySelector("optgroup[data-planning]")?.remove();
+  const wanted: [string, string][] = [
+    ...(moduleOn("budgets") ? ([["budget", "Budget vs actual"]] as [string, string][]) : []),
+    ...(moduleOn("classes") ? ([["byclass", "Profit and loss by class"]] as [string, string][]) : []),
+  ];
+  if (wanted.length === 0) return;
+  const group = document.createElement("optgroup");
+  group.label = "Budgets and classes";
+  group.dataset["planning"] = "yes";
+  for (const [value, text] of wanted) {
+    const option = document.createElement("option");
+    option.value = value;
+    option.textContent = text;
+    group.append(option);
+  }
+  const analytics = select.querySelector('optgroup[label="Analytics"]');
+  if (analytics !== null) select.insertBefore(group, analytics);
+  else select.append(group);
+}
+
+if (typeof window !== "undefined") window.addEventListener("nzosa:modules-changed", () => syncPlanningReports());
+
 export function addCountryReports(country: string): void {
+  syncPlanningReports();
   const select = document.getElementById("report-kind");
   const wanted = COUNTRY_REPORTS[country];
   if (select === null || wanted === undefined || select.querySelector("optgroup[data-country]") !== null) return;

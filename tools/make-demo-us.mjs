@@ -292,6 +292,8 @@ const ledger = {
   contacts,
   timeEntries,
   exampleAiSuggestions,
+  // Apps the demo shows although its books hold nothing for them yet.
+  modules: { classes: true, budgets: true, items: true },
   taxExtras: [],
   singleEntityConfirmed: false,
   aiEnabled: true,

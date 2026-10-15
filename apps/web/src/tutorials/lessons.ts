@@ -63,11 +63,11 @@ export const LESSONS: readonly Lesson[] = [
         page: "reconcile",
       },
       {
-        title: "Daily",
+        title: "Today",
         body:
           "The work you come back to: bank lines waiting for an account, anything that needs your attention, " +
-          "and the invoices you send and the bills you pay.",
-        target: q('.sidebar-group[data-group="daily"]'),
+          "and bank files to bring in. Sales and purchases have groups of their own below.",
+        target: q('.sidebar-group[data-group="today"]'),
       },
       {
         title: "Actions required",
@@ -78,7 +78,7 @@ export const LESSONS: readonly Lesson[] = [
         target: visible('.sidebar-nav [data-page="actions"]'),
       },
       {
-        title: "Reporting",
+        title: "Reports",
         body:
           "Profit and loss, balance sheet, cash flow, aged receivables and the rest. Every figure opens to the " +
           "lines behind it.",
@@ -101,6 +101,13 @@ export const LESSONS: readonly Lesson[] = [
           "opening balances and coding rules. Pages only appear for what your books use, so a sole trader " +
           "never sees a trust's.",
         target: q('.sidebar-group[data-group="setup"]'),
+      },
+      {
+        title: "Apps",
+        body:
+          "What these books use: invoices, payroll, rentals and the rest. Turn an app on and its pages appear in " +
+          "the menu; most turn on by themselves once the books hold anything for them.",
+        target: visible('.sidebar-nav [data-page="apps"]'),
       },
       {
         title: "Search",

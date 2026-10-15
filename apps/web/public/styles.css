@@ -821,19 +821,19 @@
   /* A deep bank navy rather than a bright one: this sits beside statements and
      signed accounts, and wants to look like the bank rather than like software.
      The page is a cool off-white so white cards lift off it. */
-  --bg: #eef1f6;
+  --bg: #e5edf1;
   --surface: #ffffff;
-  --surface-2: #f4f6fa;
-  --border: #dbe1ea;
-  --text: #16202e;
-  --muted: #5d6b7f;
-  --accent: #0b3d69;
-  --accent-soft: #e6eef7;
+  --surface-2: #f2f6f8;
+  --border: #cddbe3;
+  --text: #16232d;
+  --muted: #566b78;
+  --accent: #2e6a8e;
+  --accent-soft: #e5edf1;
   --accent-text: #ffffff;
-  --navy: #0a2540;
-  --navy-2: #123457;
-  --on-navy: #dbe6f2;
-  --on-navy-dim: #8ba3bf;
+  --navy: #96c2db;
+  --navy-2: #b4d4e6;
+  --on-navy: #12293a;
+  --on-navy-dim: #34536a;
   --in: #0f6b52;
   --out: #b3402c;
   --review: #8a5a12;

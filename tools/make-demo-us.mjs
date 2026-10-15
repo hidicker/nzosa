@@ -185,6 +185,37 @@ sorted.forEach((one, i) => {
   }
 });
 
+// Example AI answers, written by hand in the shape a model returns, so the
+// demo shows what one looks like: the account, how sure, why, and anything to
+// check. Shown as examples, never as a model's.
+const idOf = (payee) => {
+  const found = transactions.find((t) => t.otherParty === payee && overrides[t.id] === undefined);
+  if (found === undefined) throw new Error(`no uncoded line for ${payee}`);
+  return found.id;
+};
+const exampleAiSuggestions = [
+  {
+    id: idOf("Tony's Garage"),
+    code: "6010",
+    confidence: 0.86,
+    because: "A garage, paid from the studio's account: servicing or repairs on the car used for the business.",
+    caution: "If the car is also used personally, only the business share of the year's car costs goes on Schedule C.",
+  },
+  {
+    id: idOf("Clearwater Plumbing"),
+    code: "6120",
+    confidence: 0.93,
+    because: "A plumber paid from the rental account: a repair to the duplex.",
+  },
+  {
+    id: idOf("Venmo transfer"),
+    code: "4000",
+    confidence: 0.4,
+    because: "Money in through Venmo to the business account, most likely a client paying for design work.",
+    caution: "Only income if a client paid it. A personal payment from a friend or family is not, and Venmo may report business payments on a 1099-K.",
+  },
+];
+
 const chart = ACCOUNTS.map(([code, name, type, entity]) => ({
   code,
   name,
@@ -260,6 +291,7 @@ const ledger = {
   invoices,
   contacts,
   timeEntries,
+  exampleAiSuggestions,
   taxExtras: [],
   singleEntityConfirmed: false,
   aiEnabled: true,

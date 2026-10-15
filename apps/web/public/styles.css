@@ -2996,6 +2996,17 @@ button.working:not(.primary):not(.active) {
   font-weight: 700;
   cursor: pointer;
 }
+.demo-banner-books-label { font-weight: 700; white-space: nowrap; }
+.demo-banner-books {
+  background: rgba(0, 0, 0, 0.28);
+  color: #ffffff;
+  border: 1px solid rgba(255, 255, 255, 0.6);
+  border-radius: 3px;
+  padding: 1px 4px;
+  font: inherit;
+  max-width: 16rem;
+}
+.demo-banner-books option { color: #000000; background: #ffffff; }
 .demo-banner-again:hover {
   background: rgba(0, 0, 0, 0.45);
 }

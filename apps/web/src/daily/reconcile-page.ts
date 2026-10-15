@@ -642,7 +642,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
           // to press the tick is owed the difference between "your own rule says
           // so" and "something guessed, this confidently, because".
           (fromModel.via === DIRECTORY_VIA
-            ? `Known NZ business · ${fromModel.because}`
+            ? `Known business · ${fromModel.because}`
             : `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
               `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`) +
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`) +

@@ -193,7 +193,7 @@ export const LESSONS: readonly Lesson[] = [
         body:
           "NZOSA also recognises well-known New Zealand businesses, such as fuel stations, phone companies and " +
           "couriers, and suggests the one account in your chart that fits. It needs no AI and sends nothing anywhere.",
-        target: lineSuggestedBy(/^Known NZ business/),
+        target: lineSuggestedBy(/^Known business/),
       },
       {
         title: "Done",

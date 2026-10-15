@@ -124,7 +124,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksLocale, moneyPlaces, booksMoney } from "../country.js";
+import { booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
 
@@ -3936,7 +3936,8 @@ export function renderReportsPage(): void {
   // gross can be recovered. A ledger read from a file cannot say what a line
   // was before GST, so the control goes rather than sitting there lying.
   const gstSelect = $<HTMLSelectElement>("report-gst");
-  gstSelect.hidden = kindNow !== "pl" || basisNow === "accrual";
+  // No sales tax, nothing to include or exclude.
+  gstSelect.hidden = kindNow !== "pl" || basisNow === "accrual" || noSalesTax();
 
   // Registration decides this, so the control follows the entity rather than
   // waiting to be set: a registered entity reports net, an unregistered one

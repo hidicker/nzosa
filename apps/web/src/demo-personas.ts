@@ -79,12 +79,34 @@ const KEY = "nzosa:demo-persona";
 /** The persona last chosen in this browser; the main demo when none. */
 export function currentDemoPersona(): string {
   try {
-    const held = localStorage.getItem(KEY) ?? "";
-    return DEMO_PERSONAS.some((p) => p.id === held) ? held : "";
+    const held = localStorage.getItem(KEY);
+    if (held !== null) return DEMO_PERSONAS.some((p) => p.id === held) ? held : "";
+  } catch {
+    // Without storage, the visitor's own part of the world decides.
+  }
+  return firstDemoPersona();
+}
+
+/**
+ * The books a first visit opens on: the United States set for somebody whose
+ * computer keeps United States time, the New Zealand ones for everyone else.
+ * Read from the browser's own time zone, so nothing about the visitor -- not
+ * even their address -- is sent anywhere to find out.
+ */
+export function firstDemoPersona(): string {
+  let zone = "";
+  try {
+    zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
   } catch {
     return "";
   }
+  const us = DEMO_PERSONAS.some((p) => p.id === "us" && p.ready === true);
+  return us && US_TIME_ZONE.test(zone) ? "us" : "";
 }
+
+/** The time zones of the fifty states and Washington, D.C. */
+const US_TIME_ZONE =
+  /^(America\/(New_York|Detroit|Chicago|Denver|Phoenix|Boise|Los_Angeles|Anchorage|Juneau|Sitka|Metlakatla|Yakutat|Nome|Adak|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+)|Pacific\/Honolulu|US\/.+)$/;
 
 export function rememberDemoPersona(id: string): void {
   try {

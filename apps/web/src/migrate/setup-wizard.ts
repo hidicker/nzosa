@@ -1902,13 +1902,21 @@ export async function seedBrowser(): Promise<void> {
   }
   if (already) return;
 
-  await loadStartupFiles("demo", true);
+  // The demo's own choice of books: the visitor's last, or the set for their
+  // part of the world on a first visit.
+  const which = isDemoBuild() ? currentDemoPersona() : "";
+  await loadStartupFiles(demoFolder(which), true);
   if (state.ledger.transactions.length === 0) return; // nothing shipped; say nothing
   markDemoSeeded();
+  rememberDemoPersona(which);
   reclassify();
+  const about = DEMO_PERSONAS.find((p) => p.id === which)?.about;
   state.startupMessage =
-    "These are demo books — an invented coffee roastery and two rentals owned by " +
-    "a couple, part way through a year. Nothing here is real, and you can change anything. To keep " +
+    (which === "" || about === undefined
+      ? "These are demo books — an invented coffee roastery and two rentals owned by " +
+        "a couple, part way through a year."
+      : about) +
+    " Nothing here is real, and you can change anything. Other demo books are under Demo books at the top. To keep " +
     "books of your own, run NZOSA on your own computer: see the guide for owners.";
 }
 

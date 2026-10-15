@@ -6,6 +6,7 @@ import { isDemoBuild } from "./ai-consent.js";
 import { loadDemoData } from "./migrate/setup-wizard.js";
 import { openTutorials, openTutorialsOnArrival } from "./tutorials/panel.js";
 import { placeExampleSuggestions } from "./tutorials/examples.js";
+import { DEMO_PERSONAS, currentDemoPersona } from "./demo-personas.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -139,7 +140,32 @@ export function wireChrome(): void {
       tutorials.className = "demo-banner-again";
       tutorials.textContent = "Take a tutorial";
       tutorials.addEventListener("click", () => openTutorials());
-      demoBanner.querySelector(".demo-banner-content")?.append(tutorials, again);
+      // Which invented books are open, and the others, in the banner where
+      // every visitor sees them: in the Tutorials panel alone they were easy
+      // to miss.
+      const ready = DEMO_PERSONAS.filter((p) => p.ready === true);
+      const books = document.createElement("select");
+      books.className = "demo-banner-books";
+      books.title = "Other demo books";
+      books.setAttribute("aria-label", "Demo books");
+      for (const persona of ready) {
+        const option = document.createElement("option");
+        option.value = persona.id;
+        option.textContent = persona.label;
+        option.selected = persona.id === currentDemoPersona();
+        books.append(option);
+      }
+      books.addEventListener("change", () => {
+        const busy = document.createElement("button");
+        void loadDemoData(busy, books.value).finally(() => {
+          placeExampleSuggestions();
+          books.value = currentDemoPersona();
+        });
+      });
+      const label = document.createElement("label");
+      label.className = "demo-banner-books-label";
+      label.append(document.createTextNode("Demo books "), books);
+      demoBanner.querySelector(".demo-banner-content")?.append(...(ready.length > 1 ? [label] : []), tutorials, again);
       openTutorialsOnArrival();
     }
   }

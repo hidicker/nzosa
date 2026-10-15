@@ -184,3 +184,30 @@ test("an invoice document for books with no sales tax has no GST column and writ
   assert.match(us, /<h1>Invoice<\/h1>/);
   assert.match(invoiceEmail(invoice, supplier, { noTax: true, dateStyle: "mdy" }).body, /Due: 04\/03\/2026/);
 });
+
+test("a payment of exactly what one bill owes pays that bill, not the oldest", async () => {
+  const { parseQuickBooksBooks, parseQuickBooksChart } = await import("../dist/index.js");
+  const chart = parseQuickBooksChart(
+    ["Account name,Account type,Detail type", "Checking,Bank,Checking", "Accounts Payable (A/P),Accounts payable (A/P),Accounts Payable (A/P)", "Utilities,Expenses,Utilities"].join("\n"),
+  );
+  const gl = [
+    ",Distribution account,Transaction date,Transaction type,Num,Name,Description,Split,Amount,Balance",
+    "Checking,,,,,,,,,",
+    ",Checking,09/17/2026,Bill Payment (Check),,PG&E,,Accounts Payable (A/P),-114.09,-114.09",
+    "Total for Checking,,,,,,,,-114.09,",
+    "Accounts Payable (A/P),,,,,,,,,",
+    ",Accounts Payable (A/P),08/04/2026,Bill,,PG&E,,Utilities,86.44,86.44",
+    ",Accounts Payable (A/P),09/02/2026,Bill,,PG&E,,Utilities,114.09,200.53",
+    ",Accounts Payable (A/P),09/17/2026,Bill Payment (Check),,PG&E,,Checking,-114.09,86.44",
+    "Total for Accounts Payable (A/P),,,,,,,,86.44,",
+    "Utilities,,,,,,,,,",
+    ",Utilities,08/04/2026,Bill,,PG&E,,Accounts Payable (A/P),86.44,86.44",
+    ",Utilities,09/02/2026,Bill,,PG&E,,Accounts Payable (A/P),114.09,200.53",
+    "Total for Utilities,,,,,,,,200.53,",
+  ].join("\n");
+  const books = parseQuickBooksBooks(gl, chart);
+  assert.deepEqual(
+    books.invoices.map((i) => [i.issued, i.outstanding]),
+    [["2026-08-04", 8644], ["2026-09-02", 0]],
+  );
+});

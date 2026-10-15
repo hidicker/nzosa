@@ -1,6 +1,7 @@
 import { parseCsvRecords } from "./csv.js";
 import type { ReadonlyCsvRecord } from "./csv.js";
 import { parseDate } from "./dates.js";
+import { parseAmount } from "./money.js";
 import type { Invoice, InvoiceKind } from "./invoices.js";
 
 /**
@@ -12,7 +13,11 @@ import type { Invoice, InvoiceKind } from "./invoices.js";
  */
 
 const NUMBER = ["invoice #", "invoice no.", "invoice number", "bill #", "bill no.", "bill number", "num", "number", "no."];
-const CONTACT = ["customer", "vendor", "supplier", "name", "customer name", "vendor name"];
+// The full name first: QuickBooks writes a sub-customer as "Parent:Job" there,
+// as its ledger does, and only the job's own name under Customer.
+const CONTACT = ["customer full name", "vendor display name", "name", "customer name", "vendor name", "customer", "vendor", "supplier"];
+const ISSUED = ["date", "invoice date", "bill date", "transaction date"];
+const AMOUNT = ["amount", "total"];
 const DUE = ["due date", "due"];
 const TERMS = ["terms"];
 
@@ -45,6 +50,9 @@ export interface DueDate {
   contact: string;
   due: string;
   terms?: string;
+  /** When it was issued, and for how much: what finds a bill QuickBooks gave no number. */
+  issued?: string;
+  amount?: number;
 }
 
 /** The due dates in a list; bills where the list names vendors or bills, invoices otherwise. */
@@ -57,19 +65,27 @@ export function parseDueDates(text: string, dayFirst = false): DueDate[] {
   const contactAt = indexOf(headers, CONTACT);
   const dueAt = indexOf(headers, DUE);
   const termsAt = indexOf(headers, TERMS);
+  const issuedAt = indexOf(headers, ISSUED);
+  const amountAt = indexOf(headers, AMOUNT);
   const purchase = /bill|vendor|supplier/.test(`${headers[numberAt] ?? ""} ${headers[contactAt] ?? ""}`);
   const out: DueDate[] = [];
   for (const record of records.slice(at + 1)) {
     const cell = (index: number): string => (index >= 0 ? (record.fields[index] ?? "").trim() : "");
     const number = cell(numberAt);
     const due = parseDate(cell(dueAt), { dayFirst });
-    if (number === "" || due === null) continue;
+    const issued = parseDate(cell(issuedAt), { dayFirst });
+    const amount = amountAt >= 0 ? parseAmount(cell(amountAt).replace(/[$,]/g, ""), "USD") : null;
+    // A row with no due date is a heading or a total; one with no number
+    // needs the name and the date to be found by.
+    if (due === null || (number === "" && (issued === null || cell(contactAt) === ""))) continue;
     out.push({
       kind: purchase ? "purchase" : "sales",
       number,
       contact: cell(contactAt),
       due,
       ...(cell(termsAt) !== "" ? { terms: cell(termsAt) } : {}),
+      ...(issued !== null ? { issued } : {}),
+      ...(amount !== null ? { amount: Math.abs(amount) } : {}),
     });
   }
   return out;
@@ -84,13 +100,26 @@ export function applyDueDates(invoices: readonly Invoice[], dates: readonly DueD
   let filled = 0;
   const key = (kind: string, number: string): string => `${kind}\u0000${number.trim().toLowerCase()}`;
   const byNumber = new Map<string, DueDate[]>();
-  for (const d of dates) byNumber.set(key(d.kind, d.number), [...(byNumber.get(key(d.kind, d.number)) ?? []), d]);
+  for (const d of dates) {
+    if (d.number === "") continue;
+    byNumber.set(key(d.kind, d.number), [...(byNumber.get(key(d.kind, d.number)) ?? []), d]);
+  }
+  const unnumbered = dates.filter((d) => d.number === "");
   const next = invoices.map((invoice) => {
     if (invoice.due !== null && invoice.due !== "") return invoice;
     const candidates = byNumber.get(key(invoice.kind, invoice.number)) ?? [];
     const same = (a: string, b: string): boolean => a.trim().toLowerCase() === b.trim().toLowerCase();
     const match =
-      candidates.find((d) => d.contact === "" || same(d.contact, invoice.contact)) ?? (candidates.length === 1 ? candidates[0] : undefined);
+      candidates.find((d) => d.contact === "" || same(d.contact, invoice.contact)) ??
+      (candidates.length === 1 ? candidates[0] : undefined) ??
+      // No number to go by: the same name, the same day, and the same amount where the list says one.
+      unnumbered.find(
+        (d) =>
+          d.kind === invoice.kind &&
+          same(d.contact, invoice.contact) &&
+          d.issued === invoice.issued &&
+          (d.amount === undefined || d.amount === invoice.total),
+      );
     if (match === undefined) return invoice;
     filled += 1;
     return { ...invoice, due: match.due };

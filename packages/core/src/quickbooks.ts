@@ -670,7 +670,12 @@ export function quickBooksBooksFrom(
     let rest = pay.amount;
     const direction = pay.transaction !== null && pay.transaction.amount < 0 ? -1 : 1;
     const parts: QuickBooksPayment["parts"] = [];
-    for (const one of list) {
+    // A payment of exactly what one document still owes paid that document:
+    // the 114.09 paid to PG&E was its September bill, not the older one of
+    // 86.44 that oldest-first would have chosen. Otherwise oldest first.
+    const exact = list.find((one) => one.left === pay.amount);
+    const order = exact === undefined ? list : [exact, ...list.filter((one) => one !== exact)];
+    for (const one of order) {
       if (rest === 0) break;
       if (one.left <= 0) continue;
       const take = Math.min(rest, one.left);

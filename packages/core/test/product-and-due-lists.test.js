@@ -49,3 +49,20 @@ test("due dates from invoice and bill lists, filled in where a document has none
   assert.equal(filled, 2);
   assert.deepEqual(invoices.map((i) => i.due), ["2026-04-01", "2026-04-09", "2026-05-01"]);
 });
+
+test("a bill with no number is found by vendor, date and amount, as QuickBooks' A/P aging gives it", () => {
+  const AGING = [
+    "Craig's Design,,,,,,,",
+    "A/P Aging Detail Report,,,,,,,",
+    "",
+    ",Date,Transaction type,Num,Vendor display name,Due date,Past due,Amount,Open balance",
+    ",08/04/2026,Bill,,PG&E,09/03/2026,42,86.44,86.44",
+  ].join("\n");
+  const dates = parseDueDates(AGING, false);
+  assert.deepEqual(dates.map((d) => [d.kind, d.number, d.contact, d.issued, d.amount, d.due]), [
+    ["purchase", "", "PG&E", "2026-08-04", 8644, "2026-09-03"],
+  ]);
+  const bill = (number, issued, total) => ({ kind: "purchase", number, contact: "PG&E", issued, total, due: null, lines: [] });
+  const { invoices } = applyDueDates([bill("BILL-1", "2026-08-04", 8644), bill("BILL-2", "2026-09-02", 11409)], dates);
+  assert.deepEqual(invoices.map((i) => i.due), ["2026-09-03", null]);
+});

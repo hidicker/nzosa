@@ -41,3 +41,12 @@ test("line by line: bought at cost, sold at the average, put back on a return, r
   const counted = trackStock(items, docs, [{ id: "c", date: "2026-03-15", lines: [{ itemId: "gnome", quantity: 16, unitCost: 1000 }] }]);
   assert.deepEqual(counted.onHand.get("gnome"), { quantity: 14, value: 14000 });
 });
+
+test("the lines with an amount and no account", async () => {
+  const { linesWithoutAccount } = await import("../dist/index.js");
+  const line = (accountCode, gross) => ({ description: "", accountCode, taxType: "No GST", net: gross, tax: 0, gross });
+  assert.deepEqual(
+    linesWithoutAccount({ lines: [line("200", 500), line("", 300), line(" ", 0), line("  ", 20)] }).map((l) => l.gross),
+    [300, 20],
+  );
+});

@@ -35,6 +35,7 @@ import {
   findItem,
   isPosted,
   isEstimate,
+  linesWithoutAccount,
   matchInvoices,
   nextInvoiceNumber,
   splitAccountLabel,
@@ -693,6 +694,29 @@ function accountLabelFor(code: string): string {
 }
 
 /**
+ * Whether every line of a document going into the books says where it goes.
+ * A line with no account is owed but counts in no income or expense, so the
+ * person is asked before it is saved like that. A draft is not in the books
+ * yet and is saved without asking.
+ */
+function accountsChosen(built: Invoice): boolean {
+  if (!isPosted(built)) return true;
+  const missing = linesWithoutAccount(built);
+  if (missing.length === 0) return true;
+  const noun = built.kind === "purchase" ? "bill" : "invoice";
+  const said = missing
+    .map((line) => `- ${line.description.trim() || "A line"}: ${formatAmount(line.gross)}`)
+    .join("\n");
+  return confirm(
+    `${missing.length === 1 ? "A line" : `${missing.length} lines`} of this ${noun} ${missing.length === 1 ? "has" : "have"} no account:\n\n` +
+      `${said}\n\n` +
+      `The amount is ${built.kind === "purchase" ? "owed in payables" : "owed in receivables"}, but counts in no ` +
+      `${built.kind === "purchase" ? "expense" : "income"} account, so the profit and loss leaves it out.\n\n` +
+      "Save it anyway? Cancel to choose an account.",
+  );
+}
+
+/**
  * Whether a customer's credit limit, where one is set, lets this invoice go
  * in: over it, the person is asked. A limit is a warning, not a refusal.
  */
@@ -721,6 +745,7 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
   }
   if (!(await billReady(built))) return;
   if (!creditLimitAllows(built, existing)) return;
+  if (!accountsChosen(built)) return;
   const invoices = [...(state.ledger.invoices ?? [])];
   const clash = invoices.findIndex((i) => i.number === built.number);
   if (clash >= 0 && invoices[clash] !== existing) {

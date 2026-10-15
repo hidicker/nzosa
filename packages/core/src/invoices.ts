@@ -681,3 +681,12 @@ export function invoiceBalances(
   }
   return out;
 }
+
+/**
+ * The lines of a document that carry an amount but no account. Such a line
+ * is owed in receivables or payables but counts in no income or expense, so
+ * the profit and loss leaves it out.
+ */
+export function linesWithoutAccount(invoice: Pick<Invoice, "lines">): InvoiceLine[] {
+  return invoice.lines.filter((line) => line.gross !== 0 && line.accountCode.trim() === "");
+}

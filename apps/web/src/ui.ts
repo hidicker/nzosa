@@ -135,6 +135,75 @@ export function askTextOnPage(
   });
 }
 
+/**
+ * A name and a choice, asked on the page: a new set of books' name and the
+ * country it is kept in. Null when cancelled.
+ */
+export function askNameAndChoiceOnPage(
+  message: string,
+  choiceLabel: string,
+  options: readonly (readonly [string, string])[],
+  initialChoice: string,
+  yes = "OK",
+  no = "Cancel",
+): Promise<{ name: string; choice: string } | null> {
+  return new Promise((resolve) => {
+    const box = document.createElement("dialog");
+    box.className = "ask-on-page";
+    const text = document.createElement("p");
+    text.className = "ask-on-page-text";
+    text.textContent = message;
+    const field = document.createElement("input");
+    field.type = "text";
+    field.className = "ask-on-page-input";
+    const label = document.createElement("label");
+    label.className = "ask-on-page-choice";
+    const select = document.createElement("select");
+    for (const [value, words] of options) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = words;
+      option.selected = value === initialChoice;
+      select.append(option);
+    }
+    label.append(document.createTextNode(`${choiceLabel} `), select);
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "primary";
+    ok.textContent = yes;
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = no;
+    const actions = document.createElement("div");
+    actions.className = "ask-on-page-actions";
+    actions.append(cancel, ok);
+    box.append(text, field, label, actions);
+    let answered = false;
+    const finish = (answer: { name: string; choice: string } | null): void => {
+      if (answered) return;
+      answered = true;
+      box.close();
+      box.remove();
+      resolve(answer);
+    };
+    ok.addEventListener("click", () => finish({ name: field.value, choice: select.value }));
+    cancel.addEventListener("click", () => finish(null));
+    field.addEventListener("keydown", (event) => {
+      if (event.key === "Enter") {
+        event.preventDefault();
+        finish({ name: field.value, choice: select.value });
+      }
+    });
+    box.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(null);
+    });
+    document.body.append(box);
+    box.showModal();
+    field.focus();
+  });
+}
+
 /** A left-aligned label in a report. */
 export function nameCell(text: string): HTMLTableCellElement {
   const td = document.createElement("td");

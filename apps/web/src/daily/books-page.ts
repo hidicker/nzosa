@@ -12,7 +12,9 @@ import {
   switchLedger,
   writesToFolder,
 } from "../store.js";
-import { askOnPage, askTextOnPage, note } from "../ui.js";
+import { askNameAndChoiceOnPage, askOnPage, askTextOnPage, note } from "../ui.js";
+import { countryChoices, rememberNewBooksCountry } from "../new-books-country.js";
+import { booksCountry } from "../country.js";
 import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
 import { cloudConfigured } from "../cloud-config.js";
@@ -136,14 +138,19 @@ export async function chooseLedger(value: string): Promise<void> {
   let id = value;
   let label: string | undefined;
   if (id === "\u0000new") {
-    const name = await askTextOnPage(
+    // The country too: it decides the starter chart the books open with.
+    const asked = await askNameAndChoiceOnPage(
       "Name for the new set of books.\n\nIt becomes a folder beside the others, " +
         "and starts empty.",
-      "",
+      "Kept in",
+      countryChoices(),
+      booksCountry().id,
       "Create",
       "Cancel",
     );
-    if (name === null || name.trim() === "") return;
+    if (asked === null || asked.name.trim() === "") return;
+    const name = asked.name;
+    rememberNewBooksCountry(asked.choice);
     // A folder name, so only what a folder name may hold.
     label = name.trim();
     id = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");

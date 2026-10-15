@@ -1,5 +1,6 @@
 import { ASKED, MODULES, moduleOn, modulesPanel, previousSystem } from "../modules.js";
 import { showPage } from "../app.js";
+import { countryBox } from "./setup-wizard.js";
 import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
@@ -93,9 +94,14 @@ function stepsFor(held: Onboarding): Step[] {
   // read before the chart has no accounts to land on: it was asked for here,
   // ahead of the chart, and the walk's "Coded history" asks for it again in
   // its proper place, after the chart.
-  if (held.source === "xero" && moduleOn("xero")) steps.push("files");
+  if ((held.source === "xero" && moduleOn("xero")) || fromQuickBooks(held)) steps.push("files");
   steps.push("checklist", "done");
   return steps;
+}
+
+/** Books coming from QuickBooks or SlowBooks. */
+function fromQuickBooks(held: Onboarding): boolean {
+  return held.source === "sheet" && held.importFrom === "quickbooks";
 }
 
 /** The step after this one, for a "Continue" that does not care which it is. */
@@ -326,7 +332,9 @@ function said(held: Onboarding, step: Step): string {
     case "source":
       return held.source === "xero"
         ? "Moving from Xero"
-        : held.source === "sheet"
+        : fromQuickBooks(held)
+          ? "Moving from QuickBooks or SlowBooks"
+          : held.source === "sheet"
           ? "Moving from a spreadsheet"
           : held.opening === true
             ? "Starting from last year's closing balances"
@@ -370,6 +378,10 @@ function said(held: Onboarding, step: Step): string {
         : `${many} bank transaction${many === 1 ? "" : "s"}` + (how === "" ? "" : `, from the ${how}`);
     }
     case "files": {
+      if (fromQuickBooks(held)) {
+        const brought = state.ledger.transactions.filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? "")).length;
+        return brought === 0 ? "Nothing brought in yet" : `${brought} bank and card lines brought in`;
+      }
       const files = xeroMigrationFiles();
       const have = files.filter((f) => f.have).length;
       return `${have} of ${files.length} files loaded`;
@@ -401,6 +413,10 @@ function summary(step: Step, held: Onboarding): HTMLElement {
 
 function sourceQuestion(number: number): HTMLElement {
   const [box, inner] = card(number, "Where are these books starting from?");
+  // The country first: it decides the chart these books start with, the tax
+  // year and the returns, and so what the rest of this asks.
+  const country = countryBox();
+  if (country !== null) inner.append(country);
   inner.append(
     note(
       "This decides what Setup asks for. Each set of books can be answered differently.",
@@ -410,13 +426,13 @@ function sourceQuestion(number: number): HTMLElement {
   // Two of these are the same source -- nothing to bring across -- and differ
   // only in whether there are opening balances, which is the difference
   // between a balance sheet that is a position and one that is a movement.
-  const pick = (source: Source, opening: boolean): void => {
+  const pick = (source: Source, opening: boolean, importFrom: "quickbooks" | null = null): void => {
     tellSetup(source);
-    answer({ source, opening, at: "date" });
+    answer({ source, opening, importFrom, at: "date" });
   };
 
   inner.append(
-    choices<"empty" | "balances" | "xero" | "sheet">(
+    choices<"empty" | "balances" | "xero" | "quickbooks" | "sheet">(
       [
         [
           "empty",
@@ -435,12 +451,19 @@ function sourceQuestion(number: number): HTMLElement {
           "Chart, coding, opening balances, invoices and assets come across from Xero's " +
             "exports. Historical transactions can be coded as they were in Xero",
         ],
+        [
+          "quickbooks",
+          "Import from QuickBooks or SlowBooks",
+          "The accounts, bank and card lines, invoices, bills, customers and vendors come across from " +
+            "QuickBooks Online, QuickBooks Desktop or SlowBooks, with the coding",
+        ],
         ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
       ],
       (value) => {
         if (value === "empty") pick("new", false);
         else if (value === "balances") pick("new", true);
         else if (value === "xero") pick("xero", true);
+        else if (value === "quickbooks") pick("sheet", true, "quickbooks");
         else pick("sheet", true);
       },
     ),
@@ -1576,6 +1599,7 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
 }
 
 function filesQuestion(number: number, held: Onboarding): HTMLElement {
+  if (fromQuickBooks(held)) return quickBooksQuestion(number, held);
   const xero = held.source === "xero";
   const [box, inner] = card(
     number,
@@ -1671,6 +1695,64 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
   // On to the rest of the set-up, not past it: "done" skipped that walk and
   // ticked it off unseen, with five of its twelve steps still to do.
   inner.append(actions(button("Continue", () => answer({ at: nextAfter(held, "files") }), true)));
+  return box;
+}
+
+/**
+ * Bringing books across from QuickBooks or SlowBooks: what to export from
+ * each, somewhere to drop it, and then the coding to accept. Every file is
+ * recognised by what is in it, so they can be dropped together.
+ */
+function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
+  const [box, inner] = card(number, "Migration from QuickBooks or SlowBooks");
+  inner.append(
+    advice(
+      "Export these from the system you are leaving, then drop them below, together or one at a time. " +
+        "NZOSA works out what each file is.",
+    ),
+    table(
+      ["From", "Export", "Where"],
+      [
+        [
+          "QuickBooks Online",
+          "Chart of accounts",
+          "Accounting > Chart of accounts > Run report, then Export to CSV or Excel",
+        ],
+        [
+          "QuickBooks Online",
+          "General ledger",
+          "Reports > General ledger, for all the dates you want to bring, then Export to CSV or Excel",
+        ],
+        [
+          "QuickBooks Desktop",
+          "IIF file",
+          "File > Utilities > Export > Lists to IIF Files: accounts, customers, vendors and items. " +
+            "An IIF file that also holds transactions brings those too",
+        ],
+        ["SlowBooks", "General Ledger", "Reports > General Ledger, saved as CSV"],
+      ],
+    ),
+    note(
+      "The bank and card lines come in with the account each was coded to, invoices and bills with what " +
+        "was paid on them, money moved between your own accounts as transfers, and everything else as journals.",
+    ),
+    dropZone(),
+  );
+
+  // Once something is in: the coding QuickBooks gave each line, to accept.
+  const brought = state.ledger.transactions.filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? "")).length;
+  if (brought > 0) {
+    inner.append(
+      advice(
+        `${brought} bank and card lines are in. Each carries the account it was coded to in the system you ` +
+          "are leaving. Accept that coding on the coding check, where anything that differs from NZOSA's own " +
+          "suggestion is shown first.",
+      ),
+      actions(button("Check and accept the coding", () => showPage("check"), true)),
+    );
+  }
+
+  inner.append(actions(button("Continue", () => answer({ at: nextAfter(held, "files") }), brought === 0)));
   return box;
 }
 

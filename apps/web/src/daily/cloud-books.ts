@@ -1,3 +1,5 @@
+import { countryChoices, rememberNewBooksCountry } from "../new-books-country.js";
+import { booksCountry } from "../country.js";
 import { ownProjectPanel } from "./own-project.js";
 import { cloudConfigured } from "../cloud-config.js";
 import {
@@ -443,6 +445,16 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
   const name = document.createElement("input");
   name.type = "text";
   name.placeholder = "Name for a new set of books";
+  // The country it is kept in, which decides the starter chart it opens with.
+  const country = document.createElement("select");
+  country.setAttribute("aria-label", "Country these books are kept in");
+  for (const [id, label] of countryChoices()) {
+    const option = document.createElement("option");
+    option.value = id;
+    option.textContent = label;
+    option.selected = id === booksCountry().id;
+    country.append(option);
+  }
   const make = document.createElement("button");
   make.type = "button";
   make.className = "primary";
@@ -463,6 +475,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
     }
     make.disabled = true;
     say(said, "Starting…");
+    rememberNewBooksCountry(country.value);
     void createBook(wanted).then((made) => {
       if (made === null) {
         make.disabled = false;
@@ -473,7 +486,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
       location.reload();
     });
   });
-  add.append(name, make);
+  add.append(name, country, make);
   body.append(add);
 
   const openNow = books.find((book) => book.id === open);

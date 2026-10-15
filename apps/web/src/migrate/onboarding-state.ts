@@ -68,6 +68,8 @@ export interface Onboarding {
   bank?: "feed" | "files";
   /** How far through the rest of the set-up list they have walked. */
   checklistAt?: number;
+  /** Books coming from QuickBooks or SlowBooks: a spreadsheet-like import of another system's coding. */
+  importFrom?: "quickbooks" | null;
   /** Whether Xero holds the whole financial year before these books start. */
   xeroYear?: boolean;
   /** Set when the questions are behind them, so the page stops asking. */

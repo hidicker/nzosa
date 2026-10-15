@@ -1,6 +1,6 @@
 import { booksCountry } from "../country.js";
-import { JURISDICTIONS, jurisdictionOf } from "@nzosa/core";
-import { edition } from "../edition.js";
+import { jurisdictionOf } from "@nzosa/core";
+import { countryChoices, starterChartForNewCountry, WORK_IN_PROGRESS } from "../new-books-country.js";
 import { redraw, showPage } from "../app.js";
 import { allMyirCards } from "../daily/myir-cards.js";
 import {
@@ -57,7 +57,7 @@ import {
 import type { Account, Entity } from "@nzosa/core";
 import { societyFiguresEntered } from "../daily/society-report-page.js";
 import { taxYearEndSaid, taxYearOf, taxYearStart } from "../tax-year.js";
-import { DEMO_SEEDED, markDemoSeeded, record } from "../books.js";
+import { DEMO_SEEDED, markDemoSeeded, persistRules, record } from "../books.js";
 import { isDemoBuild } from "../ai-consent.js";
 import { savePart } from "../store.js";
 import { anyModuleOn, applyModules, moduleOn, modulesHere, modulesPanel } from "../modules.js";
@@ -1498,11 +1498,8 @@ function renderSetupIntro(): void {
  * South Korea are marked as work in progress, and the international edition
  * (and any books already set to another country) still lists the rest.
  */
-const WORK_IN_PROGRESS = new Set(["au", "kr"]);
-const OFFERED = new Set(["nz", "us", ...WORK_IN_PROGRESS]);
-const ORDER = (id: string): number => ["nz", "us", "au", "kr"].indexOf(id) + 1 || 99;
 
-function countryBox(): HTMLElement | null {
+export function countryBox(): HTMLElement | null {
   const set = state.ledger.jurisdiction;
   const box = document.createElement("section");
   box.id = "setup-country";
@@ -1512,12 +1509,10 @@ function countryBox(): HTMLElement | null {
   const select = document.createElement("select");
   select.setAttribute("aria-label", "Country these books are kept in");
   const here0 = jurisdictionOf(set).id;
-  for (const one of [...Object.values(JURISDICTIONS)].sort((a, b) => ORDER(a.id) - ORDER(b.id))) {
-    // The others only for the international edition, or books already there.
-    if (!OFFERED.has(one.id) && edition() !== "international" && one.id !== here0) continue;
+  for (const [id, label] of countryChoices(here0)) {
     const option = document.createElement("option");
-    option.value = one.id;
-    option.textContent = WORK_IN_PROGRESS.has(one.id) ? `${one.name} (work in progress)` : one.name;
+    option.value = id;
+    option.textContent = label;
     select.append(option);
   }
   select.value = here0;
@@ -1541,10 +1536,32 @@ The ${to.name} pack is still work in progress: reports and rates may be missing 
       "Keep " + previous.name,
     ).then((yes) => {
       if (!yes) return;
-      state.ledger = { ...state.ledger, jurisdiction: chosen };
       select.value = chosen;
       select.disabled = true;
-      void savePart(state.ledger).then(() => location.reload());
+      void (async () => {
+        state.ledger = { ...state.ledger, jurisdiction: chosen };
+        // Empty books still on the old country's starter chart take the new
+        // one's, with its tax treatments in place of the old chart's.
+        const swap = starterChartForNewCountry(previous.id, chosen);
+        if (swap !== null) {
+          state.chart = swap.chart;
+          const model = state.ledger.entities;
+          state.ledger = {
+            ...state.ledger,
+            chart: swap.chart,
+            ...(model !== undefined ? { entities: { ...model, accounts: swap.accounts } } : {}),
+          };
+          const rules = state.rules as { rules?: unknown[] } | undefined;
+          if (rules !== undefined && (rules.rules ?? []).length === 0) {
+            state.rules = { ...state.rules, codeTreatments: {} } as typeof state.rules;
+            await persistRules();
+          }
+          await savePart(state.ledger, "chart", "entities");
+          await applyChartColumns(swap.chart);
+        }
+        await savePart(state.ledger);
+        location.reload();
+      })();
     });
   });
   const here = jurisdictionOf(set);

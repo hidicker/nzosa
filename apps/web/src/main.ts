@@ -1,3 +1,4 @@
+import { applyNewBooksCountry } from "./new-books-country.js";
 import { wirePresentation } from "./presentation.js";
 import { INBOX_FRESH_HOURS, readMorning, restoreMorning } from "./nightly.js";
 import { registerPages, showPage } from "./app.js";
@@ -299,6 +300,9 @@ async function init(): Promise<void> {
       // at the time still carry the standard chart's names for its numbers.
       if (tidyStaleTreatments()) void persistRules();
     }
+    // Books made a moment ago take the country chosen as they were made,
+    // before their starter chart goes in, so it is that country's chart.
+    if (await applyNewBooksCountry()) applyCountry();
     // A new set of books starts with a chart rather than with nothing.
     await seedStarterChart();
     // A ledger folder holds the chart with its entity columns, but the model

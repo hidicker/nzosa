@@ -83,8 +83,23 @@ import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../
 import { booksLocale } from "../country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
-/** What the imported coding is called, mid-sentence: Xero, or the spreadsheet these books came from. */
-const imported = (): string => (moduleOn("xero") ? "Xero" : moduleOn("sheet") ? "the spreadsheet" : "the import");
+/** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
+const imported = (): string => {
+  if (moduleOn("xero")) return "Xero";
+  const from = otherSystem();
+  if (from !== null) return from;
+  return moduleOn("sheet") ? "the spreadsheet" : "the import";
+};
+
+/** QuickBooks or SlowBooks, where the bank lines came from one of them. */
+function otherSystem(): string | null {
+  for (const t of state.ledger.transactions) {
+    const importer = t.source?.importer ?? "";
+    if (importer.startsWith("quickbooks")) return "QuickBooks";
+    if (importer.startsWith("slowbooks")) return "SlowBooks";
+  }
+  return null;
+}
 /** The same, starting a heading or a button. */
 const Imported = (): string => { const said = imported(); return said.charAt(0).toUpperCase() + said.slice(1); };
 

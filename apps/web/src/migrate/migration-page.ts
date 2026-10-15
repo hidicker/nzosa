@@ -1720,31 +1720,88 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
       "Export these from the system you are leaving, then drop them below, together or one at a time. " +
         "NZOSA works out what each file is.",
     ),
-    table(
-      ["From", "Export", "Where"],
-      [
+    // One table for each system: what is needed to rebuild the books, then
+    // what fills in the rest -- the people, the price list, when things are due.
+    folded(
+      "QuickBooks Online",
+      table(
+        ["Export", "Where", "Gives", "Needed"],
         [
-          "QuickBooks Online",
-          "Chart of accounts",
-          "Accounting > Chart of accounts > Run report, then Export to CSV or Excel",
+          [
+            "Chart of accounts",
+            "Accounting > Chart of accounts > Run report > Export",
+            "The accounts",
+            "Required",
+          ],
+          [
+            "General ledger",
+            "Reports > General ledger: All dates; Customise > Rows/Columns to add Class. Export",
+            "Every posting: bank and card lines with their coding, invoices and bills with their payments, " +
+              "transfers, journals, and classes",
+            "Required",
+          ],
+          [
+            "Customers and Vendors",
+            "Sales > Customers, and Expenses > Vendors: the export button above each list",
+            "Addresses, emails, phones and terms",
+            "Recommended",
+          ],
+          [
+            "Products and services",
+            "Sales > Products and services > Export",
+            "The price list, and stock on hand",
+            "If you sell products or keep stock",
+          ],
         ],
+      ),
+    ),
+    folded(
+      "QuickBooks Desktop",
+      table(
+        ["Export", "Where", "Gives", "Needed"],
         [
-          "QuickBooks Online",
-          "General ledger",
-          "Reports > General ledger, for all the dates you want to bring, then Export to CSV or Excel",
+          [
+            "IIF file",
+            "File > Utilities > Export > Lists to IIF Files: tick everything",
+            "Accounts, customers, vendors, items and classes",
+            "Required",
+          ],
+          [
+            "Bank files",
+            "From your bank, or Banking > the account register",
+            "The transactions. Desktop doesn't export them to IIF itself; an IIF file from another tool that " +
+              "holds them brings them too",
+            "Required",
+          ],
         ],
+      ),
+    ),
+    folded(
+      "SlowBooks",
+      table(
+        ["Export", "Where", "Gives", "Needed"],
         [
-          "QuickBooks Desktop",
-          "IIF file",
-          "File > Utilities > Export > Lists to IIF Files: accounts, customers, vendors and items. " +
-            "An IIF file that also holds transactions brings those too",
+          ["General Ledger", "Reports > General Ledger, saved as CSV", "Every posting, with classes", "Required"],
+          [
+            "Customers and Vendors",
+            "Export CSV on the Customers and Vendors pages",
+            "Addresses, emails, phones and terms",
+            "Recommended",
+          ],
+          ["Items", "Export CSV on the Items page", "The price list", "If you sell products"],
+          [
+            "Invoices and Bills",
+            "Export CSV on the Invoices and Bills pages",
+            "When each is due, for reminders and the aged reports",
+            "Recommended",
+          ],
         ],
-        ["SlowBooks", "General Ledger", "Reports > General Ledger, saved as CSV"],
-      ],
+      ),
     ),
     note(
-      "The bank and card lines come in with the account each was coded to, invoices and bills with what " +
-        "was paid on them, money moved between your own accounts as transfers, and everything else as journals.",
+      "Drop them all together: NZOSA reads the accounts and the ledger first, then the rest. Open invoices " +
+        "from QuickBooks Online come in with no due date yet, so set the terms on the customer or the date on " +
+        "the invoice for reminders to know what is overdue.",
     ),
     dropZone(),
   );

@@ -30,7 +30,7 @@ import type {
  */
 
 export function isIif(text: string): boolean {
-  return /^"?!(TRNS|ACCNT|CUST|VEND)"?\t/m.test(text.slice(0, 20000));
+  return /^"?!(TRNS|ACCNT|CUST|VEND|CLASS|INVITEM|OTHERNAME|EMP)"?\t/m.test(text.slice(0, 20000));
 }
 
 /** IIF's account types, as QuickBooks Online names them. */
@@ -93,6 +93,8 @@ export interface IifFile {
   classes: Map<QuickBooksEntry, string>;
   /** Products and services from `!INVITEM`, the account named rather than coded. */
   items: (Omit<Item, "id" | "accountCode"> & { account?: string })[];
+  /** The classes the file lists, used or not. */
+  classNames?: string[];
   problems: ImportProblem[];
 }
 
@@ -109,6 +111,7 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
   const entries: QuickBooksEntry[] = [];
   const classes = new Map<QuickBooksEntry, string>();
   const items: IifFile["items"] = [];
+  const classNames: string[] = [];
   const problems: ImportProblem[] = [];
   const lines = text.split(/\r?\n/);
   let open: QuickBooksEntry | null = null;
@@ -173,6 +176,12 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
       if (place.debit) debitNormal.push(name);
       if (place.bank) bankNames.push(name);
       if (place.card) cardNames.push(name);
+      return;
+    }
+
+    if (kind === "CLASS") {
+      const name = get("NAME");
+      if (name !== "" && !classNames.includes(name)) classNames.push(name);
       return;
     }
 
@@ -260,7 +269,7 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
   });
   close();
 
-  return { chart: { accounts, debitNormal, bankNames, cardNames }, entries, contacts, classes, items, problems };
+  return { chart: { accounts, debitNormal, bankNames, cardNames }, entries, contacts, classes, items, classNames, problems };
 }
 
 /**
@@ -270,6 +279,8 @@ export function parseIif(text: string, options: { currency?: string } = {}): Iif
 export type ReadBooks = QuickBooksBooks & {
   chart: QuickBooksChart;
   listed: Omit<Contact, "id">[];
+  /** Every class the file names: its list, and those its lines carry. */
+  classNames: string[];
   /** Products and services the file lists, with the account's code where the chart has it. */
   items: Omit<Item, "id">[];
   /** The class each bank line and document was given, where the file gave one. */
@@ -363,6 +374,7 @@ export function booksFromEntries(
     problems: [...problems, ...books.problems],
     chart: used,
     listed: file.contacts,
+    classNames: [...new Set([...(file.classNames ?? []), ...file.classes.values()])],
     items: file.items.map(({ account, ...rest }) => {
       const code = account === undefined ? undefined : used.accounts.find((a) => a.name === account)?.code;
       return { ...rest, ...(code !== undefined && code !== "" ? { accountCode: code } : {}) };

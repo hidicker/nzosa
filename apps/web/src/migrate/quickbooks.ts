@@ -1,5 +1,5 @@
-import { isIif, isSlowBooksLedger, mergeContacts, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
-import type { ManualJournal, SplitPart } from "@nzosa/core";
+import { applyDueDates, isIif, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency } from "../country.js";
 import { addTransactions } from "../daily/bank-import.js";
@@ -119,13 +119,15 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
       names.add(klass);
       classCount += 1;
     }
+    // The file's whole list of classes, with or without lines given them.
+    for (const name of fromIif.classNames) names.add(name);
     for (const [number, klass] of fromIif.classOf.invoices) {
       if (assigned[number] !== undefined) continue;
       assigned[number] = klass;
       names.add(klass);
       classCount += 1;
     }
-    if (classCount > 0) {
+    if (classCount > 0 || names.size > held.names.length) {
       state.ledger = { ...state.ledger, classes: { names: [...names].sort((x, y) => x.localeCompare(y)), assigned } };
       state.persistent = await savePart(state.ledger);
     }
@@ -228,4 +230,71 @@ export async function loadContactList(file: File): Promise<string> {
   const added = merged.length - before;
   const word = read.kind === "vendor" ? "vendor" : read.kind === "customer" ? "customer" : "contact";
   return `${read.contacts.length} ${word}${read.contacts.length === 1 ? "" : "s"}, ${added} new, ${read.contacts.length - added} already held and filled in.`;
+}
+
+/**
+ * A list of products and services from the system being left (QuickBooks
+ * Online, SlowBooks), added to those held by name. Each takes the account its
+ * sales go to, found in the chart by name; a product kept in stock with a
+ * quantity on hand starts a stock count, so what is on hand starts right.
+ */
+export async function loadProductList(file: File): Promise<string> {
+  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+  const read = parseProductList(text, booksCurrency());
+  if (read.length === 0) return "no products or services found in it.";
+  const codeFor = (name: string | undefined): string | undefined => {
+    if (name === undefined) return undefined;
+    const wanted = name.trim().toLowerCase();
+    // QuickBooks writes a sub-account as "Parent:Child"; the chart keeps the whole name.
+    const found = state.chart.find((a) => a.name.trim().toLowerCase() === wanted || a.name.trim().toLowerCase().endsWith(`:${wanted}`));
+    return found === undefined || found.code.trim() === "" ? undefined : found.code.trim();
+  };
+  const held = state.ledger.items ?? [];
+  const names = new Set(held.map((i) => i.name.trim().toLowerCase()));
+  const stamp = Date.now().toString(36);
+  const added: Item[] = [];
+  for (const [n, one] of read.entries()) {
+    if (names.has(one.item.name.trim().toLowerCase())) continue;
+    const code = codeFor(one.incomeAccount);
+    added.push({ ...one.item, id: `item-${stamp}-${n}`, ...(code !== undefined ? { accountCode: code } : {}) });
+  }
+  if (added.length === 0) return `${read.length} products and services, all already held.`;
+  const items = [...held, ...added];
+  // Stock on hand today, for the products that say how many there are.
+  const counted = added
+    .map((item) => ({ item, onHand: read.find((r) => r.item.name === item.name)?.onHand }))
+    .filter((c): c is { item: Item; onHand: number } => c.onHand !== undefined && c.item.unitCost !== undefined);
+  const counts =
+    counted.length === 0
+      ? state.ledger.stockCounts
+      : [
+          ...(state.ledger.stockCounts ?? []),
+          {
+            id: `count-${stamp}`,
+            date: new Date().toLocaleDateString("en-CA"),
+            lines: counted.map((c) => ({ itemId: c.item.id, quantity: c.onHand, unitCost: c.item.unitCost ?? 0 })),
+          },
+        ];
+  state.ledger = { ...state.ledger, items, ...(counts !== undefined ? { stockCounts: counts } : {}) };
+  state.persistent = await savePart(state.ledger);
+  await record("items", `${added.length} products and services from ${file.name}`, held, items);
+  return (
+    `${added.length} products and services` +
+    (counted.length > 0 ? `, ${counted.length} with a quantity on hand counted into stock` : "") +
+    "."
+  );
+}
+
+/** When invoices and bills already brought in are due, from a list of them. */
+export async function loadDueDates(file: File): Promise<string> {
+  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+  const dates = parseDueDates(text, booksCountry().dayFirst);
+  if (dates.length === 0) return "no due dates found in it.";
+  const { invoices, filled } = applyDueDates(state.ledger.invoices ?? [], dates);
+  if (filled === 0) {
+    return `${dates.length} due dates, none for an invoice or bill held without one. Bring in the ledger first.`;
+  }
+  state.ledger = { ...state.ledger, invoices };
+  state.persistent = await savePart(state.ledger, "invoices");
+  return `due dates filled in on ${filled} invoice${filled === 1 ? "" : "s"} and bills.`;
 }

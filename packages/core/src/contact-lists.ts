@@ -75,6 +75,9 @@ export function parseContactList(text: string, hint: ContactKind | null = null):
     is1099: indexOf(headers, IS_1099),
     notes: indexOf(headers, NOTES),
     status: indexOf(headers, STATUS),
+    city: indexOf(headers, ["city", "town", "suburb"]),
+    region: indexOf(headers, ["state", "region", "province"]),
+    postcode: indexOf(headers, ["zip", "zip code", "postcode", "post code", "postal code"]),
   };
   const nameHeading = headers[column.name] ?? "";
   const kind: ContactKind | null = /vendor/.test(nameHeading) || column.is1099 >= 0 ? "vendor" : /customer/.test(nameHeading) ? "customer" : hint;
@@ -87,13 +90,19 @@ export function parseContactList(text: string, hint: ContactKind | null = null):
     if (name === "" || /^total\b/i.test(name)) continue;
     const status = cell(column.status).toLowerCase();
     const flag = cell(column.is1099).toLowerCase();
+    // The street, then the town, state and postcode where a list keeps them
+    // in columns of their own (SlowBooks does): "Springfield, IL 62701".
+    const place = [cell(column.city), [cell(column.region), cell(column.postcode)].filter((p) => p !== "").join(" ")]
+      .filter((p) => p !== "")
+      .join(", ");
+    const address = [cell(column.address).replace(/\s*\n\s*/g, "\n"), place].filter((p) => p !== "").join("\n");
     const contact: Omit<Contact, "id"> = {
       name,
       kind: kind ?? "customer",
       ...(cell(column.company) !== "" && cell(column.company) !== name ? { company: cell(column.company) } : {}),
       ...(cell(column.email) !== "" ? { email: cell(column.email).split(/[;,]/)[0]?.trim() ?? "" } : {}),
       ...(cell(column.phone) !== "" ? { phone: cell(column.phone) } : {}),
-      ...(cell(column.address) !== "" ? { address: cell(column.address).replace(/\s*\n\s*/g, "\n") } : {}),
+      ...(address !== "" ? { address } : {}),
       ...(cell(column.terms) !== "" ? { terms: cell(column.terms) } : {}),
       ...(cell(column.taxId) !== "" ? { taxId: cell(column.taxId) } : {}),
       ...(cell(column.notes) !== "" ? { notes: cell(column.notes) } : {}),

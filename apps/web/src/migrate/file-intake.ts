@@ -6,7 +6,7 @@ import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, re
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
-import { loadContactList, loadQuickBooksBankLines } from "./quickbooks.js";
+import { loadContactList, loadDueDates, loadProductList, loadQuickBooksBankLines } from "./quickbooks.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
@@ -217,6 +217,10 @@ async function loadEach(
     "quickbooks-ledger": 0,
     "quickbooks-iif": -1,
     "slowbooks-ledger": -1,
+    // After the ledger: the due dates go on the documents it brought in, and
+    // a product's account is found in the chart it brought.
+    "product-list": 1,
+    "due-dates": 3,
     // Which bank account each of the chart's bank rows is, before anything
     // reads a balance or a line through those rows.
     "bank-accounts": -0.5,
@@ -258,6 +262,14 @@ async function loadEach(
           // then the bank lines, documents and journals.
           await loadCheckFiles([file]);
           say(`${file.name} — ${identified.what}: ${await loadQuickBooksBankLines(file)}`);
+          continue;
+        }
+        case "product-list": {
+          say(`${file.name} — ${identified.what}: ${await loadProductList(file)}`);
+          continue;
+        }
+        case "due-dates": {
+          say(`${file.name} — ${await loadDueDates(file)}`);
           continue;
         }
         case "contact-list": {

@@ -101,3 +101,11 @@ test("a customer's credit limit and the products and services list", () => {
     { name: "Poster", kind: "product", price: 1250 },
   ]);
 });
+
+test("the list of classes, used or not", () => {
+  const T = (...cells) => cells.join("\t");
+  const text = [T("!CLASS", "NAME", "HIDDEN"), T("CLASS", "Landscaping", "N"), T("CLASS", "Design", "N")].join("\r\n");
+  assert.equal(isIif(text), true);
+  assert.deepEqual(parseIifBooks(text, null).classNames, ["Landscaping", "Design"]);
+  assert.deepEqual(parseIifBooks(FILE, null).classNames, ["Shop"]);
+});

@@ -7,6 +7,8 @@ import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
+import { isProductList } from "./product-lists.js";
+import { isDueDateList } from "./document-dates.js";
 import { isContactList } from "./contact-lists.js";
 
 /**
@@ -51,6 +53,8 @@ export type ExportKind =
   | "quickbooks-ledger"
   | "quickbooks-iif"
   | "slowbooks-ledger"
+  | "product-list"
+  | "due-dates"
   | "contact-list"
   | "unknown";
 
@@ -195,6 +199,10 @@ export function identifyExport(text: string): Identified {
   if (isContactList(text)) {
     return { kind: "contact-list", what: "customers or vendors" };
   }
+  // Products and services, and when invoices and bills fall due: lists from
+  // the system being left, read by their headings.
+  if (isProductList(text)) return { kind: "product-list", what: "products and services" };
+  if (isDueDateList(text)) return { kind: "due-dates", what: "invoices or bills with their due dates" };
   // Xero's list of its bank accounts, from the uncoded statement lines export.
   // Before the bank statements: its sections carry Date and Payee columns.
   if (isAgedDetail(text)) {

@@ -85,6 +85,14 @@ export function usingOwnProject(): boolean {
   }
 }
 
+/**
+ * Whether books can be kept on the server here. Never on the demo: it is
+ * served from the same site as the hosted app, so it sees the same sign-in,
+ * and opened that way it showed somebody's own books and wrote the invented
+ * ones over them when the demo books were switched. (The demo's AI allowance
+ * goes to the server through its own function, not through this.)
+ */
 export function cloudConfigured(): boolean {
+  if (typeof document !== "undefined" && document.documentElement.dataset["demo"] === "yes") return false;
   return CLOUD.url !== "" && CLOUD.publishableKey !== "";
 }

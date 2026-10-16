@@ -184,3 +184,9 @@ works).
   settled within 365 days), and on the invoice basis a payment received
   before the invoice is issued makes the GST due when paid. Both rare for the
   businesses NZOSA is for; the GST return takes neither into account yet.
+- **The accountant's workbook says GST in books with no sales tax.** United
+  States books get "GST Treatment", "GST ($)", "GST: Not registered" and the
+  like in the summary, bank, revenue, unusual, raw and register sheets. Right
+  for New Zealand and Australia; for the United States they should say sales
+  tax or be left out. The country's own sheets (Schedule C and the rest) are
+  already right.

@@ -124,7 +124,7 @@ import type {
   TaxExtraCategory,
   Transaction,
 } from "@nzosa/core";
-import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid, depreciationRules } from "../tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, taxTypeLabel } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
@@ -1662,7 +1662,7 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   const schedule = depreciationSchedule(assets, {
     from: taxYearStart(year),
     to: taxYearEnd(year),
-  });
+  }, depreciationRules());
 
   const heading = document.createElement("h3");
   heading.textContent = `Depreciation schedule, FY${year}`;
@@ -4733,7 +4733,7 @@ export function downloadReport(): void {
     depreciation: () => {
       const assets = state.ledger.assets ?? [];
       if (assets.length === 0 || year === undefined) return nothingToDownload();
-      const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) });
+      const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) }, depreciationRules());
       if (schedule.rows.length === 0) return nothingToDownload();
       download(
         formatDepreciationSchedule(schedule, `Depreciation schedule, FY${year}`),

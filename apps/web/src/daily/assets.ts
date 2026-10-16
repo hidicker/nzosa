@@ -1,5 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import { accountsForEditing, importedAssetProceeds, reclassify, record } from "../books.js";
+import { booksCountry } from "../country.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
@@ -18,7 +19,7 @@ import {
 } from "@nzosa/core";
 import type { Cents, FixedAsset, IsoDate } from "@nzosa/core";
 import { loadAssets } from "../migrate/file-intake.js";
-import { taxYearEnd, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndShort, taxYearOf, taxYearStart, depreciationRules } from "../tax-year.js";
 
 /**
  * Fixed assets, their depreciation, and what happens when one is sold.
@@ -67,7 +68,7 @@ function renderDisposals(body: HTMLElement): void {
     const schedule = depreciationSchedule(assets, {
       from: taxYearStart(year),
       to: taxYearEnd(year),
-    });
+    }, depreciationRules());
     for (const row of schedule.rows) {
       if (row.disposedInPeriod) bookValues.set(row.asset.number, row.bookValueAtDisposal);
     }
@@ -403,6 +404,7 @@ function assetEditor(draft: AssetDraft): HTMLElement {
     return element;
   };
 
+  const au = booksCountry().id === "au";
   field("Asset name", input(draft.name, (v) => { draft.name = v; }, "text", "e.g. Delivery van"));
   field("Asset number", input(draft.number, (v) => { draft.number = v; }));
   const typePicker = combobox(assetTypes(), draft.type === "" ? null : draft.type, "e.g. Motor Vehicles", () => {
@@ -430,18 +432,48 @@ function assetEditor(draft: AssetDraft): HTMLElement {
   for (const option of DEPRECIATION_METHODS) {
     const element = document.createElement("option");
     element.value = option.value;
-    element.textContent = option.label;
+    // Australia calls straight line prime cost.
+    element.textContent = au && /straight/i.test(option.label) ? "Prime cost (straight line)" : option.label;
     element.selected = option.value.toLowerCase() === draft.method.toLowerCase();
     method.append(element);
   }
   const rate = input(draft.rate, (v) => { draft.rate = v; }, "text", "e.g. 30");
   rate.inputMode = "decimal";
+  // In Australia the rate comes from the asset's effective life: 200% of it
+  // for diminishing value, 100% for prime cost.
+  const life = input("", () => undefined, "text", "e.g. 5");
+  life.inputMode = "decimal";
+  const fromLife = (): void => {
+    const years = Number(life.value);
+    if (!Number.isFinite(years) || years <= 0) return;
+    const share = /straight/i.test(method.value) ? 100 : 200;
+    draft.rate = String(Math.round((share / years) * 100) / 100);
+    rate.value = draft.rate;
+    refresh();
+  };
+  life.addEventListener("input", fromLife);
   method.addEventListener("change", () => {
     draft.method = method.value;
+    if (au && life.value.trim() !== "") fromLife();
     refresh();
   });
   field("Depreciation method", method);
-  field("Rate, % a year", rate, "Inland Revenue's rate for this kind of asset, for the method chosen. Its depreciation rate finder gives both.");
+  if (au) {
+    field(
+      "Effective life, years",
+      life,
+      "From the ATO's effective life tables, or your own estimate. It sets the rate: 200% of it for diminishing value, 100% for prime cost.",
+    );
+  }
+  field(
+    "Rate, % a year",
+    rate,
+    booksCountry().id === "nz"
+      ? "Inland Revenue's rate for this kind of asset, for the method chosen. Its depreciation rate finder gives both."
+      : au
+        ? "Worked out from the effective life, or typed. A small business writing an asset under $20,000 off straight away (the instant asset write-off) codes it to an expense instead of adding it here."
+        : "The rate for this kind of asset, for the method chosen.",
+  );
 
   if (draft.disposing) {
     field("Disposal date", input(draft.disposed, (v) => { draft.disposed = v; }, "date"));
@@ -595,7 +627,7 @@ export function renderAssetsPage(): void {
   // This year's figures beside each asset: the latest year the books reach.
   const years = state.ledger.transactions.map((t) => taxYearOf(t.date));
   const year = years.length > 0 ? Math.max(...years) : taxYearOf(today());
-  const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) });
+  const schedule = depreciationSchedule(assets, { from: taxYearStart(year), to: taxYearEnd(year) }, depreciationRules());
   const rowOf = new Map(schedule.rows.map((row) => [row.asset.number, row]));
 
   const total = assets.reduce((sum, a) => sum + a.cost, 0);

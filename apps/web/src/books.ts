@@ -102,7 +102,7 @@ import type {
   GstTreatment,
   GstSide,
 } from "@nzosa/core";
-import { taxYearEnd, taxYearOf, taxYearStart } from "./tax-year.js";
+import { taxYearEnd, taxYearOf, taxYearStart, depreciationRules } from "./tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
 
 /**
@@ -1910,6 +1910,7 @@ export function importedAssetProceeds(): Map<string, Cents> {
     assets: state.ledger.assets ?? [],
     journals: state.ledger.journals ?? [],
     transactions: state.ledger.transactions,
+    ...depreciationRules(),
   });
 }
 
@@ -1935,6 +1936,7 @@ function disposalJournals(options: {
     transactions: state.ledger.transactions,
     chart: state.chart,
     posting: options,
+    ...depreciationRules(),
   });
 }
 
@@ -1945,8 +1947,9 @@ function depreciationJournals(): PostedJournal[] {
     assets: state.ledger.assets ?? [],
     transactions: state.ledger.transactions,
     chart: state.chart,
-    // Today in New Zealand: the year in progress is posted month by month.
-    today: new Date().toLocaleDateString("en-CA", { timeZone: "Pacific/Auckland" }),
+    // Today where the books are kept: the year in progress is posted month by month.
+    today: new Date().toLocaleDateString("en-CA", booksCountry().id === "nz" ? { timeZone: "Pacific/Auckland" } : {}),
+    ...depreciationRules(),
   });
 }
 

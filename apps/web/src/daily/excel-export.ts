@@ -9,7 +9,7 @@ import {
   betweenTagFor,
 } from "../books.js";
 import { state } from "../state.js";
-import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, depreciationRules } from "../tax-year.js";
 import { booksCurrency, gstPercent, taxTypeLabel } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
@@ -1203,7 +1203,7 @@ function buildUnusualTransactionsSheet(ctx: SheetContext): string {
 function buildDepreciationSheet(ctx: SheetContext): string {
   const { year, from, to, entityName } = ctx;
   const assets = state.ledger.assets ?? [];
-  const schedule = depreciationSchedule(assets, { from, to });
+  const schedule = depreciationSchedule(assets, { from, to }, depreciationRules());
   const proceedsMap = assetProceedsInUse();
 
   const widths = [14, 30, 20, 12, 16, 10, 12, 16, 16, 16, 14, 16, 16, 16, 16, 16];

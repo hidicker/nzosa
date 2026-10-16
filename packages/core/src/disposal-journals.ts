@@ -2,7 +2,8 @@ import { depreciationSchedule } from "./assets.js";
 import type { FixedAsset } from "./assets.js";
 import type { Journal } from "./journals.js";
 import type { Account } from "./chart.js";
-import { financialYearOf } from "./dates.js";
+import { financialYear, financialYearOf } from "./dates.js";
+import type { FinancialYearOptions } from "./dates.js";
 import { bestAccountMatch } from "./depreciation-journals.js";
 import { disposalOf } from "./disposal.js";
 import type { Cents } from "./money.js";
@@ -35,13 +36,18 @@ export interface DisposalJournalsOptions {
   /** Where the asset and its contra go when the chart names neither. */
   fallbackAssetCode?: string;
   fallbackAccumulatedCode?: string;
+  /** The books' year end, 31 March (New Zealand's) where not given. */
+  yearEnd?: FinancialYearOptions;
+  /** Share the year out by days held, as Australia does, not by whole months. */
+  byDays?: boolean;
 }
 
 export function disposalJournals(options: DisposalJournalsOptions): PostedJournal[] {
   const { assets, proceeds, transactions, chart } = options;
   if (assets.length === 0 || Object.keys(proceeds).length === 0) return [];
 
-  const years = [...new Set(transactions.map((t) => financialYearOf(t.date)))];
+  const yearEnd = options.yearEnd ?? {};
+  const years = [...new Set(transactions.map((t) => financialYearOf(t.date, yearEnd)))];
   const accumulated = chart.filter((a) => /accumulated depreciation/i.test(a.name));
   const fixed = chart.filter(
     (a) => /fixed asset/i.test(a.type) && !/accumulated depreciation/i.test(a.name),
@@ -49,10 +55,7 @@ export function disposalJournals(options: DisposalJournalsOptions): PostedJourna
 
   const out: PostedJournal[] = [];
   for (const year of years) {
-    const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
-    });
+    const schedule = depreciationSchedule(assets, financialYear(year, yearEnd), { byDays: options.byDays === true });
     for (const row of schedule.rows) {
       if (!row.disposedInPeriod) continue;
       const sold = proceeds[row.asset.number];
@@ -115,8 +118,11 @@ export function proceedsFromDisposalJournals(options: {
   journals: readonly Journal[];
   /** Only disposals in the years the transactions reach are read. */
   transactions: readonly Transaction[];
+  yearEnd?: FinancialYearOptions;
+  byDays?: boolean;
 }): Map<string, Cents> {
   const { assets, journals, transactions } = options;
+  const yearEnd = options.yearEnd ?? {};
   const out = new Map<string, Cents>();
   if (assets.length === 0 || journals.length === 0) return out;
 
@@ -133,12 +139,9 @@ export function proceedsFromDisposalJournals(options: {
   );
   if (standing.length === 0) return out;
 
-  const years = [...new Set(transactions.map((t) => financialYearOf(t.date)))];
+  const years = [...new Set(transactions.map((t) => financialYearOf(t.date, yearEnd)))];
   for (const year of years) {
-    const schedule = depreciationSchedule(assets, {
-      from: `${year - 1}-04-01`,
-      to: `${year}-03-31`,
-    });
+    const schedule = depreciationSchedule(assets, financialYear(year, yearEnd), { byDays: options.byDays === true });
     for (const row of schedule.rows) {
       if (!row.disposedInPeriod) continue;
       const number = row.asset.number;

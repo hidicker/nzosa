@@ -1,7 +1,8 @@
 import { depreciationSchedule } from "./assets.js";
 import type { FixedAsset } from "./assets.js";
 import type { Account } from "./chart.js";
-import { financialYearOf } from "./dates.js";
+import { financialYear, financialYearOf } from "./dates.js";
+import type { FinancialYearOptions } from "./dates.js";
 import { postDepreciation } from "./posting.js";
 import type { PostedJournal } from "./posting.js";
 import type { Transaction } from "./types.js";
@@ -34,6 +35,10 @@ export interface DepreciationJournalsOptions {
    * months' depreciation, not twelve. Without it every year is posted whole.
    */
   today?: string;
+  /** The books' year end, 31 March (New Zealand's) where not given. */
+  yearEnd?: FinancialYearOptions;
+  /** Share the year out by days held, as Australia does, not by whole months. */
+  byDays?: boolean;
 }
 
 /**
@@ -66,7 +71,8 @@ export function depreciationJournals(options: DepreciationJournalsOptions): Post
   const { assets, transactions, chart } = options;
   if (assets.length === 0) return [];
 
-  const years = [...new Set(transactions.map((t) => financialYearOf(t.date)))];
+  const yearEnd = options.yearEnd ?? {};
+  const years = [...new Set(transactions.map((t) => financialYearOf(t.date, yearEnd)))];
   const accumulated = chart.filter((a) => /accumulated depreciation/i.test(a.name));
   const expense = chart.find((a) => /^depreciation$/i.test(a.name.trim()));
 
@@ -84,11 +90,11 @@ export function depreciationJournals(options: DepreciationJournalsOptions): Post
   };
   const byType = (to: string, year: number): Map<string, number> =>
     new Map(
-      depreciationSchedule(assets, { from: `${year - 1}-04-01`, to }).byType.map((g) => [g.type, g.depreciation]),
+      depreciationSchedule(assets, { from: financialYear(year, yearEnd).from, to }, { byDays: options.byDays === true }).byType.map((g) => [g.type, g.depreciation]),
     );
 
   const out: PostedJournal[] = [];
-  const current = options.today === undefined ? null : financialYearOf(options.today);
+  const current = options.today === undefined ? null : financialYearOf(options.today as never, yearEnd);
   for (const year of years) {
     if (year === current && options.today !== undefined) {
       // Month by month, each the change in the year's depreciation to date,
@@ -96,7 +102,7 @@ export function depreciationJournals(options: DepreciationJournalsOptions): Post
       // and an asset sold part-way through the year, which takes none that
       // year, has what was charged taken back in the month it went.
       let before = new Map<string, number>();
-      for (const end of monthEndsOfYear(year)) {
+      for (const end of monthEndsOfYear(financialYear(year, yearEnd).from)) {
         if (end >= options.today) break;
         const now = byType(end, year);
         for (const type of new Set([...now.keys(), ...before.keys()])) {
@@ -107,21 +113,22 @@ export function depreciationJournals(options: DepreciationJournalsOptions): Post
       }
       continue;
     }
-    for (const [type, amount] of byType(`${year}-03-31`, year)) {
-      if (amount !== 0) out.push(post(type, amount, `${year}-03-31`));
+    const end = financialYear(year, yearEnd).to;
+    for (const [type, amount] of byType(end, year)) {
+      if (amount !== 0) out.push(post(type, amount, end));
     }
   }
   return out;
 }
 
-/** The last day of each month of a financial year, April to March. */
-function monthEndsOfYear(year: number): string[] {
+/** The last day of each of the twelve months from a year's first day. */
+function monthEndsOfYear(start: string): string[] {
   const out: string[] = [];
+  const y0 = Number(start.slice(0, 4));
+  const m0 = Number(start.slice(5, 7)) - 1;
   for (let i = 0; i < 12; i++) {
-    const month = ((3 + i) % 12) + 1; // 4..12, then 1..3
-    const y = month >= 4 ? year - 1 : year;
-    const last = new Date(Date.UTC(y, month, 0)).getUTCDate();
-    out.push(`${y}-${String(month).padStart(2, "0")}-${String(last).padStart(2, "0")}`);
+    const last = new Date(Date.UTC(y0, m0 + i + 1, 0));
+    out.push(last.toISOString().slice(0, 10));
   }
   return out;
 }

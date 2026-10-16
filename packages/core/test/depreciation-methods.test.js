@@ -82,3 +82,19 @@ test("a part year is charged for the months owned", () => {
   assert.equal(y2.opening, 300000 - y1.depreciation);
   assert.equal(y2.depreciation, Math.round((y2.opening * 50) / 100));
 });
+
+test("Australian books charge by the days an asset is held", () => {
+  // $10,000 at 40% diminishing value, bought 1 October 2025: 273 days of the
+  // year to 30 June 2026, so 10,000 x 40% x 273/365.
+  const a = asset("Diminishing Value", { purchased: "2025-10-01", depreciationFrom: "2025-10-01", cost: 1000000, rate: 40 });
+  const auYear = { from: "2025-07-01", to: "2026-06-30" };
+  const byDays = depreciationSchedule([a], auYear, { byDays: true }).rows[0];
+  assert.equal(byDays.depreciation, Math.round(1000000 * 0.4 * 273 / 365));
+  // The second year is a full one, on what was left.
+  const next = depreciationSchedule([a], { from: "2026-07-01", to: "2027-06-30" }, { byDays: true }).rows[0];
+  assert.equal(next.opening, byDays.closing);
+  assert.equal(next.depreciation, Math.round(byDays.closing * 0.4));
+  // New Zealand's rule is unchanged: whole months.
+  const byMonths = depreciationSchedule([a], auYear).rows[0];
+  assert.equal(byMonths.depreciation, Math.round(1000000 * 0.4 * 9 / 12));
+});

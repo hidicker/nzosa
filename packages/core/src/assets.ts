@@ -143,6 +143,29 @@ function straightLine(cost: Cents, rate: number, months: number, cap: Cents): Ce
   return Math.min(cap, Math.round((cost * rate * months) / (100 * 12)));
 }
 
+/** Days from `from` to `to` inclusive. */
+function daysInclusive(from: IsoDate, to: IsoDate): number {
+  return Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1;
+}
+
+/**
+ * How the year is shared out. New Zealand's rule is full-month averaging; in
+ * Australia the decline in value is worked on the days held, out of 365
+ * (ITAA 1997 ss 40-70 and 40-75), including the days up to a disposal.
+ */
+export interface DepreciationOptions {
+  byDays?: boolean;
+}
+
+/** The charge on a base for a stretch of time, capped at what is left. */
+function charge(base: Cents, rate: number, from: IsoDate, to: IsoDate, cap: Cents, options: DepreciationOptions): Cents {
+  if (to < from || rate <= 0) return 0;
+  if (options.byDays === true) {
+    return Math.min(cap, Math.round((base * rate * daysInclusive(from, to)) / (100 * 365)));
+  }
+  return straightLine(base, rate, monthsInclusive(from, to), cap);
+}
+
 /**
  * Whether an asset depreciates on its reducing value rather than its cost.
  *
@@ -177,7 +200,7 @@ function monthsBefore(date: IsoDate, months: number): IsoDate {
  * time. That is what makes the opening value here the closing value of the
  * schedule printed last year.
  */
-function priorDepreciationOf(asset: FixedAsset, from: IsoDate, period: DateRange): Cents {
+function priorDepreciationOf(asset: FixedAsset, from: IsoDate, period: DateRange, options: DepreciationOptions = {}): Cents {
   const dayBefore = (date: IsoDate): IsoDate => {
     const d = new Date(`${date}T00:00:00Z`);
     d.setUTCDate(d.getUTCDate() - 1);
@@ -187,7 +210,7 @@ function priorDepreciationOf(asset: FixedAsset, from: IsoDate, period: DateRange
   if (from > priorEnd) return 0;
 
   if (!isDiminishing(asset)) {
-    return straightLine(asset.cost, asset.rate, monthsInclusive(from, priorEnd), asset.cost);
+    return charge(asset.cost, asset.rate, from, priorEnd, asset.cost, options);
   }
 
   // How many whole years back the first one starts.
@@ -201,10 +224,9 @@ function priorDepreciationOf(asset: FixedAsset, from: IsoDate, period: DateRange
     const end = dayBefore(monthsBefore(period.from, (back - 1) * 12));
     if (end < from) continue;
 
-    const months = monthsInclusive(from > start ? from : start, end > priorEnd ? priorEnd : end);
-    const charge = straightLine(book, asset.rate, months, book);
-    accumulated += charge;
-    book -= charge;
+    const taken = charge(book, asset.rate, from > start ? from : start, end > priorEnd ? priorEnd : end, book, options);
+    accumulated += taken;
+    book -= taken;
   }
   return accumulated;
 }
@@ -212,6 +234,7 @@ function priorDepreciationOf(asset: FixedAsset, from: IsoDate, period: DateRange
 export function depreciationSchedule(
   assets: readonly FixedAsset[],
   period: DateRange,
+  options: DepreciationOptions = {},
 ): DepreciationSchedule {
   const rows: DepreciationRow[] = [];
 
@@ -223,19 +246,23 @@ export function depreciationSchedule(
     // Not yet owned: it belongs to a later one.
     if (from > period.to) continue;
 
-    const priorDepreciation = priorDepreciationOf(asset, from, period);
+    const priorDepreciation = priorDepreciationOf(asset, from, period, options);
     const opening = asset.cost - priorDepreciation;
 
     const disposedInPeriod = asset.disposed !== null && asset.disposed <= period.to;
 
-    // An asset disposed of during the year takes no depreciation that year;
-    // its book value goes to the disposal instead.
-    const months = disposedInPeriod
-      ? 0
-      : monthsInclusive(from > period.from ? from : period.from, period.to);
     // Diminishing value charges on what is left, straight line on what it cost.
     const base = isDiminishing(asset) ? opening : asset.cost;
-    const depreciation = straightLine(base, asset.rate, months, opening);
+    const start = from > period.from ? from : period.from;
+    // New Zealand: an asset disposed of during the year takes no depreciation
+    // that year; its book value goes to the disposal instead. Australia: the
+    // decline in value runs to the day of disposal, and what is left then goes
+    // to the disposal.
+    const depreciation = disposedInPeriod
+      ? options.byDays === true
+        ? charge(base, asset.rate, start, asset.disposed ?? period.to, opening, options)
+        : 0
+      : charge(base, asset.rate, start, period.to, opening, options);
 
     rows.push({
       asset,
@@ -244,7 +271,7 @@ export function depreciationSchedule(
       accumulated: priorDepreciation + depreciation,
       closing: disposedInPeriod ? 0 : opening - depreciation,
       disposedInPeriod,
-      bookValueAtDisposal: disposedInPeriod ? opening : 0,
+      bookValueAtDisposal: disposedInPeriod ? opening - depreciation : 0,
     });
   }
 

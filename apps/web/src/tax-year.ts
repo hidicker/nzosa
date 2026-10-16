@@ -66,3 +66,11 @@ export function taxYearStartSaid(year: number): string {
 export function taxYearOf(date: string): number {
   return financialYearOf(date as IsoDate, yearEnd());
 }
+
+/**
+ * How these books depreciate: over their own year, and in Australia by the
+ * days an asset is held rather than New Zealand's full months.
+ */
+export function depreciationRules(): { yearEnd: { endMonth: number; endDay: number }; byDays: boolean } {
+  return { yearEnd: yearEnd(), byDays: state.ledger.jurisdiction === "au" };
+}

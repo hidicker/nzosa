@@ -1,5 +1,5 @@
 import { DEMO_PERSONAS, currentDemoPersona } from "../demo-personas.js";
-import { noSalesTax } from "../country.js";
+import { booksCountry, noSalesTax } from "../country.js";
 import { onScreen } from "./engine.js";
 import type { Lesson } from "./engine.js";
 
@@ -87,7 +87,7 @@ export const LESSONS: readonly Lesson[] = [
       {
         title: "Year end",
         body: () =>
-          noSalesTax()
+          booksCountry().id !== "nz"
             ? "The year-end work, and a pack your accountant can check."
             : "The year-end work: rental schedules, the IR3, IR4 or IR10, and a pack your accountant can check.",
         target: q('.sidebar-group[data-group="yearend"]'),
@@ -706,6 +706,116 @@ export const LESSONS: readonly Lesson[] = [
           "Give bank lines and invoices a class, such as a job or a department, and the Profit and loss by " +
           "class report shows what each one made.",
         page: "classes",
+      },
+    ],
+  },
+{
+    id: "au-bas",
+    title: "The BAS",
+    summary: "GST, PAYG withheld and PAYG instalments for each quarter, on the simpler or the full BAS.",
+    minutes: 3,
+    books: ["au"],
+    steps: [
+      {
+        title: "Each quarter's BAS",
+        body:
+          "Worked out from the coded bank lines, invoices and pay runs, one row a quarter with its due date. " +
+          "Code a line and the figures change.",
+        page: "reports",
+        before: report("bas"),
+        target: q("#reports-body table"),
+      },
+      {
+        title: "Simpler or full",
+        body:
+          "The simpler BAS reports G1, 1A and 1B. Choose the full BAS for G2, G3, G10 and G11 and the ATO's " +
+          "worksheet beneath, G1 to G20. The camera bought in October is the capital purchase at G10.",
+        target: q("#reports-body select"),
+      },
+      {
+        title: "PAYG",
+        body:
+          "W1 and W2 are the wages and the tax withheld from them, from the pay runs. T1 is the quarter's " +
+          "instalment income; give the rate the ATO notified and T11 shows the instalment to pay.",
+        target: withText("#reports-body label, #reports-body p", /Instalment rate/),
+      },
+      {
+        title: "Open a figure",
+        body: "Every figure opens to the lines behind it, so you can check it before lodging.",
+        before: report("pl"),
+        task: "Press any account name in the report.",
+        target: visible("#reports-body button.link-button"),
+        done: opened,
+      },
+    ],
+  },
+  {
+    id: "au-payroll",
+    title: "Pay Sam: PAYG, super and STP",
+    summary: "A pay run with tax withheld, the super guarantee and when it is due, and the year-to-date figures STP reports.",
+    minutes: 3,
+    books: ["au"],
+    steps: [
+      {
+        title: "Employees",
+        body:
+          "Sam Okafor works for the studio. Each employee has a usual gross pay, whether the tax-free threshold " +
+          "is claimed, and their super fund.",
+        page: "aupayroll",
+        target: withText("#aupayroll-body h3", /Employees/),
+      },
+      {
+        title: "A pay run",
+        body:
+          "Choose the payday and the period, and each employee's gross. PAYG withholding and the super guarantee " +
+          "are worked out; the run posts wages, PAYG payable and super payable to the books.",
+        target: withText("#aupayroll-body h3", /New pay run/),
+      },
+      {
+        title: "Super and STP",
+        body:
+          "Each run shows when its super is due to the fund, and the year-to-date figures Single Touch Payroll " +
+          "reports for each employee. W1 and W2 on the BAS come from here.",
+        target: withText("#aupayroll-body h3", /Pay runs/),
+      },
+    ],
+  },
+  {
+    id: "au-year-end",
+    title: "Depreciation, rental and income tax",
+    summary: "Assets depreciated by the days held, the rental property schedule, and an estimate of the year's tax.",
+    minutes: 3,
+    books: ["au"],
+    steps: [
+      {
+        title: "Fixed assets",
+        body:
+          "The camera is depreciated by diminishing value over its effective life, for the days it was held: " +
+          "bought on 1 October, so 273 days of the first year. Give an effective life and the rate is worked out.",
+        page: "assets",
+        target: q("#assets-body table"),
+      },
+      {
+        title: "The rental",
+        body:
+          "7 Banksia Street's income and deductions, set out as the rental property schedule does. Residential " +
+          "rent is input taxed, so no GST either way.",
+        page: "reports",
+        before: report("aurental"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "The year's tax",
+        body:
+          "Mia's taxable income from the studio and the rental, the tax on it, the low income and small " +
+          "business offsets, and the Medicare levy. Only what these books hold: the rest is the return's.",
+        before: report("autax"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "For your accountant",
+        body: "The whole year in one Excel workbook: every report and every line, for an accountant to check.",
+        target: q("#report-download-excel"),
       },
     ],
   },

@@ -229,7 +229,7 @@ function employeesSection(body: HTMLElement): void {
             .join(", "),
           e.superFund,
           e.ended === undefined
-            ? button("Has left", () => {
+            ? button("Mark as left", () => {
                 const now = held();
                 void keep(
                   { ...now, employees: now.employees.map((x) => (x.id === e.id ? { ...x, ended: today() as IsoDate } : x)) },

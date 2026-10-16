@@ -1,4 +1,5 @@
 import { redraw, showPage } from "../app.js";
+import { noSalesTax } from "../country.js";
 import { record, saveEntities } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
@@ -96,7 +97,7 @@ function checkPointer(): HTMLElement {
   inner.append(
     note(
       "The AI accounts check reviews the finished year: whether each account holds what " +
-        "belongs in it, whether GST treatments match the registration, and what is missing. " +
+        `belongs in it, ${noSalesTax() ? "" : "whether GST treatments match the registration, "}and what is missing. ` +
         "It uses this key and OpenAccountants' tax guides, so answers cite their sources.",
     ),
   );

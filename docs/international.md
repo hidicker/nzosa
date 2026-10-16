@@ -63,11 +63,14 @@ Modules tagged `countries: ["nz"]`, and pages marked `data-module="nz"` or `busi
   - second-hand plant
 - The business activity statement by quarter: the simpler BAS's G1, 1A and 1B, with the due dates for lodging yourself, and PAYG instalment income (T1), with the instalment (T11) once the ATO's notified rate is entered
 - An income tax estimate for each owner: resident rates (2024–25 to 2027–28, with the 14% rate from 1 July 2027), the low income tax offset, the small business income tax offset on business income (not rent), and the Medicare levy with the single low-income reduction (the latest threshold held, for a year whose own is not set yet)
-- Checked against the OpenAccountants Australian guides (`au-gst-bas`, `au-rates-2026-27`)
+- The full BAS as well as the simpler one: G1, G2, G3, G10 and G11 with 1A and 1B, and the ATO's G1–G20 calculation worksheet beneath. G1 includes GST-free and input taxed sales; only entities registered for GST are on it (a rental kept as its own unregistered entity is not)
+- Payroll (`au-payroll.ts`, the Payroll page): employees, pay runs, PAYG withheld (an estimate from the year's rates, annualised, for the employer to check against the ATO's calculator and change), the super guarantee at 12% with the annual maximum contribution base from 2026-27, and when each pay's super is due (7 business days from 1 July 2026, quarterly before). Pay runs post wages and super, and what is owed to employees, the ATO and the funds; W1 and W2 go on the BAS
+- Single Touch Payroll: each pay event's figures and year to date, to report through STP-enabled software. NZOSA does not lodge STP itself
+- Checked against the OpenAccountants Australian guides (`au-gst-bas`, `australia-gst`, `au-rates-2026-27`, `australia-payroll`, `au-super-guarantee`)
 - Not covered:
-  - PAYG withholding
-  - the full BAS labels (G2–G20)
-  - Single Touch Payroll and super
+  - the ATO's Schedule 1 coefficients (PAYG is estimated) and Schedule 8 study loan withholding
+  - G13, G15 and the adjustment labels on the full BAS
+  - lodging STP, payroll tax, leave and termination payments
   - capital works and depreciation schedules
 
 **South Korea** (`kr-tax.ts`), with each line in Korean and English:

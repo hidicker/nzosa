@@ -145,6 +145,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
                 <span>Payroll</span>
               </button>
+              <button type="button" data-page="aupayroll" hidden data-module="aupayroll">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 2a4 4 0 1 0 0 8 4 4 0 0 0 0-8zM3 18v-1a7 7 0 0 1 14 0v1H3z"/></svg>
+                <span>Payroll</span>
+              </button>
             </div>
           </div>
           <div class="sidebar-group" data-group="organisation">
@@ -708,6 +712,16 @@
           What is sold, with its usual price and the account a sale is coded to. Writing an invoice line with an item's name fills in the rest. A product with a cost a unit is kept in stock: count it, and the count puts the Inventory account to what is on hand, the difference to cost of goods sold.
         </p>
         <div id="items-body"></div>
+      </section>
+
+      <section id="page-aupayroll" class="page" hidden>
+        <div class="page-head">
+          <h2>Payroll</h2>
+        </div>
+        <p class="page-hint">
+          Who is paid, each pay run's gross, the PAYG withheld and the super guarantee on it, and when each pay's super is due. A pay run posts the wages and super, and what is owed to the employees, the ATO and the funds.
+        </p>
+        <div id="aupayroll-body"></div>
       </section>
 
       <section id="page-time" class="page" hidden>

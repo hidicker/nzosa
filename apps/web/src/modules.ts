@@ -39,6 +39,7 @@ export type ModuleId =
   | "contacts"
   | "items"
   | "time"
+  | "aupayroll"
   | "classes"
   | "budgets"
   | "statements";
@@ -243,6 +244,16 @@ export const MODULES: readonly ModuleInfo[] = [
     holds: () => count((state.ledger.payroll?.employees ?? []).length, "employee"),
   },
   {
+    id: "aupayroll",
+    opens: "aupayroll",
+    countries: ["au"],
+    name: "Payroll",
+    what: "Employees, pay runs, PAYG withholding, super and Single Touch Payroll figures.",
+    basis: "data",
+    inferred: () => (state.ledger.auPayroll?.employees ?? []).length > 0,
+    holds: () => count((state.ledger.auPayroll?.employees ?? []).length, "employee"),
+  },
+  {
     id: "vehicle",
     countries: ["nz"],
     name: "Company vehicle",
@@ -268,6 +279,7 @@ export const MODULES: readonly ModuleInfo[] = [
 /** The modules Start here asks about: the ones nothing else answers. */
 export const ASKED: readonly ModuleId[] = [
   "payroll",
+  "aupayroll",
   "vehicle",
   "assets",
   "business",

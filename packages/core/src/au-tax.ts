@@ -1,6 +1,8 @@
 import type { FormDefinition } from "./form-schedules.js";
 import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
+import type { GstReturnResult } from "./gst.js";
+import type { Transaction } from "./types.js";
 
 /**
  * Australia: the rental property schedule that goes with item 21 of the
@@ -89,6 +91,75 @@ export function simplerBas(boxes: { box5?: number; box8?: number; box12?: number
   const a1 = boxes.box8 ?? 0;
   const b1 = (boxes.box12 ?? 0) + (boxes.box13 ?? 0);
   return { g1, a1, b1, net: a1 - b1 };
+}
+
+/**
+ * The full BAS's GST labels, from the same return the simpler BAS reads
+ * (OpenAccountants `australia-gst`, checked 16 October 2026). G1, G2, G3,
+ * G10 and G11 are lodged with 1A and 1B; the rest are the ATO's calculation
+ * worksheet, shown so the lodged figures can be followed.
+ *
+ *  - Sales: taxable and GST-free sales are in the return's lines; input
+ *    taxed sales (interest, residential rent) are among those it leaves out,
+ *    and G1 takes them back in, as the ATO asks. GST-free exports go to G2,
+ *    other GST-free sales to G3, input taxed to G4.
+ *  - Purchases: G10 capital and G11 the rest, each including purchases with
+ *    no GST in the price -- GST-free and input taxed costs -- which G14 then
+ *    takes back out. Wages, super, drawings, loans and tax are outside the BAS.
+ */
+export interface FullBas {
+  g1: Cents; g2: Cents; g3: Cents; g4: Cents; g5: Cents; g6: Cents; g7: Cents; g8: Cents; g9: Cents;
+  g10: Cents; g11: Cents; g12: Cents; g13: Cents; g14: Cents; g15: Cents; g16: Cents; g17: Cents; g18: Cents; g19: Cents; g20: Cents;
+  a1: Cents;
+  b1: Cents;
+}
+
+export function fullBas(
+  ret: Pick<GstReturnResult, "lines" | "excluded" | "boxes"> & { otherPurchases?: readonly { gross: Cents }[] },
+  options: { isCapital: (t: Transaction) => boolean; isExport: (t: Transaction) => boolean },
+): FullBas {
+  let g1 = 0, g2 = 0, g3 = 0, g4 = 0, g10 = 0, g11 = 0, g14 = 0;
+  const purchase = (t: Transaction, gross: Cents): void => {
+    if (options.isCapital(t)) g10 += gross;
+    else g11 += gross;
+  };
+  for (const { transaction, classification, amount } of ret.lines) {
+    if (classification.side === "sales") {
+      g1 += amount;
+      if (classification.treatment === "zero-rated") {
+        if (options.isExport(transaction)) g2 += amount;
+        else g3 += amount;
+      }
+    } else if (classification.side === "purchases") {
+      purchase(transaction, -amount);
+    }
+  }
+  for (const { transaction, classification, amount } of ret.excluded) {
+    if (classification.side === "sales" && classification.treatment === "exempt") {
+      g1 += amount;
+      g4 += amount;
+    } else if (classification.side === "purchases" && (classification.treatment === "exempt" || classification.treatment === "zero-rated")) {
+      purchase(transaction, -amount);
+      g14 += -amount;
+    }
+  }
+  for (const other of ret.otherPurchases ?? []) g11 += other.gross;
+  const g5 = g2 + g3 + g4;
+  const g6 = g1 - g5;
+  const g7 = 0;
+  const g8 = g6 + g7;
+  const g12 = g10 + g11;
+  const g13 = 0;
+  const g15 = 0;
+  const g16 = g13 + g14 + g15;
+  const g17 = g12 - g16;
+  const g18 = 0;
+  const g19 = g17 + g18;
+  return {
+    g1, g2, g3, g4, g5, g6, g7, g8, g9: ret.boxes.box8, g10, g11, g12, g13, g14, g15, g16, g17, g18, g19, g20: ret.boxes.box12,
+    a1: ret.boxes.box10,
+    b1: ret.boxes.box14,
+  };
 }
 
 /**

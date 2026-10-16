@@ -26,11 +26,13 @@ import {
   nec1099Threshold,
   profitAndLossByClass,
   selfEmploymentTax,
-  simplerBas,
+  auWithholding,
+  fullBas,
+  splitAccountLabel,
   usIncomeTaxSingle,
 } from "@nzosa/core";
-import type { ContractorPayment, Entity, FormDefinition, FormSchedule } from "@nzosa/core";
-import { postedJournals, varianceInput } from "../books.js";
+import type { ContractorPayment, Entity, FormDefinition, FormSchedule, FullBas, IsoDate, Transaction } from "@nzosa/core";
+import { postedJournals, registeredForGst, reportEngine, varianceInput } from "../books.js";
 import { state } from "../state.js";
 import { note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
@@ -560,7 +562,9 @@ export function renderBas(body: HTMLElement, year: number): void {
   body.append(title);
   let returns: ReturnType<typeof computeOurReturns> = [];
   try {
-    returns = computeOurReturns(varianceInput(), taxYearStart(year), taxYearEnd(year));
+    // Only what the GST-registered entities do: a rental kept apart and not
+    // registered has no place on the BAS.
+    returns = computeOurReturns({ ...varianceInput(), belongsTo: registeredForGst() }, taxYearStart(year), taxYearEnd(year));
   } catch {
     returns = [];
   }
@@ -575,13 +579,30 @@ export function renderBas(body: HTMLElement, year: number): void {
     rate = NaN;
   }
   const withRate = Number.isFinite(rate) && rate > 0;
-  const table = document.createElement("table");
-  table.className = "report-table";
-  table.innerHTML =
-    "<thead><tr><th>Quarter</th><th>Due</th><th>G1 Total sales</th><th>1A GST on sales</th><th>1B GST on purchases</th><th>Net</th>" +
-    `<th>T1 Instalment income</th>${withRate ? "<th>T11 PAYG instalment</th>" : ""}</tr></thead>`;
-  const tbody = document.createElement("tbody");
-  for (const quarter of basQuarters(year)) {
+  // Simpler or full BAS: which the ATO issues, so the person's to say. Kept in
+  // this browser, like the rate.
+  const formKey = "nzosa:bas-form";
+  let full = false;
+  try {
+    full = localStorage.getItem(formKey) === "full";
+  } catch {
+    full = false;
+  }
+  const payRuns = state.ledger.auPayroll?.payRuns ?? [];
+  const withPay = payRuns.length > 0;
+
+  // Each line's account, for capital purchases (G10) and exports (G2).
+  const engine = reportEngine();
+  const accountOf = (t: Transaction): { type: string; name: string } | undefined => {
+    const label = engine?.codeOf(t) ?? null;
+    if (label === null) return undefined;
+    const { code, name } = splitAccountLabel(label);
+    return state.chart.find((a) => (code !== "" && a.code === code) || a.name === name);
+  };
+  const isCapital = (t: Transaction): boolean => /fixed asset|non-current asset/i.test(accountOf(t)?.type ?? "");
+  const isExport = (t: Transaction): boolean => /export/i.test(accountOf(t)?.name ?? "");
+
+  const quarters = basQuarters(year).map((quarter) => {
     // Instalment income: the business and investment income in the books for
     // the quarter, GST out -- not salary, not capital gains. Not a company's,
     // which pays its own instalments.
@@ -589,24 +610,83 @@ export function renderBas(body: HTMLElement, year: number): void {
       .filter((e) => e.kind !== "personal" && !(e.structure === "company" && !isRental(e)))
       .reduce((sum, e) => sum + Math.max(0, entityPeriodReport(e, quarter)?.totalIncome ?? 0), 0);
     const inside = returns.filter((r) => r.period.to >= quarter.from && r.period.to <= quarter.to);
-    const sum = (pick: (b: Record<string, number | undefined>) => number): number =>
-      inside.reduce((t, r) => t + pick(r.boxes as unknown as Record<string, number | undefined>), 0);
-    const bas = simplerBas({
-      box5: sum((b) => b["box5"] ?? 0),
-      box8: sum((b) => b["box8"] ?? 0),
-      box12: sum((b) => b["box12"] ?? 0),
-      box13: sum((b) => b["box13"] ?? 0),
-    });
+    const labels = inside
+      .map((r) => fullBas(r, { isCapital, isExport }))
+      .reduce<FullBas | null>(
+        (t, b) => (t === null ? b : (Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v + (b[k as keyof FullBas] ?? 0)])) as unknown as FullBas)),
+        null,
+      );
+    const bas = labels ?? fullBas({ lines: [], excluded: [], boxes: { box8: 0, box10: 0, box12: 0, box14: 0 } as never }, { isCapital, isExport });
+    const pay = auWithholding(payRuns, quarter.from as IsoDate, quarter.to as IsoDate);
+    const t11 = withRate ? Math.round((t1 * rate) / 100) : 0;
+    // What the statement asks to be paid: GST, PAYG withheld, and the instalment.
+    const net = bas.a1 - bas.b1 + pay.w2 + t11;
+    return { quarter, t1, t11, bas, pay, net };
+  });
+
+  const formChoice = document.createElement("select");
+  formChoice.setAttribute("aria-label", "Which BAS the ATO issues");
+  for (const [value, text] of [
+    ["simpler", "Simpler BAS (G1, 1A, 1B)"],
+    ["full", "Full BAS (G1 to G20)"],
+  ] as const) {
+    const o = document.createElement("option");
+    o.value = value;
+    o.textContent = text;
+    o.selected = (value === "full") === full;
+    formChoice.append(o);
+  }
+  formChoice.addEventListener("change", () => {
+    try {
+      localStorage.setItem(formKey, formChoice.value);
+    } catch {
+      // Without storage the simpler BAS shows.
+    }
+    document.getElementById("report-kind")?.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  body.append(formChoice);
+
+  const table = document.createElement("table");
+  table.className = "report-table";
+  const head = [
+    "Quarter",
+    "Due",
+    "G1 Total sales",
+    ...(full ? ["G2 Exports", "G3 Other GST-free", "G10 Capital purchases", "G11 Other purchases"] : []),
+    "1A GST on sales",
+    "1B GST on purchases",
+    ...(withPay ? ["W1 Wages", "W2 PAYG withheld"] : []),
+    "T1 Instalment income",
+    ...(withRate ? ["T11 PAYG instalment"] : []),
+    "Net",
+  ];
+  table.innerHTML = `<thead><tr>${head.map((h) => `<th>${h}</th>`).join("")}</tr></thead>`;
+  const tbody = document.createElement("tbody");
+  for (const { quarter, t1, t11, bas, pay, net } of quarters) {
     const tr = document.createElement("tr");
     for (const [text, cls] of [
       [`${quarter.from} to ${quarter.to}`, "report-name"],
       [basDueDate(quarter.to), "report-note"],
       [money(bas.g1), "report-amount"],
+      ...(full
+        ? ([
+            [money(bas.g2), "report-amount"],
+            [money(bas.g3), "report-amount"],
+            [money(bas.g10), "report-amount"],
+            [money(bas.g11), "report-amount"],
+          ] as const)
+        : []),
       [money(bas.a1), "report-amount"],
       [money(bas.b1), "report-amount"],
-      [`${money(Math.abs(bas.net))} ${bas.net >= 0 ? "to pay" : "refund"}`, "report-amount"],
+      ...(withPay
+        ? ([
+            [money(pay.w1), "report-amount"],
+            [money(pay.w2), "report-amount"],
+          ] as const)
+        : []),
       [money(t1), "report-amount"],
-      ...(withRate ? ([[money(Math.round((t1 * rate) / 100)), "report-amount"]] as const) : []),
+      ...(withRate ? ([[money(t11), "report-amount"]] as const) : []),
+      [`${money(Math.abs(net))} ${net >= 0 ? "to pay" : "refund"}`, "report-amount"],
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;
@@ -616,13 +696,42 @@ export function renderBas(body: HTMLElement, year: number): void {
     tbody.append(tr);
   }
   table.append(tbody);
+  body.append(table);
+
+  if (full) {
+    // The ATO's calculation worksheet, quarter by quarter, so the lodged
+    // labels can be followed back.
+    const sheet = document.createElement("table");
+    sheet.className = "report-table";
+    const rows: [string, keyof FullBas][] = [
+      ["G1 Total sales", "g1"], ["G2 Export sales", "g2"], ["G3 Other GST-free sales", "g3"], ["G4 Input taxed sales", "g4"],
+      ["G5 G2 + G3 + G4", "g5"], ["G6 Sales subject to GST (G1 - G5)", "g6"], ["G7 Adjustments", "g7"], ["G8 G6 + G7", "g8"],
+      ["G9 GST on sales", "g9"], ["G10 Capital purchases", "g10"], ["G11 Non-capital purchases", "g11"], ["G12 G10 + G11", "g12"],
+      ["G13 Purchases for making input taxed sales", "g13"], ["G14 Purchases with no GST in the price", "g14"],
+      ["G15 Estimated purchases for private use", "g15"], ["G16 G13 + G14 + G15", "g16"],
+      ["G17 Purchases with GST (G12 - G16)", "g17"], ["G18 Adjustments", "g18"], ["G19 G17 + G18", "g19"], ["G20 GST on purchases", "g20"],
+    ];
+    sheet.innerHTML =
+      `<thead><tr><th>GST calculation worksheet</th>${quarters.map((q) => `<th>${q.quarter.to.slice(0, 7)}</th>`).join("")}</tr></thead>`;
+    const sb = document.createElement("tbody");
+    for (const [name, key] of rows) {
+      const tr = document.createElement("tr");
+      tr.innerHTML = `<td class="report-name">${name}</td>${quarters.map((q) => `<td class="report-amount">${money(q.bas[key])}</td>`).join("")}`;
+      sb.append(tr);
+    }
+    sheet.append(sb);
+    body.append(sheet);
+  }
+
   body.append(
-    table,
     note(
-      "The simpler BAS: G1 includes GST. Due dates are for lodging yourself; a registered tax agent " +
-        "lodging electronically usually has longer. T1 is the quarter's business and investment income " +
-        "in these books, GST out, without salary or capital gains: income from elsewhere goes on top. " +
-        "PAYG withholding for employees is not included.",
+      (full
+        ? "The full BAS lodges G1, G2, G3, G10, G11, 1A and 1B; the worksheet beneath is the ATO's, for following them. G13, G15 and the adjustments are not worked out here. "
+        : "The simpler BAS: G1, 1A and 1B. ") +
+        "G1 includes GST, and GST-free and input taxed sales such as interest. Due dates are for lodging yourself; a registered " +
+        "tax agent lodging electronically usually has longer. T1 is the quarter's business and investment income in these books, " +
+        "GST out, without salary or capital gains: income from elsewhere goes on top." +
+        (withPay ? " W1 and W2 are the pay runs on the Payroll page." : ""),
     ),
   );
   // The instalment rate from the ATO's notice, to work out T11.

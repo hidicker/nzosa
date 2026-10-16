@@ -54,6 +54,8 @@ export function reportLabeller(options: {
 export function reportLookups(options: {
   model: EntityModel;
   accounts: readonly { account: Account; label: string }[];
+  /** Who tax is owed to, in words: Inland Revenue where not said. */
+  authority?: string;
 }): {
   entityOfCode: Map<string, string>;
   sectionOf: (code: string) => ReportSection | null;
@@ -74,7 +76,7 @@ export function reportLookups(options: {
     classes.set(label, plClassForType(account.type));
     roles.set(
       label,
-      sectionForType(account.type) === null ? balanceSheetRole(account.type, account.name) : null,
+      sectionForType(account.type) === null ? balanceSheetRole(account.type, account.name, options.authority) : null,
     );
   }
 

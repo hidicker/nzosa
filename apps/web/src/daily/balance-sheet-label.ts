@@ -11,5 +11,7 @@ export function balanceSheetLabel(line: { code: string; name: string }): string 
   // A bank account named in the books for its own name ("checking",
   // "Checking"), not a code anybody gave it.
   if (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === code) return name;
+  // Nor an id the books made up ("au-business"): no number in it to tell anybody anything.
+  if (/^[a-z][a-z-]*$/.test(code)) return name;
   return `${code} ${name}`;
 }

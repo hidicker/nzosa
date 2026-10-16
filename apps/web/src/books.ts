@@ -39,6 +39,7 @@ import {
   decodeText,
   invoiceBalancesFor,
   payrollJournal,
+  auPayRunJournal,
   postLedger,
   prepaymentAdjustments,
   readXlsx,
@@ -1008,6 +1009,25 @@ function gstBelongsTo(): { belongsTo?: (account: string, code: string) => boolea
       const whose = code === "" ? undefined : entityOf(code);
       return whose !== undefined ? whose === entity : own.has(account);
     },
+  };
+}
+
+/**
+ * Lines that belong to an entity registered for GST: coded to one, or with no
+ * entity in the coding, on a bank account one of them uses. What a BAS covers
+ * -- a rental kept as an entity of its own and not registered stays off it,
+ * its rent and costs included.
+ */
+export function registeredForGst(): (account: string, code: string) => boolean {
+  const entities = state.ledger.entities?.entities ?? [];
+  const registered = new Set(entities.filter((e) => e.gstRegistered !== false).map((e) => e.id));
+  const banks = state.ledger.entities?.banks ?? {};
+  const entityOf = entityOfCoding();
+  return (account, code) => {
+    const whose = code === "" ? undefined : entityOf(code);
+    if (whose !== undefined) return registered.has(whose);
+    const users = banks[account] ?? [];
+    return users.length === 0 || users.some((id) => registered.has(id));
   };
 }
 
@@ -2061,6 +2081,7 @@ export function postedJournals(): PostedJournal[] {
       ...depreciationJournals(),
       ...disposalJournals({ resolveAccount }),
       ...payrollJournals(),
+      ...auPayrollJournals(),
       ...stockCostJournals(),
     ],
   });
@@ -2225,6 +2246,22 @@ function payrollJournals(): PostedJournal[] {
   return (state.ledger.payroll?.payRuns ?? [])
     .map((run) => payrollJournal(run, accounts))
     .filter((j): j is PostedJournal => j !== null);
+}
+
+/** Australian pay runs, posted to the payroll accounts the Payroll page adds to the chart. */
+function auPayrollJournals(): PostedJournal[] {
+  const runs = state.ledger.auPayroll?.payRuns ?? [];
+  if (runs.length === 0) return [];
+  const chosen = state.ledger.auPayroll?.accounts ?? {};
+  const find = (code: string): { code: string; name: string } => ({ code, name: state.chart.find((a) => a.code === code)?.name ?? code });
+  const accounts = {
+    wages: find(chosen.wages ?? "477"),
+    superExpense: find(chosen.superExpense ?? "478"),
+    paygPayable: find(chosen.paygPayable ?? "825"),
+    superPayable: find(chosen.superPayable ?? "826"),
+    wagesPayable: find(chosen.wagesPayable ?? "804"),
+  };
+  return runs.map((run) => auPayRunJournal(run, accounts)).filter((j): j is PostedJournal => j !== null);
 }
 
 function chartName(code: string): string {

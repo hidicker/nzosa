@@ -75,10 +75,11 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
   {
     id: "au",
     label: "A photographer with a rental (Australia)",
-    shows: "Australian books: GST on the BAS, PAYG instalments, the rental property schedule and the tax estimate",
+    shows: "Australian books: the BAS (simpler or full, PAYG withheld and instalments), payroll with super, the rental property schedule and the tax estimate",
     about:
       "These demo books are invented and kept as Australian books: Wattle & Lens Photography, a sole trader " +
-      "registered for GST in Brisbane, and a rental house in Newcastle, for the year to 30 June 2026.",
+      "registered for GST in Brisbane with a part-time assistant on monthly pay, and a rental house in Newcastle, " +
+      "for the year to 30 June 2026.",
     page: "reconcile",
     ready: true,
   },

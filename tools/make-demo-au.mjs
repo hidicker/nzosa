@@ -16,6 +16,7 @@
 import { mkdirSync, writeFileSync } from "node:fs";
 import { dirname, join } from "node:path";
 import { fileURLToPath } from "node:url";
+import { auPayLine, earnedBeforePay, superDueDate } from "../packages/core/dist/index.js";
 
 const root = join(dirname(fileURLToPath(import.meta.url)), "..");
 const out = join(root, "apps/web/public/demo/au");
@@ -48,6 +49,12 @@ const ACCOUNTS = [
   ["554", "Interest on loans", "Expense", rental, "GST Free Expenses", "exempt"],
   ["555", "Landlord insurance", "Expense", rental, "BAS Excluded", "exempt"],
   ["556", "Repairs and maintenance (rental)", "Expense", rental, "BAS Excluded", "exempt"],
+  ["477", "Wages and Salaries", "Expense", studio, "BAS Excluded", "out-of-scope"],
+  ["478", "Superannuation", "Expense", studio, "BAS Excluded", "out-of-scope"],
+  ["804", "Wages Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
+  ["825", "PAYG Withholdings Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
+  ["826", "Superannuation Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
+  ["610", "Accounts Receivable", "Accounts Receivable", studio, "BAS Excluded", "out-of-scope"],
   ["820", "GST", "Current Liability", studio, "BAS Excluded", "exempt"],
   ["880", "Owner A Drawings", "Equity", studio, "BAS Excluded", "exempt"],
   ["960", "Retained Earnings", "Equity", studio, "BAS Excluded", "exempt"],
@@ -97,7 +104,8 @@ const jobs = [
   [5, 22, 1100, "Kurrajong Physio"],
   [6, 12, 2640, "Riverbend Weddings"],
 ];
-for (const [m, d, amount, who] of jobs) line(BUSINESS, day(m, d), cents(amount), who, "200", "Photography, incl GST");
+// Each job's fee, GST in: a round figure, so a tenth of it is the GST in an eleventh.
+for (const [m, d, amount, who] of jobs) line(BUSINESS, day(m, d), cents(Math.round((amount * 1.6) / 11) * 11), who, "200", "Photography, incl GST");
 
 for (const m of MONTHS) {
   line(BUSINESS, day(m, 2), -cents(1320), "West End Studios", "469", "Studio rent, incl GST");
@@ -138,6 +146,25 @@ line(RENTAL, day(10, 1), -cents(1640), "Allianz Landlord Insurance", "555", "Ann
 line(RENTAL, day(1, 28), -cents(385), "Coastal Plumbing", "556", "Hot water system repair");
 line(RENTAL, day(6, 22), -cents(220), "Newcastle Garden Care", undefined);
 
+// --- a part-time studio assistant, paid monthly ---------------------------------------------
+const assistant = {
+  id: "emp-sam",
+  name: "Sam Okafor",
+  taxFreeThreshold: true,
+  tfnProvided: true,
+  superFund: "Australian Retirement Trust",
+  payFrequency: "monthly",
+  usualGross: cents(2600),
+};
+const payRuns = [];
+for (const m of MONTHS) {
+  const end = new Date(Date.UTC(m >= 7 ? 2025 : 2026, m, 0)).toISOString().slice(0, 10);
+  const payDate = end;
+  const pay = auPayLine(assistant, assistant.usualGross, payDate, earnedBeforePay(payRuns, assistant.id, payDate));
+  payRuns.push({ id: `run-${end}`, payDate, periodStart: `${end.slice(0, 8)}01`, periodEnd: end, lines: [pay] });
+  line(BUSINESS, payDate, -pay.net, "Sam Okafor", "804", "Net pay");
+}
+
 // --- each BAS: the GST the quarter's lines carry, paid when due -----------------
 // Worked as the BAS works it here: one eleventh of each side's total, not of each line.
 const quarters = [
@@ -156,12 +183,20 @@ for (const q of quarters) {
   }
   const net = Math.round(sales / 11) - Math.round(purchases / 11);
   if (net > 0) line(BUSINESS, q.paid, -net, "ATO", "820", `BAS ${q.from.slice(0, 7)} to ${q.to.slice(0, 7)}, GST`);
+  const withheld = payRuns.filter((r) => r.payDate >= q.from && r.payDate <= q.to).reduce((sum, r) => sum + r.lines[0].payg, 0);
+  if (withheld > 0) line(BUSINESS, q.paid, -withheld, "ATO", "825", `BAS ${q.from.slice(0, 7)} to ${q.to.slice(0, 7)}, PAYG withheld`);
+}
+// Super for each quarter, paid to the fund by its due date (before payday super).
+for (const q of [...quarters, { from: "2026-04-01", to: "2026-06-30" }]) {
+  const owed = payRuns.filter((r) => r.payDate >= q.from && r.payDate <= q.to).reduce((sum, r) => sum + r.lines[0].superGuarantee, 0);
+  const due = superDueDate(q.to);
+  if (owed > 0 && due <= TO) line(BUSINESS, due, -owed, "Australian Retirement Trust", "826", "Super guarantee, Sam Okafor");
 }
 // PAYG instalments the ATO notified: the owner's income tax paid ahead, so drawings.
 for (const paid of ["2025-10-28", "2026-02-27", "2026-04-28"]) line(BUSINESS, paid, -cents(1240), "ATO", "880", "PAYG instalment");
 
 // --- put it together -----------------------------------------------------------
-const opening = { [BUSINESS]: cents(16800), [RENTAL]: cents(5200), "960": -cents(22000) };
+const opening = { [BUSINESS]: cents(22800), [RENTAL]: cents(5200), "960": -cents(28000) };
 if (Object.values(opening).reduce((s, v) => s + v, 0) !== 0) throw new Error("opening balances do not balance");
 
 const sorted = [...lines].sort((a, b) => a.date.localeCompare(b.date) || a.bank.localeCompare(b.bank) || b.amount - a.amount);
@@ -195,7 +230,7 @@ sorted.forEach((one, i) => {
   if (balance < 0) throw new Error(`${one.bank} goes overdrawn on ${one.date}`);
   if (one.code !== undefined) {
     const a = account.get(one.code);
-    const side = a.code === "820" || a.type === "Equity" ? "none" : one.amount > 0 ? "sales" : "purchases";
+    const side = a.code === "820" || a.type === "Equity" || a.type === "Current Liability" ? "none" : one.amount > 0 ? "sales" : "purchases";
     overrides[id] = {
       confirmed: true,
       code: `${a.name} - ${a.code}`,
@@ -306,6 +341,7 @@ const ledger = {
   invoices,
   contacts,
   exampleAiSuggestions,
+  auPayroll: { employees: [assistant], payRuns },
   modules: {},
   taxExtras: [],
   singleEntityConfirmed: false,

@@ -1,5 +1,6 @@
 import { entityId, writeQueue } from "@nzosa/core";
 import type {
+  AuPayroll,
   Item,
   BankLayout,
   StockCount,
@@ -425,6 +426,8 @@ export interface StoredLedger {
   /** What these books are, for the briefing that goes with every question. */
   booksAbout?: string;
   payroll?: PayrollData;
+  /** Australian payroll: employees, pay runs, PAYG withheld and super. Kept with the decisions. */
+  auPayroll?: AuPayroll;
   /** Invoices set to repeat. Kept with the decisions: a person chose them. */
   recurring?: RecurringInvoice[];
 }
@@ -861,6 +864,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.budgets && Object.keys(ledger.budgets).length > 0 ? { budgets: ledger.budgets } : {}),
     ...(ledger.items && ledger.items.length > 0 ? { items: ledger.items } : {}),
     ...(ledger.timeEntries && ledger.timeEntries.length > 0 ? { timeEntries: ledger.timeEntries } : {}),
+    ...(ledger.auPayroll && (ledger.auPayroll.employees.length > 0 || ledger.auPayroll.payRuns.length > 0) ? { auPayroll: ledger.auPayroll } : {}),
     ...(ledger.stockCounts && ledger.stockCounts.length > 0 ? { stockCounts: ledger.stockCounts } : {}),
     ...(ledger.bankLayouts && Object.keys(ledger.bankLayouts).length > 0 ? { bankLayouts: ledger.bankLayouts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),

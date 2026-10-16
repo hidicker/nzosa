@@ -163,7 +163,7 @@ export function plClassForType(type: string): PlClass | null {
  * several things -- a current liability may be wages, PAYE, or a suspense
  * account waiting to be cleared.
  */
-export function balanceSheetRole(type: string, name: string): string {
+export function balanceSheetRole(type: string, name: string, authority = "Inland Revenue"): string {
   const t = type.trim().toLowerCase();
   const n = name.toLowerCase();
   if (t === "bank") return "Bank account — money in and out";
@@ -179,7 +179,10 @@ export function balanceSheetRole(type: string, name: string): string {
   if (t === "retained earnings") return "Past years' profits";
   if (/loan/.test(n)) return "Loan — borrowed or repaid, not an expense";
   if (/paye|kiwisaver/.test(n)) return "PAYE and KiwiSaver owed to Inland Revenue";
-  if (/withholding|income tax|provisional/.test(n)) return "Income tax — paid, or owed to Inland Revenue";
+  // Australia's payroll accounts: what is withheld from pay, and super owed to funds.
+  if (/payg withholding/.test(n)) return `PAYG withheld — owed to the ${authority}`;
+  if (/super(annuation)? payable/.test(n)) return "Super guarantee owed to the funds";
+  if (/withholding|income tax|provisional/.test(n)) return `Income tax — paid, or owed to ${authority === "ATO" ? "the ATO" : authority}`;
   if (/wages/.test(n)) return "Wages owed";
   if (t === "rounding" || /rounding/.test(n)) return "Rounding";
   if (/suspense/.test(n)) return "Suspense — waiting to be sorted";

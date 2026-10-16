@@ -187,6 +187,8 @@ export function reportLookups(): {
   return coreReportLookups({
     model: state.ledger.entities ?? emptyEntityModel(),
     accounts: accountsForEditing(),
+    // "the ATO" reads better than "ATO" in a sentence; New Zealand's is a name.
+    authority: booksCountry().id === "au" ? "ATO" : booksCountry().taxAuthority.name,
   });
 }
 

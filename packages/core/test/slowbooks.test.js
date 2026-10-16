@@ -87,3 +87,22 @@ test("every posting comes across, as SlowBooks has them", () => {
   assert.ok(books.reference.some((r) => r.amount === -1500 && /Bank Charges/.test(r.code)));
   assert.ok(books.reference.some((r) => r.amount === 500000 && /Owner's Equity/.test(r.code)));
 });
+
+test("added to books already in use: the same account whatever its capitals, and no number given twice", () => {
+  const chart = {
+    accounts: [
+      { code: "2000", name: "Accounts payable", type: "Accounts Payable", taxCode: "" },
+      { code: "4000", name: "Sales", type: "Revenue", taxCode: "" },
+      { code: "", name: "Checking", type: "Bank", taxCode: "" },
+    ],
+    debitNormal: ["Checking"],
+    bankNames: ["Checking"],
+    cardNames: [],
+  };
+  const books = parseSlowBooksBooks(GL, chart);
+  const codes = books.chart.accounts.map((a) => a.code).filter((c) => c !== "");
+  assert.equal(new Set(codes).size, codes.length);
+  assert.equal(books.chart.accounts.filter((a) => /accounts payable/i.test(a.name)).length, 1);
+  assert.equal(books.chart.accounts.find((a) => a.name === "Service Income")?.code, "4001");
+  assert.deepEqual(books.problems, []);
+});

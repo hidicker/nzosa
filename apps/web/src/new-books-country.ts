@@ -1,4 +1,4 @@
-import { JURISDICTIONS, accountEntityKey, starterChartFor } from "@nzosa/core";
+import { JURISDICTIONS, accountEntityKey, jurisdictionOf, starterChartFor } from "@nzosa/core";
 import type { Account } from "@nzosa/core";
 import { edition } from "./edition.js";
 import { state } from "./state.js";
@@ -110,5 +110,21 @@ export function countryLocked(): boolean {
     (led.manualJournals ?? []).length > 0 ||
     led.openingBalances !== undefined ||
     (led.filedReturns ?? []).length > 0
+  );
+}
+
+/**
+ * Whether the chart is still the country's starter chart with nothing coded
+ * to it: no codings, splits, journals or rules of anyone's making. Such a chart
+ * is replaced outright by one brought from another system, not merged with it.
+ */
+export function isUnusedStarterChart(): boolean {
+  if (!isStarterChart(state.chart, jurisdictionOf(state.ledger.jurisdiction).id)) return false;
+  const rules = state.rules as { rules?: unknown[] } | undefined;
+  return (
+    Object.keys(state.ledger.overrides ?? {}).length === 0 &&
+    Object.keys(state.ledger.splits ?? {}).length === 0 &&
+    (state.ledger.manualJournals ?? []).length === 0 &&
+    (rules?.rules ?? []).length === 0
   );
 }

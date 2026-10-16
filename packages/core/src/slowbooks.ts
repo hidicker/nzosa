@@ -192,14 +192,35 @@ export function parseSlowBooksBooks(
   // report's for the rest.
   let used = read.chart;
   if (chart !== null && chart.accounts.length > 0) {
-    const have = new Set(chart.accounts.map((a) => a.name));
-    const extra = read.chart.accounts.filter((a) => !have.has(a.name));
+    // The same account whatever its capitals: "Accounts payable" is
+    // "Accounts Payable". The report's name is kept for what it names.
+    const key = (name: string): string => name.trim().toLowerCase();
+    const have = new Map(chart.accounts.map((a) => [key(a.name), a.name]));
+    const taken = new Set(chart.accounts.map((a) => a.code.trim()).filter((c) => c !== ""));
+    // An added account whose number the chart already gives another account
+    // takes the next free one in its range, so no number names two accounts.
+    const extra = read.chart.accounts
+      .filter((a) => !have.has(key(a.name)))
+      .map((a) => {
+        let code = a.code.trim();
+        if (code !== "" && taken.has(code)) {
+          let n = Number(code);
+          while (Number.isFinite(n) && taken.has(String(n))) n += 1;
+          code = Number.isFinite(n) ? String(n) : "";
+        }
+        if (code !== "") taken.add(code);
+        return { ...a, code };
+      });
+    const own = (n: string): string => have.get(key(n)) ?? n;
+    const isNew = (n: string): boolean => !have.has(key(n));
     used = {
       accounts: [...chart.accounts, ...extra],
-      debitNormal: [...chart.debitNormal, ...read.chart.debitNormal.filter((n) => !have.has(n))],
-      bankNames: [...chart.bankNames, ...read.chart.bankNames.filter((n) => !have.has(n))],
-      cardNames: [...chart.cardNames, ...read.chart.cardNames.filter((n) => !have.has(n))],
+      debitNormal: [...chart.debitNormal, ...read.chart.debitNormal.filter(isNew)],
+      bankNames: [...chart.bankNames, ...read.chart.bankNames.filter(isNew)],
+      cardNames: [...chart.cardNames, ...read.chart.cardNames.filter(isNew)],
     };
+    // The entries name accounts as the report does; the chart's own spelling is used.
+    read.entries = read.entries.map((e) => ({ ...e, legs: e.legs.map((l) => ({ ...l, account: own(l.account) })) }));
   }
   return booksFromEntries(
     { ...read, chart: used },

@@ -81,8 +81,8 @@ import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
 import { settleInvoicesExactly } from "../daily/reconcile-page.js";
 import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../books.js";
-import { booksCountry, booksLocale } from "../country.js";
-import { isStarterChart } from "../new-books-country.js";
+import { booksLocale } from "../country.js";
+import { isUnusedStarterChart } from "../new-books-country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
 /** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
@@ -496,7 +496,7 @@ export async function loadCheckFiles(files: File[]): Promise<void> {
     // accounts' entity, and the tax treatments and names it left on its
     // numbers, go with it, or the new chart's 3000 Opening Balance Equity is
     // shown as the starter's 3000 Owner contributions.
-    if (unusedStarterChart()) {
+    if (isUnusedStarterChart()) {
       const model = state.ledger.entities;
       if (model !== undefined) state.ledger = { ...state.ledger, entities: { ...model, accounts: {} } };
       const rules = state.rules as RuleFileShape | undefined;
@@ -3491,20 +3491,6 @@ export async function applyChartColumns(chart: readonly Account[]): Promise<void
   state.persistent = await save(state.ledger);
 }
 
-/**
- * Whether the chart is still the country's starter chart with nothing coded
- * to it: no codings, splits, journals or rules of anyone's making.
- */
-function unusedStarterChart(): boolean {
-  if (!isStarterChart(state.chart, booksCountry().id)) return false;
-  const rules = state.rules as RuleFileShape | undefined;
-  return (
-    Object.keys(state.ledger.overrides ?? {}).length === 0 &&
-    Object.keys(state.ledger.splits ?? {}).length === 0 &&
-    (state.ledger.manualJournals ?? []).length === 0 &&
-    (rules?.rules ?? []).length === 0
-  );
-}
 
 /**
  * Books brought across from QuickBooks or SlowBooks before their chart was

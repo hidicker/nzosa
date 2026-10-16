@@ -42,6 +42,7 @@ import type {
 } from "@nzosa/core";
 import { state } from "./state.js";
 import { booksCountry } from "./country.js";
+import { isUnusedStarterChart } from "./new-books-country.js";
 
 /** Read a sheet whose columns were pointed out by hand. */
 export function readChosenColumns(
@@ -271,7 +272,10 @@ export async function loadReference(
         continue;
       }
       if (isIif(text) || isSlowBooksLedger(text)) {
-        const known = chart.length > 0 ? chart : state.chart;
+        // The books' own chart to add to -- but not an unused starter chart,
+        // which the file's accounts replace: merged, SlowBooks' 4000 Service
+        // Income sat beside the starter's 4000 Sales on the same number.
+        const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
         const read = (isIif(text) ? parseIifBooks : parseSlowBooksBooks)(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
         if (read.chart.accounts !== known) chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
         lines.push(...read.reference);

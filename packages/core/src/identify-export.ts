@@ -9,6 +9,7 @@ import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
 import { isProductList } from "./product-lists.js";
 import { isDueDateList } from "./document-dates.js";
+import { isQuickBooksTrialBalance } from "./trial-balance.js";
 import { isContactList } from "./contact-lists.js";
 
 /**
@@ -189,6 +190,8 @@ export function identifyExport(text: string): Identified {
   if (isSlowBooksLedger(text)) {
     return { kind: "slowbooks-ledger", what: "SlowBooks general ledger" };
   }
+  // QuickBooks Online's trial balance: opening balances, as Xero's is.
+  if (isQuickBooksTrialBalance(text)) return { kind: "trial-balance", what: "QuickBooks trial balance" };
   if (isQuickBooksChart(text)) {
     return { kind: "quickbooks-chart", what: "QuickBooks chart of accounts" };
   }

@@ -272,3 +272,66 @@ export function openingBalancesFrom(
     skipped,
   };
 }
+
+/**
+ * QuickBooks Online's Trial Balance: a title, "As of Oct 15, 2026", and rows
+ * of Account Name, Debit and Credit -- no codes and no types, which come from
+ * the chart the same books were given, matched by the account's whole name.
+ */
+export function isQuickBooksTrialBalance(text: string): boolean {
+  const head = text.slice(0, 2000);
+  return /Trial Balance/i.test(head) && findHeaderRow(parseCsvRecords(head), ["Account Name", "Debit", "Credit"]) !== null;
+}
+
+export function parseQuickBooksTrialBalance(
+  text: string,
+  chart: readonly { code: string; name: string; type: string }[],
+): TrialBalance {
+  const records = parseCsvRecords(text);
+  const header = findHeaderRow(records, ["Account Name", "Debit", "Credit"]);
+  const empty: TrialBalance = { asAt: null, dates: [], accounts: [], problems: [], classFromType: true };
+  if (header === null) return { ...empty, problems: [{ message: "Not a QuickBooks trial balance.", line: 0 }] };
+  const months: Record<string, string> = {
+    jan: "01", feb: "02", mar: "03", apr: "04", may: "05", jun: "06",
+    jul: "07", aug: "08", sep: "09", oct: "10", nov: "11", dec: "12",
+  };
+  const heading = records.slice(0, header.index).map((r) => r.fields.join(" ")).join(" ");
+  const dated = /As of\s+([A-Za-z]{3,9})\s+(\d{1,2}),?\s+(\d{4})/i.exec(heading);
+  const month = dated === null ? undefined : months[(dated[1] ?? "").slice(0, 3).toLowerCase()];
+  const asAt: IsoDate | null =
+    dated === null || month === undefined ? null : `${dated[3]}-${month}-${(dated[2] ?? "").padStart(2, "0")}`;
+  if (asAt === null) return { ...empty, problems: [{ message: "No 'As of' date in the heading.", line: 0 }] };
+
+  const byName = new Map(chart.map((a) => [a.name.trim().toLowerCase(), a]));
+  const columns = records[header.index]?.fields ?? [];
+  const nameAt = columns.findIndex((c) => c.trim() === "Account Name");
+  const debitAt = columns.findIndex((c) => c.trim() === "Debit");
+  const creditAt = columns.findIndex((c) => c.trim() === "Credit");
+  const accounts: TrialBalanceAccount[] = [];
+  const problems: { message: string; line: number }[] = [];
+  for (const record of records.slice(header.index + 1)) {
+    const name = (record.fields[nameAt] ?? "").trim();
+    // The total row, and the report's footer ("Accrual Basis ..."), which has no figures.
+    const figures = `${record.fields[debitAt] ?? ""}${record.fields[creditAt] ?? ""}`.trim();
+    if (name === "" || /^total\b/i.test(name) || figures === "") continue;
+    const debit = parseAmount((record.fields[debitAt] ?? "").replace(/[$,]/g, "") || "0", "USD");
+    const credit = parseAmount((record.fields[creditAt] ?? "").replace(/[$,]/g, "") || "0", "USD");
+    if (debit === null || credit === null) {
+      if ((record.fields[debitAt] ?? "") !== "" || (record.fields[creditAt] ?? "") !== "") {
+        problems.push({ message: `Unreadable amount for ${name}`, line: record.line });
+      }
+      continue;
+    }
+    const charted = byName.get(name.toLowerCase());
+    if (charted === undefined) problems.push({ message: `${name} is not in the chart`, line: record.line });
+    const type = charted?.type ?? "";
+    accounts.push({
+      code: charted?.code ?? "",
+      name,
+      type,
+      klass: classFromType(type),
+      byDate: { [asAt]: debit - credit },
+    });
+  }
+  return { asAt, dates: [asAt], accounts, problems, classFromType: true };
+}

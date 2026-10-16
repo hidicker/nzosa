@@ -42,6 +42,8 @@ import {
   postLedger,
   prepaymentAdjustments,
   readXlsx,
+  readXls,
+  isXls,
   vehicleAdjustment,
   emptyTripLog,
   incomeYearOf,
@@ -1853,6 +1855,11 @@ export function reportEngine(): CodingEngine | null {
  * to. The sheet is turned into the text the reader already understands.
  */
 export async function asCsvText(name: string, bytes: Uint8Array): Promise<string> {
+  // The old Excel format: QuickBooks Online exports its lists in it.
+  if (isXls(bytes)) {
+    const sheet = readXls(bytes).sheets[0];
+    if (sheet !== undefined) return sheetToCsv(sheet);
+  }
   // A spreadsheet is a zip, and every zip starts "PK". Checked as well as the
   // extension, because a spreadsheet saved as .csv is still a zip inside.
   const zipped = bytes[0] === 0x50 && bytes[1] === 0x4b;

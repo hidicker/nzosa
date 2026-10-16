@@ -11,7 +11,7 @@ import { amountCell, nameCell, note } from "../ui.js";
 import { accountEntityKey, emptyEntityModel, financialYearBalances, parseAmount } from "@nzosa/core";
 import type { Account, Cents, FinancialYearBalances, IsoDate, OpeningBalances } from "@nzosa/core";
 import { asCsvText } from "../books.js";
-import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance } from "@nzosa/core";
+import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance, isQuickBooksTrialBalance, parseQuickBooksTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
@@ -1290,7 +1290,8 @@ function dayBeforeIso(iso: string): string {
 export async function loadOpeningBalances(file: File): Promise<boolean> {
   const bytes = new Uint8Array(await file.arrayBuffer());
   const text = await asCsvText(file.name, bytes);
-  const parsed = parseTrialBalance(text);
+  // QuickBooks Online's has no codes or types: the chart supplies them by name.
+  const parsed = isQuickBooksTrialBalance(text) ? parseQuickBooksTrialBalance(text, state.chart) : parseTrialBalance(text);
   if (parsed.accounts.length === 0) {
     // A trial balance with nothing in it -- an organisation that had no
     // balances on that date -- is said as that, not as some other file.

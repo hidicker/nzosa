@@ -469,7 +469,7 @@
             <br />Read and parsed in this tab. Nothing is uploaded.
           </p>
           <button id="check-pick" type="button" class="primary">Choose file</button>
-          <input id="check-input" type="file" accept=".csv,.xlsx" multiple hidden />
+          <input id="check-input" type="file" accept=".csv,.xlsx,.xls" multiple hidden />
         </div>
         <div id="check-body"></div>
       </section>
@@ -529,7 +529,7 @@
         <div id="setup-drop" class="dropzone dropzone-mini" hidden>
           <span class="dropzone-mini-text">Drop exported files here, or</span>
           <button id="setup-pick" type="button" class="small">Choose files</button>
-          <input id="setup-input" type="file" accept=".csv,.xlsx,.txt,.iif" multiple hidden />
+          <input id="setup-input" type="file" accept=".csv,.xlsx,.xls,.txt,.iif" multiple hidden />
           <div id="setup-loaded"></div>
         </div>
       </section>
@@ -915,7 +915,7 @@
             <button id="opening-bank" type="button" class="primary">Enter bank balances</button>
             <button id="opening-enter" type="button">Enter opening balances</button>
             <button id="opening-pick" type="button">Import trial balance&hellip;</button>
-            <input id="opening-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
+            <input id="opening-input" type="file" accept=".csv,.xlsx,.xls,text/csv" hidden />
           </div>
         </div>
         <p class="page-hint">
@@ -985,7 +985,7 @@
           <span class="dropzone-sub">
             or drop bank exports here, several at once: <span data-module="nz">BNZ, ANZ and Wise CSVs, and Xero's bank account export (CSV or Excel).</span><span data-module="us au kr generic" hidden>your bank's CSV, OFX or QFX, Wise, or the bank register exported from QuickBooks.</span> Read in this tab; nothing is uploaded.
           </span>
-          <input id="file-input" type="file" accept=".csv,.xlsx,.txt,.ofx,.qfx,text/csv" multiple hidden />
+          <input id="file-input" type="file" accept=".csv,.xlsx,.xls,.txt,.ofx,.qfx,text/csv" multiple hidden />
           <div id="bank-convert"></div>
           <!-- Only one currency is kept (NZD), so there is no currency to choose. -->
           <details class="import-options">

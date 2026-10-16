@@ -1352,7 +1352,7 @@ function dropZone(): HTMLElement {
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".csv,.xlsx,.txt,.iif";
+  input.accept = ".csv,.xlsx,.xls,.txt,.iif";
   input.multiple = true;
   input.hidden = true;
 
@@ -1735,22 +1735,40 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
           ],
           [
             "General ledger",
-            "Reports > General ledger: All dates; Customise > Rows/Columns to add Class. Export",
+            "Reports > General ledger. Report period: All dates. Customise > Rows/Columns: add Class. Export to CSV",
             "Every posting: bank and card lines with their coding, invoices and bills with their payments, " +
               "transfers, journals, and classes",
             "Required",
           ],
           [
+            "Invoice List",
+            "Reports > Invoice List. Report period: All dates. Customise: all columns. Export to CSV",
+            "When each invoice is due, and its terms, for reminders and the aged reports",
+            "Recommended",
+          ],
+          [
+            "A/P Aging Detail",
+            "Reports > A/P Aging Detail, as of today. Customise: all columns. Export to CSV",
+            "When each unpaid bill is due",
+            "Recommended",
+          ],
+          [
             "Customers and Vendors",
-            "Sales > Customers, and Expenses > Vendors: the export button above each list",
+            "Sales > Customers, and Expenses > Vendors: the export button above each list (Excel)",
             "Addresses, emails, phones and terms",
             "Recommended",
           ],
           [
             "Products and services",
-            "Sales > Products and services > Export",
+            "Sales > Products and services > Export (Excel)",
             "The price list, and stock on hand",
             "If you sell products or keep stock",
+          ],
+          [
+            "Trial Balance",
+            "Reports > Trial Balance, as of the day before the first date in your general ledger. Export to CSV",
+            "Opening balances, when the general ledger doesn't go back to the start. Not needed with All dates",
+            "Only without All dates",
           ],
         ],
       ),
@@ -1799,9 +1817,8 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
       ),
     ),
     note(
-      "Drop them all together: NZOSA reads the accounts and the ledger first, then the rest. Open invoices " +
-        "from QuickBooks Online come in with no due date yet, so set the terms on the customer or the date on " +
-        "the invoice for reminders to know what is overdue.",
+      "Drop them all together, CSV or Excel: NZOSA reads the accounts and the ledger first, then the rest. " +
+        "Where a report asks for a date range, choose All dates, so nothing from before it is left out.",
     ),
     dropZone(),
   );

@@ -1775,22 +1775,23 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
           ],
           [
             "General ledger",
-            "Reports > General ledger. Report period: All dates. Customise > Rows/Columns: add Class. Export to CSV",
-            "Every posting: bank and card lines with their coding, invoices and bills with their payments, " +
-              "transfers, journals, and classes",
+            "Reports > General ledger. Report period: All dates. Customise > Columns: add Line due date and " +
+              "Line open balance, and Class if you use classes. Export to CSV",
+            "Every posting: bank and card lines with their coding, invoices and bills with when each is due and " +
+              "the payments applied to it as QuickBooks applied them, transfers, journals, and classes",
             "Required",
           ],
           [
             "Invoice List",
             "Reports > Invoice List. Report period: All dates. Customise: all columns. Export to CSV",
             "When each invoice is due, and its terms, for reminders and the aged reports",
-            "Recommended",
+            "Only without Line due date",
           ],
           [
             "A/P Aging Detail",
             "Reports > A/P Aging Detail, as of today. Customise: all columns. Export to CSV",
             "When each unpaid bill is due",
-            "Recommended",
+            "Only without Line due date",
           ],
           [
             "Customers and Vendors",

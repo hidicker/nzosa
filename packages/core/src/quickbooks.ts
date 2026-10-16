@@ -326,6 +326,8 @@ export interface QuickBooksLeg {
    * receivable or payable posting.
    */
   open?: Cents;
+  /** When the document was due, where the export carries "Line due date". */
+  due?: IsoDate;
 }
 
 /** One entry as QuickBooks posted it: every account it touched, gathered from the report's sections. */
@@ -448,6 +450,8 @@ export function parseQuickBooksEntries(text: string, chart: QuickBooksChart, opt
     const name = cells.get("Name").trim();
     const memo = cells.get("Description").trim();
     const openText = cells.get("Line open balance").trim();
+    const dueText = cells.get("Line due date").trim();
+    const due = dueText === "" ? null : parseDate(dueText, { dayFirst });
     const open = openText === "" ? null : parseAmount(openText.replace(/^\$/, "").replace(/^-\$/, "-"), currency);
     // A debit is what raises an account that debits raise; what raises one
     // that credits raise is a credit.
@@ -460,7 +464,7 @@ export function parseQuickBooksEntries(text: string, chart: QuickBooksChart, opt
       entries.push(entry);
     }
     if (entry.memo === "" && memo !== "") entry.memo = memo;
-    entry.legs.push({ account, debit, ...(memo !== "" ? { memo } : {}), ...(open !== null ? { open: Math.abs(open) } : {}) });
+    entry.legs.push({ account, debit, ...(memo !== "" ? { memo } : {}), ...(open !== null ? { open: Math.abs(open) } : {}), ...(due !== null ? { due } : {}) });
   }
   return { entries, problems };
 }
@@ -594,7 +598,7 @@ export function quickBooksBooksFrom(
         contact: entry.name,
         reference: "QuickBooks",
         issued: entry.date,
-        due: null,
+        due: control?.due ?? null,
         total,
         tax: 0,
         paid: 0,

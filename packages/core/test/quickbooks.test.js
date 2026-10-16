@@ -247,3 +247,20 @@ test("with the Line open balance column, a payment goes where QuickBooks put it"
     [["1028", 3100], ["1005", 5400]],
   );
 });
+
+test("the Line due date column gives each invoice its due date", async () => {
+  const { parseQuickBooksBooks, parseQuickBooksChart } = await import("../dist/index.js");
+  const chart = parseQuickBooksChart(
+    ["Account name,Account type,Detail type", "Accounts Receivable (A/R),Accounts receivable (A/R),Accounts Receivable (A/R)", "Services,Income,Service/Fee Income"].join("\n"),
+  );
+  const gl = [
+    ",Distribution account,Transaction date,Transaction type,Num,Name,Description,Split,Amount,Balance,Line due date",
+    "Accounts Receivable (A/R),,,,,,,,,,",
+    ",Accounts Receivable (A/R),08/03/2026,Invoice,1028,Freeman Sporting Goods,,Services,81.00,81.00,09/02/2026",
+    "Total for Accounts Receivable (A/R),,,,,,,,81.00,,",
+    "Services,,,,,,,,,,",
+    ",Services,08/03/2026,Invoice,1028,Freeman Sporting Goods,,Accounts Receivable (A/R),81.00,81.00,",
+    "Total for Services,,,,,,,,81.00,,",
+  ].join("\n");
+  assert.equal(parseQuickBooksBooks(gl, chart).invoices[0]?.due, "2026-09-02");
+});

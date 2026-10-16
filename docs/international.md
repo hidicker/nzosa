@@ -121,20 +121,23 @@ The guides are guidance, not certified figures: confirm each rate with the ATO, 
 
 ## Moving from QuickBooks Online
 
-Two exports, dropped on Setup (or Start here) together or one at a time, and
-optionally the customer and vendor lists:
+Two exports are needed, dropped on Setup (or Start here) together or one at a
+time; the rest add to them:
 
 - **Chart of accounts** (Accounting > Chart of accounts > Export): account name, type and detail type. QuickBooks has no account codes, so they are made: 1100s receivables, 1200s other current assets, 1500s fixed assets, 2000s payables, 2100s other current liabilities, 2500s long-term, 3000s equity, 4000s income, 5000s cost of goods sold, 6000s expenses. Banks and cards get none, as Xero's do. A sub-account keeps its whole name (`Automobile:Fuel`).
-- **General ledger** (Reports > General ledger > Export, all accounts). Every posting in it is put back into the entry it came from, and the entries become:
+- **General ledger** (Reports > General ledger, All dates, with the Line due date and Line open balance columns added, and Class where classes are used; Export to CSV). Every posting in it is put back into the entry it came from, and the entries become:
   - **Bank and card lines**, with a card's sign turned round, coded from the Split column so the coding check and the rules work as they do for Xero.
-  - **Invoices and bills as documents**, with their payments applied to them oldest first: matched where a payment settled one, split where it settled several, recorded as paid outside the bank for a deposit to undeposited funds or a credit memo. They age, can be emailed and are matched like any other. Receivables and payables post to the chart's own accounts.
+  - **Invoices and bills as documents**, due on the Line due date, with their payments applied where QuickBooks applied them (from Line open balance; oldest first without it): matched where a payment settled one, split where it settled several, recorded as paid outside the bank for a deposit to undeposited funds or a credit memo. They age, can be emailed and are matched like any other. Receivables and payables post to the chart's own accounts.
   - **Splits** on a bank line QuickBooks spread over several accounts; **transfers** paired between your own accounts; **journals** for the rest (stock adjustments, journal entries, sales receipts).
   - **Customers and vendors**, from the names on the entries, as records.
 - **Customers and Vendors lists** (the Export on each page): addresses, emails, phone, terms, W-9 and 1099 flags, read by heading, by name, into the same records.
+- **Products and services** (Sales > Products and services > Export): the price list, and stock on hand counted in for inventory items.
+- **A/R and A/P Aging Detail, or the Invoice List**: due dates for the open documents, where the general ledger was exported without Line due date.
+- **Trial Balance**: opening balances where the general ledger does not go back to the start. With an All dates ledger it is a check instead: once the coding is accepted, the coding check says whether every asset and liability balance agrees.
 
-Checked against QuickBooks' own reports for the sample company: profit and loss, balance sheet net assets, receivables and payables all agree to the cent. A credit card is shown as a negative asset (as Xero's are), not a liability; net assets are the same.
+Checked against QuickBooks' own reports for the sample company (last on 17 October 2026, the Advanced edition, all seven files dropped together): profit and loss line by line, every balance sheet account, and each open invoice and bill against the A/R and A/P aging, all agree to the cent. A credit card is shown as a negative asset (as Xero's are), not a liability; net assets are the same.
 
-It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts` and `contact-lists.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: the trial balance, tax reports, estimates, purchase orders, items and classes.
+It is not limited to one country: the exports have the same shape wherever QuickBooks Online is sold. The date order is taken from the file when a day past 12 settles it, and from the books' country otherwise. Code: `packages/core/src/quickbooks.ts` and `contact-lists.ts`, read in `apps/web/src/check-ui.ts` and `apps/web/src/migrate/quickbooks.ts`. Not yet read: tax reports, estimates and purchase orders.
 
 ## Moving from SlowBooks Pro
 

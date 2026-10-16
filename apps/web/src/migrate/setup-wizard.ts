@@ -1954,7 +1954,10 @@ export async function seedBrowser(): Promise<void> {
     // seeding on every single load is worse than never seeding.
     already = true;
   }
-  if (already) return;
+  // On the demo the books are only ever the invented ones, so empty books are
+  // filled whatever the flag says: a visitor whose flag outlived the books (or
+  // was set while the demo was opening books on the server) saw an empty demo.
+  if (already && !isDemoBuild()) return;
 
   // The demo's own choice of books: the visitor's last, or the set for their
   // part of the world on a first visit.

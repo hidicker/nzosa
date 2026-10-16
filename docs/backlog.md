@@ -178,3 +178,9 @@ works).
   is accepted.** Dropped with the rest, it says to drop it again. Keeping it
   and running the check once "Use QuickBooks for all" is pressed would save
   the second drop.
+- **Two New Zealand GST invoice-basis rules not applied** (from the
+  OpenAccountants NZ GST guide, checked 16 October 2026): a single supply over
+  $225,000 must go on the invoice basis whatever basis is chosen (unless
+  settled within 365 days), and on the invoice basis a payment received
+  before the invoice is issued makes the GST due when paid. Both rare for the
+  businesses NZOSA is for; the GST return takes neither into account yet.

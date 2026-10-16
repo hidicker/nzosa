@@ -1,0 +1,5604 @@
+{
+ "version": 1,
+ "jurisdiction": "au",
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "au-0001",
+   "occurrence": 1,
+   "date": "2025-07-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "au-0002",
+   "occurrence": 1,
+   "date": "2025-07-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "au-0003",
+   "occurrence": 1,
+   "date": "2025-07-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "au-0004",
+   "occurrence": 1,
+   "date": "2025-07-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "au-0005",
+   "occurrence": 1,
+   "date": "2025-07-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "au-0006",
+   "occurrence": 1,
+   "date": "2025-07-11",
+   "amount": 286000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "au-0007",
+   "occurrence": 1,
+   "date": "2025-07-15",
+   "amount": -118800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Equipment insurance, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "AAMI Business Insurance",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "au-0008",
+   "occurrence": 1,
+   "date": "2025-07-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "au-0009",
+   "occurrence": 1,
+   "date": "2025-07-19",
+   "amount": -7840,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "au-0010",
+   "occurrence": 1,
+   "date": "2025-07-25",
+   "amount": 154000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Paddington Real Estate",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "au-0011",
+   "occurrence": 1,
+   "date": "2025-07-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "au-0012",
+   "occurrence": 1,
+   "date": "2025-07-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "au-0013",
+   "occurrence": 1,
+   "date": "2025-08-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "au-0014",
+   "occurrence": 1,
+   "date": "2025-08-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "au-0015",
+   "occurrence": 1,
+   "date": "2025-08-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "au-0016",
+   "occurrence": 1,
+   "date": "2025-08-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "au-0017",
+   "occurrence": 1,
+   "date": "2025-08-08",
+   "amount": 330000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "au-0018",
+   "occurrence": 1,
+   "date": "2025-08-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "au-0019",
+   "occurrence": 1,
+   "date": "2025-08-13",
+   "amount": -46200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Lens service, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Camera House",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "au-0020",
+   "occurrence": 1,
+   "date": "2025-08-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "au-0021",
+   "occurrence": 1,
+   "date": "2025-08-20",
+   "amount": -51240,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Council rates, first instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "City of Newcastle",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "au-0022",
+   "occurrence": 1,
+   "date": "2025-08-22",
+   "amount": 99000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lune Cafe",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "au-0023",
+   "occurrence": 1,
+   "date": "2025-08-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "au-0024",
+   "occurrence": 1,
+   "date": "2025-08-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "au-0025",
+   "occurrence": 1,
+   "date": "2025-09-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "au-0026",
+   "occurrence": 1,
+   "date": "2025-09-02",
+   "amount": -8115,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "au-0027",
+   "occurrence": 1,
+   "date": "2025-09-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "au-0028",
+   "occurrence": 1,
+   "date": "2025-09-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "au-0029",
+   "occurrence": 1,
+   "date": "2025-09-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "au-0030",
+   "occurrence": 1,
+   "date": "2025-09-05",
+   "amount": 242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Southbank Arts Festival",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "au-0031",
+   "occurrence": 1,
+   "date": "2025-09-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "au-0032",
+   "occurrence": 1,
+   "date": "2025-09-12",
+   "amount": -16830,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Water service charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Water",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "au-0033",
+   "occurrence": 1,
+   "date": "2025-09-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "au-0034",
+   "occurrence": 1,
+   "date": "2025-09-19",
+   "amount": 176000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Paddington Real Estate",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "au-0035",
+   "occurrence": 1,
+   "date": "2025-09-26",
+   "amount": -61200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Flight, Sydney wedding, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Virgin Australia",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "au-0036",
+   "occurrence": 1,
+   "date": "2025-09-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "au-0037",
+   "occurrence": 1,
+   "date": "2025-09-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "au-0038",
+   "occurrence": 1,
+   "date": "2025-10-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "au-0039",
+   "occurrence": 1,
+   "date": "2025-10-01",
+   "amount": -164000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Annual premium",
+   "code": "",
+   "reference": "",
+   "otherParty": "Allianz Landlord Insurance",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "au-0040",
+   "occurrence": 1,
+   "date": "2025-10-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "au-0041",
+   "occurrence": 1,
+   "date": "2025-10-03",
+   "amount": -28640,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Prints and album boxes, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Officeworks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "au-0042",
+   "occurrence": 1,
+   "date": "2025-10-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "au-0043",
+   "occurrence": 1,
+   "date": "2025-10-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "au-0044",
+   "occurrence": 1,
+   "date": "2025-10-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "au-0045",
+   "occurrence": 1,
+   "date": "2025-10-10",
+   "amount": 418000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "au-0046",
+   "occurrence": 1,
+   "date": "2025-10-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "au-0047",
+   "occurrence": 1,
+   "date": "2025-10-24",
+   "amount": 121000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kurrajong Physio",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "au-0048",
+   "occurrence": 1,
+   "date": "2025-10-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "au-0049",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -54241,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-07 to 2025-09, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "au-0050",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -124000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "au-0051",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "au-0052",
+   "occurrence": 1,
+   "date": "2025-11-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "au-0053",
+   "occurrence": 1,
+   "date": "2025-11-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "au-0054",
+   "occurrence": 1,
+   "date": "2025-11-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "au-0055",
+   "occurrence": 1,
+   "date": "2025-11-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "au-0056",
+   "occurrence": 1,
+   "date": "2025-11-07",
+   "amount": 374000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "au-0057",
+   "occurrence": 1,
+   "date": "2025-11-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "au-0058",
+   "occurrence": 1,
+   "date": "2025-11-14",
+   "amount": -7490,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "au-0059",
+   "occurrence": 1,
+   "date": "2025-11-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "au-0060",
+   "occurrence": 1,
+   "date": "2025-11-20",
+   "amount": -51240,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Council rates, second instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "City of Newcastle",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "au-0061",
+   "occurrence": 1,
+   "date": "2025-11-21",
+   "amount": 165000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Paddington Real Estate",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "au-0062",
+   "occurrence": 1,
+   "date": "2025-11-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "au-0063",
+   "occurrence": 1,
+   "date": "2025-11-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "au-0064",
+   "occurrence": 1,
+   "date": "2025-12-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "au-0065",
+   "occurrence": 1,
+   "date": "2025-12-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "au-0066",
+   "occurrence": 1,
+   "date": "2025-12-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "au-0067",
+   "occurrence": 1,
+   "date": "2025-12-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "au-0068",
+   "occurrence": 1,
+   "date": "2025-12-05",
+   "amount": 220000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lune Cafe",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "au-0069",
+   "occurrence": 1,
+   "date": "2025-12-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "au-0070",
+   "occurrence": 1,
+   "date": "2025-12-12",
+   "amount": 528000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "au-0071",
+   "occurrence": 1,
+   "date": "2025-12-12",
+   "amount": -16830,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Water service charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Water",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "au-0072",
+   "occurrence": 1,
+   "date": "2025-12-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "au-0073",
+   "occurrence": 1,
+   "date": "2025-12-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "au-0074",
+   "occurrence": 1,
+   "date": "2025-12-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "au-0075",
+   "occurrence": 1,
+   "date": "2025-12-31",
+   "amount": 1840,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Savings interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Interest",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "au-0076",
+   "occurrence": 1,
+   "date": "2026-01-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 76
+   }
+  },
+  {
+   "id": "au-0077",
+   "occurrence": 1,
+   "date": "2026-01-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 77
+   }
+  },
+  {
+   "id": "au-0078",
+   "occurrence": 1,
+   "date": "2026-01-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 78
+   }
+  },
+  {
+   "id": "au-0079",
+   "occurrence": 1,
+   "date": "2026-01-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 79
+   }
+  },
+  {
+   "id": "au-0080",
+   "occurrence": 1,
+   "date": "2026-01-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 80
+   }
+  },
+  {
+   "id": "au-0081",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 81
+   }
+  },
+  {
+   "id": "au-0082",
+   "occurrence": 1,
+   "date": "2026-01-16",
+   "amount": 143000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kurrajong Physio",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 82
+   }
+  },
+  {
+   "id": "au-0083",
+   "occurrence": 1,
+   "date": "2026-01-22",
+   "amount": -7960,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 83
+   }
+  },
+  {
+   "id": "au-0084",
+   "occurrence": 1,
+   "date": "2026-01-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 84
+   }
+  },
+  {
+   "id": "au-0085",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 85
+   }
+  },
+  {
+   "id": "au-0086",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -38500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water system repair",
+   "code": "",
+   "reference": "",
+   "otherParty": "Coastal Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 86
+   }
+  },
+  {
+   "id": "au-0087",
+   "occurrence": 1,
+   "date": "2026-02-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 87
+   }
+  },
+  {
+   "id": "au-0088",
+   "occurrence": 1,
+   "date": "2026-02-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 88
+   }
+  },
+  {
+   "id": "au-0089",
+   "occurrence": 1,
+   "date": "2026-02-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 89
+   }
+  },
+  {
+   "id": "au-0090",
+   "occurrence": 1,
+   "date": "2026-02-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 90
+   }
+  },
+  {
+   "id": "au-0091",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": 396000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 91
+   }
+  },
+  {
+   "id": "au-0092",
+   "occurrence": 1,
+   "date": "2026-02-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 92
+   }
+  },
+  {
+   "id": "au-0093",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 93
+   }
+  },
+  {
+   "id": "au-0094",
+   "occurrence": 1,
+   "date": "2026-02-18",
+   "amount": -88000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Tax return and BAS help, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bennett & Co Accountants",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 94
+   }
+  },
+  {
+   "id": "au-0095",
+   "occurrence": 1,
+   "date": "2026-02-20",
+   "amount": 187000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Paddington Real Estate",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 95
+   }
+  },
+  {
+   "id": "au-0096",
+   "occurrence": 1,
+   "date": "2026-02-20",
+   "amount": -51240,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Council rates, third instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "City of Newcastle",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 96
+   }
+  },
+  {
+   "id": "au-0097",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 97
+   }
+  },
+  {
+   "id": "au-0098",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -121970,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-10 to 2025-12, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 98
+   }
+  },
+  {
+   "id": "au-0099",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -124000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 99
+   }
+  },
+  {
+   "id": "au-0100",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 100
+   }
+  },
+  {
+   "id": "au-0101",
+   "occurrence": 1,
+   "date": "2026-03-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 101
+   }
+  },
+  {
+   "id": "au-0102",
+   "occurrence": 1,
+   "date": "2026-03-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 102
+   }
+  },
+  {
+   "id": "au-0103",
+   "occurrence": 1,
+   "date": "2026-03-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 103
+   }
+  },
+  {
+   "id": "au-0104",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 104
+   }
+  },
+  {
+   "id": "au-0105",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": 275000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Southbank Arts Festival",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 105
+   }
+  },
+  {
+   "id": "au-0106",
+   "occurrence": 1,
+   "date": "2026-03-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 106
+   }
+  },
+  {
+   "id": "au-0107",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": -19860,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Printing, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Officeworks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 107
+   }
+  },
+  {
+   "id": "au-0108",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": -16830,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Water service charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Water",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 108
+   }
+  },
+  {
+   "id": "au-0109",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 109
+   }
+  },
+  {
+   "id": "au-0110",
+   "occurrence": 1,
+   "date": "2026-03-20",
+   "amount": 440000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 110
+   }
+  },
+  {
+   "id": "au-0111",
+   "occurrence": 1,
+   "date": "2026-03-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "au-0112",
+   "occurrence": 1,
+   "date": "2026-03-27",
+   "amount": -8330,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 112
+   }
+  },
+  {
+   "id": "au-0113",
+   "occurrence": 1,
+   "date": "2026-03-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 113
+   }
+  },
+  {
+   "id": "au-0114",
+   "occurrence": 1,
+   "date": "2026-04-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 114
+   }
+  },
+  {
+   "id": "au-0115",
+   "occurrence": 1,
+   "date": "2026-04-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 115
+   }
+  },
+  {
+   "id": "au-0116",
+   "occurrence": 1,
+   "date": "2026-04-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 116
+   }
+  },
+  {
+   "id": "au-0117",
+   "occurrence": 1,
+   "date": "2026-04-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 117
+   }
+  },
+  {
+   "id": "au-0118",
+   "occurrence": 1,
+   "date": "2026-04-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 118
+   }
+  },
+  {
+   "id": "au-0119",
+   "occurrence": 1,
+   "date": "2026-04-10",
+   "amount": 132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Lune Cafe",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 119
+   }
+  },
+  {
+   "id": "au-0120",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 120
+   }
+  },
+  {
+   "id": "au-0121",
+   "occurrence": 1,
+   "date": "2026-04-24",
+   "amount": 209000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Paddington Real Estate",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 121
+   }
+  },
+  {
+   "id": "au-0122",
+   "occurrence": 1,
+   "date": "2026-04-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 122
+   }
+  },
+  {
+   "id": "au-0123",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -78968,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2026-01 to 2026-03, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 123
+   }
+  },
+  {
+   "id": "au-0124",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -124000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 124
+   }
+  },
+  {
+   "id": "au-0125",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 125
+   }
+  },
+  {
+   "id": "au-0126",
+   "occurrence": 1,
+   "date": "2026-05-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 126
+   }
+  },
+  {
+   "id": "au-0127",
+   "occurrence": 1,
+   "date": "2026-05-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 127
+   }
+  },
+  {
+   "id": "au-0128",
+   "occurrence": 1,
+   "date": "2026-05-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 128
+   }
+  },
+  {
+   "id": "au-0129",
+   "occurrence": 1,
+   "date": "2026-05-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 129
+   }
+  },
+  {
+   "id": "au-0130",
+   "occurrence": 1,
+   "date": "2026-05-08",
+   "amount": 352000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 130
+   }
+  },
+  {
+   "id": "au-0131",
+   "occurrence": 1,
+   "date": "2026-05-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 131
+   }
+  },
+  {
+   "id": "au-0132",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -7655,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 132
+   }
+  },
+  {
+   "id": "au-0133",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 133
+   }
+  },
+  {
+   "id": "au-0134",
+   "occurrence": 1,
+   "date": "2026-05-20",
+   "amount": -51240,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Council rates, fourth instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "City of Newcastle",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 134
+   }
+  },
+  {
+   "id": "au-0135",
+   "occurrence": 1,
+   "date": "2026-05-22",
+   "amount": 110000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Kurrajong Physio",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 135
+   }
+  },
+  {
+   "id": "au-0136",
+   "occurrence": 1,
+   "date": "2026-05-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 136
+   }
+  },
+  {
+   "id": "au-0137",
+   "occurrence": 1,
+   "date": "2026-05-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 137
+   }
+  },
+  {
+   "id": "au-0138",
+   "occurrence": 1,
+   "date": "2026-06-01",
+   "amount": 234000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Rent for the month, by the agent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 138
+   }
+  },
+  {
+   "id": "au-0139",
+   "occurrence": 1,
+   "date": "2026-06-02",
+   "amount": -132000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Studio rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "West End Studios",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 139
+   }
+  },
+  {
+   "id": "au-0140",
+   "occurrence": 1,
+   "date": "2026-06-03",
+   "amount": -14900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Canva Pty Ltd",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 140
+   }
+  },
+  {
+   "id": "au-0141",
+   "occurrence": 1,
+   "date": "2026-06-03",
+   "amount": -18720,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Management fee, 8% incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Property Group",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 141
+   }
+  },
+  {
+   "id": "au-0142",
+   "occurrence": 1,
+   "date": "2026-06-04",
+   "amount": -8499,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Creative Cloud, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Adobe Systems",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 142
+   }
+  },
+  {
+   "id": "au-0143",
+   "occurrence": 1,
+   "date": "2026-06-09",
+   "amount": -8900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobile and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 143
+   }
+  },
+  {
+   "id": "au-0144",
+   "occurrence": 1,
+   "date": "2026-06-11",
+   "amount": -5670,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bunnings Warehouse",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 144
+   }
+  },
+  {
+   "id": "au-0145",
+   "occurrence": 1,
+   "date": "2026-06-12",
+   "amount": 264000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Photography, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverbend Weddings",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 145
+   }
+  },
+  {
+   "id": "au-0146",
+   "occurrence": 1,
+   "date": "2026-06-12",
+   "amount": -16830,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Water service charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hunter Water",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 146
+   }
+  },
+  {
+   "id": "au-0147",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -141550,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Loan interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Westpac Home Loan",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 147
+   }
+  },
+  {
+   "id": "au-0148",
+   "occurrence": 1,
+   "date": "2026-06-18",
+   "amount": -3850,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Australia Post",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 148
+   }
+  },
+  {
+   "id": "au-0149",
+   "occurrence": 1,
+   "date": "2026-06-22",
+   "amount": -22000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Newcastle Garden Care",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-rental",
+   "extras": {
+    "accountLabel": "Rental Account ••8817"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 149
+   }
+  },
+  {
+   "id": "au-0150",
+   "occurrence": 1,
+   "date": "2026-06-24",
+   "amount": 45000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Osko payment from J Patel",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 150
+   }
+  },
+  {
+   "id": "au-0151",
+   "occurrence": 1,
+   "date": "2026-06-27",
+   "amount": -1000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly account fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 151
+   }
+  },
+  {
+   "id": "au-0152",
+   "occurrence": 1,
+   "date": "2026-06-28",
+   "amount": -250000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Owner drawings",
+   "code": "",
+   "reference": "",
+   "otherParty": "Transfer to Mia Chen",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 152
+   }
+  },
+  {
+   "id": "au-0153",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": 2175,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Savings interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Interest",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 153
+   }
+  }
+ ],
+ "overrides": {
+  "au-0001": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-07-01"
+  },
+  "au-0002": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-07-02"
+  },
+  "au-0003": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-07-03"
+  },
+  "au-0004": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-07-04"
+  },
+  "au-0005": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-07-09"
+  },
+  "au-0006": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-07-11"
+  },
+  "au-0007": {
+   "confirmed": true,
+   "code": "Insurance - 433",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Equipment insurance, incl GST",
+   "at": "2025-07-15"
+  },
+  "au-0008": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-07-15"
+  },
+  "au-0009": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2025-07-19"
+  },
+  "au-0010": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-07-25"
+  },
+  "au-0011": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-07-27"
+  },
+  "au-0012": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-07-28"
+  },
+  "au-0013": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-08-01"
+  },
+  "au-0014": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-08-02"
+  },
+  "au-0015": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-08-03"
+  },
+  "au-0016": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-08-04"
+  },
+  "au-0017": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-08-08"
+  },
+  "au-0018": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-08-09"
+  },
+  "au-0019": {
+   "confirmed": true,
+   "code": "Repairs and Maintenance - 473",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Lens service, incl GST",
+   "at": "2025-08-13"
+  },
+  "au-0020": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-08-15"
+  },
+  "au-0021": {
+   "confirmed": true,
+   "code": "Council rates - 551",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Council rates, first instalment",
+   "at": "2025-08-20"
+  },
+  "au-0022": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-08-22"
+  },
+  "au-0023": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-08-27"
+  },
+  "au-0024": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-08-28"
+  },
+  "au-0025": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-09-01"
+  },
+  "au-0026": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2025-09-02"
+  },
+  "au-0027": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-09-02"
+  },
+  "au-0028": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-09-03"
+  },
+  "au-0029": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-09-04"
+  },
+  "au-0030": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-09-05"
+  },
+  "au-0031": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-09-09"
+  },
+  "au-0032": {
+   "confirmed": true,
+   "code": "Water charges - 552",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Water service charge",
+   "at": "2025-09-12"
+  },
+  "au-0033": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-09-15"
+  },
+  "au-0034": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-09-19"
+  },
+  "au-0035": {
+   "confirmed": true,
+   "code": "Travel - National - 493",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Flight, Sydney wedding, incl GST",
+   "at": "2025-09-26"
+  },
+  "au-0036": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-09-27"
+  },
+  "au-0037": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-09-28"
+  },
+  "au-0038": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-10-01"
+  },
+  "au-0039": {
+   "confirmed": true,
+   "code": "Landlord insurance - 555",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Annual premium",
+   "at": "2025-10-01"
+  },
+  "au-0040": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-10-02"
+  },
+  "au-0041": {
+   "confirmed": true,
+   "code": "Printing & Stationery - 461",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Prints and album boxes, incl GST",
+   "at": "2025-10-03"
+  },
+  "au-0042": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-10-03"
+  },
+  "au-0043": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-10-04"
+  },
+  "au-0044": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-10-09"
+  },
+  "au-0045": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-10-10"
+  },
+  "au-0046": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-10-15"
+  },
+  "au-0047": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-10-24"
+  },
+  "au-0048": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-10-27"
+  },
+  "au-0049": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "BAS 2025-07 to 2025-09, GST",
+   "at": "2025-10-28"
+  },
+  "au-0050": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "PAYG instalment",
+   "at": "2025-10-28"
+  },
+  "au-0051": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-10-28"
+  },
+  "au-0052": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-11-01"
+  },
+  "au-0053": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-11-02"
+  },
+  "au-0054": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-11-03"
+  },
+  "au-0055": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-11-04"
+  },
+  "au-0056": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-11-07"
+  },
+  "au-0057": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-11-09"
+  },
+  "au-0058": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2025-11-14"
+  },
+  "au-0059": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-11-15"
+  },
+  "au-0060": {
+   "confirmed": true,
+   "code": "Council rates - 551",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Council rates, second instalment",
+   "at": "2025-11-20"
+  },
+  "au-0061": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-11-21"
+  },
+  "au-0062": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-11-27"
+  },
+  "au-0063": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-11-28"
+  },
+  "au-0064": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2025-12-01"
+  },
+  "au-0065": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2025-12-02"
+  },
+  "au-0066": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2025-12-03"
+  },
+  "au-0067": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2025-12-04"
+  },
+  "au-0068": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-12-05"
+  },
+  "au-0069": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2025-12-09"
+  },
+  "au-0070": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2025-12-12"
+  },
+  "au-0071": {
+   "confirmed": true,
+   "code": "Water charges - 552",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Water service charge",
+   "at": "2025-12-12"
+  },
+  "au-0072": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2025-12-15"
+  },
+  "au-0073": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-12-27"
+  },
+  "au-0074": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2025-12-28"
+  },
+  "au-0075": {
+   "confirmed": true,
+   "code": "Interest Income - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Savings interest",
+   "at": "2025-12-31"
+  },
+  "au-0076": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-01-01"
+  },
+  "au-0077": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-01-02"
+  },
+  "au-0078": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-01-03"
+  },
+  "au-0079": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-01-04"
+  },
+  "au-0080": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-01-09"
+  },
+  "au-0081": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-01-15"
+  },
+  "au-0082": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-01-16"
+  },
+  "au-0083": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2026-01-22"
+  },
+  "au-0084": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-01-27"
+  },
+  "au-0085": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-01-28"
+  },
+  "au-0086": {
+   "confirmed": true,
+   "code": "Repairs and maintenance (rental) - 556",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Hot water system repair",
+   "at": "2026-01-28"
+  },
+  "au-0087": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-02-01"
+  },
+  "au-0088": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-02-02"
+  },
+  "au-0089": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-02-03"
+  },
+  "au-0090": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-02-04"
+  },
+  "au-0091": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-02-06"
+  },
+  "au-0092": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-02-09"
+  },
+  "au-0093": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-02-15"
+  },
+  "au-0094": {
+   "confirmed": true,
+   "code": "Consulting & Accounting - 412",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Tax return and BAS help, incl GST",
+   "at": "2026-02-18"
+  },
+  "au-0095": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-02-20"
+  },
+  "au-0096": {
+   "confirmed": true,
+   "code": "Council rates - 551",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Council rates, third instalment",
+   "at": "2026-02-20"
+  },
+  "au-0097": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-02-27"
+  },
+  "au-0098": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "BAS 2025-10 to 2025-12, GST",
+   "at": "2026-02-27"
+  },
+  "au-0099": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "PAYG instalment",
+   "at": "2026-02-27"
+  },
+  "au-0100": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-02-28"
+  },
+  "au-0101": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-03-01"
+  },
+  "au-0102": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-03-02"
+  },
+  "au-0103": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-03-03"
+  },
+  "au-0104": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-03-04"
+  },
+  "au-0105": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-03-06"
+  },
+  "au-0106": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-03-09"
+  },
+  "au-0107": {
+   "confirmed": true,
+   "code": "Printing & Stationery - 461",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Printing, incl GST",
+   "at": "2026-03-12"
+  },
+  "au-0108": {
+   "confirmed": true,
+   "code": "Water charges - 552",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Water service charge",
+   "at": "2026-03-12"
+  },
+  "au-0109": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-03-15"
+  },
+  "au-0110": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-03-20"
+  },
+  "au-0111": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-03-27"
+  },
+  "au-0112": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2026-03-27"
+  },
+  "au-0113": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-03-28"
+  },
+  "au-0114": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-04-01"
+  },
+  "au-0115": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-04-02"
+  },
+  "au-0116": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-04-03"
+  },
+  "au-0117": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-04-04"
+  },
+  "au-0118": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-04-09"
+  },
+  "au-0119": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-04-10"
+  },
+  "au-0120": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-04-15"
+  },
+  "au-0121": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-04-24"
+  },
+  "au-0122": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-04-27"
+  },
+  "au-0123": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "BAS 2026-01 to 2026-03, GST",
+   "at": "2026-04-28"
+  },
+  "au-0124": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "PAYG instalment",
+   "at": "2026-04-28"
+  },
+  "au-0125": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-04-28"
+  },
+  "au-0126": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-05-01"
+  },
+  "au-0127": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-05-02"
+  },
+  "au-0128": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-05-03"
+  },
+  "au-0129": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-05-04"
+  },
+  "au-0130": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-05-08"
+  },
+  "au-0131": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-05-09"
+  },
+  "au-0132": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel, incl GST",
+   "at": "2026-05-15"
+  },
+  "au-0133": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-05-15"
+  },
+  "au-0134": {
+   "confirmed": true,
+   "code": "Council rates - 551",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Council rates, fourth instalment",
+   "at": "2026-05-20"
+  },
+  "au-0135": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-05-22"
+  },
+  "au-0136": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-05-27"
+  },
+  "au-0137": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-05-28"
+  },
+  "au-0138": {
+   "confirmed": true,
+   "code": "Rent received - 275",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Rent for the month, by the agent",
+   "at": "2026-06-01"
+  },
+  "au-0139": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Studio rent, incl GST",
+   "at": "2026-06-02"
+  },
+  "au-0141": {
+   "confirmed": true,
+   "code": "Property agent fees - 553",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Management fee, 8% incl GST",
+   "at": "2026-06-03"
+  },
+  "au-0142": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Creative Cloud, incl GST",
+   "at": "2026-06-04"
+  },
+  "au-0143": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobile and internet, incl GST",
+   "at": "2026-06-09"
+  },
+  "au-0145": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Photography, incl GST",
+   "at": "2026-06-12"
+  },
+  "au-0146": {
+   "confirmed": true,
+   "code": "Water charges - 552",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Water service charge",
+   "at": "2026-06-12"
+  },
+  "au-0147": {
+   "confirmed": true,
+   "code": "Interest on loans - 554",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Loan interest",
+   "at": "2026-06-15"
+  },
+  "au-0151": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-06-27"
+  },
+  "au-0152": {
+   "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "Owner drawings",
+   "at": "2026-06-28"
+  },
+  "au-0153": {
+   "confirmed": true,
+   "code": "Interest Income - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Savings interest",
+   "at": "2026-06-30"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "studio",
+    "name": "Wattle & Lens Photography",
+    "kind": "business",
+    "structure": "sole-trader",
+    "owners": [
+     {
+      "name": "Mia Chen",
+      "percent": 100
+     }
+    ],
+    "gstRegistered": true,
+    "gstNumber": "51 824 753 556",
+    "address": "Unit 4, 22 Boundary Street\nWest End QLD 4101",
+    "payTo": "BSB 064-000, account 1234 5678"
+   },
+   {
+    "id": "banksia",
+    "name": "7 Banksia Street, Newcastle",
+    "kind": "residential",
+    "owners": [
+     {
+      "name": "Mia Chen",
+      "percent": 100
+     }
+    ],
+    "gstRegistered": false
+   }
+  ],
+  "accounts": {
+   "200": "studio",
+   "270": "studio",
+   "275": "banksia",
+   "404": "studio",
+   "412": "studio",
+   "433": "studio",
+   "449": "studio",
+   "461": "studio",
+   "469": "studio",
+   "473": "studio",
+   "485": "studio",
+   "489": "studio",
+   "493": "studio",
+   "551": "banksia",
+   "552": "banksia",
+   "553": "banksia",
+   "554": "banksia",
+   "555": "banksia",
+   "556": "banksia",
+   "820": "studio",
+   "880": "studio",
+   "960": "studio"
+  },
+  "banks": {
+   "au-business": [
+    "studio"
+   ],
+   "au-rental": [
+    "banksia"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "200",
+   "name": "Sales",
+   "type": "Revenue",
+   "taxCode": "GST on Income",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "270",
+   "name": "Interest Income",
+   "type": "Revenue",
+   "taxCode": "Input Taxed",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "404",
+   "name": "Bank Fees",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "412",
+   "name": "Consulting & Accounting",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "433",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "449",
+   "name": "Motor Vehicle Expenses",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "461",
+   "name": "Printing & Stationery",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "469",
+   "name": "Rent",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "473",
+   "name": "Repairs and Maintenance",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "485",
+   "name": "Subscriptions",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "489",
+   "name": "Telephone & Internet",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "493",
+   "name": "Travel - National",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "275",
+   "name": "Rent received",
+   "type": "Revenue",
+   "taxCode": "Input Taxed",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "551",
+   "name": "Council rates",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "552",
+   "name": "Water charges",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "553",
+   "name": "Property agent fees",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "554",
+   "name": "Interest on loans",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "555",
+   "name": "Landlord insurance",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "556",
+   "name": "Repairs and maintenance (rental)",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "7 Banksia Street, Newcastle",
+   "gstTreatment": "exempt",
+   "entityKind": "residential"
+  },
+  {
+   "code": "820",
+   "name": "GST",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "880",
+   "name": "Owner A Drawings",
+   "type": "Equity",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "960",
+   "name": "Retained Earnings",
+   "type": "Equity",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2025-07-01",
+  "source": "Last year's records",
+  "accounts": {
+   "960": -2200000,
+   "au-business": 1680000,
+   "au-rental": 520000
+  }
+ },
+ "assets": [],
+ "invoices": [
+  {
+   "number": "INV-0231",
+   "kind": "sales",
+   "contact": "Southbank Arts Festival",
+   "reference": "",
+   "issued": "2026-05-29",
+   "due": "2026-06-12",
+   "total": 198000,
+   "tax": 18000,
+   "paid": 0,
+   "outstanding": 198000,
+   "currency": "AUD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Festival programme photography",
+     "accountCode": "200",
+     "taxType": "15% GST on Income",
+     "net": 180000,
+     "tax": 18000,
+     "gross": 198000
+    }
+   ]
+  },
+  {
+   "number": "INV-0232",
+   "kind": "sales",
+   "contact": "Kurrajong Physio",
+   "reference": "",
+   "issued": "2026-06-19",
+   "due": "2026-07-03",
+   "total": 88000,
+   "tax": 8000,
+   "paid": 0,
+   "outstanding": 88000,
+   "currency": "AUD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Staff portraits",
+     "accountCode": "200",
+     "taxType": "15% GST on Income",
+     "net": 80000,
+     "tax": 8000,
+     "gross": 88000
+    }
+   ]
+  }
+ ],
+ "contacts": [
+  {
+   "id": "c-riverbend-weddings",
+   "name": "Riverbend Weddings",
+   "kind": "customer",
+   "email": "bookings@riverbendweddings.example",
+   "terms": "7 days",
+   "address": "41 Riverside Drive\nTeneriffe QLD 4005"
+  },
+  {
+   "id": "c-paddington-real-estate",
+   "name": "Paddington Real Estate",
+   "kind": "customer",
+   "email": "marketing@paddingtonre.example",
+   "terms": "14 days"
+  },
+  {
+   "id": "c-lune-cafe",
+   "name": "Lune Cafe",
+   "kind": "customer",
+   "email": "hello@lunecafe.example",
+   "terms": "7 days"
+  },
+  {
+   "id": "c-southbank-arts-festival",
+   "name": "Southbank Arts Festival",
+   "kind": "customer",
+   "email": "accounts@southbankarts.example",
+   "terms": "14 days",
+   "address": "Grey Street\nSouth Brisbane QLD 4101"
+  },
+  {
+   "id": "c-kurrajong-physio",
+   "name": "Kurrajong Physio",
+   "kind": "customer",
+   "email": "admin@kurrajongphysio.example",
+   "terms": "14 days"
+  },
+  {
+   "id": "c-west-end-studios",
+   "name": "West End Studios",
+   "kind": "vendor",
+   "email": "leasing@westendstudios.example"
+  },
+  {
+   "id": "c-bennett-co-accountants",
+   "name": "Bennett & Co Accountants",
+   "kind": "vendor",
+   "email": "team@bennettco.example",
+   "terms": "Due on receipt"
+  },
+  {
+   "id": "c-hunter-property-group",
+   "name": "Hunter Property Group",
+   "kind": "vendor",
+   "phone": "02 4900 0000"
+  }
+ ],
+ "exampleAiSuggestions": [
+  {
+   "id": "au-0140",
+   "code": "485",
+   "confidence": 0.9,
+   "because": "Canva is design software paid from the business account: a subscription, with GST in it from an Australian supplier."
+  },
+  {
+   "id": "au-0149",
+   "code": "556",
+   "confidence": 0.88,
+   "because": "Garden care paid from the rental's account: upkeep of the rental property.",
+   "caution": "A residential rental makes input-taxed supplies, so no GST credit is claimed on it."
+  },
+  {
+   "id": "au-0150",
+   "code": "200",
+   "confidence": 0.45,
+   "because": "Money in to the business account by Osko, most likely a client paying for a shoot.",
+   "caution": "Only a sale if a client paid it. A personal payment is not, and a sale's GST (one eleventh) is owed on it."
+  }
+ ],
+ "modules": {},
+ "taxExtras": [],
+ "singleEntityConfirmed": false,
+ "aiEnabled": true
+}

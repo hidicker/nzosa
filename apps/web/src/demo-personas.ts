@@ -72,6 +72,16 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     page: "reconcile",
     ready: true,
   },
+  {
+    id: "au",
+    label: "A photographer with a rental (Australia)",
+    shows: "Australian books: GST on the BAS, PAYG instalments, the rental property schedule and the tax estimate",
+    about:
+      "These demo books are invented and kept as Australian books: Wattle & Lens Photography, a sole trader " +
+      "registered for GST in Brisbane, and a rental house in Newcastle, for the year to 30 June 2026.",
+    page: "reconcile",
+    ready: true,
+  },
 ];
 
 const KEY = "nzosa:demo-persona";
@@ -89,7 +99,8 @@ export function currentDemoPersona(): string {
 
 /**
  * The books a first visit opens on: the United States set for somebody whose
- * computer keeps United States time, the New Zealand ones for everyone else.
+ * computer keeps United States time, the Australian set for Australian time,
+ * the New Zealand ones for everyone else.
  * Read from the browser's own time zone, so nothing about the visitor -- not
  * even their address -- is sent anywhere to find out.
  */
@@ -100,8 +111,10 @@ export function firstDemoPersona(): string {
   } catch {
     return "";
   }
-  const us = DEMO_PERSONAS.some((p) => p.id === "us" && p.ready === true);
-  return us && US_TIME_ZONE.test(zone) ? "us" : "";
+  const ready = (id: string): boolean => DEMO_PERSONAS.some((p) => p.id === id && p.ready === true);
+  if (ready("us") && US_TIME_ZONE.test(zone)) return "us";
+  if (ready("au") && /^Australia\//.test(zone)) return "au";
+  return "";
 }
 
 /** The time zones of the fifty states and Washington, D.C. */

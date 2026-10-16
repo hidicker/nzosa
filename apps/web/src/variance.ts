@@ -204,7 +204,10 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
       resolve,
       claimIn: (t) => expanded.overrides[t.id]?.claimIn ?? null,
       basis: "payments",
-      rounding: "per-line",
+      // New Zealand's returns match Xero's, which rounds each line's GST and
+      // works Box 5 back from it. Elsewhere the form's way: the totals, so an
+      // Australian BAS's G1 is the sales as they were, not a cent off them.
+      rounding: booksCountry().id === "nz" ? "per-line" : "form",
       adjustments: input.debitAdjustments?.(period) ?? 0,
       otherPurchases: input.otherPurchases?.(period) ?? [],
     }),

@@ -295,7 +295,7 @@ function newPayRun(body: HTMLElement): void {
   if (active.some((e) => e.studyLoan === true)) {
     body.append(
       note(
-        "An employee with a study loan has extra withheld from the ATO's Schedule 8 tables; add it to the PAYG figure, which NZOSA does not work out.",
+        "For an employee with a study loan, PAYG withheld includes the compulsory repayment on the year's pay at the 2025-26 rates: check it against the ATO's Schedule 8 for the pay.",
       ),
     );
   }

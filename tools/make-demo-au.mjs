@@ -54,6 +54,9 @@ const ACCOUNTS = [
   ["804", "Wages Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
   ["825", "PAYG Withholdings Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
   ["826", "Superannuation Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
+  ["416", "Depreciation", "Expense", studio, "BAS Excluded", "out-of-scope"],
+  ["730", "Camera Equipment", "Fixed Asset", studio, "GST on Capital", "standard"],
+  ["731", "Less Accumulated Depreciation on Camera Equipment", "Fixed Asset", studio, "BAS Excluded", "out-of-scope"],
   ["610", "Accounts Receivable", "Accounts Receivable", studio, "BAS Excluded", "out-of-scope"],
   ["800", "Accounts Payable", "Accounts Payable", studio, "BAS Excluded", "out-of-scope"],
   ["820", "GST", "Current Liability", studio, "BAS Excluded", "exempt"],
@@ -117,6 +120,8 @@ for (const m of MONTHS) {
 }
 line(BUSINESS, day(7, 15), -cents(1188), "AAMI Business Insurance", "433", "Equipment insurance, incl GST");
 line(BUSINESS, day(8, 13), -cents(462), "Camera House", "473", "Lens service, incl GST");
+// A new camera body: a capital purchase on the BAS (G10), depreciated from the day it was bought.
+line(BUSINESS, day(10, 1), -cents(11000), "Camera House", "730", "Camera body, incl GST");
 line(BUSINESS, day(10, 3), -cents(286.4), "Officeworks", "461", "Prints and album boxes, incl GST");
 line(BUSINESS, day(3, 12), -cents(198.6), "Officeworks", "461", "Printing, incl GST");
 line(BUSINESS, day(9, 26), -cents(612), "Virgin Australia", "493", "Flight, Sydney wedding, incl GST");
@@ -338,7 +343,22 @@ const ledger = {
   },
   chart,
   openingBalances: { asAt: FROM, source: "Last year's records", accounts: opening },
-  assets: [],
+  assets: [
+    {
+      number: "FA-0001",
+      name: "Camera body",
+      type: "Camera Equipment",
+      status: "Registered",
+      purchased: day(10, 1),
+      depreciationFrom: day(10, 1),
+      cost: cents(10000),
+      // Diminishing value over an effective life of five years: 200% / 5.
+      rate: 40,
+      method: "Diminishing Value",
+      averaging: "Full Month",
+      disposed: null,
+    },
+  ],
   invoices,
   contacts,
   exampleAiSuggestions,

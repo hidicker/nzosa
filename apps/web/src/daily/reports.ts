@@ -1669,9 +1669,13 @@ function renderDepreciation(body: HTMLElement, year: number): void {
   body.append(heading);
   body.append(
     note(
-      "Each asset uses its own method (straight line or diminishing value) with full-month " +
-        "averaging. An asset disposed of in the year has no depreciation that year; its book " +
-        "value goes to the disposal.",
+      booksCountry().id === "au"
+        ? "Each asset uses its own method (prime cost or diminishing value) for the days it was " +
+            "held in the year, from the day it was first used. An asset disposed of in the year " +
+            "is depreciated to the day it went; its book value then goes to the disposal."
+        : "Each asset uses its own method (straight line or diminishing value) with full-month " +
+            "averaging. An asset disposed of in the year has no depreciation that year; its book " +
+            "value goes to the disposal.",
     ),
   );
 
@@ -1735,8 +1739,8 @@ function renderDepreciation(body: HTMLElement, year: number): void {
     body.append(
       note(
         `Assets disposed of in the year carried ${money(schedule.disposedBookValue)} of book ` +
-          "value. Enter each sale price on the Fixed assets page to work out the loss, " +
-          "depreciation recovered or capital gain.",
+          "value. Enter each sale price on the Fixed assets page to work out the " +
+          (booksCountry().id === "au" ? "balancing adjustment or capital gain." : "loss, depreciation recovered or capital gain."),
       ),
     );
   }

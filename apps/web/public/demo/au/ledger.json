@@ -1047,6 +1047,32 @@
    "id": "au-0041",
    "occurrence": 1,
    "date": "2025-10-01",
+   "amount": -1100000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Camera body, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Camera House",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "au-0042",
+   "occurrence": 1,
+   "date": "2025-10-01",
    "amount": 234000,
    "currency": "AUD",
    "serial": "",
@@ -1066,11 +1092,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 41
+    "line": 42
    }
   },
   {
-   "id": "au-0042",
+   "id": "au-0043",
    "occurrence": 1,
    "date": "2025-10-01",
    "amount": -164000,
@@ -1092,11 +1118,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 42
+    "line": 43
    }
   },
   {
-   "id": "au-0043",
+   "id": "au-0044",
    "occurrence": 1,
    "date": "2025-10-02",
    "amount": -132000,
@@ -1118,11 +1144,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 43
+    "line": 44
    }
   },
   {
-   "id": "au-0044",
+   "id": "au-0045",
    "occurrence": 1,
    "date": "2025-10-03",
    "amount": -28640,
@@ -1144,11 +1170,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 44
+    "line": 45
    }
   },
   {
-   "id": "au-0045",
+   "id": "au-0046",
    "occurrence": 1,
    "date": "2025-10-03",
    "amount": -18720,
@@ -1170,11 +1196,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 45
+    "line": 46
    }
   },
   {
-   "id": "au-0046",
+   "id": "au-0047",
    "occurrence": 1,
    "date": "2025-10-04",
    "amount": -8499,
@@ -1196,11 +1222,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 46
+    "line": 47
    }
   },
   {
-   "id": "au-0047",
+   "id": "au-0048",
    "occurrence": 1,
    "date": "2025-10-09",
    "amount": -8900,
@@ -1222,11 +1248,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 47
+    "line": 48
    }
   },
   {
-   "id": "au-0048",
+   "id": "au-0049",
    "occurrence": 1,
    "date": "2025-10-10",
    "amount": 668800,
@@ -1248,11 +1274,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 48
+    "line": 49
    }
   },
   {
-   "id": "au-0049",
+   "id": "au-0050",
    "occurrence": 1,
    "date": "2025-10-15",
    "amount": -141550,
@@ -1274,11 +1300,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 49
+    "line": 50
    }
   },
   {
-   "id": "au-0050",
+   "id": "au-0051",
    "occurrence": 1,
    "date": "2025-10-24",
    "amount": 193600,
@@ -1300,11 +1326,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 50
+    "line": 51
    }
   },
   {
-   "id": "au-0051",
+   "id": "au-0052",
    "occurrence": 1,
    "date": "2025-10-27",
    "amount": -1000,
@@ -1326,11 +1352,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 51
+    "line": 52
    }
   },
   {
-   "id": "au-0052",
+   "id": "au-0053",
    "occurrence": 1,
    "date": "2025-10-28",
    "amount": -42600,
@@ -1352,11 +1378,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 52
+    "line": 53
    }
   },
   {
-   "id": "au-0053",
+   "id": "au-0054",
    "occurrence": 1,
    "date": "2025-10-28",
    "amount": -93600,
@@ -1378,32 +1404,6 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 53
-   }
-  },
-  {
-   "id": "au-0054",
-   "occurrence": 1,
-   "date": "2025-10-28",
-   "amount": -124000,
-   "currency": "AUD",
-   "serial": "",
-   "trn": "",
-   "particulars": "PAYG instalment",
-   "code": "",
-   "reference": "",
-   "otherParty": "ATO",
-   "origin": "",
-   "type": "DEBIT",
-   "batch": "",
-   "otherPartyAccount": "",
-   "account": "au-business",
-   "extras": {
-    "accountLabel": "Business Transaction ••3302"
-   },
-   "source": {
-    "importer": "invented",
-    "file": "au-demo.csv",
     "line": 54
    }
   },
@@ -1411,11 +1411,11 @@
    "id": "au-0055",
    "occurrence": 1,
    "date": "2025-10-28",
-   "amount": -124441,
+   "amount": -124000,
    "currency": "AUD",
    "serial": "",
    "trn": "",
-   "particulars": "BAS 2025-07 to 2025-09, GST",
+   "particulars": "PAYG instalment",
    "code": "",
    "reference": "",
    "otherParty": "ATO",
@@ -1437,6 +1437,32 @@
    "id": "au-0056",
    "occurrence": 1,
    "date": "2025-10-28",
+   "amount": -124441,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-07 to 2025-09, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "au-0057",
+   "occurrence": 1,
+   "date": "2025-10-28",
    "amount": -250000,
    "currency": "AUD",
    "serial": "",
@@ -1456,11 +1482,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 56
+    "line": 57
    }
   },
   {
-   "id": "au-0057",
+   "id": "au-0058",
    "occurrence": 1,
    "date": "2025-10-31",
    "amount": -245800,
@@ -1482,11 +1508,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 57
+    "line": 58
    }
   },
   {
-   "id": "au-0058",
+   "id": "au-0059",
    "occurrence": 1,
    "date": "2025-11-01",
    "amount": 234000,
@@ -1508,11 +1534,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 58
+    "line": 59
    }
   },
   {
-   "id": "au-0059",
+   "id": "au-0060",
    "occurrence": 1,
    "date": "2025-11-02",
    "amount": -132000,
@@ -1534,11 +1560,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 59
+    "line": 60
    }
   },
   {
-   "id": "au-0060",
+   "id": "au-0061",
    "occurrence": 1,
    "date": "2025-11-03",
    "amount": -18720,
@@ -1560,11 +1586,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 60
+    "line": 61
    }
   },
   {
-   "id": "au-0061",
+   "id": "au-0062",
    "occurrence": 1,
    "date": "2025-11-04",
    "amount": -8499,
@@ -1586,11 +1612,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 61
+    "line": 62
    }
   },
   {
-   "id": "au-0062",
+   "id": "au-0063",
    "occurrence": 1,
    "date": "2025-11-07",
    "amount": 598400,
@@ -1612,11 +1638,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 62
+    "line": 63
    }
   },
   {
-   "id": "au-0063",
+   "id": "au-0064",
    "occurrence": 1,
    "date": "2025-11-09",
    "amount": -8900,
@@ -1638,11 +1664,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 63
+    "line": 64
    }
   },
   {
-   "id": "au-0064",
+   "id": "au-0065",
    "occurrence": 1,
    "date": "2025-11-14",
    "amount": -7490,
@@ -1664,11 +1690,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 64
+    "line": 65
    }
   },
   {
-   "id": "au-0065",
+   "id": "au-0066",
    "occurrence": 1,
    "date": "2025-11-15",
    "amount": -141550,
@@ -1690,11 +1716,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 65
+    "line": 66
    }
   },
   {
-   "id": "au-0066",
+   "id": "au-0067",
    "occurrence": 1,
    "date": "2025-11-20",
    "amount": -51240,
@@ -1716,11 +1742,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 66
+    "line": 67
    }
   },
   {
-   "id": "au-0067",
+   "id": "au-0068",
    "occurrence": 1,
    "date": "2025-11-21",
    "amount": 264000,
@@ -1742,11 +1768,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 67
+    "line": 68
    }
   },
   {
-   "id": "au-0068",
+   "id": "au-0069",
    "occurrence": 1,
    "date": "2025-11-27",
    "amount": -1000,
@@ -1768,11 +1794,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 68
+    "line": 69
    }
   },
   {
-   "id": "au-0069",
+   "id": "au-0070",
    "occurrence": 1,
    "date": "2025-11-28",
    "amount": -250000,
@@ -1794,11 +1820,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 69
+    "line": 70
    }
   },
   {
-   "id": "au-0070",
+   "id": "au-0071",
    "occurrence": 1,
    "date": "2025-11-30",
    "amount": -245800,
@@ -1820,11 +1846,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 70
+    "line": 71
    }
   },
   {
-   "id": "au-0071",
+   "id": "au-0072",
    "occurrence": 1,
    "date": "2025-12-01",
    "amount": 234000,
@@ -1846,11 +1872,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 71
+    "line": 72
    }
   },
   {
-   "id": "au-0072",
+   "id": "au-0073",
    "occurrence": 1,
    "date": "2025-12-02",
    "amount": -132000,
@@ -1872,11 +1898,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 72
+    "line": 73
    }
   },
   {
-   "id": "au-0073",
+   "id": "au-0074",
    "occurrence": 1,
    "date": "2025-12-03",
    "amount": -18720,
@@ -1898,11 +1924,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 73
+    "line": 74
    }
   },
   {
-   "id": "au-0074",
+   "id": "au-0075",
    "occurrence": 1,
    "date": "2025-12-04",
    "amount": -8499,
@@ -1924,11 +1950,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 74
+    "line": 75
    }
   },
   {
-   "id": "au-0075",
+   "id": "au-0076",
    "occurrence": 1,
    "date": "2025-12-05",
    "amount": 352000,
@@ -1950,11 +1976,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 75
+    "line": 76
    }
   },
   {
-   "id": "au-0076",
+   "id": "au-0077",
    "occurrence": 1,
    "date": "2025-12-09",
    "amount": -8900,
@@ -1976,11 +2002,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 76
+    "line": 77
    }
   },
   {
-   "id": "au-0077",
+   "id": "au-0078",
    "occurrence": 1,
    "date": "2025-12-12",
    "amount": 844800,
@@ -2002,11 +2028,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 77
+    "line": 78
    }
   },
   {
-   "id": "au-0078",
+   "id": "au-0079",
    "occurrence": 1,
    "date": "2025-12-12",
    "amount": -16830,
@@ -2028,11 +2054,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 78
+    "line": 79
    }
   },
   {
-   "id": "au-0079",
+   "id": "au-0080",
    "occurrence": 1,
    "date": "2025-12-15",
    "amount": -141550,
@@ -2054,11 +2080,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 79
+    "line": 80
    }
   },
   {
-   "id": "au-0080",
+   "id": "au-0081",
    "occurrence": 1,
    "date": "2025-12-27",
    "amount": -1000,
@@ -2080,11 +2106,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 80
+    "line": 81
    }
   },
   {
-   "id": "au-0081",
+   "id": "au-0082",
    "occurrence": 1,
    "date": "2025-12-28",
    "amount": -250000,
@@ -2106,11 +2132,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 81
+    "line": 82
    }
   },
   {
-   "id": "au-0082",
+   "id": "au-0083",
    "occurrence": 1,
    "date": "2025-12-31",
    "amount": 1840,
@@ -2132,11 +2158,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 82
+    "line": 83
    }
   },
   {
-   "id": "au-0083",
+   "id": "au-0084",
    "occurrence": 1,
    "date": "2025-12-31",
    "amount": -245800,
@@ -2158,11 +2184,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 83
+    "line": 84
    }
   },
   {
-   "id": "au-0084",
+   "id": "au-0085",
    "occurrence": 1,
    "date": "2026-01-01",
    "amount": 234000,
@@ -2184,11 +2210,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 84
+    "line": 85
    }
   },
   {
-   "id": "au-0085",
+   "id": "au-0086",
    "occurrence": 1,
    "date": "2026-01-02",
    "amount": -132000,
@@ -2210,11 +2236,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 85
+    "line": 86
    }
   },
   {
-   "id": "au-0086",
+   "id": "au-0087",
    "occurrence": 1,
    "date": "2026-01-03",
    "amount": -18720,
@@ -2236,11 +2262,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 86
+    "line": 87
    }
   },
   {
-   "id": "au-0087",
+   "id": "au-0088",
    "occurrence": 1,
    "date": "2026-01-04",
    "amount": -8499,
@@ -2262,11 +2288,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 87
+    "line": 88
    }
   },
   {
-   "id": "au-0088",
+   "id": "au-0089",
    "occurrence": 1,
    "date": "2026-01-09",
    "amount": -8900,
@@ -2288,11 +2314,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 88
+    "line": 89
    }
   },
   {
-   "id": "au-0089",
+   "id": "au-0090",
    "occurrence": 1,
    "date": "2026-01-15",
    "amount": -141550,
@@ -2314,11 +2340,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 89
+    "line": 90
    }
   },
   {
-   "id": "au-0090",
+   "id": "au-0091",
    "occurrence": 1,
    "date": "2026-01-16",
    "amount": 228800,
@@ -2340,11 +2366,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 90
+    "line": 91
    }
   },
   {
-   "id": "au-0091",
+   "id": "au-0092",
    "occurrence": 1,
    "date": "2026-01-22",
    "amount": -7960,
@@ -2366,11 +2392,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 91
+    "line": 92
    }
   },
   {
-   "id": "au-0092",
+   "id": "au-0093",
    "occurrence": 1,
    "date": "2026-01-27",
    "amount": -1000,
@@ -2392,11 +2418,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 92
+    "line": 93
    }
   },
   {
-   "id": "au-0093",
+   "id": "au-0094",
    "occurrence": 1,
    "date": "2026-01-28",
    "amount": -93600,
@@ -2418,11 +2444,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 93
+    "line": 94
    }
   },
   {
-   "id": "au-0094",
+   "id": "au-0095",
    "occurrence": 1,
    "date": "2026-01-28",
    "amount": -250000,
@@ -2444,11 +2470,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 94
+    "line": 95
    }
   },
   {
-   "id": "au-0095",
+   "id": "au-0096",
    "occurrence": 1,
    "date": "2026-01-28",
    "amount": -38500,
@@ -2470,11 +2496,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 95
+    "line": 96
    }
   },
   {
-   "id": "au-0096",
+   "id": "au-0097",
    "occurrence": 1,
    "date": "2026-01-31",
    "amount": -245800,
@@ -2496,11 +2522,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 96
+    "line": 97
    }
   },
   {
-   "id": "au-0097",
+   "id": "au-0098",
    "occurrence": 1,
    "date": "2026-02-01",
    "amount": 234000,
@@ -2522,11 +2548,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 97
+    "line": 98
    }
   },
   {
-   "id": "au-0098",
+   "id": "au-0099",
    "occurrence": 1,
    "date": "2026-02-02",
    "amount": -132000,
@@ -2548,11 +2574,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 98
+    "line": 99
    }
   },
   {
-   "id": "au-0099",
+   "id": "au-0100",
    "occurrence": 1,
    "date": "2026-02-03",
    "amount": -18720,
@@ -2574,11 +2600,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 99
+    "line": 100
    }
   },
   {
-   "id": "au-0100",
+   "id": "au-0101",
    "occurrence": 1,
    "date": "2026-02-04",
    "amount": -8499,
@@ -2600,11 +2626,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 100
+    "line": 101
    }
   },
   {
-   "id": "au-0101",
+   "id": "au-0102",
    "occurrence": 1,
    "date": "2026-02-06",
    "amount": 633600,
@@ -2626,11 +2652,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 101
+    "line": 102
    }
   },
   {
-   "id": "au-0102",
+   "id": "au-0103",
    "occurrence": 1,
    "date": "2026-02-09",
    "amount": -8900,
@@ -2652,11 +2678,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 102
+    "line": 103
    }
   },
   {
-   "id": "au-0103",
+   "id": "au-0104",
    "occurrence": 1,
    "date": "2026-02-15",
    "amount": -141550,
@@ -2678,11 +2704,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 103
+    "line": 104
    }
   },
   {
-   "id": "au-0104",
+   "id": "au-0105",
    "occurrence": 1,
    "date": "2026-02-18",
    "amount": -88000,
@@ -2704,11 +2730,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 104
+    "line": 105
    }
   },
   {
-   "id": "au-0105",
+   "id": "au-0106",
    "occurrence": 1,
    "date": "2026-02-20",
    "amount": 299200,
@@ -2730,11 +2756,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 105
+    "line": 106
    }
   },
   {
-   "id": "au-0106",
+   "id": "au-0107",
    "occurrence": 1,
    "date": "2026-02-20",
    "amount": -51240,
@@ -2756,11 +2782,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 106
+    "line": 107
    }
   },
   {
-   "id": "au-0107",
+   "id": "au-0108",
    "occurrence": 1,
    "date": "2026-02-27",
    "amount": -1000,
@@ -2782,11 +2808,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 107
+    "line": 108
    }
   },
   {
-   "id": "au-0108",
+   "id": "au-0109",
    "occurrence": 1,
    "date": "2026-02-27",
    "amount": -42600,
@@ -2808,32 +2834,6 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 108
-   }
-  },
-  {
-   "id": "au-0109",
-   "occurrence": 1,
-   "date": "2026-02-27",
-   "amount": -124000,
-   "currency": "AUD",
-   "serial": "",
-   "trn": "",
-   "particulars": "PAYG instalment",
-   "code": "",
-   "reference": "",
-   "otherParty": "ATO",
-   "origin": "",
-   "type": "DEBIT",
-   "batch": "",
-   "otherPartyAccount": "",
-   "account": "au-business",
-   "extras": {
-    "accountLabel": "Business Transaction ••3302"
-   },
-   "source": {
-    "importer": "invented",
-    "file": "au-demo.csv",
     "line": 109
    }
   },
@@ -2841,7 +2841,7 @@
    "id": "au-0110",
    "occurrence": 1,
    "date": "2026-02-27",
-   "amount": -221570,
+   "amount": -121570,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -2866,6 +2866,32 @@
   {
    "id": "au-0111",
    "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -124000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "au-business",
+   "extras": {
+    "accountLabel": "Business Transaction ••3302"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-demo.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "au-0112",
+   "occurrence": 1,
    "date": "2026-02-28",
    "amount": -245800,
    "currency": "AUD",
@@ -2886,11 +2912,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 111
+    "line": 112
    }
   },
   {
-   "id": "au-0112",
+   "id": "au-0113",
    "occurrence": 1,
    "date": "2026-02-28",
    "amount": -250000,
@@ -2912,11 +2938,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 112
+    "line": 113
    }
   },
   {
-   "id": "au-0113",
+   "id": "au-0114",
    "occurrence": 1,
    "date": "2026-03-01",
    "amount": 234000,
@@ -2938,11 +2964,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 113
+    "line": 114
    }
   },
   {
-   "id": "au-0114",
+   "id": "au-0115",
    "occurrence": 1,
    "date": "2026-03-02",
    "amount": -132000,
@@ -2964,11 +2990,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 114
+    "line": 115
    }
   },
   {
-   "id": "au-0115",
+   "id": "au-0116",
    "occurrence": 1,
    "date": "2026-03-03",
    "amount": -18720,
@@ -2990,11 +3016,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 115
+    "line": 116
    }
   },
   {
-   "id": "au-0116",
+   "id": "au-0117",
    "occurrence": 1,
    "date": "2026-03-04",
    "amount": -8499,
@@ -3016,11 +3042,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 116
+    "line": 117
    }
   },
   {
-   "id": "au-0117",
+   "id": "au-0118",
    "occurrence": 1,
    "date": "2026-03-06",
    "amount": 440000,
@@ -3042,11 +3068,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 117
+    "line": 118
    }
   },
   {
-   "id": "au-0118",
+   "id": "au-0119",
    "occurrence": 1,
    "date": "2026-03-09",
    "amount": -8900,
@@ -3068,11 +3094,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 118
+    "line": 119
    }
   },
   {
-   "id": "au-0119",
+   "id": "au-0120",
    "occurrence": 1,
    "date": "2026-03-12",
    "amount": -19860,
@@ -3094,11 +3120,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 119
+    "line": 120
    }
   },
   {
-   "id": "au-0120",
+   "id": "au-0121",
    "occurrence": 1,
    "date": "2026-03-12",
    "amount": -16830,
@@ -3120,11 +3146,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 120
+    "line": 121
    }
   },
   {
-   "id": "au-0121",
+   "id": "au-0122",
    "occurrence": 1,
    "date": "2026-03-15",
    "amount": -141550,
@@ -3146,11 +3172,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 121
+    "line": 122
    }
   },
   {
-   "id": "au-0122",
+   "id": "au-0123",
    "occurrence": 1,
    "date": "2026-03-20",
    "amount": 704000,
@@ -3172,11 +3198,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 122
+    "line": 123
    }
   },
   {
-   "id": "au-0123",
+   "id": "au-0124",
    "occurrence": 1,
    "date": "2026-03-27",
    "amount": -1000,
@@ -3198,11 +3224,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 123
+    "line": 124
    }
   },
   {
-   "id": "au-0124",
+   "id": "au-0125",
    "occurrence": 1,
    "date": "2026-03-27",
    "amount": -8330,
@@ -3224,11 +3250,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 124
+    "line": 125
    }
   },
   {
-   "id": "au-0125",
+   "id": "au-0126",
    "occurrence": 1,
    "date": "2026-03-28",
    "amount": -250000,
@@ -3250,11 +3276,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 125
+    "line": 126
    }
   },
   {
-   "id": "au-0126",
+   "id": "au-0127",
    "occurrence": 1,
    "date": "2026-03-31",
    "amount": -245800,
@@ -3276,11 +3302,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 126
+    "line": 127
    }
   },
   {
-   "id": "au-0127",
+   "id": "au-0128",
    "occurrence": 1,
    "date": "2026-04-01",
    "amount": 234000,
@@ -3302,11 +3328,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 127
+    "line": 128
    }
   },
   {
-   "id": "au-0128",
+   "id": "au-0129",
    "occurrence": 1,
    "date": "2026-04-02",
    "amount": -132000,
@@ -3328,11 +3354,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 128
+    "line": 129
    }
   },
   {
-   "id": "au-0129",
+   "id": "au-0130",
    "occurrence": 1,
    "date": "2026-04-03",
    "amount": -18720,
@@ -3354,11 +3380,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 129
+    "line": 130
    }
   },
   {
-   "id": "au-0130",
+   "id": "au-0131",
    "occurrence": 1,
    "date": "2026-04-04",
    "amount": -8499,
@@ -3380,11 +3406,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 130
+    "line": 131
    }
   },
   {
-   "id": "au-0131",
+   "id": "au-0132",
    "occurrence": 1,
    "date": "2026-04-09",
    "amount": -8900,
@@ -3406,11 +3432,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 131
+    "line": 132
    }
   },
   {
-   "id": "au-0132",
+   "id": "au-0133",
    "occurrence": 1,
    "date": "2026-04-10",
    "amount": 211200,
@@ -3432,11 +3458,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 132
+    "line": 133
    }
   },
   {
-   "id": "au-0133",
+   "id": "au-0134",
    "occurrence": 1,
    "date": "2026-04-15",
    "amount": -141550,
@@ -3458,11 +3484,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 133
+    "line": 134
    }
   },
   {
-   "id": "au-0134",
+   "id": "au-0135",
    "occurrence": 1,
    "date": "2026-04-24",
    "amount": 334400,
@@ -3484,11 +3510,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 134
+    "line": 135
    }
   },
   {
-   "id": "au-0135",
+   "id": "au-0136",
    "occurrence": 1,
    "date": "2026-04-27",
    "amount": -1000,
@@ -3510,11 +3536,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 135
+    "line": 136
    }
   },
   {
-   "id": "au-0136",
+   "id": "au-0137",
    "occurrence": 1,
    "date": "2026-04-28",
    "amount": -42600,
@@ -3536,11 +3562,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 136
+    "line": 137
    }
   },
   {
-   "id": "au-0137",
+   "id": "au-0138",
    "occurrence": 1,
    "date": "2026-04-28",
    "amount": -93600,
@@ -3562,11 +3588,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 137
+    "line": 138
    }
   },
   {
-   "id": "au-0138",
+   "id": "au-0139",
    "occurrence": 1,
    "date": "2026-04-28",
    "amount": -124000,
@@ -3588,11 +3614,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 138
+    "line": 139
    }
   },
   {
-   "id": "au-0139",
+   "id": "au-0140",
    "occurrence": 1,
    "date": "2026-04-28",
    "amount": -157568,
@@ -3614,11 +3640,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 139
+    "line": 140
    }
   },
   {
-   "id": "au-0140",
+   "id": "au-0141",
    "occurrence": 1,
    "date": "2026-04-28",
    "amount": -250000,
@@ -3640,11 +3666,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 140
+    "line": 141
    }
   },
   {
-   "id": "au-0141",
+   "id": "au-0142",
    "occurrence": 1,
    "date": "2026-04-30",
    "amount": -245800,
@@ -3666,11 +3692,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 141
+    "line": 142
    }
   },
   {
-   "id": "au-0142",
+   "id": "au-0143",
    "occurrence": 1,
    "date": "2026-05-01",
    "amount": 234000,
@@ -3692,11 +3718,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 142
+    "line": 143
    }
   },
   {
-   "id": "au-0143",
+   "id": "au-0144",
    "occurrence": 1,
    "date": "2026-05-02",
    "amount": -132000,
@@ -3718,11 +3744,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 143
+    "line": 144
    }
   },
   {
-   "id": "au-0144",
+   "id": "au-0145",
    "occurrence": 1,
    "date": "2026-05-03",
    "amount": -18720,
@@ -3744,11 +3770,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 144
+    "line": 145
    }
   },
   {
-   "id": "au-0145",
+   "id": "au-0146",
    "occurrence": 1,
    "date": "2026-05-04",
    "amount": -8499,
@@ -3770,11 +3796,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 145
+    "line": 146
    }
   },
   {
-   "id": "au-0146",
+   "id": "au-0147",
    "occurrence": 1,
    "date": "2026-05-08",
    "amount": 563200,
@@ -3796,11 +3822,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 146
+    "line": 147
    }
   },
   {
-   "id": "au-0147",
+   "id": "au-0148",
    "occurrence": 1,
    "date": "2026-05-09",
    "amount": -8900,
@@ -3822,11 +3848,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 147
+    "line": 148
    }
   },
   {
-   "id": "au-0148",
+   "id": "au-0149",
    "occurrence": 1,
    "date": "2026-05-15",
    "amount": -7655,
@@ -3848,11 +3874,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 148
+    "line": 149
    }
   },
   {
-   "id": "au-0149",
+   "id": "au-0150",
    "occurrence": 1,
    "date": "2026-05-15",
    "amount": -141550,
@@ -3874,11 +3900,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 149
+    "line": 150
    }
   },
   {
-   "id": "au-0150",
+   "id": "au-0151",
    "occurrence": 1,
    "date": "2026-05-20",
    "amount": -51240,
@@ -3900,11 +3926,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 150
+    "line": 151
    }
   },
   {
-   "id": "au-0151",
+   "id": "au-0152",
    "occurrence": 1,
    "date": "2026-05-22",
    "amount": 176000,
@@ -3926,11 +3952,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 151
+    "line": 152
    }
   },
   {
-   "id": "au-0152",
+   "id": "au-0153",
    "occurrence": 1,
    "date": "2026-05-27",
    "amount": -1000,
@@ -3952,11 +3978,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 152
+    "line": 153
    }
   },
   {
-   "id": "au-0153",
+   "id": "au-0154",
    "occurrence": 1,
    "date": "2026-05-28",
    "amount": -250000,
@@ -3978,11 +4004,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 153
+    "line": 154
    }
   },
   {
-   "id": "au-0154",
+   "id": "au-0155",
    "occurrence": 1,
    "date": "2026-05-31",
    "amount": -245800,
@@ -4004,11 +4030,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 154
+    "line": 155
    }
   },
   {
-   "id": "au-0155",
+   "id": "au-0156",
    "occurrence": 1,
    "date": "2026-06-01",
    "amount": 234000,
@@ -4030,11 +4056,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 155
+    "line": 156
    }
   },
   {
-   "id": "au-0156",
+   "id": "au-0157",
    "occurrence": 1,
    "date": "2026-06-02",
    "amount": -132000,
@@ -4056,11 +4082,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 156
+    "line": 157
    }
   },
   {
-   "id": "au-0157",
+   "id": "au-0158",
    "occurrence": 1,
    "date": "2026-06-03",
    "amount": -14900,
@@ -4082,11 +4108,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 157
+    "line": 158
    }
   },
   {
-   "id": "au-0158",
+   "id": "au-0159",
    "occurrence": 1,
    "date": "2026-06-03",
    "amount": -18720,
@@ -4108,11 +4134,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 158
+    "line": 159
    }
   },
   {
-   "id": "au-0159",
+   "id": "au-0160",
    "occurrence": 1,
    "date": "2026-06-04",
    "amount": -8499,
@@ -4134,11 +4160,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 159
+    "line": 160
    }
   },
   {
-   "id": "au-0160",
+   "id": "au-0161",
    "occurrence": 1,
    "date": "2026-06-09",
    "amount": -8900,
@@ -4160,11 +4186,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 160
+    "line": 161
    }
   },
   {
-   "id": "au-0161",
+   "id": "au-0162",
    "occurrence": 1,
    "date": "2026-06-11",
    "amount": -5670,
@@ -4186,11 +4212,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 161
+    "line": 162
    }
   },
   {
-   "id": "au-0162",
+   "id": "au-0163",
    "occurrence": 1,
    "date": "2026-06-12",
    "amount": 422400,
@@ -4212,11 +4238,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 162
+    "line": 163
    }
   },
   {
-   "id": "au-0163",
+   "id": "au-0164",
    "occurrence": 1,
    "date": "2026-06-12",
    "amount": -16830,
@@ -4238,11 +4264,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 163
+    "line": 164
    }
   },
   {
-   "id": "au-0164",
+   "id": "au-0165",
    "occurrence": 1,
    "date": "2026-06-15",
    "amount": -141550,
@@ -4264,11 +4290,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 164
+    "line": 165
    }
   },
   {
-   "id": "au-0165",
+   "id": "au-0166",
    "occurrence": 1,
    "date": "2026-06-18",
    "amount": -3850,
@@ -4290,11 +4316,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 165
+    "line": 166
    }
   },
   {
-   "id": "au-0166",
+   "id": "au-0167",
    "occurrence": 1,
    "date": "2026-06-22",
    "amount": -22000,
@@ -4316,11 +4342,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 166
+    "line": 167
    }
   },
   {
-   "id": "au-0167",
+   "id": "au-0168",
    "occurrence": 1,
    "date": "2026-06-24",
    "amount": 45000,
@@ -4342,11 +4368,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 167
+    "line": 168
    }
   },
   {
-   "id": "au-0168",
+   "id": "au-0169",
    "occurrence": 1,
    "date": "2026-06-27",
    "amount": -1000,
@@ -4368,11 +4394,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 168
+    "line": 169
    }
   },
   {
-   "id": "au-0169",
+   "id": "au-0170",
    "occurrence": 1,
    "date": "2026-06-28",
    "amount": -250000,
@@ -4394,11 +4420,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 169
+    "line": 170
    }
   },
   {
-   "id": "au-0170",
+   "id": "au-0171",
    "occurrence": 1,
    "date": "2026-06-30",
    "amount": 2175,
@@ -4420,11 +4446,11 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 170
+    "line": 171
    }
   },
   {
-   "id": "au-0171",
+   "id": "au-0172",
    "occurrence": 1,
    "date": "2026-06-30",
    "amount": -245800,
@@ -4446,7 +4472,7 @@
    "source": {
     "importer": "invented",
     "file": "au-demo.csv",
-    "line": 171
+    "line": 172
    }
   }
  ],
@@ -4773,13 +4799,21 @@
   },
   "au-0041": {
    "confirmed": true,
+   "code": "Camera Equipment - 730",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Camera body, incl GST",
+   "at": "2025-10-01"
+  },
+  "au-0042": {
+   "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
    "side": "sales",
    "note": "Rent for the month, by the agent",
    "at": "2025-10-01"
   },
-  "au-0042": {
+  "au-0043": {
    "confirmed": true,
    "code": "Landlord insurance - 555",
    "treatment": "exempt",
@@ -4787,7 +4821,7 @@
    "note": "Annual premium",
    "at": "2025-10-01"
   },
-  "au-0043": {
+  "au-0044": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -4795,7 +4829,7 @@
    "note": "Studio rent, incl GST",
    "at": "2025-10-02"
   },
-  "au-0044": {
+  "au-0045": {
    "confirmed": true,
    "code": "Printing & Stationery - 461",
    "treatment": "standard",
@@ -4803,7 +4837,7 @@
    "note": "Prints and album boxes, incl GST",
    "at": "2025-10-03"
   },
-  "au-0045": {
+  "au-0046": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -4811,7 +4845,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2025-10-03"
   },
-  "au-0046": {
+  "au-0047": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -4819,7 +4853,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2025-10-04"
   },
-  "au-0047": {
+  "au-0048": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -4827,7 +4861,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2025-10-09"
   },
-  "au-0048": {
+  "au-0049": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -4835,7 +4869,7 @@
    "note": "Photography, incl GST",
    "at": "2025-10-10"
   },
-  "au-0049": {
+  "au-0050": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -4843,7 +4877,7 @@
    "note": "Loan interest",
    "at": "2025-10-15"
   },
-  "au-0050": {
+  "au-0051": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -4851,7 +4885,7 @@
    "note": "Photography, incl GST",
    "at": "2025-10-24"
   },
-  "au-0051": {
+  "au-0052": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -4859,7 +4893,7 @@
    "note": "Bank fee",
    "at": "2025-10-27"
   },
-  "au-0052": {
+  "au-0053": {
    "confirmed": true,
    "code": "PAYG Withholdings Payable - 825",
    "treatment": "out-of-scope",
@@ -4867,7 +4901,7 @@
    "note": "BAS 2025-07 to 2025-09, PAYG withheld",
    "at": "2025-10-28"
   },
-  "au-0053": {
+  "au-0054": {
    "confirmed": true,
    "code": "Superannuation Payable - 826",
    "treatment": "out-of-scope",
@@ -4875,7 +4909,7 @@
    "note": "Super guarantee, Sam Okafor",
    "at": "2025-10-28"
   },
-  "au-0054": {
+  "au-0055": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -4883,7 +4917,7 @@
    "note": "PAYG instalment",
    "at": "2025-10-28"
   },
-  "au-0055": {
+  "au-0056": {
    "confirmed": true,
    "code": "GST - 820",
    "treatment": "exempt",
@@ -4891,7 +4925,7 @@
    "note": "BAS 2025-07 to 2025-09, GST",
    "at": "2025-10-28"
   },
-  "au-0056": {
+  "au-0057": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -4899,7 +4933,7 @@
    "note": "Owner drawings",
    "at": "2025-10-28"
   },
-  "au-0057": {
+  "au-0058": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -4907,7 +4941,7 @@
    "note": "Net pay",
    "at": "2025-10-31"
   },
-  "au-0058": {
+  "au-0059": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -4915,7 +4949,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2025-11-01"
   },
-  "au-0059": {
+  "au-0060": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -4923,7 +4957,7 @@
    "note": "Studio rent, incl GST",
    "at": "2025-11-02"
   },
-  "au-0060": {
+  "au-0061": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -4931,7 +4965,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2025-11-03"
   },
-  "au-0061": {
+  "au-0062": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -4939,7 +4973,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2025-11-04"
   },
-  "au-0062": {
+  "au-0063": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -4947,7 +4981,7 @@
    "note": "Photography, incl GST",
    "at": "2025-11-07"
   },
-  "au-0063": {
+  "au-0064": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -4955,7 +4989,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2025-11-09"
   },
-  "au-0064": {
+  "au-0065": {
    "confirmed": true,
    "code": "Motor Vehicle Expenses - 449",
    "treatment": "standard",
@@ -4963,7 +4997,7 @@
    "note": "Fuel, incl GST",
    "at": "2025-11-14"
   },
-  "au-0065": {
+  "au-0066": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -4971,7 +5005,7 @@
    "note": "Loan interest",
    "at": "2025-11-15"
   },
-  "au-0066": {
+  "au-0067": {
    "confirmed": true,
    "code": "Council rates - 551",
    "treatment": "exempt",
@@ -4979,7 +5013,7 @@
    "note": "Council rates, second instalment",
    "at": "2025-11-20"
   },
-  "au-0067": {
+  "au-0068": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -4987,7 +5021,7 @@
    "note": "Photography, incl GST",
    "at": "2025-11-21"
   },
-  "au-0068": {
+  "au-0069": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -4995,7 +5029,7 @@
    "note": "Bank fee",
    "at": "2025-11-27"
   },
-  "au-0069": {
+  "au-0070": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5003,7 +5037,7 @@
    "note": "Owner drawings",
    "at": "2025-11-28"
   },
-  "au-0070": {
+  "au-0071": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5011,7 +5045,7 @@
    "note": "Net pay",
    "at": "2025-11-30"
   },
-  "au-0071": {
+  "au-0072": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5019,7 +5053,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2025-12-01"
   },
-  "au-0072": {
+  "au-0073": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5027,7 +5061,7 @@
    "note": "Studio rent, incl GST",
    "at": "2025-12-02"
   },
-  "au-0073": {
+  "au-0074": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5035,7 +5069,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2025-12-03"
   },
-  "au-0074": {
+  "au-0075": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5043,7 +5077,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2025-12-04"
   },
-  "au-0075": {
+  "au-0076": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5051,7 +5085,7 @@
    "note": "Photography, incl GST",
    "at": "2025-12-05"
   },
-  "au-0076": {
+  "au-0077": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5059,7 +5093,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2025-12-09"
   },
-  "au-0077": {
+  "au-0078": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5067,7 +5101,7 @@
    "note": "Photography, incl GST",
    "at": "2025-12-12"
   },
-  "au-0078": {
+  "au-0079": {
    "confirmed": true,
    "code": "Water charges - 552",
    "treatment": "exempt",
@@ -5075,7 +5109,7 @@
    "note": "Water service charge",
    "at": "2025-12-12"
   },
-  "au-0079": {
+  "au-0080": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5083,7 +5117,7 @@
    "note": "Loan interest",
    "at": "2025-12-15"
   },
-  "au-0080": {
+  "au-0081": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5091,7 +5125,7 @@
    "note": "Bank fee",
    "at": "2025-12-27"
   },
-  "au-0081": {
+  "au-0082": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5099,7 +5133,7 @@
    "note": "Owner drawings",
    "at": "2025-12-28"
   },
-  "au-0082": {
+  "au-0083": {
    "confirmed": true,
    "code": "Interest Income - 270",
    "treatment": "exempt",
@@ -5107,7 +5141,7 @@
    "note": "Savings interest",
    "at": "2025-12-31"
   },
-  "au-0083": {
+  "au-0084": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5115,7 +5149,7 @@
    "note": "Net pay",
    "at": "2025-12-31"
   },
-  "au-0084": {
+  "au-0085": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5123,7 +5157,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-01-01"
   },
-  "au-0085": {
+  "au-0086": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5131,7 +5165,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-01-02"
   },
-  "au-0086": {
+  "au-0087": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5139,7 +5173,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-01-03"
   },
-  "au-0087": {
+  "au-0088": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5147,7 +5181,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-01-04"
   },
-  "au-0088": {
+  "au-0089": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5155,7 +5189,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-01-09"
   },
-  "au-0089": {
+  "au-0090": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5163,7 +5197,7 @@
    "note": "Loan interest",
    "at": "2026-01-15"
   },
-  "au-0090": {
+  "au-0091": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5171,7 +5205,7 @@
    "note": "Photography, incl GST",
    "at": "2026-01-16"
   },
-  "au-0091": {
+  "au-0092": {
    "confirmed": true,
    "code": "Motor Vehicle Expenses - 449",
    "treatment": "standard",
@@ -5179,7 +5213,7 @@
    "note": "Fuel, incl GST",
    "at": "2026-01-22"
   },
-  "au-0092": {
+  "au-0093": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5187,7 +5221,7 @@
    "note": "Bank fee",
    "at": "2026-01-27"
   },
-  "au-0093": {
+  "au-0094": {
    "confirmed": true,
    "code": "Superannuation Payable - 826",
    "treatment": "out-of-scope",
@@ -5195,7 +5229,7 @@
    "note": "Super guarantee, Sam Okafor",
    "at": "2026-01-28"
   },
-  "au-0094": {
+  "au-0095": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5203,7 +5237,7 @@
    "note": "Owner drawings",
    "at": "2026-01-28"
   },
-  "au-0095": {
+  "au-0096": {
    "confirmed": true,
    "code": "Repairs and maintenance (rental) - 556",
    "treatment": "exempt",
@@ -5211,7 +5245,7 @@
    "note": "Hot water system repair",
    "at": "2026-01-28"
   },
-  "au-0096": {
+  "au-0097": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5219,7 +5253,7 @@
    "note": "Net pay",
    "at": "2026-01-31"
   },
-  "au-0097": {
+  "au-0098": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5227,7 +5261,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-02-01"
   },
-  "au-0098": {
+  "au-0099": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5235,7 +5269,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-02-02"
   },
-  "au-0099": {
+  "au-0100": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5243,7 +5277,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-02-03"
   },
-  "au-0100": {
+  "au-0101": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5251,7 +5285,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-02-04"
   },
-  "au-0101": {
+  "au-0102": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5259,7 +5293,7 @@
    "note": "Photography, incl GST",
    "at": "2026-02-06"
   },
-  "au-0102": {
+  "au-0103": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5267,7 +5301,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-02-09"
   },
-  "au-0103": {
+  "au-0104": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5275,7 +5309,7 @@
    "note": "Loan interest",
    "at": "2026-02-15"
   },
-  "au-0104": {
+  "au-0105": {
    "confirmed": true,
    "code": "Consulting & Accounting - 412",
    "treatment": "standard",
@@ -5283,7 +5317,7 @@
    "note": "Tax return and BAS help, incl GST",
    "at": "2026-02-18"
   },
-  "au-0105": {
+  "au-0106": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5291,7 +5325,7 @@
    "note": "Photography, incl GST",
    "at": "2026-02-20"
   },
-  "au-0106": {
+  "au-0107": {
    "confirmed": true,
    "code": "Council rates - 551",
    "treatment": "exempt",
@@ -5299,7 +5333,7 @@
    "note": "Council rates, third instalment",
    "at": "2026-02-20"
   },
-  "au-0107": {
+  "au-0108": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5307,20 +5341,12 @@
    "note": "Bank fee",
    "at": "2026-02-27"
   },
-  "au-0108": {
+  "au-0109": {
    "confirmed": true,
    "code": "PAYG Withholdings Payable - 825",
    "treatment": "out-of-scope",
    "side": "none",
    "note": "BAS 2025-10 to 2025-12, PAYG withheld",
-   "at": "2026-02-27"
-  },
-  "au-0109": {
-   "confirmed": true,
-   "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
-   "side": "none",
-   "note": "PAYG instalment",
    "at": "2026-02-27"
   },
   "au-0110": {
@@ -5333,13 +5359,21 @@
   },
   "au-0111": {
    "confirmed": true,
+   "code": "Owner A Drawings - 880",
+   "treatment": "exempt",
+   "side": "none",
+   "note": "PAYG instalment",
+   "at": "2026-02-27"
+  },
+  "au-0112": {
+   "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
    "side": "none",
    "note": "Net pay",
    "at": "2026-02-28"
   },
-  "au-0112": {
+  "au-0113": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5347,7 +5381,7 @@
    "note": "Owner drawings",
    "at": "2026-02-28"
   },
-  "au-0113": {
+  "au-0114": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5355,7 +5389,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-03-01"
   },
-  "au-0114": {
+  "au-0115": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5363,7 +5397,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-03-02"
   },
-  "au-0115": {
+  "au-0116": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5371,7 +5405,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-03-03"
   },
-  "au-0116": {
+  "au-0117": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5379,7 +5413,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-03-04"
   },
-  "au-0117": {
+  "au-0118": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5387,7 +5421,7 @@
    "note": "Photography, incl GST",
    "at": "2026-03-06"
   },
-  "au-0118": {
+  "au-0119": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5395,7 +5429,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-03-09"
   },
-  "au-0119": {
+  "au-0120": {
    "confirmed": true,
    "code": "Printing & Stationery - 461",
    "treatment": "standard",
@@ -5403,7 +5437,7 @@
    "note": "Printing, incl GST",
    "at": "2026-03-12"
   },
-  "au-0120": {
+  "au-0121": {
    "confirmed": true,
    "code": "Water charges - 552",
    "treatment": "exempt",
@@ -5411,7 +5445,7 @@
    "note": "Water service charge",
    "at": "2026-03-12"
   },
-  "au-0121": {
+  "au-0122": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5419,7 +5453,7 @@
    "note": "Loan interest",
    "at": "2026-03-15"
   },
-  "au-0122": {
+  "au-0123": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5427,7 +5461,7 @@
    "note": "Photography, incl GST",
    "at": "2026-03-20"
   },
-  "au-0123": {
+  "au-0124": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5435,7 +5469,7 @@
    "note": "Bank fee",
    "at": "2026-03-27"
   },
-  "au-0124": {
+  "au-0125": {
    "confirmed": true,
    "code": "Motor Vehicle Expenses - 449",
    "treatment": "standard",
@@ -5443,7 +5477,7 @@
    "note": "Fuel, incl GST",
    "at": "2026-03-27"
   },
-  "au-0125": {
+  "au-0126": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5451,7 +5485,7 @@
    "note": "Owner drawings",
    "at": "2026-03-28"
   },
-  "au-0126": {
+  "au-0127": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5459,7 +5493,7 @@
    "note": "Net pay",
    "at": "2026-03-31"
   },
-  "au-0127": {
+  "au-0128": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5467,7 +5501,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-04-01"
   },
-  "au-0128": {
+  "au-0129": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5475,7 +5509,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-04-02"
   },
-  "au-0129": {
+  "au-0130": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5483,7 +5517,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-04-03"
   },
-  "au-0130": {
+  "au-0131": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5491,7 +5525,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-04-04"
   },
-  "au-0131": {
+  "au-0132": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5499,7 +5533,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-04-09"
   },
-  "au-0132": {
+  "au-0133": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5507,7 +5541,7 @@
    "note": "Photography, incl GST",
    "at": "2026-04-10"
   },
-  "au-0133": {
+  "au-0134": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5515,7 +5549,7 @@
    "note": "Loan interest",
    "at": "2026-04-15"
   },
-  "au-0134": {
+  "au-0135": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5523,7 +5557,7 @@
    "note": "Photography, incl GST",
    "at": "2026-04-24"
   },
-  "au-0135": {
+  "au-0136": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5531,7 +5565,7 @@
    "note": "Bank fee",
    "at": "2026-04-27"
   },
-  "au-0136": {
+  "au-0137": {
    "confirmed": true,
    "code": "PAYG Withholdings Payable - 825",
    "treatment": "out-of-scope",
@@ -5539,7 +5573,7 @@
    "note": "BAS 2026-01 to 2026-03, PAYG withheld",
    "at": "2026-04-28"
   },
-  "au-0137": {
+  "au-0138": {
    "confirmed": true,
    "code": "Superannuation Payable - 826",
    "treatment": "out-of-scope",
@@ -5547,7 +5581,7 @@
    "note": "Super guarantee, Sam Okafor",
    "at": "2026-04-28"
   },
-  "au-0138": {
+  "au-0139": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5555,7 +5589,7 @@
    "note": "PAYG instalment",
    "at": "2026-04-28"
   },
-  "au-0139": {
+  "au-0140": {
    "confirmed": true,
    "code": "GST - 820",
    "treatment": "exempt",
@@ -5563,7 +5597,7 @@
    "note": "BAS 2026-01 to 2026-03, GST",
    "at": "2026-04-28"
   },
-  "au-0140": {
+  "au-0141": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5571,7 +5605,7 @@
    "note": "Owner drawings",
    "at": "2026-04-28"
   },
-  "au-0141": {
+  "au-0142": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5579,7 +5613,7 @@
    "note": "Net pay",
    "at": "2026-04-30"
   },
-  "au-0142": {
+  "au-0143": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5587,7 +5621,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-05-01"
   },
-  "au-0143": {
+  "au-0144": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5595,7 +5629,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-05-02"
   },
-  "au-0144": {
+  "au-0145": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5603,7 +5637,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-05-03"
   },
-  "au-0145": {
+  "au-0146": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5611,7 +5645,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-05-04"
   },
-  "au-0146": {
+  "au-0147": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5619,7 +5653,7 @@
    "note": "Photography, incl GST",
    "at": "2026-05-08"
   },
-  "au-0147": {
+  "au-0148": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5627,7 +5661,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-05-09"
   },
-  "au-0148": {
+  "au-0149": {
    "confirmed": true,
    "code": "Motor Vehicle Expenses - 449",
    "treatment": "standard",
@@ -5635,7 +5669,7 @@
    "note": "Fuel, incl GST",
    "at": "2026-05-15"
   },
-  "au-0149": {
+  "au-0150": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5643,7 +5677,7 @@
    "note": "Loan interest",
    "at": "2026-05-15"
   },
-  "au-0150": {
+  "au-0151": {
    "confirmed": true,
    "code": "Council rates - 551",
    "treatment": "exempt",
@@ -5651,7 +5685,7 @@
    "note": "Council rates, fourth instalment",
    "at": "2026-05-20"
   },
-  "au-0151": {
+  "au-0152": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5659,7 +5693,7 @@
    "note": "Photography, incl GST",
    "at": "2026-05-22"
   },
-  "au-0152": {
+  "au-0153": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5667,7 +5701,7 @@
    "note": "Bank fee",
    "at": "2026-05-27"
   },
-  "au-0153": {
+  "au-0154": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5675,7 +5709,7 @@
    "note": "Owner drawings",
    "at": "2026-05-28"
   },
-  "au-0154": {
+  "au-0155": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5683,7 +5717,7 @@
    "note": "Net pay",
    "at": "2026-05-31"
   },
-  "au-0155": {
+  "au-0156": {
    "confirmed": true,
    "code": "Rent received - 275",
    "treatment": "exempt",
@@ -5691,7 +5725,7 @@
    "note": "Rent for the month, by the agent",
    "at": "2026-06-01"
   },
-  "au-0156": {
+  "au-0157": {
    "confirmed": true,
    "code": "Rent - 469",
    "treatment": "standard",
@@ -5699,7 +5733,7 @@
    "note": "Studio rent, incl GST",
    "at": "2026-06-02"
   },
-  "au-0158": {
+  "au-0159": {
    "confirmed": true,
    "code": "Property agent fees - 553",
    "treatment": "exempt",
@@ -5707,7 +5741,7 @@
    "note": "Management fee, 8% incl GST",
    "at": "2026-06-03"
   },
-  "au-0159": {
+  "au-0160": {
    "confirmed": true,
    "code": "Subscriptions - 485",
    "treatment": "standard",
@@ -5715,7 +5749,7 @@
    "note": "Creative Cloud, incl GST",
    "at": "2026-06-04"
   },
-  "au-0160": {
+  "au-0161": {
    "confirmed": true,
    "code": "Telephone & Internet - 489",
    "treatment": "standard",
@@ -5723,7 +5757,7 @@
    "note": "Mobile and internet, incl GST",
    "at": "2026-06-09"
   },
-  "au-0162": {
+  "au-0163": {
    "confirmed": true,
    "code": "Sales - 200",
    "treatment": "standard",
@@ -5731,7 +5765,7 @@
    "note": "Photography, incl GST",
    "at": "2026-06-12"
   },
-  "au-0163": {
+  "au-0164": {
    "confirmed": true,
    "code": "Water charges - 552",
    "treatment": "exempt",
@@ -5739,7 +5773,7 @@
    "note": "Water service charge",
    "at": "2026-06-12"
   },
-  "au-0164": {
+  "au-0165": {
    "confirmed": true,
    "code": "Interest on loans - 554",
    "treatment": "exempt",
@@ -5747,7 +5781,7 @@
    "note": "Loan interest",
    "at": "2026-06-15"
   },
-  "au-0168": {
+  "au-0169": {
    "confirmed": true,
    "code": "Bank Fees - 404",
    "treatment": "exempt",
@@ -5755,7 +5789,7 @@
    "note": "Bank fee",
    "at": "2026-06-27"
   },
-  "au-0169": {
+  "au-0170": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
    "treatment": "exempt",
@@ -5763,7 +5797,7 @@
    "note": "Owner drawings",
    "at": "2026-06-28"
   },
-  "au-0170": {
+  "au-0171": {
    "confirmed": true,
    "code": "Interest Income - 270",
    "treatment": "exempt",
@@ -5771,7 +5805,7 @@
    "note": "Savings interest",
    "at": "2026-06-30"
   },
-  "au-0171": {
+  "au-0172": {
    "confirmed": true,
    "code": "Wages Payable - 804",
    "treatment": "out-of-scope",
@@ -5820,6 +5854,7 @@
    "275": "banksia",
    "404": "studio",
    "412": "studio",
+   "416": "studio",
    "433": "studio",
    "449": "studio",
    "461": "studio",
@@ -5837,6 +5872,8 @@
    "555": "banksia",
    "556": "banksia",
    "610": "studio",
+   "730": "studio",
+   "731": "studio",
    "800": "studio",
    "804": "studio",
    "820": "studio",
@@ -6096,6 +6133,36 @@
    "entityKind": "business"
   },
   {
+   "code": "416",
+   "name": "Depreciation",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "730",
+   "name": "Camera Equipment",
+   "type": "Fixed Asset",
+   "taxCode": "GST on Capital",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "731",
+   "name": "Less Accumulated Depreciation on Camera Equipment",
+   "type": "Fixed Asset",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Wattle & Lens Photography",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
    "code": "610",
    "name": "Accounts Receivable",
    "type": "Accounts Receivable",
@@ -6155,7 +6222,21 @@
    "au-rental": 520000
   }
  },
- "assets": [],
+ "assets": [
+  {
+   "number": "FA-0001",
+   "name": "Camera body",
+   "type": "Camera Equipment",
+   "status": "Registered",
+   "purchased": "2025-10-01",
+   "depreciationFrom": "2025-10-01",
+   "cost": 1000000,
+   "rate": 40,
+   "method": "Diminishing Value",
+   "averaging": "Full Month",
+   "disposed": null
+  }
+ ],
  "invoices": [
   {
    "number": "INV-0231",
@@ -6266,20 +6347,20 @@
  ],
  "exampleAiSuggestions": [
   {
-   "id": "au-0157",
+   "id": "au-0158",
    "code": "485",
    "confidence": 0.9,
    "because": "Canva is design software paid from the business account: a subscription, with GST in it from an Australian supplier."
   },
   {
-   "id": "au-0166",
+   "id": "au-0167",
    "code": "556",
    "confidence": 0.88,
    "because": "Garden care paid from the rental's account: upkeep of the rental property.",
    "caution": "A residential rental makes input-taxed supplies, so no GST credit is claimed on it."
   },
   {
-   "id": "au-0167",
+   "id": "au-0168",
    "code": "200",
    "confidence": 0.45,
    "because": "Money in to the business account by Osko, most likely a client paying for a shoot.",

@@ -214,8 +214,12 @@ function renderDisposals(body: HTMLElement): void {
   body.append(table);
   body.append(
     note(
-      "Depreciation recovered is taxable income. A capital gain (above original cost) is not " +
-        "taxable. A loss on sale is deductible.",
+      booksCountry().id === "au"
+        ? "The balancing adjustment is the sale price less the book value: assessable income when " +
+            "it is a gain, including any amount above what the asset cost, and a deduction when it " +
+            "is a loss."
+        : "Depreciation recovered is taxable income. A capital gain (above original cost) is not " +
+            "taxable. A loss on sale is deductible.",
     ),
   );
 }
@@ -618,7 +622,7 @@ export function renderAssetsPage(): void {
     body.append(
       note(
         "No assets yet. Add them to calculate depreciation and gains or losses on sale, or " +
-          "fill in the template and load it below.",
+          "fill in the template and load it above.",
       ),
     );
     return;

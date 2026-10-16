@@ -154,7 +154,7 @@ export function booksMoney(cents: number): string {
  * browsers have shown hidden options -- and they can never apply to these
  * books, so they are removed. New Zealand books never get here.
  */
-const NEW_ZEALAND_REPORTS = ["gstreturn", "ir10", "rentals", "yearend", "ir3", "owner"];
+const NEW_ZEALAND_REPORTS = ["gstreturn", "ir10", "rentals", "yearend", "ir3", "owner", "shareholders"];
 function dropNewZealandReports(): void {
   const select = document.getElementById("report-kind");
   if (select === null) return;

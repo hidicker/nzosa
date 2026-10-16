@@ -174,12 +174,6 @@ works).
   with hundreds it should go in batches.
 - **The morning run's key is compared with `!==`.** A constant-time comparison
   would be better practice, though the key is long and random.
-- **New books show "XYZ Ltd" until Start here names the entity.** It is
-  `DEFAULT_ENTITY_NAME` in core's `entities.ts`, compared by value in several
-  places (`migration-page.ts`, `setup-wizard.ts`, `entities.ts`), so it reads
-  as a New Zealand company in US books. A neutral placeholder ("My business")
-  would need those comparisons to accept the old name too, for books saved
-  with it.
 - **QuickBooks' trial balance is checked only when dropped after the coding
   is accepted.** Dropped with the rest, it says to drop it again. Keeping it
   and running the check once "Use QuickBooks for all" is pressed would save

@@ -1499,7 +1499,10 @@ function addAccountForm(model: EntityModel, accountRows: readonly { label: strin
   code.type = "text";
   code.placeholder = "e.g. 429";
   const codeHint = hintEl();
-  codeHint.textContent = "Usually 2xx income, 3xx direct costs, 4xx expenses, 6xx–7xx assets, 8xx–9xx liabilities and equity.";
+  codeHint.textContent =
+    booksCountry().id === "nz"
+      ? "Usually 2xx income, 3xx direct costs, 4xx expenses, 6xx–7xx assets, 8xx–9xx liabilities and equity."
+      : "Choose a type to see the numbers the chart uses for it.";
 
   const name = document.createElement("input");
   name.type = "text";

@@ -15,6 +15,7 @@ import type {
   Importer,
   ImporterContext,
   ImportResult,
+  Transaction,
 } from "../types.js";
 
 export { bnzAccount, bnzCard, bnzTransactionList, anzLoan, wise, xeroBank, quickBooksBank, isQuickBooksBankExport, quickBooksBankCoding };
@@ -126,6 +127,25 @@ function numbered(result: ImportResult): ImportResult {
   }
 
   return result;
+}
+
+/**
+ * The same lines, said to be another account's -- a file that named no account
+ * found to be one already held. Their ids are made from the account, so they
+ * are made again.
+ */
+export function moveToAccount(transactions: readonly Transaction[], account: string, label?: string): Transaction[] {
+  return numbered({
+    importer: "",
+    file: "",
+    account,
+    problems: [],
+    transactions: transactions.map((t) => ({
+      ...t,
+      account,
+      ...(label !== undefined ? { extras: { ...(t.extras ?? {}), accountLabel: label } } : {}),
+    })),
+  }).transactions;
 }
 
 function pickBest(records: readonly ReadonlyCsvRecord[]): Importer | undefined {

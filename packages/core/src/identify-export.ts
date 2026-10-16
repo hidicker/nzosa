@@ -57,6 +57,7 @@ export type ExportKind =
   | "product-list"
   | "due-dates"
   | "contact-list"
+  | "not-needed"
   | "unknown";
 
 export interface Identified {
@@ -172,6 +173,33 @@ function codingColumns(text: string, headings: readonly string[]): boolean {
 const CODING_SHEET = { kind: "coding-sheet", what: "coded spreadsheet" } as const;
 
 /**
+ * A QuickBooks Online report: the company, the report's name and its dates on
+ * the first three rows, then the columns. `empty` when no row under the
+ * columns holds anything but QuickBooks' own footer ("This report contains no
+ * data.", "Accrual Basis ...").
+ */
+export function quickBooksReport(text: string): { title: string; empty: boolean } | null {
+  const rows = parseCsvRecords(text.slice(0, 200000))
+    .map((r) => r.fields.map((f) => f.trim()))
+    .slice(0, 400);
+  const cells = (row: readonly string[] | undefined): string[] => (row ?? []).filter((f) => f !== "");
+  const title = cells(rows[1]).map((t) => t.replace(/\s+/g, " "));
+  const dates = cells(rows[2]);
+  if (title.length !== 1 || dates.length !== 1 || cells(rows[0]).length !== 1) return null;
+  const said = dates[0] ?? "";
+  const MONTH = /\b(January|February|March|April|May|June|July|August|September|October|November|December)\b/;
+  // QuickBooks writes the month first ("October 1-14, 2026", "As of October
+  // 15, 2026"); Xero's reports, the same three rows, write the day first.
+  const monthFirst = new RegExp(`^(?:As of )?${MONTH.source}\\s+\\d{1,2}\\b`);
+  if (!(/\b\d{4}\b/.test(said) && monthFirst.test(said)) && !/^all dates$/i.test(said)) return null;
+  const header = rows.findIndex((row, i) => i > 2 && cells(row).length >= 3);
+  if (header < 0) return { title: title[0] ?? "", empty: true };
+  const FOOTER = /contains no data|^(accrual|cash) basis\b|\bGMT\b/i;
+  const empty = rows.slice(header + 1).every((row) => cells(row).every((cell) => FOOTER.test(cell)));
+  return { title: title[0] ?? "", empty };
+}
+
+/**
  * Identify one export.
  *
  * `text` is the file as CSV -- a workbook having already been turned into one
@@ -189,6 +217,15 @@ export function identifyExport(text: string): Identified {
   // SlowBooks Pro's general ledger: one row a posting, with its source.
   if (isSlowBooksLedger(text)) {
     return { kind: "slowbooks-ledger", what: "SlowBooks general ledger" };
+  }
+  // A QuickBooks report with nothing in it, or a sales report: nothing to
+  // bring in. Asked first, as a sales report's columns are a ledger's too.
+  const report = quickBooksReport(text);
+  if (report !== null && report.empty) {
+    return { kind: "not-needed", what: `QuickBooks ${report.title}, with nothing in it for the dates chosen` };
+  }
+  if (report !== null && /^sales by /i.test(report.title)) {
+    return { kind: "not-needed", what: `QuickBooks ${report.title}: not needed, the general ledger holds every sale` };
   }
   // QuickBooks Online's trial balance: opening balances, as Xero's is.
   if (isQuickBooksTrialBalance(text)) return { kind: "trial-balance", what: "QuickBooks trial balance" };

@@ -1,3 +1,4 @@
+import { rememberHeldAlready } from "./lines-held-already.js";
 import { askForColumns, looksLikeBankFile, rememberedLayout, renderColumnChooser } from "./bank-columns.js";
 import { clearInbox, inboxIsFresh } from "../nightly.js";
 import { morningChoice } from "../nightly-ui.js";
@@ -45,6 +46,8 @@ import {
   onOrAfter,
   hash,
   importFile,
+  getImporter,
+  moveToAccount,
   detect,
   isOfx,
   bankFileSignature,
@@ -230,6 +233,37 @@ export async function autoFetchFromFeed(morning?: Morning): Promise<void> {
   }
 }
 
+/**
+ * The held account a file's lines are already in, where the file's own
+ * account is not one held: the account sharing the most of its lines by date
+ * and amount, when that is at least two lines and a fifth of the file, and
+ * clearly more than any other account shares. Null when nothing stands out.
+ */
+function accountItShares(
+  fileAccount: string,
+  lines: readonly Transaction[],
+): { account: string; label: string | undefined } | null {
+  const held = state.ledger.transactions;
+  if (lines.length === 0 || held.some((t) => t.account === fileAccount)) return null;
+  const keys = new Map<string, Set<string>>();
+  const labels = new Map<string, string>();
+  for (const t of held) {
+    const set = keys.get(t.account) ?? new Set<string>();
+    set.add(`${t.date}|${t.amount}`);
+    keys.set(t.account, set);
+    const label = t.extras?.["accountLabel"];
+    if (typeof label === "string" && !labels.has(t.account)) labels.set(t.account, label);
+  }
+  const counts = [...keys].map(
+    ([acc, set]) => [acc, lines.filter((l) => set.has(`${l.date}|${l.amount}`)).length] as const,
+  );
+  counts.sort((a, b) => b[1] - a[1]);
+  const [best, next] = counts;
+  if (best === undefined || best[1] < 2 || best[1] < lines.length / 5) return null;
+  if (next !== undefined && next[1] * 2 > best[1]) return null;
+  return { account: best[0], label: labels.get(best[0]) };
+}
+
 export async function handleFiles(files: File[]): Promise<void> {
   if (files.length === 0 || state.busy) return;
 
@@ -292,6 +326,31 @@ export async function handleFiles(files: File[]): Promise<void> {
               ...(account !== "" ? { account } : {}),
             });
 
+      // A file that named no account -- QuickBooks' register is named for the
+      // bank, not the account -- is the held account whose lines it shares,
+      // so the lines already there are found as the same lines.
+      const shares = account === "" ? accountItShares(result.account, result.transactions) : null;
+      let already = 0;
+      if (shares !== null) {
+        result.transactions = moveToAccount(result.transactions, shares.account, shares.label);
+        result.account = shares.account;
+        // The lines it shares are that account's own, seen again -- one for
+        // one, by date and amount, as the two describe them differently.
+        const key = (t: Transaction): string => `${t.date}|${t.amount}`;
+        const pool = new Map<string, number>();
+        for (const t of state.ledger.transactions) {
+          if (t.account === shares.account) pool.set(key(t), (pool.get(key(t)) ?? 0) + 1);
+        }
+        const fresh = result.transactions.filter((t) => {
+          const left = pool.get(key(t)) ?? 0;
+          if (left === 0) return true;
+          pool.set(key(t), left - 1);
+          return false;
+        });
+        already = result.transactions.length - fresh.length;
+        rememberHeldAlready(file.name, result.transactions.filter((t) => !fresh.includes(t)));
+        result.transactions = fresh;
+      }
       const kept = onOrAfter(result.transactions, booksStart);
       const earlier = result.transactions.length - kept.length;
       incoming.push(...kept);
@@ -302,6 +361,7 @@ export async function handleFiles(files: File[]): Promise<void> {
         count: kept.length,
         problems: result.problems,
         ...(earlier > 0 && booksStart !== undefined ? { before: { count: earlier, start: booksStart } } : {}),
+        ...(already > 0 ? { already } : {}),
       });
     } catch (error) {
       state.reports.push({
@@ -1277,7 +1337,9 @@ function renderBalanceEntry(): void {
   const draft = balanceDraft;
   const labelOf = (id: string): string => {
     const label = String(state.ledger.transactions.find((t) => t.account === id)?.extras?.["accountLabel"] ?? "");
-    return label === "" || label === id ? id : `${id} ${label}`;
+    // The account number beside its name; not an id made from the name itself.
+    const madeFromName = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === id;
+    return label === "" || label === id ? id : madeFromName ? label : `${id} ${label}`;
   };
 
   const details = document.createElement("details");
@@ -1452,12 +1514,18 @@ function renderReports(): void {
           ? ""
           : `<p class="field-hint">${report.before.count} line${report.before.count === 1 ? "" : "s"} ` +
             `dated before ${escapeHtml(report.before.start)}, when these books start, left out.</p>`;
+      const already =
+        report.already === undefined
+          ? ""
+          : `<p class="field-hint">${report.already} line${report.already === 1 ? " was" : "s were"} already ` +
+            `in ${escapeHtml(bankLabel(report.account))}, and not added again.</p>`;
       return `<div class="report">
         <strong>${escapeHtml(report.name)}</strong>
-        <p>${report.count} transactions &middot; ${escapeHtml(report.importer)} &middot; ${escapeHtml(
-          report.account,
+        <p>${report.count} transactions &middot; ${escapeHtml(getImporter(report.importer)?.label ?? report.importer)} &middot; ${escapeHtml(
+          report.account === "" ? "" : bankLabel(report.account),
         )}</p>
         ${before}
+        ${already}
         ${problems}
       </div>`;
     })

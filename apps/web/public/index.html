@@ -515,7 +515,7 @@
           <div class="page-actions">
             <select id="setup-source">
               <option value="xero">I use Xero</option>
-              <option value="sheet">I use a spreadsheet</option>
+              <option value="sheet">I use QuickBooks, SlowBooks or a spreadsheet</option>
               <option value="new">I am starting from new</option>
             </select>
           </div>
@@ -559,7 +559,7 @@
             <button id="invoice-new" type="button" class="primary">New invoice</button>
             <button id="invoices-pick" type="button">Load invoices&hellip;</button>
             <input id="invoices-input" type="file" accept=".csv,text/csv" hidden />
-            <button id="allocations-pick" type="button">Load allocations&hellip;</button>
+            <button id="allocations-pick" type="button" data-module="xero">Load allocations&hellip;</button>
             <input id="allocations-input" type="file" accept=".csv,text/csv" hidden />
           </div>
         </div>
@@ -821,7 +821,7 @@
                 <option value="balancesheet">Balance sheet</option>
                 <option value="cashflow">Cash flow statement</option>
                 <option value="depreciation" data-module="assets">Depreciation schedule</option>
-                <option value="shareholders" data-module="company">Shareholder current accounts</option>
+                <option value="shareholders" data-module="company+nz">Shareholder current accounts</option>
               </optgroup>
               <optgroup label="Taxes and balances">
                 <option value="gstreturn" data-module="gst">GST return</option>
@@ -1064,7 +1064,7 @@
                   <th>Date</th>
                   <th>Amount</th>
                   <th>Other party</th>
-                  <th>Particulars / code / reference</th>
+                  <th><span data-module="nz">Particulars / code / reference</span><span data-module="us au kr">Reference</span></th>
                   <th>Account</th>
                   <th>Source</th>
                   <th>Status</th>

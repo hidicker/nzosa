@@ -1,7 +1,7 @@
-import { applyDueDates, isIif, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { applyDueDates, isIif, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
-import { asCsvText, record, reclassify, saveManualJournals } from "../books.js";
-import { booksCountry, booksCurrency } from "../country.js";
+import { asCsvText, hasCoding, postedJournals, reconcileRows, record, reclassify, saveManualJournals } from "../books.js";
+import { booksCountry, booksCurrency, booksMoney } from "../country.js";
 import { addTransactions } from "../daily/bank-import.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
@@ -297,4 +297,61 @@ export async function loadDueDates(file: File): Promise<string> {
   state.ledger = { ...state.ledger, invoices };
   state.persistent = await savePart(state.ledger, "invoices");
   return `due dates filled in on ${filled} invoice${filled === 1 ? "" : "s"} and bills.`;
+}
+
+/**
+ * QuickBooks' trial balance, where the general ledger already brought every
+ * balance from the start: not opening balances -- used as those it would count
+ * everything twice -- but the figures to check the books against. Each balance
+ * sheet account it names is set beside what the books hold on the same day.
+ * Null when it is not that: a trial balance dated before the ledger begins is
+ * the opening balances for a ledger exported for part of the history.
+ */
+export async function checkAgainstTrialBalance(file: File): Promise<string | null> {
+  const fromStart = state.ledger.transactions.filter((t) =>
+    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+  );
+  if (fromStart.length === 0) return null;
+  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+  if (!isQuickBooksTrialBalance(text)) return null;
+  const read = parseQuickBooksTrialBalance(text, state.chart);
+  const asAt = read.asAt;
+  const first = fromStart.reduce((min, t) => (t.date < min ? t.date : min), fromStart[0]?.date ?? "");
+  if (asAt === null || asAt < first) return null;
+
+  const said =
+    `a trial balance as at ${asAt}. Not needed as opening balances: the general ledger brought every ` +
+    "balance from the start. ";
+  // A bank line with nothing coded posts nowhere, and every balance it
+  // touches would be said to differ: the ledger's coding is accepted first.
+  const transfers = state.ledger.transfers ?? {};
+  const waiting = reconcileRows().all.filter(
+    (one) => fromStart.includes(one.transaction) && !hasCoding(one) && transfers[one.transaction.id] === undefined,
+  ).length;
+  if (waiting > 0) {
+    return (
+      `${said}It checks the books once the coding is accepted: ${waiting} bank and card ` +
+      "line" + (waiting === 1 ? " has" : "s have") + " no account yet. Drop it here again then."
+    );
+  }
+
+  const held = new Map<string, number>();
+  for (const row of trialBalance(postedJournals().filter((j) => j.date <= asAt)).rows) {
+    const key = row.accountName.trim().toLowerCase();
+    held.set(key, (held.get(key) ?? 0) + row.balance);
+  }
+  // Equity is left out: the books carry the year's profit there as it goes,
+  // QuickBooks moves it to retained earnings at each year end.
+  const sheet = read.accounts.filter((a) => a.klass === "Asset" || a.klass === "Liability");
+  const differ = sheet.filter((a) => (a.byDate[asAt] ?? 0) !== (held.get(a.name.trim().toLowerCase()) ?? 0));
+  const checked = `${said}Checked against the books instead: `;
+  if (differ.length === 0) return `${checked}all ${sheet.length} asset and liability balances agree.`;
+  const shown = differ
+    .slice(0, 5)
+    .map((a) => `${a.name} (QuickBooks ${booksMoney(a.byDate[asAt] ?? 0)}, here ${booksMoney(held.get(a.name.trim().toLowerCase()) ?? 0)})`)
+    .join("; ");
+  return (
+    `${checked}${sheet.length - differ.length} of ${sheet.length} asset and liability balances agree. ` +
+    `Different: ${shown}${differ.length > 5 ? `, and ${differ.length - 5} more` : ""}.`
+  );
 }

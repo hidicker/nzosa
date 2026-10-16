@@ -225,6 +225,7 @@ export {
   quickBooksBank,
   isQuickBooksBankExport,
   quickBooksBankCoding,
+  moveToAccount,
 } from "./importers/index.js";
 export type { ImportOptions } from "./importers/index.js";
 

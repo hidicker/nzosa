@@ -1,3 +1,4 @@
+import { notHeldAlready } from "./daily/lines-held-already.js";
 import {
   compareCodings,
   inferAccountMapping,
@@ -268,7 +269,8 @@ export async function loadReference(
       // bank line was coded to into the reference, as for QuickBooks Online.
       // QuickBooks' bank register: the account each line was put to.
       if (isQuickBooksBankExport(text)) {
-        lines.push(...quickBooksBankCoding(text, file.name, booksCountry().dayFirst));
+        // Only for the lines it brought in: the rest the ledger already coded.
+        lines.push(...notHeldAlready(file.name, quickBooksBankCoding(text, file.name, booksCountry().dayFirst)));
         continue;
       }
       if (isIif(text) || isSlowBooksLedger(text)) {

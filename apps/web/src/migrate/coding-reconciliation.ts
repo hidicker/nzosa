@@ -81,7 +81,7 @@ import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
 import { settleInvoicesExactly } from "../daily/reconcile-page.js";
 import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../books.js";
-import { booksLocale } from "../country.js";
+import { booksLocale, noSalesTax } from "../country.js";
 import { isUnusedStarterChart } from "../new-books-country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
@@ -1226,7 +1226,8 @@ export function renderCheck(): void {
       ? ([[String(transferAgrees.length), "transfers agree with the file"]] as const)
       : []),
     [`${rate.toFixed(1)}%`, "of checkable lines agree"],
-    [String(gstFlags.length), "GST rate differs"],
+    // No sales tax, no rate to differ.
+    ...(noSalesTax() ? [] : ([[String(gstFlags.length), "GST rate differs"]] as const)),
     [
       splitsToDo.length === 0
         ? String(splitRows.length)

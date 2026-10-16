@@ -29,6 +29,8 @@ export interface FileReport {
   error?: string;
   /** Lines dated before these books start, left out, and the day they start. */
   before?: { count: number; start: string };
+  /** Lines the file shares with the account it was found to be, already held. */
+  already?: number;
 }
 import type { ReferenceLoad } from "./check-ui.js";
 import type { VarianceRow } from "./variance.js";

@@ -8,5 +8,8 @@ export function balanceSheetLabel(line: { code: string; name: string }): string 
   const name = line.name.trim();
   if (code === "(uncoded)" || (code === "" && name === "(uncoded)")) return "Not coded to an account yet";
   if (code === "" || name === "" || name === code) return code === "" ? name : code;
+  // A bank account named in the books for its own name ("checking",
+  // "Checking"), not a code anybody gave it.
+  if (name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === code) return name;
   return `${code} ${name}`;
 }

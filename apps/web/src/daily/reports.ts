@@ -28,6 +28,7 @@ import {
   entityOfCoding,
   betweenTagFor,
   manualJournalGstAccount,
+  ledgerFromStart,
 } from "../books.js";
 import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
@@ -124,7 +125,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
 
@@ -1395,12 +1396,14 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   // Set out as signed statements are: a company's shareholder current accounts
   // as one current liability, and the year's profit inside retained earnings.
   const company = companyBooks();
+  // Shareholder current accounts are New Zealand's way of setting a company's out.
+  const currentAccounts = company && booksCountry().id === "nz";
   const sheet = computeBalanceSheet({
     asAt,
     ...(opening ? { openingBalances: opening } : {}),
     journals,
     chart: state.chart,
-    shareholderCurrentAccounts: company,
+    shareholderCurrentAccounts: currentAccounts,
     profitInRetainedEarnings: company,
   });
 
@@ -1413,7 +1416,9 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   const money = (cents: Cents): string =>
     booksMoney(cents);
 
-  if (opening === undefined) {
+  // A general ledger brought in from the start carries every balance itself.
+  const fromStart = ledgerFromStart();
+  if (opening === undefined && !fromStart) {
     const warn = document.createElement("p");
     warn.className = "journal-out";
     warn.textContent =
@@ -1513,7 +1518,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   table.append(head, tbody);
   body.append(table);
 
-  if (company) {
+  if (currentAccounts) {
     body.append(
       note(
         "Shareholder current accounts are the director's loan, drawings and funds introduced as " +
@@ -1526,7 +1531,9 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   body.append(
     note(
       opening === undefined
-        ? "Every figure is the movement on that account since the ledger begins."
+        ? fromStart
+          ? "No opening balances are needed: the general ledger brought in runs from the start."
+          : "Every figure is the movement on that account since the ledger begins."
         : `Opening figures are as at ${opening.asAt}${opening.source ? ` — ${opening.source}` : ""}. ` +
           "Movement is what the postings since then have done to each account.",
     ),

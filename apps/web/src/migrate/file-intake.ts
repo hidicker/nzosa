@@ -6,7 +6,7 @@ import { asCsvText, invoiceBalanceMap, recomputeVariance, saveManualJournals, re
 import { checkBankBalances, handleFiles } from "../daily/bank-import.js";
 import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
-import { loadContactList, loadDueDates, loadProductList, loadQuickBooksBankLines } from "./quickbooks.js";
+import { checkAgainstTrialBalance, loadContactList, loadDueDates, loadProductList, loadQuickBooksBankLines } from "./quickbooks.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
@@ -288,7 +288,17 @@ async function loadEach(
         case "general-ledger-detail":
           await loadJournals(file);
           break;
-        case "trial-balance":
+        case "not-needed":
+          say(`${file.name} — ${identified.what}.`);
+          continue;
+        case "trial-balance": {
+          // With a general ledger from the start, QuickBooks' trial balance
+          // checks the books rather than starting them.
+          const checked = await checkAgainstTrialBalance(file);
+          if (checked !== null) {
+            say(`${file.name} — ${checked}`);
+            continue;
+          }
           // Read is not applied. It was listed as loaded whenever it had been
           // recognised -- a column not chosen or a confirmation declined
           // included -- and the books went on with no opening balances.
@@ -300,6 +310,7 @@ async function loadEach(
             continue;
           }
           break;
+        }
         case "fixed-assets":
           await loadAssets(file);
           break;

@@ -13,7 +13,8 @@ import { state } from "./state.js";
  * from the books' country, through the core's `financialYear`; books with no
  * country set are New Zealand's.
  */
-const yearEnd = (): { endMonth: number; endDay: number } => jurisdictionOf(state.ledger.jurisdiction).yearEnd;
+/** The books' year end: the day and month it falls on (31 March, in New Zealand). */
+export const yearEnd = (): { endMonth: number; endDay: number } => jurisdictionOf(state.ledger.jurisdiction).yearEnd;
 
 /** The first day of the year that ends in `year`: 1 April of the year before, in New Zealand. */
 export function taxYearStart(year: number): IsoDate {

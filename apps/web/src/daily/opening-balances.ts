@@ -2,7 +2,7 @@ import { askOnPage } from "../ui.js";
 import { redraw, showPage } from "../app.js";
 import { XERO_TRIAL_BALANCE } from "../migrate/setup-wizard.js";
 import { feedStatus } from "../feed-route.js";
-import { accountsForEditing, bankLabel, ledgerAccountFor, postedJournals, record } from "../books.js";
+import { accountsForEditing, bankLabel, ledgerAccountFor, ledgerFromStart, postedJournals, record } from "../books.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
@@ -14,7 +14,7 @@ import { asCsvText } from "../books.js";
 import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalancesFrom, parseTrialBalance, isQuickBooksTrialBalance, parseQuickBooksTrialBalance } from "@nzosa/core";
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
-import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
+import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart, yearEnd } from "../tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
 
 /**
@@ -48,6 +48,7 @@ function balancesByFinancialYear(): FinancialYearBalances[] {
     transactions: state.ledger.transactions,
     chart: state.chart,
     journals: postedJournals(),
+    yearEnd: yearEnd(),
   });
 }
 
@@ -66,7 +67,13 @@ export function renderOpeningBalances(): void {
   // the part no statement contains, and until a trial balance is loaded there
   // is not one, however full the table looks.
   const status = document.createElement("p");
-  if (held === undefined) {
+  const fromStart = ledgerFromStart();
+  if (held === undefined && fromStart) {
+    status.className = "journal-balanced";
+    status.textContent =
+      "None needed: the general ledger brought in runs from the start, so it carries every balance. " +
+      "If it was exported for part of the history only, import its trial balance as of the day before it begins.";
+  } else if (held === undefined) {
     status.className = "journal-out";
     status.textContent =
       "No opening balances yet, so the figures below are only the movement since the first " +
@@ -640,8 +647,7 @@ function bankBalancesForm(draft: BankDraft): HTMLElement {
   const earlier = state.ledger.transactions.filter((t) => t.date < draft.asAt);
   if (earlier.length > 0) {
     const first = earlier.map((t) => t.date).sort()[0] ?? "";
-    const firstYear = Number(first.slice(5, 7)) >= 4 ? Number(first.slice(0, 4)) : Number(first.slice(0, 4)) - 1;
-    const usual = taxYearStart(firstYear + 1);
+    const usual = taxYearStart(taxYearOf(first));
     const warn = document.createElement("div");
     warn.className = "variance-note warn";
     const text = document.createElement("p");

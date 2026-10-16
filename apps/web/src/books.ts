@@ -449,7 +449,7 @@ export function invoiceAssignments(): Map<string, string> {
  * actually was. An invoice match is the third: a receipt settling an invoice
  * posts against the debtor rather than to an account of its own.
  */
-function hasCoding(one: Suggestion): boolean {
+export function hasCoding(one: Suggestion): boolean {
   return (
     one.code !== null ||
     (state.ledger.splits ?? {})[one.transaction.id] !== undefined ||
@@ -2003,6 +2003,17 @@ function stockCostJournals(): PostedJournal[] {
     source: "adjustment",
     taxBasis: "both",
   }));
+}
+
+/**
+ * Whether the books hold a general ledger brought in from another system --
+ * QuickBooks or SlowBooks -- which runs from the start and so carries every
+ * balance itself, with no opening balances needed.
+ */
+export function ledgerFromStart(): boolean {
+  return state.ledger.transactions.some((t) =>
+    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+  );
 }
 
 export function postedJournals(): PostedJournal[] {

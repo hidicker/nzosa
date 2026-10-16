@@ -388,7 +388,10 @@ function said(held: Onboarding, step: Step): string {
     }
     case "files": {
       if (fromQuickBooks(held)) {
-        const brought = state.ledger.transactions.filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? "")).length;
+        // The ledger's own lines, not a bank register brought in after it.
+        const brought = state.ledger.transactions.filter((t) =>
+          /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+        ).length;
         return brought === 0 ? "Nothing brought in yet" : `${brought} bank and card lines brought in`;
       }
       const files = xeroMigrationFiles();
@@ -1555,7 +1558,8 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   // to its last date: what is asked for here is only what came after.
   const ledgerLast = fromQuickBooks(held)
     ? state.ledger.transactions
-        .filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? ""))
+        // The ledger's own lines: a bank register brought in after it is not the ledger.
+        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
         .reduce((last, t) => (t.date > last ? t.date : last), "")
     : "";
   inner.append(

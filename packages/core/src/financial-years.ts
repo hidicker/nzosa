@@ -1,7 +1,7 @@
 import { computeBalanceSheet } from "./balance-sheet.js";
 import type { OpeningBalances } from "./balance-sheet.js";
-import { financialYearOf } from "./dates.js";
-import type { IsoDate } from "./dates.js";
+import { financialYear, financialYearOf } from "./dates.js";
+import type { FinancialYearOptions, IsoDate } from "./dates.js";
 import type { Cents } from "./money.js";
 import type { PostedJournal } from "./posting.js";
 import type { Account } from "./chart.js";
@@ -40,34 +40,40 @@ export interface FinancialYearBalancesOptions {
   transactions: readonly Transaction[];
   chart: readonly Account[];
   journals: readonly PostedJournal[];
+  /** The books' year end: 31 March, New Zealand's, where not given. */
+  yearEnd?: FinancialYearOptions;
 }
 
 /**
- * A year end stated as the first of April is the *opening* of that year.
+ * A balance stated on the first day of a year (1 April, in New Zealand) is the
+ * *opening* of that year.
  *
  * A trial balance column headed 1 April 2025 is the position the 2026 year
  * begins from, not a position within it, so it labels the year before the one
  * the ordinary rule would give.
  */
-function yearOfBalanceDate(date: IsoDate): number {
-  if (date.endsWith("-04-01")) return Number(date.slice(0, 4));
-  return financialYearOf(date);
+function yearOfBalanceDate(date: IsoDate, yearEnd: FinancialYearOptions): number {
+  // The day after a year end opens the next year: it is the year before's position.
+  if (date === financialYear(financialYearOf(date, yearEnd), yearEnd).from) return financialYearOf(date, yearEnd) - 1;
+  return financialYearOf(date, yearEnd);
 }
 
 export function financialYearBalances(
   options: FinancialYearBalancesOptions,
 ): FinancialYearBalances[] {
   const { openingBalances: held, transactions, chart, journals } = options;
+  const yearEnd = options.yearEnd ?? {};
+  const endOf = (year: number): IsoDate => financialYear(year, yearEnd).to;
   const result = new Map<number, FinancialYearBalances>();
 
   // 1. Imported columns, one per year end.
   if (held?.byDate) {
     for (const [date, accounts] of Object.entries(held.byDate)) {
       if (Object.keys(accounts).length === 0) continue;
-      const year = yearOfBalanceDate(date);
+      const year = yearOfBalanceDate(date, yearEnd);
       result.set(year, {
         year,
-        asAt: `${year}-03-31`,
+        asAt: endOf(year),
         accounts,
         ...(held.source !== undefined ? { source: held.source } : {}),
         isOpening: true,
@@ -79,10 +85,10 @@ export function financialYearBalances(
   // 2. The opening balances in force, which win over an imported column for
   //    the same year: they are what the ledger is actually opening from.
   if (held && Object.keys(held.accounts).length > 0) {
-    const year = yearOfBalanceDate(held.asAt);
+    const year = yearOfBalanceDate(held.asAt, yearEnd);
     result.set(year, {
       year,
-      asAt: `${year}-03-31`,
+      asAt: endOf(year),
       accounts: held.accounts,
       ...(held.source !== undefined ? { source: held.source } : {}),
       isOpening: true,
@@ -91,13 +97,13 @@ export function financialYearBalances(
   }
 
   // 3. Rolled forward for every later year the transactions reach.
-  const openingYear = held ? yearOfBalanceDate(held.asAt) : null;
-  const years = [...new Set(transactions.map((t) => financialYearOf(t.date)))].sort((a, b) => a - b);
+  const openingYear = held ? yearOfBalanceDate(held.asAt, yearEnd) : null;
+  const years = [...new Set(transactions.map((t) => financialYearOf(t.date, yearEnd)))].sort((a, b) => a - b);
 
   for (const year of years) {
     if (openingYear !== null && year <= openingYear && result.has(year)) continue;
 
-    const asAt: IsoDate = `${year}-03-31`;
+    const asAt: IsoDate = endOf(year);
     const sheet = computeBalanceSheet({
       asAt,
       ...(held ? { openingBalances: held } : {}),

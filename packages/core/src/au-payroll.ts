@@ -95,12 +95,70 @@ function foreignResidentTax(annual: Cents): Cents {
 }
 
 /**
- * NZOSA's estimate of the PAYG to withhold from one pay, in whole dollars as
- * the ATO's tables give it. Null for a year whose rates are not held.
+ * The ATO's Schedule 1 coefficients (Statement of formulas, weekly): for
+ * weekly earnings less than each limit, withholding is a times x less b.
+ * 1 July 2024 to 30 June 2026 (published 17 June 2024) and from 1 July 2026
+ * (published 17 June 2026, with the 15% rate). Scale 1 is no tax-free
+ * threshold, scale 2 claims it, scale 3 is a foreign resident.
+ */
+type Coefficients = readonly (readonly [number, number, number])[];
+const SCHEDULE_1: readonly { from: IsoDate; scale1: Coefficients; scale2: Coefficients; scale3: Coefficients }[] = [
+  {
+    from: "2026-07-01",
+    scale1: [[188, 0.15, 0.15], [371, 0.2084, 11.0185], [515, 0.179, 0.1066], [932, 0.3227, 74.1674], [2246, 0.32, 71.6508], [3303, 0.39, 228.8816], [Infinity, 0.47, 493.1893]],
+    scale2: [[362, 0, 0], [538, 0.15, 54.3462], [673, 0.25, 108.2135], [721, 0.17, 54.3473], [865, 0.179, 60.8377], [1282, 0.3227, 185.1935], [2596, 0.32, 181.7319], [3653, 0.39, 363.4627], [Infinity, 0.47, 655.7704]],
+    scale3: [[2596, 0.3, 0.3], [3653, 0.37, 181.7308], [Infinity, 0.45, 474.0385]],
+  },
+  {
+    from: "2024-07-01",
+    scale1: [[150, 0.16, 0.16], [371, 0.2117, 7.755], [515, 0.189, -0.6702], [932, 0.3227, 68.2367], [2246, 0.32, 65.7202], [3303, 0.39, 222.951], [Infinity, 0.47, 487.2587]],
+    scale2: [[361, 0, 0], [500, 0.16, 57.8462], [625, 0.26, 107.8462], [721, 0.18, 57.8462], [865, 0.189, 64.3365], [1282, 0.3227, 180.0385], [2596, 0.32, 176.5769], [3653, 0.39, 358.3077], [Infinity, 0.47, 650.6154]],
+    scale3: [[2596, 0.3, 0.3], [3653, 0.37, 181.7308], [Infinity, 0.45, 474.0385]],
+  },
+];
+
+/**
+ * Withholding by the ATO's Schedule 1 formula for one pay, in whole dollars
+ * (as cents). The pay is turned into weekly earnings the ATO's way -- half a
+ * fortnight's, three thirteenths of a month's (33 cents made 34), a
+ * thirteenth of a quarter's, cents ignored and 99 cents added -- the week's
+ * withholding rounded to the dollar, then taken back to the pay's period.
+ * Null before 1 July 2024, whose coefficients are not held.
+ */
+export function auSchedule1(gross: Cents, frequency: AuPayFrequency, scale: 1 | 2 | 3, payDate: IsoDate): Cents | null {
+  const table = SCHEDULE_1.find((t) => payDate >= t.from);
+  if (table === undefined) return null;
+  if (gross <= 0) return 0;
+  let dollars = gross / 100;
+  if (frequency === "monthly" && Math.round(gross % 100) === 33) dollars += 0.01;
+  const weekly =
+    frequency === "weekly" ? dollars : frequency === "fortnightly" ? dollars / 2 : frequency === "monthly" ? (dollars * 3) / 13 : dollars / 13;
+  const x = Math.floor(weekly + 1e-9) + 0.99;
+  const rows = scale === 1 ? table.scale1 : scale === 2 ? table.scale2 : table.scale3;
+  const row = rows.find(([limit]) => x < limit) ?? rows[rows.length - 1];
+  const week = row === undefined ? 0 : Math.max(0, Math.round(row[1] * x - row[2]));
+  const pay =
+    frequency === "weekly" ? week : frequency === "fortnightly" ? week * 2 : frequency === "monthly" ? Math.round((week * 13) / 3) : week * 13;
+  return pay * 100;
+}
+
+/**
+ * The PAYG to withhold from one pay, in whole dollars as the ATO's tables
+ * give it: the ATO's Schedule 1 formula from 1 July 2024, NZOSA's estimate
+ * from the year's rates before then. Null for a year whose rates are not held.
  */
 export function auPaygEstimate(gross: Cents, employee: AuEmployee, payDate: IsoDate): Cents | null {
   if (gross <= 0) return 0;
-  if (!employee.tfnProvided) return Math.floor((gross * 0.47) / 100) * 100;
+  // No TFN: 47%, or 45% for a foreign resident, of the pay ignoring cents.
+  if (!employee.tfnProvided) return Math.floor((gross * (employee.foreignResident === true ? 0.45 : 0.47)) / 100) * 100;
+  const scale = employee.foreignResident === true ? 3 : employee.taxFreeThreshold ? 2 : 1;
+  const formula = auSchedule1(gross, employee.payFrequency, scale, payDate);
+  if (formula !== null) {
+    if (employee.studyLoan !== true) return formula;
+    const periods = AU_PERIODS[employee.payFrequency];
+    const loan = studyLoanRepayment(gross * periods + (employee.taxFreeThreshold ? 0 : 1_820_000), payDate);
+    return formula + Math.round(loan / periods / 100) * 100;
+  }
   const periods = AU_PERIODS[employee.payFrequency];
   const annual = gross * periods;
   const year = auFinancialYear(payDate);

@@ -19,8 +19,8 @@ import type { Account, AuEmployee, AuPayFrequency, AuPayRun, AuPayroll, IsoDate 
  * super guarantee on each, when each pay's super is due, and the figures each
  * pay event reports through Single Touch Payroll.
  *
- * The PAYG figure starts as NZOSA's estimate and is the employer's to change
- * to the ATO's own before the pay goes out. NZOSA does not lodge STP: that is
+ * The PAYG figure starts as the ATO's Schedule 1 formula gives it and is the
+ * employer's to change where a declaration varies it. NZOSA does not lodge STP: that is
  * done through STP-enabled software (the ATO lists free and low-cost ones for
  * small employers), with the figures shown here.
  */
@@ -303,7 +303,7 @@ function newPayRun(body: HTMLElement): void {
   said.className = "feed-said";
   body.append(
     note(
-      "PAYG withheld is NZOSA's estimate from the year's rates, annualised: check it against the ATO's tax withheld calculator for the pay and change it before paying.",
+      "PAYG withheld is worked out by the ATO's Schedule 1 formula for the pay's period and the employee's TFN declaration. Medicare levy variations and tax offsets claimed on a withholding declaration are not taken off: change the figure where they apply.",
     ),
     button(
       "Save pay run",
@@ -376,7 +376,7 @@ function payRunsSection(body: HTMLElement): void {
           return [
             nameOf(l.employeeId),
             money(l.gross),
-            money(l.payg) + (l.paygEstimated ? " (estimate)" : ""),
+            money(l.payg) + (l.paygEstimated ? " (ATO formula)" : ""),
             money(l.superGuarantee),
             money(l.net),
             money(y?.gross ?? 0),

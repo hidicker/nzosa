@@ -4,6 +4,7 @@ import {
   auPayLine,
   auPayRunJournal,
   auPaygEstimate,
+  auSchedule1,
   auWithholding,
   earnedBeforePay,
   fullBas,
@@ -23,9 +24,18 @@ const employee = (over = {}) => ({
   ...over,
 });
 
-test("PAYG estimate: $85,000 a year paid monthly in 2026-27 is about $1,475 (australia-payroll, pattern 1)", () => {
-  // Tax $16,020 and Medicare levy $1,700 on $85,000, no low income offset: $1,476.67 a month.
-  assert.equal(auPaygEstimate(708_333, employee(), "2026-08-31"), 147_700);
+test("PAYG: the ATO's Schedule 1 formula, on the ATO's own worked examples", () => {
+  // Jabe: $1,333.45 a week, tax-free threshold claimed: x = 1,333.99, 0.32x - 181.7319 = $245.
+  assert.equal(auSchedule1(133_345, "weekly", 2, "2026-08-31"), 24_500);
+  // Tan: $5,400.33 a month, 33 cents made 34: x = 1,246.99, $217 a week, $940 a month.
+  assert.equal(auSchedule1(540_033, "monthly", 2, "2026-08-31"), 94_000);
+  // $85,000 a year paid monthly in 2026-27 (australia-payroll, pattern 1, "about $1,475").
+  assert.equal(auPaygEstimate(708_333, employee(), "2026-08-31"), 147_800);
+  // 2025-26 coefficients: $2,600 a month, x = 600.99, 0.26x - 107.8462 = $48 a week, $208 a month.
+  assert.equal(auSchedule1(260_000, "monthly", 2, "2026-03-31"), 20_800);
+  // Nothing below the weekly threshold; nothing held before 1 July 2024.
+  assert.equal(auSchedule1(70_000, "fortnightly", 2, "2026-08-31"), 0);
+  assert.equal(auSchedule1(100_000, "weekly", 2, "2024-06-30"), null);
 });
 
 test("PAYG estimate: no TFN is 47% from the first dollar; no tax-free threshold taxes from the first dollar", () => {
@@ -43,8 +53,8 @@ test("study loan: the marginal repayment from 2025-26, withheld on top of the ta
   assert.equal(studyLoanRepayment(15_000_000, "2026-08-31"), 870_000 + 425_000);
   // From $179,286, 10% of the whole income.
   assert.equal(studyLoanRepayment(20_000_000, "2026-08-31"), 2_000_000);
-  // $2,700 a year more: $225 a month on top of $1,477.
-  assert.equal(auPaygEstimate(708_333, employee({ studyLoan: true }), "2026-08-31"), 170_200);
+  // $2,700 a year more: $225 a month on top of $1,478.
+  assert.equal(auPaygEstimate(708_333, employee({ studyLoan: true }), "2026-08-31"), 170_300);
   // Below the threshold nothing extra, unless the tax-free threshold is claimed elsewhere.
   assert.equal(
     auPaygEstimate(400_000, employee({ studyLoan: true }), "2026-08-31"),

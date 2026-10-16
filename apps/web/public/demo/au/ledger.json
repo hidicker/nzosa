@@ -319,7 +319,7 @@
    "id": "au-0013",
    "occurrence": 1,
    "date": "2025-07-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -657,7 +657,7 @@
    "id": "au-0026",
    "occurrence": 1,
    "date": "2025-08-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -1021,7 +1021,7 @@
    "id": "au-0040",
    "occurrence": 1,
    "date": "2025-09-30",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -1359,7 +1359,7 @@
    "id": "au-0053",
    "occurrence": 1,
    "date": "2025-10-28",
-   "amount": -42600,
+   "amount": -62400,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -1489,7 +1489,7 @@
    "id": "au-0058",
    "occurrence": 1,
    "date": "2025-10-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -1827,7 +1827,7 @@
    "id": "au-0071",
    "occurrence": 1,
    "date": "2025-11-30",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -2165,7 +2165,7 @@
    "id": "au-0084",
    "occurrence": 1,
    "date": "2025-12-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -2503,7 +2503,7 @@
    "id": "au-0097",
    "occurrence": 1,
    "date": "2026-01-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -2815,7 +2815,7 @@
    "id": "au-0109",
    "occurrence": 1,
    "date": "2026-02-27",
-   "amount": -42600,
+   "amount": -62400,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -2893,7 +2893,7 @@
    "id": "au-0112",
    "occurrence": 1,
    "date": "2026-02-28",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -3283,7 +3283,7 @@
    "id": "au-0127",
    "occurrence": 1,
    "date": "2026-03-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -3543,7 +3543,7 @@
    "id": "au-0137",
    "occurrence": 1,
    "date": "2026-04-28",
-   "amount": -42600,
+   "amount": -62400,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -3673,7 +3673,7 @@
    "id": "au-0142",
    "occurrence": 1,
    "date": "2026-04-30",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -4011,7 +4011,7 @@
    "id": "au-0155",
    "occurrence": 1,
    "date": "2026-05-31",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -4453,7 +4453,7 @@
    "id": "au-0172",
    "occurrence": 1,
    "date": "2026-06-30",
-   "amount": -245800,
+   "amount": -239200,
    "currency": "AUD",
    "serial": "",
    "trn": "",
@@ -6389,10 +6389,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6405,10 +6405,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6421,10 +6421,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6437,10 +6437,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6453,10 +6453,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6469,10 +6469,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6485,10 +6485,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6501,10 +6501,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6517,10 +6517,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6533,10 +6533,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6549,10 +6549,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    },
@@ -6565,10 +6565,10 @@
      {
       "employeeId": "emp-sam",
       "gross": 260000,
-      "payg": 14200,
+      "payg": 20800,
       "paygEstimated": true,
       "superGuarantee": 31200,
-      "net": 245800
+      "net": 239200
      }
     ]
    }

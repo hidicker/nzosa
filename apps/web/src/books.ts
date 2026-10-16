@@ -1074,10 +1074,14 @@ export async function recordFiledReturn(one: FiledReturn): Promise<void> {
  */
 export function billEntities(): Entity[] {
   const model = state.ledger.entities ?? emptyEntityModel();
+  // Outside New Zealand a sole trader's or a partnership's business keeps
+  // bills too: an Australian sole trader registered for GST claims it on them.
+  const anyBusiness = booksCountry().id !== "nz";
   return model.entities.filter(
     (e) =>
       e.kind === "commercial" ||
-      ((e.kind ?? "business") === "business" && (e.structure === undefined || e.structure === "company")),
+      ((e.kind ?? "business") === "business" &&
+        (anyBusiness || e.structure === undefined || e.structure === "company")),
   );
 }
 

@@ -312,8 +312,8 @@ function roleOfAccount(code: string, name: string): string {
 
 function gstRateName(classification: GstClassification): string {
   if (classification.side === "imports") return "GST on Imports";
-  if (classification.treatment === "zero-rated") return "Zero Rated";
-  if (classification.treatment === "exempt") return "Exempt";
+  if (classification.treatment === "zero-rated") return taxTypeLabel("Zero Rated");
+  if (classification.treatment === "exempt") return taxTypeLabel("Exempt");
   if (classification.treatment === "out-of-scope") return "No GST";
   if (classification.side === "none") return "No GST";
   return taxTypeLabel(classification.side === "sales" ? "15% GST on Income" : "15% GST on Expenses");

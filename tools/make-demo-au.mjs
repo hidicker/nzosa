@@ -55,6 +55,7 @@ const ACCOUNTS = [
   ["825", "PAYG Withholdings Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
   ["826", "Superannuation Payable", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
   ["610", "Accounts Receivable", "Accounts Receivable", studio, "BAS Excluded", "out-of-scope"],
+  ["800", "Accounts Payable", "Accounts Payable", studio, "BAS Excluded", "out-of-scope"],
   ["820", "GST", "Current Liability", studio, "BAS Excluded", "exempt"],
   ["880", "Owner A Drawings", "Equity", studio, "BAS Excluded", "exempt"],
   ["960", "Retained Earnings", "Equity", studio, "BAS Excluded", "exempt"],

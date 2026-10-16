@@ -51,7 +51,14 @@ export function gstPercent(): number {
  * words on screen change, so Australian books read 10%.
  */
 export function taxTypeLabel(name: string): string {
-  return booksCountry().id === "nz" ? name : name.replace(/\b15%/, `${gstPercent()}%`);
+  const id = booksCountry().id;
+  if (id === "nz") return name;
+  // Australia's own words for the same treatments.
+  if (id === "au") {
+    if (/^zero.?rated/i.test(name)) return "GST-free";
+    if (/exempt/i.test(name)) return "Input taxed";
+  }
+  return name.replace(/\b15%/, `${gstPercent()}%`);
 }
 
 /**

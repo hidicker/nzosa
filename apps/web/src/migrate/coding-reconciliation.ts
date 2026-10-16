@@ -53,6 +53,7 @@ import { save, savePart } from "../store.js";
 import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
+  splitAccountLabel,
   accountTreatment,
   coverage,
   dedupeReference,
@@ -80,7 +81,8 @@ import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
 import { settleInvoicesExactly } from "../daily/reconcile-page.js";
 import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../books.js";
-import { booksLocale } from "../country.js";
+import { booksCountry, booksLocale } from "../country.js";
+import { isStarterChart } from "../new-books-country.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
 /** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
@@ -490,6 +492,19 @@ export async function loadCheckFiles(files: File[]): Promise<void> {
   state.ledger = { ...state.ledger, reference: state.reference };
   state.persistent = await savePart(state.ledger, "reference");
   if (loaded.chart.length > 0) {
+    // A starter chart nothing has been coded to yet is replaced outright: its
+    // accounts' entity, and the tax treatments and names it left on its
+    // numbers, go with it, or the new chart's 3000 Opening Balance Equity is
+    // shown as the starter's 3000 Owner contributions.
+    if (unusedStarterChart()) {
+      const model = state.ledger.entities;
+      if (model !== undefined) state.ledger = { ...state.ledger, entities: { ...model, accounts: {} } };
+      const rules = state.rules as RuleFileShape | undefined;
+      if (rules !== undefined && rules.codeTreatments !== undefined) {
+        state.rules = { ...rules, codeTreatments: {} } as typeof state.rules;
+        await persistRules();
+      }
+    }
     state.chart = loaded.chart;
     state.ledger = { ...state.ledger, chart: loaded.chart };
     state.persistent = await save(state.ledger);
@@ -3361,11 +3376,11 @@ function parseTreatment(text: string): unknown | null {
 export async function applyChartColumns(chart: readonly Account[]): Promise<void> {
   // A plain accounting-package export carries no columns of ours, but its tax
   // codes are still worth reading: they are the same information, written by
-  // whoever set the chart up.
-  const carries = chart.some(
-    (a) => a.entity !== undefined || a.gstTreatment !== undefined || a.taxCode !== "",
-  );
-  if (!carries) return;
+  // whoever set the chart up. A chart with neither -- QuickBooks' -- is still
+  // gone through: its accounts still belong to the one entity, and the names
+  // an old chart left on its numbers still have to go. Stopping here left a
+  // QuickBooks chart's accounts outside the entity and labelled with the
+  // starter chart's names for the same numbers.
 
   const model = state.ledger.entities ?? emptyEntityModel();
   const entities = [...model.entities];
@@ -3474,6 +3489,117 @@ export async function applyChartColumns(chart: readonly Account[]): Promise<void
   }
   state.ledger = { ...state.ledger, entities: { ...model, entities, accounts, banks } };
   state.persistent = await save(state.ledger);
+}
+
+/**
+ * Whether the chart is still the country's starter chart with nothing coded
+ * to it: no codings, splits, journals or rules of anyone's making.
+ */
+function unusedStarterChart(): boolean {
+  if (!isStarterChart(state.chart, booksCountry().id)) return false;
+  const rules = state.rules as RuleFileShape | undefined;
+  return (
+    Object.keys(state.ledger.overrides ?? {}).length === 0 &&
+    Object.keys(state.ledger.splits ?? {}).length === 0 &&
+    (state.ledger.manualJournals ?? []).length === 0 &&
+    (rules?.rules ?? []).length === 0
+  );
+}
+
+/**
+ * Books brought across from QuickBooks or SlowBooks before their chart was
+ * tidied as it arrived: their accounts given to the one entity, and the
+ * starter chart's names on their numbers dropped. Run as the books open; does
+ * nothing on books from anywhere else, or where everything is already in
+ * order. Says whether it changed anything.
+ */
+export async function repairImportedChart(): Promise<boolean> {
+  const imported = state.ledger.transactions.some((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? ""));
+  if (!imported || state.chart.length === 0) return false;
+  const model = state.ledger.entities;
+  const unassigned =
+    model !== undefined && model.entities.length === 1
+      ? state.chart.filter((a) => a.type !== "Bank" && model.accounts[accountEntityKey(a)] === undefined)
+      : [];
+  // Names first, then the tidy: a treatment kept for a coding is renamed with
+  // it, rather than kept under the old name because something used it.
+  const relabelled = await relabelStale();
+  const tidied = tidyStaleTreatments(state.chart);
+  if (unassigned.length === 0 && !tidied && !relabelled) return false;
+  if (tidied) await persistRules();
+  if (unassigned.length > 0 && model !== undefined) {
+    const only = model.entities[0]?.id ?? "";
+    const accounts = { ...model.accounts };
+    for (const a of unassigned) accounts[accountEntityKey(a)] = only;
+    state.ledger = { ...state.ledger, entities: { ...model, accounts } };
+    state.persistent = await save(state.ledger);
+  }
+  return true;
+}
+
+/**
+ * Codings, splits and the file's matched names saved under a name the chart
+ * no longer gives their number -- "Commissions and fees - 6020" where 6020 is
+ * now Automobile:Fuel -- put under the chart's own name. They already post to
+ * the right account, which is found by its number; only the name was wrong.
+ */
+async function relabelStale(): Promise<boolean> {
+  const nameOf = new Map(state.chart.filter((a) => a.code.trim() !== "").map((a) => [a.code.trim(), a.name.trim()]));
+  const fix = (label: string): string => {
+    const { code, name } = splitAccountLabel(label);
+    const charted = code === "" ? undefined : nameOf.get(code);
+    return charted === undefined || charted.toLowerCase() === name.trim().toLowerCase() ? label : `${charted} - ${code}`;
+  };
+  let changed = false;
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  for (const [id, o] of Object.entries(overrides)) {
+    if (o.code === undefined || o.code === "") continue;
+    const to = fix(o.code);
+    if (to !== o.code) {
+      overrides[id] = { ...o, code: to };
+      changed = true;
+    }
+  }
+  const splits = { ...(state.ledger.splits ?? {}) };
+  for (const [id, parts] of Object.entries(splits)) {
+    const next = parts.map((p) => (p.code ? { ...p, code: fix(p.code) } : p));
+    if (next.some((p, i) => p.code !== parts[i]?.code)) {
+      splits[id] = next;
+      changed = true;
+    }
+  }
+  if (changed) {
+    state.ledger = { ...state.ledger, overrides, splits };
+    state.persistent = await save(state.ledger);
+  }
+  // The rules, their defaults, the file's matched names and the treatments.
+  const rules = state.rules as
+    | (RuleFileShape & {
+        aliases?: Record<string, string>;
+        rules?: { code?: string }[];
+        defaults?: { code?: string }[];
+        codeTreatments?: Record<string, unknown>;
+      })
+    | undefined;
+  if (rules !== undefined) {
+    const next = {
+      ...rules,
+      ...(rules.aliases !== undefined
+        ? { aliases: Object.fromEntries(Object.entries(rules.aliases).map(([k, v]) => [k, fix(v)])) }
+        : {}),
+      ...(rules.rules !== undefined ? { rules: rules.rules.map((x) => (x.code ? { ...x, code: fix(x.code) } : x)) } : {}),
+      ...(rules.defaults !== undefined ? { defaults: rules.defaults.map((x) => (x.code ? { ...x, code: fix(x.code) } : x)) } : {}),
+      ...(rules.codeTreatments !== undefined
+        ? { codeTreatments: Object.fromEntries(Object.entries(rules.codeTreatments).map(([k, v]) => [fix(k), v])) }
+        : {}),
+    };
+    if (JSON.stringify(next) !== JSON.stringify(rules)) {
+      state.rules = next as typeof state.rules;
+      await persistRules();
+      changed = true;
+    }
+  }
+  return changed;
 }
 
 /** Worked examples for inference: our transactions paired with their coding. */

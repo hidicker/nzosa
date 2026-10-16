@@ -67,7 +67,7 @@ export async function applyNewBooksCountry(): Promise<boolean> {
 }
 
 /** Whether a chart is still exactly a country's starter chart, untouched. */
-function isStarterChart(chart: readonly Account[], country: string): boolean {
+export function isStarterChart(chart: readonly Account[], country: string): boolean {
   const key = (a: Account): string => `${a.code.trim()}|${a.name.trim()}`;
   const starter = new Set(starterChartFor(country).map(key));
   return chart.length === starter.size && chart.every((a) => starter.has(key(a)));

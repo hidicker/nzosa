@@ -114,6 +114,7 @@ import { showOtherTabs, watchOtherTabs } from "./other-tabs.js";
 import { renderAiCheck } from "./daily/ai-check-page.js";
 import {
   applyChartColumns,
+  repairImportedChart,
   renderCheck,
   settleInvoicesFromXero,
   wireCodingReconciliation,
@@ -319,6 +320,10 @@ async function init(): Promise<void> {
     await ensureDefaultEntity();
     // And the rows that carried the mapping have done their job.
     await tidyChart();
+    // Books brought from QuickBooks or SlowBooks before their chart was tidied
+    // as it arrived: their accounts given to their entity, the starter
+    // chart's names on their numbers dropped.
+    await repairImportedChart();
 
     state.rulesArchive = await loadRulesArchive();
     state.filed = state.ledger.filedReturns ?? [];

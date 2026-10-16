@@ -62,3 +62,29 @@ test("a layout is known again by its headings, and the same lines get the same i
   assert.deepEqual(read(US, layout).transactions.map((t) => t.id), read(US, layout).transactions.map((t) => t.id));
   assert.match(layoutProblem({ ...layout, date: -1 }) ?? "", /date/);
 });
+
+test("a file with no headings, as Commonwealth Bank exports it, is read from its contents", () => {
+  const text = [
+    '01/07/2026,"+2,200.00","TRANSFER FROM KELLY DESIGN PTY LTD INV 1001","+2,200.00"',
+    '03/07/2026,"-45.10","OFFICEWORKS 0412 SYDNEY NS AUS Card xx1234","+2,154.90"',
+    '05/07/2026,"-89.00","TELSTRA PREPAID MELBOURNE AU","+2,065.90"',
+    '15/07/2026,"+3,300.00","TRANSFER FROM HARBOUR CAFE INV 1002","+5,365.90"',
+  ].join("\n");
+  const { layout, columns } = guessBankLayout(text);
+  assert.equal(layout.headerRow, -1);
+  assert.deepEqual(columns, ["Column 1", "Column 2", "Column 3", "Column 4"]);
+  assert.deepEqual([layout.date, layout.amount, layout.description, layout.balance], [0, 1, 2, 3]);
+  assert.equal(layout.dayFirst, true);
+  assert.equal(layoutProblem(layout), null);
+  // Kept under the names it was chosen by, so the next file finds it.
+  assert.equal(bankFileSignature(text), "column 1|column 2|column 3|column 4");
+  // Every row is a line: the first is not taken for headings.
+  const read = importWithLayout(text, layout, { file: "CSVData.csv", account: "cba", currency: "AUD" });
+  assert.deepEqual(read.transactions.map((t) => [t.date, t.amount]), [
+    ["2026-07-01", 220000],
+    ["2026-07-03", -4510],
+    ["2026-07-05", -8900],
+    ["2026-07-15", 330000],
+  ]);
+  assert.equal(read.problems.length, 0);
+});

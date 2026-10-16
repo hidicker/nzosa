@@ -5,6 +5,8 @@ import {
   SCHEDULE_C,
   SCHEDULE_E,
   auResidentTax,
+  auSmallBusinessOffset,
+  medicareThresholdFor,
   basDueDate,
   basQuarters,
   contractorTotals,
@@ -234,4 +236,37 @@ test("checked against OpenAccountants: Korea's tax base is rounded down to 10,00
   assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "국민연금 보험료", "expense"), "social-insurance");
   assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "National health insurance", "expense"), "social-insurance");
   assert.equal(formLineFor(KR_BUSINESS_STATEMENT, "화재보험 Fire insurance", "expense"), "insurance");
+});
+
+test("Australia 2027-28: the 15% rate falls to 14%", () => {
+  // $18,201 to $45,000 at 14%: 26,800 x 0.14 = $3,752 at $45,000.
+  assert.equal(auResidentTax(4_500_000, 2028), 375_200);
+  assert.equal(auResidentTax(13_500_000, 2028), 375_200 + 2_700_000);
+});
+
+test("Australia: the small business income tax offset is 16% of the tax on business income, at most $1,000", () => {
+  // All business income: $60,000 taxable, tax $8,788 (2025-26) -> 16% = $1,406.08, capped at $1,000.
+  const tax = auResidentTax(6_000_000, 2026);
+  assert.equal(tax, 878_800);
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, 6_000_000, tax, 2026), 100_000);
+  // Half business, half rent: 16% x $8,788 x 1/2 = $703.04.
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, 3_000_000, tax, 2026), 70_304);
+  // Rent only, or a loss: nothing.
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, 0, tax, 2026), 0);
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, -50_000, tax, 2026), 0);
+  // Never more than the tax left after the low income offset.
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, 6_000_000, 25_000, 2026), 25_000);
+  // Before 2021-22 the rate and cap were different: not held.
+  assert.equal(auSmallBusinessOffset(tax, 6_000_000, 6_000_000, tax, 2021), null);
+});
+
+test("Australia: a year whose Medicare threshold is not set yet uses the latest held", () => {
+  // $3,865.59 in 2026-27: under the 2025-26 threshold of $28,011, so no levy, not 2% of it.
+  assert.equal(medicareLevy(386_559, 2027), 0);
+  assert.deepEqual(medicareThresholdFor(2027), { threshold: 2_801_100, year: 2026 });
+  // Its own year's where held, and none before the first held.
+  assert.deepEqual(medicareThresholdFor(2026), { threshold: 2_801_100, year: 2026 });
+  assert.equal(medicareThresholdFor(2025), null);
+  // Well above it, the full 2%.
+  assert.equal(medicareLevy(10_000_000, 2027), 200_000);
 });

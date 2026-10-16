@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { record } from "../books.js";
-import { booksCurrency, booksMoney, noSalesTax } from "../country.js";
+import { booksCurrency, booksMoney, noSalesTax, gstPercent } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -65,7 +65,7 @@ async function invoiceTime(customer: string, entries: readonly TimeEntry[]): Pro
     entries,
     account?.code.trim() ?? "",
     booksMoney,
-    noSalesTax() ? undefined : { taxType: "15% GST on Income", rate: 0.15 },
+    noSalesTax() ? undefined : { taxType: "15% GST on Income", rate: gstPercent() / 100 },
   );
   const total = lines.reduce((sum, l) => sum + l.gross, 0);
   const gst = lines.reduce((sum, l) => sum + l.tax, 0);

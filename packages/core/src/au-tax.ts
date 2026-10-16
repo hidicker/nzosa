@@ -128,7 +128,8 @@ interface Bracket {
 /**
  * Resident individual tax rates by financial year (the year ending 30 June).
  * 2025 and 2026 are the rates from 1 July 2024; from 1 July 2026 the 16%
- * rate falls to 15%. Confirm with the ATO before relying on a year.
+ * rate falls to 15%, and from 1 July 2027 to 14%. Confirm with the ATO before
+ * relying on a year.
  */
 const RESIDENT_RATES: Readonly<Record<number, readonly Bracket[]>> = {
   2025: [
@@ -145,6 +146,14 @@ const RESIDENT_RATES: Readonly<Record<number, readonly Bracket[]>> = {
   ],
   2027: [
     { from: 1_820_000, rate: 0.15 },
+    { from: 4_500_000, rate: 0.3 },
+    { from: 13_500_000, rate: 0.37 },
+    { from: 19_000_000, rate: 0.45 },
+  ],
+  // Enacted (Treasury Laws Amendment (More Cost of Living Relief) Act 2025):
+  // the 15% rate falls to 14% from 1 July 2027.
+  2028: [
+    { from: 1_820_000, rate: 0.14 },
     { from: 4_500_000, rate: 0.3 },
     { from: 13_500_000, rate: 0.37 },
     { from: 19_000_000, rate: 0.45 },
@@ -171,15 +180,36 @@ export function auResidentTax(taxable: Cents, year: number): Cents | null {
 
 /**
  * The low income tax offset: $700 up to $37,500, less 5c a dollar to $45,000,
- * then 1.5c a dollar to nil at $66,667 (unchanged 2020-21 to 2026-27). It can
+ * then 1.5c a dollar to nil at $66,667 (unchanged 2020-21 to 2027-28). It can
  * only reduce tax to nil. Null for a year it is not held for.
  */
 export function auLowIncomeOffset(taxable: Cents, year: number): Cents | null {
-  if (year < 2021 || year > 2027) return null;
+  if (year < 2021 || year > 2028) return null;
   const income = Math.max(0, taxable);
   if (income <= 3_750_000) return 70_000;
   if (income <= 4_500_000) return Math.round(70_000 - (income - 3_750_000) * 0.05);
   return Math.max(0, Math.round(32_500 - (income - 4_500_000) * 0.015));
+}
+
+/**
+ * The small business income tax offset (ITAA 1997 Subdivision 328-F), for an
+ * individual's net small business income from a sole trade, a partnership or a
+ * trust whose aggregated turnover is under $5 million: 16% of the tax on the
+ * share of taxable income that is business income, at most $1,000 a year
+ * (2021-22 onwards). Not for rent, which is not business income. It can only
+ * reduce tax to nil, so it is capped at `taxLeft`. Null for a year before it.
+ */
+export function auSmallBusinessOffset(
+  tax: Cents,
+  taxable: Cents,
+  businessIncome: Cents,
+  taxLeft: Cents,
+  year: number,
+): Cents | null {
+  if (year < 2022) return null;
+  if (tax <= 0 || taxable <= 0 || businessIncome <= 0) return 0;
+  const share = Math.min(1, businessIncome / taxable);
+  return Math.max(0, Math.min(100_000, Math.round(tax * share * 0.16), taxLeft));
 }
 
 /**
@@ -197,13 +227,28 @@ const MEDICARE_LOW_INCOME: Readonly<Record<number, Cents>> = { 2026: 2_801_100 }
 export function medicareLevy(taxable: Cents, year?: number): Cents {
   const income = Math.max(0, taxable);
   const full = Math.round(income * 0.02);
-  const threshold = year === undefined ? undefined : MEDICARE_LOW_INCOME[year];
+  const threshold = year === undefined ? undefined : medicareThresholdFor(year)?.threshold;
   if (threshold === undefined) return full;
   if (income <= threshold) return 0;
   return Math.min(full, Math.round((income - threshold) * 0.1));
 }
 
-/** Whether the year's Medicare low-income threshold is held, so the levy is reduced. */
+/** Whether the year's own Medicare low-income threshold is held. */
 export function medicareThresholdHeld(year: number): boolean {
   return MEDICARE_LOW_INCOME[year] !== undefined;
+}
+
+/**
+ * The low-income threshold the levy is worked with: the year's own, or for a
+ * later year whose threshold is not set yet (it is indexed each Budget), the
+ * latest held -- the thresholds only rise, so this charges a little levy a
+ * low earner would not, where 2% on everyone charged it on every dollar.
+ * Null before the first year held.
+ */
+export function medicareThresholdFor(year: number): { threshold: Cents; year: number } | null {
+  const held = Object.keys(MEDICARE_LOW_INCOME)
+    .map(Number)
+    .filter((y) => y <= year)
+    .sort((a, b) => b - a)[0];
+  return held === undefined ? null : { threshold: MEDICARE_LOW_INCOME[held] ?? 0, year: held };
 }

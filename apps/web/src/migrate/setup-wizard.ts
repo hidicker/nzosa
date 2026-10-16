@@ -1093,7 +1093,7 @@ export function setupSteps(
             ? "Every account started at nothing, so there are no opening balances."
             : fromNew
             ? "What each bank account and loan held on the day the books start. Enter bank " +
-              "balances takes them from a statement on any date, or from the bank feed. Only " +
+              `balances takes them from a statement on any date${nz ? ", or from the bank feed" : ""}. Only ` +
               "not needed if every account started at nothing."
             : xero
               ? `Xero: ${XERO_TRIAL_BALANCE}`

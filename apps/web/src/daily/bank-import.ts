@@ -1521,7 +1521,7 @@ function renderReports(): void {
             `in ${escapeHtml(bankLabel(report.account))}, and not added again.</p>`;
       return `<div class="report">
         <strong>${escapeHtml(report.name)}</strong>
-        <p>${report.count} transactions &middot; ${escapeHtml(getImporter(report.importer)?.label ?? report.importer)} &middot; ${escapeHtml(
+        <p>${report.count} transactions &middot; ${escapeHtml(getImporter(report.importer)?.label ?? (report.importer === "columns" ? "the columns you chose" : report.importer))} &middot; ${escapeHtml(
           report.account === "" ? "" : bankLabel(report.account),
         )}</p>
         ${before}

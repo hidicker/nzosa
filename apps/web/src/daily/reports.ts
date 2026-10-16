@@ -125,7 +125,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid } from "../tax-year.js";
-import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, taxTypeLabel } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
 
@@ -492,7 +492,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
       const { net, tax } = splitManualGst(line.amount);
       const gstAccount = manualJournalGstAccount(line.code);
       drawLine(
-        `${line.code} · ${line.gst === "INPUT2" ? "15% GST on expenses" : "15% GST on income"}`,
+        `${line.code} · ${taxTypeLabel(line.gst === "INPUT2" ? "15% GST on expenses" : "15% GST on income")}`,
         net,
       );
       drawLine(`${gstAccount.name} - ${gstAccount.code}`, tax);
@@ -798,8 +798,8 @@ function journalEditor(draft: JournalDraft): HTMLElement {
       gst.title = "GST on this line. Almost always No GST on a journal.";
       for (const [value, label] of [
         ["", "No GST"],
-        ["INPUT2", "15% GST on expenses"],
-        ["OUTPUT2", "15% GST on income"],
+        ["INPUT2", taxTypeLabel("15% GST on expenses")],
+        ["OUTPUT2", taxTypeLabel("15% GST on income")],
       ] as const) {
         const option = document.createElement("option");
         option.value = value;
@@ -2674,6 +2674,11 @@ export function entityYearReport(entity: Entity, year: number): ProfitAndLoss | 
   return entityReporter()(entity, yearPeriod(year));
 }
 
+/** One entity's profit and loss for any stretch of days -- a BAS quarter, say. */
+export function entityPeriodReport(entity: Entity, period: DateRange): ProfitAndLoss | null {
+  return entityReporter()(entity, period);
+}
+
 /** An account as a schedule names it: without the code on the end. */
 export function scheduleName(code: string): string {
   const { name } = splitAccountLabel(code);
@@ -4295,7 +4300,9 @@ export function renderReportsPage(): void {
     for (const line of report.unclassified) {
       const tr = document.createElement("tr");
       const name = document.createElement("td");
-      name.textContent = line.code;
+      // A bank account comes as its id and its name ("csvdata CSVData"): named once.
+      const [first = "", ...rest] = line.code.split(" ");
+      name.textContent = rest.length > 0 ? balanceSheetLabel({ code: first, name: rest.join(" ") }) : line.code;
       name.className = "report-name";
       const role = document.createElement("td");
       role.textContent = roleOf(line.code);

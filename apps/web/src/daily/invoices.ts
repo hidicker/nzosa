@@ -52,7 +52,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { loadInvoices } from "../migrate/file-intake.js";
-import { booksCountry, booksCurrency, booksMoney, documentOptions, noSalesTax } from "../country.js";
+import { booksCountry, booksCurrency, booksMoney, documentOptions, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
 
 /**
  * Writing an invoice by hand.
@@ -478,10 +478,11 @@ export function renderInvoiceEditor(): void {
     const treatments = choices.some((o) => o.value === line.taxType) || line.taxType === ""
       ? choices
       : [{ value: line.taxType, label: line.taxType, rate: rateOf(line.taxType) }, ...choices];
+    // The names are Xero New Zealand's; the rate shown is the books' country's.
     for (const option of treatments) {
       const item = document.createElement("option");
       item.value = option.value;
-      item.textContent = option.label;
+      item.textContent = taxTypeLabel(option.label);
       item.selected = option.value === line.taxType;
       tax.append(item);
     }
@@ -528,7 +529,7 @@ export function renderInvoiceEditor(): void {
       asBill
         ? item.unitCost === undefined
           ? undefined
-          : Math.round(item.unitCost * (1 + rateOf(tax.value) / 100))
+          : Math.round(item.unitCost * (1 + (rateOf(tax.value) === 15 ? gstPercent() : 0) / 100))
         : item.price;
     qty.addEventListener("input", () => {
       const item = stockedItems.find((i) => i.id === row.dataset["item"]);

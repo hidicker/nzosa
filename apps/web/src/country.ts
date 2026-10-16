@@ -39,6 +39,21 @@ export function noSalesTax(): boolean {
   return salesTaxFraction().num === 0;
 }
 
+/** The standard rate of GST as a percentage: 15 in New Zealand, 10 in Australia, 0 where there is none. */
+export function gstPercent(): number {
+  const tax = booksCountry().salesTax;
+  return tax === null ? 0 : Math.round(tax.rate * 100);
+}
+
+/**
+ * A GST treatment's name as these books' country would say it. The names are
+ * Xero New Zealand's ("15% GST on Income") and stay the stored key; only the
+ * words on screen change, so Australian books read 10%.
+ */
+export function taxTypeLabel(name: string): string {
+  return booksCountry().id === "nz" ? name : name.replace(/\b15%/, `${gstPercent()}%`);
+}
+
 /**
  * What an invoice or bill document needs to know of the country: no tax
  * column where there is no sales tax, and dates written the way its readers

@@ -56,7 +56,7 @@ import {
   cleanLogo,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
-import { booksCountry, booksLocale, moneyPlaces, noSalesTax } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -1251,7 +1251,7 @@ export function renderEntities(): void {
     for (const rate of GST_OPTIONS) {
       const option = document.createElement("option");
       option.value = rate.value;
-      option.textContent = rate.label;
+      option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;
       option.title = rate.hint;
       option.selected = current === rate.value;
       gst.append(option);
@@ -1262,7 +1262,9 @@ export function renderEntities(): void {
       // being flattened by the act of looking at it.
       const option = document.createElement("option");
       option.value = current;
-      option.textContent = current;
+      // Australia's words for the same treatments.
+      option.textContent =
+        booksCountry().id === "au" ? ({ "zero-rated": "GST-free", exempt: "input taxed" }[current] ?? current) : current;
       option.selected = true;
       gst.append(option);
     }
@@ -1510,8 +1512,8 @@ function addAccountForm(model: EntityModel, accountRows: readonly { label: strin
 
   const gst = document.createElement("select");
   for (const [value, caption] of [
-    ["15", "15% — GST charged or claimed"],
-    ["0", "No GST — exempt, zero-rated or not a supply"],
+    ["15", `${gstPercent()}% — GST charged or claimed`],
+    ["0", booksCountry().id === "au" ? "No GST — GST-free, input taxed or not a supply" : "No GST — exempt, zero-rated or not a supply"],
     ["100", "All GST — e.g. GST on imports"],
   ] as const) {
     const option = document.createElement("option");

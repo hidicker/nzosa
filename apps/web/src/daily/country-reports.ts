@@ -4,6 +4,7 @@ import {
   KR_BUSINESS_STATEMENT,
   KR_RENTAL_STATEMENT,
   auLowIncomeOffset,
+  auSmallBusinessOffset,
   auResidentTax,
   SCHEDULE_C,
   SCHEDULE_E,
@@ -17,6 +18,7 @@ import {
   isRental,
   medicareLevy,
   medicareThresholdHeld,
+  medicareThresholdFor,
   krIncomeTax,
   krIncomeTaxDue,
   krVatPeriods,
@@ -32,7 +34,7 @@ import { postedJournals, varianceInput } from "../books.js";
 import { state } from "../state.js";
 import { note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
-import { entityYearReport, scheduleName } from "./reports.js";
+import { entityPeriodReport, entityYearReport, scheduleName } from "./reports.js";
 import { taxYearEnd, taxYearStart } from "../tax-year.js";
 import { booksMoney } from "../country.js";
 
@@ -551,10 +553,10 @@ export function renderKrVat(body: HTMLElement, year: number): void {
   );
 }
 
-/** GST on the BAS, quarter by quarter: G1, 1A, 1B and the net. */
+/** The BAS, quarter by quarter: G1, 1A, 1B and the net, and PAYG instalment income (T1). */
 export function renderBas(body: HTMLElement, year: number): void {
   const title = document.createElement("h3");
-  title.textContent = `GST on the business activity statement — year to 30 June ${year}`;
+  title.textContent = `Business activity statement — year to 30 June ${year}`;
   body.append(title);
   let returns: ReturnType<typeof computeOurReturns> = [];
   try {
@@ -562,12 +564,30 @@ export function renderBas(body: HTMLElement, year: number): void {
   } catch {
     returns = [];
   }
+  // PAYG instalments: the ATO notifies a rate (T2) and the instalment is the
+  // quarter's instalment income (T1) times it. Kept in this browser only: the
+  // rate comes on the ATO's notice, not from the books.
+  const rateKey = `nzosa:payg-rate:${state.ledger.entities?.entities?.[0]?.name ?? ""}`;
+  let rate = NaN;
+  try {
+    rate = Number(localStorage.getItem(rateKey) ?? "");
+  } catch {
+    rate = NaN;
+  }
+  const withRate = Number.isFinite(rate) && rate > 0;
   const table = document.createElement("table");
   table.className = "report-table";
   table.innerHTML =
-    "<thead><tr><th>Quarter</th><th>Due</th><th>G1 Total sales</th><th>1A GST on sales</th><th>1B GST on purchases</th><th>Net</th></tr></thead>";
+    "<thead><tr><th>Quarter</th><th>Due</th><th>G1 Total sales</th><th>1A GST on sales</th><th>1B GST on purchases</th><th>Net</th>" +
+    `<th>T1 Instalment income</th>${withRate ? "<th>T11 PAYG instalment</th>" : ""}</tr></thead>`;
   const tbody = document.createElement("tbody");
   for (const quarter of basQuarters(year)) {
+    // Instalment income: the business and investment income in the books for
+    // the quarter, GST out -- not salary, not capital gains. Not a company's,
+    // which pays its own instalments.
+    const t1 = entities()
+      .filter((e) => e.kind !== "personal" && !(e.structure === "company" && !isRental(e)))
+      .reduce((sum, e) => sum + Math.max(0, entityPeriodReport(e, quarter)?.totalIncome ?? 0), 0);
     const inside = returns.filter((r) => r.period.to >= quarter.from && r.period.to <= quarter.to);
     const sum = (pick: (b: Record<string, number | undefined>) => number): number =>
       inside.reduce((t, r) => t + pick(r.boxes as unknown as Record<string, number | undefined>), 0);
@@ -585,6 +605,8 @@ export function renderBas(body: HTMLElement, year: number): void {
       [money(bas.a1), "report-amount"],
       [money(bas.b1), "report-amount"],
       [`${money(Math.abs(bas.net))} ${bas.net >= 0 ? "to pay" : "refund"}`, "report-amount"],
+      [money(t1), "report-amount"],
+      ...(withRate ? ([[money(Math.round((t1 * rate) / 100)), "report-amount"]] as const) : []),
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;
@@ -598,9 +620,38 @@ export function renderBas(body: HTMLElement, year: number): void {
     table,
     note(
       "The simpler BAS: G1 includes GST. Due dates are for lodging yourself; a registered tax agent " +
-        "lodging electronically usually has longer. PAYG instalments and withholding are not included.",
+        "lodging electronically usually has longer. T1 is the quarter's business and investment income " +
+        "in these books, GST out, without salary or capital gains: income from elsewhere goes on top. " +
+        "PAYG withholding for employees is not included.",
     ),
   );
+  // The instalment rate from the ATO's notice, to work out T11.
+  const label = document.createElement("label");
+  label.className = "account-add-field";
+  const caption = document.createElement("span");
+  caption.textContent = "Instalment rate the ATO notified (T2), %";
+  const input = document.createElement("input");
+  input.type = "number";
+  input.min = "0";
+  input.max = "100";
+  input.step = "0.01";
+  input.value = withRate ? String(rate) : "";
+  input.placeholder = "e.g. 4.5";
+  input.addEventListener("change", () => {
+    try {
+      if (input.value.trim() === "") localStorage.removeItem(rateKey);
+      else localStorage.setItem(rateKey, input.value.trim());
+    } catch {
+      // Without storage the rate is simply asked again.
+    }
+    // Drawn again the way the report list draws it.
+    document.getElementById("report-kind")?.dispatchEvent(new Event("change", { bubbles: true }));
+  });
+  const hint = document.createElement("small");
+  hint.textContent =
+    "Kept in this browser. With it, T11 shows the instalment: T1 times the rate. Notified an amount (T7) instead? Pay that.";
+  label.append(caption, input, hint);
+  body.append(label);
 }
 
 /**
@@ -625,7 +676,7 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
     label: "Australia",
     options: [
       ["aurental", "Rental property schedule"],
-      ["bas", "GST on the BAS"],
+      ["bas", "Business activity statement (BAS)"],
       ["autax", "Income tax estimate"],
     ],
   },
@@ -798,6 +849,9 @@ export function renderUsTax(body: HTMLElement, year: number): void {
 }
 
 /** Australia: each owner's share, resident tax on it and the Medicare levy. */
+/** An amount taken off: "-700.00", or "0.00" when nothing is. */
+const less = (cents: number): string => (cents === 0 ? money(0) : `-${money(cents)}`);
+
 export function renderAuTax(body: HTMLElement, year: number): void {
   const title = document.createElement("h3");
   title.textContent = `Income tax estimate — year to 30 June ${year}`;
@@ -812,7 +866,12 @@ export function renderAuTax(body: HTMLElement, year: number): void {
     heading.textContent = one.owner;
     const tax = auResidentTax(one.total, year);
     const lito = auLowIncomeOffset(one.total, year);
-    const afterOffset = tax === null ? null : Math.max(0, tax - (lito ?? 0));
+    const afterLito = tax === null ? null : Math.max(0, tax - (lito ?? 0));
+    // Business income, not rent: what the small business offset is worked on.
+    const business = one.parts.filter((part) => !part.rental).reduce((sum, part) => sum + part.share, 0);
+    const sbito =
+      tax === null || afterLito === null ? null : auSmallBusinessOffset(tax, one.total, business, afterLito, year);
+    const afterOffset = afterLito === null ? null : afterLito - (sbito ?? 0);
     const levy = medicareLevy(one.total, year);
     body.append(
       heading,
@@ -820,9 +879,21 @@ export function renderAuTax(body: HTMLElement, year: number): void {
         ...one.parts.map((part) => [`Share of ${part.entity}`, money(part.share)] as const),
         ["Taxable income from these books", money(one.total), true],
         ["Tax at resident rates", tax === null ? "rates not held for this year" : money(tax)],
-        ["Low income tax offset", lito === null ? "not held for this year" : `-${money(Math.min(lito, tax ?? 0))}`],
+        ["Low income tax offset", lito === null ? "not held for this year" : less(Math.min(lito, tax ?? 0))],
+        ...(business > 0
+          ? ([
+              [
+                "Small business income tax offset (16% of the tax on business income, at most $1,000)",
+                sbito === null ? "not held for this year" : less(sbito),
+              ],
+            ] as const)
+          : []),
         [
-          medicareThresholdHeld(year) ? "Medicare levy (2%, single low-income reduction applied)" : "Medicare levy (2%, low-income reduction not applied)",
+          medicareThresholdHeld(year)
+            ? "Medicare levy (2%, single low-income reduction applied)"
+            : medicareThresholdFor(year) !== null
+              ? `Medicare levy (2%, single low-income reduction at the ${(medicareThresholdFor(year)?.year ?? year) - 1}-${String(medicareThresholdFor(year)?.year ?? year).slice(2)} threshold; this year's is set with the Budget)`
+              : "Medicare levy (2%, low-income reduction not applied)",
           money(levy),
         ],
         ["Estimate", afterOffset === null ? "—" : money(afterOffset + levy), true],
@@ -832,9 +903,10 @@ export function renderAuTax(body: HTMLElement, year: number): void {
   body.append(
     note(
       "Only the income these books hold. Salary, interest, dividends, deductions and other offsets are " +
-        "the return's, and the low income tax offset is worked on this income alone. A net rental loss " +
+        "the return's, and the offsets are worked on this income alone. The small business offset " +
+        "assumes the business's aggregated turnover is under $5 million. A net rental loss " +
         "reduces other income; from 1 July 2027 only for a new build or a property held at 7:30 pm AEST " +
-        "on 12 May 2026. Rates per the OpenAccountants Australian rates card (2025-26 and 2026-27); " +
+        "on 12 May 2026. Rates per the OpenAccountants Australian rates card (2025-26 to 2027-28); " +
         "confirm them with the ATO.",
     ),
   );

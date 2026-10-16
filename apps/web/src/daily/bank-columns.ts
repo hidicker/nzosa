@@ -37,7 +37,10 @@ export function rememberedLayout(signature: string): RememberedLayout | undefine
 export function askForColumns(file: File, text: string): void {
   if (waiting.some((w) => w.file.name === file.name && w.text === text)) return;
   const guess = guessBankLayout(text);
-  const label = file.name.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").trim() || "Bank account";
+  // The file's name, unless it is a name every export from the bank has:
+  // Commonwealth Bank calls each one CSVData.csv.
+  const named = file.name.replace(/\.[^.]+$/, "").replace(/[_]+/g, " ").replace(/\s*\(\d+\)$/, "").trim();
+  const label = named === "" || /^(csvdata|export|download|transactions?|statement|data)$/i.test(named) ? "Bank account" : named;
   waiting.push({ file, text, guess, layout: { ...guess.layout }, label });
 }
 

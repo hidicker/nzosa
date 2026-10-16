@@ -10,7 +10,7 @@ import {
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksCurrency } from "../country.js";
+import { booksCurrency, gstPercent, taxTypeLabel } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
 import { ir3For, rentalSchedulesFor } from "./reports.js";
@@ -316,7 +316,7 @@ function gstRateName(classification: GstClassification): string {
   if (classification.treatment === "exempt") return "Exempt";
   if (classification.treatment === "out-of-scope") return "No GST";
   if (classification.side === "none") return "No GST";
-  return classification.side === "sales" ? "15% GST on Income" : "15% GST on Expenses";
+  return taxTypeLabel(classification.side === "sales" ? "15% GST on Income" : "15% GST on Expenses");
 }
 
 // --- Sheet Builders ---
@@ -737,7 +737,7 @@ function buildBankTransactionsSheet(ctx: SheetContext): string {
       ${textCell(`J${rIdx}`, code, 5)}
       ${textCell(`K${rIdx}`, accName, 4)}
       ${textCell(`L${rIdx}`, classification.treatment, 5)}
-      ${textCell(`M${rIdx}`, rate > 0 ? "15%" : "0%", 5)}
+      ${textCell(`M${rIdx}`, rate > 0 ? `${gstPercent()}%` : "0%", 5)}
       ${numCell(`N${rIdx}`, gst, 6)}
       ${numCell(`O${rIdx}`, netExcl, 6, `I${rIdx}-N${rIdx}`)}
       ${textCell(`P${rIdx}`, cat.matchedBy ?? "none", 5)}

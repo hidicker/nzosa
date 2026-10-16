@@ -59,7 +59,11 @@ const looksLikeDate = (cell: string): boolean =>
   /^\s*(\d{1,4}[\/\-.]\d{1,2}[\/\-.]\d{1,4}|\d{1,2}\s+[a-z]{3,9}\s+\d{2,4})/i.test(cell);
 const looksLikeMoney = (cell: string): boolean => /^\s*[-+(]?\s*[$£€¥₩]?\s*-?[\d,]+(\.\d+)?\s*\)?\s*(cr|dr)?\s*$/i.test(cell) && /\d/.test(cell);
 
-/** The header row: the first row of several cells with a date in the row under it. */
+/**
+ * The header row: the first row of several cells with a date in the row under
+ * it. -1 when the file has none -- Commonwealth Bank's export, among others,
+ * starts straight in with a dated line -- so every row is a line.
+ */
 function headerRowOf(records: readonly ReadonlyCsvRecord[]): number {
   for (let i = 0; i < Math.min(records.length - 1, 30); i += 1) {
     const row = records[i]?.fields ?? [];
@@ -67,7 +71,14 @@ function headerRowOf(records: readonly ReadonlyCsvRecord[]): number {
     const filled = row.filter((c) => c.trim() !== "").length;
     if (filled >= 2 && row.every((c) => !looksLikeDate(c)) && next.some(looksLikeDate)) return i;
   }
-  return 0;
+  return (records[0]?.fields ?? []).some(looksLikeDate) ? -1 : 0;
+}
+
+/** The headings, or for a file with none, "Column 1", "Column 2" and so on. */
+function headingsOf(records: readonly ReadonlyCsvRecord[], headerRow: number): string[] {
+  if (headerRow >= 0) return [...(records[headerRow]?.fields ?? [])].map((c) => c.trim());
+  const widest = Math.max(0, ...records.slice(0, 20).map((r) => r.fields.length));
+  return Array.from({ length: widest }, (_, i) => `Column ${i + 1}`);
 }
 
 /** Which way round the dates go, from any with a part past 12; null when none says. */
@@ -89,7 +100,7 @@ function dateOrderIn(rows: readonly (readonly string[])[], column: number): bool
 export function guessBankLayout(text: string): BankLayoutGuess {
   const records = parseCsvRecords(text);
   const headerRow = headerRowOf(records);
-  const columns = [...(records[headerRow]?.fields ?? [])].map((c) => c.trim());
+  const columns = headingsOf(records, headerRow);
   const body = records.slice(headerRow + 1).map((r) => [...r.fields]).filter((r) => r.some((c) => c.trim() !== ""));
   const sample = body.slice(0, 5);
   const taken = new Set<number>();
@@ -121,8 +132,40 @@ export function guessBankLayout(text: string): BankLayoutGuess {
     }
   }
   const payee = pick(PAYEE_WORDS);
-  const description = pick(DESCRIPTION_WORDS);
+  let description = pick(DESCRIPTION_WORDS);
   const reference = pick(REFERENCE_WORDS);
+  // With no headings to go by, the contents say. A running balance is the
+  // money column that moves by each line's amount; what each line was is the
+  // column of words.
+  let found = balance;
+  if (found < 0 && amount >= 0) {
+    const cents = (cell: string | undefined): number | null => {
+      const n = Number((cell ?? "").replace(/[,$\s+]/g, ""));
+      return (cell ?? "").trim() === "" || !Number.isFinite(n) ? null : Math.round(n * 100);
+    };
+    found = columns.findIndex((_, i) => {
+      if (taken.has(i) || !mostly(i, looksLikeMoney)) return false;
+      let agree = 0;
+      let tried = 0;
+      for (let r = 1; r < Math.min(body.length, 40); r += 1) {
+        const before = cents(body[r - 1]?.[i]);
+        const now = cents(body[r]?.[i]);
+        const moved = cents(body[r]?.[amount]);
+        if (before === null || now === null || moved === null) continue;
+        tried += 1;
+        // Newest first or oldest first, the balance moves by the line either way.
+        if (now - before === moved || before - now === cents(body[r - 1]?.[amount])) agree += 1;
+      }
+      return tried > 0 && agree >= tried * 0.8;
+    });
+    if (found >= 0) taken.add(found);
+  }
+  if (payee < 0 && description < 0) {
+    description = columns.findIndex(
+      (_, i) => !taken.has(i) && mostly(i, (c) => /[a-z]{3}/i.test(c) && !looksLikeDate(c) && !looksLikeMoney(c)),
+    );
+    if (description >= 0) taken.add(description);
+  }
   const pair = amount < 0 && moneyOut >= 0 && moneyIn >= 0;
   return {
     layout: {
@@ -134,7 +177,7 @@ export function guessBankLayout(text: string): BankLayoutGuess {
       payee,
       description,
       reference,
-      balance,
+      balance: found,
       dayFirst: date < 0 ? null : dateOrderIn(body, date),
     },
     columns,
@@ -150,7 +193,9 @@ export function layoutSignature(columns: readonly string[]): string {
 /** The headings of a file, for looking up a layout remembered for them. */
 export function bankFileSignature(text: string): string {
   const records = parseCsvRecords(text);
-  return layoutSignature(records[headerRowOf(records)]?.fields ?? []);
+  // A file with no headings is known by its column count: "column 1|column 2|...",
+  // the names the layout was chosen and kept under.
+  return layoutSignature(headingsOf(records, headerRowOf(records)));
 }
 
 /** What is wrong with a layout before it can be used, or null. */

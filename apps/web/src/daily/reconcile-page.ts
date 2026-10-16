@@ -1,6 +1,6 @@
 import { changesByLine } from "../events.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
-import { booksLocale, noSalesTax } from "../country.js";
+import { booksLocale, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
 import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import { lastFeedStatus } from "../feed-route.js";
@@ -515,7 +515,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   for (const rate of GST_OPTIONS) {
     const option = document.createElement("option");
     option.value = rate.value;
-    option.textContent = rate.label;
+    option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;
     option.title = rate.hint;
     option.selected = rate.value === (draft.gst ?? currentRate);
     gstSelect.append(option);
@@ -649,7 +649,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
           (fromHistory === null ? "" : ` · GST ${fromHistory.why}`)
         : noSalesTax()
           ? one.reason
-          : `${rateLabel(one.classification)} · ${one.reason}`;
+          : `${taxTypeLabel(rateLabel(one.classification))} · ${one.reason}`;
   if (fromModel !== undefined) reason.classList.add("code-reason-ai");
 
   /**
@@ -1169,7 +1169,7 @@ function splitLineFor(
         treatment: part.treatment ?? "standard",
         side: part.side ?? "none",
       } as GstClassification);
-      return `${part.code ?? "not coded"} ${formatAmount(part.amount)} · ${rate}`;
+      return `${part.code ?? "not coded"} ${formatAmount(part.amount)} · ${taxTypeLabel(rate)}`;
     })
     .join("  |  ");
 

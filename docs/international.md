@@ -61,10 +61,11 @@ Modules tagged `countries: ["nz"]`, and pages marked `data-module="nz"` or `busi
 - The rental property schedule (individual tax return item 21) on the ATO's labels, with notes on:
   - residential travel (not deductible since 2017)
   - second-hand plant
-- GST on the BAS by quarter: the simpler BAS's G1, 1A and 1B, with the due dates for lodging yourself
-- Resident tax rates and the Medicare levy are in core (`auResidentTax`, `medicareLevy`) for 2025–2027, but not yet on a page
+- The business activity statement by quarter: the simpler BAS's G1, 1A and 1B, with the due dates for lodging yourself, and PAYG instalment income (T1), with the instalment (T11) once the ATO's notified rate is entered
+- An income tax estimate for each owner: resident rates (2024–25 to 2027–28, with the 14% rate from 1 July 2027), the low income tax offset, the small business income tax offset on business income (not rent), and the Medicare levy with the single low-income reduction (the latest threshold held, for a year whose own is not set yet)
+- Checked against the OpenAccountants Australian guides (`au-gst-bas`, `au-rates-2026-27`)
 - Not covered:
-  - PAYG instalments and withholding
+  - PAYG withholding
   - the full BAS labels (G2–G20)
   - Single Touch Payroll and super
   - capital works and depreciation schedules

@@ -1,4 +1,5 @@
 import { combobox } from "./combobox.js";
+import { gstPercent } from "./country.js";
 import { formatAmount, parseAmount } from "@nzosa/core";
 import type { SplitPart, Transaction } from "@nzosa/core";
 import {
@@ -233,7 +234,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
         for (const rate of GST_OPTIONS) {
           const option = document.createElement("option");
           option.value = rate.value;
-          option.textContent = rate.label;
+          option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;
           option.title = rate.hint;
           option.selected = rate.value === draft.rate;
           gst.append(option);

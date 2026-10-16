@@ -1,7 +1,8 @@
 import { ASKED, MODULES, moduleOn, modulesPanel, previousSystem } from "../modules.js";
 import { showPage } from "../app.js";
 import { countryBox } from "./setup-wizard.js";
-import { booksCountry } from "../country.js";
+import { booksCountry, noSalesTax } from "../country.js";
+import { isStarterChart } from "../new-books-country.js";
 import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
@@ -90,6 +91,13 @@ function stepsFor(held: Onboarding): Step[] {
   const steps: Step[] = ["source", "date"];
   steps.push("one");
   if (held.onlyOne === false) steps.push("shared");
+  // From QuickBooks or SlowBooks the general ledger brings the bank lines, so
+  // its files come before the bank step, which then asks only for what came
+  // after the ledger ends.
+  if (fromQuickBooks(held)) {
+    steps.push("entities", "plan", "modules", "ai", "files", "bank", "checklist", "done");
+    return steps;
+  }
   steps.push("entities", "plan", "modules", "ai", "bank");
   // Xero's exports only. A spreadsheet's one file is its coding, and coding
   // read before the chart has no accounts to land on: it was asked for here,
@@ -499,7 +507,7 @@ function dateQuestion(number: number, held: Onboarding): HTMLElement {
               "balances; what happens after it arrives as transactions.",
           )
         : advice(
-            "The first day these books cover. The bank feed fetches from it, and what each " +
+            `The first day these books cover. ${booksCountry().id === "nz" ? "The bank feed fetches from it" : "Bank files are read from it"}, and what each ` +
               "bank account and loan held that day is the opening balance. The first day of a " +
               `financial year (${yearStartSaid()} for most) is simplest: the whole year then comes from ` +
               "these books.",
@@ -536,7 +544,11 @@ function dateQuestion(number: number, held: Onboarding): HTMLElement {
   inner.append(row);
 
   inner.append(
-    note("Opening balances are dated this day and the bank feed fetches from it, so nothing asks for it twice."),
+    note(
+      booksCountry().id === "nz"
+        ? "Opening balances are dated this day and the bank feed fetches from it, so nothing asks for it twice."
+        : "Opening balances are dated this day, so nothing asks for it twice.",
+    ),
     actions(
       button(
         "Save the date",
@@ -711,6 +723,11 @@ function entityRow(
     onChange();
   });
   gstLabel.append(gst, " GST registered");
+  // No sales tax, nothing to be registered for.
+  if (noSalesTax()) {
+    gst.checked = false;
+    gstLabel.hidden = true;
+  }
 
   row.append(name, kind, structure, gstLabel, owners, ownersSaid);
   if (removable) {
@@ -946,7 +963,7 @@ function entityList(planned: readonly PlannedEntity[]): HTMLElement {
     const item = document.createElement("li");
     item.textContent =
       `${entity.name} — ${kindName(entity.kind)}, ` +
-      (entity.gst ? "GST registered" : "not GST registered") +
+      (noSalesTax() ? "" : entity.gst ? "GST registered" : "not GST registered") +
       (entity.owners !== undefined ? `, owned by ${entity.owners}` : "");
     list.append(item);
   }
@@ -1435,7 +1452,7 @@ function readReport(told: HTMLElement): HTMLElement {
   const problem = /not recognised|could not be read|^Skipped |^Nothing was loaded/;
   const update = (): void => {
     const rows = [...told.children].map((row) => row.textContent ?? "");
-    const files = rows.filter((row) => /\.(csv|xlsx|txt)\s+—/i.test(row)).length;
+    const files = rows.filter((row) => /\.(csv|xlsx|xls|txt|iif|ofx|qfx)\s+—/i.test(row)).length;
     const bad = rows.filter((row) => problem.test(row)).length;
     const loading = told.querySelector(".files-loading") !== null;
     details.hidden = rows.length === 0;
@@ -1534,12 +1551,24 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const feedHere = booksCountry().id === "nz";
   const how = held.bank ?? (feedHere ? "feed" : "files");
 
+  // From QuickBooks or SlowBooks the ledger already brought the bank lines up
+  // to its last date: what is asked for here is only what came after.
+  const ledgerLast = fromQuickBooks(held)
+    ? state.ledger.transactions
+        .filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? ""))
+        .reduce((last, t) => (t.date > last ? t.date : last), "")
+    : "";
   inner.append(
-    advice(
-      "Everything else hangs off these. They come from the bank itself rather than from " +
-        "whatever you are moving away from, so they are the bank's record and not somebody's " +
-        "copy of it.",
-    ),
+    ledgerLast !== ""
+      ? advice(
+          `The general ledger you brought in has the bank and card lines up to ${ledgerLast}. Bring in your ` +
+            "bank's files for anything after that; lines already held are recognised and not added twice.",
+        )
+      : advice(
+          "Everything else hangs off these. They come from the bank itself rather than from " +
+            "whatever you are moving away from, so they are the bank's record and not somebody's " +
+            "copy of it.",
+        ),
   );
 
   inner.append(
@@ -1915,14 +1944,21 @@ function guidance(what: string, held: Onboarding): HTMLElement | null {
   }
   wrap.append(
     advice(
-      "These are the accounts you reconcile transactions to. A standard chart of accounts " +
-        "is preloaded, for example:",
+      "These are the accounts you reconcile transactions to. " +
+        (isStarterChart(state.chart, booksCountry().id)
+          ? "A standard chart of accounts is preloaded, for example:"
+          : "These books have their chart of accounts, for example:"),
     ),
   );
 
   const examples = document.createElement("ul");
   examples.className = "migration-list";
-  for (const line of ["200 Sales", "433 Insurance", "408 Cleaning", "720 Computer Equipment"]) {
+  // A few of the chart's own: an income account, then expenses.
+  const shown = [
+    ...state.chart.filter((a) => /revenue|income|sales/i.test(a.type)).slice(0, 1),
+    ...state.chart.filter((a) => /expense|overhead|direct/i.test(a.type)).slice(0, 3),
+  ].map((a) => `${a.code} ${a.name}`.trim());
+  for (const line of shown.length > 0 ? shown : ["200 Sales", "433 Insurance", "408 Cleaning", "720 Computer Equipment"]) {
     const item = document.createElement("li");
     item.textContent = line;
     examples.append(item);
@@ -1964,8 +2000,11 @@ function codedHistory(held: Onboarding): HTMLElement {
   } else if (held.source === "sheet") {
     wrap.append(
       advice(
-        "Your spreadsheet, with a column showing what each line was coded to. Accounts not " +
-          "in the chart are listed for you to resolve.",
+        fromQuickBooks(held)
+          ? "The general ledger you brought in says what each line was coded to. Any account it names " +
+              "that is not in the chart is listed for you to resolve."
+          : "Your spreadsheet, with a column showing what each line was coded to. Accounts not " +
+              "in the chart are listed for you to resolve.",
       ),
     );
   } else {

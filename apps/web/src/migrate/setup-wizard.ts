@@ -873,6 +873,12 @@ export function setupSteps(
   const source = $<HTMLSelectElement>("setup-source").value;
   const xero = source === "xero";
   const fromNew = source === "new";
+  // New Zealand's own steps and words: myIR, the IR3 and IR4, GST, the IR10.
+  const nz = booksCountry().id === "nz";
+  // Books whose whole history came from another system's general ledger.
+  const ledgerFromStart = led.transactions.some((t) =>
+    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+  );
   const entities = led.entities?.entities ?? [];
   const typed = state.chart.filter((a) => a.type.trim() !== "").length;
   const bankLinks = bankLinkState();
@@ -994,7 +1000,7 @@ export function setupSteps(
             : xero
               ? "Standard starter chart active (66 accounts). Export and drop your Xero chart to use your own."
               : "Standard starter chart active (66 accounts). Load your chart of accounts.",
-      unlocks: "Names accounts consistently, and carries entities and GST treatments",
+      unlocks: nz ? "Names accounts consistently, and carries entities and GST treatments" : "Names accounts consistently, and carries entities",
       page: "entities",
       ...(contentFor("Chart of accounts") && withoutAccounts.length > 0
         ? { extra: standardAccountButtons(withoutAccounts) }
@@ -1072,12 +1078,18 @@ export function setupSteps(
       // on the day the books start is an opening balance, and without it
       // the balance sheet is a movement rather than a position. Only books
       // where every account really started at nothing can say so and skip it.
-      done: led.openingBalances !== undefined || led.startedAtNothing === true,
+      // A general ledger from QuickBooks or SlowBooks brings every balance from
+      // the start, opening entries included: nothing more to load, unless it
+      // was exported for part of the history only.
+      done: led.openingBalances !== undefined || led.startedAtNothing === true || ledgerFromStart,
       detail:
         led.openingBalances !== undefined
           ? `${Object.keys(led.openingBalances.accounts).length} accounts as at ` +
             led.openingBalances.asAt
-          : led.startedAtNothing === true
+          : ledgerFromStart
+            ? "Not needed: the general ledger you brought in carries every balance from the start. If it was " +
+              "exported for part of the history only, load its trial balance as of the day before it begins."
+            : led.startedAtNothing === true
             ? "Every account started at nothing, so there are no opening balances."
             : fromNew
             ? "What each bank account and loan held on the day the books start. Enter bank " +
@@ -1086,7 +1098,7 @@ export function setupSteps(
             : xero
               ? `Xero: ${XERO_TRIAL_BALANCE}`
               : "A trial balance at the previous year end, so every account and cent is included",
-      unlocks: "A balance sheet that is a position rather than a movement, and the IR10",
+      unlocks: nz ? "A balance sheet that is a position rather than a movement, and the IR10" : "A balance sheet that is a position rather than a movement",
       page: "opening",
       ...(fromNew && led.openingBalances === undefined && led.startedAtNothing !== true
         ? {
@@ -1130,7 +1142,9 @@ export function setupSteps(
             ? "Not needed when starting fresh; rules are made from your first coding decisions."
             : xero
               ? XERO_ACCOUNT_TRANSACTIONS
-              : "Your spreadsheet, with a column saying what each line was coded to",
+              : ledgerFromStart
+                ? "The general ledger you brought in, which says what each line was coded to"
+                : "Your spreadsheet, with a column saying what each line was coded to",
       unlocks: "Teaches the rules, and lets your coding be checked against it",
       page: "check",
       // Once the file is in, the names it codes to have to mean accounts in
@@ -1247,32 +1261,37 @@ export function setupSteps(
       unlocks: "Accrual reports that reproduce a signed set of accounts exactly",
       page: "reports",
     },
+    // Inland Revenue's myIR, and the IR3 or IR4: New Zealand's only.
+    ...(nz
+      ? [
     (() => {
-      // What myIR can give these books, each file loadable right here, and
-      // said plainly where one is missing altogether or for a year.
-      const myir = allMyirCards(() => {
-        redraw("setup");
-        redraw("migration");
-      });
-      return {
-        what: "From Inland Revenue (myIR)",
-        done: myir.missing === 0,
-        optional: true,
-        detail:
-          myir.missing === 0
-            ? "Everything myIR has that these books use is loaded, for every year they cover."
-            : `${myir.missing} of ${myir.cards.length} myIR files still to load, or missing a year. ` +
-              "Each says where in myIR to get it, and can be loaded here.",
-        unlocks: "Checks against what Inland Revenue holds, and fills in what the books cannot know",
-        ...(contentFor("From Inland Revenue (myIR)")
-          ? (() => {
-              const box = document.createElement("div");
-              box.append(...myir.cards);
-              return { extra: box };
-            })()
-          : {}),
-      };
-    })(),
+          // What myIR can give these books, each file loadable right here, and
+          // said plainly where one is missing altogether or for a year.
+          const myir = allMyirCards(() => {
+            redraw("setup");
+            redraw("migration");
+          });
+          return {
+            what: "From Inland Revenue (myIR)",
+            done: myir.missing === 0,
+            optional: true,
+            detail:
+              myir.missing === 0
+                ? "Everything myIR has that these books use is loaded, for every year they cover."
+                : `${myir.missing} of ${myir.cards.length} myIR files still to load, or missing a year. ` +
+                  "Each says where in myIR to get it, and can be loaded here.",
+            unlocks: "Checks against what Inland Revenue holds, and fills in what the books cannot know",
+            ...(contentFor("From Inland Revenue (myIR)")
+              ? (() => {
+                  const box = document.createElement("div");
+                  box.append(...myir.cards);
+                  return { extra: box };
+                })()
+              : {}),
+          };
+        })(),
+        ]
+      : []),
     {
       what: "Filed GST returns",
       takesFiles: true,
@@ -1294,24 +1313,28 @@ export function setupSteps(
       unlocks: "Checks every period against what was actually filed, and finds what moved",
       page: "gst",
     },
+    ...(nz
+      ? [
     {
-      what: "Last year's income tax return",
-      done: (led.incomeReturns ?? []).length > 0,
-      optional: true,
-      detail:
-        (led.incomeReturns ?? []).length > 0
-          ? `${(led.incomeReturns ?? []).length} filed return${(led.incomeReturns ?? []).length === 1 ? "" : "s"} held`
-          : "A company's IR4 or a person's IR3 from myIR, read by an AI you choose and checked here",
-      unlocks: "The loss carried forward, the imputation balance and last year's tax, and a check of the books against what was filed",
-      ...(contentFor("Last year's income tax return")
-        ? {
-            extra: incomeReturnPanel(() => {
-              redraw("setup");
-              redraw("migration");
-            }),
-          }
-        : {}),
-    },
+          what: "Last year's income tax return",
+          done: (led.incomeReturns ?? []).length > 0,
+          optional: true,
+          detail:
+            (led.incomeReturns ?? []).length > 0
+              ? `${(led.incomeReturns ?? []).length} filed return${(led.incomeReturns ?? []).length === 1 ? "" : "s"} held`
+              : "A company's IR4 or a person's IR3 from myIR, read by an AI you choose and checked here",
+          unlocks: "The loss carried forward, the imputation balance and last year's tax, and a check of the books against what was filed",
+          ...(contentFor("Last year's income tax return")
+            ? {
+                extra: incomeReturnPanel(() => {
+                  redraw("setup");
+                  redraw("migration");
+                }),
+              }
+            : {}),
+        },
+        ]
+      : []),
   );
   // A not-for-profit's reporting standard turns on its last two years as its
   // signed statements give them: asked for here, not read from books that may

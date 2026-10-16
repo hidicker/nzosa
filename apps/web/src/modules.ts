@@ -222,8 +222,8 @@ export const MODULES: readonly ModuleInfo[] = [
   {
     id: "sheet",
     opens: "check",
-    name: "Spreadsheet import",
-    what: "Bringing in a coded spreadsheet, and checking these books' coding against it.",
+    name: "Spreadsheet or QuickBooks import",
+    what: "Bringing in a coded spreadsheet, or books from QuickBooks or SlowBooks, and checking these books' coding against it.",
     basis: "source",
     // Coded history from Xero is the Xero module's; this one is for a
     // spreadsheet. Loading Xero's files switched it on as well, and with it
@@ -350,7 +350,15 @@ export function applyModules(): void {
 /** How these books came, in words for a sentence: "Xero", "your spreadsheet". */
 export function previousSystem(): string {
   if (moduleOn("xero")) return "Xero";
-  if (moduleOn("sheet")) return "your spreadsheet";
+  if (moduleOn("sheet")) {
+    // QuickBooks' and SlowBooks' files come through the same door.
+    for (const t of state.ledger.transactions) {
+      const importer = t.source?.importer ?? "";
+      if (importer.startsWith("quickbooks")) return "QuickBooks";
+      if (importer.startsWith("slowbooks")) return "SlowBooks";
+    }
+    return "your spreadsheet";
+  }
   return "your previous system";
 }
 

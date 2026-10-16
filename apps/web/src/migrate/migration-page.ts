@@ -474,12 +474,19 @@ function sourceQuestion(number: number): HTMLElement {
 
 // --- 2. the day they start --------------------------------------------------
 
+/** The first day of the books' financial year, said: "1 April", "1 July", "1 January". */
+function yearStartSaid(): string {
+  const [, month, day] = taxYearStart(2026).split("-");
+  const months = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"];
+  return `${Number(day)} ${months[Number(month) - 1] ?? ""}`;
+}
+
 function dateQuestion(number: number, held: Onboarding): HTMLElement {
   const [box, inner] = card(number, "What date do these books start?");
   inner.append(
     held.source === "xero"
       ? advice(
-          "The day NZOSA takes over from Xero. The first day of a financial year (1 April " +
+          `The day NZOSA takes over from Xero. The first day of a financial year (${yearStartSaid()} ` +
             "for most) is the cleanest: the whole year's reports, depreciation and IR10 then " +
             "come from one system, and the opening balances are year-end figures your " +
             "accountant has already signed off.",
@@ -494,7 +501,7 @@ function dateQuestion(number: number, held: Onboarding): HTMLElement {
         : advice(
             "The first day these books cover. The bank feed fetches from it, and what each " +
               "bank account and loan held that day is the opening balance. The first day of a " +
-              "financial year (1 April for most) is simplest: the whole year then comes from " +
+              `financial year (${yearStartSaid()} for most) is simplest: the whole year then comes from ` +
               "these books.",
           ),
   );
@@ -2408,7 +2415,7 @@ function xeroGuide(held: Onboarding): HTMLElement {
   }
   add(
     "p",
-    "The day NZOSA takes over. The first day of a financial year (1 April for most) is the " +
+    `The day NZOSA takes over. The first day of a financial year (${yearStartSaid()} for most) is the ` +
       "cleanest: the whole year's reports, depreciation and IR10 then come from one system, " +
       "and the opening balances are year-end figures your accountant has already signed off.",
   );

@@ -1,7 +1,7 @@
 import { backendKind, ledgerCreated, ledgerId, openCloudBookId } from "../store.js";
 import { state } from "../state.js";
 import type { BusinessStructure, EntityKind } from "@nzosa/core";
-import { taxYearStart } from "../tax-year.js";
+import { taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * What the guided start has been told so far.
@@ -215,15 +215,16 @@ export function rememberSource(source: Source): void {
 }
 
 /**
- * The first day of the financial year we are in.
+ * The first day of the financial year we are in, in the books' country: 1
+ * April in New Zealand, 1 July in Australia, 1 January in the United States.
  *
- * Not 1 April of this calendar year, which between January and March is a date
- * in the future -- and an opening balance dated in the future is one that
- * every report before it ignores.
+ * The year containing today, not the one starting in this calendar year,
+ * which before New Zealand's April is a date in the future -- and an opening
+ * balance dated in the future is one that every report before it ignores.
  */
 export function startOfFinancialYear(today = new Date()): string {
-  const year = today.getMonth() >= 3 ? today.getFullYear() : today.getFullYear() - 1;
-  return taxYearStart(year + 1);
+  const pad = (n: number): string => String(n).padStart(2, "0");
+  return taxYearStart(taxYearOf(`${today.getFullYear()}-${pad(today.getMonth() + 1)}-${pad(today.getDate())}`));
 }
 
 /**

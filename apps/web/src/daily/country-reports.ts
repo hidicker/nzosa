@@ -726,7 +726,8 @@ export function renderBas(body: HTMLElement, year: number): void {
   body.append(
     note(
       (full
-        ? "The full BAS lodges G1, G2, G3, G10, G11, 1A and 1B; the worksheet beneath is the ATO's, for following them. G13, G15 and the adjustments are not worked out here. "
+        ? "The full BAS lodges G1, G2, G3, G10, G11, 1A and 1B; the worksheet beneath is the ATO's, for following them. G13, G15 and the adjustments are not worked out here. " +
+          "G10 is every purchase coded to a fixed asset account, whatever its tax code; Xero counts only those coded GST on Capital. "
         : "The simpler BAS: G1, 1A and 1B. ") +
         "G1 includes GST, and GST-free and input taxed sales such as interest. Due dates are for lodging yourself; a registered " +
         "tax agent lodging electronically usually has longer. T1 is the quarter's business and investment income in these books, " +

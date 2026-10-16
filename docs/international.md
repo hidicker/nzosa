@@ -66,12 +66,17 @@ Modules tagged `countries: ["nz"]`, and pages marked `data-module="nz"` or `busi
 - The full BAS as well as the simpler one: G1, G2, G3, G10 and G11 with 1A and 1B, and the ATO's G1–G20 calculation worksheet beneath. G1 includes GST-free and input taxed sales; only entities registered for GST are on it (a rental kept as its own unregistered entity is not)
 - Payroll (`au-payroll.ts`, the Payroll page): employees, pay runs, PAYG withheld (an estimate from the year's rates, annualised, for the employer to check against the ATO's calculator and change), the super guarantee at 12% with the annual maximum contribution base from 2026-27, and when each pay's super is due (7 business days from 1 July 2026, quarterly before). Pay runs post wages and super, and what is owed to employees, the ATO and the funds; W1 and W2 go on the BAS
 - Single Touch Payroll: each pay event's figures and year to date, to report through STP-enabled software. NZOSA does not lodge STP itself
+- Study and training support loans: the marginal repayment from 2025-26 (nothing to $67,000, 15c to $125,000, 17c above, 10% of the whole from $179,286) withheld on top of PAYG, on thresholds lowered by the tax-free threshold where it is not claimed
+- Depreciation (core `assets.ts`, `depreciationRules()` in the web app): by the days an asset is held in the books' own year, from the day it was bought; prime cost or diminishing value, with an effective life on the Fixed assets page setting the rate (200% or 100% of life). An asset disposed of is depreciated to the day it went, and the balancing adjustment note says the whole of a gain is assessable
+- The accountant's workbook carries the BAS, rental property schedule and tax estimate in place of New Zealand's GST return, filed returns and IR3 sheets
+- Xero Australia's tax codes read on import: GST on Capital (G10), GST Free (and GST Free Capital and Exports), Input Taxed, BAS Excluded
+- Three lessons with the demo: the BAS, payroll (PAYG, super and STP), and depreciation, the rental and the tax estimate
 - Checked against the OpenAccountants Australian guides (`au-gst-bas`, `australia-gst`, `au-rates-2026-27`, `australia-payroll`, `au-super-guarantee`)
 - Not covered:
-  - the ATO's Schedule 1 coefficients (PAYG is estimated) and Schedule 8 study loan withholding
+  - the ATO's Schedule 1 and Schedule 8 coefficients (PAYG and study loan withholding are estimated on the year's pay)
   - G13, G15 and the adjustment labels on the full BAS
   - lodging STP, payroll tax, leave and termination payments
-  - capital works and depreciation schedules
+  - capital works (Division 43), low-value pools and the instant asset write-off
 
 **South Korea** (`kr-tax.ts`), with each line in Korean and English:
 - 표준손익계산서: the standard income statement for a sole proprietor

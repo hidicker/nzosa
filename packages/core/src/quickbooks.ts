@@ -320,6 +320,12 @@ export interface QuickBooksLeg {
   debit: Cents;
   /** What this posting says, which for an invoice is the line's description. */
   memo?: string;
+  /**
+   * What the document still owed when the report was run, where the export
+   * carries the "Line open balance" column: given on an invoice's or bill's
+   * receivable or payable posting.
+   */
+  open?: Cents;
 }
 
 /** One entry as QuickBooks posted it: every account it touched, gathered from the report's sections. */
@@ -441,6 +447,8 @@ export function parseQuickBooksEntries(text: string, chart: QuickBooksChart, opt
     const num = cells.get("Num").trim();
     const name = cells.get("Name").trim();
     const memo = cells.get("Description").trim();
+    const openText = cells.get("Line open balance").trim();
+    const open = openText === "" ? null : parseAmount(openText.replace(/^\$/, "").replace(/^-\$/, "-"), currency);
     // A debit is what raises an account that debits raise; what raises one
     // that credits raise is a credit.
     const debit = debitNormal.has(account) ? raw : -raw;
@@ -452,7 +460,7 @@ export function parseQuickBooksEntries(text: string, chart: QuickBooksChart, opt
       entries.push(entry);
     }
     if (entry.memo === "" && memo !== "") entry.memo = memo;
-    entry.legs.push({ account, debit, ...(memo !== "" ? { memo } : {}) });
+    entry.legs.push({ account, debit, ...(memo !== "" ? { memo } : {}), ...(open !== null ? { open: Math.abs(open) } : {}) });
   }
   return { entries, problems };
 }
@@ -548,6 +556,8 @@ export function quickBooksBooksFrom(
   const payable = new Set(chart.accounts.filter((a) => a.type === "Accounts Payable").map((a) => a.name));
   const invoices: Invoice[] = [];
   const documented = new Set<QuickBooksEntry>();
+  /** What each document still owed when exported, where the ledger says. */
+  const stillOpen = new Map<Invoice, Cents>();
   const taken = new Set<string>();
   const currency = options.currency ?? "USD";
   const numbered = (stem: string, date: string, given: string, sales: boolean): string => {
@@ -566,7 +576,7 @@ export function quickBooksBooksFrom(
     if (controls.length === 0 || rest.length === 0) continue;
     const stem = entry.num !== "" ? entry.num : sales ? "INV" : "BILL";
 
-    const make = (total: number, using: QuickBooksLeg[]): void => {
+    const make = (total: number, using: QuickBooksLeg[], control?: QuickBooksLeg): void => {
       const lines: InvoiceLine[] = using.map((leg) => {
         const net = sales ? -leg.debit : leg.debit;
         return {
@@ -593,28 +603,30 @@ export function quickBooksBooksFrom(
         status: "Authorised",
         lines,
       });
+      const last = invoices[invoices.length - 1];
+      if (control?.open !== undefined && last !== undefined) stillOpen.set(last, control.open);
     };
 
     if (controls.length === 1 && controls[0] !== undefined) {
       const total = sales ? controls[0].debit : -controls[0].debit;
       if (rest.reduce((sum, l) => sum + (sales ? -l.debit : l.debit), 0) !== total) continue;
-      make(total, rest);
+      make(total, rest, controls[0]);
       documented.add(entry);
       continue;
     }
     // Several documents under one date, type, number and name: each control
     // leg with the other leg of the same size is one of them.
     const free = [...rest];
-    const made: [number, QuickBooksLeg][] = [];
+    const made: [number, QuickBooksLeg, QuickBooksLeg][] = [];
     for (const control of controls) {
       const total = sales ? control.debit : -control.debit;
       const at = free.findIndex((l) => (sales ? -l.debit : l.debit) === total);
       if (at < 0) break;
       const leg = free.splice(at, 1)[0];
-      if (leg !== undefined) made.push([total, leg]);
+      if (leg !== undefined) made.push([total, leg, control]);
     }
     if (made.length !== controls.length || free.length > 0) continue;
-    for (const [total, leg] of made) make(total, [leg]);
+    for (const [total, leg, control] of made) make(total, [leg], control);
     documented.add(entry);
   }
 
@@ -670,15 +682,28 @@ export function quickBooksBooksFrom(
     let rest = pay.amount;
     const direction = pay.transaction !== null && pay.transaction.amount < 0 ? -1 : 1;
     const parts: QuickBooksPayment["parts"] = [];
+    // Where the export says what each document still owed, payments go first
+    // to the documents QuickBooks says were paid, up to what was paid on each:
+    // a payment of 50.00 that QuickBooks put on a September invoice is not
+    // taken by an older one still open.
+    const paidOn = (one: { invoice: Invoice; left: Cents }): Cents => {
+      const owed = stillOpen.get(one.invoice);
+      return owed === undefined ? 0 : Math.max(0, one.left - owed);
+    };
     // A payment of exactly what one document still owes paid that document:
     // the 114.09 paid to PG&E was its September bill, not the older one of
     // 86.44 that oldest-first would have chosen. Otherwise oldest first.
     const exact = list.find((one) => one.left === pay.amount);
     const order = exact === undefined ? list : [exact, ...list.filter((one) => one !== exact)];
-    for (const one of order) {
+    const steps: [{ invoice: Invoice; left: Cents }, (one: { invoice: Invoice; left: Cents }) => Cents][] = [
+      ...list.map((one) => [one, paidOn] as [{ invoice: Invoice; left: Cents }, typeof paidOn]),
+      ...order.map((one) => [one, (o: { invoice: Invoice; left: Cents }) => o.left] as [{ invoice: Invoice; left: Cents }, typeof paidOn]),
+    ];
+    for (const [one, room] of steps) {
       if (rest === 0) break;
-      if (one.left <= 0) continue;
-      const take = Math.min(rest, one.left);
+      const can = room(one);
+      if (can <= 0) continue;
+      const take = Math.min(rest, can);
       one.left -= take;
       rest -= take;
       if (pay.transaction === null) {

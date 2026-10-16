@@ -211,3 +211,39 @@ test("a payment of exactly what one bill owes pays that bill, not the oldest", a
     [["2026-08-04", 8644], ["2026-09-02", 0]],
   );
 });
+
+test("with the Line open balance column, a payment goes where QuickBooks put it", async () => {
+  const { parseQuickBooksBooks, parseQuickBooksChart } = await import("../dist/index.js");
+  const chart = parseQuickBooksChart(
+    ["Account name,Account type,Detail type", "Checking,Bank,Checking", "Accounts Receivable (A/R),Accounts receivable (A/R),Accounts Receivable (A/R)", "Services,Income,Service/Fee Income"].join("\n"),
+  );
+  // Two invoices to one customer and a payment of 50.00 with no number.
+  // Oldest first would put it on August's; QuickBooks put it on September's,
+  // and the export says so: 81.00 still open on the first, 4.00 on the second.
+  const gl = [
+    ",Distribution account,Transaction date,Transaction type,Num,Name,Description,Split,Amount,Balance,Line open balance",
+    "Checking,,,,,,,,,,",
+    ",Checking,09/18/2026,Payment,,Freeman Sporting Goods,,Accounts Receivable (A/R),50.00,50.00,",
+    "Total for Checking,,,,,,,,50.00,,",
+    "Accounts Receivable (A/R),,,,,,,,,,",
+    ",Accounts Receivable (A/R),08/03/2026,Invoice,1028,Freeman Sporting Goods,,Services,81.00,81.00,81.00",
+    ",Accounts Receivable (A/R),09/11/2026,Invoice,1005,Freeman Sporting Goods,,Services,54.00,135.00,4.00",
+    ",Accounts Receivable (A/R),09/18/2026,Payment,,Freeman Sporting Goods,,Checking,-50.00,85.00,$0.00",
+    "Total for Accounts Receivable (A/R),,,,,,,,85.00,,",
+    "Services,,,,,,,,,,",
+    ",Services,08/03/2026,Invoice,1028,Freeman Sporting Goods,,Accounts Receivable (A/R),81.00,81.00,",
+    ",Services,09/11/2026,Invoice,1005,Freeman Sporting Goods,,Accounts Receivable (A/R),54.00,135.00,",
+    "Total for Services,,,,,,,,135.00,,",
+  ].join("\n");
+  const books = parseQuickBooksBooks(gl, chart);
+  assert.deepEqual(
+    books.invoices.map((i) => [i.number, i.outstanding]),
+    [["1028", 8100], ["1005", 400]],
+  );
+  // Without the column, oldest first, as before.
+  const without = gl.split("\n").map((row) => row.replace(/,[^,]*$/, "")).join("\n");
+  assert.deepEqual(
+    parseQuickBooksBooks(without, chart).invoices.map((i) => [i.number, i.outstanding]),
+    [["1028", 3100], ["1005", 5400]],
+  );
+});

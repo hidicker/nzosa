@@ -119,7 +119,27 @@ export function auPaygEstimate(gross: Cents, employee: AuEmployee, payDate: IsoD
     if (shifted === null) return null;
     tax = shifted + Math.round(annual * 0.02);
   }
+  // A study or training support loan: the compulsory repayment on the year's
+  // pay, withheld as it is earned. Without the tax-free threshold from this
+  // employer the thresholds come down by it, as Schedule 8's own columns do.
+  if (employee.studyLoan === true) {
+    tax += studyLoanRepayment(annual + (employee.taxFreeThreshold ? 0 : 1_820_000), payDate);
+  }
   return Math.round(tax / periods / 100) * 100;
+}
+
+/**
+ * The year's compulsory study and training support loan repayment on a
+ * repayment income, by the marginal system from 2025-26: nothing to $67,000,
+ * 15c in the dollar above it to $125,000, 17c above that, and from $179,286 a
+ * flat 10% of the whole income. Nothing for a pay before 1 July 2025, whose
+ * thresholds are not held.
+ */
+export function studyLoanRepayment(income: Cents, payDate: IsoDate): Cents {
+  if (payDate < "2025-07-01" || income <= 6_700_000) return 0;
+  if (income > 17_928_500) return Math.round(income * 0.1);
+  if (income > 12_500_000) return 870_000 + Math.round((income - 12_500_000) * 0.17);
+  return Math.round((income - 6_700_000) * 0.15);
 }
 
 /** The super guarantee rate for a payday: 11.5% in 2024-25, 12% from 1 July 2025. */

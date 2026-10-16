@@ -9,6 +9,7 @@ import {
   fullBas,
   stpYearToDate,
   superDueDate,
+  studyLoanRepayment,
   superGuarantee,
 } from "../dist/index.js";
 
@@ -32,6 +33,27 @@ test("PAYG estimate: no TFN is 47% from the first dollar; no tax-free threshold 
   const without = auPaygEstimate(200_000, employee({ payFrequency: "fortnightly", taxFreeThreshold: false }), "2026-08-31");
   const withIt = auPaygEstimate(200_000, employee({ payFrequency: "fortnightly" }), "2026-08-31");
   assert.ok(without > withIt);
+});
+
+test("study loan: the marginal repayment from 2025-26, withheld on top of the tax", () => {
+  assert.equal(studyLoanRepayment(6_700_000, "2026-08-31"), 0);
+  // $85,000: 15c in the dollar over $67,000.
+  assert.equal(studyLoanRepayment(8_500_000, "2026-08-31"), 270_000);
+  assert.equal(studyLoanRepayment(12_500_000, "2026-08-31"), 870_000);
+  assert.equal(studyLoanRepayment(15_000_000, "2026-08-31"), 870_000 + 425_000);
+  // From $179,286, 10% of the whole income.
+  assert.equal(studyLoanRepayment(20_000_000, "2026-08-31"), 2_000_000);
+  // $2,700 a year more: $225 a month on top of $1,477.
+  assert.equal(auPaygEstimate(708_333, employee({ studyLoan: true }), "2026-08-31"), 170_200);
+  // Below the threshold nothing extra, unless the tax-free threshold is claimed elsewhere.
+  assert.equal(
+    auPaygEstimate(400_000, employee({ studyLoan: true }), "2026-08-31"),
+    auPaygEstimate(400_000, employee(), "2026-08-31"),
+  );
+  assert.ok(
+    auPaygEstimate(500_000, employee({ studyLoan: true, taxFreeThreshold: false }), "2026-08-31") >
+      auPaygEstimate(500_000, employee({ taxFreeThreshold: false }), "2026-08-31"),
+  );
 });
 
 test("super guarantee: 12%, with the annual maximum contribution base from 1 July 2026 (au-super-guarantee tests 1 and 2)", () => {

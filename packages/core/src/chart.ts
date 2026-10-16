@@ -107,10 +107,14 @@ export function parseChartOfAccounts(text: string): ChartImportResult {
     const entityKind = cells.get("Entity Kind");
     const ledgerAccount = cells.get("Ledger Account");
 
+    // Xero exports its payroll clearing account ("Wage Payables") with no
+    // type at all; a payable is a current liability.
+    const given = cells.get("*Type");
+    const type = given === "" && /payables?\b/i.test(name) ? "Current Liability" : given;
     accounts.push({
       code,
       name,
-      type: cells.get("*Type"),
+      type,
       taxCode: cells.get("*Tax Code"),
       description: cells.get("Description"),
       ...(entity !== "" ? { entity } : {}),

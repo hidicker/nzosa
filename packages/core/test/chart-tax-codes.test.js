@@ -108,3 +108,11 @@ test("the chart is consulted below a treatment set here, and above assuming", as
   })(spend);
   assert.equal(decided.treatment, "exempt");
 });
+
+test("Xero's typeless Wage Payables account reads as a current liability", () => {
+  const { accounts } = parseChartOfAccounts(
+    ["*Code,*Name,*Type,*Tax Code,Description", "803,Wage Payables,,BAS Excluded,", "999,Mystery,,BAS Excluded,"].join("\n"),
+  );
+  assert.equal(accounts[0]?.type, "Current Liability");
+  assert.equal(accounts[1]?.type, "");
+});

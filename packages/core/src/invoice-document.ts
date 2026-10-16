@@ -74,6 +74,8 @@ export interface InvoiceDocumentOptions {
   dateStyle?: "dmy" | "mdy" | "ymd";
   /** The document's language tag, for readers and print dialogues; en-NZ by default. */
   lang?: string;
+  /** What the supplier's tax number is called: "GST" by default, "ABN" in Australia. */
+  taxIdLabel?: string;
 }
 
 function escapeHtml(value: string): string {
@@ -204,7 +206,7 @@ export function invoiceDocument(
       ${logo === null ? "" : `<img class="logo" src="${logo}" alt="">`}
       <strong>${escapeHtml(supplier.name)}</strong>
       ${supplier.address ? asLines(supplier.address) : ""}
-      ${registered ? `<div>GST ${escapeHtml(gstNumber)}</div>` : ""}
+      ${registered ? `<div>${escapeHtml(options.taxIdLabel ?? "GST")} ${escapeHtml(gstNumber)}</div>` : ""}
     </div>
     <div class="meta">
       <h1>${escapeHtml(title)}</h1>

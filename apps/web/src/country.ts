@@ -59,14 +59,53 @@ export function taxTypeLabel(name: string): string {
  * column where there is no sales tax, and dates written the way its readers
  * write them. Nothing for New Zealand, whose document is the default.
  */
-export function documentOptions(): { noTax?: boolean; dateStyle?: "dmy" | "mdy" | "ymd"; lang?: string } {
+export function documentOptions(): {
+  noTax?: boolean;
+  dateStyle?: "dmy" | "mdy" | "ymd";
+  lang?: string;
+  taxIdLabel?: string;
+} {
   const country = booksCountry();
   if (country.id === "nz") return {};
   return {
     ...(noSalesTax() ? { noTax: true } : {}),
     dateStyle: country.id === "us" ? "mdy" : country.id === "kr" ? "ymd" : "dmy",
     lang: country.locale,
+    // An Australian tax invoice carries the supplier's ABN.
+    ...(country.id === "au" ? { taxIdLabel: "ABN" } : {}),
   };
+}
+
+/**
+ * The invoice details asked for on each entity, as its country has them: the
+ * tax number's name (none where there is no sales tax), and examples of an
+ * address and of where to be paid.
+ */
+export function invoiceDetailWords(): { taxId: string | null; taxIdExample: string; address: string; payTo: string; note: string } {
+  switch (booksCountry().id) {
+    case "au":
+      return {
+        taxId: "ABN",
+        taxIdExample: "51 824 753 556",
+        address: "12 Example Street, Surry Hills NSW 2010",
+        payTo: "BSB 062-000, account 1234 5678",
+        note: "Tax invoices must show your ABN.",
+      };
+    case "us":
+      return { taxId: null, taxIdExample: "", address: "12 Example Street, Springfield, IL 62701", payTo: "Routing 021000021, account 123456789", note: "" };
+    case "nz":
+      return {
+        taxId: "GST number",
+        taxIdExample: "123-456-789",
+        address: "12 Example Street, Nelson 7010",
+        payTo: "02-1234-0567890-000",
+        note: "Invoices over $200 must show the GST number.",
+      };
+    default:
+      return noSalesTax()
+        ? { taxId: null, taxIdExample: "", address: "12 Example Street", payTo: "Bank and account number", note: "" }
+        : { taxId: "Tax number", taxIdExample: "", address: "12 Example Street", payTo: "Bank and account number", note: "" };
+  }
 }
 
 /** How numbers and dates are written: "en-NZ" for New Zealand. */

@@ -144,3 +144,11 @@ test("a document link must be an http(s) address", () => {
   assert.equal(cleanDocumentLink("not a link"), null);
   assert.equal(cleanDocumentLink(undefined), null);
 });
+
+test("an Australian tax invoice shows the supplier's ABN", () => {
+  const html = invoiceDocument(invoice(), { ...supplier, gstNumber: "51 824 753 556" }, { taxIdLabel: "ABN", lang: "en-AU" });
+  assert.ok(html.includes("ABN 51 824 753 556"));
+  assert.ok(!html.includes("GST 51 824"));
+  assert.ok(html.includes("Tax invoice"));
+  assert.ok(html.includes('lang="en-AU"'));
+});

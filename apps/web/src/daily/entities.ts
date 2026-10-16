@@ -56,7 +56,7 @@ import {
   cleanLogo,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
-import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent, invoiceDetailWords } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -942,22 +942,22 @@ export function renderEntities(): void {
     const billingDetails = document.createElement("details");
     billingDetails.className = "entity-billing-details";
     const billingSummary = document.createElement("summary");
-    const missing = (["gstNumber", "address", "payTo"] as const).filter(
-      (field) => (entity[field] ?? "").trim() === "",
-    ).length;
+    const words = invoiceDetailWords();
+    const asked = (["gstNumber", "address", "payTo"] as const).filter((field) => field !== "gstNumber" || words.taxId !== null);
+    const missing = asked.filter((field) => (entity[field] ?? "").trim() === "").length;
     billingSummary.textContent =
-      missing === 0 ? "Invoice details" : `Invoice details — ${missing} of 3 not filled in`;
+      missing === 0 ? "Invoice details" : `Invoice details — ${missing} of ${asked.length} not filled in`;
     billingSummary.title =
-      "The GST number, address and bank account shown on invoices you send. Invoices " +
-      "over $200 must show the GST number.";
+      `The ${words.taxId === null ? "" : `${words.taxId}, `}address and bank account shown on invoices you send.` +
+      (words.note === "" ? "" : ` ${words.note}`);
     billingDetails.append(billingSummary);
 
     const billing = document.createElement("div");
     billing.className = "entity-billing";
     for (const [key, label, hint, wide] of [
-      ["gstNumber", "GST number", "123-456-789", false],
-      ["address", "Address", "12 Example Street, Nelson 7010", true],
-      ["payTo", "Payment", "02-1234-0567890-000", true],
+      ...(words.taxId === null ? [] : ([["gstNumber", words.taxId, words.taxIdExample, false]] as const)),
+      ["address", "Address", words.address, true],
+      ["payTo", "Payment", words.payTo, true],
     ] as const) {
       const wrap = document.createElement("label");
       wrap.className = "entity-billing-field";

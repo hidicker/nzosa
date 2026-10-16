@@ -1266,7 +1266,7 @@ function buildDepreciationSheet(ctx: SheetContext): string {
         ${numCell(`E${rIdx}`, a.cost / 100, 6)}
         ${textCell(`F${rIdx}`, isDiminishing(a) ? "DV" : "SL", 5)}
         ${pctCell(`G${rIdx}`, a.rate, 8)}
-        ${numCell(`H${rIdx}`, row.opening / 100, 6)}
+        ${numCell(`H${rIdx}`, isNew ? 0 : row.opening / 100, 6)}
         ${numCell(`I${rIdx}`, additions, 6)}
         ${numCell(`J${rIdx}`, row.depreciation / 100, 6)}
         ${textCell(`K${rIdx}`, a.disposed ?? "", 5)}

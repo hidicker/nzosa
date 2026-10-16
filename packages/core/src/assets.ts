@@ -246,6 +246,13 @@ export function depreciationSchedule(
     // Not yet owned: it belongs to a later one.
     if (from > period.to) continue;
 
+    // A draft (Xero's word for an asset not yet registered) is not
+    // depreciated: it stays at cost until it is registered.
+    if (/^draft$/i.test(asset.status.trim())) {
+      rows.push({ asset, opening: asset.cost, depreciation: 0, accumulated: 0, closing: asset.cost, disposedInPeriod: false, bookValueAtDisposal: 0 });
+      continue;
+    }
+
     const priorDepreciation = priorDepreciationOf(asset, from, period, options);
     const opening = asset.cost - priorDepreciation;
 

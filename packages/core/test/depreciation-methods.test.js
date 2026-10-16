@@ -98,3 +98,10 @@ test("Australian books charge by the days an asset is held", () => {
   const byMonths = depreciationSchedule([a], auYear).rows[0];
   assert.equal(byMonths.depreciation, Math.round(1000000 * 0.4 * 9 / 12));
 });
+
+test("a draft asset stays at cost until it is registered", () => {
+  const draft = asset("Diminishing Value", { status: "Draft" });
+  const row = depreciationSchedule([draft], year(2024)).rows[0];
+  assert.equal(row.depreciation, 0);
+  assert.equal(row.closing, 300000);
+});

@@ -34,6 +34,15 @@ test("the specific treatments are checked before the plain rated ones", () => {
   });
 });
 
+test("Xero Australia's tax codes, capital purchases among them", () => {
+  assert.deepEqual(accountTreatment(account("GST on Capital")), { treatment: "standard", side: "purchases" });
+  assert.deepEqual(accountTreatment(account("GST Free Capital")), { treatment: "zero-rated" });
+  assert.deepEqual(accountTreatment(account("GST Free Exports")), { treatment: "zero-rated" });
+  assert.deepEqual(accountTreatment(account("Input Taxed")), { treatment: "exempt", side: "none" });
+  assert.deepEqual(accountTreatment(account("BAS Excluded")), { treatment: "out-of-scope", side: "none" });
+  assert.deepEqual(accountTreatment(account("GST on Capital Imports")), { treatment: "standard", side: "imports" });
+});
+
 test("an account with no tax code implies nothing", () => {
   assert.equal(accountTreatment(account("")), null);
   assert.equal(accountTreatment(account("Something else entirely")), null);

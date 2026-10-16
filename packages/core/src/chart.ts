@@ -192,6 +192,8 @@ export function accountTreatment(
     return { treatment: "out-of-scope", side: "none" };
   }
   if (code.includes("gst free") || code.includes("vat free")) return { treatment: "zero-rated" };
+  // "GST on Capital": a capital purchase with GST in it (G10 on the BAS).
+  if (code.includes("capital")) return { treatment: "standard", side: "purchases" };
 
   // Side is left open on zero-rated: exports are sales and a zero-rated
   // purchase is a purchase, and the sign of the transaction says which without

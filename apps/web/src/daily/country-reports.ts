@@ -829,6 +829,35 @@ export function syncPlanningReports(): void {
 
 if (typeof window !== "undefined") window.addEventListener("nzosa:modules-changed", () => syncPlanningReports());
 
+/**
+ * The country's reports as the accountant's workbook carries them: a sheet
+ * each, drawn by the same code as the Reports page.
+ */
+export function countryReportSheets(country: string): { sheet: string; render: (body: HTMLElement, year: number) => void }[] {
+  const sheets: Record<string, [string, (body: HTMLElement, year: number) => void][]> = {
+    us: [
+      ["Schedule C", renderScheduleC],
+      ["Schedule E", renderScheduleE],
+      ["Contractors 1099-NEC", renderContractors],
+      ["SE and Estimated Tax", renderUsTax],
+      ["Sales Tax", renderSalesTax],
+      ["Form 941 Worksheet", renderPayrollTax],
+    ],
+    au: [
+      ["BAS", renderBas],
+      ["Rental Property Schedule", renderAuRentalSchedule],
+      ["Income Tax Estimate", renderAuTax],
+    ],
+    kr: [
+      ["표준손익계산서", renderKrBusiness],
+      ["부동산임대", renderKrRental],
+      ["부가가치세", renderKrVat],
+      ["종합소득세", renderKrTax],
+    ],
+  };
+  return (sheets[country] ?? []).map(([sheet, render]) => ({ sheet, render }));
+}
+
 export function addCountryReports(country: string): void {
   syncPlanningReports();
   const select = document.getElementById("report-kind");

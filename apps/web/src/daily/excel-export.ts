@@ -10,10 +10,11 @@ import {
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart, depreciationRules } from "../tax-year.js";
-import { booksCurrency, gstPercent, taxTypeLabel } from "../country.js";
+import { booksCountry, booksCurrency, gstPercent, taxTypeLabel } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
 import { ir3For, rentalSchedulesFor } from "./reports.js";
+import { countryReportSheets } from "./country-reports.js";
 import {
   balanceSheetRole,
   categorise,
@@ -307,7 +308,10 @@ function roleOfAccount(code: string, name: string): string {
     byCode.get(splitAccountLabel(code).code) ??
     byName.get(splitAccountLabel(name).name.trim().toLowerCase());
   if (!acc) return "";
-  return balanceSheetRole(acc.type, acc.name);
+  const country = booksCountry();
+  if (country.id === "nz") return balanceSheetRole(acc.type, acc.name);
+  // The tax office as the Reports page names it: the ATO, the IRS.
+  return balanceSheetRole(acc.type, acc.name, country.id === "au" ? "ATO" : country.taxAuthority.name);
 }
 
 function gstRateName(classification: GstClassification): string {
@@ -2857,6 +2861,81 @@ function buildIr3Sheet(ctx: SheetContext): string {
 </worksheet>`;
 }
 
+/** A column's letters: 0 is A, 26 is AA. */
+function columnName(index: number): string {
+  let name = "";
+  for (let n = index + 1; n > 0; n = Math.floor((n - 1) / 26)) name = String.fromCharCode(65 + ((n - 1) % 26)) + name;
+  return name;
+}
+
+/**
+ * One of the country's own reports as a sheet: drawn off screen by the code
+ * the Reports page uses, then its headings, notes and tables set out row by
+ * row, amounts as numbers.
+ */
+function buildCountryReportSheet(render: (body: HTMLElement, year: number) => void, ctx: SheetContext): string {
+  const year = ctx.year === "all" ? ctx.endYear : ctx.year;
+  const body = document.createElement("div");
+  try {
+    render(body, year);
+  } catch (error) {
+    body.textContent = "";
+    const said = document.createElement("p");
+    said.textContent = `Could not be worked out: ${error instanceof Error ? error.message : String(error)}`;
+    body.append(said);
+  }
+  const amount = /^-?[\d,]+\.\d{2}$/;
+  const rows: string[] = [];
+  let widest = 1;
+  let r = 1;
+  const visit = (element: Element): void => {
+    const tag = element.tagName;
+    if (tag === "TABLE") {
+      for (const tr of element.querySelectorAll("tr")) {
+        const cells = [...tr.children].filter((c) => c.tagName === "TH" || c.tagName === "TD");
+        widest = Math.max(widest, cells.length);
+        const header = cells.every((c) => c.tagName === "TH");
+        const total = tr.classList.contains("report-total");
+        const xml = cells
+          .map((c, i) => {
+            const ref = `${columnName(i)}${r}`;
+            const text = (c.textContent ?? "").trim();
+            if (header) return textCell(ref, text, i === 0 ? 2 : 3);
+            if (amount.test(text)) return numCell(ref, Number(text.replace(/,/g, "")), total ? 10 : 6);
+            return textCell(ref, text, total ? 9 : 4);
+          })
+          .join("");
+        rows.push(`<row r="${r}">${xml}</row>`);
+        r++;
+      }
+      r++;
+      return;
+    }
+    if (tag === "SELECT" || tag === "INPUT" || tag === "BUTTON" || tag === "LABEL") return;
+    if (/^H[1-6]$/.test(tag)) {
+      rows.push(`<row r="${r}" ht="22" customHeight="1">${textCell(`A${r}`, (element.textContent ?? "").trim(), 13)}</row>`);
+      r++;
+      return;
+    }
+    if (tag === "P" || tag === "SMALL") {
+      const text = (element.textContent ?? "").trim();
+      if (text !== "") {
+        rows.push(`<row r="${r}">${textCell(`A${r}`, text, 14)}</row>`);
+        r++;
+      }
+      return;
+    }
+    for (const child of element.children) visit(child);
+  };
+  for (const child of body.children) visit(child);
+  if (rows.length === 0) rows.push(`<row r="1">${textCell("A1", "Nothing in these books for this report.", 5)}</row>`);
+  return `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
+<worksheet xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main">
+  ${buildColsXml([44, ...Array.from({ length: widest - 1 }, () => 18)])}
+  <sheetData>${rows.join("")}</sheetData>
+</worksheet>`;
+}
+
 // --- Master Workbook Assembler ---
 
 export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
@@ -2896,7 +2975,7 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
       : `FY${year} (${from} to ${to})`;
 
   const entity = reportingEntity();
-  const entityName = entity?.name ?? "NZOSA Entity";
+  const entityName = entity?.name ?? "All entities";
   const gstNumber = entity?.gstNumber ?? "";
   const basisEl = typeof document !== "undefined" ? (document.getElementById("report-basis") as HTMLSelectElement | null) : null;
   const exportBasis = basisEl?.value === "cash" ? "Cash Basis" : "Accrual / Posted Basis";
@@ -2913,29 +2992,42 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
     exportBasis,
   };
 
-  // 1. Generate XML for all 20 sheets (7 Reports + 13 Raw Database Tables)
-  const sheet1Xml = buildSummaryTrialBalanceSheet(ctx);
-  const sheet2Xml = buildGeneralLedgerSheet(ctx);
-  const sheet3Xml = buildBankTransactionsSheet(ctx);
-  const sheet4Xml = buildRevenueExpensesSheet(ctx);
-  const sheet5Xml = buildUnusualTransactionsSheet(ctx);
-  const sheet6Xml = buildDepreciationSheet(ctx);
-  const sheet7Xml = buildGstReturnsSheet(ctx);
-  const sheet8Xml = buildRawTransactionsSheet(ctx);
-  const sheet9Xml = buildRawChartSheet(ctx);
-  const sheet10Xml = buildRawInvoicesSheet(ctx);
-  const sheet11Xml = buildRawAllocationsSheet(ctx);
-  const sheet12Xml = buildRawAssetsSheet(ctx);
-  const sheet13Xml = buildRawEntitiesSheet(ctx);
-  const sheet14Xml = buildRawJournalsSheet(ctx);
-  const sheet15Xml = buildRawDecisionsSheet(ctx);
-  const sheet16Xml = buildRawRulesSheet(ctx);
-  const sheet17Xml = buildRawFiledReturnsSheet(ctx);
-  const sheet18Xml = buildRawReferenceSheet(ctx);
-  const sheet19Xml = buildRawEventsSheet(ctx);
-  const sheet20Xml = buildRawRulesArchiveSheet(ctx);
-  const sheet21Xml = buildRentalSchedulesSheet(ctx);
-  const sheet22Xml = buildIr3Sheet(ctx);
+  // 1. The sheets. New Zealand's returns (the GST return, the returns filed
+  // with Inland Revenue, the rental schedules and IR3s) are New Zealand's
+  // alone; books kept elsewhere carry their own country's reports instead.
+  const nz = booksCountry().id === "nz";
+  const sheets: { name: string; xml: string }[] = [
+    { name: "Summary & Trial Balance", xml: buildSummaryTrialBalanceSheet(ctx) },
+    { name: "General Ledger", xml: buildGeneralLedgerSheet(ctx) },
+    { name: "Bank Transactions & Coding", xml: buildBankTransactionsSheet(ctx) },
+    { name: "Revenue & Expenses", xml: buildRevenueExpensesSheet(ctx) },
+    { name: "Unusual Transactions", xml: buildUnusualTransactionsSheet(ctx) },
+    { name: "Depreciation Schedule", xml: buildDepreciationSheet(ctx) },
+    ...(nz ? [{ name: "GST Returns", xml: buildGstReturnsSheet(ctx) }] : []),
+    { name: "Raw Transactions", xml: buildRawTransactionsSheet(ctx) },
+    { name: "Chart of Accounts", xml: buildRawChartSheet(ctx) },
+    { name: "Invoices & Bills", xml: buildRawInvoicesSheet(ctx) },
+    { name: "Payment Allocations", xml: buildRawAllocationsSheet(ctx) },
+    { name: "Fixed Asset Register", xml: buildRawAssetsSheet(ctx) },
+    { name: "Entities & Setup", xml: buildRawEntitiesSheet(ctx) },
+    { name: "Raw Journals", xml: buildRawJournalsSheet(ctx) },
+    { name: "User Decisions", xml: buildRawDecisionsSheet(ctx) },
+    { name: "Categorisation Rules", xml: buildRawRulesSheet(ctx) },
+    ...(nz ? [{ name: "Filed GST Returns", xml: buildRawFiledReturnsSheet(ctx) }] : []),
+    { name: "Reference Ledger", xml: buildRawReferenceSheet(ctx) },
+    { name: "Audit Trail Events", xml: buildRawEventsSheet(ctx) },
+    { name: "Rules Archive", xml: buildRawRulesArchiveSheet(ctx) },
+    ...(nz
+      ? [
+          { name: "Rental Schedules", xml: buildRentalSchedulesSheet(ctx) },
+          { name: "IR3 Returns", xml: buildIr3Sheet(ctx) },
+        ]
+      : countryReportSheets(booksCountry().id).map(({ sheet, render }) => ({
+          name: sheet,
+          xml: buildCountryReportSheet(render, ctx),
+        }))),
+  ];
+  const numbered = sheets.map((sheet, i) => ({ ...sheet, n: i + 1 }));
 
   // 2. OpenXML Structural Files
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2944,28 +3036,7 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
   <Default Extension="xml" ContentType="application/xml"/>
   <Override PartName="/xl/workbook.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.sheet.main+xml"/>
   <Override PartName="/xl/styles.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.styles+xml"/>
-  <Override PartName="/xl/worksheets/sheet1.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet2.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet3.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet4.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet5.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet6.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet7.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet8.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet9.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet10.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet11.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet12.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet13.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet14.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet15.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet16.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet17.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet18.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet19.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet20.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet21.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
-  <Override PartName="/xl/worksheets/sheet22.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>
+${numbered.map(({ n }) => `  <Override PartName="/xl/worksheets/sheet${n}.xml" ContentType="application/vnd.openxmlformats-officedocument.spreadsheetml.worksheet+xml"/>`).join("\n")}
 </Types>`;
 
   const packageRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
@@ -2976,55 +3047,13 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
   const workbookXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <workbook xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main" xmlns:r="http://schemas.openxmlformats.org/officeDocument/2006/relationships">
   <sheets>
-    <sheet name="Summary &amp; Trial Balance" sheetId="1" r:id="rId1"/>
-    <sheet name="General Ledger" sheetId="2" r:id="rId2"/>
-    <sheet name="Bank Transactions &amp; Coding" sheetId="3" r:id="rId3"/>
-    <sheet name="Revenue &amp; Expenses" sheetId="4" r:id="rId4"/>
-    <sheet name="Unusual Transactions" sheetId="5" r:id="rId5"/>
-    <sheet name="Depreciation Schedule" sheetId="6" r:id="rId6"/>
-    <sheet name="GST Returns" sheetId="7" r:id="rId7"/>
-    <sheet name="Raw Transactions" sheetId="8" r:id="rId8"/>
-    <sheet name="Chart of Accounts" sheetId="9" r:id="rId9"/>
-    <sheet name="Invoices &amp; Bills" sheetId="10" r:id="rId10"/>
-    <sheet name="Payment Allocations" sheetId="11" r:id="rId11"/>
-    <sheet name="Fixed Asset Register" sheetId="12" r:id="rId12"/>
-    <sheet name="Entities &amp; Setup" sheetId="13" r:id="rId13"/>
-    <sheet name="Raw Journals" sheetId="14" r:id="rId14"/>
-    <sheet name="User Decisions" sheetId="15" r:id="rId15"/>
-    <sheet name="Categorisation Rules" sheetId="16" r:id="rId16"/>
-    <sheet name="Filed GST Returns" sheetId="17" r:id="rId17"/>
-    <sheet name="Reference Ledger" sheetId="18" r:id="rId18"/>
-    <sheet name="Audit Trail Events" sheetId="19" r:id="rId19"/>
-    <sheet name="Rules Archive" sheetId="20" r:id="rId20"/>
-    <sheet name="Rental Schedules" sheetId="21" r:id="rId21"/>
-    <sheet name="IR3 Returns" sheetId="22" r:id="rId22"/>
+${numbered.map(({ name, n }) => `    <sheet name="${escapeXml(name)}" sheetId="${n}" r:id="rId${n}"/>`).join("\n")}
   </sheets>
 </workbook>`;
 
   const workbookRelsXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>
 <Relationships xmlns="http://schemas.openxmlformats.org/package/2006/relationships">
-  <Relationship Id="rId1" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet1.xml"/>
-  <Relationship Id="rId2" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet2.xml"/>
-  <Relationship Id="rId3" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet3.xml"/>
-  <Relationship Id="rId4" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet4.xml"/>
-  <Relationship Id="rId5" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet5.xml"/>
-  <Relationship Id="rId6" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet6.xml"/>
-  <Relationship Id="rId7" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet7.xml"/>
-  <Relationship Id="rId8" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet8.xml"/>
-  <Relationship Id="rId9" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet9.xml"/>
-  <Relationship Id="rId10" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet10.xml"/>
-  <Relationship Id="rId11" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet11.xml"/>
-  <Relationship Id="rId12" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet12.xml"/>
-  <Relationship Id="rId13" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet13.xml"/>
-  <Relationship Id="rId14" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet14.xml"/>
-  <Relationship Id="rId15" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet15.xml"/>
-  <Relationship Id="rId16" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet16.xml"/>
-  <Relationship Id="rId17" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet17.xml"/>
-  <Relationship Id="rId18" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet18.xml"/>
-  <Relationship Id="rId19" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet19.xml"/>
-  <Relationship Id="rId20" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet20.xml"/>
-  <Relationship Id="rId21" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet21.xml"/>
-  <Relationship Id="rId22" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet22.xml"/>
+${numbered.map(({ n }) => `  <Relationship Id="rId${n}" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/worksheet" Target="worksheets/sheet${n}.xml"/>`).join("\n")}
   <Relationship Id="rIdStyle" Type="http://schemas.openxmlformats.org/officeDocument/2006/relationships/styles" Target="styles.xml"/>
 </Relationships>`;
 
@@ -3035,28 +3064,7 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
     { name: "xl/workbook.xml", data: encodeUtf8(workbookXml) },
     { name: "xl/_rels/workbook.xml.rels", data: encodeUtf8(workbookRelsXml) },
     { name: "xl/styles.xml", data: encodeUtf8(STYLES_XML) },
-    { name: "xl/worksheets/sheet1.xml", data: encodeUtf8(sheet1Xml) },
-    { name: "xl/worksheets/sheet2.xml", data: encodeUtf8(sheet2Xml) },
-    { name: "xl/worksheets/sheet3.xml", data: encodeUtf8(sheet3Xml) },
-    { name: "xl/worksheets/sheet4.xml", data: encodeUtf8(sheet4Xml) },
-    { name: "xl/worksheets/sheet5.xml", data: encodeUtf8(sheet5Xml) },
-    { name: "xl/worksheets/sheet6.xml", data: encodeUtf8(sheet6Xml) },
-    { name: "xl/worksheets/sheet7.xml", data: encodeUtf8(sheet7Xml) },
-    { name: "xl/worksheets/sheet8.xml", data: encodeUtf8(sheet8Xml) },
-    { name: "xl/worksheets/sheet9.xml", data: encodeUtf8(sheet9Xml) },
-    { name: "xl/worksheets/sheet10.xml", data: encodeUtf8(sheet10Xml) },
-    { name: "xl/worksheets/sheet11.xml", data: encodeUtf8(sheet11Xml) },
-    { name: "xl/worksheets/sheet12.xml", data: encodeUtf8(sheet12Xml) },
-    { name: "xl/worksheets/sheet13.xml", data: encodeUtf8(sheet13Xml) },
-    { name: "xl/worksheets/sheet14.xml", data: encodeUtf8(sheet14Xml) },
-    { name: "xl/worksheets/sheet15.xml", data: encodeUtf8(sheet15Xml) },
-    { name: "xl/worksheets/sheet16.xml", data: encodeUtf8(sheet16Xml) },
-    { name: "xl/worksheets/sheet17.xml", data: encodeUtf8(sheet17Xml) },
-    { name: "xl/worksheets/sheet18.xml", data: encodeUtf8(sheet18Xml) },
-    { name: "xl/worksheets/sheet19.xml", data: encodeUtf8(sheet19Xml) },
-    { name: "xl/worksheets/sheet20.xml", data: encodeUtf8(sheet20Xml) },
-    { name: "xl/worksheets/sheet21.xml", data: encodeUtf8(sheet21Xml) },
-    { name: "xl/worksheets/sheet22.xml", data: encodeUtf8(sheet22Xml) },
+    ...numbered.map(({ xml, n }) => ({ name: `xl/worksheets/sheet${n}.xml`, data: encodeUtf8(xml) })),
   ];
 
   return createZip(files);

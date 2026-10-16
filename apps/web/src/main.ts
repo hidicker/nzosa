@@ -120,7 +120,7 @@ import {
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
-import { applyCountry } from "./country.js";
+import { applyCountry, booksCountry } from "./country.js";
 import { reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
 import {
@@ -288,7 +288,14 @@ async function init(): Promise<void> {
     // Not for somebody signed in to books of their own: seeding would fill this
     // browser's copy with an invented company, and send half a dozen requests
     // after seed files a hosted copy does not have.
-    if (!writesToFolder() && !signedIn()) await seedBrowser();
+    if (!writesToFolder() && !signedIn()) {
+      // Demo books of another country -- the US set, for a first visit from
+      // there -- bring its tax, reports and date order, set again once they
+      // are in: they opened with New Zealand's GST at 15%.
+      const before = booksCountry().id;
+      await seedBrowser();
+      if (booksCountry().id !== before) applyCountry();
+    }
 
     setLoadingStatus("Preparing workspace…");
     renderFormats();

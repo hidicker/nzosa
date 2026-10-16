@@ -308,11 +308,41 @@ export async function loadDueDates(file: File): Promise<string> {
  * the opening balances for a ledger exported for part of the history.
  */
 export async function checkAgainstTrialBalance(file: File): Promise<string | null> {
+  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
+  return trialBalanceCheck(text);
+}
+
+/**
+ * A trial balance dropped before the coding was accepted, kept for the check
+ * to run by itself once it is: dropping the same file twice was the only way
+ * before.
+ */
+let trialBalanceWaiting: string | null = null;
+let trialBalanceChecked: string | null = null;
+
+/**
+ * What checking the waiting trial balance found, once every line has its
+ * account; said on the coding check, where the coding is accepted. Null while
+ * nothing is waiting or lines still are.
+ */
+export function trialBalanceFinding(): string | null {
+  if (trialBalanceWaiting !== null) {
+    const result = trialBalanceCheck(trialBalanceWaiting);
+    if (result !== null && !result.includes("once the coding is accepted")) {
+      trialBalanceWaiting = null;
+      const asAt = /as at (\d{4}-\d{2}-\d{2})/.exec(result)?.[1] ?? "";
+      const found = result.slice(result.indexOf("instead: ") + "instead: ".length);
+      trialBalanceChecked = `QuickBooks' trial balance as at ${asAt}, checked now the coding is accepted: ${found}`;
+    }
+  }
+  return trialBalanceChecked;
+}
+
+function trialBalanceCheck(text: string): string | null {
   const fromStart = state.ledger.transactions.filter((t) =>
     /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
   );
   if (fromStart.length === 0) return null;
-  const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
   if (!isQuickBooksTrialBalance(text)) return null;
   const read = parseQuickBooksTrialBalance(text, state.chart);
   const asAt = read.asAt;
@@ -329,9 +359,11 @@ export async function checkAgainstTrialBalance(file: File): Promise<string | nul
     (one) => fromStart.includes(one.transaction) && !hasCoding(one) && transfers[one.transaction.id] === undefined,
   ).length;
   if (waiting > 0) {
+    trialBalanceWaiting = text;
+    trialBalanceChecked = null;
     return (
       `${said}It checks the books once the coding is accepted: ${waiting} bank and card ` +
-      "line" + (waiting === 1 ? " has" : "s have") + " no account yet. Drop it here again then."
+      "line" + (waiting === 1 ? " has" : "s have") + " no account yet. The coding check says what it finds."
     );
   }
 

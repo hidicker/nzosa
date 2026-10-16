@@ -174,10 +174,6 @@ works).
   with hundreds it should go in batches.
 - **The morning run's key is compared with `!==`.** A constant-time comparison
   would be better practice, though the key is long and random.
-- **QuickBooks' trial balance is checked only when dropped after the coding
-  is accepted.** Dropped with the rest, it says to drop it again. Keeping it
-  and running the check once "Use QuickBooks for all" is pressed would save
-  the second drop.
 - **Two New Zealand GST invoice-basis rules not applied** (from the
   OpenAccountants NZ GST guide, checked 16 October 2026): a single supply over
   $225,000 must go on the invoice basis whatever basis is chosen (unless

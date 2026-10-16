@@ -83,6 +83,7 @@ import { settleInvoicesExactly } from "../daily/reconcile-page.js";
 import { accountsForEditing, saveManualJournals, tidyStaleTreatments } from "../books.js";
 import { booksLocale, noSalesTax } from "../country.js";
 import { isUnusedStarterChart } from "../new-books-country.js";
+import { trialBalanceFinding } from "./quickbooks.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
 
 /** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
@@ -1118,6 +1119,11 @@ export function renderCheck(): void {
   }
 
   for (const file of state.checkUnreadable) body.append(columnPicker(file));
+
+  // A QuickBooks trial balance dropped before the coding was accepted: what it
+  // found once every line has its account.
+  const trialBalance = trialBalanceFinding();
+  if (trialBalance !== null) body.append(note(trialBalance));
 
   if (state.ledger.transactions.length === 0) {
     body.append(note("No transactions yet. Import a bank file first."));

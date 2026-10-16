@@ -1535,7 +1535,7 @@ export function countryBox(): HTMLElement | null {
     box.append(
       heading,
       note(
-        `Kept in ${here.name}: year to ${here.yearEnd.endDay}/${here.yearEnd.endMonth}, ${here.currency}` +
+        `Kept in ${here.id === "us" ? "the " : ""}${here.name}: year to ${here.yearEnd.endDay}/${here.yearEnd.endMonth}, ${here.currency}` +
           (here.salesTax === null ? ", no national sales tax." : `, ${here.salesTax.name} ${Math.round(here.salesTax.rate * 100)}%.`) +
           " The country can't be changed once the books hold anything. To keep books in another country, " +
           "start a new set of books on the Books page.",
@@ -1559,7 +1559,7 @@ export function countryBox(): HTMLElement | null {
     const previous = jurisdictionOf(state.ledger.jurisdiction);
     select.value = previous.id;
     void askOnPage(
-      `Keep these books in ${to.name}?
+      `Keep these books in ${to.id === "us" ? "the " : ""}${to.name}?
 
 ` +
         "The tax year, the currency, the sales tax and the returns follow the country, and the starter chart " +

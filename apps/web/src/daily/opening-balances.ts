@@ -15,7 +15,7 @@ import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalance
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces, booksMoney } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
 
 /**
  * Where each year started.
@@ -71,8 +71,8 @@ export function renderOpeningBalances(): void {
     status.textContent =
       "No opening balances yet, so the figures below are only the movement since the first " +
       "transaction. Enter bank balances gives each bank account and loan its starting " +
-      "balance, from a statement on any date or from the bank feed. Where there is more " +
-      "than that -- debtors, assets, GST owing -- import a trial balance at the previous year end.";
+      `balance, from a statement on any date${booksCountry().id === "nz" ? " or from the bank feed" : ""}. Where there is more ` +
+      `than that -- debtors, assets, ${noSalesTax() ? "loans" : "GST owing"} -- import a trial balance at the previous year end.`;
   } else {
     status.className = "journal-balanced";
     const count = Object.keys(held.accounts).length;

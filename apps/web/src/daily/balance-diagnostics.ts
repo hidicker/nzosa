@@ -120,8 +120,8 @@ export function diagnoseAccountDailyBalances(
     }
     const diff = day.closing - running;
 
-    // Check if this is an annual balance date (31 March)
-    if (day.date.endsWith("-03-31")) {
+    // Check if this is an annual balance date (31 March in New Zealand)
+    if (day.date === taxYearEnd(Number(day.date.slice(0, 4)))) {
       yearEnds.push({
         date: day.date,
         bankClosing: day.closing,
@@ -317,7 +317,7 @@ export interface FinancialYearMilestone {
 }
 
 /**
- * Each bank account's 31 March balance, from the day before the books start
+ * Each bank account's year-end balance, from the day before the books start
  * to the latest transaction, against the year-end figures loaded from Xero
  * and the bank feed's balance worked back.
  */
@@ -342,7 +342,7 @@ export function checkFinancialYearMilestones(): FinancialYearMilestone[] {
     if (date >= before) datesSet.add(date);
   }
   for (const d of Object.keys(openingHeld?.byDate ?? {})) {
-    if (d.endsWith("-03-31") && d >= before && d <= last) datesSet.add(d as IsoDate);
+    if (d === taxYearEnd(Number(d.slice(0, 4))) && d >= before && d <= last) datesSet.add(d as IsoDate);
   }
 
   for (const date of [...datesSet].sort()) {

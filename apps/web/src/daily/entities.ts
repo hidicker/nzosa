@@ -56,7 +56,7 @@ import {
   cleanLogo,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
-import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, noSalesTax } from "../country.js";
 
 /**
  * Account types offered on the accounts page.
@@ -1544,21 +1544,37 @@ function addAccountForm(model: EntityModel, accountRows: readonly { label: strin
 
   const onType = (): void => {
     const guide = TYPE_GUIDE[type.value];
-    typeHint.textContent = guide?.help ?? "Choose what kind of account this is.";
+    typeHint.textContent = (guide?.help ?? "Choose what kind of account this is.").replace(
+      "GST, PAYE",
+      booksCountry().id === "nz" ? "GST, PAYE" : noSalesTax() ? "sales tax, payroll taxes" : "GST, payroll taxes",
+    );
     if (guide) {
-      code.placeholder = `e.g. ${guide.codes.split("e.g. ")[1]?.split(" ")[0] ?? ""}`;
-      codeHint.textContent = `Usually ${guide.codes}.`;
-      gst.value = guide.gst;
+      // Outside New Zealand the numbering is the books' own chart's, not Xero's.
+      const own =
+        booksCountry().id === "nz"
+          ? []
+          : state.chart.filter((a) => a.type === type.value && /^\d+$/.test(a.code)).sort((a, b) => Number(a.code) - Number(b.code));
+      const first = own[0];
+      const last = own[own.length - 1];
+      const codes =
+        first !== undefined && last !== undefined
+          ? `${first.code === last.code ? first.code : `${first.code}–${last.code}`}, e.g. ${first.code} ${first.name}`
+          : booksCountry().id === "nz"
+            ? guide.codes
+            : "";
+      code.placeholder = codes === "" ? "" : `e.g. ${codes.split("e.g. ")[1]?.split(" ")[0] ?? ""}`;
+      codeHint.textContent = codes === "" ? "" : `Usually ${codes}.`;
+      gst.value = noSalesTax() ? "0" : guide.gst;
     }
     // A bank account has no GST, and its entities are set in the list above.
     const bank = type.value === "Bank";
-    gstField.hidden = bank;
+    gstField.hidden = bank || noSalesTax();
     entityField.hidden = bank || model.entities.length === 0;
   };
   // An entity not registered for GST charges and claims none, whatever the type.
   const onEntity = (): void => {
     const chosen = model.entities.find((e) => e.id === entity.value);
-    if (chosen?.gstRegistered === false) gst.value = "0";
+    if (chosen?.gstRegistered === false || noSalesTax()) gst.value = "0";
     else gst.value = TYPE_GUIDE[type.value]?.gst ?? gst.value;
   };
   type.addEventListener("change", () => {

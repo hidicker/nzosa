@@ -23,7 +23,7 @@ import {
   isPosted,
 } from "@nzosa/core";
 import type { DocumentStatus, Entity, Invoice, InvoiceBalance, OutsidePayment } from "@nzosa/core";
-import { booksMoney } from "../country.js";
+import { booksMoney, noSalesTax } from "../country.js";
 
 /**
  * Bills: what these books owe suppliers.
@@ -140,7 +140,7 @@ export function renderBills(): void {
   if (bills.length === 0) {
     body.append(
       note(
-        "No bills yet. Press New bill to enter one. Approving it puts the cost and its GST in the " +
+        `No bills yet. Press New bill to enter one. Approving it puts the cost${noSalesTax() ? "" : " and its GST"} in the ` +
           "books on the bill date; matching its payment on Reconcile clears it.",
       ),
     );

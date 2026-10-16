@@ -207,7 +207,15 @@ export function combobox(
       return;
     }
     if (key === "Enter") {
-      const match = matches[active] ?? (matches.length === 1 ? matches[0] : undefined);
+      // An account typed whole, by its name or its code ("Sales" for Sales -
+      // 4000), is that account, whatever else the words also find.
+      const q = input.value.trim().toLowerCase();
+      const exact = q === "" ? [] : matches.filter((option) => {
+        const lower = option.toLowerCase();
+        return lower === q || lower.endsWith(` - ${q}`) || (lower.startsWith(`${q} - `) && !lower.slice(q.length + 3).includes(" "));
+      });
+      const match =
+        matches[active] ?? (matches.length === 1 ? matches[0] : exact.length === 1 ? exact[0] : undefined);
       if (match !== undefined) {
         event.preventDefault();
         pick(match);

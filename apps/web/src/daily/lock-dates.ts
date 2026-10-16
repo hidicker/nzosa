@@ -5,7 +5,7 @@ import { state } from "../state.js";
 import { backendKind, openCloudBookId, save } from "../store.js";
 import { addTransactions } from "./bank-import.js";
 import { nameCell, note } from "../ui.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
 import { firstOpenDay } from "@nzosa/core";
 import type { IsoDate, LockDates, Transaction } from "@nzosa/core";
 
@@ -46,9 +46,12 @@ export function renderLockDates(): void {
   body.append(heading);
   body.append(
     note(
-      "Finished periods stay as they were finished. The GST lock keeps filed GST returns from " +
-        "changing; the year lock keeps everything up to a signed-off year end from changing. A " +
-        "change that would alter a locked figure is refused, whichever page it comes from.",
+      "Finished periods stay as they were finished. " +
+        (noSalesTax()
+          ? "The year lock keeps everything up to a signed-off year end from changing. "
+          : "The GST lock keeps filed GST returns from changing; the year lock keeps everything " +
+            "up to a signed-off year end from changing. ") +
+        "A change that would alter a locked figure is refused, whichever page it comes from.",
     ),
   );
 
@@ -76,6 +79,8 @@ export function renderLockDates(): void {
     locks.gst,
     lastFiled === undefined ? "" : `Last GST return marked as filed: period to ${lastFiled}.`,
   );
+  // No sales tax, no returns to lock.
+  if (noSalesTax()) gst.closest("label")!.hidden = true;
   const year = field("Year locked up to", locks.year, "The last day of the last year signed off.");
   body.append(fields);
 

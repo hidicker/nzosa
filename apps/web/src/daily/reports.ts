@@ -3705,7 +3705,7 @@ function renderReportsHome(body: HTMLElement): void {
     about.className = "reports-about";
     about.textContent =
       "One workbook with the general ledger, bank coding, revenue and expenses, unusual " +
-      "transactions, depreciation schedule, trial balance, GST returns and all underlying tables.";
+      `transactions, depreciation schedule, trial balance, ${noSalesTax() ? "" : "GST returns "}and all underlying tables.`;
 
     const controls = document.createElement("div");
     controls.className = "excel-extract-controls";
@@ -3958,7 +3958,7 @@ export function renderReportsPage(): void {
 
   $("reports-hint").textContent =
     reportsHint(basisNow, kindNow) +
-    (kindNow === "pl"
+    (kindNow === "pl" && !noSalesTax()
       ? basisNow === "accrual"
         ? " Figures exclude GST."
         : gstSelect.value === "gross"

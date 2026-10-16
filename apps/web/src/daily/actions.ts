@@ -761,7 +761,7 @@ function renderMilestonesSection(): HTMLElement {
   titleWrap.append(
     title,
     note(
-      `Each bank account's 31 March balance in these books, against ${moduleOn("xero") ? "Xero's year-end figure" : "the year-end figure in Opening balances"} and the bank feed's balance worked back.`,
+      `Each bank account's ${taxYearEndSaid(2000).replace(/ 2000$/, "")} balance in these books, against ${moduleOn("xero") ? "Xero's year-end figure" : "the year-end figure in Opening balances"} and the bank feed's balance worked back.`,
     ),
   );
 

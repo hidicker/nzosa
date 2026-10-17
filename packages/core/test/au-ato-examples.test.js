@@ -82,3 +82,12 @@ test("An Australian residential rental's standard accounts each land on their ow
   // New Zealand's set is untouched.
   assert.ok(standardAccounts("residential", { gstRegistered: false }).some((a) => a.name === "Rates and water"));
 });
+
+// ATO, "Medicare levy reduction for low-income earners" (updated 30 June
+// 2026): single thresholds $28,011 and $35,013 for 2025-26; Angie, on $29,000,
+// pays $98.90.
+test("Medicare levy: the ATO's Angie, $29,000 in 2025-26, pays $98.90", async () => {
+  const { medicareLevy } = await import("../dist/index.js");
+  assert.equal(medicareLevy(2_900_000, 2026), 9_890);
+  assert.equal(medicareLevy(2_801_100, 2026), 0);
+});

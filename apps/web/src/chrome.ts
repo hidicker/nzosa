@@ -6,7 +6,8 @@ import { isDemoBuild } from "./ai-consent.js";
 import { loadDemoData } from "./migrate/setup-wizard.js";
 import { openTutorials, openTutorialsOnArrival } from "./tutorials/panel.js";
 import { placeExampleSuggestions } from "./tutorials/examples.js";
-import { DEMO_PERSONAS, currentDemoPersona } from "./demo-personas.js";
+import { DEMO_PERSONAS, currentDemoPersona, personaCountry } from "./demo-personas.js";
+import { flagIcon } from "./flags.js";
 
 /**
  * The frame around the pages: theme, sidebar width, and the loading screen.
@@ -155,16 +156,26 @@ export function wireChrome(): void {
         option.selected = persona.id === currentDemoPersona();
         books.append(option);
       }
+      // The open set's flag beside the choice: whose country these books are kept in.
+      const flagOf = (id: string): SVGSVGElement => {
+        const country = personaCountry(ready.find((p) => p.id === id));
+        return flagIcon(country.id, `Kept in ${country.name}`);
+      };
+      const flag = document.createElement("span");
+      flag.className = "demo-banner-flag";
+      flag.append(flagOf(currentDemoPersona()));
       books.addEventListener("change", () => {
+        flag.replaceChildren(flagOf(books.value));
         const busy = document.createElement("button");
         void loadDemoData(busy, books.value).finally(() => {
           placeExampleSuggestions();
           books.value = currentDemoPersona();
+          flag.replaceChildren(flagOf(books.value));
         });
       });
       const label = document.createElement("label");
       label.className = "demo-banner-books-label";
-      label.append(document.createTextNode("Demo books "), books);
+      label.append(document.createTextNode("Demo books "), flag, books);
       demoBanner.querySelector(".demo-banner-content")?.append(...(ready.length > 1 ? [label] : []), tutorials, again);
       openTutorialsOnArrival();
     }

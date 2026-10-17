@@ -2,6 +2,7 @@ import { NO_SALES_TAX, jurisdictionOf, minorUnits, salesTaxFraction, setSalesTax
 import type { Jurisdiction } from "@nzosa/core";
 import { state } from "./state.js";
 import { addCountryReports } from "./daily/country-reports.js";
+import { flagIcon } from "./flags.js";
 
 /**
  * The country these books are kept in, for anything on screen that depends on
@@ -24,6 +25,9 @@ export function applyCountry(): void {
   if (country.id !== "nz") dropNewZealandReports();
   const dayFirst = document.getElementById("day-first");
   if (dayFirst instanceof HTMLInputElement) dayFirst.checked = country.dayFirst;
+  // The books' flag in the header, beside Donate a coffee.
+  const flag = document.getElementById("books-flag");
+  if (flag !== null) flag.replaceChildren(flagIcon(country.id, `Books kept in ${country.name}`));
 }
 
 /** What the country decides with no page to draw on: the rate of GST. */

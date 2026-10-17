@@ -4522,3 +4522,21 @@ select.needs-choice {
 }
 
 .contact-field[hidden] { display: none; }
+
+/* A country's flag: the books' in the top bar, a demo set's in the banner and
+   the tutorials. Drawn small, with a hairline so white parts show. */
+.country-flag {
+  display: inline-block;
+  flex: none;
+  width: 21px;
+  height: 14px;
+  border-radius: 2px;
+  box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.18);
+  vertical-align: middle;
+}
+.books-flag { margin-left: auto; display: inline-flex; align-items: center; }
+.books-flag + .donate-link { margin-left: -6px; }
+.demo-banner-flag { display: inline-flex; align-items: center; margin: 0 0.35rem 0 0.15rem; }
+.tut-books-said { grid-template-columns: auto 1fr; align-items: center; column-gap: 0.45rem; }
+.tut-books-said .tut-books-label { grid-column: 1 / -1; }
+.tut-book .country-flag { width: 24px; height: 16px; }

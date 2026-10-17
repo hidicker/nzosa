@@ -1,4 +1,5 @@
-import { DEMO_PERSONAS, currentDemoPersona } from "../demo-personas.js";
+import { DEMO_PERSONAS, currentDemoPersona, personaCountry } from "../demo-personas.js";
+import { flagIcon } from "../flags.js";
 import { loadDemoData } from "../migrate/setup-wizard.js";
 import { runLesson } from "./engine.js";
 import { placeExampleSuggestions } from "./examples.js";
@@ -99,7 +100,8 @@ function booksChooser(): HTMLElement | null {
   const wrap = el("details", "tut-books");
   const summary = el("summary", "tut-books-summary");
   const said = el("span", "tut-books-said");
-  said.append(el("span", "tut-books-label", "Demo books"), el("strong", "", open?.label ?? ""));
+  const openCountry = personaCountry(open);
+  said.append(el("span", "tut-books-label", "Demo books"), flagIcon(openCountry.id, openCountry.name), el("strong", "", open?.label ?? ""));
   summary.append(said, el("span", "tut-books-change", "Change"));
   wrap.append(summary, el("p", "tut-books-hint", "Whose invented books to explore. Each set has lessons of its own."));
   const list = el("div", "tut-book-list");
@@ -112,7 +114,8 @@ function booksChooser(): HTMLElement | null {
     choice.setAttribute("aria-checked", on ? "true" : "false");
     const text = el("span", "tut-book-text");
     text.append(el("strong", "", persona.label), el("span", "", persona.shows));
-    choice.append(el("span", "tut-book-mark"), text);
+    const country = personaCountry(persona);
+    choice.append(el("span", "tut-book-mark"), flagIcon(country.id, country.name), text);
     if (on) choice.append(el("span", "tut-book-now", "Open now"));
     choice.addEventListener("click", () => {
       if (on) return;

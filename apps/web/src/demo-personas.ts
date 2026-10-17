@@ -19,6 +19,14 @@ export interface DemoPersona {
   page: string;
   /** Offered to visitors. Books still being built are not. */
   ready?: boolean;
+  /** The country the books are kept in, for its flag: New Zealand when not said. */
+  country?: "nz" | "us" | "au";
+}
+
+/** A demo set's country and its name, for its flag. */
+export function personaCountry(persona: DemoPersona | undefined): { id: string; name: string } {
+  const id = persona?.country ?? "nz";
+  return { id, name: id === "us" ? "United States" : id === "au" ? "Australia" : "New Zealand" };
 }
 
 export const DEMO_PERSONAS: readonly DemoPersona[] = [
@@ -71,6 +79,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
       "design business, and a rented duplex, for January to September 2026.",
     page: "reconcile",
     ready: true,
+    country: "us",
   },
   {
     id: "au",
@@ -82,6 +91,7 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
       "for the year to 30 June 2026.",
     page: "reconcile",
     ready: true,
+    country: "au",
   },
 ];
 

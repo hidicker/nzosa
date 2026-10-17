@@ -2236,6 +2236,11 @@ export function bookYears(): number[] {
   ];
   const years = new Set(dates.filter((d) => d !== "").map((d) => taxYearOf(d)));
   for (const use of state.ledger.vehicleUse ?? []) years.add(use.year);
+  // Books brought across with only their opening balances so far -- from a
+  // trial balance, before the first bank file -- still have the year they
+  // start in, so their balance sheet and invoices can be reported on.
+  const opening = state.ledger.openingBalances?.asAt;
+  if (years.size === 0 && opening !== undefined) years.add(taxYearOf(opening));
   return [...years].sort((a, b) => b - a);
 }
 

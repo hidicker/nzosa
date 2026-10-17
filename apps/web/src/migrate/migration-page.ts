@@ -492,16 +492,31 @@ function yearStartSaid(): string {
   return `${Number(day)} ${months[Number(month) - 1] ?? ""}`;
 }
 
+/** The return a business files on its income, the books' country's: the IR10 in New Zealand. */
+function taxReturnWord(): string {
+  return booksCountry().id === "nz" ? "IR10" : "tax return";
+}
+
+/** The GST return, as the books' country calls it: the BAS in Australia. */
+function gstReturnWord(): string {
+  return booksCountry().id === "au" ? "BAS" : "GST return";
+}
+
+/** A GST period, as the books' country calls it: a BAS quarter in Australia. */
+function gstPeriodWord(): string {
+  return booksCountry().id === "au" ? "BAS quarter" : "GST period";
+}
+
 function dateQuestion(number: number, held: Onboarding): HTMLElement {
   const [box, inner] = card(number, "What date do these books start?");
   inner.append(
     held.source === "xero"
       ? advice(
           `The day NZOSA takes over from Xero. The first day of a financial year (${yearStartSaid()} ` +
-            "for most) is the cleanest: the whole year's reports, depreciation and IR10 then " +
+            `for most) is the cleanest: the whole year's reports, depreciation and ${taxReturnWord()} then ` +
             "come from one system, and the opening balances are year-end figures your " +
             "accountant has already signed off.",
-          "Part way through a year works too. Choose the first day of a GST period, so no " +
+          `Part way through a year works too. Choose the first day of a ${gstPeriodWord()}, so no ` +
             "return is split between two systems.",
         )
       : held.opening === true
@@ -1712,7 +1727,7 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
     inner.append(
       toDoList("Finish off in Xero first", [
         "Reconcile every bank account in Xero up to the day before the conversion date.",
-        "File the last GST return that ends before it.",
+        `File the last ${gstReturnWord()} that ends before it.`,
         "Converting at a year end: have your accountant's year-end journals posted, so the " +
           "trial balance is the one the accounts were signed from.",
         "Keep access to Xero until your first year in NZOSA is filed. The history stays " +
@@ -2460,12 +2475,12 @@ function xeroGuide(held: Onboarding): HTMLElement {
   add(
     "p",
     `The day NZOSA takes over. The first day of a financial year (${yearStartSaid()} for most) is the ` +
-      "cleanest: the whole year's reports, depreciation and IR10 then come from one system, " +
+      `cleanest: the whole year's reports, depreciation and ${taxReturnWord()} then come from one system, ` +
       "and the opening balances are year-end figures your accountant has already signed off.",
   );
   add(
     "p",
-    "You can also start part way through a year. Choose the first day of a GST period, so " +
+    `You can also start part way through a year. Choose the first day of a ${gstPeriodWord()}, so ` +
       "no return is split between two systems, and load the year so far as coded history.",
   );
 

@@ -621,13 +621,19 @@ export function xeroMigrationFiles(): SourceFile[] {
       have: (led.journals ?? []).length > 0,
       page: "reports",
     },
-    {
-      what: "Filed GST reports",
-      where: "Reporting → GST → For each prior return, export Excel",
-      why: "Filed return audit history",
-      have: state.filed.length > 0,
-      page: "returns",
-    },
+    // Xero New Zealand's filed GST reports; Australia's activity statements
+    // are not read, so not asked for.
+    ...(booksCountry().id === "nz"
+      ? [
+          {
+            what: "Filed GST reports",
+            where: "Reporting → GST → For each prior return, export Excel",
+            why: "Filed return audit history",
+            have: state.filed.length > 0,
+            page: "returns",
+          },
+        ]
+      : []),
   ];
 }
 

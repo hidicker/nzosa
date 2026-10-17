@@ -156,9 +156,14 @@ export function documentsInPlay(
     // which is how the aged report names it ("Google 2024-08-20") and how the
     // document is known here ("Google/2024-08-20"). Matched by number alone,
     // every numberless bill open at the start was left out of the books.
+    // The contact-and-date name is only for a document with no number of its
+    // own: a numbered bill on the same day from the same supplier -- paid,
+    // and so not on the report -- took the open numberless one's balance.
+    const own = invoice.number.trim();
+    const numberless = own === "" || own === `${invoice.contact}/${invoice.issued}`;
     const owing =
-      known.get(invoice.number.trim().toLowerCase()) ??
-      known.get(`${invoice.contact} ${invoice.issued}`.trim().toLowerCase());
+      known.get(own.toLowerCase()) ??
+      (numberless ? known.get(`${invoice.contact} ${invoice.issued}`.trim().toLowerCase()) : undefined);
     if (owing !== undefined) out.push({ ...invoice, broughtForward: owing });
   }
   return out;

@@ -71,6 +71,7 @@ Modules tagged `countries: ["nz"]`, and pages marked `data-module="nz"` or `busi
 - The accountant's workbook carries the BAS, rental property schedule and tax estimate in place of New Zealand's GST return, filed returns and IR3 sheets
 - Xero Australia's tax codes read on import: GST on Capital (G10), GST Free (and GST Free Capital and Exports), Input Taxed, BAS Excluded
 - Three lessons with the demo: the BAS, payroll (PAYG, super and STP), and depreciation, the rental and the tax estimate
+- Checked against Xero's Demo Company (AU) on 17 October 2026, converting mid-year from its exports (chart, trial balance, invoices, bills, aged receivables and payables detail, fixed assets): the opening balance sheet matches Xero's trial balance account by account, and the aged receivables ($25,056.55) and payables ($8,507.78) match Xero's in every column. Its July to September BAS agrees on G1, G11, 1A and 1B
 - Checked against the OpenAccountants Australian guides (`au-gst-bas`, `australia-gst`, `au-rates-2026-27`, `australia-payroll`, `au-super-guarantee`)
 - Not covered:
   - Schedule 1's Medicare levy variations and declared tax offsets, and study loan withholding before 24 September 2025 (estimated on the year's pay)

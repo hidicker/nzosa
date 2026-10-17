@@ -153,3 +153,12 @@ test("an invoice dated before the start is not posted, one from the start is", (
   assert.match(text, /INV-0020/);
   assert.doesNotMatch(text, /INV-0010/);
 });
+
+test("a numbered bill on the same day as an open numberless one is not taken for it", async () => {
+  const { documentsInPlay } = await import("../dist/opening-documents.js");
+  const bill = (number, total) => ({ number, kind: "purchase", contact: "MCO Cleaning Services", issued: "2026-10-10", total, tax: 0, lines: [] });
+  // Xero's aged payables: only the numberless bill of 10 October is open.
+  const opening = [{ kind: "purchase", asAt: "2026-10-17", items: [{ number: "MCO Cleaning Services 2026-10-10", owing: 17_050 }] }];
+  const out = documentsInPlay([bill("M000471", 22_000), bill("MCO Cleaning Services/2026-10-10", 17_050)], "2026-10-18", opening);
+  assert.deepEqual(out.map((b) => [b.number, b.broughtForward]), [["MCO Cleaning Services/2026-10-10", 17_050]]);
+});

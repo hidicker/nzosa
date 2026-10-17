@@ -180,9 +180,10 @@ works).
   settled within 365 days), and on the invoice basis a payment received
   before the invoice is issued makes the GST due when paid. Both rare for the
   businesses NZOSA is for; the GST return takes neither into account yet.
-- **The accountant's workbook says GST in books with no sales tax.** United
-  States books get "GST Treatment", "GST ($)", "GST: Not registered" and the
-  like in the summary, bank, revenue, unusual, raw and register sheets. Right
-  for New Zealand and Australia; for the United States they should say sales
-  tax or be left out. The country's own sheets (Schedule C and the rest) are
-  already right.
+- **The cash flow statement never recognises a bank account named "loan".**
+  Its pattern in `apps/web/src/daily/cash-flow-report.ts` (`isLoanAccount`)
+  has held a backspace character where a word boundary was meant, since the
+  first commit, so only "mortgage", "total money" and "line of credit"
+  accounts are treated as loans (financing) rather than cash. Fixing it moves
+  any other loan account out of cash in New Zealand's cash flow statements
+  too, so it waits for a decision. Found 17 October 2026.

@@ -236,8 +236,8 @@ export function renderPayrollTax(body: HTMLElement, year: number): void {
   title.textContent = `Payroll tax worksheet (Form 941) — ${year}`;
   body.append(title);
   const kinds: { id: "wages" | "income" | "social" | "medicare" | "futa"; pattern: RegExp; label: string }[] = [
-    { id: "wages", pattern: /(wages?|salar(y|ies)|payroll expenses?)/i, label: "Wages and salaries" },
-    { id: "income", pattern: /federal (income )?(tax )?withh|fit|federal income tax/i, label: "Federal income tax withheld" },
+    { id: "wages", pattern: /\b(wages?|salar(y|ies)|payroll expenses?)\b/i, label: "Wages and salaries" },
+    { id: "income", pattern: /federal (income )?(tax )?withh|\bfit\b|federal income tax/i, label: "Federal income tax withheld" },
     { id: "social", pattern: /social security|oasdi|fica/i, label: "Social Security tax" },
     { id: "medicare", pattern: /medicare/i, label: "Medicare tax" },
     { id: "futa", pattern: /futa|federal unemployment/i, label: "Federal unemployment (FUTA)" },

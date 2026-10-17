@@ -10,7 +10,7 @@ import {
 } from "../books.js";
 import { state } from "../state.js";
 import { taxYearEnd, taxYearEndSaid, taxYearStart, depreciationRules } from "../tax-year.js";
-import { booksCountry, booksCurrency, gstPercent, taxTypeLabel } from "../country.js";
+import { booksCountry, booksCurrency, gstPercent, noSalesTax, taxTypeLabel } from "../country.js";
 export { state };
 import { computeOurReturns } from "../variance.js";
 import { ir3For, rentalSchedulesFor } from "./reports.js";
@@ -3027,7 +3027,12 @@ export function buildExcelReport(targetYear?: number | "all"): Uint8Array {
           xml: buildCountryReportSheet(render, ctx),
         }))),
   ];
-  const numbered = sheets.map((sheet, i) => ({ ...sheet, n: i + 1 }));
+  // Books kept where there is no GST (the United States) say sales tax in
+  // every cell that would say GST; New Zealand's and Australia's are as written.
+  const words = noSalesTax()
+    ? (xml: string): string => xml.replace(/(<t[^>]*>)([^<]*)/g, (_, open: string, text: string) => open + text.replace(/\bGST\b/g, "Sales tax"))
+    : (xml: string): string => xml;
+  const numbered = sheets.map((sheet, i) => ({ ...sheet, xml: words(sheet.xml), n: i + 1 }));
 
   // 2. OpenXML Structural Files
   const contentTypesXml = `<?xml version="1.0" encoding="UTF-8" standalone="yes"?>

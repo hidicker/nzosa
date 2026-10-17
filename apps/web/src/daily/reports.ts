@@ -433,7 +433,12 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     body.append(
       note(
         "None this year. Use journals for year-end adjustments the bank data cannot show, such " +
-          "as reclassifying a personal expense or correcting the GST balance to Inland Revenue's.",
+          "as reclassifying a personal expense" +
+          (booksCountry().id === "nz"
+            ? " or correcting the GST balance to Inland Revenue's."
+            : booksCountry().id === "au"
+              ? " or correcting the GST balance to the ATO's."
+              : "."),
       ),
     );
     return;
@@ -1579,13 +1584,32 @@ function renderJournal(body: HTMLElement, year: number): void {
 
   const summary = document.createElement("div");
   summary.className = "check-summary";
-  for (const [value, label] of [
-    [money(tax.box5), "Box 5 gross sales"],
-    [money(tax.box8), "Box 8 GST on sales"],
-    [money(tax.box11), "Box 11 gross purchases"],
-    [money(tax.box12), "Box 12 GST on purchases"],
-    [money(tax.box13), "Box 13 import GST"],
-  ] as const) {
+  const country = booksCountry().id;
+  const figures: readonly (readonly [string, string])[] =
+    country === "nz"
+      ? [
+          [money(tax.box5), "Box 5 gross sales"],
+          [money(tax.box8), "Box 8 GST on sales"],
+          [money(tax.box11), "Box 11 gross purchases"],
+          [money(tax.box12), "Box 12 GST on purchases"],
+          [money(tax.box13), "Box 13 import GST"],
+        ]
+      : noSalesTax()
+        ? []
+        : country === "au"
+          ? [
+              [money(tax.box5), "G1 total sales, GST in"],
+              [money(tax.box8), "1A GST on sales"],
+              [money(tax.box11), "G10 + G11 purchases, GST in"],
+              [money(tax.box12 + tax.box13), "1B GST on purchases"],
+            ]
+          : [
+              [money(tax.box5), "Sales, tax in"],
+              [money(tax.box8), "Tax on sales"],
+              [money(tax.box11), "Purchases, tax in"],
+              [money(tax.box12 + tax.box13), "Tax on purchases"],
+            ];
+  for (const [value, label] of figures) {
     const cell = document.createElement("div");
     cell.className = "check-stat";
     const big = document.createElement("span");
@@ -1597,13 +1621,15 @@ function renderJournal(body: HTMLElement, year: number): void {
     cell.append(big, small);
     summary.append(cell);
   }
-  body.append(summary);
-  body.append(
-    note(
-      "Taken from each line's GST treatment, not the GST account balance; a line posted to " +
-        "the GST account with no tax type reaches no box.",
-    ),
-  );
+  if (figures.length > 0) {
+    body.append(summary);
+    body.append(
+      note(
+        "Taken from each line's GST treatment, not the GST account balance; a line posted to " +
+          "the GST account with no tax type reaches no " + (country === "au" ? "label." : "box."),
+      ),
+    );
+  }
 
   const table = document.createElement("table");
   table.className = "report-table owner-table";
@@ -1615,7 +1641,7 @@ function renderJournal(body: HTMLElement, year: number): void {
   for (const row of [...balance.rows].sort((a, b) => Math.abs(b.balance) - Math.abs(a.balance))) {
     const tr = document.createElement("tr");
     for (const [text, cls] of [
-      [row.accountCode, "report-name"],
+      [/^[a-z][a-z-]*$/.test(row.accountCode) ? "" : row.accountCode, "report-name"],
       [row.accountName, "report-name"],
       [String(row.lines), "report-amount"],
       [row.balance > 0 ? money(row.balance) : "", "report-amount"],
@@ -4692,11 +4718,11 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
     if (first) tr.classList.add("entry-start");
     tr.append(nameCell(first ? row.date : ""));
     tr.append(nameCell(first ? row.narration : ""));
-    tr.append(nameCell(`${row.accountCode ? `${row.accountCode} ` : ""}${row.accountName}`));
+    tr.append(nameCell(row.accountCode ? balanceSheetLabel({ code: row.accountCode, name: row.accountName }) : row.accountName));
     tr.append(nameCell(row.description));
     tr.append(amountCell(row.debit === 0 ? "" : formatAmount(row.debit)));
     tr.append(amountCell(row.credit === 0 ? "" : formatAmount(row.credit)));
-    tr.append(nameCell(row.taxType === "NONE" ? "" : row.taxType));
+    tr.append(nameCell(ledgerTaxWords(row.taxType)));
     tbody.append(tr);
   }
   table.append(tbody);
@@ -4705,6 +4731,23 @@ function renderGeneralLedger(body: HTMLElement, year: number): void {
   if (rows.length > 300) {
     body.append(note(`Showing the first 300 of ${rows.length}. The export holds them all.`));
   }
+}
+
+/**
+ * A posting's tax type as the general ledger shows it: Xero's own codes in New
+ * Zealand books, where people know them (INPUT2, OUTPUT2), and words
+ * elsewhere, where INPUT2 means nothing; nothing at all without a sales tax.
+ */
+function ledgerTaxWords(code: string): string {
+  if (code === "NONE" || code === "") return "";
+  if (booksCountry().id === "nz") return code;
+  if (noSalesTax()) return "";
+  if (/^OUTPUT/i.test(code)) return taxTypeLabel("15% GST on Income");
+  if (/^INPUT/i.test(code)) return taxTypeLabel("15% GST on Expenses");
+  if (/^EXEMPT/i.test(code)) return taxTypeLabel("Exempt");
+  if (/^ZERO/i.test(code)) return taxTypeLabel("Zero Rated");
+  if (/^GSTONIMPORTS|IMPORT/i.test(code)) return "GST on imports";
+  return code;
 }
 
 /** Said where the report is, when a download has nothing to hold. */

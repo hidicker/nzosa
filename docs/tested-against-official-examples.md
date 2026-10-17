@@ -42,7 +42,7 @@ Checked 17–18 October 2026.
 | Example | Source | NZOSA | Result |
 | --- | --- | --- | --- |
 | SE tax on $53,087: $7,501, half $3,750 | OpenAccountants US Schedule C and SE guide (accountant-checked method), example 1 | $7,500.95, half $3,750.48 | Matches |
-| SE tax on $102,500: $14,483 | Same, example 2 | $14,482.79 | Matches |
+| SE tax on $102,500: $14,483 | Same, example 2 | Entered through the app on US books ($142,000 receipts, $39,500 of expenses with the $1,000 home office): Schedule C net $102,500, SE tax $14,482.79, half $7,241.40; QBI deduction $15,901.72 (limited to 20% of taxable income before it), taxable $63,606.88, federal tax $8,907.51; June's payment moved to Monday 16 June 2025 | Matches |
 | $280,000: Social Security capped at $176,100, SE tax $29,335, Additional Medicare $527 on Form 8959 | Same, example 5 | $21,836.40 + $7,498.82; $527.22 | Matches. **Fixed** the tax estimate showing the $527 inside the Schedule SE row; it has its own Form 8959 row |
 | Federal tax, single, taxable $100,000: $16,914 (2025), $16,712 (2026) | IRS brackets, Rev. Proc. 2024-40 and 2025-32 | The same | Matches |
 | 1099-NEC: $600 or more for 2025, $2,000 or more from 2026 | OpenAccountants US workflow guide, case 4 (OBBBA) | The same | Matches |

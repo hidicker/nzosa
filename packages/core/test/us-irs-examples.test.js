@@ -40,3 +40,23 @@ test("Form 8995: 20% of qualified business income, at most 20% of taxable income
   assert.equal(usQbiDeduction(150_000, 5_000_000, 2026).deduction, 40_000);
   assert.equal(usQbiDeduction(150_000, 5_000_000, 2025).deduction, 30_000);
 });
+
+test("Schedule C lines for QuickBooks Online's own account names", async () => {
+  const { formLineFor, SCHEDULE_C } = await import("../dist/index.js");
+  const line = (name) => formLineFor(SCHEDULE_C, name, "expense");
+  // The sample company's chart, against the Schedule C instructions.
+  assert.equal(line("Automobile"), "9");
+  assert.equal(line("Automobile:Fuel"), "9");
+  assert.equal(line("Meals and Entertainment"), "24b");
+  assert.equal(line("Entertainment"), "entertainment");
+  assert.equal(line("Job Expenses:Cost of Labor"), "4");
+  assert.equal(line("Equipment Rental"), "20a");
+  assert.equal(line("Rent or Lease"), "20b");
+  assert.equal(line("Legal & Professional Fees:Accounting"), "17");
+  assert.equal(line("Insurance:Workers Compensation"), "15");
+  assert.equal(line("Utilities:Telephone"), "25");
+  assert.equal(line("Taxes & Licenses"), "23");
+  assert.equal(line("Commissions & fees"), "10");
+  assert.equal(line("Travel Meals"), "24b");
+  assert.equal(line("Bank Charges"), "27a");
+});

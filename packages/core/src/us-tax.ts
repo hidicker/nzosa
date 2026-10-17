@@ -99,7 +99,7 @@ export const SCHEDULE_C: FormDefinition = {
   rules: [
     ["6", /interest income|interest received|other income|refund|grant|rebate/],
     ["1", /sales|revenue|receipts|fees|income|turnover/],
-    ["4", /cost of goods|cost of sales|purchases|inventory|stock/],
+    ["4", /cost of goods|cost of sales|cost of labou?r|purchases|inventory|stock/],
     ["16a", /mortgage/],
     ["16b", /interest/],
     ["14", /health insurance|benefit/],
@@ -113,12 +113,14 @@ export const SCHEDULE_C: FormDefinition = {
     ["8", /advertis|marketing|promotion/],
     ["13", /depreciat|amortiz|amortis|section 179/],
     ["20a", /(rent|lease|hire).*(equipment|machinery|vehicle)|(equipment|machinery|vehicle).*(rent|lease|hire)/],
-    ["9", /vehicle|motor|mileage|\bcar\b|truck|fuel|parking/],
+    ["9", /vehicle|motor|mileage|\bcar\b|\bauto|truck|fuel|parking/],
     ["20b", /rent|lease/],
     ["21", /repair|maintenance/],
     ["22", /supplies|materials|small tools/],
-    ["entertainment", /entertain/],
+    // Meals first: QuickBooks' own "Meals and Entertainment" account is mostly
+    // meals, and goes on line 24b with a note to take entertainment out.
     ["24b", /meal|food|restaurant/],
+    ["entertainment", /entertain/],
     ["24a", /travel|airfare|flight|hotel|accommodation|lodging/],
     ["25", /utilit|electric|power|water|internet|phone|telephone/],
     ["18", /office|postage|stationery|software|subscription/],
@@ -126,7 +128,7 @@ export const SCHEDULE_C: FormDefinition = {
   otherIncome: "1",
   otherExpense: "27a",
   notes: [
-    "Line 24b allows half of business meals with a documented business purpose; the full amount spent is shown beside it. Entertainment is not deductible at all (IRC 274(a)).",
+    "Line 24b allows half of business meals with a documented business purpose; the full amount spent is shown beside it. Entertainment is not deductible at all (IRC 274(a)): an account for meals and entertainment together is put on line 24b, and any entertainment in it needs taking out.",
     "Business use of your home (line 30, Form 8829 or the simplified method) is not in the books: work it out before filing.",
     "Self-employment tax (Schedule SE) is due on net earnings of $400 or more.",
   ],

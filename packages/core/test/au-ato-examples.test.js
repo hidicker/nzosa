@@ -50,3 +50,22 @@ test("Paul's refrigerator: a leap year is 366 days over 365", () => {
   assert.equal(run(fridge, 2023).depreciation, 20_000);
   assert.equal(Math.round(run(fridge, 2024).depreciation / 100), 201);
 });
+
+test("Medicare levy, 2025-26: nothing to $28,011, 10c in the dollar above it, then 2%", async () => {
+  const { medicareLevy } = await import("../dist/au-tax.js");
+  assert.equal(medicareLevy(2_801_100, 2026), 0);
+  // $29,011: 10% of the $1,000 over the threshold is $100, not 2% ($580.22).
+  assert.equal(medicareLevy(2_901_100, 2026), 10_000);
+  // From the upper threshold, $35,013, the full 2%.
+  assert.equal(medicareLevy(4_000_000, 2026), 80_000);
+});
+
+test("Resident tax and the low income offset, 2025-26", async () => {
+  const { auResidentTax, auLowIncomeOffset } = await import("../dist/au-tax.js");
+  // 16% of what is over $18,200: on $45,000, $4,288.
+  assert.equal(auResidentTax(4_500_000, 2026), 428_800);
+  // The low income offset: $700 to $37,500, less 5c a dollar to $45,000 ($325), then 1.5c to $66,667.
+  assert.equal(auLowIncomeOffset(3_750_000, 2026), 70_000);
+  assert.equal(auLowIncomeOffset(4_500_000, 2026), 32_500);
+  assert.equal(auLowIncomeOffset(6_666_700, 2026), 0);
+});

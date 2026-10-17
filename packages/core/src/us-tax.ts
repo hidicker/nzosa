@@ -308,3 +308,38 @@ export function usIncomeTaxSingle(income: Cents, year: number): UsIncomeTax | nu
   }
   return { standardDeduction: table.standardDeduction, taxableIncome, tax: Math.round(tax) };
 }
+
+/**
+ * The qualified business income deduction's threshold for a single filer
+ * (all returns but married filing jointly): Form 8995 instructions for 2025,
+ * Rev. Proc. 2025-32 for 2026.
+ */
+const QBI_THRESHOLD: Readonly<Record<number, Cents>> = {
+  2025: 19_730_000,
+  2026: 20_175_000,
+};
+
+export interface QbiDeduction {
+  /** Form 8995 line 15: what comes off taxable income (Form 1040 line 13a). */
+  deduction: Cents;
+  /** Over the threshold, Form 8995-A's limits apply and are not worked out here. */
+  overThreshold: boolean;
+  threshold: Cents;
+}
+
+/**
+ * The 20% qualified business income deduction by Form 8995, for taxable
+ * income (before the deduction) at or under the threshold: the smaller of 20%
+ * of qualified business income and 20% of taxable income before it. From
+ * 2026, at least $400 where qualified business income is $1,000 or more
+ * (section 199A(i)). Null for a year whose threshold is not held.
+ */
+export function usQbiDeduction(qbi: Cents, taxableBeforeQbi: Cents, year: number): QbiDeduction | null {
+  const threshold = QBI_THRESHOLD[year];
+  if (threshold === undefined) return null;
+  const overThreshold = taxableBeforeQbi > threshold;
+  if (overThreshold || qbi <= 0 || taxableBeforeQbi <= 0) return { deduction: 0, overThreshold, threshold };
+  let deduction = Math.min(Math.round(qbi * 0.2), Math.round(taxableBeforeQbi * 0.2));
+  if (year >= 2026 && qbi >= 100_000) deduction = Math.min(Math.max(deduction, 40_000), taxableBeforeQbi);
+  return { deduction, overThreshold, threshold };
+}

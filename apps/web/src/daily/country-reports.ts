@@ -30,6 +30,7 @@ import {
   fullBas,
   splitAccountLabel,
   usIncomeTaxSingle,
+  usQbiDeduction,
 } from "@nzosa/core";
 import type { ContractorPayment, Entity, FormDefinition, FormSchedule, FullBas, IsoDate, Transaction } from "@nzosa/core";
 import { postedJournals, registeredForGst, reportEngine, varianceInput } from "../books.js";
@@ -950,7 +951,11 @@ export function renderUsTax(body: HTMLElement, year: number): void {
     const se = selfEmploymentTax(Math.max(0, business), year);
     const gross = one.total;
     const afterHalf = gross - (se?.deduction ?? 0);
-    const income = usIncomeTaxSingle(Math.max(0, afterHalf), year);
+    const beforeQbi = usIncomeTaxSingle(Math.max(0, afterHalf), year);
+    // Form 8995: the business's profit less the deductible half of its
+    // self-employment tax, a fifth of it off taxable income.
+    const qbi = usQbiDeduction(Math.max(0, business) - (se?.deduction ?? 0), beforeQbi?.taxableIncome ?? 0, year);
+    const income = usIncomeTaxSingle(Math.max(0, afterHalf - (qbi?.deduction ?? 0)), year);
     const seTotal = se?.total ?? 0;
     const due = (income?.tax ?? 0) + seTotal;
     const rows: (readonly [string, string, boolean?])[] = [
@@ -962,6 +967,10 @@ export function renderUsTax(body: HTMLElement, year: number): void {
       ],
       ["Half of it, deducted from income", se === null ? "—" : `-${money(se.deduction)}`],
       ["Standard deduction (single)", income === null ? "—" : `-${money(Math.min(income.standardDeduction, Math.max(0, afterHalf)))}`],
+      [
+        "Qualified business income deduction (Form 8995)",
+        qbi === null ? "—" : qbi.overThreshold ? `over ${money(qbi.threshold)}: Form 8995-A` : less(qbi.deduction),
+      ],
       ["Taxable income", income === null ? "—" : money(income.taxableIncome)],
       ["Federal income tax", income === null ? "rates not held for this year" : money(income.tax)],
       ["Estimated tax for the year", se === null || income === null ? "—" : money(due), true],
@@ -978,9 +987,10 @@ export function renderUsTax(body: HTMLElement, year: number): void {
   }
   body.append(
     note(
-      "Only the income these books hold, for a single filer taking the standard deduction. Wages, interest, " +
-        "dividends, the 20% qualified business income deduction, credits, other deductions and state tax are " +
-        "the return's, as is a different filing status. Self-employment tax is on Schedule C profit only, not " +
+      "Only the income these books hold, for a single filer taking the standard deduction. The qualified " +
+        "business income deduction is Form 8995's, on the business alone: a rental counts only if it is run as a " +
+        "trade or business, and above the threshold Form 8995-A's limits apply instead. Wages, interest, " +
+        "dividends, credits, other deductions and state tax are the return's, as is a different filing status. Self-employment tax is on Schedule C profit only, not " +
         "rental income. The four payments are the year's total in equal parts; safe-harbour rules may allow " +
         "less. Rates and thresholds per the IRS for 2025 and 2026: confirm them before paying.",
     ),

@@ -134,8 +134,9 @@ export function renderScheduleC(body: HTMLElement, year: number): void {
     body,
     year,
     SCHEDULE_C,
-    (entity) => (entity.kind ?? "business") === "business",
-    "No business in these books. Add one on Entities & accounts.",
+    // A corporation files its own return (Form 1120), not a Schedule C.
+    (entity) => (entity.kind ?? "business") === "business" && entity.structure !== "company",
+    "No sole proprietorship in these books. A corporation's tax is on the tax estimate.",
   );
   const dates = estimatedTaxDates(year);
   body.append(
@@ -602,6 +603,8 @@ export function renderBas(body: HTMLElement, year: number): void {
   };
   const isCapital = (t: Transaction): boolean => /fixed asset|non-current asset/i.test(accountOf(t)?.type ?? "");
   const isExport = (t: Transaction): boolean => /export/i.test(accountOf(t)?.name ?? "");
+  const isBalanceSheet = (t: Transaction): boolean =>
+    /equity|liabilit|payable|receivable|bank|current asset|inventory|prepayment/i.test(accountOf(t)?.type ?? "");
 
   const quarters = basQuarters(year).map((quarter) => {
     // Instalment income: the business and investment income in the books for
@@ -612,12 +615,12 @@ export function renderBas(body: HTMLElement, year: number): void {
       .reduce((sum, e) => sum + Math.max(0, entityPeriodReport(e, quarter)?.totalIncome ?? 0), 0);
     const inside = returns.filter((r) => r.period.to >= quarter.from && r.period.to <= quarter.to);
     const labels = inside
-      .map((r) => fullBas(r, { isCapital, isExport }))
+      .map((r) => fullBas(r, { isCapital, isExport, isBalanceSheet }))
       .reduce<FullBas | null>(
         (t, b) => (t === null ? b : (Object.fromEntries(Object.entries(t).map(([k, v]) => [k, v + (b[k as keyof FullBas] ?? 0)])) as unknown as FullBas)),
         null,
       );
-    const bas = labels ?? fullBas({ lines: [], excluded: [], boxes: { box8: 0, box10: 0, box12: 0, box14: 0 } as never }, { isCapital, isExport });
+    const bas = labels ?? fullBas({ lines: [], excluded: [], boxes: { box8: 0, box10: 0, box12: 0, box14: 0 } as never }, { isCapital, isExport, isBalanceSheet });
     const pay = auWithholding(payRuns, quarter.from as IsoDate, quarter.to as IsoDate);
     const t11 = withRate ? Math.round((t1 * rate) / 100) : 0;
     // What the statement asks to be paid: GST, PAYG withheld, and the instalment.
@@ -879,6 +882,16 @@ export function addCountryReports(country: string): void {
   else select.append(group);
 }
 
+/** Each company's profit for the year, for the tax it pays on its own. Not its rentals'. */
+function companyProfits(year: number): { entity: string; profit: number }[] {
+  return entities()
+    .filter((e) => (e.kind ?? "business") === "business" && e.structure === "company")
+    .flatMap((e) => {
+      const report = entityYearReport(e, year);
+      return report === null ? [] : [{ entity: e.name, profit: report.netProfit }];
+    });
+}
+
 /**
  * Each owner's share of what the books earned: every rental and business by
  * the owner's percentage, net. The base for an owner's income tax, before
@@ -939,9 +952,35 @@ export function renderUsTax(body: HTMLElement, year: number): void {
   title.textContent = `Self-employment and estimated tax — ${year}`;
   body.append(title);
   const owners = ownerIncome(year);
-  if (owners.length === 0) {
+  const corporations = companyProfits(year);
+  if (owners.length === 0 && corporations.length > 0) title.textContent = `Corporation income tax — ${year}`;
+  if (owners.length === 0 && corporations.length === 0) {
     body.append(note("No owners set. On Entities & accounts, give each rental and business its owners and their shares."));
     return;
+  }
+  for (const company of corporations) {
+    // Form 1120: a flat 21% of taxable income, paid ahead in four instalments
+    // on the 15th of the 4th, 6th, 9th and 12th months of a calendar year.
+    const heading = document.createElement("h4");
+    heading.textContent = `${company.entity} (corporation)`;
+    const taxable = Math.max(0, company.profit);
+    const tax = Math.round(taxable * 0.21);
+    const quarter = Math.round(tax / 4);
+    body.append(
+      heading,
+      estimateTable([
+        ["Profit in these books", money(company.profit)],
+        ["Federal income tax at 21% (Form 1120)", money(tax), true],
+        ...[`April 15, ${year}`, `June 15, ${year}`, `September 15, ${year}`, `December 15, ${year}`].map(
+          (day, i) => [`Estimated payment ${i + 1}, due ${day}`, money(i === 3 ? tax - quarter * 3 : quarter)] as const,
+        ),
+      ]),
+      note(
+        "On the books' profit as it stands: the return's adjustments (meals at half, penalties, depreciation " +
+          "as the tax rules work it, a loss carried forward) and state tax are not here. A due date on a " +
+          "weekend or holiday moves to the next business day. Shareholders pay their own tax on dividends and wages.",
+      ),
+    );
   }
   const dates = estimatedTaxDates(year);
   for (const one of owners) {
@@ -985,6 +1024,7 @@ export function renderUsTax(body: HTMLElement, year: number): void {
       );
     }
   }
+  if (owners.length === 0) return;
   body.append(
     note(
       "Only the income these books hold, for a single filer taking the standard deduction. The qualified " +
@@ -1006,9 +1046,31 @@ export function renderAuTax(body: HTMLElement, year: number): void {
   title.textContent = `Income tax estimate — year to 30 June ${year}`;
   body.append(title);
   const owners = ownerIncome(year);
-  if (owners.length === 0) {
+  const companies = companyProfits(year);
+  if (owners.length === 0 && companies.length === 0) {
     body.append(note("No owners set. On Entities & accounts, give each rental and business its owners and their shares."));
     return;
+  }
+  for (const company of companies) {
+    // A company pays its own tax: 25% as a base rate entity, 30% otherwise.
+    const heading = document.createElement("h4");
+    heading.textContent = `${company.entity} (company)`;
+    const taxable = Math.max(0, company.profit);
+    body.append(
+      heading,
+      estimateTable([
+        ["Profit in these books", money(company.profit)],
+        ["Company tax at 25% (base rate entity)", money(Math.round(taxable * 0.25)), true],
+        ["Company tax at 30% (otherwise)", money(Math.round(taxable * 0.3))],
+      ]),
+      note(
+        "A base rate entity has aggregated turnover under $50 million and no more than 80% of its income " +
+          "passive (rent, interest, dividends). On the books' profit as it stands: the return's adjustments " +
+          "(entertainment, depreciation as the tax rules work it, a loss carried forward) are not here, and " +
+          "the PAYG instalments paid during the year come off what is due. Dividends paid carry franking " +
+          "credits at the same rate.",
+      ),
+    );
   }
   for (const one of owners) {
     const heading = document.createElement("h4");
@@ -1049,6 +1111,7 @@ export function renderAuTax(body: HTMLElement, year: number): void {
       ]),
     );
   }
+  if (owners.length === 0) return;
   body.append(
     note(
       "Only the income these books hold. Salary, interest, dividends, deductions and other offsets are " +

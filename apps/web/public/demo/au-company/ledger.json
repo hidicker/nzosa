@@ -1,0 +1,8490 @@
+{
+ "version": 1,
+ "jurisdiction": "au",
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "auco-0001",
+   "occurrence": 1,
+   "date": "2025-07-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "auco-0002",
+   "occurrence": 1,
+   "date": "2025-07-06",
+   "amount": 1620300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "auco-0003",
+   "occurrence": 1,
+   "date": "2025-07-08",
+   "amount": -386300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "auco-0004",
+   "occurrence": 1,
+   "date": "2025-07-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "auco-0005",
+   "occurrence": 1,
+   "date": "2025-07-10",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "auco-0006",
+   "occurrence": 1,
+   "date": "2025-07-10",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "auco-0007",
+   "occurrence": 1,
+   "date": "2025-07-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "auco-0008",
+   "occurrence": 1,
+   "date": "2025-07-14",
+   "amount": 529100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "auco-0009",
+   "occurrence": 1,
+   "date": "2025-07-17",
+   "amount": -16240,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "auco-0010",
+   "occurrence": 1,
+   "date": "2025-07-19",
+   "amount": 199100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "auco-0011",
+   "occurrence": 1,
+   "date": "2025-07-20",
+   "amount": -336600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Public liability and tools insurance, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Allianz Business",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "auco-0012",
+   "occurrence": 1,
+   "date": "2025-07-21",
+   "amount": -130100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "auco-0013",
+   "occurrence": 1,
+   "date": "2025-07-23",
+   "amount": 276100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "auco-0014",
+   "occurrence": 1,
+   "date": "2025-07-24",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "auco-0015",
+   "occurrence": 1,
+   "date": "2025-07-24",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "auco-0016",
+   "occurrence": 1,
+   "date": "2025-07-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "auco-0017",
+   "occurrence": 1,
+   "date": "2025-08-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "auco-0018",
+   "occurrence": 1,
+   "date": "2025-08-04",
+   "amount": -189630,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Registration, two vans",
+   "code": "",
+   "reference": "",
+   "otherParty": "VicRoads",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "auco-0019",
+   "occurrence": 1,
+   "date": "2025-08-06",
+   "amount": 1604900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "auco-0020",
+   "occurrence": 1,
+   "date": "2025-08-07",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "auco-0021",
+   "occurrence": 1,
+   "date": "2025-08-07",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "auco-0022",
+   "occurrence": 1,
+   "date": "2025-08-08",
+   "amount": -399600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "auco-0023",
+   "occurrence": 1,
+   "date": "2025-08-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "auco-0024",
+   "occurrence": 1,
+   "date": "2025-08-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "auco-0025",
+   "occurrence": 1,
+   "date": "2025-08-14",
+   "amount": 523600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "auco-0026",
+   "occurrence": 1,
+   "date": "2025-08-14",
+   "amount": -17190,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "auco-0027",
+   "occurrence": 1,
+   "date": "2025-08-19",
+   "amount": 198000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "auco-0028",
+   "occurrence": 1,
+   "date": "2025-08-21",
+   "amount": -112100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "auco-0029",
+   "occurrence": 1,
+   "date": "2025-08-21",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "auco-0030",
+   "occurrence": 1,
+   "date": "2025-08-21",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "auco-0031",
+   "occurrence": 1,
+   "date": "2025-08-23",
+   "amount": 272800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "auco-0032",
+   "occurrence": 1,
+   "date": "2025-08-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "auco-0033",
+   "occurrence": 1,
+   "date": "2025-09-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "auco-0034",
+   "occurrence": 1,
+   "date": "2025-09-03",
+   "amount": -46800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing licence renewal",
+   "code": "",
+   "reference": "",
+   "otherParty": "Victorian Building Authority",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "auco-0035",
+   "occurrence": 1,
+   "date": "2025-09-04",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "auco-0036",
+   "occurrence": 1,
+   "date": "2025-09-04",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "auco-0037",
+   "occurrence": 1,
+   "date": "2025-09-06",
+   "amount": 1560900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "auco-0038",
+   "occurrence": 1,
+   "date": "2025-09-08",
+   "amount": -376500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "auco-0039",
+   "occurrence": 1,
+   "date": "2025-09-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "auco-0040",
+   "occurrence": 1,
+   "date": "2025-09-11",
+   "amount": -15830,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "auco-0041",
+   "occurrence": 1,
+   "date": "2025-09-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "auco-0042",
+   "occurrence": 1,
+   "date": "2025-09-14",
+   "amount": 509300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "auco-0043",
+   "occurrence": 1,
+   "date": "2025-09-15",
+   "amount": -880000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Drain inspection camera, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Total Tools",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "auco-0044",
+   "occurrence": 1,
+   "date": "2025-09-18",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "auco-0045",
+   "occurrence": 1,
+   "date": "2025-09-18",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "auco-0046",
+   "occurrence": 1,
+   "date": "2025-09-19",
+   "amount": 192500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "auco-0047",
+   "occurrence": 1,
+   "date": "2025-09-21",
+   "amount": -96800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "auco-0048",
+   "occurrence": 1,
+   "date": "2025-09-23",
+   "amount": 265100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "auco-0049",
+   "occurrence": 1,
+   "date": "2025-09-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "auco-0050",
+   "occurrence": 1,
+   "date": "2025-10-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "auco-0051",
+   "occurrence": 1,
+   "date": "2025-10-02",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "auco-0052",
+   "occurrence": 1,
+   "date": "2025-10-02",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "auco-0053",
+   "occurrence": 1,
+   "date": "2025-10-06",
+   "amount": 1500400,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "auco-0054",
+   "occurrence": 1,
+   "date": "2025-10-08",
+   "amount": -338200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "auco-0055",
+   "occurrence": 1,
+   "date": "2025-10-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "auco-0056",
+   "occurrence": 1,
+   "date": "2025-10-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "auco-0057",
+   "occurrence": 1,
+   "date": "2025-10-14",
+   "amount": 489500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "auco-0058",
+   "occurrence": 1,
+   "date": "2025-10-16",
+   "amount": -16675,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "auco-0059",
+   "occurrence": 1,
+   "date": "2025-10-16",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "auco-0060",
+   "occurrence": 1,
+   "date": "2025-10-16",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "auco-0061",
+   "occurrence": 1,
+   "date": "2025-10-19",
+   "amount": 184800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "auco-0062",
+   "occurrence": 1,
+   "date": "2025-10-21",
+   "amount": -98200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "auco-0063",
+   "occurrence": 1,
+   "date": "2025-10-22",
+   "amount": -121000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Company tax return and financial statements, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Accountants",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "auco-0064",
+   "occurrence": 1,
+   "date": "2025-10-23",
+   "amount": 255200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "auco-0065",
+   "occurrence": 1,
+   "date": "2025-10-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "auco-0066",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -289440,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Super guarantee, both employees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Super clearing house",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "auco-0067",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -310000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-07 to 2025-09, PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "auco-0068",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -364328,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-07 to 2025-09, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "auco-0069",
+   "occurrence": 1,
+   "date": "2025-10-28",
+   "amount": -372000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-07 to 2025-09, PAYG withheld",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "auco-0070",
+   "occurrence": 1,
+   "date": "2025-10-30",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "auco-0071",
+   "occurrence": 1,
+   "date": "2025-10-30",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "auco-0072",
+   "occurrence": 1,
+   "date": "2025-11-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "auco-0073",
+   "occurrence": 1,
+   "date": "2025-11-05",
+   "amount": -68200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Van service, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Auto Service",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "auco-0074",
+   "occurrence": 1,
+   "date": "2025-11-06",
+   "amount": 1439900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "auco-0075",
+   "occurrence": 1,
+   "date": "2025-11-08",
+   "amount": -320000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "auco-0076",
+   "occurrence": 1,
+   "date": "2025-11-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 76
+   }
+  },
+  {
+   "id": "auco-0077",
+   "occurrence": 1,
+   "date": "2025-11-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 77
+   }
+  },
+  {
+   "id": "auco-0078",
+   "occurrence": 1,
+   "date": "2025-11-13",
+   "amount": -17420,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 78
+   }
+  },
+  {
+   "id": "auco-0079",
+   "occurrence": 1,
+   "date": "2025-11-13",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 79
+   }
+  },
+  {
+   "id": "auco-0080",
+   "occurrence": 1,
+   "date": "2025-11-13",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 80
+   }
+  },
+  {
+   "id": "auco-0081",
+   "occurrence": 1,
+   "date": "2025-11-14",
+   "amount": 469700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 81
+   }
+  },
+  {
+   "id": "auco-0082",
+   "occurrence": 1,
+   "date": "2025-11-19",
+   "amount": 177100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 82
+   }
+  },
+  {
+   "id": "auco-0083",
+   "occurrence": 1,
+   "date": "2025-11-21",
+   "amount": -115100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 83
+   }
+  },
+  {
+   "id": "auco-0084",
+   "occurrence": 1,
+   "date": "2025-11-23",
+   "amount": 245300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 84
+   }
+  },
+  {
+   "id": "auco-0085",
+   "occurrence": 1,
+   "date": "2025-11-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 85
+   }
+  },
+  {
+   "id": "auco-0086",
+   "occurrence": 1,
+   "date": "2025-11-27",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 86
+   }
+  },
+  {
+   "id": "auco-0087",
+   "occurrence": 1,
+   "date": "2025-11-27",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 87
+   }
+  },
+  {
+   "id": "auco-0088",
+   "occurrence": 1,
+   "date": "2025-12-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 88
+   }
+  },
+  {
+   "id": "auco-0089",
+   "occurrence": 1,
+   "date": "2025-12-01",
+   "amount": -312000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Company tax 2024-25, balance",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 89
+   }
+  },
+  {
+   "id": "auco-0090",
+   "occurrence": 1,
+   "date": "2025-12-02",
+   "amount": -21450,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job cards and printer ink, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Officeworks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 90
+   }
+  },
+  {
+   "id": "auco-0091",
+   "occurrence": 1,
+   "date": "2025-12-06",
+   "amount": 1395900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 91
+   }
+  },
+  {
+   "id": "auco-0092",
+   "occurrence": 1,
+   "date": "2025-12-08",
+   "amount": -338500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 92
+   }
+  },
+  {
+   "id": "auco-0093",
+   "occurrence": 1,
+   "date": "2025-12-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 93
+   }
+  },
+  {
+   "id": "auco-0094",
+   "occurrence": 1,
+   "date": "2025-12-11",
+   "amount": -16960,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 94
+   }
+  },
+  {
+   "id": "auco-0095",
+   "occurrence": 1,
+   "date": "2025-12-11",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 95
+   }
+  },
+  {
+   "id": "auco-0096",
+   "occurrence": 1,
+   "date": "2025-12-11",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 96
+   }
+  },
+  {
+   "id": "auco-0097",
+   "occurrence": 1,
+   "date": "2025-12-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 97
+   }
+  },
+  {
+   "id": "auco-0098",
+   "occurrence": 1,
+   "date": "2025-12-14",
+   "amount": 455400,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 98
+   }
+  },
+  {
+   "id": "auco-0099",
+   "occurrence": 1,
+   "date": "2025-12-15",
+   "amount": -1000000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interim dividend, fully franked",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 99
+   }
+  },
+  {
+   "id": "auco-0100",
+   "occurrence": 1,
+   "date": "2025-12-15",
+   "amount": -1000000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Interim dividend, fully franked",
+   "code": "",
+   "reference": "",
+   "otherParty": "Grace O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 100
+   }
+  },
+  {
+   "id": "auco-0101",
+   "occurrence": 1,
+   "date": "2025-12-19",
+   "amount": 171600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 101
+   }
+  },
+  {
+   "id": "auco-0102",
+   "occurrence": 1,
+   "date": "2025-12-21",
+   "amount": -131900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 102
+   }
+  },
+  {
+   "id": "auco-0103",
+   "occurrence": 1,
+   "date": "2025-12-23",
+   "amount": 237600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 103
+   }
+  },
+  {
+   "id": "auco-0104",
+   "occurrence": 1,
+   "date": "2025-12-25",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 104
+   }
+  },
+  {
+   "id": "auco-0105",
+   "occurrence": 1,
+   "date": "2025-12-25",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 105
+   }
+  },
+  {
+   "id": "auco-0106",
+   "occurrence": 1,
+   "date": "2025-12-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 106
+   }
+  },
+  {
+   "id": "auco-0107",
+   "occurrence": 1,
+   "date": "2025-12-31",
+   "amount": 4260,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Business savings interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Interest",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 107
+   }
+  },
+  {
+   "id": "auco-0108",
+   "occurrence": 1,
+   "date": "2026-01-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 108
+   }
+  },
+  {
+   "id": "auco-0109",
+   "occurrence": 1,
+   "date": "2026-01-06",
+   "amount": 1380500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 109
+   }
+  },
+  {
+   "id": "auco-0110",
+   "occurrence": 1,
+   "date": "2026-01-08",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 110
+   }
+  },
+  {
+   "id": "auco-0111",
+   "occurrence": 1,
+   "date": "2026-01-08",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "auco-0112",
+   "occurrence": 1,
+   "date": "2026-01-08",
+   "amount": -393700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 112
+   }
+  },
+  {
+   "id": "auco-0113",
+   "occurrence": 1,
+   "date": "2026-01-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 113
+   }
+  },
+  {
+   "id": "auco-0114",
+   "occurrence": 1,
+   "date": "2026-01-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 114
+   }
+  },
+  {
+   "id": "auco-0115",
+   "occurrence": 1,
+   "date": "2026-01-14",
+   "amount": 449900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 115
+   }
+  },
+  {
+   "id": "auco-0116",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -16085,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 116
+   }
+  },
+  {
+   "id": "auco-0117",
+   "occurrence": 1,
+   "date": "2026-01-19",
+   "amount": 170500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 117
+   }
+  },
+  {
+   "id": "auco-0118",
+   "occurrence": 1,
+   "date": "2026-01-21",
+   "amount": -125800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 118
+   }
+  },
+  {
+   "id": "auco-0119",
+   "occurrence": 1,
+   "date": "2026-01-22",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 119
+   }
+  },
+  {
+   "id": "auco-0120",
+   "occurrence": 1,
+   "date": "2026-01-22",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 120
+   }
+  },
+  {
+   "id": "auco-0121",
+   "occurrence": 1,
+   "date": "2026-01-23",
+   "amount": 234300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 121
+   }
+  },
+  {
+   "id": "auco-0122",
+   "occurrence": 1,
+   "date": "2026-01-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 122
+   }
+  },
+  {
+   "id": "auco-0123",
+   "occurrence": 1,
+   "date": "2026-01-28",
+   "amount": -337680,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Super guarantee, both employees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Super clearing house",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 123
+   }
+  },
+  {
+   "id": "auco-0124",
+   "occurrence": 1,
+   "date": "2026-02-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 124
+   }
+  },
+  {
+   "id": "auco-0125",
+   "occurrence": 1,
+   "date": "2026-02-05",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 125
+   }
+  },
+  {
+   "id": "auco-0126",
+   "occurrence": 1,
+   "date": "2026-02-05",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 126
+   }
+  },
+  {
+   "id": "auco-0127",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": 1395900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 127
+   }
+  },
+  {
+   "id": "auco-0128",
+   "occurrence": 1,
+   "date": "2026-02-08",
+   "amount": -396400,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 128
+   }
+  },
+  {
+   "id": "auco-0129",
+   "occurrence": 1,
+   "date": "2026-02-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 129
+   }
+  },
+  {
+   "id": "auco-0130",
+   "occurrence": 1,
+   "date": "2026-02-11",
+   "amount": -8800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Freight on a hot water unit, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "StarTrack",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 130
+   }
+  },
+  {
+   "id": "auco-0131",
+   "occurrence": 1,
+   "date": "2026-02-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 131
+   }
+  },
+  {
+   "id": "auco-0132",
+   "occurrence": 1,
+   "date": "2026-02-12",
+   "amount": -17230,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 132
+   }
+  },
+  {
+   "id": "auco-0133",
+   "occurrence": 1,
+   "date": "2026-02-14",
+   "amount": 455400,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 133
+   }
+  },
+  {
+   "id": "auco-0134",
+   "occurrence": 1,
+   "date": "2026-02-19",
+   "amount": 171600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 134
+   }
+  },
+  {
+   "id": "auco-0135",
+   "occurrence": 1,
+   "date": "2026-02-19",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 135
+   }
+  },
+  {
+   "id": "auco-0136",
+   "occurrence": 1,
+   "date": "2026-02-19",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 136
+   }
+  },
+  {
+   "id": "auco-0137",
+   "occurrence": 1,
+   "date": "2026-02-21",
+   "amount": -106700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 137
+   }
+  },
+  {
+   "id": "auco-0138",
+   "occurrence": 1,
+   "date": "2026-02-23",
+   "amount": 237600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 138
+   }
+  },
+  {
+   "id": "auco-0139",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 139
+   }
+  },
+  {
+   "id": "auco-0140",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -310000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-10 to 2025-12, PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 140
+   }
+  },
+  {
+   "id": "auco-0141",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -421054,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-10 to 2025-12, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 141
+   }
+  },
+  {
+   "id": "auco-0142",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -434000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2025-10 to 2025-12, PAYG withheld",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 142
+   }
+  },
+  {
+   "id": "auco-0143",
+   "occurrence": 1,
+   "date": "2026-03-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 143
+   }
+  },
+  {
+   "id": "auco-0144",
+   "occurrence": 1,
+   "date": "2026-03-05",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 144
+   }
+  },
+  {
+   "id": "auco-0145",
+   "occurrence": 1,
+   "date": "2026-03-05",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 145
+   }
+  },
+  {
+   "id": "auco-0146",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": 1439900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 146
+   }
+  },
+  {
+   "id": "auco-0147",
+   "occurrence": 1,
+   "date": "2026-03-08",
+   "amount": -365600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 147
+   }
+  },
+  {
+   "id": "auco-0148",
+   "occurrence": 1,
+   "date": "2026-03-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 148
+   }
+  },
+  {
+   "id": "auco-0149",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 149
+   }
+  },
+  {
+   "id": "auco-0150",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": -16540,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 150
+   }
+  },
+  {
+   "id": "auco-0151",
+   "occurrence": 1,
+   "date": "2026-03-14",
+   "amount": 469700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 151
+   }
+  },
+  {
+   "id": "auco-0152",
+   "occurrence": 1,
+   "date": "2026-03-18",
+   "amount": -74580,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Van service and tyres, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Auto Service",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 152
+   }
+  },
+  {
+   "id": "auco-0153",
+   "occurrence": 1,
+   "date": "2026-03-19",
+   "amount": 177100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 153
+   }
+  },
+  {
+   "id": "auco-0154",
+   "occurrence": 1,
+   "date": "2026-03-19",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 154
+   }
+  },
+  {
+   "id": "auco-0155",
+   "occurrence": 1,
+   "date": "2026-03-19",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 155
+   }
+  },
+  {
+   "id": "auco-0156",
+   "occurrence": 1,
+   "date": "2026-03-21",
+   "amount": -95200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 156
+   }
+  },
+  {
+   "id": "auco-0157",
+   "occurrence": 1,
+   "date": "2026-03-23",
+   "amount": 245300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 157
+   }
+  },
+  {
+   "id": "auco-0158",
+   "occurrence": 1,
+   "date": "2026-03-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 158
+   }
+  },
+  {
+   "id": "auco-0159",
+   "occurrence": 1,
+   "date": "2026-04-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 159
+   }
+  },
+  {
+   "id": "auco-0160",
+   "occurrence": 1,
+   "date": "2026-04-02",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 160
+   }
+  },
+  {
+   "id": "auco-0161",
+   "occurrence": 1,
+   "date": "2026-04-02",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 161
+   }
+  },
+  {
+   "id": "auco-0162",
+   "occurrence": 1,
+   "date": "2026-04-06",
+   "amount": 1500400,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 162
+   }
+  },
+  {
+   "id": "auco-0163",
+   "occurrence": 1,
+   "date": "2026-04-08",
+   "amount": -329700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 163
+   }
+  },
+  {
+   "id": "auco-0164",
+   "occurrence": 1,
+   "date": "2026-04-09",
+   "amount": -49500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS review, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Accountants",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 164
+   }
+  },
+  {
+   "id": "auco-0165",
+   "occurrence": 1,
+   "date": "2026-04-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 165
+   }
+  },
+  {
+   "id": "auco-0166",
+   "occurrence": 1,
+   "date": "2026-04-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 166
+   }
+  },
+  {
+   "id": "auco-0167",
+   "occurrence": 1,
+   "date": "2026-04-14",
+   "amount": 489500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 167
+   }
+  },
+  {
+   "id": "auco-0168",
+   "occurrence": 1,
+   "date": "2026-04-16",
+   "amount": -16890,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 168
+   }
+  },
+  {
+   "id": "auco-0169",
+   "occurrence": 1,
+   "date": "2026-04-16",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 169
+   }
+  },
+  {
+   "id": "auco-0170",
+   "occurrence": 1,
+   "date": "2026-04-16",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 170
+   }
+  },
+  {
+   "id": "auco-0171",
+   "occurrence": 1,
+   "date": "2026-04-19",
+   "amount": 184800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 171
+   }
+  },
+  {
+   "id": "auco-0172",
+   "occurrence": 1,
+   "date": "2026-04-21",
+   "amount": -101900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 172
+   }
+  },
+  {
+   "id": "auco-0173",
+   "occurrence": 1,
+   "date": "2026-04-23",
+   "amount": 255200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 173
+   }
+  },
+  {
+   "id": "auco-0174",
+   "occurrence": 1,
+   "date": "2026-04-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 174
+   }
+  },
+  {
+   "id": "auco-0175",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -289440,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Super guarantee, both employees",
+   "code": "",
+   "reference": "",
+   "otherParty": "Super clearing house",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 175
+   }
+  },
+  {
+   "id": "auco-0176",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -310000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2026-01 to 2026-03, PAYG instalment",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 176
+   }
+  },
+  {
+   "id": "auco-0177",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -372000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2026-01 to 2026-03, PAYG withheld",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 177
+   }
+  },
+  {
+   "id": "auco-0178",
+   "occurrence": 1,
+   "date": "2026-04-28",
+   "amount": -402170,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "BAS 2026-01 to 2026-03, GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "ATO",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 178
+   }
+  },
+  {
+   "id": "auco-0179",
+   "occurrence": 1,
+   "date": "2026-04-30",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 179
+   }
+  },
+  {
+   "id": "auco-0180",
+   "occurrence": 1,
+   "date": "2026-04-30",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 180
+   }
+  },
+  {
+   "id": "auco-0181",
+   "occurrence": 1,
+   "date": "2026-05-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 181
+   }
+  },
+  {
+   "id": "auco-0182",
+   "occurrence": 1,
+   "date": "2026-05-06",
+   "amount": 1560900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 182
+   }
+  },
+  {
+   "id": "auco-0183",
+   "occurrence": 1,
+   "date": "2026-05-07",
+   "amount": -35200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Drain machine service, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Total Tools",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 183
+   }
+  },
+  {
+   "id": "auco-0184",
+   "occurrence": 1,
+   "date": "2026-05-08",
+   "amount": -321600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 184
+   }
+  },
+  {
+   "id": "auco-0185",
+   "occurrence": 1,
+   "date": "2026-05-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 185
+   }
+  },
+  {
+   "id": "auco-0186",
+   "occurrence": 1,
+   "date": "2026-05-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 186
+   }
+  },
+  {
+   "id": "auco-0187",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": 509300,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 187
+   }
+  },
+  {
+   "id": "auco-0188",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": -17615,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 188
+   }
+  },
+  {
+   "id": "auco-0189",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 189
+   }
+  },
+  {
+   "id": "auco-0190",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 190
+   }
+  },
+  {
+   "id": "auco-0191",
+   "occurrence": 1,
+   "date": "2026-05-19",
+   "amount": 192500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 191
+   }
+  },
+  {
+   "id": "auco-0192",
+   "occurrence": 1,
+   "date": "2026-05-21",
+   "amount": -120700,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 192
+   }
+  },
+  {
+   "id": "auco-0193",
+   "occurrence": 1,
+   "date": "2026-05-23",
+   "amount": 265100,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 193
+   }
+  },
+  {
+   "id": "auco-0194",
+   "occurrence": 1,
+   "date": "2026-05-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 194
+   }
+  },
+  {
+   "id": "auco-0195",
+   "occurrence": 1,
+   "date": "2026-05-28",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 195
+   }
+  },
+  {
+   "id": "auco-0196",
+   "occurrence": 1,
+   "date": "2026-05-28",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 196
+   }
+  },
+  {
+   "id": "auco-0197",
+   "occurrence": 1,
+   "date": "2026-06-01",
+   "amount": -242000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Workshop rent, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Geelong Trade Units",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 197
+   }
+  },
+  {
+   "id": "auco-0198",
+   "occurrence": 1,
+   "date": "2026-06-04",
+   "amount": -12995,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bunnings Warehouse",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 198
+   }
+  },
+  {
+   "id": "auco-0199",
+   "occurrence": 1,
+   "date": "2026-06-06",
+   "amount": 1604900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Bellarine Homes",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 199
+   }
+  },
+  {
+   "id": "auco-0200",
+   "occurrence": 1,
+   "date": "2026-06-08",
+   "amount": -348800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fittings and pipe, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Reece Plumbing",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 200
+   }
+  },
+  {
+   "id": "auco-0201",
+   "occurrence": 1,
+   "date": "2026-06-10",
+   "amount": -13900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mobiles and internet, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Telstra",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 201
+   }
+  },
+  {
+   "id": "auco-0202",
+   "occurrence": 1,
+   "date": "2026-06-11",
+   "amount": -16370,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Fuel for the vans, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ampol",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 202
+   }
+  },
+  {
+   "id": "auco-0203",
+   "occurrence": 1,
+   "date": "2026-06-11",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 203
+   }
+  },
+  {
+   "id": "auco-0204",
+   "occurrence": 1,
+   "date": "2026-06-11",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 204
+   }
+  },
+  {
+   "id": "auco-0205",
+   "occurrence": 1,
+   "date": "2026-06-12",
+   "amount": -6500,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Job management software, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradify",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 205
+   }
+  },
+  {
+   "id": "auco-0206",
+   "occurrence": 1,
+   "date": "2026-06-14",
+   "amount": 523600,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Corio Property Management",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 206
+   }
+  },
+  {
+   "id": "auco-0207",
+   "occurrence": 1,
+   "date": "2026-06-16",
+   "amount": -5900,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Xero Australia",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 207
+   }
+  },
+  {
+   "id": "auco-0208",
+   "occurrence": 1,
+   "date": "2026-06-19",
+   "amount": 198000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Barwon Heads Bakery",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 208
+   }
+  },
+  {
+   "id": "auco-0209",
+   "occurrence": 1,
+   "date": "2026-06-19",
+   "amount": 99000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Osko payment from K Nguyen",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 209
+   }
+  },
+  {
+   "id": "auco-0210",
+   "occurrence": 1,
+   "date": "2026-06-21",
+   "amount": -134200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Hot water units and tapware, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Tradelink",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 210
+   }
+  },
+  {
+   "id": "auco-0211",
+   "occurrence": 1,
+   "date": "2026-06-23",
+   "amount": 272800,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plumbing work, incl GST",
+   "code": "",
+   "reference": "",
+   "otherParty": "Ocean Grove Dental",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 211
+   }
+  },
+  {
+   "id": "auco-0212",
+   "occurrence": 1,
+   "date": "2026-06-24",
+   "amount": -32000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "WorkSafe Victoria",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 212
+   }
+  },
+  {
+   "id": "auco-0213",
+   "occurrence": 1,
+   "date": "2026-06-25",
+   "amount": -128000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Noah Kelly",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 213
+   }
+  },
+  {
+   "id": "auco-0214",
+   "occurrence": 1,
+   "date": "2026-06-25",
+   "amount": -212000,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Liam O'Brien",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 214
+   }
+  },
+  {
+   "id": "auco-0215",
+   "occurrence": 1,
+   "date": "2026-06-27",
+   "amount": -1200,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank fee",
+   "code": "",
+   "reference": "",
+   "otherParty": "Account keeping fee",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 215
+   }
+  },
+  {
+   "id": "auco-0216",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": 5120,
+   "currency": "AUD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Business savings interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Interest",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "auco-business",
+   "extras": {
+    "accountLabel": "Business Everyday ••5190"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "au-company-demo.csv",
+    "line": 216
+   }
+  }
+ ],
+ "overrides": {
+  "auco-0001": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-07-01"
+  },
+  "auco-0002": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-07-06"
+  },
+  "auco-0003": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-07-08"
+  },
+  "auco-0004": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-07-10"
+  },
+  "auco-0005": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-07-10"
+  },
+  "auco-0006": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-07-10"
+  },
+  "auco-0007": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-07-12"
+  },
+  "auco-0008": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-07-14"
+  },
+  "auco-0009": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-07-17"
+  },
+  "auco-0010": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-07-19"
+  },
+  "auco-0011": {
+   "confirmed": true,
+   "code": "Insurance - 433",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Public liability and tools insurance, incl GST",
+   "at": "2025-07-20"
+  },
+  "auco-0012": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-07-21"
+  },
+  "auco-0013": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-07-23"
+  },
+  "auco-0014": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-07-24"
+  },
+  "auco-0015": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-07-24"
+  },
+  "auco-0016": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-07-27"
+  },
+  "auco-0017": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-08-01"
+  },
+  "auco-0018": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Registration, two vans",
+   "at": "2025-08-04"
+  },
+  "auco-0019": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-08-06"
+  },
+  "auco-0020": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-08-07"
+  },
+  "auco-0021": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-08-07"
+  },
+  "auco-0022": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-08-08"
+  },
+  "auco-0023": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-08-10"
+  },
+  "auco-0024": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-08-12"
+  },
+  "auco-0025": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-08-14"
+  },
+  "auco-0026": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-08-14"
+  },
+  "auco-0027": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-08-19"
+  },
+  "auco-0028": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-08-21"
+  },
+  "auco-0029": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-08-21"
+  },
+  "auco-0030": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-08-21"
+  },
+  "auco-0031": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-08-23"
+  },
+  "auco-0032": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-08-27"
+  },
+  "auco-0033": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-09-01"
+  },
+  "auco-0034": {
+   "confirmed": true,
+   "code": "Licences and registrations - 497",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Plumbing licence renewal",
+   "at": "2025-09-03"
+  },
+  "auco-0035": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-09-04"
+  },
+  "auco-0036": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-09-04"
+  },
+  "auco-0037": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-09-06"
+  },
+  "auco-0038": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-09-08"
+  },
+  "auco-0039": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-09-10"
+  },
+  "auco-0040": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-09-11"
+  },
+  "auco-0041": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-09-12"
+  },
+  "auco-0042": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-09-14"
+  },
+  "auco-0043": {
+   "confirmed": true,
+   "code": "Plant & Equipment - 750",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Drain inspection camera, incl GST",
+   "at": "2025-09-15"
+  },
+  "auco-0044": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-09-18"
+  },
+  "auco-0045": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-09-18"
+  },
+  "auco-0046": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-09-19"
+  },
+  "auco-0047": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-09-21"
+  },
+  "auco-0048": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-09-23"
+  },
+  "auco-0049": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-09-27"
+  },
+  "auco-0050": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-10-01"
+  },
+  "auco-0051": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-02"
+  },
+  "auco-0052": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-02"
+  },
+  "auco-0053": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-10-06"
+  },
+  "auco-0054": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-10-08"
+  },
+  "auco-0055": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-10-10"
+  },
+  "auco-0056": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-10-12"
+  },
+  "auco-0057": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-10-14"
+  },
+  "auco-0058": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-10-16"
+  },
+  "auco-0059": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-16"
+  },
+  "auco-0060": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-16"
+  },
+  "auco-0061": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-10-19"
+  },
+  "auco-0062": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-10-21"
+  },
+  "auco-0063": {
+   "confirmed": true,
+   "code": "Consulting & Accounting - 412",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Company tax return and financial statements, incl GST",
+   "at": "2025-10-22"
+  },
+  "auco-0064": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-10-23"
+  },
+  "auco-0065": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-10-27"
+  },
+  "auco-0066": {
+   "confirmed": true,
+   "code": "Superannuation Payable - 826",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Super guarantee, both employees",
+   "at": "2025-10-28"
+  },
+  "auco-0067": {
+   "confirmed": true,
+   "code": "Income Tax Payable - 830",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-07 to 2025-09, PAYG instalment",
+   "at": "2025-10-28"
+  },
+  "auco-0068": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-07 to 2025-09, GST",
+   "at": "2025-10-28"
+  },
+  "auco-0069": {
+   "confirmed": true,
+   "code": "PAYG Withholdings Payable - 825",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-07 to 2025-09, PAYG withheld",
+   "at": "2025-10-28"
+  },
+  "auco-0070": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-30"
+  },
+  "auco-0071": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-10-30"
+  },
+  "auco-0072": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-11-01"
+  },
+  "auco-0073": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Van service, incl GST",
+   "at": "2025-11-05"
+  },
+  "auco-0074": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-11-06"
+  },
+  "auco-0075": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-11-08"
+  },
+  "auco-0076": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-11-10"
+  },
+  "auco-0077": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-11-12"
+  },
+  "auco-0078": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-11-13"
+  },
+  "auco-0079": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-11-13"
+  },
+  "auco-0080": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-11-13"
+  },
+  "auco-0081": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-11-14"
+  },
+  "auco-0082": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-11-19"
+  },
+  "auco-0083": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-11-21"
+  },
+  "auco-0084": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-11-23"
+  },
+  "auco-0085": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-11-27"
+  },
+  "auco-0086": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-11-27"
+  },
+  "auco-0087": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-11-27"
+  },
+  "auco-0088": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2025-12-01"
+  },
+  "auco-0089": {
+   "confirmed": true,
+   "code": "Income Tax Payable - 830",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Company tax 2024-25, balance",
+   "at": "2025-12-01"
+  },
+  "auco-0090": {
+   "confirmed": true,
+   "code": "Printing & Stationery - 461",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job cards and printer ink, incl GST",
+   "at": "2025-12-02"
+  },
+  "auco-0091": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-12-06"
+  },
+  "auco-0092": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2025-12-08"
+  },
+  "auco-0093": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2025-12-10"
+  },
+  "auco-0094": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2025-12-11"
+  },
+  "auco-0095": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-12-11"
+  },
+  "auco-0096": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-12-11"
+  },
+  "auco-0097": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2025-12-12"
+  },
+  "auco-0098": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-12-14"
+  },
+  "auco-0099": {
+   "confirmed": true,
+   "code": "Dividends Paid - 980",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Interim dividend, fully franked",
+   "at": "2025-12-15"
+  },
+  "auco-0100": {
+   "confirmed": true,
+   "code": "Dividends Paid - 980",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Interim dividend, fully franked",
+   "at": "2025-12-15"
+  },
+  "auco-0101": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-12-19"
+  },
+  "auco-0102": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2025-12-21"
+  },
+  "auco-0103": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2025-12-23"
+  },
+  "auco-0104": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-12-25"
+  },
+  "auco-0105": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2025-12-25"
+  },
+  "auco-0106": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2025-12-27"
+  },
+  "auco-0107": {
+   "confirmed": true,
+   "code": "Interest Income - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Business savings interest",
+   "at": "2025-12-31"
+  },
+  "auco-0108": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-01-01"
+  },
+  "auco-0109": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-01-06"
+  },
+  "auco-0110": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-01-08"
+  },
+  "auco-0111": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-01-08"
+  },
+  "auco-0112": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-01-08"
+  },
+  "auco-0113": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-01-10"
+  },
+  "auco-0114": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-01-12"
+  },
+  "auco-0115": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-01-14"
+  },
+  "auco-0116": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-01-15"
+  },
+  "auco-0117": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-01-19"
+  },
+  "auco-0118": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-01-21"
+  },
+  "auco-0119": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-01-22"
+  },
+  "auco-0120": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-01-22"
+  },
+  "auco-0121": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-01-23"
+  },
+  "auco-0122": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-01-27"
+  },
+  "auco-0123": {
+   "confirmed": true,
+   "code": "Superannuation Payable - 826",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Super guarantee, both employees",
+   "at": "2026-01-28"
+  },
+  "auco-0124": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-02-01"
+  },
+  "auco-0125": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-02-05"
+  },
+  "auco-0126": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-02-05"
+  },
+  "auco-0127": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-02-06"
+  },
+  "auco-0128": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-02-08"
+  },
+  "auco-0129": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-02-10"
+  },
+  "auco-0130": {
+   "confirmed": true,
+   "code": "Freight & Courier - 425",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Freight on a hot water unit, incl GST",
+   "at": "2026-02-11"
+  },
+  "auco-0131": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-02-12"
+  },
+  "auco-0132": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-02-12"
+  },
+  "auco-0133": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-02-14"
+  },
+  "auco-0134": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-02-19"
+  },
+  "auco-0135": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-02-19"
+  },
+  "auco-0136": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-02-19"
+  },
+  "auco-0137": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-02-21"
+  },
+  "auco-0138": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-02-23"
+  },
+  "auco-0139": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-02-27"
+  },
+  "auco-0140": {
+   "confirmed": true,
+   "code": "Income Tax Payable - 830",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-10 to 2025-12, PAYG instalment",
+   "at": "2026-02-27"
+  },
+  "auco-0141": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-10 to 2025-12, GST",
+   "at": "2026-02-27"
+  },
+  "auco-0142": {
+   "confirmed": true,
+   "code": "PAYG Withholdings Payable - 825",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2025-10 to 2025-12, PAYG withheld",
+   "at": "2026-02-27"
+  },
+  "auco-0143": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-03-01"
+  },
+  "auco-0144": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-03-05"
+  },
+  "auco-0145": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-03-05"
+  },
+  "auco-0146": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-03-06"
+  },
+  "auco-0147": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-03-08"
+  },
+  "auco-0148": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-03-10"
+  },
+  "auco-0149": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-03-12"
+  },
+  "auco-0150": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-03-12"
+  },
+  "auco-0151": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-03-14"
+  },
+  "auco-0152": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Van service and tyres, incl GST",
+   "at": "2026-03-18"
+  },
+  "auco-0153": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-03-19"
+  },
+  "auco-0154": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-03-19"
+  },
+  "auco-0155": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-03-19"
+  },
+  "auco-0156": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-03-21"
+  },
+  "auco-0157": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-03-23"
+  },
+  "auco-0158": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-03-27"
+  },
+  "auco-0159": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-04-01"
+  },
+  "auco-0160": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-02"
+  },
+  "auco-0161": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-02"
+  },
+  "auco-0162": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-04-06"
+  },
+  "auco-0163": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-04-08"
+  },
+  "auco-0164": {
+   "confirmed": true,
+   "code": "Consulting & Accounting - 412",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "BAS review, incl GST",
+   "at": "2026-04-09"
+  },
+  "auco-0165": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-04-10"
+  },
+  "auco-0166": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-04-12"
+  },
+  "auco-0167": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-04-14"
+  },
+  "auco-0168": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-04-16"
+  },
+  "auco-0169": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-16"
+  },
+  "auco-0170": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-16"
+  },
+  "auco-0171": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-04-19"
+  },
+  "auco-0172": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-04-21"
+  },
+  "auco-0173": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-04-23"
+  },
+  "auco-0174": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-04-27"
+  },
+  "auco-0175": {
+   "confirmed": true,
+   "code": "Superannuation Payable - 826",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Super guarantee, both employees",
+   "at": "2026-04-28"
+  },
+  "auco-0176": {
+   "confirmed": true,
+   "code": "Income Tax Payable - 830",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2026-01 to 2026-03, PAYG instalment",
+   "at": "2026-04-28"
+  },
+  "auco-0177": {
+   "confirmed": true,
+   "code": "PAYG Withholdings Payable - 825",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2026-01 to 2026-03, PAYG withheld",
+   "at": "2026-04-28"
+  },
+  "auco-0178": {
+   "confirmed": true,
+   "code": "GST - 820",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "BAS 2026-01 to 2026-03, GST",
+   "at": "2026-04-28"
+  },
+  "auco-0179": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-30"
+  },
+  "auco-0180": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-04-30"
+  },
+  "auco-0181": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-05-01"
+  },
+  "auco-0182": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-05-06"
+  },
+  "auco-0183": {
+   "confirmed": true,
+   "code": "Repairs and Maintenance - 473",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Drain machine service, incl GST",
+   "at": "2026-05-07"
+  },
+  "auco-0184": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-05-08"
+  },
+  "auco-0185": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-05-10"
+  },
+  "auco-0186": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-05-12"
+  },
+  "auco-0187": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-05-14"
+  },
+  "auco-0188": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-05-14"
+  },
+  "auco-0189": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-05-14"
+  },
+  "auco-0190": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-05-14"
+  },
+  "auco-0191": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-05-19"
+  },
+  "auco-0192": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-05-21"
+  },
+  "auco-0193": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-05-23"
+  },
+  "auco-0194": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-05-27"
+  },
+  "auco-0195": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-05-28"
+  },
+  "auco-0196": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-05-28"
+  },
+  "auco-0197": {
+   "confirmed": true,
+   "code": "Rent - 469",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Workshop rent, incl GST",
+   "at": "2026-06-01"
+  },
+  "auco-0199": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-06-06"
+  },
+  "auco-0200": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fittings and pipe, incl GST",
+   "at": "2026-06-08"
+  },
+  "auco-0201": {
+   "confirmed": true,
+   "code": "Telephone & Internet - 489",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Mobiles and internet, incl GST",
+   "at": "2026-06-10"
+  },
+  "auco-0202": {
+   "confirmed": true,
+   "code": "Motor Vehicle Expenses - 449",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Fuel for the vans, incl GST",
+   "at": "2026-06-11"
+  },
+  "auco-0203": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-06-11"
+  },
+  "auco-0204": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-06-11"
+  },
+  "auco-0205": {
+   "confirmed": true,
+   "code": "Subscriptions - 485",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Job management software, incl GST",
+   "at": "2026-06-12"
+  },
+  "auco-0206": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-06-14"
+  },
+  "auco-0208": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-06-19"
+  },
+  "auco-0210": {
+   "confirmed": true,
+   "code": "Cost of Goods Sold - 310",
+   "treatment": "standard",
+   "side": "purchases",
+   "note": "Hot water units and tapware, incl GST",
+   "at": "2026-06-21"
+  },
+  "auco-0211": {
+   "confirmed": true,
+   "code": "Sales - 200",
+   "treatment": "standard",
+   "side": "sales",
+   "note": "Plumbing work, incl GST",
+   "at": "2026-06-23"
+  },
+  "auco-0213": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-06-25"
+  },
+  "auco-0214": {
+   "confirmed": true,
+   "code": "Wages Payable - 804",
+   "treatment": "out-of-scope",
+   "side": "none",
+   "note": "Net pay",
+   "at": "2026-06-25"
+  },
+  "auco-0215": {
+   "confirmed": true,
+   "code": "Bank Fees - 404",
+   "treatment": "exempt",
+   "side": "purchases",
+   "note": "Bank fee",
+   "at": "2026-06-27"
+  },
+  "auco-0216": {
+   "confirmed": true,
+   "code": "Interest Income - 270",
+   "treatment": "exempt",
+   "side": "sales",
+   "note": "Business savings interest",
+   "at": "2026-06-30"
+  }
+ },
+ "splits": {},
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "plumbing",
+    "name": "Southern Cross Plumbing Pty Ltd",
+    "kind": "business",
+    "structure": "company",
+    "owners": [
+     {
+      "name": "Liam O'Brien",
+      "percent": 50
+     },
+     {
+      "name": "Grace O'Brien",
+      "percent": 50
+     }
+    ],
+    "gstRegistered": true,
+    "gstNumber": "37 615 284 903",
+    "address": "Unit 3, 41 Bell Park Road\nNorth Geelong VIC 3215",
+    "payTo": "BSB 063-000, account 9876 5432"
+   }
+  ],
+  "accounts": {
+   "200": "plumbing",
+   "270": "plumbing",
+   "310": "plumbing",
+   "404": "plumbing",
+   "412": "plumbing",
+   "416": "plumbing",
+   "425": "plumbing",
+   "433": "plumbing",
+   "449": "plumbing",
+   "461": "plumbing",
+   "469": "plumbing",
+   "473": "plumbing",
+   "477": "plumbing",
+   "478": "plumbing",
+   "485": "plumbing",
+   "489": "plumbing",
+   "497": "plumbing",
+   "610": "plumbing",
+   "750": "plumbing",
+   "751": "plumbing",
+   "800": "plumbing",
+   "804": "plumbing",
+   "820": "plumbing",
+   "825": "plumbing",
+   "826": "plumbing",
+   "830": "plumbing",
+   "960": "plumbing",
+   "970": "plumbing",
+   "980": "plumbing"
+  },
+  "banks": {
+   "auco-business": [
+    "plumbing"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "200",
+   "name": "Sales",
+   "type": "Revenue",
+   "taxCode": "GST on Income",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "270",
+   "name": "Interest Income",
+   "type": "Revenue",
+   "taxCode": "Input Taxed",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "310",
+   "name": "Cost of Goods Sold",
+   "type": "Direct Costs",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "404",
+   "name": "Bank Fees",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "412",
+   "name": "Consulting & Accounting",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "416",
+   "name": "Depreciation",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "425",
+   "name": "Freight & Courier",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "433",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "449",
+   "name": "Motor Vehicle Expenses",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "461",
+   "name": "Printing & Stationery",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "469",
+   "name": "Rent",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "473",
+   "name": "Repairs and Maintenance",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "477",
+   "name": "Wages and Salaries",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "478",
+   "name": "Superannuation",
+   "type": "Expense",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "485",
+   "name": "Subscriptions",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "489",
+   "name": "Telephone & Internet",
+   "type": "Expense",
+   "taxCode": "GST on Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "497",
+   "name": "Licences and registrations",
+   "type": "Expense",
+   "taxCode": "GST Free Expenses",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "exempt",
+   "entityKind": "business"
+  },
+  {
+   "code": "610",
+   "name": "Accounts Receivable",
+   "type": "Accounts Receivable",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "750",
+   "name": "Plant & Equipment",
+   "type": "Fixed Asset",
+   "taxCode": "GST on Capital",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "standard",
+   "entityKind": "business"
+  },
+  {
+   "code": "751",
+   "name": "Less Accumulated Depreciation on Plant & Equipment",
+   "type": "Fixed Asset",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "800",
+   "name": "Accounts Payable",
+   "type": "Accounts Payable",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "804",
+   "name": "Wages Payable",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "820",
+   "name": "GST",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "825",
+   "name": "PAYG Withholdings Payable",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "826",
+   "name": "Superannuation Payable",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "830",
+   "name": "Income Tax Payable",
+   "type": "Current Liability",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "960",
+   "name": "Retained Earnings",
+   "type": "Equity",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "970",
+   "name": "Share Capital",
+   "type": "Equity",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  },
+  {
+   "code": "980",
+   "name": "Dividends Paid",
+   "type": "Equity",
+   "taxCode": "BAS Excluded",
+   "description": "",
+   "entity": "Southern Cross Plumbing Pty Ltd",
+   "gstTreatment": "out-of-scope",
+   "entityKind": "business"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2025-07-01",
+  "source": "Last year's financial statements",
+  "accounts": {
+   "830": -312000,
+   "960": -3803000,
+   "970": -10000,
+   "auco-business": 4125000
+  }
+ },
+ "assets": [
+  {
+   "number": "FA-0001",
+   "name": "Drain inspection camera",
+   "type": "Plant & Equipment",
+   "status": "Registered",
+   "purchased": "2025-09-15",
+   "depreciationFrom": "2025-09-15",
+   "cost": 800000,
+   "rate": 40,
+   "method": "Diminishing Value",
+   "averaging": "Full Month",
+   "disposed": null
+  }
+ ],
+ "invoices": [
+  {
+   "number": "INV-1184",
+   "kind": "sales",
+   "contact": "Bellarine Homes",
+   "reference": "",
+   "issued": "2026-06-12",
+   "due": "2026-07-12",
+   "total": 902000,
+   "tax": 82000,
+   "paid": 0,
+   "outstanding": 902000,
+   "currency": "AUD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Rough-in, lot 14 Clifton Springs",
+     "accountCode": "200",
+     "taxType": "GST on Income",
+     "net": 820000,
+     "tax": 82000,
+     "gross": 902000
+    }
+   ]
+  },
+  {
+   "number": "INV-1187",
+   "kind": "sales",
+   "contact": "Corio Property Management",
+   "reference": "",
+   "issued": "2026-06-26",
+   "due": "2026-07-10",
+   "total": 138600,
+   "tax": 12600,
+   "paid": 0,
+   "outstanding": 138600,
+   "currency": "AUD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Burst pipe call-out, 3 Bay Street",
+     "accountCode": "200",
+     "taxType": "GST on Income",
+     "net": 126000,
+     "tax": 12600,
+     "gross": 138600
+    }
+   ]
+  }
+ ],
+ "contacts": [
+  {
+   "id": "c-bellarine-homes",
+   "name": "Bellarine Homes",
+   "kind": "customer",
+   "email": "accounts@bellarinehomes.example",
+   "terms": "30 days",
+   "address": "8 Moorabool Street\nGeelong VIC 3220"
+  },
+  {
+   "id": "c-corio-property-management",
+   "name": "Corio Property Management",
+   "kind": "customer",
+   "email": "maintenance@coriopm.example",
+   "terms": "14 days"
+  },
+  {
+   "id": "c-barwon-heads-bakery",
+   "name": "Barwon Heads Bakery",
+   "kind": "customer",
+   "email": "hello@bhbakery.example",
+   "terms": "7 days"
+  },
+  {
+   "id": "c-ocean-grove-dental",
+   "name": "Ocean Grove Dental",
+   "kind": "customer",
+   "email": "admin@oceangrovedental.example",
+   "terms": "14 days"
+  },
+  {
+   "id": "c-reece-plumbing",
+   "name": "Reece Plumbing",
+   "kind": "vendor",
+   "email": "geelong@reece.example",
+   "terms": "30 days EOM"
+  },
+  {
+   "id": "c-tradelink",
+   "name": "Tradelink",
+   "kind": "vendor",
+   "terms": "30 days EOM"
+  },
+  {
+   "id": "c-geelong-trade-units",
+   "name": "Geelong Trade Units",
+   "kind": "vendor",
+   "email": "leasing@geelongtradeunits.example"
+  },
+  {
+   "id": "c-barwon-accountants",
+   "name": "Barwon Accountants",
+   "kind": "vendor",
+   "email": "team@barwonaccountants.example",
+   "terms": "Due on receipt"
+  }
+ ],
+ "exampleAiSuggestions": [
+  {
+   "id": "auco-0198",
+   "code": "310",
+   "confidence": 0.72,
+   "because": "Hardware bought by a plumbing company: most likely parts for a job, with GST in it.",
+   "caution": "If it was a tool kept for use, it is an expense or an asset rather than a job's cost."
+  },
+  {
+   "id": "auco-0207",
+   "code": "485",
+   "confidence": 0.9,
+   "because": "Accounting software paid monthly: a subscription, with GST from an Australian supplier."
+  },
+  {
+   "id": "auco-0209",
+   "code": "200",
+   "confidence": 0.6,
+   "because": "Money in by Osko from a person: most likely a household paying for a job.",
+   "caution": "Match it to an invoice if one was sent; a sale's GST is one eleventh of it."
+  },
+  {
+   "id": "auco-0212",
+   "code": "433",
+   "confidence": 0.82,
+   "because": "WorkSafe's premium is workers compensation insurance, which an employer in Victoria must hold.",
+   "caution": "WorkSafe premiums carry GST; check the notice before claiming it."
+  }
+ ],
+ "auPayroll": {
+  "employees": [
+   {
+    "id": "emp-liam",
+    "name": "Liam O'Brien",
+    "taxFreeThreshold": true,
+    "tfnProvided": true,
+    "superFund": "AustralianSuper",
+    "payFrequency": "fortnightly",
+    "usualGross": 260000
+   },
+   {
+    "id": "emp-noah",
+    "name": "Noah Kelly",
+    "taxFreeThreshold": true,
+    "tfnProvided": true,
+    "studyLoan": true,
+    "superFund": "Cbus",
+    "payFrequency": "fortnightly",
+    "usualGross": 142000
+   }
+  ],
+  "payRuns": [
+   {
+    "id": "run-2025-07-10",
+    "payDate": "2025-07-10",
+    "periodStart": "2025-06-27",
+    "periodEnd": "2025-07-10",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-07-24",
+    "payDate": "2025-07-24",
+    "periodStart": "2025-07-11",
+    "periodEnd": "2025-07-24",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-08-07",
+    "payDate": "2025-08-07",
+    "periodStart": "2025-07-25",
+    "periodEnd": "2025-08-07",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-08-21",
+    "payDate": "2025-08-21",
+    "periodStart": "2025-08-08",
+    "periodEnd": "2025-08-21",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-09-04",
+    "payDate": "2025-09-04",
+    "periodStart": "2025-08-22",
+    "periodEnd": "2025-09-04",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-09-18",
+    "payDate": "2025-09-18",
+    "periodStart": "2025-09-05",
+    "periodEnd": "2025-09-18",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-10-02",
+    "payDate": "2025-10-02",
+    "periodStart": "2025-09-19",
+    "periodEnd": "2025-10-02",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-10-16",
+    "payDate": "2025-10-16",
+    "periodStart": "2025-10-03",
+    "periodEnd": "2025-10-16",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-10-30",
+    "payDate": "2025-10-30",
+    "periodStart": "2025-10-17",
+    "periodEnd": "2025-10-30",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-11-13",
+    "payDate": "2025-11-13",
+    "periodStart": "2025-10-31",
+    "periodEnd": "2025-11-13",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-11-27",
+    "payDate": "2025-11-27",
+    "periodStart": "2025-11-14",
+    "periodEnd": "2025-11-27",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-12-11",
+    "payDate": "2025-12-11",
+    "periodStart": "2025-11-28",
+    "periodEnd": "2025-12-11",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2025-12-25",
+    "payDate": "2025-12-25",
+    "periodStart": "2025-12-12",
+    "periodEnd": "2025-12-25",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-01-08",
+    "payDate": "2026-01-08",
+    "periodStart": "2025-12-26",
+    "periodEnd": "2026-01-08",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-01-22",
+    "payDate": "2026-01-22",
+    "periodStart": "2026-01-09",
+    "periodEnd": "2026-01-22",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-02-05",
+    "payDate": "2026-02-05",
+    "periodStart": "2026-01-23",
+    "periodEnd": "2026-02-05",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-02-19",
+    "payDate": "2026-02-19",
+    "periodStart": "2026-02-06",
+    "periodEnd": "2026-02-19",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-03-05",
+    "payDate": "2026-03-05",
+    "periodStart": "2026-02-20",
+    "periodEnd": "2026-03-05",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-03-19",
+    "payDate": "2026-03-19",
+    "periodStart": "2026-03-06",
+    "periodEnd": "2026-03-19",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-04-02",
+    "payDate": "2026-04-02",
+    "periodStart": "2026-03-20",
+    "periodEnd": "2026-04-02",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-04-16",
+    "payDate": "2026-04-16",
+    "periodStart": "2026-04-03",
+    "periodEnd": "2026-04-16",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-04-30",
+    "payDate": "2026-04-30",
+    "periodStart": "2026-04-17",
+    "periodEnd": "2026-04-30",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-05-14",
+    "payDate": "2026-05-14",
+    "periodStart": "2026-05-01",
+    "periodEnd": "2026-05-14",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-05-28",
+    "payDate": "2026-05-28",
+    "periodStart": "2026-05-15",
+    "periodEnd": "2026-05-28",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-06-11",
+    "payDate": "2026-06-11",
+    "periodStart": "2026-05-29",
+    "periodEnd": "2026-06-11",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   },
+   {
+    "id": "run-2026-06-25",
+    "payDate": "2026-06-25",
+    "periodStart": "2026-06-12",
+    "periodEnd": "2026-06-25",
+    "lines": [
+     {
+      "employeeId": "emp-liam",
+      "gross": 260000,
+      "payg": 48000,
+      "paygEstimated": true,
+      "superGuarantee": 31200,
+      "net": 212000
+     },
+     {
+      "employeeId": "emp-noah",
+      "gross": 142000,
+      "payg": 14000,
+      "paygEstimated": true,
+      "superGuarantee": 17040,
+      "net": 128000
+     }
+    ]
+   }
+  ]
+ },
+ "modules": {},
+ "taxExtras": [],
+ "singleEntityConfirmed": true,
+ "aiEnabled": true
+}

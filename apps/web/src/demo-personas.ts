@@ -5,6 +5,9 @@
  * visitor can see the parts of NZOSA it never shows -- a society's grants, a
  * trust's people and IR6, a person's own IR3 -- without having to know those
  * pages are there: each page only appears for books that use it.
+ *
+ * Listed United States first, then Australia, then New Zealand. Which one a
+ * first visit opens on is the visitor's time zone's, not the list's order.
  */
 
 export interface DemoPersona {
@@ -30,6 +33,51 @@ export function personaCountry(persona: DemoPersona | undefined): { id: string; 
 }
 
 export const DEMO_PERSONAS: readonly DemoPersona[] = [
+  {
+    id: "us-company",
+    label: "A landscaping company with staff (United States)",
+    shows: "A C corporation: payroll journals and the Form 941 worksheet, the corporation's Form 1120 tax and estimated payments, a dividend",
+    about:
+      "These demo books are invented and kept as United States books: Cedar Ridge Landscaping, Inc., a C corporation " +
+      "in Portland, Oregon, owned by two shareholders who both work in it and are paid through payroll, for January to September 2026.",
+    page: "reconcile",
+    ready: true,
+    country: "us",
+  },
+  {
+    id: "us",
+    label: "A US freelancer with a rental (United States)",
+    shows: "US books: Schedule C, Schedule E, 1099-NEC contractors, no sales tax",
+    about:
+      "These demo books are invented and kept as United States books: Ellis Design Studio, a sole proprietor " +
+      "design business, and a rented duplex, for January to September 2026.",
+    page: "reconcile",
+    ready: true,
+    country: "us",
+  },
+  {
+    id: "au-company",
+    label: "A plumbing company with staff (Australia)",
+    shows: "A Pty Ltd: the BAS with PAYG withheld and instalments, fortnightly pay with super, company tax, a franked dividend and plant depreciation",
+    about:
+      "These demo books are invented and kept as Australian books: Southern Cross Plumbing Pty Ltd in Geelong, " +
+      "registered for GST, with a director and an apprentice on fortnightly pay, for the year to 30 June 2026.",
+    page: "reconcile",
+    ready: true,
+    country: "au",
+  },
+  {
+    id: "au",
+    label: "A photographer with a rental (Australia)",
+    shows: "Australian books: the BAS (simpler or full, PAYG withheld and instalments), payroll with super, the rental property schedule and the tax estimate",
+    about:
+      "These demo books are invented and kept as Australian books: Wattle & Lens Photography, a sole trader " +
+      "registered for GST in Brisbane with a part-time assistant on monthly pay, and a rental house in Newcastle, " +
+      "for the year to 30 June 2026.",
+    page: "reconcile",
+    ready: true,
+    country: "au",
+  },
   {
     id: "",
     label: "A coffee roastery with two rentals",
@@ -69,29 +117,6 @@ export const DEMO_PERSONAS: readonly DemoPersona[] = [
     about: "These demo books are invented: Sam Taylor, a physiotherapist on a salary, with a home loan, some shares and a rental flat.",
     page: "personalyear",
     ready: true,
-  },
-  {
-    id: "us",
-    label: "A US freelancer with a rental (United States)",
-    shows: "US books: Schedule C, Schedule E, 1099-NEC contractors, no sales tax",
-    about:
-      "These demo books are invented and kept as United States books: Ellis Design Studio, a sole proprietor " +
-      "design business, and a rented duplex, for January to September 2026.",
-    page: "reconcile",
-    ready: true,
-    country: "us",
-  },
-  {
-    id: "au",
-    label: "A photographer with a rental (Australia)",
-    shows: "Australian books: the BAS (simpler or full, PAYG withheld and instalments), payroll with super, the rental property schedule and the tax estimate",
-    about:
-      "These demo books are invented and kept as Australian books: Wattle & Lens Photography, a sole trader " +
-      "registered for GST in Brisbane with a part-time assistant on monthly pay, and a rental house in Newcastle, " +
-      "for the year to 30 June 2026.",
-    page: "reconcile",
-    ready: true,
-    country: "au",
   },
 ];
 

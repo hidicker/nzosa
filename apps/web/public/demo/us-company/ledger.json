@@ -1,0 +1,7133 @@
+{
+ "version": 1,
+ "jurisdiction": "us",
+ "legitimateDuplicates": [],
+ "transactions": [
+  {
+   "id": "usco-0001",
+   "occurrence": 1,
+   "date": "2026-01-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 1
+   }
+  },
+  {
+   "id": "usco-0002",
+   "occurrence": 1,
+   "date": "2026-01-04",
+   "amount": 686000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 2
+   }
+  },
+  {
+   "id": "usco-0003",
+   "occurrence": 1,
+   "date": "2026-01-06",
+   "amount": -25200,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 3
+   }
+  },
+  {
+   "id": "usco-0004",
+   "occurrence": 1,
+   "date": "2026-01-08",
+   "amount": -130500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 4
+   }
+  },
+  {
+   "id": "usco-0005",
+   "occurrence": 1,
+   "date": "2026-01-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 5
+   }
+  },
+  {
+   "id": "usco-0006",
+   "occurrence": 1,
+   "date": "2026-01-12",
+   "amount": 343000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 6
+   }
+  },
+  {
+   "id": "usco-0007",
+   "occurrence": 1,
+   "date": "2026-01-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 7
+   }
+  },
+  {
+   "id": "usco-0008",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 8
+   }
+  },
+  {
+   "id": "usco-0009",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 9
+   }
+  },
+  {
+   "id": "usco-0010",
+   "occurrence": 1,
+   "date": "2026-01-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 10
+   }
+  },
+  {
+   "id": "usco-0011",
+   "occurrence": 1,
+   "date": "2026-01-19",
+   "amount": 161000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 11
+   }
+  },
+  {
+   "id": "usco-0012",
+   "occurrence": 1,
+   "date": "2026-01-20",
+   "amount": -348000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "General liability and auto, annual",
+   "code": "",
+   "reference": "",
+   "otherParty": "Northwest Business Insurance",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 12
+   }
+  },
+  {
+   "id": "usco-0013",
+   "occurrence": 1,
+   "date": "2026-01-22",
+   "amount": -42800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 13
+   }
+  },
+  {
+   "id": "usco-0014",
+   "occurrence": 1,
+   "date": "2026-01-26",
+   "amount": 342000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 14
+   }
+  },
+  {
+   "id": "usco-0015",
+   "occurrence": 1,
+   "date": "2026-01-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 15
+   }
+  },
+  {
+   "id": "usco-0016",
+   "occurrence": 1,
+   "date": "2026-01-31",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 16
+   }
+  },
+  {
+   "id": "usco-0017",
+   "occurrence": 1,
+   "date": "2026-01-31",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 17
+   }
+  },
+  {
+   "id": "usco-0018",
+   "occurrence": 1,
+   "date": "2026-02-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 18
+   }
+  },
+  {
+   "id": "usco-0019",
+   "occurrence": 1,
+   "date": "2026-02-04",
+   "amount": 686000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 19
+   }
+  },
+  {
+   "id": "usco-0020",
+   "occurrence": 1,
+   "date": "2026-02-06",
+   "amount": -25200,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 20
+   }
+  },
+  {
+   "id": "usco-0021",
+   "occurrence": 1,
+   "date": "2026-02-08",
+   "amount": -159500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 21
+   }
+  },
+  {
+   "id": "usco-0022",
+   "occurrence": 1,
+   "date": "2026-02-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 22
+   }
+  },
+  {
+   "id": "usco-0023",
+   "occurrence": 1,
+   "date": "2026-02-12",
+   "amount": 343000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 23
+   }
+  },
+  {
+   "id": "usco-0024",
+   "occurrence": 1,
+   "date": "2026-02-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 24
+   }
+  },
+  {
+   "id": "usco-0025",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 25
+   }
+  },
+  {
+   "id": "usco-0026",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-01",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 26
+   }
+  },
+  {
+   "id": "usco-0027",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 27
+   }
+  },
+  {
+   "id": "usco-0028",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 28
+   }
+  },
+  {
+   "id": "usco-0029",
+   "occurrence": 1,
+   "date": "2026-02-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-01",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 29
+   }
+  },
+  {
+   "id": "usco-0030",
+   "occurrence": 1,
+   "date": "2026-02-17",
+   "amount": -27500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "License renewal",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Landscape Contractors Board",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 30
+   }
+  },
+  {
+   "id": "usco-0031",
+   "occurrence": 1,
+   "date": "2026-02-19",
+   "amount": 161000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 31
+   }
+  },
+  {
+   "id": "usco-0032",
+   "occurrence": 1,
+   "date": "2026-02-22",
+   "amount": -52300,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 32
+   }
+  },
+  {
+   "id": "usco-0033",
+   "occurrence": 1,
+   "date": "2026-02-25",
+   "amount": -16230,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Office supplies",
+   "code": "",
+   "reference": "",
+   "otherParty": "Staples",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 33
+   }
+  },
+  {
+   "id": "usco-0034",
+   "occurrence": 1,
+   "date": "2026-02-26",
+   "amount": 418000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 34
+   }
+  },
+  {
+   "id": "usco-0035",
+   "occurrence": 1,
+   "date": "2026-02-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 35
+   }
+  },
+  {
+   "id": "usco-0036",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 36
+   }
+  },
+  {
+   "id": "usco-0037",
+   "occurrence": 1,
+   "date": "2026-02-28",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 37
+   }
+  },
+  {
+   "id": "usco-0038",
+   "occurrence": 1,
+   "date": "2026-03-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 38
+   }
+  },
+  {
+   "id": "usco-0039",
+   "occurrence": 1,
+   "date": "2026-03-04",
+   "amount": 882000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 39
+   }
+  },
+  {
+   "id": "usco-0040",
+   "occurrence": 1,
+   "date": "2026-03-06",
+   "amount": -37800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 40
+   }
+  },
+  {
+   "id": "usco-0041",
+   "occurrence": 1,
+   "date": "2026-03-08",
+   "amount": -261000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 41
+   }
+  },
+  {
+   "id": "usco-0042",
+   "occurrence": 1,
+   "date": "2026-03-09",
+   "amount": -120000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "2025 Form 1120 and Oregon return",
+   "code": "",
+   "reference": "",
+   "otherParty": "Hill & Park CPA",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 42
+   }
+  },
+  {
+   "id": "usco-0043",
+   "occurrence": 1,
+   "date": "2026-03-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 43
+   }
+  },
+  {
+   "id": "usco-0044",
+   "occurrence": 1,
+   "date": "2026-03-12",
+   "amount": 441000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 44
+   }
+  },
+  {
+   "id": "usco-0045",
+   "occurrence": 1,
+   "date": "2026-03-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 45
+   }
+  },
+  {
+   "id": "usco-0046",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 46
+   }
+  },
+  {
+   "id": "usco-0047",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-02",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 47
+   }
+  },
+  {
+   "id": "usco-0048",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 48
+   }
+  },
+  {
+   "id": "usco-0049",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 49
+   }
+  },
+  {
+   "id": "usco-0050",
+   "occurrence": 1,
+   "date": "2026-03-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-02",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 50
+   }
+  },
+  {
+   "id": "usco-0051",
+   "occurrence": 1,
+   "date": "2026-03-19",
+   "amount": 207000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 51
+   }
+  },
+  {
+   "id": "usco-0052",
+   "occurrence": 1,
+   "date": "2026-03-22",
+   "amount": -85500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 52
+   }
+  },
+  {
+   "id": "usco-0053",
+   "occurrence": 1,
+   "date": "2026-03-24",
+   "amount": -64000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Spring advertising",
+   "code": "",
+   "reference": "",
+   "otherParty": "Nextdoor Ads",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 53
+   }
+  },
+  {
+   "id": "usco-0054",
+   "occurrence": 1,
+   "date": "2026-03-26",
+   "amount": 684000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 54
+   }
+  },
+  {
+   "id": "usco-0055",
+   "occurrence": 1,
+   "date": "2026-03-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 55
+   }
+  },
+  {
+   "id": "usco-0056",
+   "occurrence": 1,
+   "date": "2026-03-31",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 56
+   }
+  },
+  {
+   "id": "usco-0057",
+   "occurrence": 1,
+   "date": "2026-03-31",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 57
+   }
+  },
+  {
+   "id": "usco-0058",
+   "occurrence": 1,
+   "date": "2026-03-31",
+   "amount": -1180000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Commercial zero-turn mower",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Small Engine",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 58
+   }
+  },
+  {
+   "id": "usco-0059",
+   "occurrence": 1,
+   "date": "2026-04-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 59
+   }
+  },
+  {
+   "id": "usco-0060",
+   "occurrence": 1,
+   "date": "2026-04-04",
+   "amount": 1225000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 60
+   }
+  },
+  {
+   "id": "usco-0061",
+   "occurrence": 1,
+   "date": "2026-04-06",
+   "amount": -52500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 61
+   }
+  },
+  {
+   "id": "usco-0062",
+   "occurrence": 1,
+   "date": "2026-04-07",
+   "amount": -91840,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Mower blades and service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Small Engine",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 62
+   }
+  },
+  {
+   "id": "usco-0063",
+   "occurrence": 1,
+   "date": "2026-04-08",
+   "amount": -362500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 63
+   }
+  },
+  {
+   "id": "usco-0064",
+   "occurrence": 1,
+   "date": "2026-04-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 64
+   }
+  },
+  {
+   "id": "usco-0065",
+   "occurrence": 1,
+   "date": "2026-04-12",
+   "amount": 612500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 65
+   }
+  },
+  {
+   "id": "usco-0066",
+   "occurrence": 1,
+   "date": "2026-04-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 66
+   }
+  },
+  {
+   "id": "usco-0067",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 67
+   }
+  },
+  {
+   "id": "usco-0068",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-03",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 68
+   }
+  },
+  {
+   "id": "usco-0069",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 69
+   }
+  },
+  {
+   "id": "usco-0070",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -214000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "2025 Form 1120 balance due",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 70
+   }
+  },
+  {
+   "id": "usco-0071",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 71
+   }
+  },
+  {
+   "id": "usco-0072",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "2026 estimated tax, 1st",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 72
+   }
+  },
+  {
+   "id": "usco-0073",
+   "occurrence": 1,
+   "date": "2026-04-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-03",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 73
+   }
+  },
+  {
+   "id": "usco-0074",
+   "occurrence": 1,
+   "date": "2026-04-19",
+   "amount": 287500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 74
+   }
+  },
+  {
+   "id": "usco-0075",
+   "occurrence": 1,
+   "date": "2026-04-22",
+   "amount": -118800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 75
+   }
+  },
+  {
+   "id": "usco-0076",
+   "occurrence": 1,
+   "date": "2026-04-26",
+   "amount": 950000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 76
+   }
+  },
+  {
+   "id": "usco-0077",
+   "occurrence": 1,
+   "date": "2026-04-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 77
+   }
+  },
+  {
+   "id": "usco-0078",
+   "occurrence": 1,
+   "date": "2026-04-30",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 78
+   }
+  },
+  {
+   "id": "usco-0079",
+   "occurrence": 1,
+   "date": "2026-04-30",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 79
+   }
+  },
+  {
+   "id": "usco-0080",
+   "occurrence": 1,
+   "date": "2026-05-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 80
+   }
+  },
+  {
+   "id": "usco-0081",
+   "occurrence": 1,
+   "date": "2026-05-04",
+   "amount": 1372000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 81
+   }
+  },
+  {
+   "id": "usco-0082",
+   "occurrence": 1,
+   "date": "2026-05-06",
+   "amount": -58800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 82
+   }
+  },
+  {
+   "id": "usco-0083",
+   "occurrence": 1,
+   "date": "2026-05-08",
+   "amount": -406000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 83
+   }
+  },
+  {
+   "id": "usco-0084",
+   "occurrence": 1,
+   "date": "2026-05-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 84
+   }
+  },
+  {
+   "id": "usco-0085",
+   "occurrence": 1,
+   "date": "2026-05-12",
+   "amount": 686000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 85
+   }
+  },
+  {
+   "id": "usco-0086",
+   "occurrence": 1,
+   "date": "2026-05-13",
+   "amount": -220000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Sprinkler install, subcontracted",
+   "code": "",
+   "reference": "",
+   "otherParty": "Green Thumb Irrigation",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 86
+   }
+  },
+  {
+   "id": "usco-0087",
+   "occurrence": 1,
+   "date": "2026-05-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 87
+   }
+  },
+  {
+   "id": "usco-0088",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 88
+   }
+  },
+  {
+   "id": "usco-0089",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-04",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 89
+   }
+  },
+  {
+   "id": "usco-0090",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 90
+   }
+  },
+  {
+   "id": "usco-0091",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 91
+   }
+  },
+  {
+   "id": "usco-0092",
+   "occurrence": 1,
+   "date": "2026-05-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-04",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 92
+   }
+  },
+  {
+   "id": "usco-0093",
+   "occurrence": 1,
+   "date": "2026-05-19",
+   "amount": 322000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 93
+   }
+  },
+  {
+   "id": "usco-0094",
+   "occurrence": 1,
+   "date": "2026-05-22",
+   "amount": -133000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 94
+   }
+  },
+  {
+   "id": "usco-0095",
+   "occurrence": 1,
+   "date": "2026-05-26",
+   "amount": 1064000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 95
+   }
+  },
+  {
+   "id": "usco-0096",
+   "occurrence": 1,
+   "date": "2026-05-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 96
+   }
+  },
+  {
+   "id": "usco-0097",
+   "occurrence": 1,
+   "date": "2026-05-31",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 97
+   }
+  },
+  {
+   "id": "usco-0098",
+   "occurrence": 1,
+   "date": "2026-05-31",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 98
+   }
+  },
+  {
+   "id": "usco-0099",
+   "occurrence": 1,
+   "date": "2026-06-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 99
+   }
+  },
+  {
+   "id": "usco-0100",
+   "occurrence": 1,
+   "date": "2026-06-04",
+   "amount": 1372000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 100
+   }
+  },
+  {
+   "id": "usco-0101",
+   "occurrence": 1,
+   "date": "2026-06-06",
+   "amount": -58800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 101
+   }
+  },
+  {
+   "id": "usco-0102",
+   "occurrence": 1,
+   "date": "2026-06-08",
+   "amount": -406000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 102
+   }
+  },
+  {
+   "id": "usco-0103",
+   "occurrence": 1,
+   "date": "2026-06-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 103
+   }
+  },
+  {
+   "id": "usco-0104",
+   "occurrence": 1,
+   "date": "2026-06-12",
+   "amount": 686000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 104
+   }
+  },
+  {
+   "id": "usco-0105",
+   "occurrence": 1,
+   "date": "2026-06-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 105
+   }
+  },
+  {
+   "id": "usco-0106",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 106
+   }
+  },
+  {
+   "id": "usco-0107",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-05",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 107
+   }
+  },
+  {
+   "id": "usco-0108",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 108
+   }
+  },
+  {
+   "id": "usco-0109",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 109
+   }
+  },
+  {
+   "id": "usco-0110",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "2026 estimated tax, 2nd",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 110
+   }
+  },
+  {
+   "id": "usco-0111",
+   "occurrence": 1,
+   "date": "2026-06-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-05",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 111
+   }
+  },
+  {
+   "id": "usco-0112",
+   "occurrence": 1,
+   "date": "2026-06-19",
+   "amount": 322000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 112
+   }
+  },
+  {
+   "id": "usco-0113",
+   "occurrence": 1,
+   "date": "2026-06-22",
+   "amount": -133000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 113
+   }
+  },
+  {
+   "id": "usco-0114",
+   "occurrence": 1,
+   "date": "2026-06-26",
+   "amount": 1064000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 114
+   }
+  },
+  {
+   "id": "usco-0115",
+   "occurrence": 1,
+   "date": "2026-06-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 115
+   }
+  },
+  {
+   "id": "usco-0116",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": 3840,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Savings interest",
+   "code": "",
+   "reference": "",
+   "otherParty": "Interest",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 116
+   }
+  },
+  {
+   "id": "usco-0117",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": -48675,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Trimmer repair",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Small Engine",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 117
+   }
+  },
+  {
+   "id": "usco-0118",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 118
+   }
+  },
+  {
+   "id": "usco-0119",
+   "occurrence": 1,
+   "date": "2026-06-30",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 119
+   }
+  },
+  {
+   "id": "usco-0120",
+   "occurrence": 1,
+   "date": "2026-07-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 120
+   }
+  },
+  {
+   "id": "usco-0121",
+   "occurrence": 1,
+   "date": "2026-07-04",
+   "amount": 1274000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 121
+   }
+  },
+  {
+   "id": "usco-0122",
+   "occurrence": 1,
+   "date": "2026-07-06",
+   "amount": -54600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 122
+   }
+  },
+  {
+   "id": "usco-0123",
+   "occurrence": 1,
+   "date": "2026-07-08",
+   "amount": -377000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 123
+   }
+  },
+  {
+   "id": "usco-0124",
+   "occurrence": 1,
+   "date": "2026-07-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 124
+   }
+  },
+  {
+   "id": "usco-0125",
+   "occurrence": 1,
+   "date": "2026-07-10",
+   "amount": -600000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Dividend",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 125
+   }
+  },
+  {
+   "id": "usco-0126",
+   "occurrence": 1,
+   "date": "2026-07-10",
+   "amount": -900000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Dividend",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 126
+   }
+  },
+  {
+   "id": "usco-0127",
+   "occurrence": 1,
+   "date": "2026-07-12",
+   "amount": 637000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 127
+   }
+  },
+  {
+   "id": "usco-0128",
+   "occurrence": 1,
+   "date": "2026-07-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 128
+   }
+  },
+  {
+   "id": "usco-0129",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 129
+   }
+  },
+  {
+   "id": "usco-0130",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-06",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 130
+   }
+  },
+  {
+   "id": "usco-0131",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 131
+   }
+  },
+  {
+   "id": "usco-0132",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 132
+   }
+  },
+  {
+   "id": "usco-0133",
+   "occurrence": 1,
+   "date": "2026-07-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-06",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 133
+   }
+  },
+  {
+   "id": "usco-0134",
+   "occurrence": 1,
+   "date": "2026-07-19",
+   "amount": 299000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 134
+   }
+  },
+  {
+   "id": "usco-0135",
+   "occurrence": 1,
+   "date": "2026-07-21",
+   "amount": -165000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Drip system, subcontracted",
+   "code": "",
+   "reference": "",
+   "otherParty": "Green Thumb Irrigation",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 135
+   }
+  },
+  {
+   "id": "usco-0136",
+   "occurrence": 1,
+   "date": "2026-07-22",
+   "amount": -123500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 136
+   }
+  },
+  {
+   "id": "usco-0137",
+   "occurrence": 1,
+   "date": "2026-07-26",
+   "amount": 988000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 137
+   }
+  },
+  {
+   "id": "usco-0138",
+   "occurrence": 1,
+   "date": "2026-07-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 138
+   }
+  },
+  {
+   "id": "usco-0139",
+   "occurrence": 1,
+   "date": "2026-07-31",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 139
+   }
+  },
+  {
+   "id": "usco-0140",
+   "occurrence": 1,
+   "date": "2026-07-31",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 140
+   }
+  },
+  {
+   "id": "usco-0141",
+   "occurrence": 1,
+   "date": "2026-08-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 141
+   }
+  },
+  {
+   "id": "usco-0142",
+   "occurrence": 1,
+   "date": "2026-08-04",
+   "amount": 1176000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 142
+   }
+  },
+  {
+   "id": "usco-0143",
+   "occurrence": 1,
+   "date": "2026-08-06",
+   "amount": -50400,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 143
+   }
+  },
+  {
+   "id": "usco-0144",
+   "occurrence": 1,
+   "date": "2026-08-08",
+   "amount": -348000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 144
+   }
+  },
+  {
+   "id": "usco-0145",
+   "occurrence": 1,
+   "date": "2026-08-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 145
+   }
+  },
+  {
+   "id": "usco-0146",
+   "occurrence": 1,
+   "date": "2026-08-12",
+   "amount": 588000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 146
+   }
+  },
+  {
+   "id": "usco-0147",
+   "occurrence": 1,
+   "date": "2026-08-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 147
+   }
+  },
+  {
+   "id": "usco-0148",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 148
+   }
+  },
+  {
+   "id": "usco-0149",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-07",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 149
+   }
+  },
+  {
+   "id": "usco-0150",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 150
+   }
+  },
+  {
+   "id": "usco-0151",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 151
+   }
+  },
+  {
+   "id": "usco-0152",
+   "occurrence": 1,
+   "date": "2026-08-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-07",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 152
+   }
+  },
+  {
+   "id": "usco-0153",
+   "occurrence": 1,
+   "date": "2026-08-19",
+   "amount": 276000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 153
+   }
+  },
+  {
+   "id": "usco-0154",
+   "occurrence": 1,
+   "date": "2026-08-22",
+   "amount": -114000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 154
+   }
+  },
+  {
+   "id": "usco-0155",
+   "occurrence": 1,
+   "date": "2026-08-26",
+   "amount": 912000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 155
+   }
+  },
+  {
+   "id": "usco-0156",
+   "occurrence": 1,
+   "date": "2026-08-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 156
+   }
+  },
+  {
+   "id": "usco-0157",
+   "occurrence": 1,
+   "date": "2026-08-31",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 157
+   }
+  },
+  {
+   "id": "usco-0158",
+   "occurrence": 1,
+   "date": "2026-08-31",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 158
+   }
+  },
+  {
+   "id": "usco-0159",
+   "occurrence": 1,
+   "date": "2026-09-01",
+   "amount": -185000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Yard and shop rent",
+   "code": "",
+   "reference": "",
+   "otherParty": "Columbia Yard Rentals",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 159
+   }
+  },
+  {
+   "id": "usco-0160",
+   "occurrence": 1,
+   "date": "2026-09-04",
+   "amount": 1029000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Riverside HOA",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 160
+   }
+  },
+  {
+   "id": "usco-0161",
+   "occurrence": 1,
+   "date": "2026-09-06",
+   "amount": -44100,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Truck and mower fuel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Chevron",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 161
+   }
+  },
+  {
+   "id": "usco-0162",
+   "occurrence": 1,
+   "date": "2026-09-08",
+   "amount": -21240,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Home Depot",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 162
+   }
+  },
+  {
+   "id": "usco-0163",
+   "occurrence": 1,
+   "date": "2026-09-08",
+   "amount": -304500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Plants, mulch and soil",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland Nursery Supply",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 163
+   }
+  },
+  {
+   "id": "usco-0164",
+   "occurrence": 1,
+   "date": "2026-09-10",
+   "amount": -5900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Scheduling and invoicing",
+   "code": "",
+   "reference": "",
+   "otherParty": "Jobber",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 164
+   }
+  },
+  {
+   "id": "usco-0165",
+   "occurrence": 1,
+   "date": "2026-09-12",
+   "amount": 514500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Courtyard and planters",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pearl District Lofts",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 165
+   }
+  },
+  {
+   "id": "usco-0166",
+   "occurrence": 1,
+   "date": "2026-09-14",
+   "amount": -8900,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "QuickBooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 166
+   }
+  },
+  {
+   "id": "usco-0167",
+   "occurrence": 1,
+   "date": "2026-09-14",
+   "amount": -18500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Shop power",
+   "code": "",
+   "reference": "",
+   "otherParty": "Portland General Electric",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 167
+   }
+  },
+  {
+   "id": "usco-0168",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -14000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Payroll service",
+   "code": "",
+   "reference": "",
+   "otherParty": "Gusto",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 168
+   }
+  },
+  {
+   "id": "usco-0169",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -94600,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Withholding for 2026-08",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon Department of Revenue",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 169
+   }
+  },
+  {
+   "id": "usco-0170",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 170
+   }
+  },
+  {
+   "id": "usco-0171",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 171
+   }
+  },
+  {
+   "id": "usco-0172",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -300000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "2026 estimated tax, 3rd",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 172
+   }
+  },
+  {
+   "id": "usco-0173",
+   "occurrence": 1,
+   "date": "2026-09-15",
+   "amount": -334380,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Form 941 deposit for 2026-08",
+   "code": "",
+   "reference": "",
+   "otherParty": "IRS EFTPS",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 173
+   }
+  },
+  {
+   "id": "usco-0174",
+   "occurrence": 1,
+   "date": "2026-09-17",
+   "amount": 125000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Zelle from M Chen",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 174
+   }
+  },
+  {
+   "id": "usco-0175",
+   "occurrence": 1,
+   "date": "2026-09-19",
+   "amount": 241500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Grounds maintenance",
+   "code": "",
+   "reference": "",
+   "otherParty": "Willamette Dental Group",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 175
+   }
+  },
+  {
+   "id": "usco-0176",
+   "occurrence": 1,
+   "date": "2026-09-22",
+   "amount": -99800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Pavers and gravel",
+   "code": "",
+   "reference": "",
+   "otherParty": "Pacific Stone & Pavers",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 176
+   }
+  },
+  {
+   "id": "usco-0177",
+   "occurrence": 1,
+   "date": "2026-09-23",
+   "amount": -31800,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "",
+   "code": "",
+   "reference": "",
+   "otherParty": "Oregon DMV",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 177
+   }
+  },
+  {
+   "id": "usco-0178",
+   "occurrence": 1,
+   "date": "2026-09-26",
+   "amount": 798000,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Residential design and install",
+   "code": "",
+   "reference": "",
+   "otherParty": "Square deposit",
+   "origin": "",
+   "type": "CREDIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 178
+   }
+  },
+  {
+   "id": "usco-0179",
+   "occurrence": 1,
+   "date": "2026-09-27",
+   "amount": -1500,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Bank charge",
+   "code": "",
+   "reference": "",
+   "otherParty": "Monthly service charge",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 179
+   }
+  },
+  {
+   "id": "usco-0180",
+   "occurrence": 1,
+   "date": "2026-09-30",
+   "amount": -208480,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Luis Ortega",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 180
+   }
+  },
+  {
+   "id": "usco-0181",
+   "occurrence": 1,
+   "date": "2026-09-30",
+   "amount": -255225,
+   "currency": "USD",
+   "serial": "",
+   "trn": "",
+   "particulars": "Net pay",
+   "code": "",
+   "reference": "",
+   "otherParty": "Dana Brooks",
+   "origin": "",
+   "type": "DEBIT",
+   "batch": "",
+   "otherPartyAccount": "",
+   "account": "usco-business",
+   "extras": {
+    "accountLabel": "Business Checking ••6290"
+   },
+   "source": {
+    "importer": "invented",
+    "file": "us-company-demo.csv",
+    "line": 181
+   }
+  }
+ ],
+ "overrides": {
+  "usco-0001": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-01-01"
+  },
+  "usco-0002": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-01-04"
+  },
+  "usco-0003": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-01-06"
+  },
+  "usco-0004": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-01-08"
+  },
+  "usco-0005": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-01-10"
+  },
+  "usco-0006": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-01-12"
+  },
+  "usco-0007": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-01-14"
+  },
+  "usco-0008": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-01-15"
+  },
+  "usco-0009": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-01-15"
+  },
+  "usco-0010": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-01-15"
+  },
+  "usco-0011": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-01-19"
+  },
+  "usco-0012": {
+   "confirmed": true,
+   "code": "Insurance - 6050",
+   "note": "General liability and auto, annual",
+   "at": "2026-01-20"
+  },
+  "usco-0013": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-01-22"
+  },
+  "usco-0014": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-01-26"
+  },
+  "usco-0015": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-01-27"
+  },
+  "usco-0016": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-01-31"
+  },
+  "usco-0017": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-01-31"
+  },
+  "usco-0018": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-02-01"
+  },
+  "usco-0019": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-02-04"
+  },
+  "usco-0020": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-02-06"
+  },
+  "usco-0021": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-02-08"
+  },
+  "usco-0022": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-02-10"
+  },
+  "usco-0023": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-02-12"
+  },
+  "usco-0024": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-02-14"
+  },
+  "usco-0025": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-02-15"
+  },
+  "usco-0026": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-01",
+   "at": "2026-02-15"
+  },
+  "usco-0027": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-02-15"
+  },
+  "usco-0028": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-02-15"
+  },
+  "usco-0030": {
+   "confirmed": true,
+   "code": "Licenses and permits - 6110",
+   "note": "License renewal",
+   "at": "2026-02-17"
+  },
+  "usco-0031": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-02-19"
+  },
+  "usco-0032": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-02-22"
+  },
+  "usco-0033": {
+   "confirmed": true,
+   "code": "Office expense - 6090",
+   "note": "Office supplies",
+   "at": "2026-02-25"
+  },
+  "usco-0034": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-02-26"
+  },
+  "usco-0035": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-02-27"
+  },
+  "usco-0036": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-02-28"
+  },
+  "usco-0037": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-02-28"
+  },
+  "usco-0038": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-03-01"
+  },
+  "usco-0039": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-03-04"
+  },
+  "usco-0040": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-03-06"
+  },
+  "usco-0041": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-03-08"
+  },
+  "usco-0042": {
+   "confirmed": true,
+   "code": "Legal and professional services - 6080",
+   "note": "2025 Form 1120 and Oregon return",
+   "at": "2026-03-09"
+  },
+  "usco-0043": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-03-10"
+  },
+  "usco-0044": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-03-12"
+  },
+  "usco-0045": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-03-14"
+  },
+  "usco-0046": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-03-15"
+  },
+  "usco-0047": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-02",
+   "at": "2026-03-15"
+  },
+  "usco-0048": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-03-15"
+  },
+  "usco-0049": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-03-15"
+  },
+  "usco-0051": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-03-19"
+  },
+  "usco-0052": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-03-22"
+  },
+  "usco-0053": {
+   "confirmed": true,
+   "code": "Advertising - 6000",
+   "note": "Spring advertising",
+   "at": "2026-03-24"
+  },
+  "usco-0054": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-03-26"
+  },
+  "usco-0055": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-03-27"
+  },
+  "usco-0056": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-03-31"
+  },
+  "usco-0057": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-03-31"
+  },
+  "usco-0058": {
+   "confirmed": true,
+   "code": "Equipment - 1500",
+   "note": "Commercial zero-turn mower",
+   "at": "2026-03-31"
+  },
+  "usco-0059": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-04-01"
+  },
+  "usco-0060": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-04-04"
+  },
+  "usco-0061": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-04-06"
+  },
+  "usco-0062": {
+   "confirmed": true,
+   "code": "Equipment repairs - 6020",
+   "note": "Mower blades and service",
+   "at": "2026-04-07"
+  },
+  "usco-0063": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-04-08"
+  },
+  "usco-0064": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-04-10"
+  },
+  "usco-0065": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-04-12"
+  },
+  "usco-0066": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-04-14"
+  },
+  "usco-0067": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-04-15"
+  },
+  "usco-0068": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-03",
+   "at": "2026-04-15"
+  },
+  "usco-0069": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-04-15"
+  },
+  "usco-0070": {
+   "confirmed": true,
+   "code": "Corporate income tax payable - 2200",
+   "note": "2025 Form 1120 balance due",
+   "at": "2026-04-15"
+  },
+  "usco-0071": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-04-15"
+  },
+  "usco-0072": {
+   "confirmed": true,
+   "code": "Corporate income tax payable - 2200",
+   "note": "2026 estimated tax, 1st",
+   "at": "2026-04-15"
+  },
+  "usco-0074": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-04-19"
+  },
+  "usco-0075": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-04-22"
+  },
+  "usco-0076": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-04-26"
+  },
+  "usco-0077": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-04-27"
+  },
+  "usco-0078": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-04-30"
+  },
+  "usco-0079": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-04-30"
+  },
+  "usco-0080": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-05-01"
+  },
+  "usco-0081": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-05-04"
+  },
+  "usco-0082": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-05-06"
+  },
+  "usco-0083": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-05-08"
+  },
+  "usco-0084": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-05-10"
+  },
+  "usco-0085": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-05-12"
+  },
+  "usco-0086": {
+   "confirmed": true,
+   "code": "Subcontractors - 5100",
+   "note": "Sprinkler install, subcontracted",
+   "at": "2026-05-13"
+  },
+  "usco-0087": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-05-14"
+  },
+  "usco-0088": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-05-15"
+  },
+  "usco-0089": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-04",
+   "at": "2026-05-15"
+  },
+  "usco-0090": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-05-15"
+  },
+  "usco-0091": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-05-15"
+  },
+  "usco-0093": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-05-19"
+  },
+  "usco-0094": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-05-22"
+  },
+  "usco-0095": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-05-26"
+  },
+  "usco-0096": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-05-27"
+  },
+  "usco-0097": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-05-31"
+  },
+  "usco-0098": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-05-31"
+  },
+  "usco-0099": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-06-01"
+  },
+  "usco-0100": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-06-04"
+  },
+  "usco-0101": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-06-06"
+  },
+  "usco-0102": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-06-08"
+  },
+  "usco-0103": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-06-10"
+  },
+  "usco-0104": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-06-12"
+  },
+  "usco-0105": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-06-14"
+  },
+  "usco-0106": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-06-15"
+  },
+  "usco-0107": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-05",
+   "at": "2026-06-15"
+  },
+  "usco-0108": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-06-15"
+  },
+  "usco-0109": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-06-15"
+  },
+  "usco-0110": {
+   "confirmed": true,
+   "code": "Corporate income tax payable - 2200",
+   "note": "2026 estimated tax, 2nd",
+   "at": "2026-06-15"
+  },
+  "usco-0112": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-06-19"
+  },
+  "usco-0113": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-06-22"
+  },
+  "usco-0114": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-06-26"
+  },
+  "usco-0115": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-06-27"
+  },
+  "usco-0116": {
+   "confirmed": true,
+   "code": "Interest income - 4900",
+   "note": "Savings interest",
+   "at": "2026-06-30"
+  },
+  "usco-0117": {
+   "confirmed": true,
+   "code": "Equipment repairs - 6020",
+   "note": "Trimmer repair",
+   "at": "2026-06-30"
+  },
+  "usco-0118": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-06-30"
+  },
+  "usco-0119": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-06-30"
+  },
+  "usco-0120": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-07-01"
+  },
+  "usco-0121": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-07-04"
+  },
+  "usco-0122": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-07-06"
+  },
+  "usco-0123": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-07-08"
+  },
+  "usco-0124": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-07-10"
+  },
+  "usco-0125": {
+   "confirmed": true,
+   "code": "Dividends paid - 3200",
+   "note": "Dividend",
+   "at": "2026-07-10"
+  },
+  "usco-0126": {
+   "confirmed": true,
+   "code": "Dividends paid - 3200",
+   "note": "Dividend",
+   "at": "2026-07-10"
+  },
+  "usco-0127": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-07-12"
+  },
+  "usco-0128": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-07-14"
+  },
+  "usco-0129": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-07-15"
+  },
+  "usco-0130": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-06",
+   "at": "2026-07-15"
+  },
+  "usco-0131": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-07-15"
+  },
+  "usco-0132": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-07-15"
+  },
+  "usco-0134": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-07-19"
+  },
+  "usco-0135": {
+   "confirmed": true,
+   "code": "Subcontractors - 5100",
+   "note": "Drip system, subcontracted",
+   "at": "2026-07-21"
+  },
+  "usco-0136": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-07-22"
+  },
+  "usco-0137": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-07-26"
+  },
+  "usco-0138": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-07-27"
+  },
+  "usco-0139": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-07-31"
+  },
+  "usco-0140": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-07-31"
+  },
+  "usco-0141": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-08-01"
+  },
+  "usco-0142": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-08-04"
+  },
+  "usco-0143": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-08-06"
+  },
+  "usco-0144": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-08-08"
+  },
+  "usco-0145": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-08-10"
+  },
+  "usco-0146": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-08-12"
+  },
+  "usco-0147": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-08-14"
+  },
+  "usco-0148": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-08-15"
+  },
+  "usco-0149": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-07",
+   "at": "2026-08-15"
+  },
+  "usco-0150": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-08-15"
+  },
+  "usco-0151": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-08-15"
+  },
+  "usco-0153": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-08-19"
+  },
+  "usco-0154": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-08-22"
+  },
+  "usco-0155": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-08-26"
+  },
+  "usco-0156": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-08-27"
+  },
+  "usco-0157": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-08-31"
+  },
+  "usco-0158": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-08-31"
+  },
+  "usco-0159": {
+   "confirmed": true,
+   "code": "Rent - 6100",
+   "note": "Yard and shop rent",
+   "at": "2026-09-01"
+  },
+  "usco-0160": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-09-04"
+  },
+  "usco-0161": {
+   "confirmed": true,
+   "code": "Truck and equipment fuel - 6010",
+   "note": "Truck and mower fuel",
+   "at": "2026-09-06"
+  },
+  "usco-0163": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Plants, mulch and soil",
+   "at": "2026-09-08"
+  },
+  "usco-0164": {
+   "confirmed": true,
+   "code": "Software and subscriptions - 6095",
+   "note": "Scheduling and invoicing",
+   "at": "2026-09-10"
+  },
+  "usco-0165": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Courtyard and planters",
+   "at": "2026-09-12"
+  },
+  "usco-0167": {
+   "confirmed": true,
+   "code": "Utilities - 6170",
+   "note": "Shop power",
+   "at": "2026-09-14"
+  },
+  "usco-0168": {
+   "confirmed": true,
+   "code": "Payroll service fees - 6320",
+   "note": "Payroll service",
+   "at": "2026-09-15"
+  },
+  "usco-0169": {
+   "confirmed": true,
+   "code": "Oregon withholding payable - 2150",
+   "note": "Withholding for 2026-08",
+   "at": "2026-09-15"
+  },
+  "usco-0170": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-09-15"
+  },
+  "usco-0171": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-09-15"
+  },
+  "usco-0172": {
+   "confirmed": true,
+   "code": "Corporate income tax payable - 2200",
+   "note": "2026 estimated tax, 3rd",
+   "at": "2026-09-15"
+  },
+  "usco-0175": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Grounds maintenance",
+   "at": "2026-09-19"
+  },
+  "usco-0176": {
+   "confirmed": true,
+   "code": "Plants and materials - 5000",
+   "note": "Pavers and gravel",
+   "at": "2026-09-22"
+  },
+  "usco-0178": {
+   "confirmed": true,
+   "code": "Landscaping services - 4000",
+   "note": "Residential design and install",
+   "at": "2026-09-26"
+  },
+  "usco-0179": {
+   "confirmed": true,
+   "code": "Bank charges - 6180",
+   "note": "Bank charge",
+   "at": "2026-09-27"
+  },
+  "usco-0180": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-09-30"
+  },
+  "usco-0181": {
+   "confirmed": true,
+   "code": "Wages payable - 2100",
+   "note": "Net pay",
+   "at": "2026-09-30"
+  }
+ },
+ "splits": {
+  "usco-0029": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0050": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0073": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0092": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0111": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0133": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0152": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ],
+  "usco-0173": [
+   {
+    "amount": -141600,
+    "code": "Federal income tax withheld - 2110",
+    "note": "Federal income tax withheld"
+   },
+   {
+    "amount": -156240,
+    "code": "Social Security payable - 2120",
+    "note": "Social Security"
+   },
+   {
+    "amount": -36540,
+    "code": "Medicare payable - 2130",
+    "note": "Medicare"
+   }
+  ]
+ },
+ "invoiceMatches": {},
+ "transfers": {},
+ "entities": {
+  "entities": [
+   {
+    "id": "landscaping",
+    "name": "Cedar Ridge Landscaping, Inc.",
+    "kind": "business",
+    "structure": "company",
+    "owners": [
+     {
+      "name": "Dana Brooks",
+      "percent": 60
+     },
+     {
+      "name": "Luis Ortega",
+      "percent": 40
+     }
+    ],
+    "gstRegistered": false,
+    "address": "4410 SE Johnson Creek Blvd\nPortland, OR 97222"
+   }
+  ],
+  "accounts": {
+   "1100": "landscaping",
+   "1500": "landscaping",
+   "2100": "landscaping",
+   "2110": "landscaping",
+   "2120": "landscaping",
+   "2130": "landscaping",
+   "2140": "landscaping",
+   "2150": "landscaping",
+   "2200": "landscaping",
+   "3000": "landscaping",
+   "3200": "landscaping",
+   "3900": "landscaping",
+   "4000": "landscaping",
+   "4900": "landscaping",
+   "5000": "landscaping",
+   "5100": "landscaping",
+   "6000": "landscaping",
+   "6010": "landscaping",
+   "6020": "landscaping",
+   "6050": "landscaping",
+   "6080": "landscaping",
+   "6090": "landscaping",
+   "6095": "landscaping",
+   "6100": "landscaping",
+   "6110": "landscaping",
+   "6170": "landscaping",
+   "6180": "landscaping",
+   "6300": "landscaping",
+   "6310": "landscaping",
+   "6320": "landscaping"
+  },
+  "banks": {
+   "usco-business": [
+    "landscaping"
+   ]
+  }
+ },
+ "chart": [
+  {
+   "code": "4000",
+   "name": "Landscaping services",
+   "type": "Revenue",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "4900",
+   "name": "Interest income",
+   "type": "Revenue",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "5000",
+   "name": "Plants and materials",
+   "type": "Direct Costs",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "5100",
+   "name": "Subcontractors",
+   "type": "Direct Costs",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6000",
+   "name": "Advertising",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6010",
+   "name": "Truck and equipment fuel",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6020",
+   "name": "Equipment repairs",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6050",
+   "name": "Insurance",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6080",
+   "name": "Legal and professional services",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6090",
+   "name": "Office expense",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6095",
+   "name": "Software and subscriptions",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6100",
+   "name": "Rent",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6110",
+   "name": "Licenses and permits",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6170",
+   "name": "Utilities",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6180",
+   "name": "Bank charges",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6300",
+   "name": "Wages and salaries",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6310",
+   "name": "Payroll taxes",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "6320",
+   "name": "Payroll service fees",
+   "type": "Expense",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "1100",
+   "name": "Accounts Receivable",
+   "type": "Accounts Receivable",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "1500",
+   "name": "Equipment",
+   "type": "Fixed Asset",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2100",
+   "name": "Wages payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2110",
+   "name": "Federal income tax withheld",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2120",
+   "name": "Social Security payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2130",
+   "name": "Medicare payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2140",
+   "name": "Federal unemployment (FUTA) payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2150",
+   "name": "Oregon withholding payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "2200",
+   "name": "Corporate income tax payable",
+   "type": "Current Liability",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "3000",
+   "name": "Common stock",
+   "type": "Equity",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "3200",
+   "name": "Dividends paid",
+   "type": "Equity",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  },
+  {
+   "code": "3900",
+   "name": "Retained earnings",
+   "type": "Equity",
+   "taxCode": "Tax Exempt",
+   "description": "",
+   "entity": "Cedar Ridge Landscaping, Inc.",
+   "entityKind": "business"
+  }
+ ],
+ "openingBalances": {
+  "asAt": "2026-01-01",
+  "source": "Last year's balance sheet",
+  "accounts": {
+   "1500": 2400000,
+   "2200": -214000,
+   "3000": -100000,
+   "3900": -7336000,
+   "usco-business": 5250000
+  }
+ },
+ "assets": [],
+ "invoices": [
+  {
+   "number": "INV-2041",
+   "kind": "sales",
+   "contact": "Riverside HOA",
+   "reference": "",
+   "issued": "2026-08-31",
+   "due": "2026-09-30",
+   "total": 682000,
+   "tax": 0,
+   "paid": 0,
+   "outstanding": 682000,
+   "currency": "USD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "August grounds maintenance",
+     "accountCode": "4000",
+     "taxType": "No GST",
+     "net": 682000,
+     "tax": 0,
+     "gross": 682000
+    }
+   ]
+  },
+  {
+   "number": "INV-2046",
+   "kind": "sales",
+   "contact": "Pearl District Lofts",
+   "reference": "",
+   "issued": "2026-09-15",
+   "due": "2026-10-15",
+   "total": 372000,
+   "tax": 0,
+   "paid": 0,
+   "outstanding": 372000,
+   "currency": "USD",
+   "status": "Awaiting Payment",
+   "lines": [
+    {
+     "description": "Fall planting, courtyard",
+     "accountCode": "4000",
+     "taxType": "No GST",
+     "net": 372000,
+     "tax": 0,
+     "gross": 372000
+    }
+   ]
+  }
+ ],
+ "contacts": [
+  {
+   "id": "c-riverside-hoa",
+   "name": "Riverside HOA",
+   "kind": "customer",
+   "email": "board@riversidehoa.example",
+   "terms": "Net 30",
+   "address": "1200 River Road\nPortland, OR 97219"
+  },
+  {
+   "id": "c-pearl-district-lofts",
+   "name": "Pearl District Lofts",
+   "kind": "customer",
+   "email": "manager@pearllofts.example",
+   "terms": "Net 30"
+  },
+  {
+   "id": "c-willamette-dental-group",
+   "name": "Willamette Dental Group",
+   "kind": "customer",
+   "email": "office@willamettedental.example",
+   "terms": "Net 15"
+  },
+  {
+   "id": "c-green-thumb-irrigation",
+   "name": "Green Thumb Irrigation",
+   "kind": "vendor",
+   "email": "office@greenthumb.example",
+   "w9": true,
+   "is1099": true
+  },
+  {
+   "id": "c-portland-nursery-supply",
+   "name": "Portland Nursery Supply",
+   "kind": "vendor",
+   "terms": "Net 30"
+  },
+  {
+   "id": "c-hill-park-cpa",
+   "name": "Hill & Park CPA",
+   "kind": "vendor",
+   "email": "team@hillparkcpa.example",
+   "terms": "Due on receipt"
+  }
+ ],
+ "manualJournals": [
+  {
+   "id": "payroll-2026-01-15",
+   "date": "2026-01-15",
+   "narration": "Payroll for the period ending 2026-01-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 51975,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Federal unemployment (FUTA) payable - 2140",
+     "amount": -3780,
+     "description": "FUTA"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-01-31",
+   "date": "2026-01-31",
+   "narration": "Payroll for the period ending 2026-01-31, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 51975,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Federal unemployment (FUTA) payable - 2140",
+     "amount": -3780,
+     "description": "FUTA"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-02-15",
+   "date": "2026-02-15",
+   "narration": "Payroll for the period ending 2026-02-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 49035,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Federal unemployment (FUTA) payable - 2140",
+     "amount": -840,
+     "description": "FUTA"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-02-28",
+   "date": "2026-02-28",
+   "narration": "Payroll for the period ending 2026-02-28, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-03-15",
+   "date": "2026-03-15",
+   "narration": "Payroll for the period ending 2026-03-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-03-31",
+   "date": "2026-03-31",
+   "narration": "Payroll for the period ending 2026-03-31, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-04-15",
+   "date": "2026-04-15",
+   "narration": "Payroll for the period ending 2026-04-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-04-30",
+   "date": "2026-04-30",
+   "narration": "Payroll for the period ending 2026-04-30, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-05-15",
+   "date": "2026-05-15",
+   "narration": "Payroll for the period ending 2026-05-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-05-31",
+   "date": "2026-05-31",
+   "narration": "Payroll for the period ending 2026-05-31, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-06-15",
+   "date": "2026-06-15",
+   "narration": "Payroll for the period ending 2026-06-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-06-30",
+   "date": "2026-06-30",
+   "narration": "Payroll for the period ending 2026-06-30, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-07-15",
+   "date": "2026-07-15",
+   "narration": "Payroll for the period ending 2026-07-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-07-31",
+   "date": "2026-07-31",
+   "narration": "Payroll for the period ending 2026-07-31, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-08-15",
+   "date": "2026-08-15",
+   "narration": "Payroll for the period ending 2026-08-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-08-31",
+   "date": "2026-08-31",
+   "narration": "Payroll for the period ending 2026-08-31, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-09-15",
+   "date": "2026-09-15",
+   "narration": "Payroll for the period ending 2026-09-15, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  },
+  {
+   "id": "payroll-2026-09-30",
+   "date": "2026-09-30",
+   "narration": "Payroll for the period ending 2026-09-30, from the Gusto payroll register",
+   "source": "Gusto payroll register",
+   "lines": [
+    {
+     "code": "Wages and salaries - 6300",
+     "amount": 630000,
+     "description": "Gross wages"
+    },
+    {
+     "code": "Payroll taxes - 6310",
+     "amount": 48195,
+     "description": "Employer Social Security, Medicare and FUTA"
+    },
+    {
+     "code": "Federal income tax withheld - 2110",
+     "amount": -70800,
+     "description": "Federal income tax withheld"
+    },
+    {
+     "code": "Social Security payable - 2120",
+     "amount": -78120,
+     "description": "Social Security, employee and employer"
+    },
+    {
+     "code": "Medicare payable - 2130",
+     "amount": -18270,
+     "description": "Medicare, employee and employer"
+    },
+    {
+     "code": "Oregon withholding payable - 2150",
+     "amount": -47300,
+     "description": "Oregon income tax withheld"
+    },
+    {
+     "code": "Wages payable - 2100",
+     "amount": -463705,
+     "description": "Net pay"
+    }
+   ]
+  }
+ ],
+ "exampleAiSuggestions": [
+  {
+   "id": "usco-0162",
+   "code": "5000",
+   "confidence": 0.74,
+   "because": "Hardware bought by a landscaping company: most likely materials for a job.",
+   "caution": "A tool kept for use is an expense or equipment, not a job's materials."
+  },
+  {
+   "id": "usco-0166",
+   "code": "6095",
+   "confidence": 0.9,
+   "because": "Accounting software paid monthly: a subscription."
+  },
+  {
+   "id": "usco-0174",
+   "code": "4000",
+   "confidence": 0.55,
+   "because": "Money in by Zelle from a person: most likely a household paying for a job.",
+   "caution": "Match it to an invoice if one was sent. A shareholder putting money in is a loan or capital, not income."
+  },
+  {
+   "id": "usco-0177",
+   "code": "6110",
+   "confidence": 0.8,
+   "because": "The DMV: registration for the company's truck or trailer."
+  }
+ ],
+ "modules": {
+  "classes": true,
+  "budgets": true
+ },
+ "taxExtras": [],
+ "singleEntityConfirmed": true,
+ "aiEnabled": true
+}

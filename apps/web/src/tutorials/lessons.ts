@@ -639,7 +639,7 @@ export const LESSONS: readonly Lesson[] = [
     title: "Moving from QuickBooks",
     summary: "Bring a QuickBooks company across: two exports from QuickBooks Online, or an IIF file from QuickBooks Desktop.",
     minutes: 2,
-    books: ["us"],
+    books: ["us", "us-company"],
     steps: [
       {
         title: "Two exports",
@@ -714,7 +714,7 @@ export const LESSONS: readonly Lesson[] = [
     title: "The BAS",
     summary: "GST, PAYG withheld and PAYG instalments for each quarter, on the simpler or the full BAS.",
     minutes: 3,
-    books: ["au"],
+    books: ["au", "au-company"],
     steps: [
       {
         title: "Each quarter's BAS",
@@ -777,6 +777,75 @@ export const LESSONS: readonly Lesson[] = [
           "Each run shows when its super is due to the fund, and the year-to-date figures Single Touch Payroll " +
           "reports for each employee. W1 and W2 on the BAS come from here.",
         target: withText("#aupayroll-body h3", /Pay runs/),
+      },
+    ],
+  },
+  {
+    id: "us-corporation",
+    title: "A corporation: payroll and its own tax",
+    summary: "Each payday's journal from the payroll register, the Form 941 worksheet, and the corporation's tax on its profit.",
+    minutes: 3,
+    books: ["us-company"],
+    steps: [
+      {
+        title: "Payroll as journals",
+        body:
+          "Each payday the payroll service's register is one journal: gross wages and the employer's taxes as " +
+          "expenses, the taxes withheld and owed as liabilities, and net pay waiting to go out. The bank lines " +
+          "that pay the crew and the IRS clear those liabilities.",
+        page: "reports",
+        before: report("manual"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "Form 941, quarter by quarter",
+        body:
+          "Wages, federal income tax withheld, Social Security and Medicare for each quarter, with the EFTPS " +
+          "deposits made and what is still to deposit: September's taxes are paid in October.",
+        before: report("payrolltax"),
+        target: q("#reports-body"),
+      },
+      {
+        title: "The corporation's tax",
+        body:
+          "A C corporation pays its own federal income tax, 21% of its profit, on Form 1120, ahead in four estimated " +
+          "payments. The shareholders pay tax on their wages and on the dividend, not on the company's profit.",
+        before: report("ustax"),
+        target: q("#reports-body"),
+      },
+    ],
+  },
+  {
+    id: "au-company-tax",
+    title: "A company: pay runs and company tax",
+    summary: "A director and an apprentice on fortnightly pay, super each quarter, and the company's own tax on its profit.",
+    minutes: 3,
+    books: ["au-company"],
+    steps: [
+      {
+        title: "Pay runs",
+        body:
+          "Liam is a director and an employee: paid wages through payroll, with PAYG withheld and super, " +
+          "not drawings. Noah is an apprentice with a study loan, so Schedule 8's extra is withheld too.",
+        page: "aupayroll",
+        target: q("#page-aupayroll"),
+      },
+      {
+        title: "Plant and depreciation",
+        body:
+          "The drain camera is the company's: on the BAS as a capital purchase (G10) when bought, then " +
+          "depreciated by diminishing value for the days held.",
+        page: "assets",
+        target: q("#assets-body table"),
+      },
+      {
+        title: "Company tax",
+        body:
+          "A company pays its own tax on its profit: 25% as a base rate entity, 30% otherwise. The PAYG " +
+          "instalments paid with each BAS come off it. The dividend paid to Liam and Grace carries franking credits.",
+        page: "reports",
+        before: report("autax"),
+        target: q("#reports-body"),
       },
     ],
   },

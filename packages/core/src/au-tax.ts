@@ -116,7 +116,16 @@ export interface FullBas {
 
 export function fullBas(
   ret: Pick<GstReturnResult, "lines" | "excluded" | "boxes"> & { otherPurchases?: readonly { gross: Cents }[] },
-  options: { isCapital: (t: Transaction) => boolean; isExport: (t: Transaction) => boolean },
+  options: {
+    isCapital: (t: Transaction) => boolean;
+    isExport: (t: Transaction) => boolean;
+    /**
+     * Whether a line is coded to the balance sheet -- equity, a liability, a
+     * bank -- other than a fixed asset. A dividend, drawings or a payment to
+     * the ATO is no supply, whatever the account's tax code says.
+     */
+    isBalanceSheet?: (t: Transaction) => boolean;
+  },
 ): FullBas {
   let g1 = 0, g2 = 0, g3 = 0, g4 = 0, g10 = 0, g11 = 0, g14 = 0;
   const purchase = (t: Transaction, gross: Cents): void => {
@@ -136,7 +145,9 @@ export function fullBas(
   }
   for (const { transaction, classification, amount } of ret.excluded) {
     // An account's own "Input Taxed" or "GST Free" tax code says no side: the
-    // money says it, in for a sale and out for a purchase.
+    // money says it, in for a sale and out for a purchase. Not on the balance
+    // sheet, where no side means no supply.
+    if ((classification.side === "none" || classification.side === undefined) && options.isBalanceSheet?.(transaction) === true) continue;
     const side =
       classification.side === "none" || classification.side === undefined
         ? classification.treatment === "exempt" || classification.treatment === "zero-rated"

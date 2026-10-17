@@ -4568,7 +4568,7 @@
   "au-0012": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-07-28"
@@ -4672,7 +4672,7 @@
   "au-0025": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-08-28"
@@ -4784,7 +4784,7 @@
   "au-0039": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-09-28"
@@ -4912,7 +4912,7 @@
   "au-0055": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "PAYG instalment",
    "at": "2025-10-28"
@@ -4920,7 +4920,7 @@
   "au-0056": {
    "confirmed": true,
    "code": "GST - 820",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "BAS 2025-07 to 2025-09, GST",
    "at": "2025-10-28"
@@ -4928,7 +4928,7 @@
   "au-0057": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-10-28"
@@ -5032,7 +5032,7 @@
   "au-0070": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-11-28"
@@ -5128,7 +5128,7 @@
   "au-0082": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2025-12-28"
@@ -5232,7 +5232,7 @@
   "au-0095": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-01-28"
@@ -5352,7 +5352,7 @@
   "au-0110": {
    "confirmed": true,
    "code": "GST - 820",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "BAS 2025-10 to 2025-12, GST",
    "at": "2026-02-27"
@@ -5360,7 +5360,7 @@
   "au-0111": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "PAYG instalment",
    "at": "2026-02-27"
@@ -5376,7 +5376,7 @@
   "au-0113": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-02-28"
@@ -5480,7 +5480,7 @@
   "au-0126": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-03-28"
@@ -5584,7 +5584,7 @@
   "au-0139": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "PAYG instalment",
    "at": "2026-04-28"
@@ -5592,7 +5592,7 @@
   "au-0140": {
    "confirmed": true,
    "code": "GST - 820",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "BAS 2026-01 to 2026-03, GST",
    "at": "2026-04-28"
@@ -5600,7 +5600,7 @@
   "au-0141": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-04-28"
@@ -5704,7 +5704,7 @@
   "au-0154": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-05-28"
@@ -5792,7 +5792,7 @@
   "au-0170": {
    "confirmed": true,
    "code": "Owner A Drawings - 880",
-   "treatment": "exempt",
+   "treatment": "out-of-scope",
    "side": "none",
    "note": "Owner drawings",
    "at": "2026-06-28"
@@ -6189,7 +6189,7 @@
    "taxCode": "BAS Excluded",
    "description": "",
    "entity": "Wattle & Lens Photography",
-   "gstTreatment": "exempt",
+   "gstTreatment": "out-of-scope",
    "entityKind": "business"
   },
   {
@@ -6199,7 +6199,7 @@
    "taxCode": "BAS Excluded",
    "description": "",
    "entity": "Wattle & Lens Photography",
-   "gstTreatment": "exempt",
+   "gstTreatment": "out-of-scope",
    "entityKind": "business"
   },
   {
@@ -6209,7 +6209,7 @@
    "taxCode": "BAS Excluded",
    "description": "",
    "entity": "Wattle & Lens Photography",
-   "gstTreatment": "exempt",
+   "gstTreatment": "out-of-scope",
    "entityKind": "business"
   }
  ],

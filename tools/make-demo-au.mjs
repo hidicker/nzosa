@@ -59,9 +59,9 @@ const ACCOUNTS = [
   ["731", "Less Accumulated Depreciation on Camera Equipment", "Fixed Asset", studio, "BAS Excluded", "out-of-scope"],
   ["610", "Accounts Receivable", "Accounts Receivable", studio, "BAS Excluded", "out-of-scope"],
   ["800", "Accounts Payable", "Accounts Payable", studio, "BAS Excluded", "out-of-scope"],
-  ["820", "GST", "Current Liability", studio, "BAS Excluded", "exempt"],
-  ["880", "Owner A Drawings", "Equity", studio, "BAS Excluded", "exempt"],
-  ["960", "Retained Earnings", "Equity", studio, "BAS Excluded", "exempt"],
+  ["820", "GST", "Current Liability", studio, "BAS Excluded", "out-of-scope"],
+  ["880", "Owner A Drawings", "Equity", studio, "BAS Excluded", "out-of-scope"],
+  ["960", "Retained Earnings", "Equity", studio, "BAS Excluded", "out-of-scope"],
 ];
 const account = new Map(ACCOUNTS.map(([code, name, type, entity, taxCode, treatment]) => [code, { code, name, type, entity, taxCode, treatment }]));
 

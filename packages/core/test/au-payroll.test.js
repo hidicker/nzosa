@@ -173,3 +173,22 @@ test("full BAS: an account's own Input Taxed or GST Free code, with no side, is 
   assert.deepEqual([bas.g2, bas.g3, bas.g4], [3_000_00, 0, 150_00]);
   assert.deepEqual([bas.g11, bas.g14], [15_00, 15_00]);
 });
+
+test("full BAS: a dividend or a GST payment on an exempt-coded balance sheet account is no purchase", () => {
+  const t = (id, account) => ({ id, account, date: "2025-12-15", amount: 0 });
+  const ret = {
+    lines: [],
+    excluded: [
+      { transaction: t("div", "equity"), classification: { treatment: "exempt", side: "none" }, amount: -20_000_00 },
+      { transaction: t("gst", "liability"), classification: { treatment: "exempt", side: "none" }, amount: -3_643_28 },
+      { transaction: t("fee", "expense"), classification: { treatment: "zero-rated", side: "none" }, amount: -12_00 },
+    ],
+    boxes: { box8: 0, box10: 0, box12: 0, box14: 0 },
+  };
+  const bas = fullBas(ret, {
+    isCapital: () => false,
+    isExport: () => false,
+    isBalanceSheet: (x) => x.account === "equity" || x.account === "liability",
+  });
+  assert.deepEqual([bas.g1, bas.g11, bas.g14], [0, 12_00, 12_00]);
+});

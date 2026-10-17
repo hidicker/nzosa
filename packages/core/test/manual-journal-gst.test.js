@@ -71,3 +71,15 @@ test("splitManualGst gives the net and GST that the journal posts", async () => 
   assert.deepEqual(amounts, [3182, -2767, -415]);
   assert.equal(amounts.reduce((a, b) => a + b, 0), 0);
 });
+
+test("a journal's GST is the books' rate: one eleventh in Australia, 3/23 in New Zealand", async () => {
+  const { setSalesTaxFraction, splitManualGst, NZ_GST } = await import("../dist/index.js");
+  assert.deepEqual(splitManualGst(-11000), { net: -9565, tax: -1435 });
+  setSalesTaxFraction({ num: 1, den: 11 });
+  try {
+    assert.deepEqual(splitManualGst(-11000), { net: -10000, tax: -1000 });
+    assert.deepEqual(splitManualGst(5000), { net: 4545, tax: 455 });
+  } finally {
+    setSalesTaxFraction(NZ_GST);
+  }
+});

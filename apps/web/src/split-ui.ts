@@ -1,5 +1,6 @@
 import { combobox } from "./combobox.js";
-import { gstPercent } from "./country.js";
+import { accountZeroOrExempt } from "./books.js";
+import { booksCountry, gstPercent } from "./country.js";
 import { formatAmount, parseAmount } from "@nzosa/core";
 import type { SplitPart, Transaction } from "@nzosa/core";
 import {
@@ -129,7 +130,13 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     options.onSave(
       drafts.map((draft) => {
         const amount = parseAmount(draft.amount) ?? 0;
-        const { treatment, side } = rateToClassification(draft.rate as GstRate, amount);
+        // Outside New Zealand a 0% part on a GST-free or input taxed account
+        // is that, as on Reconcile, not "no GST": the BAS counts both.
+        const own = draft.rate === "0" && booksCountry().id !== "nz" ? accountZeroOrExempt(draft.code) : null;
+        const { treatment, side } =
+          own === null
+            ? rateToClassification(draft.rate as GstRate, amount)
+            : { treatment: own, side: amount > 0 ? ("sales" as const) : ("purchases" as const) };
         return {
           amount,
           ...(draft.code !== "" ? { code: draft.code } : {}),
@@ -220,9 +227,10 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
         ask.disabled = true;
         ask.selected = draft.rate === "";
         gst.append(ask);
+        const au = booksCountry().id === "au";
         for (const [value, label] of [
-          ["0", "Settles the GST bill — a payment to or refund from IRD"],
-          ["100", "GST paid at the border — claim all of it (Box 13)"],
+          ["0", `Settles the GST bill — a payment to or refund from ${au ? "the ATO" : "IRD"}`],
+          ["100", au ? "GST paid on imports — claim all of it (1B)" : "GST paid at the border — claim all of it (Box 13)"],
         ] as const) {
           const option = document.createElement("option");
           option.value = value;

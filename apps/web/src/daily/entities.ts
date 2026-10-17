@@ -810,7 +810,8 @@ export function renderEntities(): void {
     // every year, including the year to 31 March 2025 when others got 80%.
     const exemptWrap = document.createElement("label");
     exemptWrap.className = "entity-gst";
-    exemptWrap.hidden = entity.kind !== "residential";
+    // New Zealand's rules: elsewhere there is nothing to be exempt from.
+    exemptWrap.hidden = entity.kind !== "residential" || booksCountry().id !== "nz";
     const exemptBox = document.createElement("input");
     exemptBox.type = "checkbox";
     exemptBox.checked = entity.interestExempt === true;

@@ -3,6 +3,7 @@ import { record } from "../books.js";
 import { booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
+import { taxYearEndShort, taxYearOf } from "../tax-year.js";
 import { note } from "../ui.js";
 import { parseAmount } from "@nzosa/core";
 
@@ -12,7 +13,8 @@ import { parseAmount } from "@nzosa/core";
  * months when it is set beside the year to date.
  */
 
-let year = new Date().getFullYear();
+// The books' year, by the year it ends in, as the Reports page counts it.
+let year = taxYearOf(new Date().toISOString().slice(0, 10));
 
 const isIncome = (type: string): boolean => /revenue|income|sales/i.test(type);
 const isCost = (type: string): boolean => /expense|overhead|direct|cost/i.test(type);
@@ -28,11 +30,11 @@ export function renderBudgets(): void {
   const controls = document.createElement("div");
   controls.className = "contacts-controls";
   const pick = document.createElement("select");
-  const now = new Date().getFullYear();
+  const now = taxYearOf(new Date().toISOString().slice(0, 10));
   for (const y of [now - 1, now, now + 1]) {
     const option = document.createElement("option");
     option.value = String(y);
-    option.textContent = String(y);
+    option.textContent = `Year to ${taxYearEndShort(y)}`;
     option.selected = y === year;
     pick.append(option);
   }

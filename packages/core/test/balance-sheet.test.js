@@ -356,3 +356,25 @@ test("an account typed Depreciation is an expense, and the sheet still balances"
   assert.equal(sheet.imbalance, 0);
   assert.equal(sheet.profitForPeriod, -120000, "the charge is in the result");
 });
+
+test("depreciation posted by name, with no contra account in the chart, sits with the fixed assets", () => {
+  const sheet = computeBalanceSheet({
+    asAt: "2026-06-30",
+    chart: [{ code: "416", name: "Depreciation", type: "Expense" }, { code: "720", name: "Computer Equipment", type: "Fixed Asset" }],
+    journals: [
+      {
+        transactionId: "dep",
+        date: "2026-06-30",
+        narration: "Depreciation",
+        source: "depreciation",
+        taxBasis: "payments",
+        lines: [
+          { accountCode: "416", accountName: "Depreciation", amount: 165479, taxType: "NONE" },
+          { accountCode: "", accountName: "Less Accumulated Depreciation — Computer Equipment", amount: -165479, taxType: "NONE" },
+        ],
+      },
+    ],
+  });
+  assert.deepEqual(sheet.nonCurrentAssets.lines.map((l) => [l.name, l.closing]), [["Less Accumulated Depreciation — Computer Equipment", -165479]]);
+  assert.equal(sheet.currentAssets.lines.length, 0);
+});

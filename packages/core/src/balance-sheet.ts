@@ -262,8 +262,10 @@ export function computeBalanceSheet(options: {
     const account = byCode.get(code);
     // A posting whose code is not in the chart is a bank line: this app posts
     // the bank side against the account itself, which carries no chart code.
-    // It is the only such posting, which is what makes the fallback safe.
-    const type = account?.type ?? "Bank";
+    // It is the only such posting, which is what makes the fallback safe --
+    // but for depreciation on an asset type the chart has no contra account
+    // for, posted by name: that belongs with the assets it wears down.
+    const type = account?.type ?? (/accumulated depreciation/i.test(code) ? "Fixed Asset" : "Bank");
     if (
       options.shareholderCurrentAccounts === true &&
       account !== undefined &&

@@ -38,7 +38,7 @@ import { state } from "../state.js";
 import { note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
 import { entityPeriodReport, entityYearReport, scheduleName } from "./reports.js";
-import { taxYearEnd, taxYearStart } from "../tax-year.js";
+import { taxYearEnd, taxYearEndShort, taxYearStart } from "../tax-year.js";
 import { booksMoney } from "../country.js";
 
 /**
@@ -333,7 +333,7 @@ export function renderPayrollTax(body: HTMLElement, year: number): void {
  */
 export function renderBudgetVsActual(body: HTMLElement, year: number): void {
   const title = document.createElement("h3");
-  title.textContent = `Budget vs actual — ${year}`;
+  title.textContent = `Budget vs actual — year to ${taxYearEndShort(year)}`;
   body.append(title);
   const budgets = state.ledger.budgets?.[String(year)] ?? {};
   if (Object.keys(budgets).length === 0) {
@@ -344,16 +344,24 @@ export function renderBudgetVsActual(body: HTMLElement, year: number): void {
   const costType = /expense|overhead|direct|cost/i;
   const accounts = state.chart.filter((a) => incomeType.test(a.type) || costType.test(a.type));
   const actual = new Map<string, number>();
-  const today = new Date();
+  // The books' own year, as the Reports page's year is: July to June in Australia.
+  const from = taxYearStart(year);
+  const to = taxYearEnd(year);
   for (const journal of postedJournals()) {
-    if (!journal.date.startsWith(String(year))) continue;
+    if (journal.date < from || journal.date > to) continue;
     for (const line of journal.lines) {
       const code = line.accountCode.trim();
       actual.set(code, (actual.get(code) ?? 0) + line.amount);
     }
   }
   // The months gone: all twelve for a year past, none for one not begun.
-  const months = today.getFullYear() > year ? 12 : today.getFullYear() < year ? 0 : today.getMonth() + 1;
+  const today = new Date().toISOString().slice(0, 10);
+  const months =
+    today > to
+      ? 12
+      : today < from
+        ? 0
+        : (Number(today.slice(0, 4)) - Number(from.slice(0, 4))) * 12 + Number(today.slice(5, 7)) - Number(from.slice(5, 7)) + 1;
   const table = document.createElement("table");
   table.className = "report-table";
   table.innerHTML =
@@ -733,6 +741,8 @@ export function renderBas(body: HTMLElement, year: number): void {
         ? "The full BAS lodges G1, G2, G3, G10, G11, 1A and 1B; the worksheet beneath is the ATO's, for following them. G13, G15 and the adjustments are not worked out here. " +
           "G10 is every purchase coded to a fixed asset account, whatever its tax code; Xero counts only those coded GST on Capital. "
         : "The simpler BAS: G1, 1A and 1B. ") +
+        "Worked on the cash basis: a sale or purchase counts in the quarter it is paid, so an invoice or bill " +
+        "still owing is not here yet, whichever basis the reports show. " +
         "G1 includes GST, and GST-free and input taxed sales such as interest. Due dates are for lodging yourself; a registered " +
         "tax agent lodging electronically usually has longer. T1 is the quarter's business and investment income in these books, " +
         "GST out, without salary or capital gains: income from elsewhere goes on top." +
@@ -812,6 +822,9 @@ const COUNTRY_REPORTS: Record<string, { label: string; options: [string, string]
 export function syncPlanningReports(): void {
   const select = document.getElementById("report-kind");
   if (select === null) return;
+  // Drawn again on every redraw of Reports: keep what was chosen in it, or
+  // taking the group away leaves the list on its first report.
+  const chosen = (select as HTMLSelectElement).value;
   select.querySelector("optgroup[data-planning]")?.remove();
   const wanted: [string, string][] = [
     ...(moduleOn("budgets") ? ([["budget", "Budget vs actual"]] as [string, string][]) : []),
@@ -830,6 +843,7 @@ export function syncPlanningReports(): void {
   const analytics = select.querySelector('optgroup[label="Analytics"]');
   if (analytics !== null) select.insertBefore(group, analytics);
   else select.append(group);
+  if (wanted.some(([value]) => value === chosen)) (select as HTMLSelectElement).value = chosen;
 }
 
 if (typeof window !== "undefined") window.addEventListener("nzosa:modules-changed", () => syncPlanningReports());
@@ -1118,7 +1132,7 @@ export function renderAuTax(body: HTMLElement, year: number): void {
         "the return's, and the offsets are worked on this income alone. The small business offset " +
         "assumes the business's aggregated turnover is under $5 million. A net rental loss " +
         "reduces other income; from 1 July 2027 only for a new build or a property held at 7:30 pm AEST " +
-        "on 12 May 2026. Rates per the OpenAccountants Australian rates card (2025-26 to 2027-28); " +
+        "on 12 May 2026. Rates for 2025-26 to 2027-28: " +
         "confirm them with the ATO.",
     ),
   );

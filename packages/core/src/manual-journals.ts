@@ -3,6 +3,7 @@ import type { IsoDate } from "./dates.js";
 import type { Journal } from "./journals.js";
 import type { PostedJournal, PostedLine, PostingOptions } from "./posting.js";
 import { gstAccountsFrom } from "./posting.js";
+import { taxWithinExact } from "./sales-tax.js";
 
 /**
  * Journals a person writes, which no amount of bank data implies.
@@ -42,8 +43,8 @@ export interface ManualJournalLine {
    * bank feed missed, put in by hand. Not usually -- most journals move
    * amounts already taxed elsewhere, and GST here would claim it twice.
    *
-   * The amount is then GST-inclusive: the account takes it less 3/23, the GST
-   * account takes the 3/23, and the return counts both as a bank line's.
+   * The amount is then GST-inclusive: the account takes it less the tax in it
+   * (3/23 in New Zealand), the GST account takes the tax.
    */
   gst?: "INPUT2" | "OUTPUT2";
 }
@@ -109,11 +110,12 @@ export function checkManualJournal(journal: ManualJournal): ManualJournalProblem
 
 /**
  * A GST-inclusive journal amount, split the way it is posted: the account takes it
- * less 3/23, the GST account takes the 3/23. One place, so a page drawing the
- * journal and the ledger posting it cannot disagree.
+ * less the tax in it, the GST account takes the tax -- 3/23 at New Zealand's 15%,
+ * 1/11 at Australia's 10%. One place, so a page drawing the journal and the
+ * ledger posting it cannot disagree.
  */
 export function splitManualGst(amount: Cents): { net: Cents; tax: Cents } {
-  const tax = (Math.sign(amount) * Math.round((Math.abs(amount) * 3) / 23)) as Cents;
+  const tax = (Math.sign(amount) * Math.round(Math.abs(taxWithinExact(amount)))) as Cents;
   return { net: (amount - tax) as Cents, tax };
 }
 

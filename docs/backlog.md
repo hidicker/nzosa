@@ -192,3 +192,20 @@ works).
   Reference, Account) is read into one account named after the file, as the
   picker for an unknown layout offers no column for the account. Found by an
   outside tester on Australian books, 17 October 2026.
+- **GST on a manual journal does not reach the GST return or the BAS.** A
+  journal line given GST posts the tax to the GST account and shows in the
+  journal report's summary, and the journal editor says it puts the line on
+  the return, but the return is built from bank lines and outside-paid bills
+  only. True in New Zealand too, so including them would change New Zealand
+  returns for any books with such a journal: waits for a decision. (The rate
+  itself is now the books' own: 1/11 in Australia.) Found by an outside
+  tester on Australian books, 17 October 2026.
+- **No way to mark one line GST-free on a 10% account.** On Reconcile and in
+  a split, 0% on a GST-free or input taxed account keeps that treatment, but
+  0% on a standard account is "no GST" (BAS excluded): a GST-free item bought
+  under General Expenses cannot reach G14 without its own account. Needs a
+  per-line GST-free choice outside New Zealand. Found 17 October 2026.
+- **An invoice or bill saved with a line that has no account** (after the
+  "Save it anyway?" question) posts that line with no account, and the
+  balance sheet shows it as a nameless current asset. An account typed but
+  not picked from the list is not caught at all. Found 17 October 2026.

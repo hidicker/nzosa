@@ -1598,9 +1598,11 @@ function renderJournal(body: HTMLElement, year: number): void {
         ? []
         : country === "au"
           ? [
-              [money(tax.box5), "G1 total sales, GST in"],
+              // What these hold, by the BAS's own labels: taxable and GST-free
+              // sales (input taxed left out), and purchases with GST in them.
+              [money(tax.box5), "G1 less G4 (input taxed), GST in"],
               [money(tax.box8), "1A GST on sales"],
-              [money(tax.box11), "G10 + G11 purchases, GST in"],
+              [money(tax.box11), "G17 purchases with GST in them"],
               [money(tax.box12 + tax.box13), "1B GST on purchases"],
             ]
           : [

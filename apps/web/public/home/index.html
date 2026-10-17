@@ -9,8 +9,8 @@
 <!--
   NZOSA's home page: the address its licence credit links to
   ("NZOSA, by hidicker"). It must keep working at /nzosa/home/ for as long as
-  copies of NZOSA point here. No scripts: the site's security policy allows
-  none inline, and this page needs none. Screenshots are of the demo's
+  copies of NZOSA point here. The site's security policy allows no inline
+  scripts, so the worked examples' code is in learn.js beside this page. Screenshots are of the demo's
   invented books.
 -->
 <style>
@@ -245,6 +245,596 @@
     </div>
   </section>
 
+
+  <section class="block" id="learn">
+    <div class="wrap">
+      <div class="head">
+        <span class="kicker">New to the books?</span>
+        <h2>How a bank line becomes balanced books.</h2>
+        <p>Two worked examples to click through: a deposit coded to sales and GST, and an invoice matched to the payment that settles it.</p>
+      </div>
+      <style>
+  #nzosa-ledger-showcase {
+    --bg-page: #f8fafc;
+    --bg-card: #ffffff;
+    --bg-table-head: #eef3f7;
+    --border-light: #e2e8f0;
+    --border-row: #f1f5f9;
+    --text-main: #1e293b;
+    --text-muted: #64748b;
+    --bank-blue: #0284c7;
+    --sales-teal: #0d9488;
+    --gst-indigo: #6366f1;
+    --ar-amber: #d97706;
+    --tick-green: #16a34a;
+
+    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+    color: var(--text-main);
+    max-width: 1080px;
+    margin: 0 auto;
+    padding: 20px 12px;
+    box-sizing: border-box;
+  }
+
+  #nzosa-ledger-showcase * { box-sizing: border-box; }
+
+  /* Beginner Welcome Banner */
+  .nzosa-welcome-banner {
+    background: linear-gradient(135deg, #f0f9ff 0%, #e0f2fe 100%);
+    border: 1px solid #bae6fd;
+    border-radius: 10px;
+    padding: 20px 24px;
+    margin-bottom: 24px;
+  }
+
+  .nzosa-welcome-banner h2 {
+    margin: 0 0 6px 0;
+    font-size: 18px;
+    color: #0369a1;
+  }
+
+  .nzosa-welcome-banner p {
+    margin: 0;
+    font-size: 13.5px;
+    color: #334155;
+    line-height: 1.5;
+  }
+
+  .nzosa-guide-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+    gap: 12px;
+    margin-top: 14px;
+  }
+
+  .nzosa-guide-card {
+    background: #ffffff;
+    border: 1px solid #bae6fd;
+    border-radius: 6px;
+    padding: 10px 14px;
+    font-size: 12.5px;
+  }
+
+  .nzosa-guide-card strong { color: #0284c7; display: block; margin-bottom: 2px; }
+
+  /* Section Containers */
+  .nzosa-section {
+    background: var(--bg-card);
+    border: 1px solid var(--border-light);
+    border-radius: 10px;
+    box-shadow: 0 4px 16px rgba(15, 23, 42, 0.04);
+    margin-bottom: 36px;
+    overflow: hidden;
+  }
+
+  .nzosa-section-titlebar {
+    background: var(--bg-table-head);
+    padding: 14px 22px;
+    border-bottom: 1px solid var(--border-light);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+  }
+
+  .nzosa-section-title {
+    font-size: 16px;
+    font-weight: 700;
+    color: var(--text-main);
+    margin: 0;
+    display: flex;
+    align-items: center;
+    gap: 10px;
+  }
+
+  .nzosa-step-badge {
+    background: #0284c7;
+    color: #fff;
+    font-size: 11px;
+    font-weight: 700;
+    padding: 3px 8px;
+    border-radius: 5px;
+    text-transform: uppercase;
+  }
+
+  /* Scale Stage */
+  .nzosa-scale-stage {
+    background: linear-gradient(180deg, #f8fafc 0%, #ffffff 100%);
+    border-bottom: 1px solid var(--border-light);
+    position: relative;
+    height: 330px;
+    overflow: hidden;
+  }
+
+  .nzosa-scale-stage::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background-image: 
+      linear-gradient(rgba(148, 163, 184, 0.08) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(148, 163, 184, 0.08) 1px, transparent 1px);
+    background-size: 28px 28px;
+    pointer-events: none;
+  }
+
+  .nzosa-stage-toolbar {
+    position: relative;
+    z-index: 5;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 12px;
+    padding: 12px 22px;
+    background: rgba(255, 255, 255, 0.88);
+    backdrop-filter: blur(6px);
+    border-bottom: 1px solid var(--border-row);
+  }
+
+  .nzosa-metrics-group {
+    display: flex;
+    gap: 24px;
+    align-items: center;
+    flex-wrap: wrap;
+  }
+
+  .nzosa-metric-item {
+    display: flex;
+    flex-direction: column;
+  }
+
+  .nzosa-metric-label {
+    font-size: 10px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.05em;
+    color: var(--text-muted);
+  }
+
+  .nzosa-metric-val {
+    font-size: 15px;
+    font-weight: 700;
+    font-variant-numeric: tabular-nums;
+    color: var(--text-main);
+  }
+
+  .nzosa-btn-group {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .nzosa-btn {
+    background: #ffffff;
+    border: 1px solid #cbd5e1;
+    color: var(--text-main);
+    padding: 7px 13px;
+    border-radius: 6px;
+    font-size: 12.5px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .nzosa-btn:hover:not(:disabled):not(.status-only) {
+    border-color: var(--bank-blue);
+    color: var(--bank-blue);
+    background: #f0f9ff;
+  }
+
+  .nzosa-btn:disabled { opacity: 0.4; cursor: default; }
+
+  .nzosa-btn.primary {
+    background: var(--bank-blue);
+    border-color: var(--bank-blue);
+    color: #ffffff;
+    box-shadow: 0 2px 6px rgba(2, 132, 199, 0.22);
+  }
+
+  .nzosa-btn.primary:hover:not(:disabled):not(.status-only) {
+    background: #0369a1;
+  }
+
+  .nzosa-btn.status-only { cursor: default; }
+  .nzosa-btn.status-only.prompt-tick {
+    background: #f0fdf4;
+    border-color: #22c55e;
+    color: #15803d;
+  }
+
+  .nzosa-btn.done {
+    background: #dcfce7;
+    border-color: #86efac;
+    color: #15803d;
+  }
+
+  .nzosa-canvas {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    pointer-events: none;
+  }
+
+  /* Ledger Area */
+  .nzosa-ledger-wrap { padding: 18px 22px 22px; overflow-x: auto; }
+
+  .nzosa-summary-line {
+    font-size: 14.5px;
+    color: var(--text-main);
+    margin-bottom: 14px;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    flex-wrap: wrap;
+    gap: 10px;
+  }
+
+  .nzosa-hint-pill {
+    font-size: 12.5px;
+    background: var(--bg-table-head);
+    color: #334155;
+    padding: 5px 11px;
+    border-radius: 5px;
+    border: 1px solid var(--border-light);
+  }
+
+  .nzosa-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 13px;
+    min-width: 720px;
+  }
+
+  .nzosa-table th {
+    background-color: var(--bg-table-head);
+    color: var(--text-muted);
+    font-size: 11px;
+    font-weight: 700;
+    text-transform: uppercase;
+    letter-spacing: 0.04em;
+    padding: 9px 12px;
+    text-align: left;
+  }
+
+  .nzosa-table td {
+    padding: 11px 12px;
+    border-bottom: 1px solid var(--border-row);
+    vertical-align: top;
+    line-height: 1.38;
+  }
+
+  .nzosa-table tr.group-end td { border-bottom: 2px solid var(--border-light); }
+  .nzosa-table th.num, .nzosa-table td.num { text-align: right; font-variant-numeric: tabular-nums; }
+  .nzosa-table th.center, .nzosa-table td.center { text-align: center; vertical-align: middle; }
+
+  .nzosa-ledger-footer {
+    margin-top: 14px;
+    padding-top: 12px;
+    display: flex;
+    justify-content: flex-start;
+    align-items: center;
+    gap: 12px;
+  }
+
+  /* Tick Button */
+  .nzosa-tick {
+    width: 30px;
+    height: 30px;
+    border-radius: 6px;
+    border: 2px solid #cbd5e1;
+    background: #ffffff;
+    color: #94a3b8;
+    font-size: 15px;
+    font-weight: 800;
+    cursor: pointer;
+    transition: all 0.18s ease;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+  }
+
+  .nzosa-tick:hover:not(.reconciled) {
+    border-color: var(--tick-green);
+    color: var(--tick-green);
+    transform: scale(1.08);
+    box-shadow: 0 2px 8px rgba(22, 163, 74, 0.2);
+  }
+
+  .nzosa-tick.pulse::after {
+    content: '';
+    position: absolute;
+    inset: -4px;
+    border-radius: 8px;
+    border: 2px solid var(--tick-green);
+    animation: nzosaTickPulse 1.6s infinite;
+  }
+
+  @keyframes nzosaTickPulse {
+    0% { transform: scale(0.95); opacity: 0.8; }
+    80% { transform: scale(1.2); opacity: 0; }
+    100% { transform: scale(1.2); opacity: 0; }
+  }
+
+  .nzosa-tick.reconciled {
+    background: var(--tick-green);
+    border-color: var(--tick-green);
+    color: #ffffff;
+    cursor: default;
+  }
+
+  .nzosa-pending { opacity: 0.25; filter: blur(0.5px); transition: all 0.35s ease; }
+  .nzosa-pending.posted { opacity: 1; filter: none; }
+
+  .nzosa-dot { width: 8px; height: 8px; border-radius: 50%; display: inline-block; margin-right: 6px; }
+  .nzosa-badge { font-size: 10px; font-weight: 700; padding: 2px 6px; border-radius: 4px; margin-left: 6px; display: inline-block; }
+  .nzosa-badge.green { background: #dcfce7; color: #15803d; }
+  .nzosa-badge.amber { background: #fef3c7; color: #b45309; }
+  .nzosa-badge.indigo { background: #e0e7ff; color: #4338ca; }
+
+  .nzosa-strike { text-decoration: line-through; opacity: 0.5; }
+
+  .nzosa-gst-explainer {
+    background: #f8fafc;
+    border-top: 1px solid var(--border-light);
+    padding: 16px 22px;
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+    gap: 16px;
+  }
+
+  .nzosa-gst-card {
+    background: #ffffff;
+    border: 1px solid var(--border-light);
+    border-left: 4px solid var(--bank-blue);
+    border-radius: 6px;
+    padding: 12px 14px;
+    font-size: 12.5px;
+    line-height: 1.45;
+  }
+  .nzosa-gst-card.gst-focus { border-left-color: var(--gst-indigo); }
+  .nzosa-gst-card h4 { margin: 0 0 4px 0; font-size: 13px; color: var(--text-main); display: flex; justify-content: space-between; }
+  .nzosa-gst-card p { margin: 0; color: var(--text-muted); }
+</style>
+      <div id="nzosa-ledger-showcase">
+
+  <!-- BEGINNER WELCOME BANNER -->
+  <div class="nzosa-welcome-banner">
+    <h2>👋 Welcome! New to Ledgers &amp; Reconciling?</h2>
+    <p>Don't worry—accounting is just like a physical scale. Every dollar entering your bank account (a <strong>Debit</strong>) must be balanced by exactly the same amount in sales and tax (<strong>Credits</strong>). Watch the automated preview below, then try it yourself!</p>
+    
+    <div class="nzosa-guide-grid">
+      <div class="nzosa-guide-card">
+        <strong>1. The Bank Line</strong>
+        Money hits your bank feed. It sits unassigned until you make a decision.
+      </div>
+      <div class="nzosa-guide-card">
+        <strong>2. The Green Tick (✓)</strong>
+        Clicking the tick tells the ledger: <em>"Match this bank deposit to our Sales &amp; GST accounts!"</em>
+      </div>
+      <div class="nzosa-guide-card">
+        <strong>3. The Scale Balances</strong>
+        The weights drop into place, the scale locks level, and your books are reconciled.
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- EXAMPLE 1: NORMAL BANK RECONCILE                                     -->
+  <!-- ===================================================================== -->
+  <div class="nzosa-section">
+    <div class="nzosa-section-titlebar">
+      <h3 class="nzosa-section-title">
+        <span class="nzosa-step-badge">Example 1</span>
+        Direct Bank Reconciliation (Try clicking the ✓ ticks!)
+      </h3>
+      <div style="font-size:12px; color:var(--text-muted);">
+        <span><i class="nzosa-dot" style="background:var(--bank-blue)"></i>Bank Debit</span> &nbsp;&bull;&nbsp;
+        <span><i class="nzosa-dot" style="background:var(--sales-teal)"></i>Sales Credit</span> &nbsp;&bull;&nbsp;
+        <span><i class="nzosa-dot" style="background:var(--gst-indigo)"></i>GST Credit</span>
+      </div>
+    </div>
+
+    <!-- Scale Stage 1 -->
+    <div class="nzosa-scale-stage">
+      <div class="nzosa-stage-toolbar">
+        <div class="nzosa-metrics-group">
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">Bank Debits (Landed)</span>
+            <span class="nzosa-metric-val" style="color:var(--bank-blue)" id="s1Dr">510.00</span>
+          </div>
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">Journal Credits (Posted)</span>
+            <span class="nzosa-metric-val" style="color:var(--sales-teal)" id="s1Cr">0.00</span>
+          </div>
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">Scale Equilibrium</span>
+            <span class="nzosa-metric-val" style="color:var(--ar-amber)" id="s1Status">510.00 UNRECONCILED</span>
+          </div>
+        </div>
+
+        <div class="nzosa-btn-group">
+          <button class="nzosa-btn" data-learn="s1Reset">Reset Demo</button>
+        </div>
+      </div>
+
+      <canvas id="canvasNormal" class="nzosa-canvas" width="1060" height="330"></canvas>
+    </div>
+
+    <!-- Ledger Table 1 -->
+    <div class="nzosa-ledger-wrap">
+      <div class="nzosa-summary-line">
+        <div id="s1SummaryText">
+          ▼ <strong>Today:</strong> 0 decisions today, about 2 bank lines, posting 0 journals: <strong>510.00</strong> of debits and <strong>0.00</strong> of credits.
+        </div>
+        <div class="nzosa-hint-pill" id="s1HintText">
+          💡 <strong>Pointer:</strong> Click the green <strong>✓</strong> button on the first row below to see how a bank line splits into Sales and GST!
+        </div>
+      </div>
+
+      <table class="nzosa-table">
+        <thead>
+          <tr>
+            <th style="width:11%;">DATE</th>
+            <th style="width:23%;">BANK LINE</th>
+            <th class="num" style="width:10%;">AMOUNT</th>
+            <th class="center" style="width:9%;">RECONCILE</th>
+            <th style="width:27%;">POSTED TO</th>
+            <th class="num" style="width:10%;">DEBIT</th>
+            <th class="num" style="width:10%;">CREDIT</th>
+          </tr>
+        </thead>
+        <tbody id="s1TableBody"></tbody>
+      </table>
+
+      <div class="nzosa-ledger-footer">
+        <button class="nzosa-btn primary" data-learn="s1SpawnBankLine">+ Drop New Bank Line</button>
+        <span style="font-size:12px; color:var(--text-muted);">Test your skills by adding more bank transactions and reconciling them.</span>
+      </div>
+    </div>
+  </div>
+
+
+  <!-- ===================================================================== -->
+  <!-- EXAMPLE 2: INVOICE & AR CLEARING + CASH GST                          -->
+  <!-- ===================================================================== -->
+  <div class="nzosa-section">
+    <div class="nzosa-section-titlebar">
+      <h3 class="nzosa-section-title">
+        <span class="nzosa-step-badge" style="background:var(--ar-amber);">Example 2</span>
+        Invoice Entry &amp; Bank Match (Accrual Accounting &amp; Cash GST)
+      </h3>
+      <div style="font-size:12px; color:var(--text-muted);">
+        <span><i class="nzosa-dot" style="background:var(--ar-amber)"></i>610 AR</span> &nbsp;&bull;&nbsp;
+        <span><i class="nzosa-dot" style="background:var(--bank-blue)"></i>Bank</span> &nbsp;&bull;&nbsp;
+        <span><i class="nzosa-dot" style="background:var(--sales-teal)"></i>Sales</span> &nbsp;&bull;&nbsp;
+        <span><i class="nzosa-dot" style="background:var(--gst-indigo)"></i>GST</span>
+      </div>
+    </div>
+
+    <!-- Scale Stage 2 -->
+    <div class="nzosa-scale-stage">
+      <div class="nzosa-stage-toolbar">
+        <div class="nzosa-metrics-group">
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">Total Debits</span>
+            <span class="nzosa-metric-val" style="color:var(--bank-blue)" id="s2Dr">0.00</span>
+          </div>
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">Total Credits</span>
+            <span class="nzosa-metric-val" style="color:var(--sales-teal)" id="s2Cr">0.00</span>
+          </div>
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">610 Accounts Receivable</span>
+            <span class="nzosa-metric-val" id="s2ArStatus">0.00</span>
+          </div>
+          <div class="nzosa-metric-item">
+            <span class="nzosa-metric-label">820 GST Return</span>
+            <span class="nzosa-metric-val" style="color:var(--gst-indigo)" id="s2GstStatus">0.00 Due</span>
+          </div>
+        </div>
+
+        <div class="nzosa-btn-group">
+          <button id="btnInv1" class="nzosa-btn primary" data-learn="s2Step1_Invoice">
+            1. Enter Invoice (INV-0049)
+          </button>
+          <button id="btnInv2" class="nzosa-btn" data-learn="s2Step2_BankLands" disabled>
+            2. Bank Payment Lands ($225.00)
+          </button>
+          <span id="btnInv3" class="nzosa-btn status-only" disabled>
+            3. Match the invoice, ✓ to clear AR (Click ✓ below)
+          </span>
+          <button class="nzosa-btn" data-learn="s2Reset">Reset</button>
+        </div>
+      </div>
+
+      <canvas id="canvasInvoice" class="nzosa-canvas" width="1060" height="330"></canvas>
+    </div>
+
+    <!-- Ledger Table 2 -->
+    <div class="nzosa-ledger-wrap">
+      <div class="nzosa-summary-line">
+        <div id="s2SummaryText">
+          ▼ <strong>Invoice Lifecycle:</strong> Click <strong>1. Enter Invoice (INV-0049)</strong> above to begin.
+        </div>
+        <div class="nzosa-hint-pill" id="s2HintText">
+          💡 <strong>Pointer:</strong> Step 1 creates an unpaid customer debt. Step 2 brings in the bank payment. Step 3 clears them together.
+        </div>
+      </div>
+
+      <table class="nzosa-table">
+        <thead>
+          <tr>
+            <th style="width:8%;">SOURCE</th>
+            <th style="width:12%;">REF / ID</th>
+            <th style="width:19%;">CONTACT / BANK LINE</th>
+            <th class="center" style="width:7%;">MATCH</th>
+            <th style="width:7%;">CODE</th>
+            <th style="width:19%;">ACCOUNT NAME</th>
+            <th style="width:12%;">DESCRIPTION</th>
+            <th class="num" style="width:8%;">DEBIT</th>
+            <th style="width:8%;">CREDIT</th>
+          </tr>
+        </thead>
+        <tbody id="s2TableBody"></tbody>
+      </table>
+    </div>
+
+    <div class="nzosa-gst-explainer">
+      <div class="nzosa-gst-card">
+        <h4>
+          <span>📊 Accrual Accounting (610 AR)</span>
+          <span class="nzosa-badge amber" id="badgeAccrualState">Waiting for Invoice</span>
+        </h4>
+        <p id="textAccrualExplain">
+          Tracks who owes you money. When you issue an invoice, <strong>$225.00</strong> is logged in Accounts Receivable immediately so you always know your outstanding revenue.
+        </p>
+      </div>
+
+      <div class="nzosa-gst-card gst-focus">
+        <h4>
+          <span>🏦 Cash Basis GST (820 GST)</span>
+          <span class="nzosa-badge indigo" id="badgeCashGstState">0.00 Reportable</span>
+        </h4>
+        <p id="textCashGstExplain">
+          On a <strong>Cash Basis for GST</strong>, the <strong>$29.35 tax component</strong> is held in suspense and is NOT payable to IRD until the customer's cash payment actually lands in your bank and you click the green tick.
+        </p>
+      </div>
+    </div>
+  </div>
+
+</div>
+    </div>
+  </section>
+
   <section class="block" id="banks">
     <div class="wrap">
       <div class="bank">
@@ -348,5 +938,6 @@
     <span><a href="https://github.com/hidicker/nzosa">Source code</a> &middot; <a href="https://github.com/hidicker/nzosa/blob/main/docs/user-guide.md">Guide</a> &middot; <a href="../privacy.html">Privacy</a> &middot; <a href="../terms.html">Terms</a> &middot; <a href="https://buy.stripe.com/28EaEX2sY2Ar7vy49pd7q00" rel="noopener">Donate</a></span>
   </div>
 </footer>
+<script src="learn.js" defer></script>
 </body>
 </html>

@@ -1,5 +1,6 @@
 import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
+import type { OtherPurchase } from "./gst.js";
 import type { Journal } from "./journals.js";
 import type { PostedJournal, PostedLine, PostingOptions } from "./posting.js";
 import { gstAccountsFrom } from "./posting.js";
@@ -117,6 +118,38 @@ export function checkManualJournal(journal: ManualJournal): ManualJournalProblem
 export function splitManualGst(amount: Cents): { net: Cents; tax: Cents } {
   const tax = (Math.sign(amount) * Math.round(Math.abs(taxWithinExact(amount)))) as Cents;
   return { net: (amount - tax) as Cents, tax };
+}
+
+/**
+ * The GST lines of manual journals dated in a period, for the GST return.
+ *
+ * As Xero does with "Show journal on cash basis reports" ticked, its default:
+ * a journal has no payment to wait for, so a line given GST is on the return
+ * for the period of the journal's date, whichever basis the return is on. GST
+ * on expenses is a purchase (a credit, a refund, reduces them); GST on income
+ * is a sale. `include` says which lines belong to the return being worked:
+ * the entity chosen, and one registered for GST.
+ */
+export function journalGstFor(
+  journals: readonly ManualJournal[],
+  period: { from: IsoDate; to: IsoDate },
+  include: (code: string) => boolean = () => true,
+): { purchases: OtherPurchase[]; sales: OtherPurchase[] } {
+  const purchases: OtherPurchase[] = [];
+  const sales: OtherPurchase[] = [];
+  for (const journal of journals) {
+    if (journal.deleted !== undefined || journal.date < period.from || journal.date > period.to) continue;
+    if (checkManualJournal(journal).length > 0) continue;
+    for (const line of journal.lines) {
+      if (line.gst === undefined || line.amount === 0 || !include(line.code)) continue;
+      const { tax } = splitManualGst(line.amount);
+      const label = line.description ?? journal.narration;
+      // Debits positive: a purchase's gross is the debit, a sale's the credit.
+      if (line.gst === "INPUT2") purchases.push({ gross: line.amount, gst: tax, date: journal.date, label });
+      else sales.push({ gross: -line.amount, gst: -tax, date: journal.date, label });
+    }
+  }
+  return { purchases, sales };
 }
 
 /**

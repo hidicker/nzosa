@@ -701,9 +701,9 @@ function accountLabelFor(code: string): string {
 
 /**
  * Whether every line of a document going into the books says where it goes.
- * A line with no account is owed but counts in no income or expense, so the
- * person is asked before it is saved like that. A draft is not in the books
- * yet and is saved without asking.
+ * A line with no account would be owed but count in no income or expense, so
+ * it is refused, as Xero refuses it. A draft is not in the books yet and is
+ * saved without asking.
  */
 function accountsChosen(built: Invoice): boolean {
   if (!isPosted(built)) return true;
@@ -713,13 +713,14 @@ function accountsChosen(built: Invoice): boolean {
   const said = missing
     .map((line) => `- ${line.description.trim() || "A line"}: ${formatAmount(line.gross)}`)
     .join("\n");
-  return confirm(
+  // As Xero: a line with an amount needs an account before the document is in
+  // the books. A draft may wait; a line with no amount is a note.
+  alert(
     `${missing.length === 1 ? "A line" : `${missing.length} lines`} of this ${noun} ${missing.length === 1 ? "has" : "have"} no account:\n\n` +
       `${said}\n\n` +
-      `The amount is ${built.kind === "purchase" ? "owed in payables" : "owed in receivables"}, but counts in no ` +
-      `${built.kind === "purchase" ? "expense" : "income"} account, so the profit and loss leaves it out.\n\n` +
-      "Save it anyway? Cancel to choose an account.",
+      "Choose an account for each line with an amount before approving it, or save it as a draft to finish later.",
   );
+  return false;
 }
 
 /**

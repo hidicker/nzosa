@@ -32,7 +32,7 @@ import {
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
 import {
-  GST_OPTIONS,
+  gstRateOptions,
   classificationToRate,
   describeFlow,
   knownCodes,
@@ -513,7 +513,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   const fromHistory = fromModel !== undefined ? rateForSuggestion(one.transaction, fromModel.code) : null;
   const suggestedRate = fromModel !== undefined ? (fromHistory?.rate ?? accountRate(fromModel.code)) : null;
   const currentRate = suggestedRate ?? classificationToRate(one.classification);
-  for (const rate of GST_OPTIONS) {
+  for (const rate of gstRateOptions()) {
     const option = document.createElement("option");
     option.value = rate.value;
     option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;
@@ -664,11 +664,17 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     if (one.confirmed || noSalesTax()) return;
     const rate = gstSelect.value as GstRate;
     const words =
-      rate === "0"
-        ? "No GST"
-        : rate === "100"
-          ? "GST on Imports"
-          : taxTypeLabel(one.transaction.amount < 0 ? "15% GST on Expenses" : "15% GST on Income");
+      rate === "free"
+        ? "GST-free"
+        : rate === "taxed"
+          ? "Input taxed"
+          : rate === "0"
+            ? booksCountry().id === "au"
+              ? "BAS excluded"
+              : "No GST"
+            : rate === "100"
+              ? "GST on Imports"
+              : taxTypeLabel(one.transaction.amount < 0 ? "15% GST on Expenses" : "15% GST on Income");
     reason.textContent = `${words} · Chosen here, not yet confirmed`;
     reason.classList.remove("code-reason-ai", "code-reason-caution");
   }
@@ -2259,9 +2265,10 @@ export async function confirmLine(
   if (hasSplit && linesWithUncodedPart().has(one.transaction.id)) return;
 
   const chosen = rateToClassification(rate, one.transaction.amount);
-  // Outside New Zealand a 0% line on a GST-free or input taxed account is that,
-  // not "no GST": the BAS counts both.
-  const own = rate === "0" && booksCountry().id !== "nz" ? accountZeroOrExempt(code) : null;
+  // Outside New Zealand and Australia a 0% line on a zero-rated or exempt
+  // account is that, not "no GST". Australia names each, so 0% there is BAS
+  // excluded and is taken at its word.
+  const own = rate === "0" && booksCountry().id !== "nz" && booksCountry().id !== "au" ? accountZeroOrExempt(code) : null;
   const { treatment, side } =
     own === null ? chosen : { treatment: own, side: one.transaction.amount > 0 ? ("sales" as const) : ("purchases" as const) };
   // A description is worth having when a suggestion is overruled, but it is not

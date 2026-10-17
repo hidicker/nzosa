@@ -626,7 +626,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   const gstWarning = note(
     "GST is not usually applied to a manual journal. Most journals move amounts whose GST was " +
       "dealt with when they were first entered, and GST here puts the line on the GST return " +
-      "again. Use it only for a supply no bank line shows, such as a refund the bank feed " +
+      "again, in the period of the journal's date. Use it only for a supply no bank line shows, such as a refund the bank feed " +
       "missed. The amount is GST-inclusive: the account takes it less GST.",
   );
   gstWarning.className = "journal-gst-warning";
@@ -2621,19 +2621,23 @@ function renderGstTransactions(body: HTMLElement, result: GstReturnResult, money
     }
   }
   // Bills paid by a shareholder or on an unloaded card are in Box 11 with no
-  // bank line behind them. Listed, or the boxes would not add up to the lines.
-  if ((gstBoxFocus === null || gstBoxFocus === "purchases") && result.otherPurchases.length > 0) {
+  // bank line behind them, and manual journals given GST in Box 5 or Box 11.
+  // Listed, or the boxes would not add up to the lines.
+  for (const [side, list, caption] of [
+    ["purchases", result.otherPurchases, "Purchases with no bank line: bills paid elsewhere, and manual journals"],
+    ["sales", result.otherSales, "Sales with no bank line: manual journals"],
+  ] as const) {
+    if ((gstBoxFocus !== null && gstBoxFocus !== side) || list.length === 0) continue;
     const heading = document.createElement("h4");
-    heading.textContent = "Bills paid other than through a bank line";
+    heading.textContent = caption;
     body.append(heading);
     const table = document.createElement("table");
     table.className = "report-table";
-    table.innerHTML =
-      "<thead><tr><th>Date</th><th>Bill</th><th>Gross</th><th>GST</th><th>Net</th></tr></thead>";
+    table.innerHTML = "<thead><tr><th>Date</th><th>What</th><th>Gross</th><th>GST</th><th>Net</th></tr></thead>";
     const tbody = document.createElement("tbody");
     let gross = 0;
     let gst = 0;
-    for (const other of result.otherPurchases) {
+    for (const other of list) {
       const tr = document.createElement("tr");
       tr.append(nameCell(other.date ?? ""), nameCell(other.label ?? ""));
       tr.append(amountCell(money(other.gross)), amountCell(money(other.gst)), amountCell(money(other.gross - other.gst)));

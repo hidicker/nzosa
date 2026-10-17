@@ -1261,7 +1261,9 @@ export function renderEntities(): void {
     for (const rate of GST_OPTIONS) {
       const option = document.createElement("option");
       option.value = rate.value;
-      option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;
+      // Xero Australia's name for no GST: off the BAS altogether.
+      option.textContent =
+        rate.value === "15" ? `${gstPercent()}%` : rate.value === "0" && booksCountry().id === "au" ? "BAS excluded" : rate.label;
       option.title = rate.hint;
       option.selected = current === rate.value;
       gst.append(option);

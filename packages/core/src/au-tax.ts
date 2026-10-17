@@ -115,7 +115,10 @@ export interface FullBas {
 }
 
 export function fullBas(
-  ret: Pick<GstReturnResult, "lines" | "excluded" | "boxes"> & { otherPurchases?: readonly { gross: Cents }[] },
+  ret: Pick<GstReturnResult, "lines" | "excluded" | "boxes"> & {
+    otherPurchases?: readonly { gross: Cents }[];
+    otherSales?: readonly { gross: Cents }[];
+  },
   options: {
     isCapital: (t: Transaction) => boolean;
     isExport: (t: Transaction) => boolean;
@@ -169,6 +172,7 @@ export function fullBas(
     }
   }
   for (const other of ret.otherPurchases ?? []) g11 += other.gross;
+  for (const other of ret.otherSales ?? []) g1 += other.gross;
   const g5 = g2 + g3 + g4;
   const g6 = g1 - g5;
   const g7 = 0;

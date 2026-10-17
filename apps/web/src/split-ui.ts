@@ -4,7 +4,7 @@ import { booksCountry, gstPercent } from "./country.js";
 import { formatAmount, parseAmount } from "@nzosa/core";
 import type { SplitPart, Transaction } from "@nzosa/core";
 import {
-  GST_OPTIONS,
+  gstRateOptions,
   classificationToRate,
   isGstAccount,
   rateToClassification,
@@ -132,7 +132,8 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
         const amount = parseAmount(draft.amount) ?? 0;
         // Outside New Zealand a 0% part on a GST-free or input taxed account
         // is that, as on Reconcile, not "no GST": the BAS counts both.
-        const own = draft.rate === "0" && booksCountry().id !== "nz" ? accountZeroOrExempt(draft.code) : null;
+        const own =
+          draft.rate === "0" && booksCountry().id !== "nz" && booksCountry().id !== "au" ? accountZeroOrExempt(draft.code) : null;
         const { treatment, side } =
           own === null
             ? rateToClassification(draft.rate as GstRate, amount)
@@ -239,7 +240,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
           gst.append(option);
         }
       } else {
-        for (const rate of GST_OPTIONS) {
+        for (const rate of gstRateOptions()) {
           const option = document.createElement("option");
           option.value = rate.value;
           option.textContent = rate.value === "15" ? `${gstPercent()}%` : rate.label;

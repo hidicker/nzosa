@@ -69,6 +69,7 @@ import {
   isCreditNote as isCreditDocument,
   trackStock,
   outsidePurchases,
+  journalGstFor,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
 } from "@nzosa/core";
@@ -994,7 +995,8 @@ export function varianceInput(): VarianceInput {
     // The private use of a vehicle gives back GST once a year, in Box 9 of
     // the return covering the balance date.
     debitAdjustments: vehicleBox9(accountsFor(state.varianceAccounts)),
-    otherPurchases: otherPurchasesFor,
+    otherPurchases: (period) => [...otherPurchasesFor(period), ...journalGstIn(period).purchases],
+    otherSales: (period) => journalGstIn(period).sales,
     settles: settlementOf,
   };
 }
@@ -1202,6 +1204,20 @@ export function datedInvoicePayments(): DatedPayment[] {
 }
 
 /**
+ * Manual journal lines given GST, for the GST return: those of the entity
+ * chosen, and of an entity registered for GST.
+ */
+function journalGstIn(period: { from: string; to: string }): { purchases: OtherPurchase[]; sales: OtherPurchase[] } {
+  const chosen = state.entityFilter;
+  const entityOf = entityOfCoding();
+  const unregistered = unregisteredCode();
+  return journalGstFor(state.ledger.manualJournals ?? [], period as { from: IsoDate; to: IsoDate }, (code) => {
+    if (unregistered(code)) return false;
+    return chosen === "" || entityOf(code) === chosen;
+  });
+}
+
+/**
  * Bills paid outside the bank lines, for the GST return's Box 11.
  *
  * Only those of the entity chosen, and only an entity registered for GST: a
@@ -1306,9 +1322,14 @@ export function cachedChartTreatments(): Map<string, unknown> {
  * follow when the account is picked; null where it says nothing the row can
  * show. An account of an entity not registered for GST is always 0%.
  */
-export function accountRate(label: string): "0" | "15" | "100" | null {
+export function accountRate(label: string): "0" | "15" | "100" | "free" | "taxed" | null {
   if (label === "") return null;
   if (unregisteredCode()(label)) return "0";
+  // Australia's GST-free and input taxed accounts, by name, as the line shows them.
+  if (booksCountry().id === "au") {
+    const own = accountZeroOrExempt(label);
+    if (own !== null) return own === "zero-rated" ? "free" : "taxed";
+  }
   const file = state.rules as RuleFileShape | undefined;
   const rate = rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));
   return rate === "0" || rate === "15" || rate === "100" ? rate : null;

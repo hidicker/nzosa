@@ -184,9 +184,30 @@ export function combobox(
     active = -1;
     draw(input.value);
   });
+  /**
+   * What was typed, if it names one option and no other: the one highlighted,
+   * the only match, or an account typed whole by its name or its code ("Sales"
+   * for Sales - 4000), whatever else the words also find.
+   */
+  function typedChoice(matches: readonly string[], highlighted: boolean): string | undefined {
+    const q = input.value.trim().toLowerCase();
+    if (q === "" || input.value === chosen) return undefined;
+    const exact = matches.filter((option) => {
+      const lower = option.toLowerCase();
+      return lower === q || lower.endsWith(` - ${q}`) || (lower.startsWith(`${q} - `) && !lower.slice(q.length + 3).includes(" "));
+    });
+    return (highlighted ? matches[active] : undefined) ?? (matches.length === 1 ? matches[0] : exact.length === 1 ? exact[0] : undefined);
+  }
+
   input.addEventListener("blur", () => {
-    // Leaving a half-typed account reverts to the last real choice rather than
-    // silently keeping text that means nothing.
+    // Leaving an account typed whole takes it, as Tab does in Xero; leaving a
+    // half-typed one reverts to the last real choice rather than silently
+    // keeping text that means nothing.
+    const match = list.hidden ? undefined : typedChoice(ranked(input.value), false);
+    if (match !== undefined) {
+      pick(match);
+      return;
+    }
     input.value = chosen;
     close();
   });
@@ -206,18 +227,11 @@ export function combobox(
       list.querySelector(".combo-option.on")?.scrollIntoView({ block: "nearest" });
       return;
     }
-    if (key === "Enter") {
-      // An account typed whole, by its name or its code ("Sales" for Sales -
-      // 4000), is that account, whatever else the words also find.
-      const q = input.value.trim().toLowerCase();
-      const exact = q === "" ? [] : matches.filter((option) => {
-        const lower = option.toLowerCase();
-        return lower === q || lower.endsWith(` - ${q}`) || (lower.startsWith(`${q} - `) && !lower.slice(q.length + 3).includes(" "));
-      });
-      const match =
-        matches[active] ?? (matches.length === 1 ? matches[0] : exact.length === 1 ? exact[0] : undefined);
+    if (key === "Enter" || key === "Tab") {
+      // Tab takes the highlighted account too, as in Xero, and then moves on.
+      const match = list.hidden ? undefined : typedChoice(matches, true);
       if (match !== undefined) {
-        event.preventDefault();
+        if (key === "Enter") event.preventDefault();
         pick(match);
       }
       return;

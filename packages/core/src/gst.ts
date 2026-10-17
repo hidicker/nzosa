@@ -189,6 +189,12 @@ export interface GstReturnOptions {
    * in `gross`, as the bill has it.
    */
   otherPurchases?: readonly OtherPurchase[];
+  /**
+   * Sales in the period that no bank line shows, for Box 5: a manual
+   * journal's line given GST on income, as Xero puts one on the return.
+   * `gross` is GST-inclusive; negative for a credit.
+   */
+  otherSales?: readonly OtherPurchase[];
   /** How to arrive at the GST content. Defaults to `per-line`. */
   rounding?: GstRounding;
 }
@@ -234,6 +240,8 @@ export interface GstReturnResult {
   missingTaxPoint: Transaction[];
   /** Purchases in Box 11 that no bank line shows, after any share. */
   otherPurchases: OtherPurchase[];
+  /** Sales in Box 5 that no bank line shows, after any share. */
+  otherSales: OtherPurchase[];
 }
 
 /**
@@ -380,6 +388,17 @@ export function gstReturn(
     perLinePurchaseGst += shared.gst;
     otherPurchases.push(shared);
   }
+  const otherSales: OtherPurchase[] = [];
+  for (const other of options.otherSales ?? []) {
+    const shared = {
+      ...other,
+      gross: applyShare(other.gross, sharePercent),
+      gst: applyShare(other.gst, sharePercent),
+    };
+    box5 += shared.gross;
+    perLineGst += shared.gst;
+    otherSales.push(shared);
+  }
 
   const rounding = options.rounding ?? "per-line";
 
@@ -435,6 +454,7 @@ export function gstReturn(
     lateClaims,
     missingTaxPoint,
     otherPurchases,
+    otherSales,
   };
 }
 

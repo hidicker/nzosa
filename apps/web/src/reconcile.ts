@@ -1,4 +1,5 @@
 import { categorise, gstResolver, isGstControlCode, splitAccountLabel } from "@nzosa/core";
+import { booksCountry } from "./country.js";
 import type {
   GstClassification,
   RuleFile,
@@ -149,7 +150,32 @@ export const GST_OPTIONS: readonly { value: GstRate; label: string; hint: string
   { value: "100", label: "100%", hint: "The whole line is GST, e.g. a customs entry" },
 ];
 
-export type GstRate = "0" | "15" | "100";
+/**
+ * A line's GST, as chosen on it. "free" and "taxed" are Australia's GST-free
+ * and input taxed: no GST either, but each its own place on the BAS, so not
+ * the same as "0" -- which there is BAS excluded, as Xero's named rates have it.
+ */
+export type GstRate = "0" | "15" | "100" | "free" | "taxed";
+
+/** Whether the books' rates are named, Xero Australia's way, rather than 15% / 0% / 100%. */
+function namedRates(): boolean {
+  return booksCountry().id === "au";
+}
+
+/**
+ * The rates offered on a line: the percentage, none and all of it, and in
+ * Australia GST-free and input taxed besides, with "none" called BAS excluded.
+ */
+export function gstRateOptions(): readonly { value: GstRate; label: string; hint: string }[] {
+  if (!namedRates()) return GST_OPTIONS;
+  return [
+    ...GST_OPTIONS.map((o) =>
+      o.value === "0" ? { ...o, label: "BAS excluded", hint: "Not on the BAS: wages, transfers, drawings, tax payments" } : o,
+    ),
+    { value: "free", label: "GST-free", hint: "No GST in the price, but on the BAS: G3 or G14" },
+    { value: "taxed", label: "Input taxed", hint: "No GST either way, but on the BAS: G4, or G13 and G14" },
+  ];
+}
 
 /**
  * Whether a coding names the GST control account.
@@ -184,12 +210,16 @@ export function rateToClassification(
 ): { treatment: GstTreatment; side: GstSide } {
   if (rate === "0") return { treatment: "out-of-scope", side: "none" };
   if (rate === "100") return { treatment: "standard", side: "imports" };
+  if (rate === "free") return { treatment: "zero-rated", side: amount < 0 ? "purchases" : "sales" };
+  if (rate === "taxed") return { treatment: "exempt", side: amount < 0 ? "purchases" : "sales" };
   return { treatment: "standard", side: amount < 0 ? "purchases" : "sales" };
 }
 
 /** The rate a classification already represents, for showing the current state. */
 export function classificationToRate(classification: GstClassification): GstRate {
   if (classification.side === "imports") return "100";
+  if (namedRates() && classification.treatment === "zero-rated") return "free";
+  if (namedRates() && classification.treatment === "exempt") return "taxed";
   if (classification.treatment !== "standard") return "0";
   return "15";
 }

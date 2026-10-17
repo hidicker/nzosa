@@ -83,3 +83,30 @@ test("a journal's GST is the books' rate: one eleventh in Australia, 3/23 in New
     setSalesTaxFraction(NZ_GST);
   }
 });
+
+test("a journal's GST is on the return for the journal's date, as Xero's cash basis default has it", async () => {
+  const { journalGstFor, gstReturn } = await import("../dist/index.js");
+  const journals = [
+    refund("INPUT2"),
+    {
+      id: "s1",
+      date: "2025-05-10",
+      narration: "Sale the bank feed missed",
+      lines: [
+        { code: "BNZ Visa", amount: 2300 },
+        { code: "200", amount: -2300, gst: "OUTPUT2" },
+      ],
+    },
+    { ...refund("INPUT2"), id: "late", date: "2025-07-01" },
+    { ...refund("INPUT2"), id: "gone", deleted: { at: "2025-05-01", by: "me" } },
+  ];
+  const period = { from: "2025-04-01", to: "2025-05-31" };
+  const { purchases, sales } = journalGstFor(journals, period);
+  // The refund is a credit on expenses: it reduces purchases.
+  assert.deepEqual(purchases.map((p) => [p.gross, p.gst]), [[-3182, -415]]);
+  assert.deepEqual(sales.map((p) => [p.gross, p.gst]), [[2300, 300]]);
+  const ret = gstReturn([], period, { resolve: () => ({ treatment: "out-of-scope", side: "none" }), basis: "payments", otherPurchases: purchases, otherSales: sales });
+  assert.equal(ret.boxes.box5, 2300);
+  assert.equal(ret.boxes.box8, 300);
+  assert.equal(ret.boxes.box12, -415);
+});

@@ -87,6 +87,8 @@ export interface VarianceInput {
   settles?: (transactionId: string) => Settlement | undefined;
   /** Bills paid in a period other than through a bank line, for Box 11. */
   otherPurchases?: (period: { from: string; to: string }) => OtherPurchase[];
+  /** Sales in a period no bank line shows -- a manual journal's -- for Box 5. */
+  otherSales?: (period: { from: string; to: string }) => OtherPurchase[];
 }
 
 export interface VarianceRow {
@@ -210,6 +212,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
       rounding: booksCountry().id === "nz" ? "per-line" : "form",
       adjustments: input.debitAdjustments?.(period) ?? 0,
       otherPurchases: input.otherPurchases?.(period) ?? [],
+      otherSales: input.otherSales?.(period) ?? [],
     }),
   );
 }

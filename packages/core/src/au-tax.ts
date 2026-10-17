@@ -135,10 +135,24 @@ export function fullBas(
     }
   }
   for (const { transaction, classification, amount } of ret.excluded) {
-    if (classification.side === "sales" && classification.treatment === "exempt") {
+    // An account's own "Input Taxed" or "GST Free" tax code says no side: the
+    // money says it, in for a sale and out for a purchase.
+    const side =
+      classification.side === "none" || classification.side === undefined
+        ? classification.treatment === "exempt" || classification.treatment === "zero-rated"
+          ? amount > 0
+            ? "sales"
+            : "purchases"
+          : classification.side
+        : classification.side;
+    if (side === "sales" && classification.treatment === "exempt") {
       g1 += amount;
       g4 += amount;
-    } else if (classification.side === "purchases" && (classification.treatment === "exempt" || classification.treatment === "zero-rated")) {
+    } else if (side === "sales" && classification.treatment === "zero-rated") {
+      g1 += amount;
+      if (options.isExport(transaction)) g2 += amount;
+      else g3 += amount;
+    } else if (side === "purchases" && (classification.treatment === "exempt" || classification.treatment === "zero-rated")) {
       purchase(transaction, -amount);
       g14 += -amount;
     }

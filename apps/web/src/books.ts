@@ -1847,6 +1847,19 @@ export function chartTreatmentOf(label: string): unknown | null {
 }
 
 /**
+ * Whether an account is GST-free (zero-rated) or input taxed (exempt), by the
+ * treatment set for it here or its chart tax code. A line confirmed at 0% on
+ * such an account keeps that treatment outside New Zealand, where the BAS
+ * counts both (G1, G2 to G4, G14) and "no GST" would leave them out.
+ */
+export function accountZeroOrExempt(label: string): "zero-rated" | "exempt" | null {
+  const set = ((state.rules as { codeTreatments?: Record<string, unknown> } | undefined)?.codeTreatments ?? {})[label];
+  const held = set ?? chartTreatmentOf(label);
+  const treatment = typeof held === "string" ? held : (held as { treatment?: string } | null)?.treatment;
+  return treatment === "zero-rated" || treatment === "exempt" ? treatment : null;
+}
+
+/**
  * Coding and GST, set up once for a report.
  *
  * Splits are expanded first: a payment divided across accounts reaches the

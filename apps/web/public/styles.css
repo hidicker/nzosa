@@ -231,6 +231,11 @@
    anything a module hides say so themselves -- or "hidden" shows anyway. */
 .sidebar-nav button[hidden],
 [data-module][hidden] { display: none !important; }
+/* The same for fields shown only where they apply: an entity's LTC and
+   new-build boxes, a bill's own fields on an invoice. */
+.entity-gst[hidden],
+.invoice-fields label[hidden],
+.remove-account[hidden] { display: none !important; }
 
 .sidebar-nav button {
   display: flex;

@@ -74,3 +74,30 @@ export function taxYearOf(date: string): number {
 export function depreciationRules(): { yearEnd: { endMonth: number; endDay: number }; byDays: boolean } {
   return { yearEnd: yearEnd(), byDays: state.ledger.jurisdiction === "au" };
 }
+
+/**
+ * The twelve months of the books' year, in order from its first: April to
+ * March in New Zealand, July to June in Australia, January to December in the
+ * United States. Each with its short name and its first and last day.
+ */
+export function monthsOfTaxYear(year: number, locale = "en-NZ"): { label: string; from: IsoDate; to: IsoDate }[] {
+  const start = taxYearStart(year);
+  let y = Number(start.slice(0, 4));
+  let m = Number(start.slice(5, 7));
+  const months: { label: string; from: IsoDate; to: IsoDate }[] = [];
+  for (let i = 0; i < 12; i++) {
+    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
+    const two = String(m).padStart(2, "0");
+    months.push({
+      label: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(locale, { month: "short", timeZone: "UTC" }),
+      from: `${y}-${two}-01` as IsoDate,
+      to: `${y}-${two}-${String(last).padStart(2, "0")}` as IsoDate,
+    });
+    m += 1;
+    if (m > 12) {
+      m = 1;
+      y += 1;
+    }
+  }
+  return months;
+}

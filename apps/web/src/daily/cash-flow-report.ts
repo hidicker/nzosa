@@ -3,7 +3,7 @@ import { state } from "../state.js";
 import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
-import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid, monthsOfTaxYear } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 
 /**
@@ -164,16 +164,9 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
 /** The three headings, the change and the closing cash, a column for each month. */
 function monthly(year: number, banks: ReadonlySet<string>): HTMLElement {
   const months: { label: string; s: CashFlowStatement | null }[] = [];
-  for (let i = 0; i < 12; i++) {
-    const y = i < 9 ? year - 1 : year;
-    const m = ((i + 3) % 12) + 1;
-    const from = `${y}-${String(m).padStart(2, "0")}-01`;
-    const last = new Date(Date.UTC(y, m, 0)).getUTCDate();
-    const to = `${y}-${String(m).padStart(2, "0")}-${String(last).padStart(2, "0")}`;
-    months.push({
-      label: new Date(Date.UTC(y, m - 1, 1)).toLocaleDateString(booksLocale(), { month: "short", timeZone: "UTC" }),
-      s: statementFor({ from, to }, banks),
-    });
+  // The books' own year: April to March in New Zealand, July to June in Australia.
+  for (const { label, from, to } of monthsOfTaxYear(year, booksLocale())) {
+    months.push({ label, s: statementFor({ from, to }, banks) });
   }
   const table = document.createElement("table");
   table.className = "report-table cash-flow-months";

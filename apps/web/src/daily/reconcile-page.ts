@@ -1,6 +1,6 @@
 import { changesByLine } from "../events.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
-import { booksLocale, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
+import { booksCountry, booksLocale, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
 import { offerAsset } from "./assets.js";
 import { redraw, showPage } from "../app.js";
 import { lastFeedStatus } from "../feed-route.js";
@@ -27,6 +27,7 @@ import {
   bankReach,
   betweenTagFor,
   linesWithUncodedPart,
+  accountZeroOrExempt,
 } from "../books.js";
 import { codingReconciliationWaiting } from "../migrate/coding-reconciliation.js";
 import { combobox } from "../combobox.js";
@@ -667,9 +668,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
         ? "No GST"
         : rate === "100"
           ? "GST on Imports"
-          : one.transaction.amount < 0
-            ? "15% GST on Expenses"
-            : "15% GST on Income";
+          : taxTypeLabel(one.transaction.amount < 0 ? "15% GST on Expenses" : "15% GST on Income");
     reason.textContent = `${words} · Chosen here, not yet confirmed`;
     reason.classList.remove("code-reason-ai", "code-reason-caution");
   }
@@ -2259,10 +2258,12 @@ export async function confirmLine(
   // not finished, whichever route confirmed it.
   if (hasSplit && linesWithUncodedPart().has(one.transaction.id)) return;
 
-  const { treatment, side } = rateToClassification(
-    rate,
-    one.transaction.amount,
-  );
+  const chosen = rateToClassification(rate, one.transaction.amount);
+  // Outside New Zealand a 0% line on a GST-free or input taxed account is that,
+  // not "no GST": the BAS counts both.
+  const own = rate === "0" && booksCountry().id !== "nz" ? accountZeroOrExempt(code) : null;
+  const { treatment, side } =
+    own === null ? chosen : { treatment: own, side: one.transaction.amount > 0 ? ("sales" as const) : ("purchases" as const) };
   // A description is worth having when a suggestion is overruled, but it is not
   // required: blocking the line only moved the friction onto the person doing
   // the work, who then types a full stop. The change log records what changed

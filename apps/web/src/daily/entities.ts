@@ -1257,7 +1257,17 @@ export function renderEntities(): void {
       option.selected = current === rate.value;
       gst.append(option);
     }
-    if (current !== null && !GST_OPTIONS.some((r) => r.value === current)) {
+    // Australia's GST-free and input taxed, each its own place on the BAS.
+    const auExtra: readonly (readonly [string, string])[] =
+      booksCountry().id === "au" ? [["zero-rated", "GST-free"], ["exempt", "Input taxed"]] : [];
+    for (const [value, words] of auExtra) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = words;
+      option.selected = current === value;
+      gst.append(option);
+    }
+    if (current !== null && !GST_OPTIONS.some((r) => r.value === current) && !auExtra.some(([v]) => v === current)) {
       // A treatment this picker cannot express -- half-deductible
       // entertainment, for instance -- is shown and left alone rather than
       // being flattened by the act of looking at it.
@@ -1514,7 +1524,13 @@ function addAccountForm(model: EntityModel, accountRows: readonly { label: strin
   const gst = document.createElement("select");
   for (const [value, caption] of [
     ["15", `${gstPercent()}% — GST charged or claimed`],
-    ["0", booksCountry().id === "au" ? "No GST — GST-free, input taxed or not a supply" : "No GST — exempt, zero-rated or not a supply"],
+    ["0", booksCountry().id === "au" ? "No GST — not a supply (BAS excluded)" : "No GST — exempt, zero-rated or not a supply"],
+    ...(booksCountry().id === "au"
+      ? ([
+          ["zero-rated", "GST-free — exports, basic food, health, education"],
+          ["exempt", "Input taxed — residential rent, interest, financial supplies"],
+        ] as const)
+      : []),
     ["100", "All GST — e.g. GST on imports"],
   ] as const) {
     const option = document.createElement("option");
@@ -2053,6 +2069,7 @@ function setTreatment(label: string, rate: string): void {
   else if (rate === "0") codeTreatments[label] = "out-of-scope";
   else if (rate === "100") codeTreatments[label] = { treatment: "standard", side: "imports" };
   else if (rate === "15") codeTreatments[label] = "standard";
+  else if (rate === "zero-rated" || rate === "exempt") codeTreatments[label] = rate;
   else return; // a treatment this picker does not express: left as it was
 
   // RuleSet is the shape core consumes; the file carries GST fields alongside

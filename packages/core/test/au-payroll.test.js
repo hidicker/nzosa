@@ -152,3 +152,24 @@ test("full BAS: sales split into taxable, GST-free and input taxed; purchases in
   assert.deepEqual([bas.g10, bas.g11, bas.g12, bas.g14, bas.g17], [2_200_00, 120_00, 2_320_00, 10_00, 2_310_00]);
   assert.deepEqual([bas.a1, bas.b1], [100_00, 210_00]);
 });
+
+test("full BAS: an account's own Input Taxed or GST Free code, with no side, is placed by the money", () => {
+  const t = (id, account = "x") => ({ id, account, date: "2026-08-01", amount: 0 });
+  const ret = {
+    lines: [],
+    excluded: [
+      // Interest on an "Input Taxed" account, and bank fees on "GST Free Expenses".
+      { transaction: t("i1"), classification: { treatment: "exempt", side: "none" }, amount: 150_00 },
+      { transaction: t("f1"), classification: { treatment: "zero-rated", side: "none" }, amount: -15_00 },
+      // A sale on a "GST Free Exports" account.
+      { transaction: t("e1", "export"), classification: { treatment: "zero-rated", side: "none" }, amount: 3_000_00 },
+      // Drawings stay outside the BAS.
+      { transaction: t("d1"), classification: { treatment: "out-of-scope", side: "none" }, amount: -1_000_00 },
+    ],
+    boxes: { box8: 0, box10: 0, box12: 0, box14: 0 },
+  };
+  const bas = fullBas(ret, { isCapital: () => false, isExport: (x) => x.account === "export" });
+  assert.equal(bas.g1, 3_150_00);
+  assert.deepEqual([bas.g2, bas.g3, bas.g4], [3_000_00, 0, 150_00]);
+  assert.deepEqual([bas.g11, bas.g14], [15_00, 15_00]);
+});

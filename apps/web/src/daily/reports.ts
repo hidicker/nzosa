@@ -124,7 +124,7 @@ import type {
   TaxExtraCategory,
   Transaction,
 } from "@nzosa/core";
-import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid, depreciationRules } from "../tax-year.js";
+import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid, depreciationRules, monthsOfTaxYear } from "../tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, taxTypeLabel } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
@@ -4476,7 +4476,7 @@ function renderExtract(body: HTMLElement, year: number): void {
     tr.append(nameCell(row.date), nameCell(row.source), nameCell(row.contact));
     tr.append(nameCell(row.description));
     tr.append(amountCell(formatAmount(row.gross)), amountCell(formatAmount(row.gst)));
-    tr.append(nameCell(row.gstRateName), nameCell(row.account));
+    tr.append(nameCell(taxTypeLabel(row.gstRateName)), nameCell(row.account));
     const coded = nameCell(row.relatedAccount);
     if (row.relatedAccount === "(not coded)") coded.className = "match-off";
     tr.append(coded);
@@ -4497,16 +4497,9 @@ function renderExtract(body: HTMLElement, year: number): void {
   }
 }
 
-/** The twelve months of a financial year, April to March. */
+/** The twelve months of a financial year, from its first: April to March in New Zealand. */
 function monthsOfYear(year: number): { label: string; from: string; to: string }[] {
-  const names = ["Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec", "Jan", "Feb", "Mar"];
-  return names.map((label, index) => {
-    const month = ((index + 3) % 12) + 1;
-    const calendar = index <= 8 ? year - 1 : year;
-    const last = new Date(Date.UTC(calendar, month, 0)).getUTCDate();
-    const two = String(month).padStart(2, "0");
-    return { label, from: `${calendar}-${two}-01`, to: `${calendar}-${two}-${last}` };
-  });
+  return monthsOfTaxYear(year, "en-US");
 }
 
 /**

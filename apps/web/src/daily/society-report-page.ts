@@ -1,5 +1,5 @@
 import { redraw } from "../app.js";
-import { bookYears, postedJournals, record } from "../books.js";
+import { banksOfEntity, bookYears, postedJournals, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, nameCell, note } from "../ui.js";
@@ -269,7 +269,17 @@ export function renderSocietyPage(): void {
     return owned(accountEntityKey(account));
   };
   const journals = postedJournals();
-  const statementsFor = (y: number) => smallSocietyStatements({ journals, chart: state.chart, from: taxYearStart(y), to: taxYearEnd(y), only });
+  const banks = banksOfEntity(entity.id);
+  const statementsFor = (y: number) =>
+    smallSocietyStatements({
+      journals,
+      chart: state.chart,
+      from: taxYearStart(y),
+      to: taxYearEnd(y),
+      only,
+      openingBalances: state.ledger.openingBalances,
+      banks,
+    });
 
   // 1. Which standard
   body.append(heading("1. Which standard applies?"));

@@ -5,6 +5,37 @@ import type { PostedJournal } from "./posting.js";
 import { incomeAndExpenses } from "./ir9.js";
 import type { AccountAmount } from "./ir9.js";
 import type { Tier3Inputs } from "./tier3-report.js";
+import type { OpeningBalances } from "./balance-sheet.js";
+
+/** A bank account the chart does not list: its lines are posted under its id. */
+export interface BankHeld {
+  account: string;
+  name: string;
+}
+
+/**
+ * Each account's balance at a date: the opening balances, where the books
+ * have them and the date is on or after them, and every journal up to the
+ * date. A journal before the opening balances is already inside them.
+ */
+export function balancesAt(
+  journals: readonly PostedJournal[],
+  to: IsoDate,
+  opening?: OpeningBalances | undefined,
+): Map<string, number> {
+  const balance = new Map<string, number>();
+  const from = opening !== undefined && to >= opening.asAt ? opening.asAt : null;
+  if (from !== null && opening !== undefined) {
+    for (const [code, amount] of Object.entries(opening.accounts)) {
+      balance.set(code.trim(), (balance.get(code.trim()) ?? 0) + amount);
+    }
+  }
+  for (const j of journals) {
+    if (j.date > to || (from !== null && j.date < from)) continue;
+    for (const l of j.lines) balance.set(l.accountCode.trim(), (balance.get(l.accountCode.trim()) ?? 0) + l.amount);
+  }
+  return balance;
+}
 
 /**
  * Which financial reporting standard an organisation uses, and the financial
@@ -187,13 +218,14 @@ export function smallSocietyStatements(options: {
   from: IsoDate;
   to: IsoDate;
   only?: ((account: Account) => boolean) | undefined;
+  /** What the books opened with: what was owned and owed before the first journal. */
+  openingBalances?: OpeningBalances | undefined;
+  /** The society's own bank accounts the chart does not list. */
+  banks?: readonly BankHeld[];
 }): SmallSocietyStatements {
   const { income, expenses } = incomeAndExpenses(options);
-  const balance = new Map<string, number>();
-  for (const j of options.journals) {
-    if (j.date > options.to) continue;
-    for (const l of j.lines) balance.set(l.accountCode.trim(), (balance.get(l.accountCode.trim()) ?? 0) + l.amount);
-  }
+  const balance = balancesAt(options.journals, options.to, options.openingBalances);
+  const seen = new Set<string>();
   const currentAssets: AccountAmount[] = [];
   const fixedAssets: AccountAmount[] = [];
   const currentLiabilities: AccountAmount[] = [];
@@ -203,6 +235,7 @@ export function smallSocietyStatements(options: {
     // A bank account's lines are posted under its ledger account id, not a code.
     const code = (account.ledgerAccount ?? "").trim() || account.code.trim();
     if (code === "") continue;
+    seen.add(code);
     const amount = balance.get(code) ?? 0;
     if (amount === 0) continue;
     const type = account.type.toLowerCase();
@@ -211,6 +244,12 @@ export function smallSocietyStatements(options: {
     else if (/liabilit|payable/.test(type)) currentLiabilities.push(row(-amount));
     else if (/fixed|non-?current|depreciable/.test(type) && /asset/.test(type)) fixedAssets.push(row(amount));
     else if (/asset|bank|receivable|inventory|prepay/.test(type)) currentAssets.push(row(amount));
+  }
+  // Bank accounts the chart does not list are still the society's cash.
+  for (const bank of options.banks ?? []) {
+    if (seen.has(bank.account)) continue;
+    const amount = balance.get(bank.account) ?? 0;
+    if (amount !== 0) currentAssets.push({ code: bank.account, name: bank.name, amount: amount as Cents });
   }
   const totalIncome = sum(income);
   const totalExpenses = sum(expenses);

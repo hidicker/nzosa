@@ -169,7 +169,14 @@ function startupFiles(): StartupFile[] {
         if (parsed.invoices.length === 0) return null;
         const kinds = new Set(parsed.invoices.map((i) => i.kind));
         const kept = (state.ledger.invoices ?? []).filter((i) => !kinds.has(i.kind));
-        state.ledger = { ...state.ledger, invoices: [...kept, ...parsed.invoices] };
+        // Xero's export says nothing of whose an invoice is: one already held
+        // under the same number keeps its entity, and so its own receivable.
+        const entityOf = new Map((state.ledger.invoices ?? []).map((i) => [i.number, i.entityId]));
+        const read = parsed.invoices.map((i) => {
+          const entityId = i.entityId ?? entityOf.get(i.number);
+          return entityId === undefined ? i : { ...i, entityId };
+        });
+        state.ledger = { ...state.ledger, invoices: [...kept, ...read] };
         state.persistent = await save(state.ledger);
         return `${parsed.invoices.length} invoices`;
       },

@@ -322,6 +322,12 @@ function write(name, built) {
         signers: ["Kate Rowe, Commodore", "Tom Hira, Treasurer"],
       },
     },
+    // The IR9 as the treasurer filled it in: bar stock and regatta costs were
+    // spent earning the bar and regatta income, and the club is approved for
+    // the $1,000 not-for-profit deduction.
+    ir9Returns: {
+      [`${club.id}:2026`]: { classes: {}, shares: { "540": 100, "550": 100 }, deductionApproved: true, incorporated: true },
+    },
     grants: [
       {
         id: "tct-2025-114",

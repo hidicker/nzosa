@@ -1204,6 +1204,20 @@ export function datedInvoicePayments(): DatedPayment[] {
 }
 
 /**
+ * An entity's own bank accounts, by the account id their lines are posted
+ * under, with their names: those given to it, or every one where the books
+ * keep one entity.
+ */
+export function banksOfEntity(entityId: string): { account: string; name: string }[] {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const ids = new Set(state.ledger.transactions.map((t) => t.account));
+  for (const id of Object.keys(model.banks)) ids.add(id);
+  return [...ids]
+    .filter((id) => (model.banks[id] ?? []).includes(entityId) || (model.banks[id] === undefined && model.entities.length <= 1))
+    .map((id) => ({ account: id, name: bankLabel(id) }));
+}
+
+/**
  * Manual journal lines given GST, for the GST return: those of the entity
  * chosen, and of an entity registered for GST.
  */

@@ -352,7 +352,8 @@ function entityReports(year: number): {
 export function ownerSummaryFor(owner: string, year: number): OwnerSummary {
   return summariseForOwner(
     owner,
-    entityReports(year).map(({ entity, report }) => ({
+    // A person's own entity -- salary, living costs -- is no rent or business.
+    entityReports(year).filter(({ entity }) => entity.kind !== "personal").map(({ entity, report }) => ({
       entity: entity.name,
       kind: entity.kind ?? "business",
       percent: (entity.owners ?? []).find((o) => o.name === owner)?.percent ?? 0,
@@ -1171,7 +1172,18 @@ function companyBooks(): boolean {
   const entity = reportingEntity();
   // Said outright where the entity says what it is; its name only otherwise.
   if (entity?.structure !== undefined) return entity.structure === "company";
-  return entity === undefined || /\b(limited|ltd)\b/i.test(entity.name);
+  if (entity !== undefined) return /\b(limited|ltd)\b/i.test(entity.name);
+  // All entities: a company's books where one of them is a company, or where
+  // none is set up yet. A person's own books and their rental are not.
+  const all = (state.ledger.entities ?? emptyEntityModel()).entities;
+  return (
+    all.length === 0 ||
+    all.some(
+      (e) =>
+        e.structure === "company" ||
+        (e.structure === undefined && (e.kind ?? "business") === "business" && /\b(limited|ltd)\b/i.test(e.name)),
+    )
+  );
 }
 
 /**

@@ -255,6 +255,8 @@ sorted.forEach((one, i) => {
   if (one.split !== undefined) {
     if (one.split.reduce((s, p) => s + p.amount, 0) !== one.amount) throw new Error(`split on ${one.date} does not add up`);
     splits[id] = one.split;
+    // Split and confirmed, as the bookkeeper left it.
+    overrides[id] = { confirmed: true, note: one.note, at: one.date };
   } else if (one.code !== undefined) {
     overrides[id] = { confirmed: true, code: label(one.code), note: one.note || account.get(one.code).name, at: one.date };
   }
@@ -262,7 +264,7 @@ sorted.forEach((one, i) => {
 
 // Example AI answers, written by hand in the shape a model returns.
 const idOf = (payee) => {
-  const found = transactions.find((t) => t.otherParty === payee && overrides[t.id] === undefined && splits[t.id] === undefined);
+  const found = transactions.find((t) => t.otherParty === payee && overrides[t.id] === undefined);
   if (found === undefined) throw new Error(`no uncoded line for ${payee}`);
   return found.id;
 };
@@ -364,5 +366,5 @@ const ledger = {
 
 mkdirSync(out, { recursive: true });
 writeFileSync(join(out, "ledger.json"), `${JSON.stringify(ledger, null, 1)}\n`);
-const uncoded = transactions.length - Object.keys(overrides).length - Object.keys(splits).length;
+const uncoded = transactions.length - Object.keys(overrides).length;
 console.log(`us-company: ${transactions.length} lines (${uncoded} left uncoded), ${manualJournals.length} payroll journals; closes at ${(running / 100).toFixed(2)}`);

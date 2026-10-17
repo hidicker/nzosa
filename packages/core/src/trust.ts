@@ -7,6 +7,9 @@ import type { ManualJournal } from "./manual-journals.js";
 import { provisionalStandardOption } from "./rental-schedules.js";
 import type { ProvisionalStandard } from "./rental-schedules.js";
 import type { AccountAmount } from "./ir9.js";
+import { balancesAt } from "./small-society.js";
+import type { BankHeld } from "./small-society.js";
+import type { OpeningBalances } from "./balance-sheet.js";
 
 /**
  * Trusts and estates: who is in the trust, and the IR6 income tax return.
@@ -849,13 +852,14 @@ export function trustStatements(options: {
   to: IsoDate;
   sheet: TrustWorksheet;
   only?: ((account: Account) => boolean) | undefined;
+  /** What the books opened with: the trust's property, loans and funds before the first journal. */
+  openingBalances?: OpeningBalances | undefined;
+  /** The trust's own bank accounts the chart does not list. */
+  banks?: readonly BankHeld[];
 }): TrustStatements {
   const { chart, trust, inputs } = options;
-  const balance = new Map<string, number>();
-  for (const j of options.journals) {
-    if (j.date > options.to) continue;
-    for (const l of j.lines) balance.set(l.accountCode.trim(), (balance.get(l.accountCode.trim()) ?? 0) + l.amount);
-  }
+  const balance = balancesAt(options.journals, options.to, options.openingBalances);
+  const seen = new Set<string>();
   const linked = new Map<string, string>();
   for (const b of trust.beneficiaries) if (b.accountCode !== undefined && b.accountCode !== "") linked.set(b.accountCode.trim(), b.id);
 
@@ -867,6 +871,7 @@ export function trustStatements(options: {
     // A bank account's lines are posted under its ledger account id, not a code.
     const code = (account.ledgerAccount ?? "").trim() || account.code.trim();
     if (code === "") continue;
+    seen.add(code);
     const sum = balance.get(code) ?? 0;
     if (sum === 0) continue;
     if (linked.has(code)) {
@@ -884,6 +889,14 @@ export function trustStatements(options: {
       else if (place === "shares") a.shares += sum;
       else a.other += sum;
     }
+  }
+  // Bank accounts the chart does not list are still the trust's money.
+  for (const bank of options.banks ?? []) {
+    if (seen.has(bank.account)) continue;
+    const sum = balance.get(bank.account) ?? 0;
+    if (sum === 0) continue;
+    if (inputs.placementsOfBalances[bank.account] === "associated") a.associated += sum;
+    else a.other += sum;
   }
   const benAsset = beneficiaryNet < 0 ? -beneficiaryNet : 0;
   const benLiability = beneficiaryNet > 0 ? beneficiaryNet : 0;

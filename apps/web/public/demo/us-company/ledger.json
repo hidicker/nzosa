@@ -4879,6 +4879,11 @@
    "note": "Net pay",
    "at": "2026-02-15"
   },
+  "usco-0029": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-01",
+   "at": "2026-02-15"
+  },
   "usco-0030": {
    "confirmed": true,
    "code": "Licenses and permits - 6110",
@@ -4997,6 +5002,11 @@
    "confirmed": true,
    "code": "Wages payable - 2100",
    "note": "Net pay",
+   "at": "2026-03-15"
+  },
+  "usco-0050": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-02",
    "at": "2026-03-15"
   },
   "usco-0051": {
@@ -5131,6 +5141,11 @@
    "note": "2026 estimated tax, 1st",
    "at": "2026-04-15"
   },
+  "usco-0073": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-03",
+   "at": "2026-04-15"
+  },
   "usco-0074": {
    "confirmed": true,
    "code": "Landscaping services - 4000",
@@ -5239,6 +5254,11 @@
    "note": "Net pay",
    "at": "2026-05-15"
   },
+  "usco-0092": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-04",
+   "at": "2026-05-15"
+  },
   "usco-0093": {
    "confirmed": true,
    "code": "Landscaping services - 4000",
@@ -5345,6 +5365,11 @@
    "confirmed": true,
    "code": "Corporate income tax payable - 2200",
    "note": "2026 estimated tax, 2nd",
+   "at": "2026-06-15"
+  },
+  "usco-0111": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-05",
    "at": "2026-06-15"
   },
   "usco-0112": {
@@ -5473,6 +5498,11 @@
    "note": "Net pay",
    "at": "2026-07-15"
   },
+  "usco-0133": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-06",
+   "at": "2026-07-15"
+  },
   "usco-0134": {
    "confirmed": true,
    "code": "Landscaping services - 4000",
@@ -5581,6 +5611,11 @@
    "note": "Net pay",
    "at": "2026-08-15"
   },
+  "usco-0152": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-07",
+   "at": "2026-08-15"
+  },
   "usco-0153": {
    "confirmed": true,
    "code": "Landscaping services - 4000",
@@ -5687,6 +5722,11 @@
    "confirmed": true,
    "code": "Corporate income tax payable - 2200",
    "note": "2026 estimated tax, 3rd",
+   "at": "2026-09-15"
+  },
+  "usco-0173": {
+   "confirmed": true,
+   "note": "Form 941 deposit for 2026-08",
    "at": "2026-09-15"
   },
   "usco-0175": {

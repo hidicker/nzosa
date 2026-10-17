@@ -2856,6 +2856,17 @@
    ]
   }
  },
+ "ir9Returns": {
+  "harbourside-sailing-club:2026": {
+   "classes": {},
+   "shares": {
+    "540": 100,
+    "550": 100
+   },
+   "deductionApproved": true,
+   "incorporated": true
+  }
+ },
  "grants": [
   {
    "id": "tct-2025-114",

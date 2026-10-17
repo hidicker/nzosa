@@ -647,7 +647,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
             : `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
               `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`) +
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`) +
-          (fromHistory === null ? "" : ` · GST ${fromHistory.why}`)
+          (fromHistory === null || noSalesTax() ? "" : ` · GST ${fromHistory.why}`)
         : noSalesTax()
           ? one.reason
           : `${taxTypeLabel(rateLabel(one.classification))} · ${one.reason}`;

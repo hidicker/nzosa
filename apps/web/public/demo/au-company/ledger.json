@@ -5744,7 +5744,7 @@
   "auco-0016": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-07-27"
@@ -5872,7 +5872,7 @@
   "auco-0032": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-08-27"
@@ -5888,7 +5888,7 @@
   "auco-0034": {
    "confirmed": true,
    "code": "Licences and registrations - 497",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Plumbing licence renewal",
    "at": "2025-09-03"
@@ -6008,7 +6008,7 @@
   "auco-0049": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-09-27"
@@ -6136,7 +6136,7 @@
   "auco-0065": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-10-27"
@@ -6296,7 +6296,7 @@
   "auco-0085": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-11-27"
@@ -6464,7 +6464,7 @@
   "auco-0106": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-12-27"
@@ -6592,7 +6592,7 @@
   "auco-0122": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-01-27"
@@ -6728,7 +6728,7 @@
   "auco-0139": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-02-27"
@@ -6880,7 +6880,7 @@
   "auco-0158": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-03-27"
@@ -7008,7 +7008,7 @@
   "auco-0174": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-04-27"
@@ -7168,7 +7168,7 @@
   "auco-0194": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-05-27"
@@ -7304,7 +7304,7 @@
   "auco-0215": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-06-27"
@@ -7419,7 +7419,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "Southern Cross Plumbing Pty Ltd",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "business"
   },
   {
@@ -7549,7 +7549,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "Southern Cross Plumbing Pty Ltd",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "business"
   },
   {

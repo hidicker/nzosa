@@ -254,6 +254,29 @@ const invoices = parseXeroInvoices(invoiceCsv);
 if (chart.problems?.length) console.log("chart problems:", chart.problems.slice(0, 3));
 if (assets.problems?.length) console.log("asset problems:", assets.problems.slice(0, 3));
 
+// ---------------------------------------------------------------------------
+// Where the company's last year left things, at 1 April 2025: its bank
+// balance, the roaster and the van at cost less the depreciation already
+// taken, the director's loan, and the rest kept in the company. The rentals'
+// accounts start the year empty.
+// ---------------------------------------------------------------------------
+const openingBalances = {
+  asAt: "2025-04-01",
+  source: "Last year's financial statements",
+  accounts: {
+    [TRADING]: cents(18000),
+    "710KC": cents(18500),
+    "711KC": -cents(2405),
+    "740KC": cents(24000),
+    // INV-1001, raised in March and paid in April.
+    "610KC": cents(1265),
+    "741KC": -cents(3200),
+    "910KC": -cents(15000),
+    "960KC": -cents(41160),
+  },
+};
+if (Object.values(openingBalances.accounts).reduce((s, v) => s + v, 0) !== 0) throw new Error("opening balances do not balance");
+
 const entities = {
   entities: [
     {
@@ -267,9 +290,15 @@ const entities = {
         "Roasts green beans bought by the sack and sells the coffee wholesale to cafes, " +
         "and at markets and trade shows. Runs one van. Rents its roastery unit.",
       kind: "business",
+      structure: "company",
       gstRegistered: true,
       codeSuffix: "KC",
       owners: [],
+      // Ana and Tom hold the shares, as they own the two rentals.
+      shareholders: [
+        { name: "Ana Whitcombe", percent: 50 },
+        { name: "Tom Whitcombe", percent: 50 },
+      ],
     },
     {
       id: "17-rimu-lane",
@@ -371,8 +400,10 @@ const ledger = {
   transfers,
   entities,
   chart: chart.accounts,
+  openingBalances,
   assets: assets.assets,
-  invoices: invoices.invoices,
+  // The company's: so each one sits in its own Accounts Receivable, 610KC.
+  invoices: invoices.invoices.map((invoice) => ({ ...invoice, entityId: "kea-coffee-roasters-limited" })),
   taxExtras,
   ir3Details,
   // On in the demo, off everywhere else.

@@ -32,7 +32,7 @@ const rental = { id: "banksia", name: "7 Banksia Street, Newcastle", kind: "resi
 const ACCOUNTS = [
   ["200", "Sales", "Revenue", studio, "GST on Income", "standard"],
   ["270", "Interest Income", "Revenue", studio, "Input Taxed", "exempt"],
-  ["404", "Bank Fees", "Expense", studio, "GST Free Expenses", "exempt"],
+  ["404", "Bank Fees", "Expense", studio, "GST Free Expenses", "zero-rated"],
   ["412", "Consulting & Accounting", "Expense", studio, "GST on Expenses", "standard"],
   ["433", "Insurance", "Expense", studio, "GST on Expenses", "standard"],
   ["449", "Motor Vehicle Expenses", "Expense", studio, "GST on Expenses", "standard"],
@@ -43,10 +43,10 @@ const ACCOUNTS = [
   ["489", "Telephone & Internet", "Expense", studio, "GST on Expenses", "standard"],
   ["493", "Travel - National", "Expense", studio, "GST on Expenses", "standard"],
   ["275", "Rent received", "Revenue", rental, "Input Taxed", "exempt"],
-  ["551", "Council rates", "Expense", rental, "GST Free Expenses", "exempt"],
-  ["552", "Water charges", "Expense", rental, "GST Free Expenses", "exempt"],
+  ["551", "Council rates", "Expense", rental, "GST Free Expenses", "zero-rated"],
+  ["552", "Water charges", "Expense", rental, "GST Free Expenses", "zero-rated"],
   ["553", "Property agent fees", "Expense", rental, "BAS Excluded", "exempt"],
-  ["554", "Interest on loans", "Expense", rental, "GST Free Expenses", "exempt"],
+  ["554", "Interest on loans", "Expense", rental, "GST Free Expenses", "zero-rated"],
   ["555", "Landlord insurance", "Expense", rental, "BAS Excluded", "exempt"],
   ["556", "Repairs and maintenance (rental)", "Expense", rental, "BAS Excluded", "exempt"],
   ["477", "Wages and Salaries", "Expense", studio, "BAS Excluded", "out-of-scope"],
@@ -308,7 +308,7 @@ const invoices = [
     outstanding: gross,
     currency: "AUD",
     status: "Awaiting Payment",
-    lines: [{ description: words, accountCode: "200", taxType: "15% GST on Income", net: gross - tax, tax, gross }],
+    lines: [{ description: words, accountCode: "200", taxType: "GST on Income", net: gross - tax, tax, gross }],
   };
 });
 

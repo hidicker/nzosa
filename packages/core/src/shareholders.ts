@@ -3,6 +3,7 @@ import type { IsoDate } from "./dates.js";
 import type { Account } from "./chart.js";
 import type { PostedJournal } from "./posting.js";
 import type { OpeningBalances } from "./balance-sheet.js";
+import { isShareholderCurrentAccount } from "./ir10.js";
 
 /**
  * The shareholder current account, and why it is worth its own schedule.
@@ -88,8 +89,23 @@ export function shareholderSchedule(options: {
   accounts?: ShareholderAccounts;
 }): ShareholderSchedule {
   const { from, to, journals, openingBalances, chart } = options;
-  const introducedCodes = new Set(options.accounts?.introducedCodes ?? DEFAULT_INTRODUCED);
-  const drawingsCodes = new Set(options.accounts?.drawingsCodes ?? DEFAULT_DRAWINGS);
+  // Xero's codes where the chart has them; otherwise the accounts the balance
+  // sheet sets out as shareholder current accounts, by their names -- "881
+  // Shareholder current account, Rewi Moana", "921KC Current account --
+  // Nikau" -- which the fixed codes never found.
+  const hasDefaults = [...DEFAULT_INTRODUCED, ...DEFAULT_DRAWINGS].some((code) => chart.some((a) => a.code === code));
+  const found =
+    options.accounts !== undefined || hasDefaults
+      ? []
+      : chart.filter((a) => isShareholderCurrentAccount(a.code, a.name, a.type ?? ""));
+  const introducedCodes = new Set(
+    options.accounts?.introducedCodes ??
+      (found.length > 0 ? found.filter((a) => !/drawing/i.test(a.name)).map((a) => a.code) : DEFAULT_INTRODUCED),
+  );
+  const drawingsCodes = new Set(
+    options.accounts?.drawingsCodes ??
+      (found.length > 0 ? found.filter((a) => /drawing/i.test(a.name)).map((a) => a.code) : DEFAULT_DRAWINGS),
+  );
   const codes = new Set([...introducedCodes, ...drawingsCodes]);
   const byCode = new Map(chart.map((a) => [a.code, a]));
 

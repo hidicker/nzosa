@@ -4530,9 +4530,20 @@
         "note": "The trading company",
         "about": "Roasts green beans bought by the sack and sells the coffee wholesale to cafes, and at markets and trade shows. Runs one van. Rents its roastery unit.",
         "kind": "business",
+        "structure": "company",
         "gstRegistered": true,
         "codeSuffix": "KC",
-        "owners": []
+        "owners": [],
+        "shareholders": [
+          {
+            "name": "Ana Whitcombe",
+            "percent": 50
+          },
+          {
+            "name": "Tom Whitcombe",
+            "percent": 50
+          }
+        ]
       },
       {
         "id": "17-rimu-lane",
@@ -5786,6 +5797,20 @@
       "entityKind": "commercial"
     }
   ],
+  "openingBalances": {
+    "asAt": "2025-04-01",
+    "source": "Last year's financial statements",
+    "accounts": {
+      "02-1234-0056789-000": 1800000,
+      "710KC": 1850000,
+      "711KC": -240500,
+      "740KC": 2400000,
+      "610KC": 126500,
+      "741KC": -320000,
+      "910KC": -1500000,
+      "960KC": -4116000
+    }
+  },
   "assets": [
     {
       "number": "FA-0001",
@@ -5864,7 +5889,8 @@
           "gross": 126500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1002",
@@ -5889,7 +5915,8 @@
           "gross": 253000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1003",
@@ -5914,7 +5941,8 @@
           "gross": 97750,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1004",
@@ -5939,7 +5967,8 @@
           "gross": 184000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1005",
@@ -5964,7 +5993,8 @@
           "gross": 310500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1006",
@@ -5989,7 +6019,8 @@
           "gross": 126500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1007",
@@ -6014,7 +6045,8 @@
           "gross": 218500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1008",
@@ -6039,7 +6071,8 @@
           "gross": 149500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1009",
@@ -6064,7 +6097,8 @@
           "gross": 276000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1010",
@@ -6089,7 +6123,8 @@
           "gross": 345000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1011",
@@ -6114,7 +6149,8 @@
           "gross": 161000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1012",
@@ -6139,7 +6175,8 @@
           "gross": 207000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1013",
@@ -6164,7 +6201,8 @@
           "gross": 184000,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1014",
@@ -6189,7 +6227,8 @@
           "gross": 149500,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     },
     {
       "number": "INV-1015",
@@ -6214,7 +6253,8 @@
           "gross": 86250,
           "quantity": 1
         }
-      ]
+      ],
+      "entityId": "kea-coffee-roasters-limited"
     }
   ],
   "taxExtras": [

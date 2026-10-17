@@ -1,5 +1,5 @@
 import { redraw } from "../app.js";
-import { bookYears, postedJournals, record, saveManualJournals } from "../books.js";
+import { banksOfEntity, bookYears, postedJournals, record, saveManualJournals } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, download, nameCell, note } from "../ui.js";
@@ -589,7 +589,7 @@ export function renderIr6Page(): void {
   // 9. Disclosure
   if (trust.disclosureExempt !== true) {
     body.append(heading("The trust disclosure pages"));
-    const statements = trustStatements({ journals, chart: state.chart, trust, inputs, from, to: balanceDate, sheet, only });
+    const statements = trustStatements({ journals, chart: state.chart, trust, inputs, from, to: balanceDate, sheet, only, openingBalances: state.ledger.openingBalances, banks: banksOfEntity(entity.id) });
     body.append(
       note(
         "Questions 33 to 37 of the return: the trust's profit or loss, what it owns and owes, and what it has built up. Valued as in the trust's own accounts. " +
@@ -667,7 +667,7 @@ export function renderIr6Page(): void {
     for (const r of rows) lines.push(["IR6", r.box, r.label, (r.amount / 100).toFixed(2)]);
     for (const s of sheet.beneficiaries) for (const r of ir6bRows(s)) lines.push([`IR6B ${s.name}`, r.box, r.label, (r.amount / 100).toFixed(2)]);
     if (trust.disclosureExempt !== true) {
-      const st = trustStatements({ journals, chart: state.chart, trust, inputs, from, to: balanceDate, sheet, only });
+      const st = trustStatements({ journals, chart: state.chart, trust, inputs, from, to: balanceDate, sheet, only, openingBalances: state.ledger.openingBalances, banks: banksOfEntity(entity.id) });
       for (const r of trustStatementRows(st)) lines.push(["IR6", r.box, r.label, (r.amount / 100).toFixed(2)]);
     }
     const text = lines.map((row) => row.map((cell) => spreadsheetCell(cell)).join(",")).join("\r\n");

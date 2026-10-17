@@ -4536,7 +4536,7 @@
   "au-0008": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-07-15"
@@ -4560,7 +4560,7 @@
   "au-0011": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-07-27"
@@ -4640,7 +4640,7 @@
   "au-0021": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-08-15"
@@ -4648,7 +4648,7 @@
   "au-0022": {
    "confirmed": true,
    "code": "Council rates - 551",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Council rates, first instalment",
    "at": "2025-08-20"
@@ -4664,7 +4664,7 @@
   "au-0024": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-08-27"
@@ -4744,7 +4744,7 @@
   "au-0034": {
    "confirmed": true,
    "code": "Water charges - 552",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Water service charge",
    "at": "2025-09-12"
@@ -4752,7 +4752,7 @@
   "au-0035": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-09-15"
@@ -4776,7 +4776,7 @@
   "au-0038": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-09-27"
@@ -4872,7 +4872,7 @@
   "au-0050": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-10-15"
@@ -4888,7 +4888,7 @@
   "au-0052": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-10-27"
@@ -5000,7 +5000,7 @@
   "au-0066": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-11-15"
@@ -5008,7 +5008,7 @@
   "au-0067": {
    "confirmed": true,
    "code": "Council rates - 551",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Council rates, second instalment",
    "at": "2025-11-20"
@@ -5024,7 +5024,7 @@
   "au-0069": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-11-27"
@@ -5104,7 +5104,7 @@
   "au-0079": {
    "confirmed": true,
    "code": "Water charges - 552",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Water service charge",
    "at": "2025-12-12"
@@ -5112,7 +5112,7 @@
   "au-0080": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2025-12-15"
@@ -5120,7 +5120,7 @@
   "au-0081": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2025-12-27"
@@ -5192,7 +5192,7 @@
   "au-0090": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-01-15"
@@ -5216,7 +5216,7 @@
   "au-0093": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-01-27"
@@ -5304,7 +5304,7 @@
   "au-0104": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-02-15"
@@ -5328,7 +5328,7 @@
   "au-0107": {
    "confirmed": true,
    "code": "Council rates - 551",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Council rates, third instalment",
    "at": "2026-02-20"
@@ -5336,7 +5336,7 @@
   "au-0108": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-02-27"
@@ -5440,7 +5440,7 @@
   "au-0121": {
    "confirmed": true,
    "code": "Water charges - 552",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Water service charge",
    "at": "2026-03-12"
@@ -5448,7 +5448,7 @@
   "au-0122": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-03-15"
@@ -5464,7 +5464,7 @@
   "au-0124": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-03-27"
@@ -5544,7 +5544,7 @@
   "au-0134": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-04-15"
@@ -5560,7 +5560,7 @@
   "au-0136": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-04-27"
@@ -5672,7 +5672,7 @@
   "au-0150": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-05-15"
@@ -5680,7 +5680,7 @@
   "au-0151": {
    "confirmed": true,
    "code": "Council rates - 551",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Council rates, fourth instalment",
    "at": "2026-05-20"
@@ -5696,7 +5696,7 @@
   "au-0153": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-05-27"
@@ -5768,7 +5768,7 @@
   "au-0164": {
    "confirmed": true,
    "code": "Water charges - 552",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Water service charge",
    "at": "2026-06-12"
@@ -5776,7 +5776,7 @@
   "au-0165": {
    "confirmed": true,
    "code": "Interest on loans - 554",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Loan interest",
    "at": "2026-06-15"
@@ -5784,7 +5784,7 @@
   "au-0169": {
    "confirmed": true,
    "code": "Bank Fees - 404",
-   "treatment": "exempt",
+   "treatment": "zero-rated",
    "side": "purchases",
    "note": "Bank fee",
    "at": "2026-06-27"
@@ -5919,7 +5919,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "Wattle & Lens Photography",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "business"
   },
   {
@@ -6029,7 +6029,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "7 Banksia Street, Newcastle",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "residential"
   },
   {
@@ -6039,7 +6039,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "7 Banksia Street, Newcastle",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "residential"
   },
   {
@@ -6059,7 +6059,7 @@
    "taxCode": "GST Free Expenses",
    "description": "",
    "entity": "7 Banksia Street, Newcastle",
-   "gstTreatment": "exempt",
+   "gstTreatment": "zero-rated",
    "entityKind": "residential"
   },
   {
@@ -6255,7 +6255,7 @@
     {
      "description": "Festival programme photography",
      "accountCode": "200",
-     "taxType": "15% GST on Income",
+     "taxType": "GST on Income",
      "net": 180000,
      "tax": 18000,
      "gross": 198000
@@ -6279,7 +6279,7 @@
     {
      "description": "Staff portraits",
      "accountCode": "200",
-     "taxType": "15% GST on Income",
+     "taxType": "GST on Income",
      "net": 80000,
      "tax": 8000,
      "gross": 88000

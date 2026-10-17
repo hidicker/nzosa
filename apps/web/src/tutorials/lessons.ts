@@ -1,5 +1,5 @@
 import { DEMO_PERSONAS, currentDemoPersona } from "../demo-personas.js";
-import { booksCountry, noSalesTax } from "../country.js";
+import { booksCountry, gstPercent, noSalesTax } from "../country.js";
 import { onScreen } from "./engine.js";
 import type { Lesson } from "./engine.js";
 
@@ -55,8 +55,11 @@ export const LESSONS: readonly Lesson[] = [
         title: "Welcome",
         body: () =>
           (noSalesTax()
-            ? "NZOSA turns your bank files into a coded, double-entry set of books, and from those your " +
-              "financial statements and the figures for Schedule C, Schedule E and 1099-NEC. "
+            ? currentDemoPersona() === "us-company"
+              ? "NZOSA turns your bank files into a coded, double-entry set of books, and from those your " +
+                "financial statements, the Form 941 payroll worksheet and the corporation's Form 1120 tax. "
+              : "NZOSA turns your bank files into a coded, double-entry set of books, and from those your " +
+                "financial statements and the figures for Schedule C, Schedule E and 1099-NEC. "
             : "NZOSA turns your bank files into a coded, double-entry set of books, and from those your GST returns, " +
               "financial statements and tax returns. ") +
           (DEMO_PERSONAS.find((p) => p.id === currentDemoPersona())?.about ?? ""),
@@ -163,9 +166,13 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: "GST",
-        body:
-          "15% for an ordinary purchase or sale, 0% for anything with no GST in it, such as bank fees or wages. " +
-          "The GST return adds these up for you.",
+        body: () =>
+          booksCountry().id === "au"
+            ? "10% for an ordinary purchase or sale. GST-free (bank fees, exports) and input taxed (interest, " +
+              "residential rent) each have their own place on the BAS; BAS excluded is for wages, drawings and " +
+              "transfers. The BAS adds these up for you."
+            : `${booksCountry().id === "nz" ? "15" : gstPercent()}% for an ordinary purchase or sale, 0% for anything with no GST in it, such as bank fees or wages. ` +
+              "The GST return adds these up for you.",
         target: () => firstLine()?.querySelector(".gst-select") ?? null,
         // Where there is no sales tax there is no rate to choose.
         when: () => !noSalesTax(),
@@ -201,6 +208,8 @@ export const LESSONS: readonly Lesson[] = [
           "NZOSA also recognises well-known New Zealand businesses, such as fuel stations, phone companies and " +
           "couriers, and suggests the one account in your chart that fits. It needs no AI and sends nothing anywhere.",
         target: lineSuggestedBy(/^Known business/),
+        // New Zealand's directory: elsewhere there may be no such line to show.
+        when: () => booksCountry().id === "nz" && lineSuggestedBy(/^Known business/)() !== null,
       },
       {
         title: "Done",
@@ -727,9 +736,12 @@ export const LESSONS: readonly Lesson[] = [
       },
       {
         title: "Simpler or full",
-        body:
+        body: () =>
           "The simpler BAS reports G1, 1A and 1B. Choose the full BAS for G2, G3, G10 and G11 and the ATO's " +
-          "worksheet beneath, G1 to G20. The camera bought in October is the capital purchase at G10.",
+          "worksheet beneath, G1 to G20. " +
+          (currentDemoPersona() === "au-company"
+            ? "The drain camera bought in September is the capital purchase at G10."
+            : "The camera bought in October is the capital purchase at G10."),
         target: q("#reports-body select"),
       },
       {

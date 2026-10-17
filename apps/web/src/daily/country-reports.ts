@@ -161,7 +161,9 @@ export function renderSalesTax(body: HTMLElement, year: number): void {
   title.textContent = `Sales tax — ${year}`;
   body.append(title);
   const holds = /sales tax|tax payable|board of equalization|dept\. of revenue|department of revenue|use tax/i;
-  const accounts = state.chart.filter((a) => /liab/i.test(a.type) && holds.test(a.name));
+  // "Tax payable" finds a state's sales tax; not income tax or payroll taxes.
+  const notSales = /income tax|withh|payroll|social security|medicare|futa|unemployment/i;
+  const accounts = state.chart.filter((a) => /liab/i.test(a.type) && holds.test(a.name) && !notSales.test(a.name));
   if (accounts.length === 0) {
     body.append(note("No sales tax accounts in the chart. A liability account with Sales tax in its name will be read here."));
     return;
@@ -263,19 +265,46 @@ export function renderPayrollTax(body: HTMLElement, year: number): void {
     return;
   }
   const quarters = [1, 2, 3, 4].map(() => ({ wages: 0, income: 0, social: 0, medicare: 0, futa: 0, deposits: 0 }));
-  for (const journal of postedJournals()) {
-    if (!journal.date.startsWith(String(year))) continue;
+  // Deposits of the 941 taxes, in date order, and what was owed before the
+  // year began: a deposit pays the oldest tax first, so March's, deposited on
+  // 15 April, counts for the first quarter, as line 13 has it.
+  const paid: number[] = [];
+  let owedBefore = 0;
+  for (const [code, amount] of Object.entries(state.ledger.openingBalances?.accounts ?? {})) {
+    const id = byCode.get(code.trim());
+    if (id === "income" || id === "social" || id === "medicare") owedBefore += -amount;
+  }
+  for (const journal of [...postedJournals()].sort((a, b) => a.date.localeCompare(b.date))) {
+    if (journal.date > `${year}-12-31`) continue;
+    const inYear = journal.date.startsWith(String(year));
     const quarter = Math.min(3, Math.floor((Number(journal.date.slice(5, 7)) - 1) / 3));
     const q = quarters[quarter];
-    if (q === undefined) continue;
     for (const line of journal.lines) {
       const id = byCode.get(line.accountCode.trim());
       if (id === undefined) continue;
+      if (!inYear) {
+        // Earlier years: what was still owed when this one began.
+        if (id === "income" || id === "social" || id === "medicare") owedBefore += -line.amount;
+        continue;
+      }
+      if (q === undefined) continue;
       if (id === "wages") q.wages += line.amount;
       // A payable account: the credit is the tax, a debit is a deposit of it.
       else if (line.amount < 0) q[id] += -line.amount;
-      else q.deposits += line.amount;
+      else if (id === "futa") continue;
+      else paid.push(line.amount);
     }
+  }
+  let available = paid.reduce((sum, amount) => sum + amount, 0) - Math.max(0, owedBefore);
+  for (const q of quarters) {
+    const due = q.income + q.social + q.medicare;
+    q.deposits = Math.max(0, Math.min(due, available));
+    available -= q.deposits;
+  }
+  // Anything over, deposited ahead, is shown in the last quarter with tax.
+  if (available > 0) {
+    const last = [...quarters].reverse().find((q) => q.income + q.social + q.medicare > 0) ?? quarters[3];
+    if (last !== undefined) last.deposits += available;
   }
   const table = document.createElement("table");
   table.className = "report-table";
@@ -321,7 +350,8 @@ export function renderPayrollTax(body: HTMLElement, year: number): void {
       "Read from the accounts named for wages and for each payroll tax; Social Security and Medicare include " +
         "the employer's share only if it was posted to the same account. Limits that depend on each employee " +
         "(the Social Security wage base, the additional Medicare tax) and the number of employees are not worked " +
-        "out: use this to check a payroll service's 941, not to file from. Deposits are debits to those accounts.",
+        "out: use this to check a payroll service's 941, not to file from. Deposits are debits to those accounts, " +
+        "set against the oldest tax owed first: a quarter's last month is usually deposited in the next.",
     ),
   );
 }
@@ -616,10 +646,10 @@ export function renderBas(body: HTMLElement, year: number): void {
 
   const quarters = basQuarters(year).map((quarter) => {
     // Instalment income: the business and investment income in the books for
-    // the quarter, GST out -- not salary, not capital gains. Not a company's,
-    // which pays its own instalments.
+    // the quarter, GST out -- not salary, not capital gains. A company's too:
+    // a Pty Ltd pays its own instalments on its own BAS.
     const t1 = entities()
-      .filter((e) => e.kind !== "personal" && !(e.structure === "company" && !isRental(e)))
+      .filter((e) => e.kind !== "personal")
       .reduce((sum, e) => sum + Math.max(0, entityPeriodReport(e, quarter)?.totalIncome ?? 0), 0);
     const inside = returns.filter((r) => r.period.to >= quarter.from && r.period.to <= quarter.to);
     const labels = inside
@@ -913,6 +943,11 @@ function companyProfits(year: number): { entity: string; profit: number }[] {
  */
 function ownerIncome(
   year: number,
+  /**
+   * The entity's net as its return takes it, where that is not the books'
+   * profit: Schedule C allows half of business meals.
+   */
+  netOf: (entity: Entity, report: NonNullable<ReturnType<typeof entityYearReport>>) => number = (_, report) => report.netProfit,
 ): { owner: string; parts: { entity: string; share: number; rental: boolean }[]; total: number }[] {
   const byOwner = new Map<string, { entity: string; share: number; rental: boolean }[]>();
   for (const entity of entities()) {
@@ -924,7 +959,7 @@ function ownerIncome(
       const list = byOwner.get(owner.name) ?? [];
       list.push({
         entity: entity.name,
-        share: Math.round((report.netProfit * owner.percent) / 100),
+        share: Math.round((netOf(entity, report) * owner.percent) / 100),
         rental: isRental(entity),
       });
       byOwner.set(owner.name, list);
@@ -965,7 +1000,11 @@ export function renderUsTax(body: HTMLElement, year: number): void {
   const title = document.createElement("h3");
   title.textContent = `Self-employment and estimated tax — ${year}`;
   body.append(title);
-  const owners = ownerIncome(year);
+  // The net each schedule shows, so the two pages agree: Schedule C allows
+  // half of business meals.
+  const owners = ownerIncome(year, (entity, report) =>
+    formSchedule(isRental(entity) ? SCHEDULE_E : SCHEDULE_C, report, scheduleName).net,
+  );
   const corporations = companyProfits(year);
   if (owners.length === 0 && corporations.length > 0) title.textContent = `Corporation income tax — ${year}`;
   if (owners.length === 0 && corporations.length === 0) {

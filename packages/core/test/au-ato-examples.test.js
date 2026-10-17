@@ -69,3 +69,16 @@ test("Resident tax and the low income offset, 2025-26", async () => {
   assert.equal(auLowIncomeOffset(4_500_000, 2026), 32_500);
   assert.equal(auLowIncomeOffset(6_666_700, 2026), 0);
 });
+
+test("An Australian residential rental's standard accounts each land on their own rental schedule line", async () => {
+  const { standardAccounts, formLineFor, AU_RENTAL_SCHEDULE } = await import("../dist/index.js");
+  const accounts = standardAccounts("residential", { gstRegistered: false, country: "au" });
+  const lines = accounts.filter((a) => /Expense|Depreciation/.test(a.type)).map((a) => formLineFor(AU_RENTAL_SCHEDULE, a.name, "expense"));
+  // Council rates, water and land tax apart; no travel account at all.
+  for (const line of ["council-rates", "water", "land-tax", "body-corporate", "borrowing", "capital-works", "capital-allowances", "agent", "interest"]) {
+    assert.ok(lines.includes(line), line);
+  }
+  assert.ok(!accounts.some((a) => /travel/i.test(a.name)));
+  // New Zealand's set is untouched.
+  assert.ok(standardAccounts("residential", { gstRegistered: false }).some((a) => a.name === "Rates and water"));
+});

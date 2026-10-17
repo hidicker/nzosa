@@ -155,7 +155,7 @@ export function addEntityForm(): HTMLElement {
     option.textContent = caption;
     kind.append(option);
   }
-  kind.title = "Residential rental losses are ring-fenced; the others are not.";
+  kind.title = rentalLossWords();
 
   // What sort of non-profit, asked only when one is chosen: it sets the usual
   // answers (registered charity or not) that can be changed afterwards.
@@ -607,7 +607,9 @@ export function renderEntities(): void {
     holders.value = formatOwners(entity.shareholders ?? []);
     holders.hidden = (entity.kind ?? "business") !== "business";
     holders.title =
-      "Companies only: the shareholder current account is split between them on the IR4. " +
+      (booksCountry().id === "nz"
+        ? "Companies only: the shareholder current account is split between them on the IR4. "
+        : "Companies only: who holds its shares, and in what part. ") +
       "Leave empty for a sole trader, partnership or trust.";
     const holdersSaid = document.createElement("span");
     holdersSaid.className = "entity-owners-said";
@@ -654,7 +656,7 @@ export function renderEntities(): void {
       option.selected = (entity.kind ?? "business") === value;
       kind.append(option);
     }
-    kind.title = "Residential rental losses are ring-fenced; the others are not.";
+    kind.title = rentalLossWords();
     kind.addEventListener("change", () => {
       const live = state.ledger.entities ?? emptyEntityModel();
       void saveEntities({
@@ -769,21 +771,27 @@ export function renderEntities(): void {
     // How often its GST return is filed, which sets every return's period.
     const frequency = document.createElement("select");
     frequency.className = "entity-gst-frequency";
-    for (const [value, caption] of [
-      ["1", "Monthly GST"],
-      ["2", "Two-monthly GST"],
-      ["6", "Six-monthly GST"],
-    ] as const) {
+    // New Zealand's three periods; Australia's BAS is worked quarterly here.
+    const au = booksCountry().id === "au";
+    const periods: readonly (readonly [string, string])[] = au
+      ? [["3", "Quarterly BAS"]]
+      : [
+          ["1", "Monthly GST"],
+          ["2", "Two-monthly GST"],
+          ["6", "Six-monthly GST"],
+        ];
+    for (const [value, caption] of periods) {
       const option = document.createElement("option");
       option.value = value;
       option.textContent = caption;
-      option.selected = String(entity.gstFrequency ?? 2) === value;
+      option.selected = String(entity.gstFrequency ?? (au ? 3 : 2)) === value;
       frequency.append(option);
     }
     frequency.hidden = !reportsNetOfGst(entity);
-    frequency.title =
-      "How often the GST return is filed. Six-monthly is only for sales under $500,000 in " +
-      "any 12 months; its periods end 30 September and 31 March.";
+    frequency.title = au
+      ? "The BAS is worked out quarterly. Monthly GST reporting, required from $20 million turnover, is not worked out here."
+      : "How often the GST return is filed. Six-monthly is only for sales under $500,000 in " +
+        "any 12 months; its periods end 30 September and 31 March.";
     frequency.addEventListener("change", () => {
       const live = state.ledger.entities ?? emptyEntityModel();
       const months = Number(frequency.value) as 1 | 2 | 3 | 6;
@@ -792,7 +800,7 @@ export function renderEntities(): void {
           ...live,
           entities: live.entities.map((e) => (e.id === entity.id ? { ...e, gstFrequency: months } : e)),
         },
-        `${entity.name} files GST ${months === 1 ? "monthly" : months === 6 ? "six-monthly" : "two-monthly"}`,
+        `${entity.name} files GST ${months === 1 ? "monthly" : months === 3 ? "quarterly" : months === 6 ? "six-monthly" : "two-monthly"}`,
       );
     });
     gstWrap.append(frequency);
@@ -2084,4 +2092,16 @@ function setTreatment(label: string, rate: string): void {
   );
   reclassify();
   void persistRules().then(() => redraw("entities"));
+}
+
+/** What the kind of entity changes about a loss, in the books' country. */
+function rentalLossWords(): string {
+  switch (booksCountry().id) {
+    case "nz":
+      return "Residential rental losses are ring-fenced; the others are not.";
+    case "au":
+      return "A residential rental's net loss reduces other income (negative gearing); from 1 July 2027 only for a new build or a property held at 12 May 2026.";
+    default:
+      return "Whether it is a business, a rental or a person's own affairs decides which schedule its figures go on.";
+  }
 }

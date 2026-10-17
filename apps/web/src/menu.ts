@@ -180,6 +180,16 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   ir3: "individual tax return income tax",
   owner: "owners shares",
   charts: "analytics graphs",
+  // Other countries' returns, in the words people search for them by.
+  bas: "gst bas business activity statement g1 1a 1b g10 g11 payg instalment withholding w1 w2 quarterly ato",
+  autax: "income tax return estimate medicare levy offset small business ato individual",
+  aurental: "rental property schedule negative gearing landlord ato",
+  schedulec: "schedule c 1040 business profit loss sole proprietor irs",
+  schedulee: "schedule e 1040 rental real estate irs",
+  ustax: "self-employment tax estimated tax 1040-es quarterly payments schedule se qbi 8995 irs",
+  contractors: "1099 1099-nec contractors w-9 irs",
+  salestax: "sales tax collected state",
+  payrolltax: "941 payroll tax withholding social security medicare futa 940",
 };
 
 interface Destination {

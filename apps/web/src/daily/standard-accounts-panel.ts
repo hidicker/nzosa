@@ -177,6 +177,7 @@ export function standardPanel(model: EntityModel): HTMLElement | null {
       gstRegistered: entity.gstRegistered !== false,
       structure: entity.structure,
       partners: (entity.owners ?? []).map((o) => o.name),
+      country: booksCountry().id,
     })) {
       const tr = document.createElement("tr");
       const tick = document.createElement("input");
@@ -346,6 +347,7 @@ export async function addPayableFor(entity: Entity): Promise<string> {
       gstRegistered: entity.gstRegistered !== false,
       structure: entity.structure,
       partners: (entity.owners ?? []).map((o) => o.name),
+      country: booksCountry().id,
     }).filter((a) => !held.has(a.code.trim()));
     const payable = usual.find((a) => /accounts\s+payable/i.test(a.type));
     if (payable !== undefined) {
@@ -399,6 +401,7 @@ export async function addStandardForAll(entities: readonly Entity[]): Promise<nu
       gstRegistered: entity.gstRegistered !== false,
       structure: entity.structure,
       partners: (entity.owners ?? []).map((o) => o.name),
+      country: booksCountry().id,
     }).filter((a) => !held.has(a.code));
     if (accounts.length === 0) continue;
     await addStandard(entity, accounts, suffix, replace);

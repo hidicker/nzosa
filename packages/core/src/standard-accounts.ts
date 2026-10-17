@@ -1,6 +1,7 @@
 import type { Account } from "./chart.js";
 import type { BusinessStructure, EntityKind } from "./entities.js";
 import { starterChart } from "./starter-chart.js";
+import { starterChartFor } from "./country-charts.js";
 
 /**
  * The accounts each kind of entity starts with.
@@ -137,6 +138,41 @@ const TRUST: readonly StandardRow[] = [
   { code: "970", name: "Accumulated trust funds", type: "Equity", gst: "none", description: "What the trust has built up; opening balances are balanced here" },
 ];
 
+/**
+ * An Australian residential rental's accounts, named for the labels of the
+ * ATO's rental property schedule (item 21), so each lands on its own line:
+ * council rates, water and land tax apart, body corporate, borrowing expenses
+ * and capital works. No travel: travel to a residential rental is not
+ * deductible for most individuals since 1 July 2017. Rent is input taxed, so
+ * no GST either way.
+ */
+const AU_RESIDENTIAL: readonly StandardRow[] = [
+  { code: "200", name: "Rent received", type: "Revenue", gst: "none", description: "Rent from tenants" },
+  { code: "260", name: "Other rental income", type: "Other Income", gst: "none", description: "Insurance payouts, bond kept for damage, water recharged" },
+  { code: "404", name: "Bank fees", type: "Expense", gst: "none", description: "Account and loan fees" },
+  { code: "405", name: "Advertising for tenants", type: "Expense", gst: "none", description: "Listing the property for rent" },
+  { code: "410", name: "Body corporate fees", type: "Expense", gst: "none", description: "Strata levies and body corporate charges" },
+  { code: "411", name: "Borrowing expenses", type: "Expense", gst: "none", description: "Loan establishment fees and mortgage insurance, over five years" },
+  { code: "415", name: "Cleaning", type: "Expense", gst: "none", description: "Cleaning between tenants" },
+  { code: "416", name: "Capital allowances (depreciation)", type: "Depreciation", gst: "none", description: "Decline in value of plant and equipment, from the asset register" },
+  { code: "417", name: "Capital works deductions", type: "Expense", gst: "none", description: "Division 43: 2.5% a year of the building's construction cost" },
+  { code: "418", name: "Gardening and lawn mowing", type: "Expense", gst: "none", description: "Garden and lawn upkeep" },
+  { code: "420", name: "Council rates", type: "Expense", gst: "none", description: "Council rates" },
+  { code: "421", name: "Water charges", type: "Expense", gst: "none", description: "Water and sewerage charges paid by the owner" },
+  { code: "422", name: "Land tax", type: "Expense", gst: "none", description: "State land tax" },
+  { code: "433", name: "Insurance", type: "Expense", gst: "none", description: "Building, contents and landlord insurance" },
+  { code: "437", name: "Interest on loans", type: "Expense", gst: "none", description: "Interest on money borrowed for the property" },
+  { code: "441", name: "Legal fees", type: "Expense", gst: "none", description: "Tenancy and lease legal costs" },
+  { code: "445", name: "Pest control", type: "Expense", gst: "none", description: "Pest inspections and treatment" },
+  { code: "450", name: "Property agent fees and commission", type: "Expense", gst: "none", description: "The agent's letting fees and management commission" },
+  { code: "473", name: "Repairs and maintenance", type: "Expense", gst: "none", description: "Restoring the property to its condition; not improvements" },
+  { code: "480", name: "Stationery, telephone and postage", type: "Expense", gst: "none", description: "Running costs of looking after the rental" },
+  { code: "615", name: "Held by property agent", type: "Current Asset", gst: "none", description: "Rent the agent has collected and not yet paid out; their payments to you are coded here" },
+  { code: "740", name: "Plant and equipment", type: "Fixed Asset", gst: "none", description: "Depreciating assets bought for the property: appliances, carpets, blinds" },
+  { code: "970", name: "Funds introduced", type: "Equity", gst: "none", description: "Owner's money paid into the property's accounts" },
+  { code: "980", name: "Drawings", type: "Equity", gst: "none", description: "Money taken out of the property's accounts by the owner" },
+];
+
 const STANDARD: Readonly<Record<Exclude<EntityKind, "business">, readonly StandardRow[]>> = {
   nonprofit: NON_PROFIT,
   trust: TRUST,
@@ -240,6 +276,8 @@ export function standardAccounts(
     structure?: BusinessStructure | undefined;
     /** The partners, by name, for a partnership's current and drawings accounts. */
     partners?: readonly string[] | undefined;
+    /** The books' country, where it has a set of its own: an Australian residential rental. */
+    country?: string | undefined;
   } = {},
 ): Account[] {
   const suffix = options.suffix ?? "";
@@ -251,7 +289,9 @@ export function standardAccounts(
 
   if (kind === "business") {
     const unincorporated = options.structure === "partnership" || options.structure === "sole-trader";
-    const base = starterChart()
+    // The books' country's own starter chart where it has one: Australia's
+    // accounts and tax codes, not New Zealand's.
+    const base = (options.country !== undefined && options.country !== "nz" ? starterChartFor(options.country) : starterChart())
       .filter((a) => registered || a.type !== "GST")
       .filter((a) => !unincorporated || !COMPANY_ONLY.has(a.code))
       .map((a) => (unincorporated && a.code === "910" ? { ...a, ...LOAN_FROM[options.structure === "partnership" ? "partnership" : "sole-trader"] } : a))
@@ -259,7 +299,8 @@ export function standardAccounts(
     const extra = options.structure === "partnership" ? partnerAccounts(options.partners ?? []) : [];
     return [...base, ...extra].map((a) => withSuffix(registered ? a : { ...a, taxCode: "No GST" }));
   }
-  return STANDARD[kind]
+  const rows = kind === "residential" && options.country === "au" ? AU_RESIDENTIAL : STANDARD[kind];
+  return rows
     .filter((row) => registered || row.name !== "GST")
     .map((row) =>
       withSuffix({

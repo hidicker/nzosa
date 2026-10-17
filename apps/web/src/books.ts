@@ -2230,6 +2230,7 @@ export function bookYears(): number[] {
     ...(state.ledger.journals ?? []).map((j) => j.date),
     ...(state.ledger.manualJournals ?? []).map((j) => j.date),
     ...(state.ledger.payroll?.payRuns ?? []).map((r) => r.payDate),
+    ...(state.ledger.auPayroll?.payRuns ?? []).map((r) => r.payDate),
     ...(state.ledger.agentStatements ?? []).map((a) => a.to),
     ...(state.ledger.prepayments ?? []).map((p) => p.from),
   ];

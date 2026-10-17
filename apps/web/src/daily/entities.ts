@@ -1268,9 +1268,14 @@ export function renderEntities(): void {
       option.selected = current === rate.value;
       gst.append(option);
     }
-    // Australia's GST-free and input taxed, each its own place on the BAS.
+    // Australia's GST-free and input taxed, each its own place on the BAS;
+    // New Zealand's zero-rated, for an exports account (Box 5 and Box 6).
     const auExtra: readonly (readonly [string, string])[] =
-      booksCountry().id === "au" ? [["zero-rated", "GST-free"], ["exempt", "Input taxed"]] : [];
+      booksCountry().id === "au"
+        ? [["zero-rated", "GST-free"], ["exempt", "Input taxed"]]
+        : booksCountry().id === "nz"
+          ? [["zero-rated", "0% zero-rated"]]
+          : [];
     for (const [value, words] of auExtra) {
       const option = document.createElement("option");
       option.value = value;

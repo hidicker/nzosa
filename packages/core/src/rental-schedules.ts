@@ -506,6 +506,12 @@ export interface Ir3ReturnOptions {
    * part-year wrong in one direction or the other.
    */
   ietcMonthsOut?: number;
+  /**
+   * This owner's share of each sole trader business's net profit for the
+   * year: box 24, self-employed income. A loss is negative, and not
+   * ring-fenced as a residential rental's is.
+   */
+  selfEmployed?: readonly { business: string; net: Cents }[];
 }
 
 export interface Ir3Return {
@@ -569,8 +575,9 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
   const otherRentals = mineRentals.filter((r) => !r.residential);
   const netRents = otherRentals.reduce((total, r) => total + r.netRents, 0);
 
+  const selfEmployed = (options.selfEmployed ?? []).reduce((total, b) => total + b.net, 0);
   const taxableIncome =
-    earnings + grossInterest + grossDividends + residential.netIncome + netRents + otherIncome;
+    earnings + grossInterest + grossDividends + residential.netIncome + netRents + selfEmployed + otherIncome;
   const taxOnIncome = incomeTaxOn(taxableIncome, year);
   const notes: string[] = [];
   // What each rental schedule had to say -- an interest limit applied, or one it
@@ -655,7 +662,7 @@ export function ir3Return(options: Ir3ReturnOptions): Ir3Return {
     box("22H", "Net residential income", residential.netIncome),
     box("22I", "Excess residential rental deductions carried forward", residential.carriedForward),
     box("23", "Net rents", netRents),
-    box("24", "Self-employed income", 0),
+    box("24", "Self-employed income", selfEmployed),
     box("27", "Other income", otherIncome),
     box("29", "Total other expenses", 0),
     box("31A", "Amount of loss brought forward", 0),

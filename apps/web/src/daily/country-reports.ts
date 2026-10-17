@@ -1055,9 +1055,13 @@ export function renderUsTax(body: HTMLElement, year: number): void {
       ["Net income from these books", money(gross), true],
       [
         "Self-employment tax (Schedule SE)",
-        se === null ? "rates not held for this year" : money(seTotal),
+        se === null ? "rates not held for this year" : money(seTotal - se.additionalMedicare),
       ],
       ["Half of it, deducted from income", se === null ? "—" : `-${money(se.deduction)}`],
+      // On Form 8959, not Schedule SE, and not halved.
+      ...(se !== null && se.additionalMedicare > 0
+        ? ([["Additional Medicare Tax (Form 8959)", money(se.additionalMedicare)]] as const)
+        : []),
       ["Standard deduction (single)", income === null ? "—" : `-${money(Math.min(income.standardDeduction, Math.max(0, afterHalf)))}`],
       [
         "Qualified business income deduction (Form 8995)",

@@ -2944,9 +2944,18 @@ export function ir3For(owner: string, year: number): ReturnType<typeof ir3Return
   const broughtForward = details?.residentialBroughtForward ?? fencedFromReturn;
   // Typed in wins; otherwise what the income tax account says was paid.
   const provisionalTaxPaid = details?.provisionalTaxPaid ?? provisionalPaidFromIrd(owner, year)?.paid;
+  // A sole trader's business is the owner's own: its net profit is box 24.
+  const selfEmployed = (state.ledger.entities ?? emptyEntityModel()).entities
+    .filter((e) => (e.kind ?? "business") === "business" && e.structure === "sole-trader")
+    .flatMap((e) => {
+      const percent = (e.owners ?? []).find((o) => o.name === owner)?.percent ?? 0;
+      const report = percent > 0 ? entityYearReport(e, year) : null;
+      return report === null ? [] : [{ business: e.name, net: Math.round((report.netProfit * percent) / 100) as Cents }];
+    });
   return ir3Return({
     owner,
     year,
+    ...(selfEmployed.length > 0 ? { selfEmployed } : {}),
     extras: state.ledger.taxExtras ?? [],
     rentals: shares,
     ...(provisionalTaxPaid !== undefined ? { provisionalTaxPaid } : {}),

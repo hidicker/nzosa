@@ -1339,10 +1339,12 @@ export function cachedChartTreatments(): Map<string, unknown> {
 export function accountRate(label: string): "0" | "15" | "100" | "free" | "taxed" | null {
   if (label === "") return null;
   if (unregisteredCode()(label)) return "0";
-  // Australia's GST-free and input taxed accounts, by name, as the line shows them.
-  if (booksCountry().id === "au") {
+  // Australia's GST-free and input taxed accounts, by name, as the line shows
+  // them; New Zealand's zero-rated ones.
+  if (booksCountry().id === "au" || booksCountry().id === "nz") {
     const own = accountZeroOrExempt(label);
-    if (own !== null) return own === "zero-rated" ? "free" : "taxed";
+    if (own === "zero-rated") return "free";
+    if (own === "exempt" && booksCountry().id === "au") return "taxed";
   }
   const file = state.rules as RuleFileShape | undefined;
   const rate = rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));

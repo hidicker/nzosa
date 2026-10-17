@@ -162,11 +162,21 @@ function namedRates(): boolean {
   return booksCountry().id === "au";
 }
 
+/** Whether a line can be zero-rated as such, apart from no GST: New Zealand's books. */
+function zeroRatedToo(): boolean {
+  return booksCountry().id === "nz";
+}
+
 /**
  * The rates offered on a line: the percentage, none and all of it, and in
  * Australia GST-free and input taxed besides, with "none" called BAS excluded.
  */
 export function gstRateOptions(): readonly { value: GstRate; label: string; hint: string }[] {
+  // New Zealand: zero-rated too, for exports, which go in Box 5 and Box 6.
+  // Without it a 0% line was off the return altogether.
+  if (zeroRatedToo()) {
+    return [...GST_OPTIONS, { value: "free", label: "0% zero-rated", hint: "Exports and other zero-rated supplies: Box 5 and Box 6" }];
+  }
   if (!namedRates()) return GST_OPTIONS;
   return [
     ...GST_OPTIONS.map((o) =>
@@ -218,7 +228,7 @@ export function rateToClassification(
 /** The rate a classification already represents, for showing the current state. */
 export function classificationToRate(classification: GstClassification): GstRate {
   if (classification.side === "imports") return "100";
-  if (namedRates() && classification.treatment === "zero-rated") return "free";
+  if ((namedRates() || zeroRatedToo()) && classification.treatment === "zero-rated") return "free";
   if (namedRates() && classification.treatment === "exempt") return "taxed";
   if (classification.treatment !== "standard") return "0";
   return "15";

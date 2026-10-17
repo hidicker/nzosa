@@ -5,6 +5,7 @@ import {
   auPayRunJournal,
   auPaygEstimate,
   auSchedule1,
+  auSchedule8,
   auWithholding,
   earnedBeforePay,
   fullBas,
@@ -53,8 +54,17 @@ test("study loan: the marginal repayment from 2025-26, withheld on top of the ta
   assert.equal(studyLoanRepayment(15_000_000, "2026-08-31"), 870_000 + 425_000);
   // From $179,286, 10% of the whole income.
   assert.equal(studyLoanRepayment(20_000_000, "2026-08-31"), 2_000_000);
-  // $2,700 a year more: $225 a month on top of $1,478.
-  assert.equal(auPaygEstimate(708_333, employee({ studyLoan: true }), "2026-08-31"), 170_300);
+  // Schedule 8 from 1 July 2026: x = 1,634.99, 0.15x - 200.5615 = $45 a week, $195 a month, on top of $1,478.
+  assert.equal(auSchedule8(708_333, "monthly", true, "2026-08-31"), 19_500);
+  assert.equal(auPaygEstimate(708_333, employee({ studyLoan: true }), "2026-08-31"), 167_300);
+  // From 24 September 2025: $1,500 a week, 0.15 x 1,500.99 - 193.2692 = $32; nothing under $1,288 a week.
+  assert.equal(auSchedule8(150_000, "weekly", true, "2026-03-01"), 3_200);
+  assert.equal(auSchedule8(128_000, "weekly", true, "2026-03-01"), 0);
+  // No tax-free threshold: the lower table, $1,000 a week is 0.15 x 1,000.99 - 140.7692 = $9.
+  assert.equal(auSchedule8(100_000, "weekly", false, "2026-03-01"), 900);
+  // From $3,577 a week (2026-27), 10% of the whole: $4,000.99 x 10% = $400.
+  assert.equal(auSchedule8(400_000, "weekly", true, "2026-08-31"), 40_000);
+  assert.equal(auSchedule8(150_000, "weekly", true, "2025-09-01"), null);
   // Below the threshold nothing extra, unless the tax-free threshold is claimed elsewhere.
   assert.equal(
     auPaygEstimate(400_000, employee({ studyLoan: true }), "2026-08-31"),

@@ -118,6 +118,58 @@ const SCHEDULE_1: readonly { from: IsoDate; scale1: Coefficients; scale2: Coeffi
 ];
 
 /**
+ * The ATO's Schedule 8 coefficients: the study and training support loans
+ * component, worked on the same weekly earnings as Schedule 1. From 24
+ * September 2025 (the marginal system) and from 1 July 2026 (published 17
+ * June 2026). One table where the tax-free threshold is claimed or the payee
+ * is a foreign resident, the other where it is not.
+ */
+const SCHEDULE_8: readonly { from: IsoDate; claimed: Coefficients; notClaimed: Coefficients }[] = [
+  {
+    from: "2026-07-01",
+    claimed: [[1337, 0, 0], [2494, 0.15, 200.5615], [3577, 0.17, 250.4527], [Infinity, 0.1, 0]],
+    notClaimed: [[987, 0, 0], [2144, 0.15, 148.0615], [2727, 0.17, 190.9527], [Infinity, 0.1, 0]],
+  },
+  {
+    from: "2025-09-24",
+    claimed: [[1288, 0, 0], [2403, 0.15, 193.2692], [3447, 0.17, 241.3462], [Infinity, 0.1, 0]],
+    notClaimed: [[938, 0, 0], [2053, 0.15, 140.7692], [2597, 0.17, 181.8462], [Infinity, 0.1, 0]],
+  },
+];
+
+/** A pay as the ATO's weekly earnings: whole dollars of the week's share, plus 99 cents. */
+function weeklyEarnings(gross: Cents, frequency: AuPayFrequency): number {
+  let dollars = gross / 100;
+  if (frequency === "monthly" && Math.round(gross % 100) === 33) dollars += 0.01;
+  const weekly = frequency === "weekly" ? dollars : frequency === "fortnightly" ? dollars / 2 : (dollars * 3) / 13;
+  return Math.floor(weekly + 1e-9) + 0.99;
+}
+
+/** A week's withholding taken back to the pay's period, in cents. */
+function perPay(week: number, frequency: AuPayFrequency): Cents {
+  const pay = frequency === "weekly" ? week : frequency === "fortnightly" ? week * 2 : Math.round((week * 13) / 3);
+  return pay * 100;
+}
+
+/** a times x less b for the row x falls in, rounded to the dollar and never below nothing. */
+function formula(rows: Coefficients, x: number): number {
+  const row = rows.find(([limit]) => x < limit) ?? rows[rows.length - 1];
+  return row === undefined ? 0 : Math.max(0, Math.round(row[1] * x - row[2]));
+}
+
+/**
+ * The study and training support loans component for one pay by the ATO's
+ * Schedule 8, in whole dollars (as cents), added to the Schedule 1 amount.
+ * Null before 24 September 2025, whose coefficients are not held.
+ */
+export function auSchedule8(gross: Cents, frequency: AuPayFrequency, thresholdClaimed: boolean, payDate: IsoDate): Cents | null {
+  const table = SCHEDULE_8.find((t) => payDate >= t.from);
+  if (table === undefined) return null;
+  if (gross <= 0) return 0;
+  return perPay(formula(thresholdClaimed ? table.claimed : table.notClaimed, weeklyEarnings(gross, frequency)), frequency);
+}
+
+/**
  * Withholding by the ATO's Schedule 1 formula for one pay, in whole dollars
  * (as cents). The pay is turned into weekly earnings the ATO's way -- half a
  * fortnight's, three thirteenths of a month's (33 cents made 34), a
@@ -129,17 +181,8 @@ export function auSchedule1(gross: Cents, frequency: AuPayFrequency, scale: 1 | 
   const table = SCHEDULE_1.find((t) => payDate >= t.from);
   if (table === undefined) return null;
   if (gross <= 0) return 0;
-  let dollars = gross / 100;
-  if (frequency === "monthly" && Math.round(gross % 100) === 33) dollars += 0.01;
-  const weekly =
-    frequency === "weekly" ? dollars : frequency === "fortnightly" ? dollars / 2 : frequency === "monthly" ? (dollars * 3) / 13 : dollars / 13;
-  const x = Math.floor(weekly + 1e-9) + 0.99;
   const rows = scale === 1 ? table.scale1 : scale === 2 ? table.scale2 : table.scale3;
-  const row = rows.find(([limit]) => x < limit) ?? rows[rows.length - 1];
-  const week = row === undefined ? 0 : Math.max(0, Math.round(row[1] * x - row[2]));
-  const pay =
-    frequency === "weekly" ? week : frequency === "fortnightly" ? week * 2 : frequency === "monthly" ? Math.round((week * 13) / 3) : week * 13;
-  return pay * 100;
+  return perPay(formula(rows, weeklyEarnings(gross, frequency)), frequency);
 }
 
 /**
@@ -155,6 +198,8 @@ export function auPaygEstimate(gross: Cents, employee: AuEmployee, payDate: IsoD
   const formula = auSchedule1(gross, employee.payFrequency, scale, payDate);
   if (formula !== null) {
     if (employee.studyLoan !== true) return formula;
+    const component = auSchedule8(gross, employee.payFrequency, employee.taxFreeThreshold || employee.foreignResident === true, payDate);
+    if (component !== null) return formula + component;
     const periods = AU_PERIODS[employee.payFrequency];
     const loan = studyLoanRepayment(gross * periods + (employee.taxFreeThreshold ? 0 : 1_820_000), payDate);
     return formula + Math.round(loan / periods / 100) * 100;

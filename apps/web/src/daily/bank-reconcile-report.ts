@@ -1,4 +1,5 @@
 import { spreadsheetCell } from "@nzosa/core";
+import { bankWithId } from "./balance-sheet-label.js";
 import { anyModuleOn, moduleOn } from "../modules.js";
 import {
   dayBefore,
@@ -147,7 +148,7 @@ export function getReconcileAccounts(): BankAccountOption[] {
     // The chart's name first, as everywhere else: "BNZ Visa - Business Card"
     // rather than the feed's "Arrow Rock Tradin".
     const label = bankLabel(id);
-    result.push({ id, label: label === id ? id : `${label} (${id})`, txCount, hasBalances });
+    result.push({ id, label: bankWithId(label, id), txCount, hasBalances });
   }
 
   // Sort accounts with transactions or balances first

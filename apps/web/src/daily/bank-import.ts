@@ -1,4 +1,5 @@
 import { rememberHeldAlready } from "./lines-held-already.js";
+import { bankIdThenName } from "./balance-sheet-label.js";
 import { askForColumns, looksLikeBankFile, rememberedLayout, renderColumnChooser } from "./bank-columns.js";
 import { clearInbox, inboxIsFresh } from "../nightly.js";
 import { morningChoice } from "../nightly-ui.js";
@@ -1339,7 +1340,7 @@ function renderBalanceEntry(): void {
     const label = String(state.ledger.transactions.find((t) => t.account === id)?.extras?.["accountLabel"] ?? "");
     // The account number beside its name; not an id made from the name itself.
     const madeFromName = label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") === id;
-    return label === "" || label === id ? id : madeFromName ? label : `${id} ${label}`;
+    return label === "" || label === id ? id : madeFromName ? label : bankIdThenName(id, label);
   };
 
   const details = document.createElement("details");

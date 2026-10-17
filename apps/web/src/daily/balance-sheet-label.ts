@@ -15,3 +15,22 @@ export function balanceSheetLabel(line: { code: string; name: string }): string 
   if (/^[a-z][a-z-]*$/.test(code)) return name;
   return `${code} ${name}`;
 }
+
+/**
+ * A bank account's name with its id beside it, as "BNZ Visa (02-1234-...)":
+ * the account number tells somebody which account it is. An id the books made
+ * up ("au-business", or the name made into one) tells them nothing, and is
+ * left off.
+ */
+export function bankWithId(name: string, id: string): string {
+  if (name === "" || name === id) return id;
+  const slug = name.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  if (slug === id || /^[a-z][a-z-]*$/.test(id)) return name;
+  return `${name} (${id})`;
+}
+
+/** The same, number first as on a statement: "02-1234-... BNZ Visa", or the name alone beside a made-up id. */
+export function bankIdThenName(id: string, name: string): string {
+  if (name === "" || name === id) return id;
+  return /^[a-z][a-z-]*$/.test(id) ? name : `${id} ${name}`;
+}

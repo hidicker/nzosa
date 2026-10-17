@@ -1,4 +1,5 @@
 import { moduleOn } from "../modules.js";
+import { bankWithId } from "./balance-sheet-label.js";
 import { redraw, showPage } from "../app.js";
 import {
   NOT_IN_LEDGER,
@@ -274,7 +275,7 @@ function bankTable(model: EntityModel): HTMLElement {
     const named = state.ledger.transactions.find((t) => t.account === account)?.extras?.[
       "accountLabel"
     ];
-    label.textContent = named !== undefined ? `${named} (${account})` : account;
+    label.textContent = named !== undefined ? bankWithId(named, account) : account;
     tr.append(label);
 
     const ticked = model.banks[account] ?? [];
@@ -359,7 +360,7 @@ export function bankLinkSelect(account: Account): HTMLSelectElement {
     const option = document.createElement("option");
     option.value = bank;
     const label = labels.get(bank);
-    option.textContent = label !== undefined && label !== bank ? `${label} (${bank})` : bank;
+    option.textContent = label !== undefined ? bankWithId(label, bank) : bank;
     option.selected = bank === id;
     link.append(option);
   }

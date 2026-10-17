@@ -1,6 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import { accountsForEditing, importedAssetProceeds, reclassify, record } from "../books.js";
-import { booksCountry } from "../country.js";
+import { booksCountry, booksMoney } from "../country.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
@@ -11,7 +11,6 @@ import {
   disposalOf,
   fixedAssetProblems,
   fixedAssetTemplate,
-  formatAmount,
   formatFixedAssets,
   isNoDepreciation,
   nextAssetNumber,
@@ -115,8 +114,8 @@ function renderDisposals(body: HTMLElement): void {
           disagree
             .map(
               (a) =>
-                `${a.number} ${formatAmount(entered[a.number] ?? 0)} entered, ` +
-                `${formatAmount(imported.get(a.number) ?? 0)} in the journal`,
+                `${a.number} ${booksMoney(entered[a.number] ?? 0)} entered, ` +
+                `${booksMoney(imported.get(a.number) ?? 0)} in the journal`,
             )
             .join("; ") +
           '. Press "use" on the row to take the journal\'s figure.',
@@ -139,7 +138,7 @@ function renderDisposals(body: HTMLElement): void {
     const tr = document.createElement("tr");
     tr.append(nameCell(`${asset.number} ${asset.name}`));
     tr.append(nameCell(asset.disposed ?? ""));
-    tr.append(amountCell(formatAmount(asset.cost)));
+    tr.append(amountCell(booksMoney(asset.cost)));
 
     if (book === undefined) {
       // Disposed outside every year the transactions cover, so no schedule ran
@@ -155,8 +154,8 @@ function renderDisposals(body: HTMLElement): void {
       continue;
     }
 
-    tr.append(amountCell(formatAmount(asset.cost - book)));
-    tr.append(amountCell(formatAmount(book)));
+    tr.append(amountCell(booksMoney(asset.cost - book)));
+    tr.append(amountCell(booksMoney(book)));
 
     if (sold === undefined) {
       const cell = document.createElement("td");
@@ -181,10 +180,10 @@ function renderDisposals(body: HTMLElement): void {
       accumulatedDepreciation: asset.cost - book,
       proceeds: sold,
     });
-    tr.append(amountCell(formatAmount(d.proceeds)));
-    tr.append(amountCell(d.depreciationRecovered === 0 ? "" : formatAmount(d.depreciationRecovered)));
-    tr.append(amountCell(d.capitalGain === 0 ? "" : formatAmount(d.capitalGain)));
-    tr.append(amountCell(d.lossOnSale === 0 ? "" : formatAmount(d.lossOnSale)));
+    tr.append(amountCell(booksMoney(d.proceeds)));
+    tr.append(amountCell(d.depreciationRecovered === 0 ? "" : booksMoney(d.depreciationRecovered)));
+    tr.append(amountCell(d.capitalGain === 0 ? "" : booksMoney(d.capitalGain)));
+    tr.append(amountCell(d.lossOnSale === 0 ? "" : booksMoney(d.lossOnSale)));
 
     const actions = document.createElement("td");
     const edit = document.createElement("button");
@@ -202,7 +201,7 @@ function renderDisposals(body: HTMLElement): void {
       const use = document.createElement("button");
       use.type = "button";
       use.className = "link-button";
-      use.textContent = `use ${formatAmount(fromJournal)}`;
+      use.textContent = `use ${booksMoney(fromJournal)}`;
       use.addEventListener("click", () => void saveProceeds(asset.number, fromJournal));
       actions.append(" · ", use);
     }
@@ -540,7 +539,7 @@ async function saveAsset(asset: FixedAsset, replacing: string | null, proceeds: 
   state.persistent = await savePart(state.ledger, "assets");
   const what =
     replacing === null
-      ? `${asset.number} ${asset.name} added, ${formatAmount(asset.cost)}`
+      ? `${asset.number} ${asset.name} added, ${booksMoney(asset.cost)}`
       : asset.disposed !== null
         ? `${asset.number} ${asset.name} disposed of on ${asset.disposed}`
         : `${asset.number} ${asset.name} changed`;
@@ -637,7 +636,7 @@ export function renderAssetsPage(): void {
   const total = assets.reduce((sum, a) => sum + a.cost, 0);
   body.append(
     note(
-      `${assets.length} asset${assets.length === 1 ? "" : "s"}, ${formatAmount(total)} at cost. ` +
+      `${assets.length} asset${assets.length === 1 ? "" : "s"}, ${booksMoney(total)} at cost. ` +
         `Depreciation and book value are for FY${year}; the full schedule is on the Reports page.`,
     ),
   );
@@ -658,10 +657,10 @@ export function renderAssetsPage(): void {
     tr.append(nameCell(asset.name));
     tr.append(nameCell(asset.type));
     tr.append(nameCell(asset.purchased ?? ""));
-    tr.append(amountCell(formatAmount(asset.cost)));
+    tr.append(amountCell(booksMoney(asset.cost)));
     tr.append(nameCell(isNoDepreciation(asset.method) ? "None" : `${asset.rate}% ${/dim|dv/i.test(asset.method) ? "DV" : "SL"}`));
-    tr.append(amountCell(row === undefined ? "" : formatAmount(row.depreciation)));
-    tr.append(amountCell(row === undefined ? "" : formatAmount(row.closing)));
+    tr.append(amountCell(row === undefined ? "" : booksMoney(row.depreciation)));
+    tr.append(amountCell(row === undefined ? "" : booksMoney(row.closing)));
     tr.append(nameCell(asset.disposed !== null ? `Disposed ${asset.disposed}` : asset.status || "Registered"));
 
     const cell = document.createElement("td");

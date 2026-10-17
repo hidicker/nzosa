@@ -1,4 +1,5 @@
 import { askOnPage } from "../ui.js";
+import { bankIdThenName, bankWithId } from "./balance-sheet-label.js";
 import { redraw, showPage } from "../app.js";
 import { XERO_TRIAL_BALANCE } from "../migrate/setup-wizard.js";
 import { feedStatus } from "../feed-route.js";
@@ -469,7 +470,7 @@ function startBankDraft(): BankDraft {
     const name = bankLabel(id);
     return {
       id,
-      label: name === id ? id : `${id} ${name}`,
+      label: bankIdThenName(id, name),
       amount: "",
       owing: false,
       balanceTo: equityFor(id),
@@ -1048,7 +1049,7 @@ function againstTheFeed(held: OpeningBalances): HTMLElement {
       const tr = document.createElement("tr");
       const name = bankLabel(row.bank);
       tr.append(
-        nameCell(name === row.bank ? row.bank : `${name} (${row.bank})`),
+        nameCell(bankWithId(name, row.bank)),
         amountCell(dollars(row.ours)),
         amountCell(dollars(row.bankSays)),
         amountCell(difference === 0 ? "\u2713 agrees" : dollars(difference)),
@@ -1689,7 +1690,7 @@ function openingAccountOptions(): { key: string; label: string }[] {
   const bankIds = [...new Set(state.ledger.transactions.map((t) => t.account))].sort();
   const banks = bankIds.map((id) => {
     const name = bankLabel(id);
-    return { key: id, label: name === id ? id : `${id} ${name}` };
+    return { key: id, label: bankIdThenName(id, name) };
   });
   const chart = accountsForEditing()
     .map((row) => row.account)

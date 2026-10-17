@@ -644,6 +644,9 @@ export function renderBas(body: HTMLElement, year: number): void {
   const isBalanceSheet = (t: Transaction): boolean =>
     /equity|liabilit|payable|receivable|bank|current asset|inventory|prepayment/i.test(accountOf(t)?.type ?? "");
 
+  // The ATO's instruction: every label in whole dollars, rounded down.
+  const whole = (cents: number): number => Math.sign(cents) * Math.floor(Math.abs(cents) / 100) * 100;
+  const label$ = (cents: number): string => money(whole(cents)).replace(/\.0+$/, "");
   const quarters = basQuarters(year).map((quarter) => {
     // Instalment income: the business and investment income in the books for
     // the quarter, GST out -- not salary, not capital gains. A company's too:
@@ -661,8 +664,9 @@ export function renderBas(body: HTMLElement, year: number): void {
     const bas = labels ?? fullBas({ lines: [], excluded: [], boxes: { box8: 0, box10: 0, box12: 0, box14: 0 } as never }, { isCapital, isExport, isBalanceSheet });
     const pay = auWithholding(payRuns, quarter.from as IsoDate, quarter.to as IsoDate);
     const t11 = withRate ? Math.round((t1 * rate) / 100) : 0;
-    // What the statement asks to be paid: GST, PAYG withheld, and the instalment.
-    const net = bas.a1 - bas.b1 + pay.w2 + t11;
+    // What the statement asks to be paid: GST, PAYG withheld, and the
+    // instalment -- as the labels are lodged, each in whole dollars.
+    const net = whole(bas.a1) - whole(bas.b1) + whole(pay.w2) + whole(t11);
     return { quarter, t1, t11, bas, pay, net };
   });
 
@@ -709,26 +713,26 @@ export function renderBas(body: HTMLElement, year: number): void {
     for (const [text, cls] of [
       [`${quarter.from} to ${quarter.to}`, "report-name"],
       [basDueDate(quarter.to), "report-note"],
-      [money(bas.g1), "report-amount"],
+      [label$(bas.g1), "report-amount"],
       ...(full
         ? ([
-            [money(bas.g2), "report-amount"],
-            [money(bas.g3), "report-amount"],
-            [money(bas.g10), "report-amount"],
-            [money(bas.g11), "report-amount"],
+            [label$(bas.g2), "report-amount"],
+            [label$(bas.g3), "report-amount"],
+            [label$(bas.g10), "report-amount"],
+            [label$(bas.g11), "report-amount"],
           ] as const)
         : []),
-      [money(bas.a1), "report-amount"],
-      [money(bas.b1), "report-amount"],
+      [label$(bas.a1), "report-amount"],
+      [label$(bas.b1), "report-amount"],
       ...(withPay
         ? ([
-            [money(pay.w1), "report-amount"],
-            [money(pay.w2), "report-amount"],
+            [label$(pay.w1), "report-amount"],
+            [label$(pay.w2), "report-amount"],
           ] as const)
         : []),
-      [money(t1), "report-amount"],
-      ...(withRate ? ([[money(t11), "report-amount"]] as const) : []),
-      [`${money(Math.abs(net))} ${net >= 0 ? "to pay" : "refund"}`, "report-amount"],
+      [label$(t1), "report-amount"],
+      ...(withRate ? ([[label$(t11), "report-amount"]] as const) : []),
+      [`${label$(Math.abs(net))} ${net >= 0 ? "to pay" : "refund"}`, "report-amount"],
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;
@@ -758,7 +762,7 @@ export function renderBas(body: HTMLElement, year: number): void {
     const sb = document.createElement("tbody");
     for (const [name, key] of rows) {
       const tr = document.createElement("tr");
-      tr.innerHTML = `<td class="report-name">${name}</td>${quarters.map((q) => `<td class="report-amount">${money(q.bas[key])}</td>`).join("")}`;
+      tr.innerHTML = `<td class="report-name">${name}</td>${quarters.map((q) => `<td class="report-amount">${label$(q.bas[key])}</td>`).join("")}`;
       sb.append(tr);
     }
     sheet.append(sb);
@@ -771,6 +775,7 @@ export function renderBas(body: HTMLElement, year: number): void {
         ? "The full BAS lodges G1, G2, G3, G10, G11, 1A and 1B; the worksheet beneath is the ATO's, for following them. G13, G15 and the adjustments are not worked out here. " +
           "G10 is every purchase coded to a fixed asset account, whatever its tax code; Xero counts only those coded GST on Capital. "
         : "The simpler BAS: G1, 1A and 1B. ") +
+        "In whole dollars, rounded down, as the ATO asks the BAS to be completed. " +
         "Worked on the cash basis: a sale or purchase counts in the quarter it is paid, so an invoice or bill " +
         "still owing is not here yet, whichever basis the reports show. " +
         "G1 includes GST, and GST-free and input taxed sales such as interest. Due dates are for lodging yourself; a registered " +

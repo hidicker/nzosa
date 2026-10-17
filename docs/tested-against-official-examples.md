@@ -19,6 +19,7 @@ Checked 17–18 October 2026.
 | GST: $920 of tools, $120 GST, in Box 11 | OpenAccountants NZ GST guide, case 2 | Entered through the app: Box 11 includes $920, Box 12 $120 | Matches |
 | GST: $8,500 of advice to a Sydney company, zero-rated, Boxes 5 and 6 | Same guide, case 3 | Entered through the app: Box 5 $20,000 (with an $11,500 sale), Box 6 $8,500 | Matches, **after a fix**: New Zealand lines had no zero-rated choice, so an export was off the return altogether |
 | Entertainment $2,300: $150 debit adjustment | Same guide, case 6 | Coded to 420 alone, the full $300 is claimed; split 50/50 into 420 and 424 (the Xero NZ way, which Split offers), $150 is claimed | Same result when split; no change |
+| Company income tax at 28% | IRD | Same books, IR4: sales $18,500 net of GST (the export included), costs net of GST, tax $4,396 on $15,700 | Matches. The dinners coded wholly to 420 Entertainment are deducted in full; the IR4 page says entertainment belongs in the tax adjustment, and splitting into 420 and 424 does it in the books |
 | PAYE, M code, $1,000 a week, 2026-27: $171.50 | IRD payroll calculations specification 2026-27, section 5.2 | $171.50; fortnightly $343.00; monthly ME $1,256.66; $4,000 a week $1,210.36 (levy capped) | Matches |
 | Seasonal worker's $960 holiday pay: $117.60 | Same, NSW example | $117.60 | Matches |
 | ESCT on $79.04 at 17.5%: $13.82 (cents dropped first) | Same, 5.21.4 | $13.82 | Matches |

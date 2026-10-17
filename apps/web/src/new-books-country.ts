@@ -2,6 +2,7 @@ import { JURISDICTIONS, accountEntityKey, jurisdictionOf, starterChartFor } from
 import type { Account } from "@nzosa/core";
 import { edition } from "./edition.js";
 import { state } from "./state.js";
+import { US_TIME_ZONE } from "./demo-personas.js";
 import { savePart } from "./store.js";
 
 /**
@@ -31,8 +32,50 @@ export function countryChoices(keep?: string): [string, string][] {
     .map((one) => [one.id, WORK_IN_PROGRESS.has(one.id) ? `${one.name} (work in progress)` : one.name]);
 }
 
+const LAST = "nzosa.lastCountry";
+
+/**
+ * The country new books start in: the one this person last chose, and before
+ * they have chosen any, their own part of the world, read from the browser's
+ * time zone (nothing about them is sent anywhere to find out). New Zealand
+ * where neither says otherwise.
+ */
+export function defaultCountry(): string {
+  try {
+    const last = localStorage.getItem(LAST);
+    if (last !== null && last in JURISDICTIONS) return last;
+  } catch {
+    // Without storage, the time zone decides.
+  }
+  return countryOfTimeZone();
+}
+
+/** The country a browser's time zone is in, among those books can be kept in. */
+export function countryOfTimeZone(): string {
+  let zone = "";
+  try {
+    zone = Intl.DateTimeFormat().resolvedOptions().timeZone ?? "";
+  } catch {
+    return "nz";
+  }
+  if (/^Australia\//.test(zone)) return "au";
+  if (US_TIME_ZONE.test(zone)) return "us";
+  if (zone === "Asia/Seoul") return "kr";
+  return "nz";
+}
+
+/** Remember a country somebody chose, for the next books they make. */
+export function rememberChosenCountry(country: string): void {
+  try {
+    localStorage.setItem(LAST, country);
+  } catch {
+    // Without storage the time zone decides next time.
+  }
+}
+
 /** Hold the country for the set of books about to be made. */
 export function rememberNewBooksCountry(country: string): void {
+  rememberChosenCountry(country);
   try {
     localStorage.setItem(PENDING, JSON.stringify({ country, at: Date.now() }));
   } catch {
@@ -52,8 +95,12 @@ export async function applyNewBooksCountry(): Promise<boolean> {
   } catch {
     return false;
   }
-  if (held === null || typeof held.country !== "string" || typeof held.at !== "number") return false;
-  if (Date.now() - held.at > FRESH_FOR) return false;
+  // Books with nothing in them and no country yet -- a first login's -- start in
+  // the country this person would choose: the last they chose, or their own.
+  if (held === null || typeof held.country !== "string" || typeof held.at !== "number" || Date.now() - held.at > FRESH_FOR) {
+    held = state.ledger.jurisdiction === undefined ? { country: defaultCountry(), at: Date.now() } : null;
+  }
+  if (held === null || typeof held.country !== "string") return false;
   // Only on books with nothing in them yet: never over a country somebody chose.
   const fresh =
     state.ledger.jurisdiction === undefined &&

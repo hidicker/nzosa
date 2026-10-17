@@ -1,6 +1,6 @@
 import { booksCountry } from "../country.js";
 import { jurisdictionOf } from "@nzosa/core";
-import { countryChoices, countryLocked, starterChartForNewCountry, WORK_IN_PROGRESS } from "../new-books-country.js";
+import { countryChoices, countryLocked, rememberChosenCountry, starterChartForNewCountry, WORK_IN_PROGRESS } from "../new-books-country.js";
 import { redraw, showPage } from "../app.js";
 import { allMyirCards } from "../daily/myir-cards.js";
 import {
@@ -1575,6 +1575,8 @@ The ${to.name} pack is still work in progress: reports and rates may be missing 
       if (!yes) return;
       select.value = chosen;
       select.disabled = true;
+      // The next books this person makes start here too.
+      rememberChosenCountry(chosen);
       void (async () => {
         state.ledger = { ...state.ledger, jurisdiction: chosen };
         // Empty books still on the old country's starter chart take the new

@@ -129,7 +129,7 @@ export function firstDemoPersona(): string {
 }
 
 /** The time zones of the fifty states and Washington, D.C. */
-const US_TIME_ZONE =
+export const US_TIME_ZONE =
   /^(America\/(New_York|Detroit|Chicago|Denver|Phoenix|Boise|Los_Angeles|Anchorage|Juneau|Sitka|Metlakatla|Yakutat|Nome|Adak|Menominee|Indiana\/.+|Kentucky\/.+|North_Dakota\/.+)|Pacific\/Honolulu|US\/.+)$/;
 
 export function rememberDemoPersona(id: string): void {

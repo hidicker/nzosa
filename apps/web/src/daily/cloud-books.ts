@@ -1,5 +1,4 @@
-import { countryChoices, rememberNewBooksCountry } from "../new-books-country.js";
-import { booksCountry } from "../country.js";
+import { countryChoices, defaultCountry, rememberNewBooksCountry } from "../new-books-country.js";
 import { ownProjectPanel } from "./own-project.js";
 import { cloudConfigured } from "../cloud-config.js";
 import {
@@ -452,7 +451,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
     const option = document.createElement("option");
     option.value = id;
     option.textContent = label;
-    option.selected = id === booksCountry().id;
+    option.selected = id === defaultCountry();
     country.append(option);
   }
   const make = document.createElement("button");

@@ -13,8 +13,7 @@ import {
   writesToFolder,
 } from "../store.js";
 import { askNameAndChoiceOnPage, askOnPage, askTextOnPage, note } from "../ui.js";
-import { countryChoices, rememberNewBooksCountry } from "../new-books-country.js";
-import { booksCountry } from "../country.js";
+import { countryChoices, defaultCountry, rememberNewBooksCountry } from "../new-books-country.js";
 import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
 import { cloudConfigured } from "../cloud-config.js";
@@ -144,7 +143,7 @@ export async function chooseLedger(value: string): Promise<void> {
         "and starts empty.",
       "Kept in",
       countryChoices(),
-      booksCountry().id,
+      defaultCountry(),
       "Create",
       "Cancel",
     );

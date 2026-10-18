@@ -192,3 +192,9 @@ works).
   Reference, Account) is read into one account named after the file, as the
   picker for an unknown layout offers no column for the account. Found by an
   outside tester on Australian books, 17 October 2026.
+- **SimpleFIN for books kept online.** The SimpleFIN feed works on the
+  desktop app only: its Access URL is kept in `.simplefin.json` by the local
+  server. Books kept online need it in Supabase Vault with an edge function
+  (`supabase/functions/simplefin`, a `simplefin_secret` table and RPCs), as
+  `supabase/functions/wise` does for Wise. Left because it changes the
+  production database. 18 October 2026.

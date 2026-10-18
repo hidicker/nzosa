@@ -55,6 +55,10 @@ import {
   jevSuggest,
   listModels as listAiModels,
   pickModel as pickAiModel,
+  simpleFinAccess,
+  simpleFinClaimUrl,
+  simpleFinErrors,
+  simpleFinWindows,
 } from "@nzosa/core";
 
 const root = dirname(fileURLToPath(import.meta.url));
@@ -475,6 +479,55 @@ function writeWise(root, ledger, value) {
   renameSync(temporary, file);
 }
 
+/**
+ * SimpleFIN's Access URL, and which of its accounts go where, per set of
+ * books. Its own file, written as the Wise one is: mode 0600, in the ledger
+ * root, never in a ledger file. The page is told the bridge's host and never
+ * the address with its password.
+ */
+function simpleFinFile(root) {
+  return join(root, ".simplefin.json");
+}
+
+function readSimpleFinStore(root) {
+  try {
+    const parsed = JSON.parse(readFileSync(simpleFinFile(root), "utf8"));
+    return parsed && typeof parsed === "object" ? parsed : {};
+  } catch {
+    return {};
+  }
+}
+
+function readSimpleFin(root, ledger) {
+  return readSimpleFinStore(root)[ledger] ?? null;
+}
+
+function writeSimpleFin(root, ledger, value) {
+  const store = readSimpleFinStore(root);
+  if (value === null) delete store[ledger];
+  else store[ledger] = value;
+  mkdirSync(root, { recursive: true });
+  const file = simpleFinFile(root);
+  const temporary = `${file}.writing`;
+  writeFileSync(temporary, JSON.stringify(store, null, 1), { mode: 0o600 });
+  renameSync(temporary, file);
+}
+
+/** Ask the Bridge for its account set, with the Access URL's name and password. */
+async function simpleFin(accessUrl, search) {
+  const access = simpleFinAccess(accessUrl);
+  if (access === null) throw new Error("the saved SimpleFIN access is not an address that can be used");
+  const basic = Buffer.from(`${access.username}:${access.password}`).toString("base64");
+  const response = await fetch(`${access.base}/accounts?${search.toString()}`, {
+    headers: { Authorization: `Basic ${basic}` },
+  });
+  if (response.status === 403) throw new Error("access was refused: it may have been revoked at the Bridge");
+  if (response.status === 402) throw new Error("the Bridge says payment is needed on your SimpleFIN account");
+  const body = await response.json().catch(() => null);
+  if (!response.ok || body === null || !Array.isArray(body.accounts)) throw new Error(`HTTP ${response.status}`);
+  return body;
+}
+
 async function wise(token, path) {
   const response = await fetch(`https://api.wise.com${path}`, {
     headers: { Authorization: `Bearer ${token}` },
@@ -583,7 +636,7 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
       // request with no such header -- an older browser, the command line --
       // is let through, as before.
       if (
-        (path === "/api/feed/transactions" || path === "/api/wise/statement") &&
+        (path === "/api/feed/transactions" || path === "/api/wise/statement" || path === "/api/simplefin/transactions") &&
         request.headers["sec-fetch-site"] === "cross-site"
       ) {
         send(response, 403, { error: "that request did not come from this app" });
@@ -1089,6 +1142,178 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 200, { transactions: lines, closing });
         } catch (error) {
           send(response, 502, { error: `Wise said: ${error.message}` });
+        }
+        return;
+      }
+
+      // --- SimpleFIN ---------------------------------------------------
+      //
+      // A Setup Token is claimed here, once, for its Access URL, which stays
+      // here as the bank feed's tokens do.
+      if (path === "/api/simplefin" && request.method === "GET") {
+        const held = readSimpleFin(ledgerRoot, current);
+        const access = held === null ? null : simpleFinAccess(held.access);
+        send(response, 200, {
+          configured: held !== null,
+          bridge: access === null ? "" : new URL(access.base).host,
+          accounts: held?.accounts ?? {},
+          from: held?.from ?? "",
+          lastFetch: held?.lastFetch ?? "",
+        });
+        return;
+      }
+
+      if (path === "/api/simplefin" && request.method === "PUT") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const body = await readJson(request);
+        const given = String(body.token ?? "").trim();
+        let access = simpleFinAccess(given) === null ? null : given;
+        if (access === null) {
+          const claim = simpleFinClaimUrl(given);
+          if (claim === null) {
+            send(response, 400, { error: "that is not a SimpleFIN Setup Token" });
+            return;
+          }
+          try {
+            const claimed = await fetch(claim, { method: "POST", headers: { "content-length": "0" }, redirect: "manual" });
+            if (claimed.status >= 300 && claimed.status < 400) {
+              send(response, 400, { error: "the Bridge no longer answers at that token's address. Make a new Setup Token" });
+              return;
+            }
+            const text = (await claimed.text()).trim();
+            if (claimed.status === 403) {
+              send(response, 400, {
+                error:
+                  "the Bridge says that token was already claimed. If you did not claim it, disable it at the " +
+                  "Bridge, then make a new one.",
+              });
+              return;
+            }
+            if (!claimed.ok || simpleFinAccess(text) === null) {
+              send(response, 400, { error: `the Bridge did not give access (HTTP ${claimed.status})` });
+              return;
+            }
+            access = text;
+          } catch (error) {
+            send(response, 502, { error: `could not reach the Bridge: ${error.message}` });
+            return;
+          }
+        }
+        // Checked before it is kept, as Wise's token is.
+        try {
+          await simpleFin(access, new URLSearchParams({ "balances-only": "1", version: "2" }));
+        } catch (error) {
+          send(response, 400, { error: `SimpleFIN said: ${error.message}` });
+          return;
+        }
+        const existing = readSimpleFin(ledgerRoot, current);
+        writeSimpleFin(ledgerRoot, current, { access, accounts: existing?.accounts ?? {}, from: existing?.from ?? "" });
+        send(response, 200, { configured: true });
+        return;
+      }
+
+      if (path === "/api/simplefin" && request.method === "DELETE") {
+        writeSimpleFin(ledgerRoot, current, null);
+        send(response, 200, { configured: false });
+        return;
+      }
+
+      // Every account the access reaches, with its balance and no lines.
+      if (path === "/api/simplefin/accounts" && request.method === "GET") {
+        const held = readSimpleFin(ledgerRoot, current);
+        if (held === null) {
+          send(response, 400, { error: "SimpleFIN is not connected" });
+          return;
+        }
+        try {
+          const set = await simpleFin(held.access, new URLSearchParams({ "balances-only": "1", version: "2" }));
+          const names = new Map((set.connections ?? []).map((c) => [c.conn_id, c.org_name ?? c.name ?? ""]));
+          send(response, 200, {
+            accounts: set.accounts.map((a) => ({
+              id: String(a.id),
+              name: String(a.name ?? ""),
+              institution: String(names.get(a.conn_id) ?? a.org?.name ?? ""),
+              currency: String(a.currency ?? ""),
+              balance: String(a.balance ?? ""),
+              balanceDate: Number(a["balance-date"] ?? 0),
+            })),
+            errors: simpleFinErrors(set),
+          });
+        } catch (error) {
+          send(response, 502, { error: `SimpleFIN said: ${error.message}` });
+        }
+        return;
+      }
+
+      if (path === "/api/simplefin/accounts" && request.method === "PUT") {
+        if (!/^application\/json/.test(request.headers["content-type"] ?? "")) {
+          send(response, 415, { error: "expected application/json" });
+          return;
+        }
+        const held = readSimpleFin(ledgerRoot, current);
+        if (held === null) {
+          send(response, 400, { error: "SimpleFIN is not connected" });
+          return;
+        }
+        const body = await readJson(request);
+        const from = typeof body.from === "string" && /^\d{4}-\d{2}-\d{2}$/.test(body.from) ? body.from : held.from;
+        const accounts = body.accounts && typeof body.accounts === "object" ? body.accounts : held.accounts ?? {};
+        writeSimpleFin(ledgerRoot, current, { ...held, accounts, ...(from ? { from } : {}) });
+        send(response, 200, { accounts, from: from ?? "" });
+        return;
+      }
+
+      // One account's lines from a day on, asked for in the windows the Bridge
+      // accepts.
+      if (path === "/api/simplefin/transactions" && request.method === "GET") {
+        const held = readSimpleFin(ledgerRoot, current);
+        if (held === null) {
+          send(response, 400, { error: "SimpleFIN is not connected" });
+          return;
+        }
+        const account = url.searchParams.get("account") ?? "";
+        const start = url.searchParams.get("start") ?? "";
+        if (account === "" || (start !== "" && Number.isNaN(Date.parse(start)))) {
+          send(response, 400, { error: "which account, from when?" });
+          return;
+        }
+        try {
+          const to = Math.ceil(Date.now() / 1000) + 86_400;
+          const from = Math.floor((start !== "" ? Date.parse(start) : Date.now() - 90 * 86_400_000) / 1000);
+          let found = null;
+          const transactions = [];
+          const errors = [];
+          for (const window of simpleFinWindows(from, to)) {
+            const set = await simpleFin(
+              held.access,
+              new URLSearchParams({ account, "start-date": String(window.start), "end-date": String(window.end), version: "2" }),
+            );
+            errors.push(...simpleFinErrors(set));
+            const one = set.accounts.find((a) => String(a.id) === account);
+            if (one === undefined) continue;
+            found = one;
+            transactions.push(...(Array.isArray(one.transactions) ? one.transactions : []));
+          }
+          if (found === null) {
+            send(response, 404, { error: "the Bridge no longer lists that account" });
+            return;
+          }
+          // One line asked for twice, at a window's edge, is one line.
+          const seen = new Set();
+          const unique = transactions.filter((t) => {
+            const key = String(t.id);
+            if (seen.has(key)) return false;
+            seen.add(key);
+            return true;
+          });
+          const latest = readSimpleFin(ledgerRoot, current) ?? held;
+          writeSimpleFin(ledgerRoot, current, { ...latest, lastFetch: new Date().toISOString() });
+          send(response, 200, { account: { ...found, transactions: unique }, errors: [...new Set(errors)] });
+        } catch (error) {
+          send(response, 502, { error: `SimpleFIN said: ${error.message}` });
         }
         return;
       }

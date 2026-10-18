@@ -73,8 +73,9 @@ import type {
 import { loadCheckFiles } from "../migrate/coding-reconciliation.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { renderWise } from "./wise-feed.js";
+import { renderSimpleFin } from "./simplefin-feed.js";
 import { autoLinkBankRows } from "./entities.js";
-import { booksCurrency, booksLocale, moneyPlaces } from "../country.js";
+import { booksCountry, booksCurrency, booksLocale, moneyPlaces } from "../country.js";
 
 /**
  * Getting bank data in, by file or by feed.
@@ -933,8 +934,9 @@ async function drawFeed(): Promise<void> {
   // What is there stays until its replacement is ready. Emptied first, the
   // section vanished for as long as the server took to answer, the page
   // shortened under whoever was reading it, and it came back somewhere else.
-  // Wise sits beside the feed, drawn with it.
+  // Wise sits beside the feed, drawn with it, and SimpleFIN for United States books.
   void renderWise();
+  if (booksCountry().id === "us") void renderSimpleFin();
 
   if (!feedPossible()) {
     body.textContent = "";

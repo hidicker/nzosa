@@ -120,6 +120,10 @@ The guides are guidance, not certified figures: confirm each rate with the ATO, 
 - **The bank's FITID** is kept as the reference.
 - **"Day first"** on Bank import follows the country.
 
+## SimpleFIN bank feed (United States)
+
+The SimpleFIN Bridge (beta-bridge.simplefin.org) is a read-only feed for United States and Canadian banks that the person subscribes to themselves; its protocol is published at simplefin.org. On Bank import, a United States set of books has a SimpleFIN section: the person makes a Setup Token at the Bridge and pastes it there, and the app's server claims it once (a POST to the address the token encodes) for an Access URL, which it keeps in `.simplefin.json` beside the ledgers, mode 0600, as Wise's token is kept. The page is told the Bridge's host and never the address with its password. Each account is ticked to come in or not, books' currency only; Fetch asks for each one's lines from the books' start, 45 days at a time as the Bridge asks, and they go through the same import as any bank line. Pending lines are left until they post. The Bridge's transaction id is kept as the line's transaction number, so a second fetch adds nothing; a line is dated where it was made (`transacted_at`) in this computer's time zone. What the Bridge says went wrong (`errlist`) is shown in its words. A token that was already claimed is said to be, with the advice to disable it at the Bridge, since that can mean someone else claimed it. Code: `packages/core/src/simplefin.ts`, `apps/web/server.js` (`/api/simplefin`), `apps/web/src/daily/simplefin-feed.ts`. Checked against the Bridge's public demo account on 18 October 2026: its accounts listed with their balances, 448 checking lines from the books' start, none added again on a second fetch. Only on the desktop app for now: books kept online would need the access held in the server's vault, as the Akahu and Wise connections are.
+
 ## Moving from QuickBooks Online
 
 Two exports are needed, dropped on Setup (or Start here) together or one at a

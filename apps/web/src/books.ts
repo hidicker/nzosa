@@ -2089,7 +2089,7 @@ function stockCostJournals(): PostedJournal[] {
  */
 export function ledgerFromStart(): boolean {
   return state.ledger.transactions.some((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
   );
 }
 

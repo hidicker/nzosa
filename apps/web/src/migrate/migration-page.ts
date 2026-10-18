@@ -390,7 +390,7 @@ function said(held: Onboarding, step: Step): string {
       if (fromQuickBooks(held)) {
         // The ledger's own lines, not a bank register brought in after it.
         const brought = state.ledger.transactions.filter((t) =>
-          /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+          /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
         ).length;
         return brought === 0 ? "Nothing brought in yet" : `${brought} bank and card lines brought in`;
       }
@@ -1574,7 +1574,7 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const ledgerLast = fromQuickBooks(held)
     ? state.ledger.transactions
         // The ledger's own lines: a bank register brought in after it is not the ledger.
-        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
+        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
         .reduce((last, t) => (t.date > last ? t.date : last), "")
     : "";
   inner.append(
@@ -1841,10 +1841,11 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
             "Required",
           ],
           [
-            "Bank files",
-            "From your bank, or Banking > the account register",
-            "The transactions. Desktop doesn't export them to IIF itself; an IIF file from another tool that " +
-              "holds them brings them too",
+            "Transaction Detail by Account",
+            "Reports > Accountant & Taxes > Transaction Detail by Account, Dates: All, then Excel > Create New " +
+              "Worksheet, saved as a comma separated values (.csv) file",
+            "Every transaction: deposits, checks, transfers, invoices, bills and journal entries. Each account's " +
+              "lines are checked against the total QuickBooks printed for it",
             "Required",
           ],
         ],

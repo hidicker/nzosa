@@ -16,6 +16,8 @@ import {
   isQuickBooksBankExport,
   quickBooksBankCoding,
   parseSlowBooksBooks,
+  parseQuickBooksDesktopDetailBooks,
+  isQuickBooksDesktopDetail,
   parseXeroAllocations,
   parseXeroAccountTransactions,
   payoutGroups,
@@ -273,12 +275,13 @@ export async function loadReference(
         lines.push(...notHeldAlready(file.name, quickBooksBankCoding(text, file.name, booksCountry().dayFirst)));
         continue;
       }
-      if (isIif(text) || isSlowBooksLedger(text)) {
+      if (isIif(text) || isSlowBooksLedger(text) || isQuickBooksDesktopDetail(text)) {
         // The books' own chart to add to -- but not an unused starter chart,
         // which the file's accounts replace: merged, SlowBooks' 4000 Service
         // Income sat beside the starter's 4000 Sales on the same number.
         const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
-        const read = (isIif(text) ? parseIifBooks : parseSlowBooksBooks)(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
+        const reader = isIif(text) ? parseIifBooks : isSlowBooksLedger(text) ? parseSlowBooksBooks : parseQuickBooksDesktopDetailBooks;
+        const read = reader(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
         if (read.chart.accounts !== known) chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
         lines.push(...read.reference);
         for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);

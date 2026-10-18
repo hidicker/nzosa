@@ -217,6 +217,8 @@ async function loadEach(
     "quickbooks-ledger": 0,
     "quickbooks-iif": -1,
     "slowbooks-ledger": -1,
+    // After the IIF file, whose chart gives its accounts their types.
+    "quickbooks-desktop-detail": 0,
     // After the ledger: the due dates go on the documents it brought in, and
     // a product's account is found in the chart it brought.
     "product-list": 1,
@@ -257,6 +259,7 @@ async function loadEach(
           continue;
         }
         case "slowbooks-ledger":
+        case "quickbooks-desktop-detail":
         case "quickbooks-iif": {
           // The chart and the coding first, the way a chart and a ledger go;
           // then the bank lines, documents and journals.

@@ -187,7 +187,22 @@ export function parseSlowBooksBooks(
   chart: QuickBooksChart | null,
   options: QuickBooksLedgerOptions = {},
 ): ReadBooks {
-  const read = parseSlowBooksLedger(text, options);
+  return booksWithChart(parseSlowBooksLedger(text, options), chart, options, "general-ledger.csv", "slowbooks-ledger");
+}
+
+/**
+ * A ledger read from another system's report, made into books on the chart
+ * these books already hold, where they hold one: its accounts by name, the
+ * report's for the rest. SlowBooks' general ledger and QuickBooks Desktop's
+ * transaction detail both go this way.
+ */
+export function booksWithChart(
+  read: IifFile,
+  chart: QuickBooksChart | null,
+  options: QuickBooksLedgerOptions,
+  defaultFile: string,
+  importer: string,
+): ReadBooks {
   // The books' own chart, where there is one, for the accounts it has; the
   // report's for the rest.
   let used = read.chart;
@@ -222,10 +237,5 @@ export function parseSlowBooksBooks(
     // The entries name accounts as the report does; the chart's own spelling is used.
     read.entries = read.entries.map((e) => ({ ...e, legs: e.legs.map((l) => ({ ...l, account: own(l.account) })) }));
   }
-  return booksFromEntries(
-    { ...read, chart: used },
-    used,
-    { ...options, file: options.file ?? "general-ledger.csv" },
-    "slowbooks-ledger",
-  );
+  return booksFromEntries({ ...read, chart: used }, used, { ...options, file: options.file ?? defaultFile }, importer);
 }

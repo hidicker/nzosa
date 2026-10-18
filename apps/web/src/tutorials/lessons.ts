@@ -646,7 +646,7 @@ export const LESSONS: readonly Lesson[] = [
   {
     id: "us-quickbooks",
     title: "Moving from QuickBooks",
-    summary: "Bring a QuickBooks company across: two exports from QuickBooks Online, or an IIF file from QuickBooks Desktop.",
+    summary: "Bring a QuickBooks company across: two exports from QuickBooks Online, or two from QuickBooks Desktop.",
     minutes: 2,
     books: ["us", "us-company"],
     steps: [
@@ -662,8 +662,9 @@ export const LESSONS: readonly Lesson[] = [
         body:
           "Drop both files on Setup, or on Start here. NZOSA works out what each one is: the chart becomes the " +
           "chart, the bank and card postings become bank lines, invoices and bills come in with their payments, " +
-          "and the rest of the entries become journals. From QuickBooks Desktop, drop its IIF file instead: it " +
-          "holds the accounts, customers, vendors and transactions in one.",
+          "and the rest of the entries become journals. From QuickBooks Desktop, drop its IIF file of lists and " +
+          "its Transaction Detail by Account report: the lists bring the accounts, customers and vendors, the " +
+          "report every transaction.",
         target: visible("#setup-drop, .dropzone"),
       },
       {

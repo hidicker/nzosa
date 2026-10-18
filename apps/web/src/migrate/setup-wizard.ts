@@ -890,7 +890,7 @@ export function setupSteps(
   const nz = booksCountry().id === "nz";
   // Books whose whole history came from another system's general ledger.
   const ledgerFromStart = led.transactions.some((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
   );
   const entities = led.entities?.entities ?? [];
   const typed = state.chart.filter((a) => a.type.trim() !== "").length;

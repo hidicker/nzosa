@@ -7,6 +7,7 @@ import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
+import { isQuickBooksDesktopDetail } from "./qb-desktop-detail.js";
 import { isProductList } from "./product-lists.js";
 import { isDueDateList } from "./document-dates.js";
 import { isQuickBooksTrialBalance } from "./trial-balance.js";
@@ -54,6 +55,7 @@ export type ExportKind =
   | "quickbooks-ledger"
   | "quickbooks-iif"
   | "slowbooks-ledger"
+  | "quickbooks-desktop-detail"
   | "product-list"
   | "due-dates"
   | "contact-list"
@@ -217,6 +219,11 @@ export function identifyExport(text: string): Identified {
   // SlowBooks Pro's general ledger: one row a posting, with its source.
   if (isSlowBooksLedger(text)) {
     return { kind: "slowbooks-ledger", what: "SlowBooks general ledger" };
+  }
+  // QuickBooks Desktop's Transaction Detail by Account: every transaction,
+  // under each account it touches.
+  if (isQuickBooksDesktopDetail(text)) {
+    return { kind: "quickbooks-desktop-detail", what: "QuickBooks Desktop transaction detail by account" };
   }
   // A QuickBooks report with nothing in it, or a sales report: nothing to
   // bring in. Asked first, as a sales report's columns are a ledger's too.

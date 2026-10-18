@@ -156,6 +156,8 @@ QuickBooks Desktop's IIF export (File > Utilities > Export > Lists to IIF Files,
 
 Dates are read month first. Code: `packages/core/src/iif.ts`, sharing `quickBooksBooksFrom` in `quickbooks.ts`. The `CLASS` column is given to the Classes page for bank lines and invoices and bills; a journal's is not carried yet.
 
+Desktop does not export its own transactions to IIF. They come from its **Transaction Detail by Account** report (Reports > Accountant & Taxes, all dates, saved as CSV), dropped with the IIF file: each posting sits under its account (a sub-account's heading one column in, named `Parent:Child` as IIF names it), and the postings sharing a type, date and name, and a number where they have one, are one transaction. A journal entry whose number is printed on some lines only is still one. Before anything is taken, each account's postings are checked against the total QuickBooks printed for it and every transaction must balance; a file that fails is refused whole, with why. The chart's types come from the IIF file; dropped alone, they are guessed from the accounts' names. Code: `packages/core/src/qb-desktop-detail.ts`; the layout was learnt from SlowBooks Pro 2.23.4's notes, and the tests are invented books in it.
+
 ## United States pages
 
 Shown for books kept outside New Zealand:

@@ -1,4 +1,4 @@
-import { applyDueDates, isIif, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { applyDueDates, isIif, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, hasCoding, postedJournals, reconcileRows, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency, booksMoney } from "../country.js";
@@ -27,7 +27,8 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const options = { dayFirst: booksCountry().dayFirst, currency: booksCurrency(), file: file.name };
 
   const slowBooks = isSlowBooksLedger(text);
-  const iif = isIif(text) || slowBooks;
+  const desktop = isQuickBooksDesktopDetail(text);
+  const iif = isIif(text) || slowBooks || desktop;
   if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
@@ -40,14 +41,17 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
 
   const chart = state.chart.length > 0 ? quickBooksChartFrom(state.chart) : null;
   const fromIif = iif
-    ? (slowBooks ? parseSlowBooksBooks : parseIifBooks)(text, chart, { currency: booksCurrency(), file: file.name })
+    ? (slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : parseIifBooks)(text, chart, {
+        currency: booksCurrency(),
+        file: file.name,
+      })
     : null;
   const books = fromIif ?? parseQuickBooksBooks(text, chart ?? quickBooksChartFrom([]), options);
   // An IIF file lists its customers and vendors with their details.
   if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: slowBooks ? "slowbooks-ledger" : iif ? "quickbooks-iif" : "quickbooks-ledger",
+      importer: slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });
@@ -340,7 +344,7 @@ export function trialBalanceFinding(): string | null {
 
 function trialBalanceCheck(text: string): string | null {
   const fromStart = state.ledger.transactions.filter((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
   );
   if (fromStart.length === 0) return null;
   if (!isQuickBooksTrialBalance(text)) return null;

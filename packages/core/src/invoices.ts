@@ -38,6 +38,12 @@ export interface InvoiceLine {
   gross: Cents;
   quantity?: number;
   itemCode?: string;
+  /**
+   * The liability account this line's tax is owed in, where it is not the
+   * GST account: United States sales tax, owed to the authority of the rate
+   * the invoice was charged at.
+   */
+  taxAccount?: string;
 }
 
 export type InvoiceKind = "sales" | "purchase";
@@ -62,6 +68,8 @@ export interface Invoice {
   currency: string;
   status: string;
   lines: InvoiceLine[];
+  /** The United States sales tax rate the invoice was charged at, by its id. */
+  salesTaxRateId?: string;
   /**
    * The entity whose document this is, when the books keep several.
    *

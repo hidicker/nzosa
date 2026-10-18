@@ -31,6 +31,8 @@ export interface Contact {
   w9?: boolean;
   /** To be sent a 1099-NEC when paid over the threshold. */
   is1099?: boolean;
+  /** A customer charged no sales tax: a reseller or an exempt organisation (United States). */
+  taxExempt?: boolean;
   /** For a customer: the most they should owe at once, in cents. A warning, not a refusal. */
   creditLimit?: number;
   /** For a vendor: the chart code their bills are usually coded to. */

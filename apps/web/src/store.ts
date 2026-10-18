@@ -27,6 +27,7 @@ import type {
   ReferenceLine,
   Overrides,
   RuleSet,
+  SalesTaxRate,
   Splits,
   Transaction,
   VarianceNote,
@@ -225,6 +226,8 @@ export interface StoredLedger {
   timeEntries?: TimeEntry[];
   /** Stock counted, and the journal each put the inventory account to. */
   stockCounts?: StockCount[];
+  /** United States sales tax rates, each owed in its own liability account. */
+  salesTaxRates?: SalesTaxRate[];
   /** Bank file layouts pointed out by hand, by the file's headings, with the account their lines go on. */
   bankLayouts?: Record<string, { layout: BankLayout; account: string; accountLabel: string }>;
   /** What an individual's return needs that the books cannot know, by owner and year. */
@@ -866,6 +869,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.timeEntries && ledger.timeEntries.length > 0 ? { timeEntries: ledger.timeEntries } : {}),
     ...(ledger.auPayroll && (ledger.auPayroll.employees.length > 0 || ledger.auPayroll.payRuns.length > 0) ? { auPayroll: ledger.auPayroll } : {}),
     ...(ledger.stockCounts && ledger.stockCounts.length > 0 ? { stockCounts: ledger.stockCounts } : {}),
+    ...(ledger.salesTaxRates && ledger.salesTaxRates.length > 0 ? { salesTaxRates: ledger.salesTaxRates } : {}),
     ...(ledger.bankLayouts && Object.keys(ledger.bankLayouts).length > 0 ? { bankLayouts: ledger.bankLayouts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),

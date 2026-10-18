@@ -404,6 +404,7 @@ export * from "./jurisdiction.js";
 export * from "./sales-tax.js";
 export * from "./form-schedules.js";
 export * from "./us-tax.js";
+export * from "./us-sales-tax.js";
 export * from "./au-tax.js";
 export * from "./au-payroll.js";
 export * from "./kr-tax.js";

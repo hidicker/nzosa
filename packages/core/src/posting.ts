@@ -579,7 +579,8 @@ export function postInvoice(invoice: Invoice, options: PostingOptions = {}): Pos
       description: line.description,
     });
     if (line.tax !== 0) {
-      const gst = gstFor(account.code);
+      // Sales tax owed to an authority of its own; GST to the GST account.
+      const gst = line.taxAccount !== undefined && line.taxAccount !== "" ? resolve(line.taxAccount) : gstFor(account.code);
       lines.push({
         accountCode: gst.code,
         accountName: gst.name,

@@ -17,6 +17,8 @@ export interface Item {
   active?: boolean;
   /** A product kept in stock: counted, and valued at this cost a unit, in cents. */
   unitCost?: Cents;
+  /** Charged sales tax where the invoice has a rate (United States); taxable unless false. */
+  taxable?: boolean;
 }
 
 export function itemKey(name: string): string {

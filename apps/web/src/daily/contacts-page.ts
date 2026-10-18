@@ -264,6 +264,8 @@ function form(existing: Contact | null): HTMLElement {
   w9.checked = existing?.w9 === true;
   const is1099 = input(undefined, "checkbox");
   is1099.checked = existing?.is1099 === true;
+  const exempt = input(undefined, "checkbox");
+  exempt.checked = existing?.taxExempt === true;
   const limit = input(existing?.creditLimit === undefined ? "" : (existing.creditLimit / 100).toFixed(2));
   limit.inputMode = "decimal";
   limit.placeholder = "None";
@@ -289,7 +291,9 @@ function form(existing: Contact | null): HTMLElement {
   w9Label.append(w9, document.createTextNode(" W-9 on file"));
   const tenLabel = document.createElement("label");
   tenLabel.append(is1099, document.createTextNode(" Send a 1099-NEC"));
-  ticks.append(w9Label, tenLabel);
+  const exemptLabel = document.createElement("label");
+  exemptLabel.append(exempt, document.createTextNode(" Tax exempt: no sales tax on their invoices"));
+  ticks.append(w9Label, tenLabel, exemptLabel);
 
   const problem = document.createElement("p");
   problem.className = "cloud-said";
@@ -326,6 +330,7 @@ function form(existing: Contact | null): HTMLElement {
       ...(notes.value.trim() !== "" ? { notes: notes.value.trim() } : {}),
       ...(w9.checked ? { w9: true } : {}),
       ...(is1099.checked ? { is1099: true } : {}),
+      ...(exempt.checked ? { taxExempt: true } : {}),
       ...(limitCents !== null && limitCents > 0 ? { creditLimit: limitCents } : {}),
       ...(usual.value !== "" ? { defaultAccount: usual.value } : {}),
     };

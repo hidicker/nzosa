@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { postedJournals, record, saveManualJournals, stockAccounts, stockTracked } from "../books.js";
-import { booksCurrency, booksMoney, noSalesTax } from "../country.js";
+import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -76,6 +76,10 @@ function form(existing: Item | null): HTMLElement {
     option.selected = existing?.accountCode === a.code;
     account.append(option);
   }
+  // United States sales tax is charged on a line only where it is taxable.
+  const taxable = document.createElement("input");
+  taxable.type = "checkbox";
+  taxable.checked = existing?.taxable !== false;
   const problem = document.createElement("p");
   problem.className = "cloud-said";
   const save = document.createElement("button");
@@ -109,6 +113,7 @@ function form(existing: Item | null): HTMLElement {
       ...(description.value.trim() !== "" ? { description: description.value.trim() } : {}),
       ...(cents !== null ? { price: cents } : {}),
       ...(account.value !== "" ? { accountCode: account.value } : {}),
+      ...(booksCountry().id === "us" && !taxable.checked ? { taxable: false } : {}),
     };
     editing = null;
     if (existing === null) {
@@ -139,6 +144,7 @@ function form(existing: Item | null): HTMLElement {
     label("Line description", description),
     label(noSalesTax() ? "Usual price" : "Usual price, including GST", price),
     label("Sale coded to", account),
+    ...(booksCountry().id === "us" ? [label("Charged sales tax", taxable)] : []),
     label(noSalesTax() ? "Cost a unit, for products kept in stock" : "Cost a unit before GST, for products kept in stock", cost),
     problem,
     row,

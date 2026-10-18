@@ -76,6 +76,11 @@ export interface InvoiceDocumentOptions {
   lang?: string;
   /** What the supplier's tax number is called: "GST" by default, "ABN" in Australia. */
   taxIdLabel?: string;
+  /**
+   * Where there is no GST but the invoice charges sales tax on top (the
+   * United States): what its total row says, "Sales tax (Seattle, WA 10.35%)".
+   */
+  salesTaxLabel?: string;
 }
 
 function escapeHtml(value: string): string {
@@ -113,7 +118,8 @@ function lineRow(line: InvoiceLine, noTax = false): string {
     `<td class="n">${escapeHtml(quantity)}</td>` +
     `<td class="n">${formatAmount(line.net)}</td>` +
     (noTax ? "" : `<td class="n">${formatAmount(line.tax)}</td>`) +
-    `<td class="n">${formatAmount(line.gross)}</td>` +
+    // Sales tax is added to the invoice, not to each line, where there is no GST.
+    `<td class="n">${formatAmount(noTax ? line.net : line.gross)}</td>` +
     "</tr>"
   );
 }
@@ -236,7 +242,10 @@ export function invoiceDocument(
     <tfoot>
       ${
         noTax
-          ? ""
+          ? invoice.tax === 0
+            ? ""
+            : `<tr><td colspan="${span}" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
+      <tr><td colspan="${span}" class="n">${escapeHtml(options.salesTaxLabel ?? "Sales tax")}</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
           : `<tr><td colspan="4" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
       <tr><td colspan="4" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
       }

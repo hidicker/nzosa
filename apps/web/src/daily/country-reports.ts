@@ -31,6 +31,7 @@ import {
   splitAccountLabel,
   usIncomeTaxSingle,
   usQbiDeduction,
+  salesTaxByRate,
 } from "@nzosa/core";
 import type { ContractorPayment, Entity, FormDefinition, FormSchedule, FullBas, IsoDate, Transaction } from "@nzosa/core";
 import { postedJournals, registeredForGst, reportEngine, varianceInput } from "../books.js";
@@ -163,7 +164,12 @@ export function renderSalesTax(body: HTMLElement, year: number): void {
   const holds = /sales tax|tax payable|board of equalization|dept\. of revenue|department of revenue|use tax/i;
   // "Tax payable" finds a state's sales tax; not income tax or payroll taxes.
   const notSales = /income tax|withh|payroll|social security|medicare|futa|unemployment/i;
-  const accounts = state.chart.filter((a) => /liab/i.test(a.type) && holds.test(a.name) && !notSales.test(a.name));
+  // And whatever account a rate charged on invoices is owed in, by any name.
+  const rates = state.ledger.salesTaxRates ?? [];
+  const rateAccounts = new Set(rates.map((r) => r.accountCode.trim()));
+  const accounts = state.chart.filter(
+    (a) => rateAccounts.has(a.code.trim()) || (/liab/i.test(a.type) && holds.test(a.name) && !notSales.test(a.name)),
+  );
   if (accounts.length === 0) {
     body.append(note("No sales tax accounts in the chart. A liability account with Sales tax in its name will be read here."));
     return;
@@ -218,8 +224,45 @@ export function renderSalesTax(body: HTMLElement, year: number): void {
     note(
       `Owed to the authorities at 31 December ${year}: ${money(totalOwed)}. ` +
         "Collected is what customers were charged on invoices and sales; paid is what has gone to the " +
-        "state or district. Which sales are taxable, and at what rate for each address, is not worked out " +
-        "here: the figures are what the books hold in these accounts.",
+        "state or district. The figures are what the books hold in these accounts.",
+    ),
+  );
+
+  // The invoices, by the rate each was charged at: what a state's return asks
+  // for, place by place.
+  const byRate = salesTaxByRate(state.ledger.invoices ?? [], rates, start, end);
+  if (rates.length === 0 || byRate.length === 0) return;
+  const heading = document.createElement("h4");
+  heading.textContent = "Invoices by rate";
+  const sales = document.createElement("table");
+  sales.className = "report-table";
+  sales.innerHTML =
+    "<thead><tr><th>Rate</th><th>Invoices</th><th>Sales</th><th>Not taxable</th><th>Taxable</th><th>Sales tax</th></tr></thead>";
+  const rows2 = document.createElement("tbody");
+  for (const row of byRate) {
+    const tr = document.createElement("tr");
+    for (const [text, cls] of [
+      [row.rate === null ? "No sales tax charged" : `${row.rate.name} ${row.rate.percent}%`, "report-name"],
+      [String(row.invoices), "report-amount"],
+      [money(row.sales), "report-amount"],
+      [money(row.sales - row.taxable), "report-amount"],
+      [money(row.taxable), "report-amount"],
+      [money(row.tax), "report-amount"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    rows2.append(tr);
+  }
+  sales.append(rows2);
+  body.append(
+    heading,
+    sales,
+    note(
+      "From the invoices raised in the year, drafts and estimates left out. Sales before tax; an exempt " +
+        "customer's invoices are among those with no sales tax charged.",
     ),
   );
 }

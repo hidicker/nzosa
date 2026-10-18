@@ -18,10 +18,11 @@ import { renderRecurring } from "./recurring.js";
 import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
-import { savePart } from "../store.js";
+import { save as saveLedger, savePart } from "../store.js";
 import { amountCell, askOnPage, download, invoiceCell, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
+  applySalesTax,
   billWarnings,
   canonicalCodeFor,
   emptyEntityModel,
@@ -41,8 +42,12 @@ import {
   splitAccountLabel,
   splitInvoiceNumber,
   splitPartId,
+  NOT_TAXABLE,
+  TAXABLE,
 } from "@nzosa/core";
 import type {
+  SalesTaxRate,
+  Account,
   Invoice,
   InvoiceBalance,
   InvoiceKind,
@@ -387,6 +392,140 @@ export function renderInvoiceEditor(): void {
   // would have neither.
   paidField.hidden = asBill && draft.paid === 0;
 
+  // United States sales tax: one rate for the invoice, the place the sale is
+  // made, added on top of the taxable lines and owed in the rate's account.
+  const usTax = !asBill && booksCountry().id === "us";
+  const rates = (): SalesTaxRate[] => state.ledger.salesTaxRates ?? [];
+  const taxRate = document.createElement("select");
+  const fillRates = (chosen: string): void => {
+    taxRate.textContent = "";
+    const add = (value: string, label: string): void => {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = label;
+      taxRate.append(option);
+    };
+    add("", "No sales tax");
+    for (const rate of rates()) {
+      if (rate.active === false && rate.id !== chosen) continue;
+      add(rate.id, `${rate.name} ${rate.percent}%`);
+    }
+    add("new", "Add a rate…");
+    taxRate.value = rates().some((r) => r.id === chosen) ? chosen : "";
+  };
+  const exemptOf = (name: string): boolean => findContact(state.ledger.contacts ?? [], name)?.taxExempt === true;
+  // A new invoice takes the rate the last one was charged at, unless its
+  // customer is exempt.
+  const lastRate =
+    [...(state.ledger.invoices ?? [])].reverse().find((i) => i.kind === "sales" && i.salesTaxRateId !== undefined)
+      ?.salesTaxRateId ?? "";
+  fillRates(existing !== undefined ? (draft.salesTaxRateId ?? "") : exemptOf(draft.contact) ? "" : lastRate);
+  const rateField = field("Sales tax", taxRate, "The rate where the sale is made: state, county and city together.");
+  const exemptNote = document.createElement("small");
+  exemptNote.textContent = "This customer is tax exempt.";
+  rateField.append(exemptNote);
+
+  // A rate added from here: its name, its percentage, and the account it is owed in.
+  const owedIn = state.chart.filter((a) => /liab/i.test(a.type));
+  const newRate = document.createElement("div");
+  newRate.className = "invoice-new-rate";
+  const rateName = text("", "e.g. Seattle, WA");
+  rateName.setAttribute("aria-label", "Rate name");
+  const ratePercent = text("", "10.35");
+  ratePercent.inputMode = "decimal";
+  ratePercent.setAttribute("aria-label", "Rate percent");
+  const rateAccount = document.createElement("select");
+  rateAccount.setAttribute("aria-label", "Owed in account");
+  for (const account of owedIn) {
+    const option = document.createElement("option");
+    option.value = account.code;
+    option.textContent = account.code === "" ? account.name : `${account.code} ${account.name}`;
+    rateAccount.append(option);
+  }
+  const salesTaxAccount = owedIn.find((a) => /sales tax/i.test(a.name));
+  if (salesTaxAccount !== undefined) rateAccount.value = salesTaxAccount.code;
+  else {
+    // Books brought from elsewhere may have nowhere to owe it: one is made.
+    const make = document.createElement("option");
+    make.value = "new";
+    make.textContent = "Sales tax payable (a new account)";
+    rateAccount.prepend(make);
+    rateAccount.value = "new";
+  }
+  const keepRate = document.createElement("button");
+  keepRate.type = "button";
+  keepRate.className = "small";
+  keepRate.textContent = "Add rate";
+  const rateProblem = document.createElement("small");
+  keepRate.addEventListener("click", () => {
+    const percent = Number(ratePercent.value.replace("%", "").trim());
+    const name = rateName.value.trim();
+    if (name === "" || !Number.isFinite(percent) || percent <= 0 || percent >= 100 || rateAccount.value === "") {
+      rateProblem.textContent = "Give the rate a name, a percentage between 0 and 100, and the account it is owed in.";
+      return;
+    }
+    let accountCode = rateAccount.value;
+    if (accountCode === "new") {
+      let n = 2200;
+      while (state.chart.some((a) => a.code.trim() === String(n))) n += 10;
+      accountCode = String(n);
+      const made = { code: accountCode, name: "Sales tax payable", type: "Current Liability", taxCode: "Tax Exempt", description: "" } as Account;
+      state.chart = [...state.chart, made];
+      const model = state.ledger.entities;
+      const owner = model?.entities.find((e) => e.kind !== "personal" && e.kind !== "residential")?.id ?? model?.entities[0]?.id;
+      state.ledger = {
+        ...state.ledger,
+        chart: state.chart,
+        ...(model !== undefined && owner !== undefined
+          ? { entities: { ...model, accounts: { ...model.accounts, [accountCode]: owner } } }
+          : {}),
+      };
+      const option = rateAccount.querySelector<HTMLOptionElement>('option[value="new"]');
+      if (option !== null) {
+        option.value = accountCode;
+        option.textContent = `${accountCode} Sales tax payable`;
+      }
+    }
+    const rate: SalesTaxRate = { id: `rate-${Date.now().toString(36)}`, name, percent, accountCode };
+    state.ledger = { ...state.ledger, salesTaxRates: [...rates(), rate] };
+    void saveLedger(state.ledger).then((saved) => {
+      state.persistent = saved;
+    });
+    rateName.value = "";
+    ratePercent.value = "";
+    rateProblem.textContent = "";
+    fillRates(rate.id);
+    showTax();
+  });
+  newRate.append(rateName, ratePercent, rateAccount, keepRate, rateProblem);
+  const newRateField = field(
+    "New sales tax rate",
+    newRate,
+    "Owed in a liability account of its own for each authority you file with.",
+  );
+
+  const salesTaxOn = (): boolean => usTax && kind.value === "sales";
+  const chosenRate = (): SalesTaxRate | null =>
+    salesTaxOn() ? (rates().find((r) => r.id === taxRate.value) ?? null) : null;
+  function showTax(): void {
+    rateField.hidden = !salesTaxOn();
+    newRateField.hidden = !salesTaxOn() || taxRate.value !== "new";
+    exemptNote.hidden = !exemptOf(contact.value);
+    for (const select of lineHost.querySelectorAll<HTMLSelectElement>(".line-tax")) {
+      if (usTax) select.hidden = chosenRate() === null;
+    }
+    refreshTotals();
+  }
+  taxRate.addEventListener("change", showTax);
+  kind.addEventListener("change", showTax);
+  if (usTax) {
+    contact.addEventListener("change", () => {
+      if (exemptOf(contact.value)) fillRates("");
+      else if (existing === undefined && taxRate.value === "") fillRates(lastRate);
+      showTax();
+    });
+  }
+
   box.append(grid);
 
   // --- lines ---------------------------------------------------------------
@@ -422,7 +561,7 @@ export function renderInvoiceEditor(): void {
       // The gross is what the customer pays, so the tax is taken out of it
       // rather than added on -- the same 3/23 the returns use.
       const rate = rateOf(taxType);
-      const tax = rate === 15 ? gstContent(gross) : 0;
+      const tax = rate === 15 && !usTax ? gstContent(gross) : 0;
       // A stocked product's line says which, and how many.
       const item = row.dataset["item"];
       const quantity = Number(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
@@ -433,14 +572,28 @@ export function renderInvoiceEditor(): void {
     });
   }
 
-  function refreshTotals(): void {
+  /** The lines with their sales tax on, where the invoice is charged it. */
+  function taxedLines(): InvoiceLine[] {
     const lines = readLines();
+    if (!usTax) return lines;
+    // A bill, or an invoice turned into one, has no sales tax of its own to add.
+    if (!salesTaxOn()) return lines.map((l) => ({ ...l, taxType: "No GST" }));
+    return applySalesTax(lines, chosenRate());
+  }
+
+  function refreshTotals(): void {
+    const lines = taxedLines();
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
-    totals.textContent = noSalesTax()
-      ? `Total ${formatAmount(total)}`
-      : `Total ${formatAmount(total)} · GST ${formatAmount(tax)} · ` +
-        `excluding GST ${formatAmount(total - tax)}`;
+    const rate = usTax ? chosenRate() : null;
+    totals.textContent =
+      rate !== null
+        ? `Subtotal ${formatAmount(total - tax)} · Sales tax ${formatAmount(tax)} (${rate.name} ${rate.percent}%) · ` +
+          `Total ${formatAmount(total)}`
+        : noSalesTax()
+          ? `Total ${formatAmount(total)}`
+          : `Total ${formatAmount(total)} · GST ${formatAmount(tax)} · ` +
+            `excluding GST ${formatAmount(total - tax)}`;
   }
 
   function addLine(line: InvoiceLine): void {
@@ -474,18 +627,25 @@ export function renderInvoiceEditor(): void {
 
     const tax = document.createElement("select");
     tax.className = "line-tax";
-    const choices = taxTypesFor(asBill ? "purchase" : draft.kind);
+    const choices = usTax
+      ? [
+          { value: TAXABLE, label: "Taxable", rate: 0 },
+          { value: NOT_TAXABLE, label: "Not taxable", rate: 0 },
+        ]
+      : taxTypesFor(asBill ? "purchase" : draft.kind);
     // A treatment the document already carries stays offered, so opening an
     // imported bill does not quietly change its GST.
-    const treatments = choices.some((o) => o.value === line.taxType) || line.taxType === ""
+    const treatments = usTax || choices.some((o) => o.value === line.taxType) || line.taxType === ""
       ? choices
       : [{ value: line.taxType, label: line.taxType, rate: rateOf(line.taxType) }, ...choices];
     // The names are Xero New Zealand's; the rate shown is the books' country's.
     for (const option of treatments) {
       const item = document.createElement("option");
       item.value = option.value;
-      item.textContent = taxTypeLabel(option.label);
-      item.selected = option.value === line.taxType;
+      item.textContent = usTax ? option.label : taxTypeLabel(option.label);
+      item.selected = usTax
+        ? option.value === (line.taxType === NOT_TAXABLE ? NOT_TAXABLE : TAXABLE)
+        : option.value === line.taxType;
       tax.append(item);
     }
 
@@ -541,8 +701,9 @@ export function renderInvoiceEditor(): void {
       refreshTotals();
     });
 
-    // Where there is no sales tax there is no treatment to choose.
-    tax.hidden = noSalesTax();
+    // Where there is no sales tax there is no treatment to choose; in the
+    // United States, only once the invoice has a rate.
+    tax.hidden = usTax ? chosenRate() === null : noSalesTax();
     row.append(description, qty, account.element, tax, gross, drop);
     lineHost.append(row);
     // A name that is an item's fills in what is still empty: its account, its
@@ -566,6 +727,7 @@ export function renderInvoiceEditor(): void {
         gross.dispatchEvent(new Event("input", { bubbles: true }));
       }
       if (found.description !== undefined) description.value = found.description;
+      if (usTax) tax.value = found.taxable === false ? NOT_TAXABLE : TAXABLE;
       refreshTotals();
     });
     for (const control of [description, tax, gross]) {
@@ -575,7 +737,7 @@ export function renderInvoiceEditor(): void {
   }
 
   for (const line of draft.lines) addLine(line);
-  refreshTotals();
+  showTax();
 
   const addRow = document.createElement("button");
   addRow.type = "button";
@@ -584,7 +746,7 @@ export function renderInvoiceEditor(): void {
     const first = readLines()[0]?.taxType;
     addLine({
       description: "", accountCode: "",
-      taxType: noSalesTax() ? "No GST" : (first ?? (asBill ? "15% GST on Expenses" : "15% GST on Income")),
+      taxType: usTax ? TAXABLE : noSalesTax() ? "No GST" : (first ?? (asBill ? "15% GST on Expenses" : "15% GST on Income")),
       net: 0, tax: 0, gross: 0,
     });
     refreshTotals();
@@ -596,11 +758,12 @@ export function renderInvoiceEditor(): void {
   actions.className = "invoice-actions";
 
   const build = (statusValue: string): Invoice => {
-    const lines = readLines().filter((l) => l.gross !== 0 || l.description.trim() !== "");
+    const lines = taxedLines().filter((l) => l.gross !== 0 || l.description.trim() !== "");
+    const rate = usTax ? chosenRate() : null;
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, ...rest } = draft;
     const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
@@ -620,6 +783,7 @@ export function renderInvoiceEditor(): void {
       currency: draft.currency,
       status: statusValue,
       lines,
+      ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
       ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(linkValue !== null ? { documentLink: linkValue } : {}),
       ...(asBill && entity.value !== ""
@@ -693,6 +857,12 @@ export function renderInvoiceEditor(): void {
 
   box.append(actions);
   host.append(box);
+}
+
+/** What an invoice's sales tax row says: the rate it was charged at, by name. */
+function salesTaxWords(invoice: Invoice): { salesTaxLabel?: string } {
+  const rate = (state.ledger.salesTaxRates ?? []).find((r) => r.id === invoice.salesTaxRateId);
+  return rate === undefined ? {} : { salesTaxLabel: `Sales tax (${rate.name} ${rate.percent}%)` };
 }
 
 /** The picker label for a chart code, so an editor shows what a coder sees. */
@@ -930,7 +1100,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -978,7 +1148,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );

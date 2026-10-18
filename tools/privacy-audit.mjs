@@ -54,7 +54,7 @@ const { businessIn, knownBusinessNames } = await import(
 );
 const BUSINESS_NAMES = knownBusinessNames().map((name) => ` ${name.replace(/[^A-Z0-9']+/g, " ")} `);
 const isBusiness = (needle) => {
-  if (businessIn(needle) !== null) return true;
+  if (["nz", "au", "us"].some((country) => businessIn(needle, country) !== null)) return true;
   const spaced = ` ${needle.replace(/[^A-Z0-9']+/g, " ")} `;
   return BUSINESS_NAMES.some((name) => name.includes(spaced));
 };

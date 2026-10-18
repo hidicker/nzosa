@@ -4,6 +4,7 @@ import { classificationToRate, knownCodes, rateLabel, suggest } from "./reconcil
 import type { GstRate } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
+import { booksCountry } from "./country.js";
 import {
   accountEntityKey,
   accountForBusiness,
@@ -104,7 +105,7 @@ export function forgetAiSuggestions(): void {
 }
 
 /** Where a suggestion came from when it was the list of known businesses. */
-export const DIRECTORY_VIA = "NZ business list";
+export const DIRECTORY_VIA = "known business list";
 
 /** Account types money spent can be coded to. */
 const SPENDING = /expense|overhead|direct cost|cost of sales|depreciation/i;
@@ -132,10 +133,12 @@ export function suggestFromDirectory(): number {
   const byId = new Map(model.entities.map((entity) => [entity.id, entity]));
   const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const spending = state.chart.filter((account) => SPENDING.test(account.type ?? "") && account.code.trim() !== "");
+  // The books' own country's list: New Zealand's, Australia's, the United States'.
+  const country = booksCountry().id;
   let got = 0;
   for (const one of waitingForAnswers()) {
     if (one.transaction.amount >= 0) continue;
-    const business = businessOf(one.transaction);
+    const business = businessOf(one.transaction, country);
     if (business === null) continue;
     // An account that pays for several entities: one shop says nothing about whose.
     const serves = bankReach(one.transaction.account);
@@ -151,6 +154,7 @@ export function suggestFromDirectory(): number {
       business,
       pool.map((account) => ({ label: account.code.trim(), name: account.name })),
       paidInForeignCurrency(one.transaction),
+      country,
     );
     if (code === null) continue;
     const label = labelForCode(code, labels);
@@ -159,7 +163,7 @@ export function suggestFromDirectory(): number {
       id: one.transaction.id,
       code: label,
       confidence: 1,
-      because: describeBusiness(business),
+      because: describeBusiness(business, country),
       via: DIRECTORY_VIA,
     });
     got += 1;
@@ -251,8 +255,8 @@ export function whatWouldBeAsked(lines: readonly Suggestion[], howMany = AI_BATC
       const asked = askAbout(one.transaction, labels.get(one.transaction.id) ?? "");
       // What the business is, where the list of well-known ones knows it: one
       // note for this line, never the list.
-      const business = businessOf(one.transaction);
-      return business === null ? asked : { ...asked, known: describeBusiness(business) };
+      const business = businessOf(one.transaction, booksCountry().id);
+      return business === null ? asked : { ...asked, known: describeBusiness(business, booksCountry().id) };
     });
 
   const books = {

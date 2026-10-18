@@ -24,6 +24,8 @@
  * person called Farmer Spark is not a power company.
  */
 
+import { AU_LIST, GLOBAL_LIST, US_LIST } from "./businesses-abroad.js";
+
 export interface BusinessKind {
   /** What a business of this kind sells, in a few words, for a person or a model. */
   what: string;
@@ -120,9 +122,77 @@ export const BUSINESS_KINDS = {
   childcare: { what: "childcare: usually personal" },
   attraction: { what: "attraction, ski field or day out: usually personal or entertainment" },
   farm: { what: "farm supplies and services: fertiliser, seed, animal health or stock" },
+  workersComp: {
+    what: "workers' compensation insurer or scheme: the employer's premium",
+    accounts: [/workers.? comp|workcover|worksafe/i, /insurance/i],
+  },
+  investment: { what: "share trading or investment platform: usually an investment, not an expense" },
 } as const satisfies Record<string, BusinessKind>;
 
 export type BusinessKindName = keyof typeof BUSINESS_KINDS;
+
+/** The countries with lists of their own; anywhere else has the global names only. */
+export type BusinessListCountry = "nz" | "au" | "us" | string;
+
+/**
+ * What a kind is called where New Zealand's words would be wrong: the tax
+ * office, vehicle registration, councils.
+ */
+const WHAT_ABROAD: Readonly<Record<string, Partial<Record<BusinessKindName, string>>>> = {
+  au: {
+    tax: "Australian Taxation Office: a GST, PAYG or income tax payment or refund, so not an expense",
+    vehicleLicence: "vehicle registration and CTP",
+    airline: "airline flying both within Australia and overseas: which travel account depends on the flight",
+    bookingSite: "travel booking site, for stays in Australia or overseas",
+    council: "local council: mostly rates, also permits, dog registration and other fees",
+    bond: "rental bonds, lodged or refunded: held for the tenant, so not income or an expense",
+    electronics: "electronics and computers: an asset unless it can be written off at once",
+    government: "government fees and charges: state revenue, ASIC, licences",
+  },
+  us: {
+    tax: "the IRS or a state tax agency: an income, payroll or sales tax payment or refund, so not an expense",
+    vehicleLicence: "DMV: vehicle registration and licences",
+    airline: "airline flying both within the United States and overseas: which travel account depends on the flight",
+    bookingSite: "travel booking site",
+    council: "county or city: property tax, permits and fees",
+    electronics: "electronics and computers: an asset, or expensed under the de minimis election",
+    government: "government fees and charges: state filings, licences and permits",
+    transfer: "money transfer service: often a payment to a person, or between your own accounts",
+  },
+};
+
+const US_VEHICLE = [/car and truck|motor ?vehicle|\bvehicle|\bauto\b/i];
+const US_TRAVEL = [/^travel\b/i];
+
+/**
+ * Account names in the United States charts, Schedule C's: a car is "Car and
+ * truck expenses", a phone or power bill "Utilities", stationery "Office
+ * expense". Where a kind has none here, New Zealand's patterns are tried.
+ */
+const ACCOUNTS_US: Partial<Record<BusinessKindName, readonly RegExp[]>> = {
+  fuel: US_VEHICLE,
+  vehicle: US_VEHICLE,
+  vehicleLicence: [...US_VEHICLE, /taxes and licenses/i],
+  parking: [/parking/i, ...US_VEHICLE],
+  tolls: [...US_VEHICLE, ...US_TRAVEL],
+  evCharging: US_VEHICLE,
+  transport: US_TRAVEL,
+  rentalCar: US_TRAVEL,
+  domesticAirline: US_TRAVEL,
+  overseasAirline: [/travel.*(international|overseas)|(international|overseas).*travel/i, ...US_TRAVEL],
+  accommodation: [/lodging|accommodation/i, ...US_TRAVEL],
+  telco: [/telephone|phone|internet|telco|communication/i, /utilities/i],
+  power: [/electric|power|energy|gas and electric/i, /utilities/i],
+  water: [/water/i, /utilities/i],
+  council: [/property tax/i, /taxes and licenses/i],
+  office: [/office (supplies|expenses?)|printing|stationery/i],
+  courier: [/postage|shipping|freight|courier/i, /office expense/i],
+  software: [/software|subscriptions?|computer/i, /office expense/i],
+  hosting: [/website|hosting|domain/i, /software|subscriptions?/i, /office expense/i],
+  accounting: [/software|subscriptions?|computer/i, /office expense/i],
+  professional: [/dues|memberships?|subscriptions?/i, /legal and professional/i],
+  education: [/training|education|professional development|courses?/i],
+};
 
 const LIST = `
 Z Energy|Z ENERGY,Z,Z STATION|fuel
@@ -1074,13 +1144,23 @@ function words(text: string): string[] {
     .filter((w) => w !== "");
 }
 
-let index: Map<string, Alias[]> | null = null;
+/** The lists a country's books are matched against: New Zealand's own, or another's with the global names. */
+function listsFor(country: BusinessListCountry): string[] {
+  if (country === "au") return [AU_LIST, GLOBAL_LIST];
+  if (country === "us") return [US_LIST, GLOBAL_LIST];
+  if (country === "nz") return [LIST];
+  return [GLOBAL_LIST];
+}
 
-/** The list, parsed once, by the first letter of each alias. */
-function aliases(): Map<string, Alias[]> {
-  if (index !== null) return index;
-  index = new Map();
-  for (const line of LIST.split("\n")) {
+const indexes = new Map<string, Map<string, Alias[]>>();
+
+/** A country's lists, parsed once, by the first letter of each alias. */
+function aliases(country: BusinessListCountry = "nz"): Map<string, Alias[]> {
+  const held = indexes.get(country);
+  if (held !== undefined) return held;
+  const index = new Map<string, Alias[]>();
+  indexes.set(country, index);
+  for (const line of listsFor(country).join("\n").split("\n")) {
     const [name, said, kind] = line.split("|");
     if (name === undefined || said === undefined || kind === undefined || !(kind in BUSINESS_KINDS)) continue;
     const business: KnownBusiness = { name, kind: kind as BusinessKindName };
@@ -1106,7 +1186,7 @@ function aliases(): Map<string, Alias[]> {
  */
 export function knownBusinessNames(): string[] {
   const out = new Set<string>();
-  for (const line of LIST.split("\n")) {
+  for (const line of [LIST, GLOBAL_LIST, AU_LIST, US_LIST].join("\n").split("\n")) {
     const [name, said, kind] = line.split("|");
     if (name === undefined || said === undefined || kind === undefined) continue;
     for (const alias of [name, ...said.split(",")]) if (alias.trim() !== "") out.add(alias.trim().toUpperCase());
@@ -1114,9 +1194,12 @@ export function knownBusinessNames(): string[] {
   return [...out];
 }
 
-/** How many businesses the list knows. */
-export function knownBusinessCount(): number {
-  return LIST.split("\n").filter((line) => line.split("|").length === 3).length;
+/** How many businesses a country's books are matched against. */
+export function knownBusinessCount(country: BusinessListCountry = "nz"): number {
+  return listsFor(country)
+    .join("\n")
+    .split("\n")
+    .filter((line) => line.split("|").length === 3).length;
 }
 
 /** Words a bank puts before the payee, which are not the payee. */
@@ -1129,9 +1212,9 @@ const BANK_PREFIX = new Set(["POS", "EFTPOS", "EFT", "VISA", "DEBIT", "CARD", "P
  * "ZAPPY" is not "Z" and "ACCOUNTANT" is not "ACC". An alias of one word
  * counts only where the payee starts.
  */
-export function businessIn(text: string): KnownBusiness | null {
+export function businessIn(text: string, country: BusinessListCountry = "nz"): KnownBusiness | null {
   const tokens = words(text);
-  const byFirst = aliases();
+  const byFirst = aliases(country);
   let payee = 0;
   while (payee < tokens.length && (BANK_PREFIX.has(tokens[payee]!) || /^\d+$/.test(tokens[payee]!))) payee += 1;
   for (let start = payee; start < tokens.length; start += 1) {
@@ -1152,23 +1235,26 @@ export function businessIn(text: string): KnownBusiness | null {
  * The business a bank line is with: the payee first, then the other fields a
  * bank puts names in when the payee is only "DD PAYMENT" or "EFTPOS".
  */
-export function businessOf(line: {
-  otherParty?: string;
-  particulars?: string;
-  code?: string;
-  reference?: string;
-}): KnownBusiness | null {
+export function businessOf(
+  line: {
+    otherParty?: string;
+    particulars?: string;
+    code?: string;
+    reference?: string;
+  },
+  country: BusinessListCountry = "nz",
+): KnownBusiness | null {
   for (const field of [line.otherParty, line.particulars, line.code, line.reference]) {
     if (field === undefined || field.trim() === "") continue;
-    const found = businessIn(field);
+    const found = businessIn(field, country);
     if (found !== null) return found;
   }
   return null;
 }
 
 /** One line saying what a business is: "Z Energy, a fuel station". */
-export function describeBusiness(business: KnownBusiness): string {
-  return `${business.name}: ${BUSINESS_KINDS[business.kind].what}`;
+export function describeBusiness(business: KnownBusiness, country: BusinessListCountry = "nz"): string {
+  return `${business.name}: ${WHAT_ABROAD[country]?.[business.kind] ?? BUSINESS_KINDS[business.kind].what}`;
 }
 
 /**
@@ -1183,9 +1269,12 @@ export function accountForBusiness(
   business: KnownBusiness,
   accounts: readonly { label: string; name: string }[],
   paidAbroad = false,
+  country: BusinessListCountry = "nz",
 ): string | null {
   const kind: BusinessKind = BUSINESS_KINDS[business.kind];
-  const patterns: readonly RegExp[] = (paidAbroad ? kind.abroad : undefined) ?? kind.accounts ?? [];
+  const own = country === "us" ? ACCOUNTS_US[business.kind] : undefined;
+  // A United States chart has one Travel account, home or away.
+  const patterns: readonly RegExp[] = own ?? (paidAbroad ? kind.abroad : undefined) ?? kind.accounts ?? [];
   for (const pattern of patterns) {
     const fits = accounts.filter((account) => pattern.test(account.name));
     if (fits.length === 1) return fits[0]!.label;

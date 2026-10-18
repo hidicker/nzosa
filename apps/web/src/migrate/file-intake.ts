@@ -8,6 +8,7 @@ import { loadOpeningBalances } from "../daily/opening-balances.js";
 import { loadXeroBankAccounts } from "../daily/entities.js";
 import { checkAgainstTrialBalance, loadContactList, loadDueDates, loadProductList, loadQuickBooksBankLines } from "./quickbooks.js";
 import { loadOpeningDocuments } from "../daily/aged-report.js";
+import { setQuickBooksExportCompanions } from "./qbo-export-set.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
 import { ledgerName, save, savePart } from "../store.js";
@@ -17,7 +18,10 @@ import { readFiledReturns } from "../variance.js";
 import { readIrdFiles } from "../daily/ird-records.js";
 import {
   identifyExport,
+  isQuickBooksExportStatement,
+  isZip,
   manualJournalsIn,
+  readZipFiles,
   mergeJournalNarrations,
   narratedJournalsLost,
   parseFixedAssets,
@@ -114,11 +118,40 @@ export async function loadWhatever(files: File[]): Promise<void> {
     show();
   };
   try {
+    files = await unzipped(files, say);
     await loadEach(files, say, loading);
   } finally {
     setLoading(null);
     show();
   }
+}
+
+/**
+ * A zip of exports opened into the files inside it, as if each had been
+ * dropped: QuickBooks Online's Export data comes as one. A workbook is a zip
+ * too, and is left as it is.
+ */
+async function unzipped(files: File[], say: (line: string) => void): Promise<File[]> {
+  const out: File[] = [];
+  for (const file of files) {
+    if (!/\.zip$/i.test(file.name)) {
+      out.push(file);
+      continue;
+    }
+    const bytes = new Uint8Array(await file.arrayBuffer());
+    if (!isZip(bytes)) {
+      say(`${file.name} — not a zip file that can be opened, so nothing was done with it.`);
+      continue;
+    }
+    try {
+      const inside = (await readZipFiles(bytes)).filter((f) => !/(^|\/)(__MACOSX\/|\.)/.test(f.name));
+      for (const one of inside) out.push(new File([new Uint8Array(one.bytes)], one.name.split("/").pop() ?? one.name));
+      if (inside.length === 0) say(`${file.name} — an empty zip file.`);
+    } catch (error) {
+      say(`${file.name} — the zip could not be opened: ${(error as Error).message}`);
+    }
+  }
+  return out;
 }
 
 /** Where loading dropped files is up to: how many are in, of how many, and which now. */
@@ -182,6 +215,7 @@ async function loadEach(
   const banks: File[] = [];
   const rest: { file: File; identified: Identified }[] = [];
 
+  const read: { file: File; text: string; identified: Identified }[] = [];
   for (const file of files) {
     loading(0, file.name);
     if (file.size > 50 * 1024 * 1024) {
@@ -189,9 +223,33 @@ async function loadEach(
       continue;
     }
     const text = await asCsvText(file.name, new Uint8Array(await file.arrayBuffer()));
-    const identified = identifyExport(text);
-    if (identified.kind === "bank") banks.push(file);
-    else rest.push({ file, identified });
+    read.push({ file, text, identified: identifyExport(text) });
+  }
+
+  // QuickBooks Online's Export data: the Journal is read with the statements
+  // and the trial balance that came with it, which say what each account is
+  // and what the whole must come to. Each goes as text, as the workbooks it
+  // came in are read as nothing else here.
+  const exportJournal = read.some((r) => r.identified.kind === "quickbooks-export");
+  const companions = exportJournal ? read.filter((r) => isQuickBooksExportStatement(r.text) !== null) : [];
+  setQuickBooksExportCompanions(companions.map((r) => ({ name: r.file.name, text: r.text })));
+  for (const one of companions) {
+    const kind = isQuickBooksExportStatement(one.text);
+    say(
+      `${one.file.name} — QuickBooks Online ` +
+        (kind === "trial-balance"
+          ? "trial balance, read with the journal to check it."
+          : `${kind === "balance-sheet" ? "balance sheet" : "profit and loss"}, read with the journal for what type each account is.`),
+    );
+  }
+  for (const one of read) {
+    if (companions.includes(one)) continue;
+    const file =
+      one.identified.kind === "quickbooks-export" && !/\.csv$/i.test(one.file.name)
+        ? new File([one.text], `${one.file.name.replace(/\.[^.]*$/, "")}.csv`, { type: "text/csv" })
+        : one.file;
+    if (one.identified.kind === "bank") banks.push(file);
+    else rest.push({ file, identified: one.identified });
   }
 
   let done = 0;
@@ -219,6 +277,8 @@ async function loadEach(
     "slowbooks-ledger": -1,
     // After the IIF file, whose chart gives its accounts their types.
     "quickbooks-desktop-detail": 0,
+    // Its own chart, made from the statements dropped with it.
+    "quickbooks-export": -1,
     // After the ledger: the due dates go on the documents it brought in, and
     // a product's account is found in the chart it brought.
     "product-list": 1,
@@ -260,6 +320,7 @@ async function loadEach(
         }
         case "slowbooks-ledger":
         case "quickbooks-desktop-detail":
+        case "quickbooks-export":
         case "quickbooks-iif": {
           // The chart and the coding first, the way a chart and a ledger go;
           // then the bank lines, documents and journals.

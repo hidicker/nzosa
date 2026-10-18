@@ -8,6 +8,7 @@ import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
 import { isQuickBooksDesktopDetail } from "./qb-desktop-detail.js";
+import { isQuickBooksExportJournal } from "./qbo-export.js";
 import { isProductList } from "./product-lists.js";
 import { isDueDateList } from "./document-dates.js";
 import { isQuickBooksTrialBalance } from "./trial-balance.js";
@@ -56,6 +57,7 @@ export type ExportKind =
   | "quickbooks-iif"
   | "slowbooks-ledger"
   | "quickbooks-desktop-detail"
+  | "quickbooks-export"
   | "product-list"
   | "due-dates"
   | "contact-list"
@@ -224,6 +226,10 @@ export function identifyExport(text: string): Identified {
   // under each account it touches.
   if (isQuickBooksDesktopDetail(text)) {
     return { kind: "quickbooks-desktop-detail", what: "QuickBooks Desktop transaction detail by account" };
+  }
+  // QuickBooks Online's Export data: its Journal, every transaction in blocks.
+  if (isQuickBooksExportJournal(text)) {
+    return { kind: "quickbooks-export", what: "QuickBooks Online journal, from Export data" };
   }
   // A QuickBooks report with nothing in it, or a sales report: nothing to
   // bring in. Asked first, as a sales report's columns are a ledger's too.

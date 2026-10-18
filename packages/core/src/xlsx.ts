@@ -133,8 +133,30 @@ function utf8(bytes: Uint8Array): string {
   return out;
 }
 
+/**
+ * Every file in a zip archive, unpacked: for a bundle of exports downloaded
+ * as one, such as QuickBooks Online's Export data. Folders are left out.
+ */
+export async function readZipFiles(bytes: Uint8Array): Promise<{ name: string; bytes: Uint8Array }[]> {
+  const out: { name: string; bytes: Uint8Array }[] = [];
+  for (const entry of readZip(bytes)) {
+    if (entry.name.endsWith("/")) continue;
+    out.push({ name: entry.name, bytes: await inflateBytes(entry) });
+  }
+  return out;
+}
+
+/** Whether bytes are a zip archive, by its first signature. */
+export function isZip(bytes: Uint8Array): boolean {
+  return bytes.length > 4 && u32(bytes, 0) === 0x04034b50;
+}
+
 async function inflate(entry: ZipEntry): Promise<string> {
-  if (entry.compression === 0) return utf8(entry.data);
+  return utf8(await inflateBytes(entry));
+}
+
+async function inflateBytes(entry: ZipEntry): Promise<Uint8Array> {
+  if (entry.compression === 0) return entry.data;
   if (entry.compression !== 8) {
     throw new Error(`unsupported zip compression method ${entry.compression} for ${entry.name}`);
   }
@@ -162,7 +184,7 @@ async function inflate(entry: ZipEntry): Promise<string> {
     merged.set(chunk, at);
     at += chunk.length;
   }
-  return utf8(merged);
+  return merged;
 }
 
 /** `BC` -> 55. Column letters are base-26 with no zero. */

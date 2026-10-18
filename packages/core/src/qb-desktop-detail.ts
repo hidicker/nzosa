@@ -64,7 +64,7 @@ function splitNumber(heading: string): { number: string; name: string } {
 }
 
 /** The QuickBooks type an account's name (and number, where it has one) suggest, with no chart to say. */
-function typeOfName(name: string, number: string): string {
+export function quickBooksTypeFromName(name: string, number: string): string {
   const leaf = name.split(":").pop() ?? name;
   const n = Number(number);
   if (/accounts receivable|\breceivable\b/i.test(leaf)) return "Accounts Receivable (A/R)";
@@ -136,7 +136,7 @@ export function parseQuickBooksDesktopDetail(text: string, options: QuickBooksLe
   const addAccount = (path: string, number: string): void => {
     if (named.has(path)) return;
     named.set(path, number);
-    const type = typeOfName(path, number);
+    const type = quickBooksTypeFromName(path, number);
     const place = quickBooksPlacement(type, /retained earnings/i.test(path) ? "Retained Earnings" : "");
     accounts.push({ code: place.bank ? "" : number, name: path, type: place.type, taxCode: "", description: type === "Credit Card" ? "Credit Card" : "" } as Account);
     if (place.debit) debitNormal.push(path);

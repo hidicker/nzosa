@@ -390,7 +390,7 @@ function said(held: Onboarding, step: Step): string {
       if (fromQuickBooks(held)) {
         // The ledger's own lines, not a bank register brought in after it.
         const brought = state.ledger.transactions.filter((t) =>
-          /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+          /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
         ).length;
         return brought === 0 ? "Nothing brought in yet" : `${brought} bank and card lines brought in`;
       }
@@ -1394,7 +1394,7 @@ function dropZone(): HTMLElement {
 
   const input = document.createElement("input");
   input.type = "file";
-  input.accept = ".csv,.xlsx,.xls,.txt,.iif";
+  input.accept = ".csv,.xlsx,.xls,.txt,.iif,.zip";
   input.multiple = true;
   input.hidden = true;
 
@@ -1574,7 +1574,7 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const ledgerLast = fromQuickBooks(held)
     ? state.ledger.transactions
         // The ledger's own lines: a bank register brought in after it is not the ledger.
-        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
+        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
         .reduce((last, t) => (t.date > last ? t.date : last), "")
     : "";
   inner.append(
@@ -1783,10 +1783,19 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
         ["Export", "Where", "Gives", "Needed"],
         [
           [
+            "Export data, or the two below",
+            "Settings (the gear) > Tools > Export data. Reports and Lists: leave everything ticked, Report period: " +
+              "All dates. Export to Excel, then drop the zip as it is",
+            "Every transaction, each account with its type, and the customers and vendors, in one download. The " +
+              "books are checked against the trial balance in it. It has no due dates: add the Invoice List and " +
+              "A/P Aging Detail below",
+            "Required, or the two below",
+          ],
+          [
             "Chart of accounts",
             "Accounting > Chart of accounts > Run report > Export",
             "The accounts",
-            "Required",
+            "Required, or Export data",
           ],
           [
             "General ledger",
@@ -1794,19 +1803,19 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
               "Line open balance, and Class if you use classes. Export to CSV",
             "Every posting: bank and card lines with their coding, invoices and bills with when each is due and " +
               "the payments applied to it as QuickBooks applied them, transfers, journals, and classes",
-            "Required",
+            "Required, or Export data",
           ],
           [
             "Invoice List",
             "Reports > Invoice List. Report period: All dates. Customise: all columns. Export to CSV",
             "When each invoice is due, and its terms, for reminders and the aged reports",
-            "Only without Line due date",
+            "With Export data, or without Line due date",
           ],
           [
             "A/P Aging Detail",
             "Reports > A/P Aging Detail, as of today. Customise: all columns. Export to CSV",
             "When each unpaid bill is due",
-            "Only without Line due date",
+            "With Export data, or without Line due date",
           ],
           [
             "Customers and Vendors",
@@ -1874,7 +1883,7 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
       ),
     ),
     note(
-      "Drop them all together, CSV or Excel: NZOSA reads the accounts and the ledger first, then the rest. " +
+      "Drop them all together, CSV, Excel or a zip as QuickBooks gives it: NZOSA reads the accounts and the ledger first, then the rest. " +
         "Where a report asks for a date range, choose All dates, so nothing from before it is left out.",
     ),
     dropZone(),

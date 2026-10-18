@@ -18,6 +18,7 @@ import {
   parseSlowBooksBooks,
   parseQuickBooksDesktopDetailBooks,
   isQuickBooksDesktopDetail,
+  isQuickBooksExportJournal,
   parseXeroAllocations,
   parseXeroAccountTransactions,
   payoutGroups,
@@ -46,6 +47,7 @@ import type {
 import { state } from "./state.js";
 import { booksCountry } from "./country.js";
 import { isUnusedStarterChart } from "./new-books-country.js";
+import { readQuickBooksExport } from "./migrate/qbo-export-set.js";
 
 /** Read a sheet whose columns were pointed out by hand. */
 export function readChosenColumns(
@@ -283,6 +285,16 @@ export async function loadReference(
         const reader = isIif(text) ? parseIifBooks : isSlowBooksLedger(text) ? parseSlowBooksBooks : parseQuickBooksDesktopDetailBooks;
         const read = reader(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
         if (read.chart.accounts !== known) chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        lines.push(...read.reference);
+        for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
+        continue;
+      }
+      if (isQuickBooksExportJournal(text)) {
+        // QuickBooks Online's Export data: its accounts, typed by the
+        // statements that came with it, and what each bank line was coded to.
+        const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
+        const read = readQuickBooksExport({ name: file.name, text }, known, { dayFirst: booksCountry().dayFirst });
+        chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
         lines.push(...read.reference);
         for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
         continue;

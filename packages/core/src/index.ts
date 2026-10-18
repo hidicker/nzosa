@@ -467,6 +467,7 @@ export * from "./iif.js";
 export * from "./time-entries.js";
 export * from "./slowbooks.js";
 export * from "./qb-desktop-detail.js";
+export * from "./qbo-export.js";
 export * from "./stock.js";
 export * from "./bank-columns.js";
 export * from "./product-lists.js";

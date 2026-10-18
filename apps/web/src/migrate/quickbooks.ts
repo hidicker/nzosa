@@ -1,10 +1,11 @@
-import { applyDueDates, isIif, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { applyDueDates, isIif, isQuickBooksExportJournal, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, hasCoding, postedJournals, reconcileRows, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency, booksMoney } from "../country.js";
 import { addTransactions } from "../daily/bank-import.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
+import { readQuickBooksExport } from "./qbo-export-set.js";
 
 /** Journals made from QuickBooks carry this, so a second drop replaces them. */
 const SOURCE = "QuickBooks";
@@ -28,7 +29,8 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
 
   const slowBooks = isSlowBooksLedger(text);
   const desktop = isQuickBooksDesktopDetail(text);
-  const iif = isIif(text) || slowBooks || desktop;
+  const exported = isQuickBooksExportJournal(text);
+  const iif = isIif(text) || slowBooks || desktop || exported;
   if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
@@ -40,7 +42,9 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   }
 
   const chart = state.chart.length > 0 ? quickBooksChartFrom(state.chart) : null;
-  const fromIif = iif
+  const fromIif = exported
+    ? readQuickBooksExport({ name: file.name, text }, state.chart, { currency: booksCurrency(), dayFirst: booksCountry().dayFirst })
+    : iif
     ? (slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : parseIifBooks)(text, chart, {
         currency: booksCurrency(),
         file: file.name,
@@ -51,7 +55,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
+      importer: exported ? "quickbooks-export" : slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });
@@ -201,6 +205,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   }
 
   const accounts = new Set(books.transactions.map((t) => t.account)).size;
+  const verified = exported && "verified" in books && books.verified !== null ? ` Checked: ${books.verified}.` : "";
   return (
     `${books.transactions.length} bank and card line${books.transactions.length === 1 ? "" : "s"} ` +
     `on ${accounts} account${accounts === 1 ? "" : "s"}` +
@@ -211,7 +216,8 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
     (contactCount > 0 ? `, ${contactCount} customers and vendors` : "") +
     (classCount > 0 ? `, ${classCount} given a class` : "") +
     (itemCount > 0 ? `, ${itemCount} products and services` : "") +
-    "."
+    "." +
+    verified
   );
 }
 
@@ -344,7 +350,7 @@ export function trialBalanceFinding(): string | null {
 
 function trialBalanceCheck(text: string): string | null {
   const fromStart = state.ledger.transactions.filter((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
   );
   if (fromStart.length === 0) return null;
   if (!isQuickBooksTrialBalance(text)) return null;

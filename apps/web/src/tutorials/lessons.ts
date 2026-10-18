@@ -654,13 +654,14 @@ export const LESSONS: readonly Lesson[] = [
         title: "Two exports",
         body:
           "In QuickBooks Online, export the Chart of accounts, and run the General ledger report for all accounts " +
-          "and export that. Both come out as CSV or Excel.",
+          "and export that. Both come out as CSV or Excel. Or, in one go: Settings > Tools > Export data, which " +
+          "gives a zip of every transaction, the statements and the customer and vendor lists.",
         page: "setup",
       },
       {
         title: "Drop them in",
         body:
-          "Drop both files on Setup, or on Start here. NZOSA works out what each one is: the chart becomes the " +
+          "Drop both files, or the zip, on Setup or on Start here. NZOSA works out what each one is: the chart becomes the " +
           "chart, the bank and card postings become bank lines, invoices and bills come in with their payments, " +
           "and the rest of the entries become journals. From QuickBooks Desktop, drop its IIF file of lists and " +
           "its Transaction Detail by Account report: the lists bring the accounts, customers and vendors, the " +

@@ -99,7 +99,9 @@ function taxTypesFor(kind: InvoiceKind): readonly { value: string; label: string
 
 /** The rate a treatment charges, whichever list it came from. */
 function rateOf(taxType: string): number {
-  return /15%/.test(taxType) ? 15 : 0;
+  // Xero New Zealand writes the rate ("15% GST on Income"); Xero Australia
+  // does not ("GST on Income", "GST on Capital"). Both charge the books' rate.
+  return /15%|10%/.test(taxType) || /^\s*gst on (income|expenses|capital)\b/i.test(taxType) ? 15 : 0;
 }
 
 /**

@@ -36,6 +36,8 @@ Checked 17–18 October 2026.
 | Medicare levy reduction: Angie, $29,000 in 2025-26, pays $98.90; thresholds $28,011 and $35,013 | ATO, "Medicare levy reduction for low-income earners" (updated 30 June 2026) | $98.90 | Matches |
 | BAS: "round down to whole dollars (don't show cents)" | ATO, "Instructions for completing your BAS" (updated 14 September 2026) | Showed cents | **Fixed**: the BAS shows whole dollars, rounded down, and the amount to pay is worked from them |
 | Super guarantee: 12%; maximum contribution base $62,500 a quarter (2025-26), $270,830 a year from 2026-27 | OpenAccountants AU super guarantee guide | The same | Matches |
+| Small business income tax offset worked on "net small business income": tax-related expenses such as accounting fees, and gifts and donations, are not deducted | ATO, "Small business income tax offset", Income and deductions you cannot include | Was worked on the business's net profit | **Fixed**: accounting fees and donations are added back. The photographer demo's offset moves from $270.62 to $278.85 ($800 of accounting fees) |
+| 2026-27 resident rates (15% second bracket): Nadia, $88,340, tax $17,022, Medicare $1,766.80 | OpenAccountants AU deductions and offsets guide, worked example (Ryan Duguid, accountant) | The same | Matches |
 | Company tax: 25% base rate entity, 30% otherwise | OpenAccountants AU bookkeeping guide | The same | Matches |
 
 ## United States
@@ -58,11 +60,6 @@ Checked 17–18 October 2026.
 
 ## Left as they are, to be decided
 
-- **Small business income tax offset (Australia).** The ATO works the offset on
-  "net small business income", which leaves out tax-related expenses such as
-  the accountant's fee for the return. NZOSA uses the business's net profit
-  after them. It changes nothing once the offset reaches its $1,000 cap, and
-  the rule's exact scope was not confirmed, so it is unchanged.
 - **IRD extra pay example 1**, one cent, above.
 - **Korean due dates on a weekend**, above.
 - **Standard provisional tax** is rounded to whole dollars before it is

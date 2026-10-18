@@ -931,6 +931,35 @@ export function addCountryReports(country: string): void {
   else select.append(group);
 }
 
+/**
+ * An owner's net small business income, as the ATO works the small business
+ * income tax offset on it: each sole trader business's profit, with the
+ * deductions the offset leaves out added back -- tax-related expenses such as
+ * accounting fees, and gifts and donations. Nil rather than a loss.
+ */
+function netSmallBusinessIncome(owner: string, year: number): number {
+  const notForOffset = /\baccount(ing|ant|ants)\b|tax agent|tax return|donation|\bgifts?\b/i;
+  let total = 0;
+  for (const entity of entities()) {
+    if ((entity.kind ?? "business") !== "business" || entity.structure === "company" || isRental(entity)) continue;
+    const percent = (entity.owners ?? []).find((o) => o.name === owner)?.percent ?? 0;
+    if (percent === 0) continue;
+    const report = entityYearReport(entity, year);
+    if (report === null) continue;
+    // A line names its account by code alone on the posted basis, "Name - code"
+    // otherwise: the chart's name, whichever it is.
+    const nameOf = (code: string): string => {
+      const { code: digits, name } = splitAccountLabel(code);
+      return state.chart.find((a) => a.code === (digits || code))?.name ?? name ?? code;
+    };
+    const addBack = report.expenses
+      .filter((line) => notForOffset.test(nameOf(line.code)))
+      .reduce((sum, line) => sum + Math.abs(line.net), 0);
+    total += Math.round(((report.netProfit + addBack) * percent) / 100);
+  }
+  return Math.max(0, total);
+}
+
 /** Each company's profit for the year, for the tax it pays on its own. Not its rentals'. */
 function companyProfits(year: number): { entity: string; profit: number }[] {
   return entities()
@@ -1140,8 +1169,9 @@ export function renderAuTax(body: HTMLElement, year: number): void {
     const tax = auResidentTax(one.total, year);
     const lito = auLowIncomeOffset(one.total, year);
     const afterLito = tax === null ? null : Math.max(0, tax - (lito ?? 0));
-    // Business income, not rent: what the small business offset is worked on.
-    const business = one.parts.filter((part) => !part.rental).reduce((sum, part) => sum + part.share, 0);
+    // Business income, not rent: what the small business offset is worked on,
+    // as the ATO's net small business income.
+    const business = netSmallBusinessIncome(one.owner, year);
     const sbito =
       tax === null || afterLito === null ? null : auSmallBusinessOffset(tax, one.total, business, afterLito, year);
     const afterOffset = afterLito === null ? null : afterLito - (sbito ?? 0);
@@ -1178,7 +1208,8 @@ export function renderAuTax(body: HTMLElement, year: number): void {
     note(
       "Only the income these books hold. Salary, interest, dividends, deductions and other offsets are " +
         "the return's, and the offsets are worked on this income alone. The small business offset " +
-        "assumes the business's aggregated turnover is under $5 million. A net rental loss " +
+        "assumes the business's aggregated turnover is under $5 million, and is worked on the business's " +
+        "profit with accounting fees and donations added back, as the ATO's net small business income is. A net rental loss " +
         "reduces other income; from 1 July 2027 only for a new build or a property held at 7:30 pm AEST " +
         "on 12 May 2026. Rates for 2025-26 to 2027-28: " +
         "confirm them with the ATO.",

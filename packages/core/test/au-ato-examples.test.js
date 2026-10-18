@@ -91,3 +91,12 @@ test("Medicare levy: the ATO's Angie, $29,000 in 2025-26, pays $98.90", async ()
   assert.equal(medicareLevy(2_900_000, 2026), 9_890);
   assert.equal(medicareLevy(2_801_100, 2026), 0);
 });
+
+// OpenAccountants, "AU Deductions Offsets" (Ryan Duguid, accountant), worked
+// example: Nadia, 2026-27, taxable income $88,340 on the 15% second bracket.
+test("2026-27 resident tax: Nadia's $88,340 is $17,022, Medicare $1,766.80", async () => {
+  const { auResidentTax, medicareLevy } = await import("../dist/index.js");
+  assert.equal(auResidentTax(8_834_000, 2027), 1_702_200);
+  assert.equal(auResidentTax(8_856_000, 2027), 1_708_800);
+  assert.equal(medicareLevy(8_834_000, 2027), 176_680);
+});

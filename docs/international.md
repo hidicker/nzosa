@@ -7,17 +7,24 @@ Books can be kept in another country. The engine is the same everywhere:
 
 What changes is a short list of facts about the country, and which returns the books produce.
 
-This is the `international` branch. New Zealand's books open and read exactly as they did: the
-parity check (below) compares every page, report and workbook sheet with `main`, word for word.
+The country work is on `main` (the `international` branch was merged on 8 October 2026). New
+Zealand's books must still open and read exactly as they did: before a change to the country work
+ships, `tools/parity.mjs` compares every page, report and workbook sheet of two builds on the same
+books, word for word.
 
 ## Choosing the country
 
 - **A set of books' country is `jurisdiction`** in its decisions.
-  - Unset is New Zealand, so every set kept before this is New Zealand's.
-- **The choice is under Setup → Country.** It shows only in the international edition:
+  - Unset is New Zealand, so every set kept before the country work is New Zealand's.
+- **It is chosen as a new set of books is made**, and under Setup → Country until the books hold
+  anything; after that it is fixed, and another country needs a new set of books.
+- **Offered to everyone:** New Zealand, the United States, Australia and South Korea. The last
+  three are marked work in progress (`WORK_IN_PROGRESS` in `apps/web/src/new-books-country.ts`).
+- **New books start in the country last chosen**, or before any is, the one the browser's time
+  zone suggests.
+- **"Anywhere"** (calendar year, USD, no sales tax) is listed only in the international build:
   - `node apps/web/build.js --edition international` (or `NZOSA_EDITION=international`)
-- **Books already set to another country show it in either edition.**
-- **NZOSA as it ships never asks.**
+  - Books already set to a country are shown it whichever build opens them.
 
 ## What the country decides
 

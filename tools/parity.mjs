@@ -14,7 +14,7 @@
  *
  *   node tools/parity.mjs --a <repo> --b <repo> --ledgers <folder> --books a,b,c [--out <folder>]
  *
- * --a and --b are two checkouts (say, main and the international worktree),
+ * --a and --b are two checkouts (say, main before and after a change),
  * each built with `npm run build`. Run a build against itself first: two runs
  * must agree, or a difference later proves nothing.
  */

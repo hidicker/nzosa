@@ -1,5 +1,6 @@
 import { applyNewBooksCountry } from "./new-books-country.js";
 import { wirePresentation } from "./presentation.js";
+import { afterPress, watchBusyButtons } from "./busy.js";
 import { INBOX_FRESH_HOURS, readMorning, restoreMorning } from "./nightly.js";
 import { registerPages, showPage } from "./app.js";
 import {
@@ -394,10 +395,12 @@ function wireUp(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>(
     ".sidebar-nav button[data-page], .sidebar-foot button[data-page]",
   )) {
-    button.addEventListener("click", () => {
-      if (button.dataset["page"] === "reports") reportsFromMenu();
-      showPage(button.dataset["page"] ?? "reconcile");
-    });
+    button.addEventListener("click", () =>
+      afterPress(button, () => {
+        if (button.dataset["page"] === "reports") reportsFromMenu();
+        showPage(button.dataset["page"] ?? "reconcile");
+      }),
+    );
   }
 
   $<HTMLSelectElement>("entity-filter").addEventListener("change", () => {
@@ -484,6 +487,8 @@ function wireUp(): void {
       banner.hidden = false;
     }
   }
+  // Before anything can be pressed: a button left waiting says so.
+  watchBusyButtons();
   wireBankImport();
   wireFileIntake();
   wireReconcile();

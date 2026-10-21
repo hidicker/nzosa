@@ -1,4 +1,5 @@
 import { changesByLine } from "../events.js";
+import { afterNextFrame } from "../busy.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
 import { booksCountry, booksLocale, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
 import { offerAsset } from "./assets.js";
@@ -610,9 +611,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     // and stops taking clicks, and the work starts once that is on screen.
     row.classList.add("code-row-working");
     const chosen = [codeSelect.value, gstSelect.value as GstRate, description.value, to.value] as const;
-    requestAnimationFrame(() =>
-      setTimeout(() => void confirmLine(one, chosen[0], chosen[1], chosen[2], chosen[3]), 0),
-    );
+    afterNextFrame(() => void confirmLine(one, chosen[0], chosen[1], chosen[2], chosen[3]));
   });
 
   const splitButton = document.createElement("button");

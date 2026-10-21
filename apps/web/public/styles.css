@@ -2422,6 +2422,11 @@ button.working:not(.primary):not(.active) {
 @media (prefers-reduced-motion: reduce) {
   button.working { animation: none; }
 }
+/* A menu item pressed, while its page is drawn: shown at once, so a page
+   that takes a moment in large books is not mistaken for a press missed. */
+.sidebar-nav button.opening,
+.sidebar-foot button.opening { opacity: 0.6; cursor: progress; }
+body.page-opening { cursor: progress; }
 
 /* The same dropzone as the Import page, shorter: the Check page has a table
    under it and does not need a landing pad the height of the window. */

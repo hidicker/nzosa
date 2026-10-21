@@ -309,10 +309,23 @@ export async function acceptAllShown(): Promise<void> {
   }
 
   if (lines.length === 0 && pairs.length === 0) {
+    // Why, in the words the rows use. It said "already settled or has no
+    // suggestion" over a screen of suggested lines that had only been left
+    // out for their caution, which read as the button not working.
+    const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
+    const reasons = [
+      ...(ruleCautioned > 0
+        ? [`${plural(ruleCautioned, "line goes", "lines go")} the opposite way to the account suggested (money in to an expense account, say)`]
+        : []),
+      ...(cautioned > 0 ? [`${plural(cautioned, "has a caution", "have a caution")} from the AI`] : []),
+      ...(held.size > 0
+        ? [`${plural(held.size, "line could be a transfer", "lines could be a transfer")} with more than one possible match`]
+        : []),
+    ];
     await askOnPage(
-      (held.size > 0
-        ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
-          "transfer with more than one possible match. Check each one individually."
+      (reasons.length > 0
+        ? `Nothing accepted: ${reasons.join("; ")}. Accept all leaves these for you: check each one, ` +
+          "and confirm it with its ✓ if the suggestion is right."
         : "Nothing to accept: every line shown is already settled or has no suggestion.") +
         (unfinished > 0
           ? `\n\n${unfinished} ${unfinished === 1 ? "has" : "have"} a split with a part that has no account ` +

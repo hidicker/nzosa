@@ -76,6 +76,7 @@ import type {
   SheetRows,
   SplitPart,
   Transaction,
+  TransactionOverride,
 } from "@nzosa/core";
 import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
@@ -1738,6 +1739,10 @@ function section(
     const canUseRules = proposed !== "" && proposed !== coded;
     const canUseXero = imported !== "" && !isSplit;
     const canUseSplit = isSplit;
+    // What "Keep mine" keeps: the account itself, never the words shown for
+    // it -- "(unconfirmed)", or "settles INV-0135" on a matched payment.
+    const keepCode = override?.code ?? "";
+    const canKeep = coded !== "";
 
     return {
       row,
@@ -1751,6 +1756,8 @@ function section(
       canUseXero,
       canUseSplit,
       settlesInvoice,
+      keepCode,
+      canKeep,
     };
   });
 
@@ -1758,6 +1765,7 @@ function section(
   const totalXero = rowOptions.filter((o) => o.canUseXero).length;
   const totalRules = rowOptions.filter((o) => o.canUseRules).length;
   const totalSplits = rowOptions.filter((o) => o.canUseSplit).length;
+  const totalKeep = rowOptions.filter((o) => o.canKeep).length;
 
   const actionsBar = document.createElement("div");
   actionsBar.className = "check-section-actions";
@@ -1794,6 +1802,15 @@ function section(
     btnRules = document.createElement("button");
     btnRules.type = "button";
     actionsBar.append(btnRules);
+  }
+
+  // Your own coding, kept on every line that has some: the row's Keep mine,
+  // all at once.
+  let btnKeep: HTMLButtonElement | null = null;
+  if (totalKeep > 0) {
+    btnKeep = document.createElement("button");
+    btnKeep.type = "button";
+    actionsBar.append(btnKeep);
   }
 
   wrap.append(actionsBar);
@@ -1860,6 +1877,19 @@ function section(
       }
     }
 
+    if (btnKeep) {
+      if (noneChecked) {
+        btnKeep.textContent = `Keep mine for all (${totalKeep})`;
+        btnKeep.disabled = totalKeep === 0;
+      } else {
+        const count = rowOptions.filter(
+          (o) => selectedIds.has(o.row.transaction.id) && o.canKeep,
+        ).length;
+        btnKeep.textContent = `Keep mine for ${count} selected`;
+        btnKeep.disabled = count === 0;
+      }
+    }
+
     if (btnSplits) {
       if (noneChecked) {
         btnSplits.textContent = `Use all splits (${totalSplits}) (recommended)`;
@@ -1923,6 +1953,25 @@ function section(
     });
   }
 
+  if (btnKeep) {
+    btnKeep.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked")).map(
+          (cb) => cb.dataset.id!,
+        ),
+      );
+      const targets = (
+        selectedIds.size > 0
+          ? rowOptions.filter((o) => selectedIds.has(o.row.transaction.id) && o.canKeep)
+          : rowOptions.filter((o) => o.canKeep)
+      ).map((o) => ({ transaction: o.row.transaction, code: o.keepCode }));
+      if (targets.length === 0) return;
+      btnKeep!.disabled = true;
+      btnKeep!.classList.add("working");
+      void keepOurCodingBulk(targets);
+    });
+  }
+
   if (btnSplits) {
     btnSplits.addEventListener("click", () => {
       const selectedIds = new Set(
@@ -1963,8 +2012,7 @@ function section(
 
   for (const opt of rowOptions) {
     const {
-      row, override, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit,
-      settlesInvoice,
+      row, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit,
     } = opt;
     const tr = document.createElement("tr");
 
@@ -2097,10 +2145,11 @@ function section(
       keep.className = "small";
       keep.textContent = "Keep mine";
       keep.title = `${coded} — records that this was checked and stands`;
-      // Keeping a match keeps the coding the line already has; the words
-      // "settles INV-0135" are a description, not an account to write back.
-      const keeping = settlesInvoice ? (override?.code ?? "") : coded;
-      keep.addEventListener("click", () => void keepOurCoding(row.transaction, keeping));
+      // The account the line already has: "settles INV-0135" and
+      // "(unconfirmed)" are words shown for it, not an account to write back.
+      // Kept from the label, an unconfirmed line was given an account named
+      // "Sales - 200 (unconfirmed)".
+      keep.addEventListener("click", () => void keepOurCoding(row.transaction, opt.keepCode));
       actions.append(keep);
     }
     tr.append(actions);
@@ -4329,14 +4378,15 @@ export function wireCodingReconciliation(): void {
  * whole point. A return built afterwards can be defended by pointing at the
  * decision rather than at the absence of one.
  */
-async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
-  if (codingRefusedForTransfer(transaction)) return;
+/** The override that records a line's own coding as checked and kept. */
+function keptOverride(
+  transaction: Transaction,
+  code: string,
+  was: TransactionOverride | undefined,
+): TransactionOverride {
   const one = state.suggestions?.get(transaction.id);
-  const overrides = { ...(state.ledger.overrides ?? {}) };
-  const was = overrides[transaction.id];
   const side = one?.classification.side;
-
-  overrides[transaction.id] = {
+  return {
     ...(was ?? {}),
     confirmed: true,
     code,
@@ -4345,6 +4395,47 @@ async function keepOurCoding(transaction: Transaction, code: string): Promise<vo
     note: "Checked against the imported coding and kept, on the Coding reconciliation page.",
     at: new Date().toISOString().slice(0, 10),
   };
+}
+
+/**
+ * Keep the coding already here on many lines at once: "Keep mine for all".
+ *
+ * Each as the row's own Keep mine keeps it, saved once, and written to
+ * History as one entry that can still be undone line by line.
+ */
+async function keepOurCodingBulk(
+  targets: readonly { transaction: Transaction; code: string }[],
+): Promise<void> {
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const batchEvents: CodingBatchEntry[] = [];
+  for (const { transaction, code } of targets) {
+    if (code === "" || codingRefusedForTransfer(transaction)) continue;
+    const was = overrides[transaction.id];
+    overrides[transaction.id] = keptOverride(transaction, code, was);
+    batchEvents.push({ id: transaction.id, before: was ?? null });
+  }
+  if (batchEvents.length === 0) {
+    redraw("check");
+    return;
+  }
+  state.ledger = { ...state.ledger, overrides };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "codingBatch",
+    `Kept own coding for ${batchEvents.length} line${batchEvents.length === 1 ? "" : "s"}, ` +
+      "against the imported coding, on the Coding reconciliation page",
+    batchEvents,
+    null,
+  );
+  reclassify();
+  redraw("check");
+}
+
+async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
+  if (codingRefusedForTransfer(transaction)) return;
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const was = overrides[transaction.id];
+  overrides[transaction.id] = keptOverride(transaction, code, was);
 
   state.ledger = { ...state.ledger, overrides };
   state.persistent = await savePart(state.ledger);

@@ -114,10 +114,19 @@ works).
   in full as now. Held until asked for. Not yet tested by hand: cutting the
   connection mid-tick (the "not saved" warning, and the warning on leaving
   with saves outstanding), and two tabs on the same books.
-- **History is rewritten whole on every change.** Each coding sends the
-  entire event log (77 KB on AI Test, growing), so every write gets slower as
-  the books age. Append one event at a time instead -- a table of rows on the
-  server rather than a part, with the browser and folder backends to match.
+- **Books in a folder still write each changed part whole.** Books online
+  now send only what changed (`save_part_changes`, and `part-changes.ts` in
+  core), with the coding and its history entry in one request. A folder is
+  the app on the same computer, so the size matters far less there, but the
+  history file is still rewritten on every change. The same change lists
+  could go to `PUT api/ledger/parts/:part` if it ever shows.
+- **Trimming what each online save replaced.** Saves now keep the change
+  rather than a whole copy (a whole copy at most once a day per part), so the
+  history table grows far more slowly. What is already there (about 68 MB of
+  the 87 MB database on 21 Oct 2026, from whole copies) stays until
+  `prune_part_history(interval)` is run by the project's owner, which removes
+  rows older than the interval and keeps each part rebuildable. Not run, and
+  not scheduled: how long to keep is the owner's call.
 - **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
   notes and the Google One journal with GST were sorted. Not yet traced.
 - **Say it is working while the other bulk actions on Reconcile run.** "Split

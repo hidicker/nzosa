@@ -1,4 +1,5 @@
-import { entityId, writeQueue } from "@nzosa/core";
+import { copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
+import type { PartCopy } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -34,7 +35,8 @@ import type {
 } from "@nzosa/core";
 import type { LedgerEvent } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { currentSession, loadPart as loadCloudPart, loadParts as loadCloudParts, rpc, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, loadPart as loadCloudPart, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import type { PartChange, SaveOutcome } from "./cloud.js";
 
 /**
  * Browser-side ledger storage.
@@ -1144,6 +1146,10 @@ async function loadFromCloud(): Promise<StoredLedger | null> {
 
   const parts = await loadCloudParts(book.id);
   if (parts === null) return null;
+  // Copied before anything can change them, so the first save of each part
+  // can be worked out as changes to what the server holds.
+  serverCopies.clear();
+  for (const [part, held] of Object.entries(parts)) serverCopies.set(part, partCopy(held.data));
 
   const ledger = ledgerFromParts(parts);
   // A part the server does not hold is an empty part, not an unread one. The
@@ -1178,41 +1184,154 @@ async function writeCloud(
 ): Promise<boolean> {
   const book = cloudBook;
   if (book === null) return false;
-  let ok = true;
+  // Every changed part asked for at once, before any is answered, so they
+  // go to the server together.
+  const asked: [string, Promise<SaveOutcome>][] = [];
   for (const part of parts) {
     const value = partValue(ledger, part);
     if (value === undefined) continue;
     if (!loadedParts.has(part) && !changedParts.has(part)) continue;
     if (lastWritten.get(part) === value) continue;
-
-    const outcome = await oneAtATime(async () => {
-      const result = await saveCloudPart(book.id, part, value, versions.get(part) ?? 0);
-      if (result.kind === "saved") {
-        versions.set(part, result.version);
-        lastWritten.set(part, value);
-      }
-      return result;
-    });
-    if (outcome.kind === "saved") {
+    asked.push([part, sendToCloud(part, value)]);
+  }
+  let ok = true;
+  for (const [part, outcome] of asked) {
+    const result = await outcome;
+    if (result.kind === "saved") {
       markSaved(part);
       continue;
     }
     markUnsaved(part);
-    // Not a write to retry: on a conflict somebody else's save is now the
-    // truth, and this page is holding something built on what it replaced.
+    // Said once: the parts of one save fail together.
+    if (ok) tellCloudTrouble(result);
     ok = false;
-    tellAboutTrouble(
-      outcome.kind === "conflict"
-        ? {
-            kind: "conflict",
-            why:
-              "These books changed somewhere else, so your last change was not saved. " +
-              "Reload to get the latest, then make it again.",
-          }
-        : { kind: outcome.kind, why: outcome.why },
-    );
   }
   return ok;
+}
+
+/**
+ * A save to hosted books that was not made, said out loud.
+ *
+ * Not one to retry: on a conflict somebody else's save is now the truth, and
+ * this page is holding something built on what it replaced.
+ */
+function tellCloudTrouble(outcome: Exclude<SaveOutcome, { kind: "saved" }>): void {
+  tellAboutTrouble(
+    outcome.kind === "conflict"
+      ? {
+          kind: "conflict",
+          why:
+            "These books changed somewhere else, so your last change was not saved. " +
+            "Reload to get the latest, then make it again.",
+        }
+      : { kind: outcome.kind, why: outcome.why },
+  );
+}
+
+/**
+ * What the server holds of each part of the hosted books, as text.
+ *
+ * Read when the books are opened and kept up with every save, so a save can
+ * send what changed rather than the whole part. Text rather than the objects:
+ * the app changes some objects in place, and a copy sharing them would change
+ * with them and hide the change. A part missing here is sent whole.
+ */
+const serverCopies = new Map<string, PartCopy>();
+
+/** Whether the server takes changes; a project of somebody's own set up before it did, does not. */
+let changesTaken = true;
+
+/** Saves of hosted books asked for and not yet sent: the latest value of each part. */
+const waitingToSend = new Map<string, { value: unknown; answer: ((outcome: SaveOutcome) => void)[] }>();
+let sendQueued = false;
+
+/**
+ * Ask for one part of the hosted books to be saved.
+ *
+ * Everything asked for before the request goes -- a coding and the history
+ * entry recording it, or several ticks while a save is still on its way --
+ * goes in one request, as what changed in each part. A part asked for twice
+ * sends the later value, and both are answered with how it went.
+ */
+function sendToCloud(part: string, value: unknown): Promise<SaveOutcome> {
+  return new Promise((resolve) => {
+    const held = waitingToSend.get(part);
+    if (held === undefined) {
+      waitingToSend.set(part, { value, answer: [resolve] });
+    } else {
+      held.value = value;
+      held.answer.push(resolve);
+    }
+    if (!sendQueued) {
+      sendQueued = true;
+      void oneAtATime(sendWaiting);
+    }
+  });
+}
+
+/** The changes are sent instead of the whole part when no more than this share of its size. */
+const CHANGES_AT_MOST = 0.5;
+
+async function sendWaiting(): Promise<void> {
+  sendQueued = false;
+  const batch = new Map(waitingToSend);
+  waitingToSend.clear();
+  const answer = (part: string, outcome: SaveOutcome): void => {
+    for (const one of batch.get(part)?.answer ?? []) one(outcome);
+  };
+  const book = cloudBook;
+  if (book === null) {
+    for (const part of batch.keys()) answer(part, { kind: "failed", why: "No books are open." });
+    return;
+  }
+
+  // Worked out now rather than when asked: the version and the server's copy
+  // are the ones the save before this left.
+  const sending: { part: string; value: unknown; copy: PartCopy; change: PartChange }[] = [];
+  for (const [part, { value }] of batch) {
+    const version = versions.get(part) ?? 0;
+    const before = serverCopies.get(part);
+    const found = changesTaken && before !== undefined && version > 0 ? partChanges(before, value) : null;
+    if (found !== null && found.ops.length === 0) {
+      // What the server already holds: nothing to send.
+      lastWritten.set(part, value);
+      answer(part, { kind: "saved", version });
+      continue;
+    }
+    if (found !== null && JSON.stringify(found.ops).length <= copySize(found.copy) * CHANGES_AT_MOST) {
+      sending.push({ part, value, copy: found.copy, change: { part, version, ops: found.ops } });
+      continue;
+    }
+    sending.push({ part, value, copy: found?.copy ?? partCopy(value), change: { part, version, data: value } });
+  }
+  if (sending.length === 0) return;
+
+  const saved = (one: { part: string; value: unknown; copy: PartCopy }, version: number): void => {
+    versions.set(one.part, version);
+    lastWritten.set(one.part, one.value);
+    serverCopies.set(one.part, one.copy);
+    answer(one.part, { kind: "saved", version });
+  };
+
+  if (changesTaken) {
+    const outcome = await saveCloudChanges(book.id, sending.map((one) => one.change));
+    if (outcome.kind === "saved") {
+      sending.forEach((one, i) => saved(one, outcome.versions[i] ?? 0));
+      return;
+    }
+    if (outcome.kind !== "missing") {
+      for (const one of sending) answer(one.part, outcome);
+      return;
+    }
+    changesTaken = false;
+  }
+
+  // A project without save_part_changes: each part whole, as before it.
+  for (const one of sending) {
+    const outcome = await saveCloudPart(book.id, one.part, one.value, versions.get(one.part) ?? 0);
+    if (outcome.kind === "saved") saved(one, outcome.version);
+    else answer(one.part, outcome);
+  }
 }
 
 /**
@@ -1263,25 +1382,9 @@ async function putCloudPart(part: string, data: unknown): Promise<boolean> {
   if (data === undefined) return true;
   if (lastWritten.get(part) === data) return true;
 
-  const outcome = await oneAtATime(async () => {
-    const result = await saveCloudPart(book.id, part, data, versions.get(part) ?? 0);
-    if (result.kind === "saved") {
-      versions.set(part, result.version);
-      lastWritten.set(part, data);
-    }
-    return result;
-  });
+  const outcome = await sendToCloud(part, data);
   if (outcome.kind === "saved") return true;
-  tellAboutTrouble(
-    outcome.kind === "conflict"
-      ? {
-          kind: "conflict",
-          why:
-            "These books changed somewhere else, so your last change was not saved. " +
-            "Reload to get the latest, then make it again.",
-        }
-      : { kind: outcome.kind, why: outcome.why },
-  );
+  tellCloudTrouble(outcome);
   return false;
 }
 

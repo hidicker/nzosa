@@ -609,6 +609,51 @@ export async function savePart(
   return { kind: "failed", why: error.message ?? `Save failed (${response.status}).` };
 }
 
+/** One part in a save of several: its changes, or the part whole. */
+export type PartChange =
+  | { part: string; version: number; ops: unknown[] }
+  | { part: string; version: number; data: unknown };
+
+export type ChangesOutcome =
+  | { kind: "saved"; versions: number[] }
+  | { kind: "conflict" }
+  | { kind: "refused"; why: string }
+  | { kind: "failed"; why: string }
+  /** The project has no save_part_changes: one set up before it existed. */
+  | { kind: "missing" };
+
+/**
+ * Save several parts in one request, each as its changes or whole.
+ *
+ * All of them or none: a coding and the history entry that records it are
+ * saved together, so the history never tells of a change that did not save.
+ * Each names the version it was built on, as with `savePart`.
+ */
+export async function saveChanges(bookId: string, changes: readonly PartChange[]): Promise<ChangesOutcome> {
+  const response = await rest("rpc/save_part_changes", {
+    method: "POST",
+    body: JSON.stringify({ p_book: bookId, p_changes: swapChars(changes, NUL, STAND_IN) }),
+  });
+  if (response === null) return { kind: "failed", why: "Not signed in, or no connection." };
+
+  if (response.ok) {
+    const next = (await response.json().catch(() => null)) as unknown;
+    return Array.isArray(next) && next.length === changes.length && next.every((v) => typeof v === "number")
+      ? { kind: "saved", versions: next as number[] }
+      : { kind: "failed", why: "The server did not say which versions it wrote." };
+  }
+
+  const error = (await response.json().catch(() => ({}))) as PostgrestError;
+  if (response.status === 409 || error.code === "PT409") return { kind: "conflict" };
+  if (error.code === "42501") {
+    return { kind: "refused", why: "You do not have permission to change these books." };
+  }
+  // PostgREST's "no such function": a project of somebody's own, set up from
+  // an older own-project.sql.
+  if (error.code === "PGRST202" || (response.status === 404 && error.code === undefined)) return { kind: "missing" };
+  return { kind: "failed", why: error.message ?? `Save failed (${response.status}).` };
+}
+
 /**
  * Call one of the project's edge functions, as the person signed in.
  *

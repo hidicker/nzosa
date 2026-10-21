@@ -312,20 +312,25 @@ export async function acceptAllShown(): Promise<void> {
     // Why, in the words the rows use. It said "already settled or has no
     // suggestion" over a screen of suggested lines that had only been left
     // out for their caution, which read as the button not working.
-    const plural = (n: number, one: string, many: string): string => `${n} ${n === 1 ? one : many}`;
-    const reasons = [
-      ...(ruleCautioned > 0
-        ? [`${plural(ruleCautioned, "line goes", "lines go")} the opposite way to the account suggested (money in to an expense account, say)`]
-        : []),
-      ...(cautioned > 0 ? [`${plural(cautioned, "has a caution", "have a caution")} from the AI`] : []),
-      ...(held.size > 0
-        ? [`${plural(held.size, "line could be a transfer", "lines could be a transfer")} with more than one possible match`]
-        : []),
+    const why: [number, string, string][] = [
+      [
+        ruleCautioned,
+        "the lines go the opposite way to the account suggested (money in to an expense account, for example)",
+        "go the opposite way to the account suggested (money in to an expense account, for example)",
+      ],
+      [cautioned, "the AI gave each a caution", "have a caution from the AI"],
+      [held.size, "each could be a transfer with more than one possible match", "could be a transfer with more than one possible match"],
     ];
+    const reasons = why.filter(([n]) => n > 0);
+    const total = reasons.reduce((sum, [n]) => sum + n, 0);
+    const these = total === 1 ? "this line needs" : `each of these ${total} needs`;
+    const because =
+      reasons.length === 1
+        ? `This is because ${total === 1 ? (reasons[0]?.[2] ?? "").replace(/^go /, "it goes ").replace(/^have /, "it has ").replace(/^could /, "it could ") : reasons[0]?.[1]}.`
+        : `This is because ${reasons.map(([n, , some]) => `${n} ${some}`).join(", and ")}.`;
     await askOnPage(
       (reasons.length > 0
-        ? `Nothing accepted: ${reasons.join("; ")}. Accept all leaves these for you: check each one, ` +
-          "and confirm it with its ✓ if the suggestion is right."
+        ? `Nothing accepted: ${these} to be ✓ manually. ${because}`
         : "Nothing to accept: every line shown is already settled or has no suggestion.") +
         (unfinished > 0
           ? `\n\n${unfinished} ${unfinished === 1 ? "has" : "have"} a split with a part that has no account ` +
@@ -4369,6 +4374,9 @@ export function wireCodingReconciliation(): void {
   wireSheetAi();
 
   $("accept-all").addEventListener("click", () => void acceptAllShown());
+  // A tick, a bulk accept or a rule made in passing is undone on History and
+  // Undo; from the page where it was done, that is one press away.
+  $("reconcile-undo").addEventListener("click", () => showPage("history"));
   wireAiButton();
   $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
   $("check-template").addEventListener("click", () =>

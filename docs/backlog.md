@@ -120,6 +120,11 @@ works).
   the app on the same computer, so the size matters far less there, but the
   history file is still rewritten on every change. The same change lists
   could go to `PUT api/ledger/parts/:part` if it ever shows.
+- **The rules go whole when a tick makes or changes one.** Changes reach
+  two levels into a part, and the list of rules is the third (`rules.rules`),
+  so it is sent whole: 7–17 KB on the books online in Oct 2026, against a
+  few hundred bytes for the coding. Small, but the biggest piece of such a
+  tick. Reaching a third level means `apply_part_ops` taking longer paths.
 - **Trimming what each online save replaced.** Saves now keep the change
   rather than a whole copy (a whole copy at most once a day per part), so the
   history table grows far more slowly. What is already there (about 68 MB of

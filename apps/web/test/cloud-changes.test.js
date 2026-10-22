@@ -332,3 +332,73 @@ test("without the page's books to take theirs into, refused as before", async ()
   assert.equal(await store.save({ ...ledger, overrides: { ...ledger.overrides, t5: { code: "MINE" } } }), false);
   assert.equal(remote.parts.get("decisions").data.overrides.t5.code, "6100");
 });
+
+test("two tabs ticking at random: nothing saved is lost, and nothing is undone behind anybody's back", async (t) => {
+  for (const delay of [0, 15]) {
+    const remote = server({ delay });
+    seeded(remote);
+    let seed = delay + 3;
+    const random = () => ((seed = (seed * 1103515245 + 12345) % 2147483648) / 2147483648);
+    const pick = (n) => Math.floor(random() * n);
+
+    const open = async () => {
+      const { store, ledger, events, troubles } = await opened(remote);
+      return { store, memory: memoryFor(store, ledger, events), troubles };
+    };
+    const tabs = [await open(), await open()];
+    /** What each saved line should be, by who saved it last; and every history entry saved. */
+    const expected = new Map();
+    const savedEntries = new Set();
+    let refused = 0;
+    let caughtUp = 0;
+    let n = 0;
+
+    const tick = async (tab) => {
+      n += 1;
+      const line = `t${pick(12)}`;
+      const code = `C${n}`;
+      const entry = { id: `x${n}`, kind: "coding", summary: line };
+      tab.memory.ledger = { ...tab.memory.ledger, overrides: { ...tab.memory.ledger.overrides, [line]: { code } } };
+      tab.memory.events = [entry, ...tab.memory.events];
+      const [saved, logged] = await Promise.all([tab.store.save(tab.memory.ledger), tab.store.saveEvents(tab.memory.events)]);
+      assert.equal(saved, logged, "a coding and its history entry are saved together or not at all");
+      return { saved, line, code, entry };
+    };
+
+    for (let round = 0; round < 40; round++) {
+      const together = pick(3) === 0;
+      const order = pick(2) === 0 ? [0, 1] : [1, 0];
+      const results = together
+        ? await Promise.all(order.map((i) => tick(tabs[i]).then((r) => ({ ...r, i }))))
+        : [{ ...(await tick(tabs[order[0]])), i: order[0] }];
+      for (const r of results) {
+        if (r.saved) {
+          savedEntries.add(r.entry.id);
+        } else {
+          refused += 1;
+          caughtUp += tabs[r.i].memory.shown;
+          // As a person would: reload, which drops the change not saved.
+          tabs[r.i] = await open();
+        }
+      }
+      // What the server holds for every line is what was last saved to it.
+      const held = remote.parts.get("decisions").data.overrides;
+      for (const r of results) if (r.saved) expected.set(r.line, held[r.line].code);
+      for (const [line, code] of expected) {
+        assert.ok(held[line] !== undefined, `${line} is still there`);
+        if (!results.some((r) => r.line === line)) assert.equal(held[line].code, code, `${line} was not changed by a save that did not touch it`);
+        expected.set(line, held[line].code);
+      }
+      const ids = new Set(remote.parts.get("events").data.map((e) => e.id));
+      for (const id of savedEntries) assert.ok(ids.has(id), `history entry ${id} kept`);
+      // The other 2988 lines are untouched.
+      assert.equal(held.t2999.code, "6100");
+      assert.equal(Object.keys(held).length, 3000);
+    }
+    caughtUp += tabs[0].memory.shown + tabs[1].memory.shown;
+    t.diagnostic(`delay ${delay}: ${savedEntries.size} saved, ${caughtUp} after taking in the other tab's, ${refused} refused (same line)`);
+    assert.ok(savedEntries.size > 20);
+    assert.ok(caughtUp > 5, "the other tab's saves were taken in");
+    assert.ok(refused > 0, "a tick on the same line as the other tab's is refused");
+  }
+});

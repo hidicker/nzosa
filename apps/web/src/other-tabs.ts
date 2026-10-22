@@ -1,3 +1,5 @@
+import { backendKind } from "./store.js";
+
 /**
  * Saying, at once, when the same books are open in another tab.
  *
@@ -55,5 +57,15 @@ export function watchOtherTabs(key: string, show: (othersOpen: boolean) => void)
 /** The banner, shown while another tab has the same books open. */
 export function showOtherTabs(othersOpen: boolean): void {
   const banner = document.getElementById("tabs-banner");
-  if (banner !== null) banner.hidden = !othersOpen;
+  if (banner === null) return;
+  const said = document.getElementById("tabs-banner-text");
+  // Books online take in what the other tab saved; elsewhere the later save
+  // replaces the earlier.
+  if (said !== null) {
+    said.textContent =
+      backendKind() === "cloud"
+        ? "These books are open in another tab too. Changes made in both are kept, except when both change the same line: then the second is refused. Closing one avoids that."
+        : "These books are open in another tab too. A change made in one may be lost when the other saves: close one of them.";
+  }
+  banner.hidden = !othersOpen;
 }

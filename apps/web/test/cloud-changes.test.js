@@ -41,7 +41,13 @@ function server({ takesChanges = true, delay = 0 } = {}) {
     asked.push({ where, body, bytes: init.body?.length ?? 0 });
     if (delay > 0) await new Promise((resolve) => setTimeout(resolve, delay));
     if (where.includes("/rest/v1/book_parts?")) {
-      return reply(200, [...parts].map(([part, held]) => ({ part, version: held.version, data: structuredClone(held.data) })));
+      const named = /part=in\.\(([^)]*)\)/.exec(where)?.[1]?.split(",").map(decodeURIComponent);
+      return reply(
+        200,
+        [...parts]
+          .filter(([part]) => named === undefined || named.includes(part))
+          .map(([part, held]) => ({ part, version: held.version, data: structuredClone(held.data) })),
+      );
     }
     if (where.endsWith("/rpc/book_member_list")) return reply(200, [{ user_id: "me", role: "owner" }]);
     if (where.endsWith("/rpc/save_part")) {
@@ -226,4 +232,103 @@ test("the null character goes up as its stand-in, in keys and values", async () 
   assert.equal(await store.save({ ...ledger, legitimateDuplicates: [...ledger.legitimateDuplicates, "a\u0000b"] }), true);
   assert.ok(JSON.stringify(saves(remote)[0].body).includes("ab"));
   assert.ok(!JSON.stringify(saves(remote)[0].body).includes("\\u0000"));
+});
+
+/** The page's books, as main.ts hands them to the store. */
+function memoryFor(store, ledger, events) {
+  const memory = { ledger, events, rules: undefined, shown: 0 };
+  store.keepBooksInMemory({
+    ledger: () => memory.ledger,
+    setLedger: (next) => (memory.ledger = next),
+    events: () => memory.events,
+    setEvents: (next) => (memory.events = next),
+    rules: () => memory.rules,
+    setRules: (next) => (memory.rules = next),
+    shown: () => (memory.shown += 1),
+  });
+  return memory;
+}
+
+/** Somebody else's save, made straight to the server. */
+function elsewhere(remote, part, change) {
+  const held = remote.parts.get(part);
+  remote.parts.set(part, { version: held.version + 1, data: change(structuredClone(held.data)) });
+}
+
+test("somebody else saved in between: theirs is taken in, and this goes on top", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events, troubles } = await opened(remote);
+  const memory = memoryFor(store, ledger, events);
+
+  elsewhere(remote, "decisions", (d) => ({ ...d, overrides: { ...d.overrides, t9: { code: "THEIRS" } } }));
+  elsewhere(remote, "events", (e) => [{ id: "theirs", kind: "coding", summary: "theirs" }, ...e]);
+
+  memory.ledger = { ...memory.ledger, overrides: { ...memory.ledger.overrides, t5: { code: "MINE" } } };
+  memory.events = [{ id: "mine", kind: "coding", summary: "mine" }, ...memory.events];
+  const results = await Promise.all([store.save(memory.ledger), store.saveEvents(memory.events)]);
+  assert.deepEqual(results, [true, true]);
+  assert.deepEqual(troubles, []);
+
+  const held = remote.parts.get("decisions").data.overrides;
+  assert.equal(held.t5.code, "MINE");
+  assert.equal(held.t9.code, "THEIRS");
+  assert.deepEqual(remote.parts.get("events").data.slice(0, 3).map((e) => e.id), ["mine", "theirs", "e0"]);
+  // The page now shows theirs too, and the next save builds on both.
+  assert.equal(memory.ledger.overrides.t9.code, "THEIRS");
+  assert.deepEqual(memory.events.slice(0, 2).map((e) => e.id), ["mine", "theirs"]);
+  assert.equal(memory.shown, 1);
+  memory.ledger = { ...memory.ledger, overrides: { ...memory.ledger.overrides, t6: { code: "NEXT" } } };
+  assert.equal(await store.save(memory.ledger), true);
+  assert.equal(remote.parts.get("decisions").data.overrides.t9.code, "THEIRS");
+  assert.equal(remote.parts.get("decisions").data.overrides.t6.code, "NEXT");
+});
+
+test("both changed the same line: refused as before, and theirs is not overwritten", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events, troubles } = await opened(remote);
+  const memory = memoryFor(store, ledger, events);
+  elsewhere(remote, "decisions", (d) => ({ ...d, overrides: { ...d.overrides, t5: { code: "THEIRS" } } }));
+
+  memory.ledger = { ...memory.ledger, overrides: { ...memory.ledger.overrides, t5: { code: "MINE" } } };
+  assert.equal(await store.save(memory.ledger), false);
+  assert.equal(remote.parts.get("decisions").data.overrides.t5.code, "THEIRS");
+  assert.ok(troubles.some((t) => t.kind === "conflict"));
+  assert.equal(memory.ledger.overrides.t5.code, "MINE", "nothing in memory was changed");
+  assert.equal(memory.shown, 0);
+});
+
+test("lock dates changed elsewhere and here: refused", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events } = await opened(remote);
+  const memory = memoryFor(store, ledger, events);
+  elsewhere(remote, "decisions", (d) => ({ ...d, lockDates: { all: "2025-03-31" } }));
+  memory.ledger = { ...memory.ledger, lockDates: { all: "2023-03-31" } };
+  assert.equal(await store.save(memory.ledger), false);
+  assert.deepEqual(remote.parts.get("decisions").data.lockDates, { all: "2025-03-31" });
+});
+
+test("an undo here and a new entry there both stay in the history", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events } = await opened(remote);
+  const memory = memoryFor(store, ledger, events);
+  elsewhere(remote, "events", (e) => [{ id: "theirs" }, ...e]);
+  memory.events = memory.events.map((e) => (e.id === "e3" ? { ...e, reverted: true } : e));
+  assert.equal(await store.saveEvents(memory.events), true);
+  const held = remote.parts.get("events").data;
+  assert.equal(held[0].id, "theirs");
+  assert.equal(held.find((e) => e.id === "e3").reverted, true);
+  assert.equal(held.length, 2001);
+});
+
+test("without the page's books to take theirs into, refused as before", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger } = await opened(remote);
+  elsewhere(remote, "decisions", (d) => ({ ...d, overrides: { ...d.overrides, t9: { code: "THEIRS" } } }));
+  assert.equal(await store.save({ ...ledger, overrides: { ...ledger.overrides, t5: { code: "MINE" } } }), false);
+  assert.equal(remote.parts.get("decisions").data.overrides.t5.code, "6100");
 });

@@ -1,5 +1,5 @@
-import { copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { PartCopy } from "@nzosa/core";
+import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
+import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -34,8 +34,9 @@ import type {
   VarianceNote,
 } from "@nzosa/core";
 import type { LedgerEvent } from "./events.js";
+import { MAX_EVENTS } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { currentSession, loadPart as loadCloudPart, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, loadPart as loadCloudPart, loadNamedParts, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
 import type { PartChange, SaveOutcome } from "./cloud.js";
 
 /**
@@ -1272,6 +1273,9 @@ function sendToCloud(part: string, value: unknown): Promise<SaveOutcome> {
 /** The changes are sent instead of the whole part when no more than this share of its size. */
 const CHANGES_AT_MOST = 0.5;
 
+/** How many times a save refused because the books changed is caught up and tried again. */
+const CATCH_UP_TRIES = 3;
+
 async function sendWaiting(): Promise<void> {
   sendQueued = false;
   const batch = new Map(waitingToSend);
@@ -1285,53 +1289,242 @@ async function sendWaiting(): Promise<void> {
     return;
   }
 
-  // Worked out now rather than when asked: the version and the server's copy
-  // are the ones the save before this left.
-  const sending: { part: string; value: unknown; copy: PartCopy; change: PartChange }[] = [];
-  for (const [part, { value }] of batch) {
-    const version = versions.get(part) ?? 0;
-    const before = serverCopies.get(part);
-    const found = changesTaken && before !== undefined && version > 0 ? partChanges(before, value) : null;
-    if (found !== null && found.ops.length === 0) {
-      // What the server already holds: nothing to send.
-      lastWritten.set(part, value);
-      answer(part, { kind: "saved", version });
-      continue;
+  for (let tries = 0; ; tries++) {
+    // Worked out now rather than when asked: the version and the server's copy
+    // are the ones the save before this left.
+    const sending: { part: string; value: unknown; copy: PartCopy; change: PartChange }[] = [];
+    for (const [part, { value }] of batch) {
+      const version = versions.get(part) ?? 0;
+      const before = serverCopies.get(part);
+      const found = changesTaken && before !== undefined && version > 0 ? partChanges(before, value) : null;
+      if (found !== null && found.ops.length === 0) {
+        // What the server already holds: nothing to send.
+        lastWritten.set(part, value);
+        answer(part, { kind: "saved", version });
+        continue;
+      }
+      if (found !== null && JSON.stringify(found.ops).length <= copySize(found.copy) * CHANGES_AT_MOST) {
+        sending.push({ part, value, copy: found.copy, change: { part, version, ops: found.ops } });
+        continue;
+      }
+      sending.push({ part, value, copy: found?.copy ?? partCopy(value), change: { part, version, data: value } });
     }
-    if (found !== null && JSON.stringify(found.ops).length <= copySize(found.copy) * CHANGES_AT_MOST) {
-      sending.push({ part, value, copy: found.copy, change: { part, version, ops: found.ops } });
-      continue;
+    if (sending.length === 0) return;
+
+    const saved = (one: { part: string; value: unknown; copy: PartCopy }, version: number): void => {
+      versions.set(one.part, version);
+      lastWritten.set(one.part, one.value);
+      serverCopies.set(one.part, one.copy);
+      answer(one.part, { kind: "saved", version });
+    };
+
+    if (!changesTaken) {
+      await sendEachWhole(book.id, sending, saved, answer);
+      return;
     }
-    sending.push({ part, value, copy: found?.copy ?? partCopy(value), change: { part, version, data: value } });
-  }
-  if (sending.length === 0) return;
-
-  const saved = (one: { part: string; value: unknown; copy: PartCopy }, version: number): void => {
-    versions.set(one.part, version);
-    lastWritten.set(one.part, one.value);
-    serverCopies.set(one.part, one.copy);
-    answer(one.part, { kind: "saved", version });
-  };
-
-  if (changesTaken) {
     const outcome = await saveCloudChanges(book.id, sending.map((one) => one.change));
     if (outcome.kind === "saved") {
       sending.forEach((one, i) => saved(one, outcome.versions[i] ?? 0));
+      if (tries > 0) booksInMemory?.shown();
       return;
     }
-    if (outcome.kind !== "missing") {
-      for (const one of sending) answer(one.part, outcome);
+    if (outcome.kind === "missing") {
+      changesTaken = false;
+      await sendEachWhole(book.id, sending, saved, answer);
       return;
     }
-    changesTaken = false;
+    if (outcome.kind === "conflict" && tries < CATCH_UP_TRIES) {
+      // Somebody else saved these books since they were read here. Take in
+      // what they changed and try again with this change on top of theirs --
+      // unless both changed the same thing, which only a person can settle.
+      const parts = [...batch.keys()];
+      const caughtUp = await catchUp(book.id, parts);
+      if (caughtUp !== null) {
+        for (const part of parts) {
+          const held = batch.get(part);
+          if (held === undefined) continue;
+          held.value = caughtUp.get(part) ?? held.value;
+          // A later save of the same part was built on what was just
+          // replaced: this one now carries everything in memory, so it is
+          // answered with this.
+          const later = waitingToSend.get(part);
+          if (later !== undefined) {
+            held.answer.push(...later.answer);
+            waitingToSend.delete(part);
+          }
+        }
+        continue;
+      }
+    }
+    for (const one of sending) answer(one.part, outcome);
+    return;
   }
+}
 
-  // A project without save_part_changes: each part whole, as before it.
+/** A project without save_part_changes: each part whole, as before it. */
+async function sendEachWhole(
+  bookId: string,
+  sending: readonly { part: string; value: unknown; copy: PartCopy }[],
+  saved: (one: { part: string; value: unknown; copy: PartCopy }, version: number) => void,
+  answer: (part: string, outcome: SaveOutcome) => void,
+): Promise<void> {
   for (const one of sending) {
-    const outcome = await saveCloudPart(book.id, one.part, one.value, versions.get(one.part) ?? 0);
+    const outcome = await saveCloudPart(bookId, one.part, one.value, versions.get(one.part) ?? 0);
     if (outcome.kind === "saved") saved(one, outcome.version);
     else answer(one.part, outcome);
   }
+}
+
+/**
+ * The books as this page holds them, for taking in what somebody else saved.
+ *
+ * Storage keeps no books of its own -- the page does -- so the page hands over
+ * how to read and replace them. Without it, a save refused because the books
+ * changed elsewhere is only reported, as it always was.
+ */
+export interface BooksInMemory {
+  ledger(): StoredLedger;
+  setLedger(ledger: StoredLedger): void;
+  events(): readonly LedgerEvent[];
+  setEvents(events: LedgerEvent[]): void;
+  /** The rules as they are saved; undefined when there are none. */
+  rules(): unknown;
+  setRules(stored: unknown): void;
+  /** After something taken in: show it. */
+  shown(): void;
+}
+
+let booksInMemory: BooksInMemory | null = null;
+
+export function keepBooksInMemory(memory: BooksInMemory): void {
+  booksInMemory = memory;
+}
+
+/** A part as the page holds it now, as it would be saved. */
+function heldNow(memory: BooksInMemory, part: string): unknown {
+  if (part === "events") return memory.events();
+  if (part === "rules") return memory.rules();
+  if (part === "rulesarchive") return undefined;
+  const ledger = memory.ledger();
+  return partValue(beforeSave?.(ledger) ?? ledger, part);
+}
+
+/** Put a part back into the page's books. */
+function holdNow(memory: BooksInMemory, part: string, value: unknown): void {
+  if (part === "events") {
+    memory.setEvents(value as LedgerEvent[]);
+    return;
+  }
+  if (part === "rules") {
+    memory.setRules(value);
+    return;
+  }
+  const ledger = { ...memory.ledger() } as unknown as Record<string, unknown>;
+  if (part === "decisions") {
+    const was = decisionsOf(memory.ledger());
+    for (const key of Object.keys(was)) delete ledger[key];
+    Object.assign(ledger, value as Record<string, unknown>);
+  } else if (part === "filed") {
+    ledger["filedReturns"] = value;
+  } else {
+    ledger[part] = value;
+  }
+  memory.setLedger(ledger as unknown as StoredLedger);
+}
+
+/** Where a change lands: a key, or a key inside one ("" for a part that is a list). */
+function placeOf(op: PartOp): string {
+  const path = "set" in op ? op.set : "del" in op ? op.del : op.splice;
+  return path.join("\u0001");
+}
+
+/** Whether two sets of changes touch the same thing (a key, or anything inside it). */
+function overlap(mine: readonly PartOp[], theirs: readonly PartOp[]): boolean {
+  const places = new Set(theirs.map(placeOf));
+  const tops = new Set([...places].map((place) => place.split("\u0001")[0]));
+  for (const op of mine) {
+    const place = placeOf(op);
+    if (places.has(place)) return true;
+    const [top, inner] = place.split("\u0001");
+    // A whole key replaced on one side, and something inside it on the other.
+    if (inner === undefined ? tops.has(place) : places.has(top ?? "")) return true;
+  }
+  return false;
+}
+
+/**
+ * The history, with both sides' entries.
+ *
+ * Every save adds to it, so two people working at once always both change
+ * it, and never the same entry: their new entries and this page's are put
+ * together, newest (this page's) first, and an entry this page marked undone
+ * stays marked.
+ */
+function bothHistories(base: PartCopy, mine: readonly LedgerEvent[], theirs: readonly LedgerEvent[]): LedgerEvent[] {
+  const had = new Map<string, string>();
+  if (base.t === "arr") {
+    for (const item of base.items) {
+      const id = (JSON.parse(item) as { id?: unknown } | null)?.id;
+      if (typeof id === "string") had.set(id, item);
+    }
+  }
+  const theirIds = new Set(theirs.map((event) => event.id));
+  const mineNew = mine.filter((event) => !had.has(event.id) && !theirIds.has(event.id));
+  const mineChanged = new Map(
+    mine.filter((event) => had.has(event.id) && had.get(event.id) !== JSON.stringify(event)).map((event) => [event.id, event]),
+  );
+  return [...mineNew, ...theirs.map((event) => mineChanged.get(event.id) ?? event)].slice(0, MAX_EVENTS);
+}
+
+/**
+ * Take in what somebody else saved to these parts since this page read them.
+ *
+ * All of it or none: if any part cannot be put together -- both changed the
+ * same coding, say -- nothing in memory is touched and null comes back. What
+ * comes back is each part as it is now to be saved.
+ */
+async function catchUp(bookId: string, parts: readonly string[]): Promise<Map<string, unknown> | null> {
+  const memory = booksInMemory;
+  if (memory === null) return null;
+  const fresh = await loadNamedParts(bookId, parts);
+  if (fresh === null) return null;
+
+  const taking: { part: string; next: unknown; held: { version: number; data: unknown } }[] = [];
+  for (const part of parts) {
+    const held = fresh[part];
+    // A part this page was the first to write, that somebody else wrote first.
+    if (held === undefined) {
+      if ((versions.get(part) ?? 0) === 0) continue;
+      return null;
+    }
+    if (held.version === versions.get(part)) continue;
+    const base = serverCopies.get(part);
+    const now = heldNow(memory, part);
+    if (base === undefined || now === undefined) return null;
+    if (part === "events") {
+      if (!Array.isArray(now) || !Array.isArray(held.data)) return null;
+      taking.push({ part, held, next: bothHistories(base, now as LedgerEvent[], held.data as LedgerEvent[]) });
+      continue;
+    }
+    const theirs = partChanges(base, held.data);
+    const mine = partChanges(base, now);
+    if (theirs === null || mine === null || overlap(mine.ops, theirs.ops)) return null;
+    taking.push({ part, held, next: applyPartOps(now, theirs.ops) });
+  }
+
+  const now = new Map<string, unknown>();
+  for (const { part, next, held } of taking) {
+    holdNow(memory, part, next);
+    versions.set(part, held.version);
+    serverCopies.set(part, partCopy(held.data));
+    lastWritten.delete(part);
+    cloudParts[part] = held;
+  }
+  for (const part of parts) {
+    const value = heldNow(memory, part);
+    if (value !== undefined) now.set(part, value);
+  }
+  return now;
 }
 
 /**

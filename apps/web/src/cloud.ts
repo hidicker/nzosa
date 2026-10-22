@@ -536,6 +536,19 @@ export async function loadParts(bookId: string): Promise<Record<string, CloudPar
   return parts;
 }
 
+/** Some parts of one set of books, as they are now; null if they could not be read. */
+export async function loadNamedParts(bookId: string, names: readonly string[]): Promise<Record<string, CloudPart> | null> {
+  const list = names.map((name) => encodeURIComponent(name)).join(",");
+  const response = await rest(
+    `book_parts?book_id=eq.${encodeURIComponent(bookId)}&part=in.(${list})&select=part,version,data`,
+  );
+  if (response === null || !response.ok) return null;
+  const rows = (await response.json().catch(() => [])) as { part: string; version: number; data: unknown }[];
+  const parts: Record<string, CloudPart> = {};
+  for (const row of rows) parts[row.part] = { version: row.version, data: swapChars(row.data, STAND_IN, NUL) };
+  return parts;
+}
+
 /**
  * The null character, which Postgres will not store.
  *

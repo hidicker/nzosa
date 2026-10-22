@@ -1442,7 +1442,11 @@ function placeOf(op: PartOp): string {
 function overlap(mine: readonly PartOp[], theirs: readonly PartOp[]): boolean {
   const places = new Set(theirs.map(placeOf));
   const tops = new Set([...places].map((place) => place.split("\u0001")[0]));
+  // The same change made on both sides -- two people accepting the same
+  // suggestion for a line -- is no disagreement.
+  const same = new Set(theirs.map(sameText));
   for (const op of mine) {
+    if (same.has(sameText(op))) continue;
     const place = placeOf(op);
     if (places.has(place)) return true;
     const [top, inner] = place.split("\u0001");
@@ -1450,6 +1454,15 @@ function overlap(mine: readonly PartOp[], theirs: readonly PartOp[]): boolean {
     if (inner === undefined ? tops.has(place) : places.has(top ?? "")) return true;
   }
   return false;
+}
+
+/** A change as text, with keys in order, so the same change reads the same from either side. */
+function sameText(op: PartOp): string {
+  return JSON.stringify(op, (_key, value: unknown) =>
+    value !== null && typeof value === "object" && !Array.isArray(value)
+      ? Object.fromEntries(Object.entries(value as Record<string, unknown>).sort(([a], [b]) => (a < b ? -1 : a > b ? 1 : 0)))
+      : value,
+  );
 }
 
 /**

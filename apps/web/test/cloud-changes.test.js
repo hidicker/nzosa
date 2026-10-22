@@ -402,3 +402,26 @@ test("two tabs ticking at random: nothing saved is lost, and nothing is undone b
     assert.ok(refused > 0, "a tick on the same line as the other tab's is refused");
   }
 });
+
+test("both made the same change to a line (the same suggestion accepted): no refusal", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events, troubles } = await opened(remote);
+  const memory = memoryFor(store, ledger, events);
+  // Their copy of the line lists its keys in another order, as the database does.
+  elsewhere(remote, "decisions", (d) => ({ ...d, overrides: { ...d.overrides, t5: { confirmed: true, code: "4000" } } }));
+  elsewhere(remote, "events", (e) => [{ id: "theirs" }, ...e]);
+
+  memory.ledger = { ...memory.ledger, overrides: { ...memory.ledger.overrides, t5: { code: "4000", confirmed: true } } };
+  memory.events = [{ id: "mine" }, ...memory.events];
+  assert.deepEqual(await Promise.all([store.save(memory.ledger), store.saveEvents(memory.events)]), [true, true]);
+  assert.deepEqual(troubles, []);
+  assert.deepEqual(remote.parts.get("decisions").data.overrides.t5, { code: "4000", confirmed: true });
+  assert.deepEqual(remote.parts.get("events").data.slice(0, 2).map((e) => e.id), ["mine", "theirs"]);
+
+  // A different change to the same line is still refused.
+  elsewhere(remote, "decisions", (d) => ({ ...d, overrides: { ...d.overrides, t5: { code: "THEIRS" } } }));
+  memory.ledger = { ...memory.ledger, overrides: { ...memory.ledger.overrides, t5: { code: "MINE" } } };
+  assert.equal(await store.save(memory.ledger), false);
+  assert.equal(remote.parts.get("decisions").data.overrides.t5.code, "THEIRS");
+});

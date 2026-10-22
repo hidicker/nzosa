@@ -125,13 +125,13 @@ works).
   so it is sent whole: 7–17 KB on the books online in Oct 2026, against a
   few hundred bytes for the coding. Small, but the biggest piece of such a
   tick. Reaching a third level means `apply_part_ops` taking longer paths.
-- **Trimming what each online save replaced.** Saves now keep the change
-  rather than a whole copy (a whole copy at most once a day per part), so the
-  history table grows far more slowly. What is already there (about 68 MB of
-  the 87 MB database on 21 Oct 2026, from whole copies) stays until
-  `prune_part_history(interval)` is run by the project's owner, which removes
-  rows older than the interval and keeps each part rebuildable. Not run, and
-  not scheduled: how long to keep is the owner's call.
+- **What each online save replaced is all kept.** The owner decided on
+  22 Oct 2026 to keep all of it (then about 68 MB of an 87 MB database, from
+  the whole copies saves used to keep). Saves now keep the change rather
+  than a whole copy, with a whole copy at most once a day per part, so it
+  grows slowly. Revisit only if the database nears the free plan's 500 MB:
+  `prune_part_history(interval)` removes rows older than the interval and
+  keeps each part rebuildable.
 - **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
   notes and the Google One journal with GST were sorted. Not yet traced.
 - **Say it is working while the other bulk actions on Reconcile run.** "Split

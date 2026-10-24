@@ -5,6 +5,8 @@ import type { Overrides } from "./overrides.js";
 import type { RuleSet } from "./rules.js";
 import type { Splits } from "./splits.js";
 import type { RuleFile } from "./chart-codes.js";
+import { splitAccountLabel } from "./chart-codes.js";
+import type { ManualJournal } from "./manual-journals.js";
 
 /**
  * Renaming an account, and everything that points at it.
@@ -31,6 +33,8 @@ export interface AccountReferences {
   splits: Splits;
   rules: RuleSet | undefined;
   accountEntities: AccountEntities;
+  /** Manual journals, whose lines name their accounts the same way. */
+  manualJournals?: readonly ManualJournal[] | undefined;
 }
 
 export interface RenameResult extends AccountReferences {
@@ -42,6 +46,8 @@ export interface RenameResult extends AccountReferences {
     rules: number;
     treatment: boolean;
     entity: boolean;
+    /** Lines of manual journals. */
+    journalLines: number;
   };
 }
 
@@ -64,7 +70,7 @@ export function renameAccount(
   oldLabel: string,
   newLabel: string,
 ): RenameResult {
-  const moved = { codings: 0, splitParts: 0, rules: 0, treatment: false, entity: false };
+  const moved = { codings: 0, splitParts: 0, rules: 0, treatment: false, entity: false, journalLines: 0 };
 
   const chart = before.chart.map((account) =>
     account.code === from.code && account.name === from.name
@@ -134,7 +140,39 @@ export function renameAccount(
     moved.entity = true;
   }
 
-  return { chart, overrides, splits, rules, accountEntities, moved };
+  // A journal line names its account as a coding does, though not always in
+  // the same words -- one read from Xero says "Advertising - 400" where the
+  // codings say "NB Advertising - 400". Its figures follow the code either
+  // way; what it says follows here, by the label or by the code.
+  const fromCode = from.code.trim().toLowerCase();
+  const fromName = from.name.trim().toLowerCase();
+  const isFrom = (text: string): boolean => {
+    if (text === oldLabel) return true;
+    const { code, name } = splitAccountLabel(text);
+    if (code !== "") return fromCode !== "" && code.toLowerCase() === fromCode;
+    return fromCode === "" && name.toLowerCase() === fromName;
+  };
+  const manualJournals = before.manualJournals?.map((journal) => {
+    if (!journal.lines.some((line) => isFrom(line.code))) return journal;
+    return {
+      ...journal,
+      lines: journal.lines.map((line) => {
+        if (!isFrom(line.code)) return line;
+        moved.journalLines += 1;
+        return { ...line, code: newLabel };
+      }),
+    };
+  });
+
+  return {
+    chart,
+    overrides,
+    splits,
+    rules,
+    accountEntities,
+    ...(manualJournals !== undefined ? { manualJournals } : {}),
+    moved,
+  };
 }
 
 /**
@@ -199,6 +237,7 @@ export function mergeAccount(
     splits: moved.splits,
     rules,
     accountEntities,
+    ...(moved.manualJournals !== undefined ? { manualJournals: moved.manualJournals } : {}),
     moved: {
       ...moved.moved,
       treatment: moved.moved.treatment && intoTreatment === undefined,

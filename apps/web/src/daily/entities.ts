@@ -1923,6 +1923,7 @@ async function renameChartAccount(
       splits: state.ledger.splits ?? {},
       rules: state.rules,
       accountEntities: model.accounts,
+      manualJournals: state.ledger.manualJournals,
     },
     account,
     { code, name },
@@ -1936,6 +1937,7 @@ async function renameChartAccount(
     chart: after.chart,
     overrides: after.overrides,
     splits: after.splits,
+    ...(after.manualJournals !== undefined ? { manualJournals: [...after.manualJournals] } : {}),
     entities: { ...model, accounts: after.accountEntities },
   };
   // Saved whole rather than part by part: a rename moves the chart, the
@@ -1945,11 +1947,12 @@ async function renameChartAccount(
   state.rules = after.rules;
   await persistRules();
 
-  const { codings, splitParts, rules, treatment } = after.moved;
+  const { codings, splitParts, rules, treatment, journalLines } = after.moved;
   const carried = [
     codings > 0 ? `${codings} coding${codings === 1 ? "" : "s"}` : "",
     splitParts > 0 ? `${splitParts} split part${splitParts === 1 ? "" : "s"}` : "",
     rules > 0 ? `${rules} rule${rules === 1 ? "" : "s"}` : "",
+    journalLines > 0 ? `${journalLines} journal line${journalLines === 1 ? "" : "s"}` : "",
     treatment ? "its GST treatment" : "",
   ].filter((part) => part !== "");
 
@@ -1981,6 +1984,7 @@ async function mergeChartAccount(
       splits: state.ledger.splits ?? {},
       rules: state.rules,
       accountEntities: model.accounts,
+      manualJournals: state.ledger.manualJournals,
     },
     account,
     into,
@@ -1994,6 +1998,7 @@ async function mergeChartAccount(
     chart: after.chart,
     overrides: after.overrides,
     splits: after.splits,
+    ...(after.manualJournals !== undefined ? { manualJournals: [...after.manualJournals] } : {}),
     entities: { ...model, accounts: after.accountEntities },
   };
   // Saved whole, as a rename is: the codings and the chart move together.
@@ -2001,11 +2006,12 @@ async function mergeChartAccount(
   state.rules = after.rules;
   await persistRules();
 
-  const { codings, splitParts, rules } = after.moved;
+  const { codings, splitParts, rules, journalLines } = after.moved;
   const carried = [
     codings > 0 ? `${codings} coding${codings === 1 ? "" : "s"}` : "",
     splitParts > 0 ? `${splitParts} split part${splitParts === 1 ? "" : "s"}` : "",
     rules > 0 ? `${rules} rule${rules === 1 ? "" : "s"}` : "",
+    journalLines > 0 ? `${journalLines} journal line${journalLines === 1 ? "" : "s"}` : "",
   ].filter((part) => part !== "");
 
   await record(

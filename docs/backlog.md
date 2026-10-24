@@ -124,9 +124,6 @@ works).
   N" now shows the `working` style and "Splitting 12 of 40…" on its button
   until it is done. Accept all and AI suggestions may need the same: check
   how long each takes on a large set of books.
-- **A journal keeps an account's old name after the account is renamed.** Manual
-  journal lines store "Name - CODE" as text; the figures follow the code, but
-  the journal list shows the name as it was.
 - **The lock guard works out every GST return from the first transaction on
   every save.** Fine on the books tried so far; on books with many years it
   may make saving slow. Worth measuring before changing.

@@ -441,6 +441,8 @@ export type { CarriesGst } from "./expense-claims.js";
 export { writeQueue } from "./write-queue.js";
 export type { WriteQueue } from "./write-queue.js";
 export { applyPartOps, copySize, partChanges, partCopy } from "./part-changes.js";
+export { periodChoiceFrom, periodOptions, periodRange, periodSaid, yearEarlier, yearMonths } from "./report-periods.js";
+export type { PeriodChoice, PeriodOption } from "./report-periods.js";
 export type { PartChanges, PartCopy, PartOp } from "./part-changes.js";
 export {
   MAX_CATCH_UP,

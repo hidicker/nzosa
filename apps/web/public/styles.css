@@ -2141,6 +2141,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-table-wrap { overflow-x: auto; margin: 0.5rem 0; }
 /* A table wider than its page scrolls within itself. */
 .wide-table { overflow-x: auto; max-width: 100%; }
+/* A report's chosen dates, and the year-earlier choice, beside its year. */
+.report-dates { display: inline-flex; align-items: center; gap: 6px; }
+.report-compare { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .migration-table { max-width: none; }
 .migration-table td { white-space: normal; vertical-align: top; font-size: 0.82rem; }
 

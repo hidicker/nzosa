@@ -118,10 +118,6 @@ works).
   grows slowly. Revisit only if the database nears the free plan's 500 MB:
   `prune_part_history(interval)` removes rows older than the interval and
   keeps each part rebuildable.
-- **Say it is working while the other bulk actions on Reconcile run.** "Split
-  N" now shows the `working` style and "Splitting 12 of 40…" on its button
-  until it is done. Accept all and AI suggestions may need the same: check
-  how long each takes on a large set of books.
 - **The lock guard works out every GST return from the first transaction on
   every save.** Measured 24 Oct 2026 on invented books in the browser, eight
   years and 11,800 bank lines: with lock dates set, about 230 ms a save (525
@@ -135,6 +131,9 @@ works).
   Fixed 24 Oct 2026 -- worked out once per redraw, and transfers searched by
   amount -- with the page shown identical before and after; a tick there is
   now about 2 s, most of it the full redraw (Reconcile tick, stage 2).
+  Accept all of 8,321 lines there went from 57 s to 6 s (the account list
+  was rebuilt for every line), and its button now says "Accepting 8321…"
+  while it runs.
 
 ## Online books
 

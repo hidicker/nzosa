@@ -86,6 +86,7 @@ import { booksLocale, noSalesTax } from "../country.js";
 import { isUnusedStarterChart } from "../new-books-country.js";
 import { trialBalanceFinding } from "./quickbooks.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
+import { showWorking } from "../busy.js";
 
 /** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
 const imported = (): string => {
@@ -424,54 +425,58 @@ export async function acceptAllShown(): Promise<void> {
     return;
   }
 
-  const overrides = { ...(state.ledger.overrides ?? {}) };
-  const batch: CodingBatchEntry[] = [];
-  const today = new Date().toISOString().slice(0, 10);
-  for (const one of lines) {
-    batch.push({ id: one.transaction.id, before: overrides[one.transaction.id] ?? null });
-    const code = codeFor(one);
-    const said = modelSaid(one);
-    // A model's account is not what the line was classified by -- that was
-    // the uncoded default -- so its GST is the account's own, as picking the
-    // account by hand would give.
-    const history = one.code === null && code !== null ? rateForSuggestion(one.transaction, code) : null;
-    const own =
-      one.code === null && code !== null
-        ? history !== null
-          ? rateToClassification(history.rate, one.transaction.amount)
-          : accountDefault(code, one.transaction.amount)
-        : null;
-    overrides[one.transaction.id] = {
-      ...(code !== null ? { code } : {}),
-      confirmed: true,
-      treatment: own?.treatment ?? one.classification.treatment,
-      side: own?.side ?? one.classification.side,
-      // Read a year later by somebody asking why an account was chosen, where
-      // "a rule said so" and "a model guessed, this confidently, because"
-      // are not the same answer. Written down at the moment it stops being a
-      // suggestion, because the suggestion itself is only in memory and does
-      // not survive the reload.
-      note:
-        said === undefined
-          ? (one.description ?? "Suggestion accepted unchanged, with others")
-          : "AI suggestion accepted unchanged, with others" +
-            (said.via === undefined ? "" : ` (${said.via})`) +
-            ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,
-      at: today,
-    };
-  }
+  // Thousands of lines can take some seconds, all of it in the page: the
+  // button says so first.
+  await showWorking(document.getElementById("accept-all"), `Accepting ${lines.length}…`, async () => {
+    const overrides = { ...(state.ledger.overrides ?? {}) };
+    const batch: CodingBatchEntry[] = [];
+    const today = new Date().toISOString().slice(0, 10);
+    for (const one of lines) {
+      batch.push({ id: one.transaction.id, before: overrides[one.transaction.id] ?? null });
+      const code = codeFor(one);
+      const said = modelSaid(one);
+      // A model's account is not what the line was classified by -- that was
+      // the uncoded default -- so its GST is the account's own, as picking the
+      // account by hand would give.
+      const history = one.code === null && code !== null ? rateForSuggestion(one.transaction, code) : null;
+      const own =
+        one.code === null && code !== null
+          ? history !== null
+            ? rateToClassification(history.rate, one.transaction.amount)
+            : accountDefault(code, one.transaction.amount)
+          : null;
+      overrides[one.transaction.id] = {
+        ...(code !== null ? { code } : {}),
+        confirmed: true,
+        treatment: own?.treatment ?? one.classification.treatment,
+        side: own?.side ?? one.classification.side,
+        // Read a year later by somebody asking why an account was chosen, where
+        // "a rule said so" and "a model guessed, this confidently, because"
+        // are not the same answer. Written down at the moment it stops being a
+        // suggestion, because the suggestion itself is only in memory and does
+        // not survive the reload.
+        note:
+          said === undefined
+            ? (one.description ?? "Suggestion accepted unchanged, with others")
+            : "AI suggestion accepted unchanged, with others" +
+              (said.via === undefined ? "" : ` (${said.via})`) +
+              ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,
+        at: today,
+      };
+    }
 
-  state.ledger = { ...state.ledger, overrides };
-  state.persistent = await save(state.ledger);
-  await record(
-    "codingBatch",
-    `Accepted ${lines.length} suggestions ${summary}` +
-      (guessed > 0 ? ` (${guessed} from the model)` : ""),
-    batch,
-    null,
-  );
-  reclassify();
-  redraw("reconcile");
+    state.ledger = { ...state.ledger, overrides };
+    state.persistent = await save(state.ledger);
+    await record(
+      "codingBatch",
+      `Accepted ${lines.length} suggestions ${summary}` +
+        (guessed > 0 ? ` (${guessed} from the model)` : ""),
+      batch,
+      null,
+    );
+    reclassify();
+    redraw("reconcile");
+  });
 }
 
 export async function loadCheckFiles(files: File[]): Promise<void> {

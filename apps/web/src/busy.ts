@@ -162,6 +162,34 @@ export function afterPress(button: HTMLElement, open: () => void): void {
 }
 
 /**
+ * A button that says it is working while `work` runs, shown before it starts.
+ *
+ * For work done in the page itself -- accepting thousands of suggestions --
+ * which sends nothing the watch above could notice, and holds the page while
+ * it runs: the button is marked, the screen is given a frame to show it, and
+ * only then does the work begin. Put back as it was however the work ends.
+ */
+export async function showWorking<T>(button: HTMLElement | null, words: string, work: () => Promise<T>): Promise<T> {
+  if (button === null) return work();
+  const was = button.textContent ?? "";
+  const plain = button.children.length === 0;
+  const wasDisabled = button instanceof HTMLButtonElement ? button.disabled : false;
+  button.classList.add("working");
+  button.setAttribute("aria-busy", "true");
+  if (button instanceof HTMLButtonElement) button.disabled = true;
+  if (plain) button.textContent = words;
+  await new Promise<void>((resolve) => afterNextFrame(resolve));
+  try {
+    return await work();
+  } finally {
+    button.classList.remove("working");
+    button.removeAttribute("aria-busy");
+    if (button instanceof HTMLButtonElement) button.disabled = wasDisabled;
+    if (plain && button.textContent === words) button.textContent = was;
+  }
+}
+
+/**
  * Run `work` once the screen has had a chance to show what changed.
  *
  * After the next frame -- or 50 ms, whichever comes first: a tab that is not

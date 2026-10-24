@@ -123,8 +123,19 @@ works).
   until it is done. Accept all and AI suggestions may need the same: check
   how long each takes on a large set of books.
 - **The lock guard works out every GST return from the first transaction on
-  every save.** Fine on the books tried so far; on books with many years it
-  may make saving slow. Worth measuring before changing.
+  every save.** Measured 24 Oct 2026 on invented books in the browser, eight
+  years and 11,800 bank lines: with lock dates set, about 230 ms a save (525
+  ms the save that sets them); with none, nothing. Noticeable, not the slow
+  part (below). Working out only the periods up to the lock would cut it.
+- **Reconcile on large books with many lines still to code.** On the same
+  invented books (11,800 lines, none coded, ten payees) a tick took 18 s and
+  choosing an account in a line's box about 15 s, the page frozen meanwhile;
+  the lock guard was 0.24 s of the tick. Each tick there makes a rule that
+  suggests a code for a thousand-odd similar lines, and every line is worked
+  out again. Real books are mostly coded and far smaller (TestOnline's tick
+  is 0.2–0.35 s), so this is for books brought in years at a time. Profile
+  before changing: likely the reclassify after a rule, and the full redraw
+  (see Reconcile tick, stage 2).
 
 ## Online books
 

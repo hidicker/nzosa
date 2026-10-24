@@ -127,18 +127,14 @@ works).
   years and 11,800 bank lines: with lock dates set, about 230 ms a save (525
   ms the save that sets them); with none, nothing. Noticeable, not the slow
   part (below). Working out only the periods up to the lock would cut it.
-- **Reconcile on large books with many lines still to code.** On the same
-  invented books (11,800 lines, none coded, ten payees) a tick took 18 s and
-  choosing an account in a line's box about 15 s, the page frozen meanwhile;
-  the lock guard was 0.24 s of the tick. Each tick there makes a rule that
-  suggests a code for a thousand-odd similar lines, and every line is worked
-  out again. Real books are mostly coded and far smaller (TestOnline's tick
-  is 0.2–0.35 s), so this is for books brought in years at a time. Profile
-  before changing: likely the reclassify after a rule, and the full redraw
-  (see Reconcile tick, stage 2).
-
-## Online books
-
+- **Reconcile on large books with many lines still to code.** On invented
+  books of eight years (11,800 lines, none coded at first) a tick took
+  18-23 s, nearly all of it in the redraw: each row worked out every line in
+  the books again (how its payee was coded before, and its usual transfer
+  partner), and the transfer search compared every line with every other.
+  Fixed 24 Oct 2026 -- worked out once per redraw, and transfers searched by
+  amount -- with the page shown identical before and after; a tick there is
+  now about 2 s, most of it the full redraw (Reconcile tick, stage 2).
 - **The two books lists offer the same things.** Books in a folder (Books
   page, `books-page.ts`) have Open, Make a copy… and Clear…; books online
   (`cloud-books.ts`) have Open, Rename, Delete and Start a new set. Both

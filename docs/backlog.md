@@ -154,10 +154,6 @@ works).
     per-person record (a `last_opened_at` on the membership row, set on
     opening); in a folder, a note beside the books. Shown as a column, and
     the list sorted by it.
-- **Rename and Delete are offered to people who cannot use them.** The online
-  Books page shows both on every row, whatever the person's role. The server
-  lets only an owner do either, so a bookkeeper, accountant or reader is
-  refused after pressing. Show them to owners only.
 - **Bring the GitHub workflows up to date.** The "Deploy website" run on
   10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
   target Node.js 20, which GitHub has deprecated (they are being run on

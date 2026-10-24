@@ -469,6 +469,19 @@ export async function listBooks(): Promise<CloudBook[]> {
 }
 
 /**
+ * The role the person signed in has in each set of books they are in: owner,
+ * bookkeeper, accountant or readonly. Null when it could not be read.
+ */
+export async function myRoles(): Promise<Map<string, string> | null> {
+  const me = currentSession()?.userId ?? "";
+  if (me === "") return null;
+  const response = await rest(`book_members?user_id=eq.${encodeURIComponent(me)}&select=book_id,role`);
+  if (response === null || !response.ok) return null;
+  const rows = (await response.json().catch(() => null)) as { book_id: string; role: string }[] | null;
+  return Array.isArray(rows) ? new Map(rows.map((row) => [row.book_id, row.role])) : null;
+}
+
+/**
  * A new set of books, owned by whoever made it.
  *
  * Through a function rather than by inserting a row, and not for tidiness:

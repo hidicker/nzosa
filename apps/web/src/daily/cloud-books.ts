@@ -15,7 +15,7 @@ import {
 } from "../cloud.js";
 import { backupTools, buildBackup, restoredName } from "../backup.js";
 import { renderMembers } from "./cloud-members.js";
-import { rpc } from "../cloud.js";
+import { myRoles, rpc } from "../cloud.js";
 import { state } from "../state.js";
 import { copyToCloudBook, openCloudBook, openCloudBookId } from "../store.js";
 import { askOnPage, askTextOnPage, note } from "../ui.js";
@@ -312,7 +312,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
 
   await renderInvitations(body);
 
-  const books = await listBooks();
+  const [books, roles] = await Promise.all([listBooks(), myRoles()]);
   const open = openCloudBookId();
   said.textContent = "";
 
@@ -357,6 +357,11 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
         actions.append(openIt);
       }
 
+      // Renaming and deleting are an owner's: the server refuses anybody
+      // else, so nobody else is offered them. Not knowing the role (it could
+      // not be read) offers them, and the server still decides.
+      const owner = roles === null || roles.get(book.id) === "owner";
+
       // Renamed in place: the name cell becomes a box with Save beside it.
       const rename = document.createElement("button");
       rename.type = "button";
@@ -397,7 +402,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
         box.focus();
         box.select();
       });
-      actions.append(" ", rename);
+      if (owner) actions.append(" ", rename);
 
       // Deleting hides the set from everybody and keeps everything in it; an
       // owner can restore it below. Typing the name is the guard against the
@@ -427,7 +432,7 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
           say(said, "Could not delete them. Only an owner of these books can.", true);
         });
       });
-      actions.append(" ", remove);
+      if (owner) actions.append(" ", remove);
 
       row.append(name, when, actions);
       tbody.append(row);

@@ -135,6 +135,9 @@ works).
   Fixed 24 Oct 2026 -- worked out once per redraw, and transfers searched by
   amount -- with the page shown identical before and after; a tick there is
   now about 2 s, most of it the full redraw (Reconcile tick, stage 2).
+
+## Online books
+
 - **The two books lists offer the same things.** Books in a folder (Books
   page, `books-page.ts`) have Open, Make a copy… and Clear…; books online
   (`cloud-books.ts`) have Open, Rename, Delete and Start a new set. Both

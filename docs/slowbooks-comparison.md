@@ -1,130 +1,233 @@
 # SlowBooks Pro 2026 compared with NZOSA
 
-What SlowBooks Pro 2026 (version 2.23.4, released 17 October 2026: a desktop
-and server bookkeeping application for United States small businesses,
-written as a replacement for QuickBooks) does that NZOSA does not.
+What SlowBooks Pro 2026 does, set against NZOSA, and what of it NZOSA could
+take. SlowBooks is a desktop and server bookkeeping application for United
+States small businesses, written as a replacement for QuickBooks 2003.
 
-How this was made: from SlowBooks' release notes (2.7.0 to 2.23.4), its
-screens and its server routes, set against what NZOSA's pages and core code
-do. It was not driven by hand through SlowBooks' own screens, so a detail may
-differ in use. First written against 2.23.0 on 15 October 2026; brought up to
-date on 18 October 2026, when much of what was missing had been built.
+How this was made, on 24 October 2026: from SlowBooks 2.27.0's source (its
+574 server routes, its data models and services), its feature catalogue
+(`docs/features.md`) and its release notes from 2.23.4 to 2.27.0, each set
+against NZOSA's pages and core code as they stand on main. It was not driven
+by hand through SlowBooks' screens, so a detail may differ in use. Earlier
+versions of this comparison: 15 and 18 October 2026, against 2.23.0 and
+2.23.4. Nothing of SlowBooks' code is used in NZOSA; its licence is
+source-available, not free software, and this compares what it does only.
 
-"No" means NZOSA has nothing like it. "Partly" says what it has.
+**Has** — NZOSA does it. **Partly** — says what NZOSA has. **No** — nothing
+like it. The last column is whether NZOSA could take it: **Yes**, **US** (for
+United States books only), or **No** (with why).
 
 ## Sales (money in)
 
-| SlowBooks | NZOSA |
-|---|---|
-| Customer records with their own page, invoices, payments and credits | Yes |
-| Customer statements and collection letters | Yes (statements, reminder letters) |
-| Estimates converted to invoices | Yes, outside New Zealand |
-| Sales receipts (paid on the spot) | Partly: an invoice paid at once |
-| Credit memos applied to invoices, or held as customer credit | Partly: credit notes against an invoice |
-| Credit limits, late fees, writing off small balances | Yes |
-| Batch payments, one receipt across many invoices | Partly: one payment settling several invoices on Reconcile |
-| **Receive payment to Undeposited Funds, Make Deposits, deposit slips** | No. Receipts are matched to bank lines |
-| Recurring invoices | Yes |
-| **Foreign-currency invoices** at an exchange rate | No: one currency per set of books |
-| **Online payment links** (a customer pays a public page) | No |
-| **Email templates** with preview | Partly: a plain email message |
-| Invoice PDF with the logo | Partly |
-| **Per-line sales tax**: taxable and untaxed lines, rates to four decimals, tax-exempt customers | No |
-| Sales tax report; **Pay Sales Tax** by jurisdiction; reseller permits | Partly: a sales tax report read from the liability accounts |
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Invoices: create, edit, void, duplicate, mark sent, email as PDF, numbering, terms | Has, except duplicating an invoice | Yes: Duplicate |
+| Estimates converted to invoices | Has ("Save as estimate", outside New Zealand) | Yes: offer it in New Zealand too, as a quote |
+| Sales receipts (paid on the spot), and a walk-in customer | Partly: an invoice paid at once | Yes |
+| Payments across several invoices, oldest first; batch payments across customers | Partly: a bank line settling several invoices on Reconcile | — (NZOSA matches to bank lines) |
+| **Customer credits**: an overpayment or credit note held on the customer's account and applied later | Partly: credit notes against a named invoice | Yes |
+| Credit limits, late fees, writing off small balances | Has | — |
+| Recurring invoices | Has | — |
+| **Saved invoice messages** (how to pay, a thank-you), one the default | No | Yes |
+| **Email templates**, editable, for invoices, statements and reminders | Partly: a fixed message | Yes |
+| **Email all overdue statements** from the receivables aging | No: one statement at a time | Yes |
+| Customer statements and collection letters | Has | — |
+| **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | No: one currency per set of books | Yes (large; the same work as Wise balances in other currencies) |
+| **Online payment link** (Stripe, PayPal, Square) and a public pay page | No | Yes, with a decision on the provider and on keys held online |
+| **Quick entry** of a backlog of paper invoices, save and next | No | Yes |
+| Quantities and unit prices to four decimal places | No: two | Yes |
+| Logo on invoices | Has | — |
+| Per-line sales tax, tax-exempt customers, reseller permits, Pay Sales Tax | Partly: a sales tax report from the liability accounts | US |
 
 ## Purchases (money out)
 
-| SlowBooks | NZOSA |
-|---|---|
-| Vendor records, W-9 on file, 1099 flag, usual account | Yes |
-| Purchase orders converted into bills | Yes |
-| Vendor credits | Partly: credit notes |
-| **Pay bills screen and printed checks** | No. Bills are matched to bank lines |
-| Expenses and card charges entered as documents | Partly: bills paid outside the bank; otherwise bank and card lines are the entries |
-| **Receipt intake** (scan a receipt into a bill or expense) | No |
-| **Attachments** kept with bills, expenses, journals and employees | No: a link to a document only |
-
-## Inventory and projects
-
-| SlowBooks | NZOSA |
-|---|---|
-| Items and services with price, cost and accounts; stock on hand | Yes: stock at average cost, counted |
-| **Reorder points** and low-stock lists; stock movement reports | No |
-| Jobs with **cost codes**, job costing, job budget vs actual | Partly: jobs are classes, with P&L by class |
-| Classes on every transaction, P&L by class | Yes |
-| Time entries | Yes, invoiced by customer; **no approval step** |
-| Budgets with budget vs actual | Yes |
-| Equipment register | Partly: the fixed asset register |
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Vendor records, usual account, inactive | Has | — |
+| **Vendor page: paid this year and all time, payments CSV** | No | Yes |
+| Purchase orders to bills | Has | — |
+| Bills, edited after posting | Has | — |
+| **A bill line as an amount alone** (no quantity and rate) | No: a line takes a quantity and a price | Yes |
+| **Vendor credits held on account**, applied to later bills | Partly: credit notes against a bill | Yes (with customer credits) |
+| Expenses and card charges as documents | Partly: bank and card lines are the entries | — |
+| **Receipt scanning** into a bill or expense (OCR on the computer, no AI) | Partly: an AI can read a PDF bill | Yes: OCR in the page, no AI, no upload |
+| **Attachments**: the receipt or file kept with a bill, expense, invoice, journal, contact | No: a link to a document only | Yes (storage in the folder, or Supabase Storage online) |
+| Duplicate-name warning when a customer or vendor is added | No | Yes |
+| Pay bills screen, printed checks | No | No: cheques are all but gone in New Zealand; bills are matched to bank lines |
+| W-9, 1099 vendors, 1099-NEC and 1096 | Has (US) | — |
 
 ## Banking
 
-| SlowBooks | NZOSA |
-|---|---|
-| Bank rules from a statement line | Partly: rules and suggestions learnt from coding |
-| **Bank feeds through SimpleFIN** (United States banks) | No. Akahu (New Zealand) and Wise only |
-| US bank CSV, QFX and OFX | Yes: OFX, QFX and any CSV through the column picker |
-| Reconcile to a statement, mark all, lock what it closed | Yes |
-| **Check register** per account with a running balance | Partly: account transactions |
-| Transfers and card payments | Yes |
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Bank feeds | Has: Akahu (NZ), Wise, SimpleFIN on the desktop | SimpleFIN online is in the backlog |
+| OFX, QFX and any CSV, column picker, an Account column | Has | — |
+| **A register you can type into**: a cash or petty-cash account's lines entered by hand, a running balance, an entry split across accounts | No: lines come from files and feeds only | Yes |
+| Bank rules, a rule from a line | Has (rules learnt from coding) | — |
+| Transfers, card payments | Has | — |
+| Reconcile to a statement, mark all, lock | Has | — |
+| **Reconcile: show only lines through a date; correct the statement's ending balance in place** | Partly: each day's balance is checked against the statement's | Yes |
+| **Reconciliation reports**: every completed one listed, with its report | Partly: the report for one reconciliation | Yes |
+| **Possible duplicates** in a bank account: same amount, similar payee, within three days, "not a duplicate" remembered | Has: duplicates found on import, with "kept on purpose" | — |
+| Undeposited funds, make deposits, deposit slips | No | No for now: cheques are rare here; cash takings already come in as bank lines |
 
-## Accounting
+## Inventory
 
-| SlowBooks | NZOSA |
-|---|---|
-| Chart of accounts: add, edit, deactivate, delete | Partly: no delete |
-| Journal entries, opening balances, fixed assets, backups | Yes |
-| Financial statements pack | Partly (year-end packs) |
-| **Saved reports** with their own addresses | No; drill-down from every row, yes |
-| **Dashboard** and **analytics** with an AI brief | No: Actions required, and AI suggestions and checks |
-| Audit log with document hashes | Partly: History and undo |
-| Multi-user with roles | Partly: roles on online books |
-| API tokens and a documented API | Partly: an MCP server, read-only |
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Items, stock on hand at average cost, cost of goods posted | Has | — |
+| Stock counts and adjustments | Has | — |
+| **Reorder points and a low-stock list** | No | Yes |
+| **Stock valuation report** (quantity × average cost, by item) | No | Yes |
+| **An item's movements** (every purchase, sale and adjustment) | No | Yes |
+| Opening stock posted as it is entered | Partly: through opening balances | Yes |
 
-## Payroll and HR (United States)
+## Jobs and time
 
-NZOSA has New Zealand payroll (PAYE, KiwiSaver, student loan, payday filing)
-and Australian payroll (PAYG withholding, super, STP figures). For the United
-States it reads payroll from a payroll service's journals into a Form 941
-worksheet. SlowBooks runs US payroll itself: federal and **all 50 states'
-withholding**, **Forms 941, 940, W-2, W-3, 1099-NEC and 1096**, benefits,
-garnishments, PTO, time off, an employee portal, new-hire reports and NACHA
-direct-deposit files.
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Classes on every line, P&L by class, a class's own P&L | Has | — |
+| **Jobs** belonging to a customer, job on invoice and bill lines, **job profitability** and **P&L by job** | Partly: classes stand in for jobs | Yes |
+| Cost codes, committed cost, job budget vs actual, burden rates | No | Later: for builders and trades, after jobs |
+| Time entries, invoiced by customer | Has | — |
+| **Time approval** (submit, approve, reject) | No | Yes |
+| QuickBooks Desktop timesheets imported | No | US |
 
-## Nonprofit (United States)
+## Accounting and reports
 
-NZOSA has grants, donation receipts and the New Zealand society reports.
-SlowBooks has **funds with donor restrictions**, the **Statement of
-Activities**, **functional expenses** (Form 990 Part IX), pledges, in-kind
-gifts and year-end giving statements.
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Chart: add, rename, merge, delete when unused | Has | — |
+| **Sub-accounts** (an account under a parent, totals rolled up) | No: read from QuickBooks only as a name | Yes |
+| **Inactive accounts**, and removing the starter chart's unused accounts in one step | Partly | Yes |
+| Manual journals, reversing, opening balances, fixed assets, depreciation, disposal | Has | — |
+| **Adjusting entries marked**, a report of them, and P&L or trial balance without them | No | Yes |
+| Closing date | Has: lock dates, enforced on the server for the dates themselves | — |
+| **Changes made into a locked period, reported** | No | Yes |
+| **Accountant's package**: one zip of the statements, ledger and trial balance as CSV, agings, reconciliations, adjusting entries and history for a period | Partly: year-end packs and the Excel extract | Yes |
+| **Reclassify transactions**: pick an account and a period, tick lines, move them to another account in one change | No: rename and merge move everything | Yes |
+| **Compare with last year** on the profit and loss and balance sheet | No: one year at a time | Yes |
+| **Report periods**: this month, this quarter, year to date, any dates | No: financial years only (and BAS quarters) | Yes |
+| **Saved reports** with their own addresses; Back returns to them | Partly: favourite reports | Yes |
+| Every report row drills down; the drill-down saves as CSV and PDF | Has | — |
+| Profit and loss, balance sheet, trial balance, general ledger, cash flow, agings | Has | — |
+| **Income by customer**, and sales by item | No | Yes |
+| **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Partly: the Charts report | Yes |
+| AI: an insights brief, eleven one-click analyses, any of eight providers | Partly: AI suggestions, the AI check, and a conversation with tools | Yes: one-click analyses |
+| Global search across customers, vendors, items, invoices and payments | Partly: Ctrl+K finds pages | Yes |
+| Keyboard shortcuts for new invoice, bill, payment | No | Yes |
+| History of every change, with who | Has, with undo | — |
+| Users and roles; an Accountant role; invite with an end date; last sign-in shown | Partly: roles and invitations online | Yes: an end date and last sign-in |
+| CSV import and export of customers, vendors, items, the chart | Partly: customers and vendors | Yes: items and the chart, with a dry run |
+| A documented API with tokens, read and write | Partly: an MCP server, read only | Later, with a decision on writing |
+| Tamper-evident hash on printed tax forms | No | Yes (small) |
+| Company file encryption, an accountant's copy file | No | No: books online are protected by the server; a folder is the person's own |
+| Dark theme, a sidebar trimmed to what is used | Has (themes, modules) | — |
 
-## Moving in from QuickBooks and others
+## Payroll
 
-| SlowBooks | NZOSA |
-|---|---|
-| IIF import, classes on every line (2.23.1) | Yes: chart, customers, vendors, transactions and classes |
-| **IIF export** | No |
-| **QuickBooks Online's "Export data" zip** (2.23.2): its Journal, chart from the statements, customer and vendor lists, no Intuit app | No: the chart and a General Ledger report, exported one by one |
-| **QuickBooks Desktop Transaction Detail by Account** (2.23.4): every Desktop transaction, checked against QuickBooks' totals | No: Desktop's transactions do not come across |
-| QuickBooks Desktop Transaction Detail to invoices with open balances | Partly: invoices from a QuickBooks Online ledger |
-| **Desktop timesheets as time entries** (2.23.4) | No |
-| **Wave** import | No |
-| Xero | Partly in SlowBooks; NZOSA's Xero migration is complete, checked against Xero's own reports |
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Pay runs, journals, year-to-date | Has: New Zealand (PAYE, KiwiSaver, student loan, payday filing, Holidays Act leave) and Australia (PAYG, super, STP figures) | — |
+| **Pay stubs as PDFs** | No: no payslip | Yes: payslips, printed and emailed |
+| **Direct deposit file** for the bank | No | Yes: a direct credit (batch payment) file for New Zealand banks, and ABA for Australia — for pay runs and bills |
+| Garnishments | No | Yes: New Zealand deduction notices (child support, IRD), as deductions on a pay run |
+| Leave requests, approved | Partly: leave taken is recorded | Later |
+| Onboarding checklist, new-hire report | No | Later (New Zealand: IR330, KiwiSaver forms) |
+| Employee portal | No | No for now |
+| US payroll for every state, W-2, W-3, 940, 941, NACHA | Partly: the 941 worksheet from a payroll service | US |
+
+## Nonprofit
+
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| Grants, donation receipts | Has, and New Zealand's tier 3 and 4 reports | — |
+| Funds with donor restrictions, releases | No | Later: PBE reporting takes restricted reserves |
+| Statement of activities, functional expenses (Form 990) | No | US |
+| Pledges, in-kind gifts, year-end giving statements | Partly: donation receipts | Yes: a year's giving statement per donor |
+
+## Moving in
+
+| SlowBooks | NZOSA | Take? |
+|---|---|---|
+| QuickBooks Desktop IIF, Transaction Detail by Account | Has | — |
+| QuickBooks Online's Export data zip | Has | — |
+| Xero | Has, checked against Xero's own reports | — |
+| **MYOB** | No | Yes: MYOB is the other big name in New Zealand and Australia |
+| **Sage 50, Wave, Zoho Books, GnuCash** | No | Yes, smaller |
+| A categorised bank sheet (Transaction Pro layout: bank account, date, payee, account, amount) | No | Yes |
+| Chart from CSV or hledger, with a dry run | Partly | Yes |
+| IIF export back to QuickBooks Desktop | No | US |
 
 ## What NZOSA has that SlowBooks does not
 
-- New Zealand bank feeds (Akahu), Wise, and coding rules that learn.
+- New Zealand bank feeds (Akahu) and Wise, and coding rules that learn from each decision.
 - Known-business lists for New Zealand, Australia and the United States that code fuel, phone, power and the rest before any AI is asked.
-- AI suggestions and an AI check against tax authority guidance and OpenAccountants, off until asked.
+- AI suggestions, an AI check against tax authority guidance and OpenAccountants, and a conversation with the books -- off until asked.
 - Many entities in one set of books, with shared bank accounts, money between entities and owner shares.
-- New Zealand returns (GST, IR3, IR4, IR6, IR7, IR9, IR10, rental schedules, payday filing); Australia's BAS, payroll and tax estimates; the United States' Schedule C, Schedule E, 1099-NEC, Form 941 worksheet and Form 1120 estimate.
+- New Zealand's returns (GST, IR3, IR4, IR6, IR7, IR9, IR10, rental schedules, payday filing); Australia's BAS, payroll and tax estimates; South Korea's VAT; the United States' Schedule C, Schedule E, 1099-NEC, Form 941 worksheet and Form 1120 estimate.
 - Lock dates, per-line confirmation, and History with undo on every change.
-- Hosted books with sign-in, invitations and roles; free software under the AGPL.
+- Books online with sign-in, invitations and roles, saving only what changed, and two people working at once; free software under the AGPL.
 
-## Worth taking, in order
+## Everything NZOSA could take, in order
 
-1. **QuickBooks Desktop Transaction Detail by Account.** Desktop users can bring only their lists today; this one report carries every transaction, and SlowBooks checks it against the totals QuickBooks prints.
-2. **QuickBooks Online's Export data zip.** One download any user can make, in place of exporting reports one by one.
-3. **SimpleFIN bank feeds** for United States books: Akahu is New Zealand only.
-4. **Per-line sales tax on invoices** for United States books.
-5. **Undeposited funds and deposit slips**, for businesses that bank cheques and cash in batches.
-6. Smaller: reorder points, saved reports, IIF export, Desktop timesheets.
+Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
+
+**First: what bookkeepers here meet every week**
+
+1. **Report periods**: this month, this quarter, year to date, any dates (M).
+2. **Compare with last year** on the profit and loss and balance sheet (S, after 1).
+3. **Payslips**, printed and emailed, for New Zealand and Australian pay runs (M).
+4. **Direct credit files** for New Zealand banks, and ABA for Australia, from a pay run or a list of bills (M).
+5. **Reclassify transactions**: move chosen lines from one account to another in one change, undoable (M).
+6. **A register you can type into**, for cash, petty cash and accounts with no feed, entries split across accounts (M).
+7. **Customer and vendor credits held on account**, applied later (M).
+8. **Attachments** on invoices, bills, journals and contacts (L).
+9. **MYOB import** (L).
+
+**Second: smaller, and quickly done**
+
+10. Duplicate an invoice (S).
+11. Saved invoice messages, one the default (S).
+12. Editable email wording for invoices, statements and reminders (S).
+13. Email every overdue customer their statement at once (S).
+14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
+15. Income by customer, and sales by item (S).
+16. Vendor page with paid this year and all time (S).
+17. A duplicate-name warning when a contact is added (S).
+18. A bill line as an amount alone (S).
+19. Quantities and prices to four decimal places (S).
+20. Quotes offered in New Zealand (S).
+21. Time approval (S).
+22. Reconcile: lines through a date, and the statement balance corrected in place (S).
+23. Every completed reconciliation listed (S).
+24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).
+25. Keyboard shortcuts for a new invoice, bill and journal (S).
+26. Sales receipts, and a walk-in customer (M).
+27. Quick entry for a backlog of paper invoices (S).
+
+**Third: for accountants**
+
+28. Adjusting entries marked, reported, and left out of a report on request (M).
+29. Changes made into a locked period, reported (M).
+30. The accountant's package: one zip for a period (M).
+31. An end date on an invitation, and each person's last sign-in (S).
+
+**Fourth: larger, or wanting a decision**
+
+32. Jobs belonging to customers, job profitability and P&L by job (L).
+33. Sub-accounts in the chart (L).
+34. Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast (M).
+35. One-click AI analyses beside the conversation (S).
+36. Global search across contacts, invoices, bills and lines (M).
+37. Receipt scanning in the page, without AI (L).
+38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
+39. Online payment links (L; which provider, and keys held online).
+40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
+41. Chart import from CSV or hledger with a dry run (S).
+42. New Zealand deduction notices on pay runs (M).
+43. A year's giving statement per donor (S).
+44. Items and the chart exported and imported as CSV (S).
+45. A hash on printed returns, to show they are unchanged (S).
+
+**Not taking**, and why: printed cheques and deposit slips (cheques are all but gone here), undeposited funds, United States payroll for every state and its forms, Form 990 reports, reseller permits, the employee portal, company file encryption and the accountant's copy file (books online are protected by the server; a folder is the person's own), and QuickBooks 2003's look.

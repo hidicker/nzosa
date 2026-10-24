@@ -232,8 +232,7 @@ export async function renderBooks(): Promise<void> {
       "can be put back.";
   }
 
-  const books = await ledgers();
-  const open = await currentLedger();
+  const [books, open] = await Promise.all([ledgers(), currentLedger()]);
 
   const table = document.createElement("table");
   table.className = "report-table books-table";

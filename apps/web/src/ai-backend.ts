@@ -106,7 +106,24 @@ export function aiRoute(): "folder" | "cloud" | "demo" | "none" {
   return "none";
 }
 
-export async function aiStatus(): Promise<AiStatus | null> {
+/**
+ * Whether there is a key, and which model -- one request however many ask.
+ *
+ * Several parts of one page ask as it is drawn (two tax return cards, each
+ * offering the AI), and each asked the server for itself. Those asking while
+ * an answer is on its way share it; nothing is kept once it has come, so a
+ * later question is answered fresh.
+ */
+export function aiStatus(): Promise<AiStatus | null> {
+  statusAsked ??= aiStatusNow().finally(() => {
+    statusAsked = null;
+  });
+  return statusAsked;
+}
+
+let statusAsked: Promise<AiStatus | null> | null = null;
+
+async function aiStatusNow(): Promise<AiStatus | null> {
   if (aiRoute() === "demo") return demoStatus();
   if (aiRoute() === "folder") {
     const response = await local("/api/ai");
@@ -143,6 +160,7 @@ export async function aiStatus(): Promise<AiStatus | null> {
 }
 
 export async function aiSetKey(key: string): Promise<{ ok: boolean; error: string }> {
+  statusAsked = null;
   if (aiRoute() === "demo") return demoSetKey(key);
   if (aiRoute() === "cloud") {
     const answer = await hosted("set-key", { key });
@@ -159,6 +177,7 @@ export async function aiSetKey(key: string): Promise<{ ok: boolean; error: strin
 }
 
 export async function aiSetModel(model: string): Promise<void> {
+  statusAsked = null;
   if (aiRoute() === "demo") {
     demoSetModel(model);
     return;
@@ -175,6 +194,7 @@ export async function aiSetModel(model: string): Promise<void> {
 }
 
 export async function aiClearKey(): Promise<void> {
+  statusAsked = null;
   if (aiRoute() === "demo") {
     demoClearKey();
     return;

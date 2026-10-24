@@ -1660,33 +1660,44 @@ export async function writeNightlyPart(data: unknown): Promise<boolean> {
   return false;
 }
 
+interface FolderStatus {
+  ledger?: string;
+  ledgers?: Array<{ id: string; name: string; transactions: number }>;
+}
+
+/**
+ * What the folder's server says of itself: the books beside each other, and
+ * which is open. One request however many ask while it is on its way -- the
+ * books list asks for both as every page is drawn -- and nothing kept after.
+ */
+function folderStatus(): Promise<FolderStatus | null> {
+  statusAsked ??= (async (): Promise<FolderStatus | null> => {
+    try {
+      const response = await api("status");
+      return response.ok ? ((await response.json()) as FolderStatus) : null;
+    } catch {
+      return null;
+    }
+  })().finally(() => {
+    statusAsked = null;
+  });
+  return statusAsked;
+}
+
+let statusAsked: Promise<FolderStatus | null> | null = null;
+
 /** The ledgers side by side in the same place, for the picker. */
 export async function ledgers(): Promise<
   Array<{ id: string; name: string; transactions: number }>
 > {
   if (backend !== "folder") return [];
-  try {
-    const response = await api("status");
-    if (!response.ok) return [];
-    const body = (await response.json()) as {
-      ledgers?: Array<{ id: string; name: string; transactions: number }>;
-    };
-    return body.ledgers ?? [];
-  } catch {
-    return [];
-  }
+  return (await folderStatus())?.ledgers ?? [];
 }
 
 /** Which ledger the folder is currently open on. */
 export async function currentLedger(): Promise<string> {
   if (backend !== "folder") return "";
-  try {
-    const response = await api("status");
-    if (!response.ok) return "";
-    return ((await response.json()) as { ledger?: string }).ledger ?? "";
-  } catch {
-    return "";
-  }
+  return (await folderStatus())?.ledger ?? "";
 }
 
 /**

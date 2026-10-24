@@ -5,6 +5,7 @@ import { booksReadOnly, setSaveGuard } from "./store.js";
 import type { StoredLedger } from "./store.js";
 import { lockBroken, lockedFigures } from "@nzosa/core";
 import type { Account, LockDates, LockedFigures } from "@nzosa/core";
+import { tellOnPage } from "./ui.js";
 
 /**
  * Keeping locked periods as they were locked.
@@ -123,21 +124,27 @@ function guard(ledger: StoredLedger): void {
 export function installLockGuard(redrawPage: () => void): void {
   setSaveGuard(guard);
   window.addEventListener("unhandledrejection", (event) => {
+    // The page is put back first, so what is behind the message is the books
+    // as they still are.
     if (event.reason instanceof ReadOnlyChange) {
       event.preventDefault();
-      alert(
-        `${event.reason.message}\n\nNothing was changed. An owner of these books can give you ` +
+      redrawPage();
+      void tellOnPage(
+        `${event.reason.message}
+
+Nothing was changed. An owner of these books can give you ` +
           "more than read-only access.",
       );
-      redrawPage();
       return;
     }
     if (!(event.reason instanceof LockedChange)) return;
     event.preventDefault();
-    alert(
-      `${event.reason.message}\n\nNothing was changed. To change it, move the lock first ` +
+    redrawPage();
+    void tellOnPage(
+      `${event.reason.message}
+
+Nothing was changed. To change it, move the lock first ` +
         "(Setup → Lock dates).",
     );
-    redrawPage();
   });
 }

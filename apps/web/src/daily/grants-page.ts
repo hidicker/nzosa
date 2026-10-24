@@ -2,7 +2,7 @@ import { redraw } from "../app.js";
 import { record, saveManualJournals } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
 import {
   accountEntityKey,
   accountLabel,
@@ -384,8 +384,8 @@ function card(position: GrantPosition, entities: Entity[]): HTMLElement {
     });
     void saveGrants(grants, state.ledger.grantLinks ?? {}, `${grantOpen(grant) ? "Finished" : "Reopened"}: ${grant.funder}, ${grant.purpose}`);
   });
-  button("Remove", () => {
-    if (!confirm(`Remove the grant from ${grant.funder}? The bank lines and the books are not touched.`)) return;
+  button("Remove", async () => {
+    if (!await askOnPage(`Remove the grant from ${grant.funder}? The bank lines and the books are not touched.`)) return;
     const links = Object.fromEntries(Object.entries(state.ledger.grantLinks ?? {}).filter(([, id]) => id !== grant.id));
     void saveGrants((state.ledger.grants ?? []).filter((g) => g.id !== grant.id), links, `Grant removed: ${grant.funder}`);
   });

@@ -5,7 +5,7 @@ import type { LedgerEvent } from "../events.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, saveEvents } from "../store.js";
-import { note } from "../ui.js";
+import { note, tellOnPage } from "../ui.js";
 import type { RuleSet } from "@nzosa/core";
 import { postedJournals } from "../books.js";
 import { daysWork, formatAmount, localDay, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
@@ -28,7 +28,7 @@ import { booksLocale } from "../country.js";
 export async function undo(event: LedgerEvent): Promise<void> {
   const allowed = canReverse(state.events, event);
   if (!allowed.ok) {
-    alert(allowed.why);
+    await tellOnPage(allowed.why);
     return;
   }
 

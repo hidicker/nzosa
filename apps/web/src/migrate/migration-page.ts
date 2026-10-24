@@ -7,7 +7,7 @@ import { gstUsually, saveEntities } from "../books.js";
 import { createBook } from "../cloud.js";
 import { $, state } from "../state.js";
 import { backendKind, ledgerName, openCloudBook, openCloudBookName, save, switchLedger, writesToFolder } from "../store.js";
-import { askOnPage, note } from "../ui.js";
+import { askOnPage, note, tellOnPage } from "../ui.js";
 import {
   BUSINESS_STRUCTURES,
   DEFAULT_ENTITY_NAME,
@@ -2198,7 +2198,7 @@ async function startBooksFor(
   if (backendKind() === "cloud") {
     const made = await createBook(first.name);
     if (made === null) {
-      alert("Could not start that set of books.");
+      await tellOnPage("Could not start that set of books.");
       return;
     }
     openCloudBook({ id: made.id, name: made.name });
@@ -2210,14 +2210,14 @@ async function startBooksFor(
       .replace(/[^a-z0-9]+/g, "-")
       .replace(/^-|-$/g, "");
     if (slug === "") {
-      alert("That name has nothing in it a folder can be called.");
+      await tellOnPage("That name has nothing in it a folder can be called.");
       return;
     }
     // Never into a folder this list has already given to somebody else.
     const taken = planned.some((e) => !group.includes(e) && e.book === slug);
     id = taken ? `${slug}-books` : slug;
     if (!(await switchLedger(id, first.name))) {
-      alert("Could not start that set of books.");
+      await tellOnPage("Could not start that set of books.");
       return;
     }
   }

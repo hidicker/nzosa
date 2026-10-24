@@ -40,7 +40,7 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, switchLedger, writesToFolder } from "../store.js";
 import type { StoredLedger } from "../store.js";
-import { askOnPage, note, setLoadingStatus } from "../ui.js";
+import { askOnPage, note, setLoadingStatus, tellOnPage } from "../ui.js";
 import { DEMO_PERSONAS, currentDemoPersona, demoFolder, rememberDemoPersona } from "../demo-personas.js";
 import {
   DEFAULT_ENTITY_NAME,
@@ -520,7 +520,7 @@ function pickXeroBankList(): void {
   input.addEventListener("change", () => {
     const file = input.files?.[0];
     if (file === undefined) return;
-    void loadXeroBankAccounts(file).then((said) => alert(said));
+    void loadXeroBankAccounts(file).then((said) => tellOnPage(said));
   });
   input.click();
 }
@@ -1850,7 +1850,7 @@ export async function loadDemoData(button: HTMLButtonElement, persona?: string):
     button.disabled = true;
     button.textContent = "Opening…";
     if (!(await switchLedger("demo", "Demo"))) {
-      alert("Could not open the demo books.");
+      await tellOnPage("Could not open the demo books.");
       button.disabled = false;
       button.textContent = "Open the demo books";
       return;
@@ -1898,7 +1898,7 @@ export async function loadDemoData(button: HTMLButtonElement, persona?: string):
     state.entityFilter = "";
     showPage(landing);
   } catch (error) {
-    alert(`Could not load the demo data: ${(error as Error).message}`);
+    await tellOnPage(`Could not load the demo data: ${(error as Error).message}`);
     button.disabled = false;
     button.textContent = "Load demo data";
   }

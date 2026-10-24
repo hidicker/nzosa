@@ -48,7 +48,7 @@ import { $, state } from "../state.js";
 import { startNewAccount } from "./entities.js";
 import { DIRECTORY_VIA, aiSuggestionFor, rateForSuggestion, suggestFromDirectory } from "../ai.js";
 import { save, savePart } from "../store.js";
-import { askOnPage, dollars, note } from "../ui.js";
+import { askOnPage, dollars, note, tellOnPage } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
 import {
   accountEntityKey,
@@ -274,10 +274,10 @@ export function renderReconcile(): void {
           settle.title = `Pays ${numbers.join(" and ")}`;
           settle.addEventListener("click", () => {
             settle.disabled = true;
-            void settleInvoicesExactly(t, said).then((done) => {
+            void settleInvoicesExactly(t, said).then(async (done) => {
               if (!done) {
                 settle.disabled = false;
-                alert(
+                await tellOnPage(
                   (numbers.length > 1
                     ? `${numbers.join(" and ")} no longer come to ${formatAmount(t.amount)} exactly. `
                     : `Nothing open under ${numbers[0]} takes ${formatAmount(t.amount)}. `) +
@@ -1431,7 +1431,7 @@ async function linkTransfer(
     (t) => (state.ledger.splits ?? {})[t.id] !== undefined || invoiceAssignments().has(t.id),
   );
   if (involved.length > 0) {
-    alert(
+    await tellOnPage(
       involved.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("\n") +
         "\n\nThis line is split or settles an invoice, so it cannot also be a transfer. " +
         "Remove the split or invoice match first.",
@@ -1448,7 +1448,7 @@ async function linkTransfer(
       )
       .join("\n");
     if (
-      !confirm(
+      !await askOnPage(
         "A line is either a transfer or coded to an account, not both.\n\n" +
           listed +
           `\n\nRecord the transfer and remove ${removed.length === 1 ? "that coding" : "those codings"}?`,
@@ -2358,7 +2358,7 @@ export async function confirmLine(
     );
     if (
       !held &&
-      confirm(
+      await askOnPage(
         `Coded to ${account.name}. Add it to the fixed asset register at ` +
           `${formatAmount(cost)}${rate === "15" ? " excluding GST" : ""} so it is depreciated?`,
       )

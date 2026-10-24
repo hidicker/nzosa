@@ -1,6 +1,6 @@
 import { callFunction, currentSession, rpc } from "../cloud.js";
 import { usingOwnProject } from "../cloud-config.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 
 /**
  * Who else can see a set of books kept on the server.
@@ -143,9 +143,9 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
         remove.type = "button";
         remove.className = "danger";
         remove.textContent = row.user_id === me ? "Leave" : "Remove";
-        remove.addEventListener("click", () => {
+        remove.addEventListener("click", async () => {
           if (
-            !confirm(
+            !await askOnPage(
               row.user_id === me
                 ? `Leave ${book.name}? You will not be able to open it again unless somebody adds you back.`
                 : `Remove ${row.email} from ${book.name}? They keep any backup they have already downloaded.`,

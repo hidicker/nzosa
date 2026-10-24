@@ -1,5 +1,5 @@
 import { CLOUD, OWN_PROJECT_KEY, cleanProjectUrl, ownProject, usingOwnProject } from "../cloud-config.js";
-import { download, note } from "../ui.js";
+import { askOnPage, download, note } from "../ui.js";
 
 /**
  * Keeping books in your own Supabase project.
@@ -137,8 +137,8 @@ export function ownProjectPanel(): HTMLElement {
     const back = document.createElement("button");
     back.type = "button";
     back.textContent = "Go back to the shared service";
-    back.addEventListener("click", () => {
-      if (confirm("Go back to the shared service? You will be signed out here. Your own project and its books are not touched.")) useSharedService();
+    back.addEventListener("click", async () => {
+      if (await askOnPage("Go back to the shared service? You will be signed out here. Your own project and its books are not touched.")) useSharedService();
     });
     fold.append(back);
     return fold;

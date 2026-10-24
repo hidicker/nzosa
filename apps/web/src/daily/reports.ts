@@ -35,7 +35,7 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note, tellOnPage } from "../ui.js";
 import { downloadExcelReport } from "./excel-export.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
@@ -909,10 +909,10 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     box.append("Reverse on ", date, " ");
     button(
       "Post reversal",
-      () => {
+      async () => {
         const on = date.value;
         if (on === "" || on < journal.date) {
-          alert("Choose a date on or after the journal's own.");
+          await tellOnPage("Choose a date on or after the journal's own.");
           return;
         }
         reversing = null;
@@ -943,9 +943,9 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     box.append(reversed ? "" : "In a locked year: reverse it to correct it.");
     return box;
   }
-  button("Delete", () => {
+  button("Delete", async () => {
     if (
-      !confirm(
+      !await askOnPage(
         `Delete this journal?
 
 ${journal.date} — ${journal.narration}
@@ -2294,7 +2294,7 @@ async function saveAgentStatement(statement: AgentStatement): Promise<void> {
 }
 
 async function removeAgentStatement(statement: AgentStatement): Promise<void> {
-  if (!confirm(`Remove the ${statement.agent} statement for ${statement.from} to ${statement.to}? Its journal goes with it.`)) {
+  if (!await askOnPage(`Remove the ${statement.agent} statement for ${statement.from} to ${statement.to}? Its journal goes with it.`)) {
     return;
   }
   const before = state.ledger.agentStatements ?? [];
@@ -2466,13 +2466,13 @@ function renderGstReturn(body: HTMLElement, year: number): void {
     mark.className = "primary";
     mark.textContent = "Mark as filed";
     mark.title = "Keep this return as it stands today, to compare the books against later.";
-    mark.addEventListener("click", () => {
+    mark.addEventListener("click", async () => {
       const owedText =
         result.boxes.outcome === "refund"
           ? `a refund of ${money(result.boxes.box15)}`
           : `${money(result.boxes.box15)} to pay`;
       if (
-        !confirm(
+        !await askOnPage(
           `Record the return for ${result.period.from} to ${result.period.to} as filed, with ${owedText}? ` +
             "It is kept as these books show it now, and the GST reconciliation compares against it.",
         )
@@ -3208,7 +3208,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
   save.type = "button";
   save.className = "primary";
   save.textContent = "Save";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const next: Ir3Details = { owner, year };
     for (const [input, key, what] of [
       [paid, "provisionalTaxPaid", "Provisional tax paid"],
@@ -3217,7 +3217,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
       if (input.value.trim() === "") continue;
       const amount = parseAmount(input.value);
       if (amount === null) {
-        alert(`${what} needs to be an amount.`);
+        await tellOnPage(`${what} needs to be an amount.`);
         return;
       }
       next[key] = amount;
@@ -3226,7 +3226,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
     if (monthsOut.value.trim() !== "") {
       const months = Number(monthsOut.value);
       if (!Number.isInteger(months) || months < 0 || months > 12) {
-        alert("Months ruled out needs to be a whole number from 0 to 12.");
+        await tellOnPage("Months ruled out needs to be a whole number from 0 to 12.");
         return;
       }
       next.ietcMonthsOut = months;
@@ -3478,10 +3478,10 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
   add.type = "button";
   add.className = "primary";
   add.textContent = "Add";
-  add.addEventListener("click", () => {
+  add.addEventListener("click", async () => {
     const amount = parseAmount(gross.value);
     if (amount === null) {
-      alert("Give a gross amount.");
+      await tellOnPage("Give a gross amount.");
       return;
     }
     void addExtra({

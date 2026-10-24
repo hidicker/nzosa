@@ -14,7 +14,7 @@ import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { placeBankImport } from "../menu.js";
 import { renderLockedArrivals } from "./lock-dates.js";
-import { amountCell, askOnPage, dollars, download, escapeHtml, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, dollars, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
 import {
   feedAccounts,
   feedAutoFetch,
@@ -287,7 +287,7 @@ export async function handleFiles(files: File[]): Promise<void> {
 
   for (const file of files) {
     if (file.size > 50 * 1024 * 1024) {
-      alert(`"${file.name}" is over 50 MB and was skipped. Bank exports are normally much smaller.`);
+      await tellOnPage(`"${file.name}" is over 50 MB and was skipped. Bank exports are normally much smaller.`);
       continue;
     }
     // Excel as well as CSV: Xero's bank account export comes out as either,
@@ -1065,9 +1065,9 @@ function fillFeed(body: HTMLElement, status: FeedStatus | null): void {
   forget.type = "button";
   forget.className = "link-button";
   forget.textContent = "forget this connection";
-  forget.addEventListener("click", () => {
+  forget.addEventListener("click", async () => {
     if (
-      !confirm(
+      !await askOnPage(
         feedIsHosted()
           ? "Forget the bank feed connection? The tokens are deleted from the server."
           : "Forget the bank feed connection? The tokens are deleted from this machine.",
@@ -1215,11 +1215,11 @@ export function showWhatNeedsDeciding(): void {
  * they can be backed up, diffed and edited in a spreadsheet -- rather than
  * living only in one browser profile, which is where they were.
  */
-export function saveChart(): void {
+export async function saveChart(): Promise<void> {
   const model = state.ledger.entities ?? emptyEntityModel();
   const rows = accountsForEditing();
   if (rows.length === 0) {
-    alert("There are no accounts to save yet. Load a chart of accounts first.");
+    await tellOnPage("There are no accounts to save yet. Load a chart of accounts first.");
     return;
   }
 
@@ -2150,7 +2150,7 @@ function broughtInSection(lines: readonly Transaction[], start: string): HTMLEle
  */
 async function leaveOutAfterAll(line: Transaction): Promise<void> {
   if (heldByLock(state.ledger.lockDates, state.ledger.entities, line)) {
-    alert(`${line.date} is locked, so this line stays. Move the lock date back first to leave it out.`);
+    await tellOnPage(`${line.date} is locked, so this line stays. Move the lock date back first to leave it out.`);
     return;
   }
   const id = line.id;

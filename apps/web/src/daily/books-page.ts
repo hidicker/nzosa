@@ -12,7 +12,7 @@ import {
   switchLedger,
   writesToFolder,
 } from "../store.js";
-import { askNameAndChoiceOnPage, askOnPage, askTextOnPage, note } from "../ui.js";
+import { askNameAndChoiceOnPage, askOnPage, askTextOnPage, note, tellOnPage } from "../ui.js";
 import { countryChoices, defaultCountry, rememberNewBooksCountry } from "../new-books-country.js";
 import { backupTools } from "../backup.js";
 import { renderCloudBooks } from "./cloud-books.js";
@@ -88,9 +88,9 @@ async function renderArchives(body: HTMLElement, whose = ""): Promise<void> {
     const put = document.createElement("button");
     put.type = "button";
     put.textContent = "Put this back";
-    put.addEventListener("click", () => {
+    put.addEventListener("click", async () => {
       if (
-        !confirm(
+        !await askOnPage(
           `Put back the copy of ${whose || "these books"} from ${when.textContent}?
 
 ` +
@@ -102,10 +102,10 @@ async function renderArchives(body: HTMLElement, whose = ""): Promise<void> {
       }
       put.disabled = true;
       put.textContent = "Putting back…";
-      void restoreArchive(archive.stamp).then((ok) => {
+      void restoreArchive(archive.stamp).then(async (ok) => {
         if (ok) location.reload();
         else {
-          alert("Could not put that copy back.");
+          await tellOnPage("Could not put that copy back.");
           put.disabled = false;
           put.textContent = "Put this back";
         }
@@ -338,10 +338,10 @@ export async function renderBooks(): Promise<void> {
           void clearEverything(go);
           return;
         }
-        void archiveOther(book.id).then((result: { ok: boolean; why: string }) => {
+        void archiveOther(book.id).then(async (result: { ok: boolean; why: string }) => {
           if (result.ok) void renderBooks();
           else {
-            alert(result.why);
+            await tellOnPage(result.why);
             go.disabled = false;
             go.textContent = `Clear ${book.name}`;
           }
@@ -462,7 +462,7 @@ export function wireBooksPage(): void {
     go.type = "button";
     go.className = "danger";
     go.textContent = "Remove its lines";
-    go.addEventListener("click", () => {
+    go.addEventListener("click", async () => {
       const account = pick.value;
       const cutoff = before.value;
       const gone = new Set(
@@ -471,11 +471,11 @@ export function wireBooksPage(): void {
           .map((t) => t.id),
       );
       if (gone.size === 0) {
-        alert(cutoff === "" ? "That account has no lines." : `${account} has no lines before ${cutoff}.`);
+        await tellOnPage(cutoff === "" ? "That account has no lines." : `${account} has no lines before ${cutoff}.`);
         return;
       }
       if (
-        !confirm(
+        !await askOnPage(
           `Remove ${gone.size} lines of ${account}${cutoff === "" ? "" : ` dated before ${cutoff}`} from these books?`,
         )
       ) {
@@ -528,7 +528,7 @@ export function wireBooksPage(): void {
             }
             if (unlinked) await feedMapping(mapping);
           } catch {
-            alert(
+            await tellOnPage(
               "The lines are removed, but the bank feed could not be changed. Set this account " +
                 "to \u201cdo not import\u201d on the feed, or the next fetch brings them back.",
             );

@@ -91,20 +91,6 @@ works).
   foreign-currency bank account in the chart, and the realised gain or loss
   on conversion posted. Xero's chart had no row for Wise KRW either, so the
   link step needs a way to add a bank row for one.
-- **Ask on the page everywhere, not in the browser's confirm box.** An
-  embedded browser (the Claude desktop app's pane, for one) answers
-  `confirm()` "Cancel" at once without showing it, so whatever it guards is
-  refused in silence. `askOnPage` in `ui.ts` asks in the page instead; the
-  trial balance, Leave out after all, Bring in as a journal and taking the
-  year-end journals from the journal report use it, and `askTextOnPage`
-  (the same box with a field) asks for the name of a new set of books and of
-  a copy. About 44 `confirm()` calls in 28 files remain, and `alert()` and
-  `prompt()` (entity names, donation reasons, asset and opening amounts) have
-  the same problem. Each needs its handler made async.
-  First of them: Delete on the online Books page (`cloud-books.ts`) asks for
-  the set's name with `prompt()`, so in such a browser the button does
-  nothing at all. Replace everything on the server, there, and the two
-  backup restores in `backup.ts` ask with `confirm()`.
 - **Reconcile tick, stage 2: redraw only the ticked line.** Stage 1 is done: a
   tick no longer waits for its saves (about 0.3 s on books online, down from
   0.8–2.6 s), and the writes queue in order (`writeQueue` in core). What is

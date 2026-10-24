@@ -105,6 +105,7 @@ import type {
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart, depreciationRules } from "./tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
+import { tellOnPage } from "./ui.js";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -373,7 +374,7 @@ export async function unpairTransfer(transactionId: string): Promise<boolean> {
  */
 export function codingRefusedForTransfer(transaction: Transaction): boolean {
   if ((state.ledger.transfers ?? {})[transaction.id] === undefined) return false;
-  alert(
+  void tellOnPage(
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} is recorded as a ` +
       "transfer between your own accounts, so it cannot also be coded to an account.\n\n" +
       'If it is not a transfer, choose "not a transfer" on the Reconcile page, then code it.',

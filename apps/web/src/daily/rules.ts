@@ -7,7 +7,7 @@ import { describeRules, mergeRules } from "../rules-ui.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { saveRulesArchive } from "../store.js";
-import { download, note } from "../ui.js";
+import { askOnPage, download, note } from "../ui.js";
 import { combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { ruleMatches, ruleSearchText } from "@nzosa/core";
@@ -503,9 +503,9 @@ function commitRule(draft: RuleDraft): void {
   void persistRules();
 }
 
-function deleteRule(index: number, rule: CategoryRule): void {
+async function deleteRule(index: number, rule: CategoryRule): Promise<void> {
   if (
-    !confirm(
+    !await askOnPage(
       `Delete the rule coding "${rule.keyword ?? rule.account ?? "everything"}" to ${rule.code}?` +
         " Confirmed lines keep their coding.",
     )

@@ -50,7 +50,7 @@ import type { AiSuggestion, GstSide, GstTreatment } from "@nzosa/core";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note, tellOnPage } from "../ui.js";
 import {
   accountEntityKey,
   splitAccountLabel,
@@ -347,7 +347,7 @@ export async function acceptAllShown(): Promise<void> {
   // in those words.
   if (lines.length === 0) {
     if (
-      !confirm(
+      !await askOnPage(
         `Pair ${pairs.length} transfer${pairs.length === 1 ? "" : "s"} between your own accounts?` +
           "\n\n" +
           pairs
@@ -382,7 +382,7 @@ export async function acceptAllShown(): Promise<void> {
         ? `all to ${[...accounts][0]}`
         : `across ${accounts.size} accounts`;
   if (
-    !confirm(
+    !await askOnPage(
       `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?` +
         "\n\n" +
         (held.size > 0
@@ -2650,16 +2650,16 @@ function transferDiffersSection(rows: readonly CodingRow[]): HTMLElement {
       act.className = "small";
       if (mapped === null) {
         act.textContent = "match the file's name";
-        act.addEventListener("click", () => {
-          if (!showCodingMatch(name)) alert(`"${name}" is not matched to an account.`);
+        act.addEventListener("click", async () => {
+          if (!showCodingMatch(name)) await tellOnPage(`"${name}" is not matched to an account.`);
         });
       } else {
         act.textContent = `not a transfer — use ${mapped}`;
-        act.addEventListener("click", () => {
+        act.addEventListener("click", async () => {
           const other =
             partner === undefined ? "" : ` (${partner.date} in ${bankLabel(partner.account)})`;
           if (
-            !confirm(
+            !await askOnPage(
               `Undo this transfer and code ${row.transaction.date} ` +
                 `${formatAmount(row.transaction.amount)} to ${mapped}?\n\n` +
                 `The other side${other} is left uncoded, to be coded on its own.`,
@@ -3132,7 +3132,7 @@ async function acceptCodesBulk(
   }
 
   if (unmapped.size > 0) {
-    alert(
+    await tellOnPage(
       `Not matched to an account yet: "${[...unmapped].join('", "')}". ` +
         (applied > 0
           ? `${applied} other line${applied === 1 ? " was" : "s were"} updated. `
@@ -3252,14 +3252,14 @@ async function acceptSplitsBulk(
   }
 
   if (unmappedAll.size > 0) {
-    alert(
+    await tellOnPage(
       `No account in your rules matches: ${[...unmappedAll].join(", ")}. ` +
         "Set a GST treatment for it first so the GST is not assumed.",
     );
   }
 
   if (mismatchIds.size > 0) {
-    alert(`${mismatchIds.size} split(s) could not be applied because part amounts did not match the bank line.`);
+    await tellOnPage(`${mismatchIds.size} split(s) could not be applied because part amounts did not match the bank line.`);
   }
 
   if (applied === 0) {
@@ -3304,7 +3304,7 @@ async function acceptCode(
       // people to add it to the chart made a second account beside the one
       // it meant, so the answer is the match table, opened at that name.
       if (!showCodingMatch(code)) {
-        alert(`"${code}" is not matched to an account. Match it in the file's coding table.`);
+        await tellOnPage(`"${code}" is not matched to an account. Match it in the file's coding table.`);
       }
       return;
     }
@@ -3398,7 +3398,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   }
 
   if (unmapped.length > 0) {
-    alert(
+    await tellOnPage(
       `No account in your rules matches ${unmapped.join(", ")}. ` +
         "Set a GST treatment for it first so the GST is not assumed.",
     );
@@ -3407,7 +3407,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
 
   const total = mapped.reduce((sum, part) => sum + part.amount, 0);
   if (total !== transaction.amount) {
-    alert(`The parts total ${formatAmount(total)} but the bank line is ${formatAmount(transaction.amount)}.`);
+    await tellOnPage(`The parts total ${formatAmount(total)} but the bank line is ${formatAmount(transaction.amount)}.`);
     return;
   }
 
@@ -3869,9 +3869,9 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
     const to = mapToOurVocabulary(proposal.rule.code);
     if (to === null || to === "") {
       accept.textContent = "Match the name";
-      accept.addEventListener("click", () => {
+      accept.addEventListener("click", async () => {
         if (!showCodingMatch(proposal.rule.code)) {
-          alert(
+          await tellOnPage(
             `"${proposal.rule.code}" is not matched to an account yet. Match it in the file's ` +
               "coding table, on the Coded history step or the Coding reconciliation page.",
           );
@@ -4279,15 +4279,15 @@ function wireAiButton(): void {
     button.classList.add("working");
     button.setAttribute("aria-busy", "true");
     void askAboutLines(waiting, howMany)
-      .then(({ got, said: trouble }) => {
-        if (trouble !== "") alert(trouble);
+      .then(async ({ got, said: trouble }) => {
+        if (trouble !== "") await tellOnPage(trouble);
         if (got > 0) showTheAiOnes();
         redraw("reconcile");
       })
-      .catch((error: unknown) => {
+      .catch(async (error: unknown) => {
         // Nothing below this throws today, but a button left saying "Asking
         // AI" for good is the wrong way to find out that changed.
-        alert((error as Error).message);
+        await tellOnPage((error as Error).message);
       })
       .finally(() => {
         button.classList.remove("working");

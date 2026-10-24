@@ -3,7 +3,7 @@ import { postedJournals, record } from "../books.js";
 import { booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, askTextOnPage, note, tellOnPage } from "../ui.js";
 import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 import { classSource } from "@nzosa/core";
 
@@ -130,11 +130,11 @@ function namesSection(body: HTMLElement): void {
     rename.type = "button";
     rename.className = "small";
     rename.textContent = "Rename";
-    rename.addEventListener("click", () => {
-      const next = window.prompt(`Rename ${name} to`, name)?.trim();
+    rename.addEventListener("click", async () => {
+      const next = (await askTextOnPage(`Rename ${name} to`, name))?.trim();
       if (next === undefined || next === "" || next === name) return;
       if (names.some((n) => n !== name && n.toLowerCase() === next.toLowerCase())) {
-        window.alert(`${next} is already a class.`);
+        await tellOnPage(`${next} is already a class.`);
         return;
       }
       const moved = Object.fromEntries(Object.entries(assigned).map(([id, n]) => [id, n === name ? next : n]));
@@ -147,9 +147,9 @@ function namesSection(body: HTMLElement): void {
     remove.type = "button";
     remove.className = "small";
     remove.textContent = "Remove";
-    remove.addEventListener("click", () => {
+    remove.addEventListener("click", async () => {
       const n = counts.get(name) ?? 0;
-      if (n > 0 && !window.confirm(`Remove ${name}? The ${n} it is given to go back to having no class.`)) return;
+      if (n > 0 && !await askOnPage(`Remove ${name}? The ${n} it is given to go back to having no class.`)) return;
       const left = Object.fromEntries(Object.entries(assigned).filter(([, c]) => c !== name));
       void keep({ names: names.filter((c) => c !== name), assigned: left }, `Removed class ${name}`);
     });

@@ -4,7 +4,7 @@ import { supplierFor } from "./invoices.js";
 import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { download, note } from "../ui.js";
+import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
   collectionLetter,
   contactKey,
@@ -110,14 +110,14 @@ function statementLines(mine: readonly { invoice: Invoice; remaining: number }[]
  * posts nothing until it is approved on Invoices.
  */
 async function draftLateFee(customer: string, pastDue: number): Promise<void> {
-  const said = window.prompt(
+  const said = await askTextOnPage(
     `Late fee for ${customer}, as a percentage of the ${booksMoney(pastDue)} past due:`,
     "1.5",
   );
   if (said === null) return;
   const percent = Number(said.replace("%", "").trim());
   if (!Number.isFinite(percent) || percent <= 0) {
-    window.alert("A percentage, such as 1.5.");
+    await tellOnPage("A percentage, such as 1.5.");
     return;
   }
   const amount = lateFee(pastDue, percent);
@@ -156,7 +156,7 @@ async function draftLateFee(customer: string, pastDue: number): Promise<void> {
   state.ledger = { ...state.ledger, invoices: [...(state.ledger.invoices ?? []), draft] };
   state.persistent = await savePart(state.ledger, "invoices");
   await record("invoice", `Created ${draft.number} — ${customer} late fee ${booksMoney(amount)}`, null, draft, draft.number);
-  window.alert(`${draft.number} for ${booksMoney(amount)} is drafted on Invoices. Approve it there to post it.`);
+  await tellOnPage(`${draft.number} for ${booksMoney(amount)} is drafted on Invoices. Approve it there to post it.`);
   redraw("contacts");
   redraw("invoices");
 }
@@ -169,29 +169,29 @@ async function draftLateFee(customer: string, pastDue: number): Promise<void> {
  * in History.
  */
 async function writeOffSmall(): Promise<void> {
-  const said = window.prompt("Write off what customers still owe on an invoice when it is no more than:", "5.00");
+  const said = await askTextOnPage("Write off what customers still owe on an invoice when it is no more than:", "5.00");
   if (said === null) return;
   const limit = parseAmount(said, booksCurrency());
   if (limit === null || limit <= 0) {
-    window.alert("An amount, such as 5.00.");
+    await tellOnPage("An amount, such as 5.00.");
     return;
   }
   const expense = state.chart.filter((a) => /expense|overhead/i.test(a.type));
   const account = expense.find((a) => /bad debt|write.?off|uncollect/i.test(a.name));
   if (account === undefined) {
-    window.alert("Add an expense account for bad debts on Entities & accounts first, such as Bad debts.");
+    await tellOnPage("Add an expense account for bad debts on Entities & accounts first, such as Bad debts.");
     return;
   }
   const small = [...invoiceBalanceMap().values()].filter(
     (b) => b.invoice.kind === "sales" && isPosted(b.invoice) && b.remaining > 0 && b.remaining <= limit,
   );
   if (small.length === 0) {
-    window.alert(`No invoice has ${booksMoney(limit)} or less left to pay.`);
+    await tellOnPage(`No invoice has ${booksMoney(limit)} or less left to pay.`);
     return;
   }
   const total = small.reduce((sum, b) => sum + b.remaining, 0);
   if (
-    !window.confirm(
+    !await askOnPage(
       `Write off ${small.length} balance${small.length === 1 ? "" : "s"}, ${booksMoney(total)} in all, ` +
         `to ${account.code} ${account.name}?\n\n` +
         small.map((b) => `${b.invoice.number} ${b.invoice.contact}: ${booksMoney(b.remaining)}`).join("\n"),
@@ -503,11 +503,11 @@ export function renderContacts(): void {
       const stage = reminderStageFor(sums.lateDays);
       remind.title =
         stage === 1 ? "A first, friendly reminder" : stage === 2 ? "A second notice" : "A final notice";
-      remind.addEventListener("click", () => {
+      remind.addEventListener("click", async () => {
         const mine = salesFor(contact.name);
         const supplier = mine[0] === undefined ? null : supplierFor(mine[0].invoice);
         if (supplier === null) {
-          window.alert("Say which entity is sending it first: add an entity on Entities & accounts.");
+          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
           return;
         }
         const html = collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions());
@@ -527,12 +527,12 @@ export function renderContacts(): void {
       statement.type = "button";
       statement.className = "small";
       statement.textContent = "Statement";
-      statement.addEventListener("click", () => {
+      statement.addEventListener("click", async () => {
         const mine = salesFor(contact.name);
         const first = mine[0]?.invoice;
         const supplier = first === undefined ? null : supplierFor(first);
         if (supplier === null) {
-          window.alert("Say which entity is sending it first: add an entity on Entities & accounts.");
+          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
           return;
         }
         const html = customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());

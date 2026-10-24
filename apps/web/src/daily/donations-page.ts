@@ -2,7 +2,7 @@ import { redraw, showPage } from "../app.js";
 import { record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, askTextOnPage, download, nameCell, note } from "../ui.js";
 import {
   belowCreditMinimum,
   donorYears,
@@ -204,7 +204,7 @@ function issueForm(entity: Entity, receipts: DonationReceipt[]): HTMLElement {
   issue.type = "button";
   issue.className = "primary";
   issue.textContent = "Issue the receipt";
-  issue.addEventListener("click", () => {
+  issue.addEventListener("click", async () => {
     // Everything ticked, whether or not a search has since hidden it.
     const picked: Transaction[] = linesFor(entity).filter((t) => ticked.has(t.id));
     let total: Cents = 0;
@@ -245,7 +245,7 @@ function issueForm(entity: Entity, receipts: DonationReceipt[]): HTMLElement {
       designation: signer?.designation ?? "",
       ...(replacing !== null ? { replaces: replacing.id } : {}),
     };
-    if (belowCreditMinimum(receipt.amount) && !confirm(
+    if (belowCreditMinimum(receipt.amount) && !await askOnPage(
       "This is under $5, the smallest gift Inland Revenue gives a tax credit for. The donor cannot claim it. Issue the receipt anyway?",
     )) {
       return;
@@ -317,8 +317,8 @@ function table(entity: Entity, receipts: DonationReceipt[]): HTMLElement {
     if (r.voided === undefined) {
       button("Print", () => openReceipt(entity, r));
       button("Copy", () => openReceipt(entity, r, { copy: true }));
-      button("Cancel", () => {
-        const why = prompt(
+      button("Cancel", async () => {
+        const why = await askTextOnPage(
           `Cancel receipt ${r.number} for ${r.donor}?\n\nIt stays on the list marked cancelled, and its number is not reused. Why is it being cancelled?`,
         );
         if (why === null || why.trim() === "") return;

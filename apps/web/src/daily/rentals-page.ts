@@ -2,7 +2,7 @@ import { redraw } from "../app.js";
 import { postedJournals, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, nameCell, note } from "../ui.js";
 import { accountEntityKey, bondStatus, emptyEntityModel, parseAmount, rentOn, rentPosition, rentSources } from "@nzosa/core";
 import type { Account, Cents, Entity, IsoDate, RentFrequency, RentSource, Tenancy } from "@nzosa/core";
 import { tripsPanel } from "./vehicle-trips-panel.js";
@@ -398,8 +398,8 @@ function card(t: Tenancy, entities: Entity[], asAt: IsoDate): HTMLElement {
   const remove = document.createElement("button");
   remove.type = "button";
   remove.textContent = "Remove";
-  remove.addEventListener("click", () => {
-    if (!confirm(`Remove the tenancy for ${t.tenant}? The books are not touched.`)) return;
+  remove.addEventListener("click", async () => {
+    if (!await askOnPage(`Remove the tenancy for ${t.tenant}? The books are not touched.`)) return;
     void saveTenancies((state.ledger.tenancies ?? []).filter((x) => x.id !== t.id), `Tenancy removed: ${t.tenant}`);
   });
   row.append(edit, remove);

@@ -1,7 +1,7 @@
 import { redraw } from "../app.js";
 import { saveEntities } from "../books.js";
 import { $, state } from "../state.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 import { accountEntityKey, ageOn, emptyEntityModel, emptyTrust } from "@nzosa/core";
 import type { Entity, Trust, TrustAppointer, TrustBeneficiary, TrustPerson } from "@nzosa/core";
 
@@ -78,10 +78,10 @@ function edit<T extends TrustPerson>(entity: Entity, group: Group, id: string, c
   void save(entity, { ...trust, [group]: list }, what);
 }
 
-function remove(entity: Entity, group: Group, id: string, name: string): void {
+async function remove(entity: Entity, group: Group, id: string, name: string): Promise<void> {
   const live = (state.ledger.entities ?? emptyEntityModel()).entities.find((e) => e.id === entity.id);
   const trust = live?.trust ?? emptyTrust();
-  if (!confirm(`Remove ${name === "" ? "this person" : name} from the trust's ${group}?`)) return;
+  if (!await askOnPage(`Remove ${name === "" ? "this person" : name} from the trust's ${group}?`)) return;
   void save(entity, { ...trust, [group]: (trust[group] as unknown as TrustPerson[]).filter((p) => p.id !== id) }, `removed ${name}`);
 }
 

@@ -3,7 +3,7 @@ import { noSalesTax } from "../country.js";
 import { record, saveEntities } from "../books.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { note } from "../ui.js";
+import { note, tellOnPage } from "../ui.js";
 import { AI_OWN_BATCH, aiSuggestionCount, askAboutLines, waitingForAnswers, whatWouldBeAsked } from "../ai.js";
 import { carrySection } from "../ai-carry.js";
 import { aiRoute, aiStatus } from "../ai-backend.js";
@@ -410,8 +410,8 @@ function carryPanel(): HTMLElement {
     carrySection({
       onRead: ({ got }) => {
         showPage("reconcile");
-        void Promise.resolve().then(() => {
-          alert(
+        void Promise.resolve().then(async () => {
+          await tellOnPage(
             `${got} suggestion${got === 1 ? "" : "s"} read. They are on the lines they ` +
               "belong to, under AI suggested.",
           );

@@ -17,7 +17,7 @@ import {
 import type { FiledReturn, GstReturnResult, VarianceNote } from "@nzosa/core";
 import { loadFiledReturns } from "../migrate/file-intake.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
-import { note } from "../ui.js";
+import { askOnPage, note, tellOnPage } from "../ui.js";
 import { taxWithin } from "@nzosa/core";
 
 /**
@@ -317,14 +317,14 @@ function explanationsFor(row: VarianceRow): HTMLElement {
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "Add explanation";
-  add.addEventListener("click", () => {
+  add.addEventListener("click", async () => {
     const cents = parseAmount(amount.value.trim());
     if (cents === null || cents === 0) {
-      alert("Enter the amount this explains, ours less filed: negative where ours is lower.");
+      await tellOnPage("Enter the amount this explains, ours less filed: negative where ours is lower.");
       return;
     }
     if (reason.value.trim() === "") {
-      alert("Say what the difference is.");
+      await tellOnPage("Say what the difference is.");
       return;
     }
     const note: VarianceNote = {
@@ -493,7 +493,7 @@ async function markFiled(result: GstReturnResult): Promise<void> {
       ? `a refund of ${formatAmount(result.boxes.box15)}`
       : `${formatAmount(result.boxes.box15)} to pay`;
   if (
-    !confirm(
+    !await askOnPage(
       `Record the return for ${result.period.from} to ${result.period.to} as filed, with ${owed}? ` +
         "It is kept as these books show it now.",
     )

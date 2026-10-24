@@ -74,6 +74,45 @@ export function askOnPage(message: string, yes = "OK", no = "Cancel"): Promise<b
 }
 
 /**
+ * Say something on the page that needs reading before going on, with one
+ * button. What alert() was used for -- which an embedded browser also skips
+ * without showing. Resolves when it is closed.
+ */
+export function tellOnPage(message: string, done = "OK"): Promise<void> {
+  return new Promise((resolve) => {
+    const box = document.createElement("dialog");
+    box.className = "ask-on-page";
+    const text = document.createElement("p");
+    text.className = "ask-on-page-text";
+    text.textContent = message;
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "primary";
+    ok.textContent = done;
+    const actions = document.createElement("div");
+    actions.className = "ask-on-page-actions";
+    actions.append(ok);
+    box.append(text, actions);
+    let answered = false;
+    const finish = (): void => {
+      if (answered) return;
+      answered = true;
+      box.close();
+      box.remove();
+      resolve();
+    };
+    ok.addEventListener("click", finish);
+    box.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish();
+    });
+    document.body.append(box);
+    box.showModal();
+    ok.focus();
+  });
+}
+
+/**
  * Ask for a line of text on the page, and wait for it: the typed text, or null
  * when it is dismissed. The same box as askOnPage, for what prompt() was used
  * for -- which an embedded browser also answers without showing.

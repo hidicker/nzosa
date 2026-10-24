@@ -4,7 +4,7 @@ import { bankLabel, banks } from "../books.js";
 import { aiAsk, aiRoute, aiStatus } from "../ai-backend.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, nameCell, note } from "../ui.js";
 import {
   categoryMatchPrompt,
   codingAccountsOnly,
@@ -367,7 +367,7 @@ function keep(joined: SheetConversion): HTMLElement {
     void (async () => {
       const source = held?.file ?? "spreadsheet";
       if (txInput.checked) {
-        if (!confirm(`Add ${joined.lines.length} lines to the books as transactions? Check none of them is already in from a bank feed or file.`)) {
+        if (!await askOnPage(`Add ${joined.lines.length} lines to the books as transactions? Check none of them is already in from a bank feed or file.`)) {
           go.disabled = false;
           return;
         }

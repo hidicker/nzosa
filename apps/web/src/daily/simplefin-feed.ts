@@ -3,7 +3,7 @@ import { addTransactions } from "./bank-import.js";
 import { state } from "../state.js";
 import { feedIsHosted } from "../feed-route.js";
 import { backendKind } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { feedRequestFrom, fromSimpleFin, onOrAfter, simpleFinAccountId } from "@nzosa/core";
 import type { IsoDate, SimpleFinAccount } from "@nzosa/core";
@@ -103,8 +103,8 @@ export async function renderSimpleFin(): Promise<void> {
   head.textContent =
     `Connected to ${status.bridge || "the SimpleFIN Bridge"}.` +
     (status.lastFetch ? ` Last fetched ${new Date(status.lastFetch).toLocaleString(booksLocale())}.` : "");
-  const disconnect = button("Disconnect", () => {
-    if (!confirm("Forget the SimpleFIN access for these books? The lines already brought in stay.")) return;
+  const disconnect = button("Disconnect", async () => {
+    if (!await askOnPage("Forget the SimpleFIN access for these books? The lines already brought in stay.")) return;
     void call("", { method: "DELETE" }).then(() => {
       listed = null;
       void renderSimpleFin();
@@ -284,8 +284,8 @@ async function fetchAccounts(
       const back = document.createElement("button");
       back.type = "button";
       back.textContent = "Bring them back";
-      back.addEventListener("click", () => {
-        if (!confirm(`Bring back the ${skipped} line${skipped === 1 ? "" : "s"} removed earlier?`)) return;
+      back.addEventListener("click", async () => {
+        if (!await askOnPage(`Bring back the ${skipped} line${skipped === 1 ? "" : "s"} removed earlier?`)) return;
         void fetchAccounts(accounts, chosen, said, button, fromDay, true);
       });
       said.append(back);

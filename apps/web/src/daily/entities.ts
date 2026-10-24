@@ -26,7 +26,7 @@ import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, askTextOnPage, note, tellOnPage } from "../ui.js";
 import {
   feedAccountForNumber,
   parseXeroBankAccountList,
@@ -183,13 +183,13 @@ export function addEntityForm(): HTMLElement {
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "Add entity";
-  add.addEventListener("click", () => {
+  add.addEventListener("click", async () => {
     const wanted = name.value.trim();
     if (wanted === "") return;
     const model = state.ledger.entities ?? emptyEntityModel();
     const id = entityId(wanted);
     if (model.entities.some((e) => e.id === id)) {
-      alert(`There is already an entity called "${wanted}".`);
+      await tellOnPage(`There is already an entity called "${wanted}".`);
       return;
     }
     name.value = "";
@@ -745,8 +745,8 @@ export function renderEntities(): void {
       "and reports include it.";
     gstWrap.append(gstBox, document.createTextNode(" GST registered"));
     gstWrap.hidden = noSalesTax();
-    gstBox.addEventListener("change", () => {
-      const sure = confirm(
+    gstBox.addEventListener("change", async () => {
+      const sure = await askOnPage(
         `${entity.name} ${gstBox.checked ? "is" : "is not"} registered for GST?\n\n` +
           `Lines not yet confirmed will be suggested ${gstBox.checked ? "with GST" : "with no GST"}. Lines already ` +
           "confirmed keep the GST they were confirmed with: change any that need it on Reconcile, where the filter " +
@@ -835,8 +835,8 @@ export function renderEntities(): void {
     const rename = document.createElement("button");
     rename.type = "button";
     rename.textContent = "Rename";
-    rename.addEventListener("click", () => {
-      const next = prompt("Name for this entity", entity.name);
+    rename.addEventListener("click", async () => {
+      const next = await askTextOnPage("Name for this entity", entity.name);
       if (next === null || next.trim() === "") return;
       void saveEntities({
         ...model,
@@ -850,8 +850,8 @@ export function renderEntities(): void {
     remove.type = "button";
     remove.className = "danger";
     remove.textContent = "Delete";
-    remove.addEventListener("click", () => {
-      if (!confirm(`Delete "${entity.name}"? Everything assigned to it becomes unassigned.`)) {
+    remove.addEventListener("click", async () => {
+      if (!await askOnPage(`Delete "${entity.name}"? Everything assigned to it becomes unassigned.`)) {
         return;
       }
       // Assignments pointing at a deleted entity are removed rather than left
@@ -1823,8 +1823,8 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
       "Recode them before deleting it.";
   } else {
     button.title = "Take this account out of the chart.";
-    button.addEventListener("click", () => {
-      if (!confirm(`Remove "${account.name}" from the chart of accounts?`)) return;
+    button.addEventListener("click", async () => {
+      if (!await askOnPage(`Remove "${account.name}" from the chart of accounts?`)) return;
       void removeChartAccount(account, label);
     });
   }
@@ -1900,7 +1900,7 @@ async function renameChartAccount(
     (r) => r.label !== label && (r.label === newLabel || (code !== "" && r.account.code.trim() === code)),
   );
   if (existing !== undefined) {
-    const ok = confirm(
+    const ok = await askOnPage(
       `"${existing.label}" already exists. Merge "${label}" into it?\n\n` +
         "All coding, splits and rules move across; the account keeps its own GST treatment " +
         `and entity. Files that still say "${label}" will read as ${existing.label}.`,
@@ -1911,7 +1911,7 @@ async function renameChartAccount(
 
   const why = renameProblem(state.chart, account, to);
   if (why !== null) {
-    alert(why);
+    await tellOnPage(why);
     return;
   }
 

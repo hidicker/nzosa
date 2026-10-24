@@ -18,7 +18,7 @@ import { renderMembers } from "./cloud-members.js";
 import { rpc } from "../cloud.js";
 import { state } from "../state.js";
 import { copyToCloudBook, openCloudBook, openCloudBookId } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, askTextOnPage, note } from "../ui.js";
 
 /**
  * Books kept on a server, and the way in to them.
@@ -406,8 +406,8 @@ async function booksList(body: HTMLElement, email: string): Promise<void> {
       remove.type = "button";
       remove.className = "danger";
       remove.textContent = "Delete";
-      remove.addEventListener("click", () => {
-        const typed = prompt(
+      remove.addEventListener("click", async () => {
+        const typed = await askTextOnPage(
           `Delete "${book.name}"?\n\nIt disappears for everyone who can see it. Nothing in it is erased, ` +
             "and an owner can restore it from this page.\n\nType the name to delete it:",
         );
@@ -596,8 +596,8 @@ function saveToServer(body: HTMLElement): void {
       replace.type = "button";
       replace.className = "danger";
       replace.textContent = `Replace what is in "${same.name}"`;
-      replace.addEventListener("click", () => {
-        if (!confirm(`Replace everything in "${same.name}" on the server with the books in this browser?`)) return;
+      replace.addEventListener("click", async () => {
+        if (!await askOnPage(`Replace everything in "${same.name}" on the server with the books in this browser?`)) return;
         choice.hidden = true;
         void fill(same);
       });

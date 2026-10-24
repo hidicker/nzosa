@@ -19,7 +19,7 @@ import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { save as saveLedger, savePart } from "../store.js";
-import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
+import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   accountEntityKey,
   applySalesTax,
@@ -1361,7 +1361,7 @@ export function renderInvoices(): void {
       tbody.append(tr);
     }
     table.append(head, tbody);
-    body.append(table);
+    body.append(wideTable(table));
   }
 
   // --- what is still owing ---
@@ -1399,7 +1399,7 @@ export function renderInvoices(): void {
       draftBody.append(tr);
     }
     draftTable.append(draftHead, draftBody);
-    body.append(draftTable);
+    body.append(wideTable(draftTable));
   }
 
   if (owing.length > 0) {
@@ -1447,7 +1447,7 @@ export function renderInvoices(): void {
       tbody.append(tr);
     }
     table.append(head, tbody);
-    body.append(table);
+    body.append(wideTable(table));
   }
 
   // --- matched ---
@@ -1538,7 +1538,7 @@ export function renderInvoices(): void {
 
   heading.textContent = `Matched (${result.matched.length + byInvoice.size})`;
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 
   // --- accepted differences ---
   // Matched, but for an amount that was not the invoice's: the difference is
@@ -1581,7 +1581,7 @@ export function renderInvoices(): void {
       accBody.append(tr);
     }
     accTable.append(accHead, accBody);
-    body.append(accTable);
+    body.append(wideTable(accTable));
   }
 }
 
@@ -1756,7 +1756,7 @@ export function creditNoteSection(
   }
 
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 }
 
 /** Record which invoice a credit note credits, or take the link away. */

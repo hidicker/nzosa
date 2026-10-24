@@ -17,7 +17,7 @@ import {
 import type { FiledReturn, GstReturnResult, VarianceNote } from "@nzosa/core";
 import { loadFiledReturns } from "../migrate/file-intake.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
-import { askOnPage, note, tellOnPage } from "../ui.js";
+import { askOnPage, note, tellOnPage, wideTable } from "../ui.js";
 import { taxWithin } from "@nzosa/core";
 
 /**
@@ -193,7 +193,7 @@ export function renderVariance(): void {
   }
 
   table.append(tbody);
-  body.append(table);
+  body.append(wideTable(table));
 
   const open = state.varianceRows.find((row) => row.periodEnd === state.openPeriod);
   if (open) body.append(renderDetail(open));
@@ -252,7 +252,7 @@ function renderDetail(row: VarianceRow): HTMLElement {
       tbody.append(tr);
     }
     table.append(tbody);
-    wrap.append(table);
+    wrap.append(wideTable(table));
   };
 
   section("In the filed return, not in ours", detail.onlyFiled);
@@ -473,7 +473,7 @@ function filedReturnTools(): HTMLElement {
       tbody.append(tr);
     }
     table.append(tbody);
-    wrap.append(table);
+    wrap.append(wideTable(table));
   }
   return wrap;
 }

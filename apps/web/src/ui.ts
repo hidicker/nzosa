@@ -19,6 +19,17 @@ export type Theme = "system" | "light" | "dark";
 
 export const THEME_KEY = "nzosa:theme";
 
+/**
+ * A table, in a box that scrolls sideways when the page is narrower than the
+ * table -- rather than the whole page scrolling, sidebar and all.
+ */
+export function wideTable(table: HTMLElement): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "wide-table";
+  box.append(table);
+  return box;
+}
+
 /** A line of explanation under a heading. */
 export function note(text: string): HTMLElement {
   const p = document.createElement("p");

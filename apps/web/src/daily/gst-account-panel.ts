@@ -1,7 +1,7 @@
 import { postedJournals, reportEngine, varianceInput } from "../books.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { state } from "../state.js";
-import { note } from "../ui.js";
+import { note, wideTable } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
 import {
   accountEntityKey,
@@ -139,7 +139,7 @@ export function gstAccountSection(): HTMLElement | null {
     tbody.append(tr);
   }
   table.append(tbody);
-  box.append(table);
+  box.append(wideTable(table));
   box.append(
     note(
       "A difference with the GST account is GST posted that no return counted, or a return " +

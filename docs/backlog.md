@@ -129,8 +129,6 @@ works).
   the journal list shows the name as it was.
 - **Each page change asks the local server for `/api/status` and `/api/ai`
   twice.** Harmless, but chatty; one of each is enough.
-- **At about 800 pixels wide, Entities & accounts scrolls sideways.** The
-  accounts table is wider than the page.
 - **The lock guard works out every GST return from the first transaction on
   every save.** Fine on the books tried so far; on books with many years it
   may make saving slow. Worth measuring before changing.

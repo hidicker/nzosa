@@ -26,7 +26,7 @@ import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { askOnPage, askTextOnPage, note, tellOnPage } from "../ui.js";
+import { askOnPage, askTextOnPage, note, tellOnPage, wideTable } from "../ui.js";
 import {
   feedAccountForNumber,
   parseXeroBankAccountList,
@@ -1387,7 +1387,7 @@ export function renderEntities(): void {
     const at = [...chartHead.querySelectorAll("th")].findIndex((th) => th.textContent === "GST");
     if (at >= 0) for (const row of chartTable.rows) row.cells[at]?.remove();
   }
-  body.append(chartTable);
+  body.append(wideTable(chartTable));
   body.append(addAccountForm(model, accountRows));
 }
 

@@ -4,7 +4,7 @@ import { booksCountry, booksMoney } from "../country.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, askTextOnPage, download, nameCell, note, tellOnPage } from "../ui.js";
+import { amountCell, askOnPage, askTextOnPage, download, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   DEPRECIATION_METHODS,
   depreciationSchedule,
@@ -210,7 +210,7 @@ function renderDisposals(body: HTMLElement): void {
   }
 
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
   body.append(
     note(
       booksCountry().id === "au"
@@ -693,7 +693,7 @@ export function renderAssetsPage(): void {
     tbody.append(tr);
   }
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 
   renderDisposals(body);
 }

@@ -183,11 +183,6 @@ works).
   accounts are treated as loans (financing) rather than cash. Fixing it moves
   any other loan account out of cash in New Zealand's cash flow statements
   too, so it waits for a decision. Found 17 October 2026.
-- **The bank file column picker has no Account column.** A bank CSV that
-  names the account on each row (Date, Amount, Payee, Description,
-  Reference, Account) is read into one account named after the file, as the
-  picker for an unknown layout offers no column for the account. Found by an
-  outside tester on Australian books, 17 October 2026.
 - **SimpleFIN for books kept online.** The SimpleFIN feed works on the
   desktop app only: its Access URL is kept in `.simplefin.json` by the local
   server. Books kept online need it in Supabase Vault with an edge function

@@ -31,6 +31,8 @@ export interface FileReport {
   before?: { count: number; start: string };
   /** Lines the file shares with the account it was found to be, already held. */
   already?: number;
+  /** Every account the file's lines went on, where it held several. */
+  accounts?: string[];
 }
 import type { ReferenceLoad } from "./check-ui.js";
 import type { VarianceRow } from "./variance.js";

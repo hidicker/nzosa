@@ -30,6 +30,11 @@ export interface BankLayout {
   description: number;
   reference: number;
   balance: number;
+  /**
+   * Which bank account each line is on, for a file that holds several. -1 or
+   * absent (layouts kept before there was one) for a file of one account.
+   */
+  account?: number;
   /** Day first (13/04), month first (04/13), or null when the dates settle it themselves. */
   dayFirst: boolean | null;
   /** An amount column that shows money out as positive: turn it round. */
@@ -54,6 +59,8 @@ const PAYEE_WORDS = [/\bpayee\b/i, /\bname\b/i, /\bother party\b/i, /\bmerchant\
 const DESCRIPTION_WORDS = [/\bdescription\b/i, /\bdetails?\b/i, /\bnarrative\b/i, /\bmemo\b/i, /\bparticulars\b/i, /\bnarration\b/i, /\btransaction\b/i];
 const REFERENCE_WORDS = [/\breference\b/i, /\bref\b/i, /\bcode\b/i, /\bcheque\b/i, /\bcheck\b/i];
 const BALANCE_WORDS = [/\bbalance\b/i];
+/** The account itself, not the other party's: "Account", "Account name", "Acct no". */
+const ACCOUNT_WORDS = [/^\s*(bank\s+)?(account|acct|a\/c)(\s+(name|number|no\.?|#))?\s*$/i];
 
 const looksLikeDate = (cell: string): boolean =>
   /^\s*(\d{1,4}[\/\-.]\d{1,2}[\/\-.]\d{1,4}|\d{1,2}\s+[a-z]{3,9}\s+\d{2,4})/i.test(cell);
@@ -131,6 +138,7 @@ export function guessBankLayout(text: string): BankLayoutGuess {
       if (amount >= 0) taken.add(amount);
     }
   }
+  const account = pick(ACCOUNT_WORDS);
   const payee = pick(PAYEE_WORDS);
   let description = pick(DESCRIPTION_WORDS);
   const reference = pick(REFERENCE_WORDS);
@@ -178,6 +186,7 @@ export function guessBankLayout(text: string): BankLayoutGuess {
       description,
       reference,
       balance: found,
+      account,
       dayFirst: date < 0 ? null : dateOrderIn(body, date),
     },
     columns,
@@ -218,6 +227,16 @@ function moneyOf(cell: string, currency: string): number | null {
   return negative ? -Math.abs(value) : value;
 }
 
+/** `Business Cheque 123` as `business-cheque-123`: an id for an account the file names. */
+function accountIdOf(name: string): string {
+  return (
+    name
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, "-")
+      .replace(/^-|-$/g, "") || "bank"
+  );
+}
+
 /**
  * The file's lines, read with a layout: ids and occurrence numbers given the
  * same way every importer gives them, so a file read this way and the same
@@ -233,6 +252,17 @@ export function importWithLayout(
   const problems: ImportProblem[] = [];
   const dayFirst = layout.dayFirst ?? options.dayFirst ?? true;
   const cell = (fields: readonly string[], at: number): string => (at < 0 ? "" : (fields[at] ?? "").trim());
+  // A file naming several accounts puts each line on its own; naming one (or
+  // none), every line goes on the account chosen for the file, as before.
+  const accountColumn = layout.account ?? -1;
+  const named = new Set<string>();
+  if (accountColumn >= 0) {
+    for (const record of records.slice(layout.headerRow + 1)) {
+      const name = cell(record.fields, accountColumn);
+      if (name !== "") named.add(name);
+    }
+  }
+  const several = named.size > 1;
   for (const record of records.slice(layout.headerRow + 1)) {
     const { fields, line } = record;
     if (fields.every((f) => f.trim() === "")) continue;
@@ -259,6 +289,8 @@ export function importWithLayout(
     const payee = cell(fields, layout.payee);
     const description = cell(fields, layout.description);
     const balance = layout.balance >= 0 ? moneyOf(cell(fields, layout.balance), options.currency) : null;
+    const accountName = several ? cell(fields, accountColumn) : "";
+    const label = accountName !== "" ? accountName : options.accountLabel;
     transactions.push({
       id: "",
       occurrence: 1,
@@ -275,9 +307,9 @@ export function importWithLayout(
       type: amount < 0 ? "DEBIT" : "CREDIT",
       batch: "",
       otherPartyAccount: "",
-      account: options.account,
+      account: accountName !== "" ? accountIdOf(accountName) : options.account,
       extras: {
-        ...(options.accountLabel !== undefined ? { accountLabel: options.accountLabel } : {}),
+        ...(label !== undefined ? { accountLabel: label } : {}),
         ...(balance !== null && balance !== 0 ? { balance: (balance / 100).toFixed(2) } : {}),
       },
       source: { importer: "columns", file: options.file, line },
@@ -292,5 +324,11 @@ export function importWithLayout(
     t.occurrence = next;
   }
   for (const t of transactions) t.id = hash(dedupeKey(t));
-  return { importer: "columns", file: options.file, account: options.account, transactions, problems };
+  return {
+    importer: "columns",
+    file: options.file,
+    account: several ? (transactions[0]?.account ?? options.account) : options.account,
+    transactions,
+    problems,
+  };
 }

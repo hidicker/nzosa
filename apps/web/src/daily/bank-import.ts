@@ -331,7 +331,9 @@ export async function handleFiles(files: File[]): Promise<void> {
       // A file that named no account -- QuickBooks' register is named for the
       // bank, not the account -- is the held account whose lines it shares,
       // so the lines already there are found as the same lines.
-      const shares = account === "" ? accountItShares(result.account, result.transactions) : null;
+      // Not a file of several accounts: those are each named by the file.
+      const oneAccount = new Set(result.transactions.map((t) => t.account)).size <= 1;
+      const shares = account === "" && oneAccount ? accountItShares(result.account, result.transactions) : null;
       let already = 0;
       if (shares !== null) {
         result.transactions = moveToAccount(result.transactions, shares.account, shares.label);
@@ -356,12 +358,14 @@ export async function handleFiles(files: File[]): Promise<void> {
       const kept = onOrAfter(result.transactions, booksStart);
       const earlier = result.transactions.length - kept.length;
       incoming.push(...kept);
+      const accounts = [...new Set(kept.map((t) => t.account))];
       state.reports.push({
         name: file.name,
         importer: result.importer,
         account: result.account,
         count: kept.length,
         problems: result.problems,
+        ...(accounts.length > 1 ? { accounts } : {}),
         ...(earlier > 0 && booksStart !== undefined ? { before: { count: earlier, start: booksStart } } : {}),
         ...(already > 0 ? { already } : {}),
       });
@@ -1525,7 +1529,11 @@ function renderReports(): void {
       return `<div class="report">
         <strong>${escapeHtml(report.name)}</strong>
         <p>${report.count} transactions &middot; ${escapeHtml(getImporter(report.importer)?.label ?? (report.importer === "columns" ? "the columns you chose" : report.importer))} &middot; ${escapeHtml(
-          report.account === "" ? "" : bankLabel(report.account),
+          report.accounts !== undefined
+            ? report.accounts.map(bankLabel).join(", ")
+            : report.account === ""
+              ? ""
+              : bankLabel(report.account),
         )}</p>
         ${before}
         ${already}

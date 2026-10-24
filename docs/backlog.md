@@ -118,8 +118,6 @@ works).
   grows slowly. Revisit only if the database nears the free plan's 500 MB:
   `prune_part_history(interval)` removes rows older than the interval and
   keeps each part rebuildable.
-- **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
-  notes and the Google One journal with GST were sorted. Not yet traced.
 - **Say it is working while the other bulk actions on Reconcile run.** "Split
   N" now shows the `working` style and "Splitting 12 of 40…" on its button
   until it is done. Accept all and AI suggestions may need the same: check

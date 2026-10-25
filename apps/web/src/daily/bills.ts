@@ -1,3 +1,4 @@
+import { creditOnAccountSection } from "./credit-on-account.js";
 import { redraw, showPage } from "../app.js";
 import {
   bankLabel,
@@ -12,8 +13,9 @@ import {
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, askOnPage, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
-import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
+import { approveBill, copyBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
+import { billPaymentFile } from "./bill-payment-file.js";
 import {
   accountEntityKey,
   daysBetween,
@@ -102,6 +104,7 @@ export function renderBills(): void {
     .filter((r): r is { bill: Invoice; balance: InvoiceBalance; status: DocumentStatus } => r !== null);
 
   body.append(summary(rows, now));
+  billPaymentFile(body, rows);
   // Credit notes from suppliers, each to say which bill it reduces. They
   // could not be assigned anywhere: the list was on Invoices, of sales only.
   creditNoteSection(
@@ -109,6 +112,7 @@ export function renderBills(): void {
     new Map([...balances].filter(([, b]) => b.invoice.kind === "purchase")),
     money,
   );
+  creditOnAccountSection(body, balances, "purchase", money);
 
   if (paying !== null) {
     const row = rows.find((r) => r.bill.number === paying);
@@ -271,6 +275,9 @@ function actionsCell(bill: Invoice, balance: InvoiceBalance, status: DocumentSta
         document.getElementById("bill-pay")?.scrollIntoView({ block: "nearest" });
       }, "Record a payment that no bank line in these books shows"),
     );
+  }
+  if (status !== "Credit note") {
+    td.append(button("copy", () => copyBill(bill), "A new bill like this one: same supplier and lines, dated today, as a draft."));
   }
   if (status !== "Voided") {
     td.append(button("void", () => void voidBill(bill, balance), "Take it back out of the books"));

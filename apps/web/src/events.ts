@@ -6,7 +6,9 @@ import type {
   OpeningBalances,
   CategoryRule,
   Invoice,
+  LockDates,
   SplitPart,
+  Transaction,
   TransactionOverride,
   VarianceNote,
 } from "@nzosa/core";
@@ -66,10 +68,23 @@ export type EventKind =
   | "items"
   /** Classes and what each is given to, whole. */
   | "classes"
+  | "jobs"
   /** Time entries, whole. */
   | "time"
   /** Australian payroll: employees and pay runs, whole. */
   | "aupayroll"
+  /** Where bills are paid from by bank file, whole. */
+  | "billPayment"
+  /** Saved invoice messages and email wording, whole. */
+  | "wording"
+  /** Whether time needs approving before it is invoiced. */
+  | "timeApproval"
+  /** A line typed into a register, or taken out of one, with its coding and split. */
+  | "register"
+  /** Credit applied in parts, whole. */
+  | "creditApplications"
+  /** Which files are attached to which documents, whole. */
+  | "attachments"
   /** Stock counts, whole. */
   | "stock"
   /** One account in the chart. `id` is its code and name. */
@@ -201,6 +216,11 @@ export interface LedgerEvent {
   after: unknown;
   /** Set once this event has been undone, so it is not undone twice. */
   reverted?: boolean;
+  /**
+   * Set when the change moved a figure in a period that had been locked and
+   * was open again: the dates the locks had reached.
+   */
+  intoLocked?: LockDates;
 }
 
 /**
@@ -298,6 +318,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, auPayroll: (event.before ?? { employees: [], payRuns: [] }) as NonNullable<StoredLedger["auPayroll"]> };
     case "classes":
       return { ...ledger, classes: (event.before ?? { names: [], assigned: {} }) as NonNullable<StoredLedger["classes"]> };
+    case "jobs":
+      return { ...ledger, jobs: (event.before ?? { jobs: [], assigned: {} }) as NonNullable<StoredLedger["jobs"]> };
     case "items":
       return { ...ledger, items: (event.before ?? []) as NonNullable<StoredLedger["items"]> };
     case "budgets":
@@ -306,6 +328,43 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
+    case "attachments":
+      return { ...ledger, attachments: (event.before ?? []) as NonNullable<StoredLedger["attachments"]> };
+    case "creditApplications":
+      return { ...ledger, creditApplications: (event.before ?? {}) as NonNullable<StoredLedger["creditApplications"]> };
+    case "register": {
+      // Undone, a line typed in goes, and one deleted comes back, each with
+      // its coding and split.
+      type Typed = { transaction: Transaction; override?: TransactionOverride; split?: SplitPart[] };
+      const added = event.before === null || event.before === undefined;
+      const one = (added ? event.after : event.before) as Typed;
+      const id = one.transaction.id;
+      const overrides = { ...(ledger.overrides ?? {}) };
+      const splits = { ...(ledger.splits ?? {}) };
+      if (added) {
+        delete overrides[id];
+        delete splits[id];
+        return { ...ledger, transactions: ledger.transactions.filter((t) => t.id !== id), overrides, splits };
+      }
+      if (one.override !== undefined) overrides[id] = one.override;
+      if (one.split !== undefined) splits[id] = one.split;
+      const transactions = ledger.transactions.some((t) => t.id === id) ? ledger.transactions : [...ledger.transactions, one.transaction];
+      return { ...ledger, transactions, overrides, splits };
+    }
+    case "timeApproval": {
+      const { timeApproval: _t, ...rest } = ledger;
+      return event.before === true ? { ...rest, timeApproval: true } : (rest as StoredLedger);
+    }
+    case "wording": {
+      const { invoiceMessages: _m, emailWording: _w, ...rest } = ledger;
+      return { ...rest, ...((event.before ?? {}) as Pick<StoredLedger, "invoiceMessages" | "emailWording">) } as StoredLedger;
+    }
+    case "billPayment": {
+      const { billPayment: _gone, ...rest } = ledger;
+      return event.before === null || event.before === undefined
+        ? (rest as StoredLedger)
+        : { ...ledger, billPayment: event.before as NonNullable<StoredLedger["billPayment"]> };
+    }
     case "manualJournal": {
       // The whole set, because a journal is only meaningful beside the others.
       return { ...ledger, manualJournals: (event.before ?? []) as ManualJournal[] };
@@ -574,8 +633,15 @@ export const KIND_LABELS: Record<EventKind, string> = {
   budgets: "Budgets",
   items: "Products and services",
   classes: "Classes",
+  jobs: "Jobs",
   time: "Time",
   aupayroll: "Payroll",
+  billPayment: "Paying bills by bank file",
+  wording: "Invoice messages and email wording",
+  timeApproval: "Time approval",
+  register: "Typed into a register",
+  creditApplications: "Credit applied",
+  attachments: "Attachments",
   stock: "Stock count",
   entities: "Entities",
   codingBatch: "Coding (batch)",

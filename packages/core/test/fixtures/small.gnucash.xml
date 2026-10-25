@@ -1,0 +1,494 @@
+<?xml version="1.0" encoding="utf-8" ?>
+<gnc-v2
+     xmlns:gnc="http://www.gnucash.org/XML/gnc"
+     xmlns:act="http://www.gnucash.org/XML/act"
+     xmlns:book="http://www.gnucash.org/XML/book"
+     xmlns:cd="http://www.gnucash.org/XML/cd"
+     xmlns:cmdty="http://www.gnucash.org/XML/cmdty"
+     xmlns:slot="http://www.gnucash.org/XML/slot"
+     xmlns:split="http://www.gnucash.org/XML/split"
+     xmlns:trn="http://www.gnucash.org/XML/trn"
+     xmlns:ts="http://www.gnucash.org/XML/ts">
+<gnc:count-data cd:type="book">1</gnc:count-data>
+<gnc:book version="2.0.0">
+<book:id type="guid">b00k</book:id>
+<gnc:count-data cd:type="account">17</gnc:count-data>
+<gnc:count-data cd:type="transaction">6</gnc:count-data>
+<gnc:account version="2.0.0">
+  <act:name>Root Account</act:name>
+  <act:id type="guid">r</act:id>
+  <act:type>ROOT</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Assets</act:name>
+  <act:id type="guid">a</act:id>
+  <act:type>ASSET</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">r</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Current Assets</act:name>
+  <act:id type="guid">ca</act:id>
+  <act:type>ASSET</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">a</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Cheque Account</act:name>
+  <act:id type="guid">chq</act:id>
+  <act:type>BANK</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:code>090</act:code>
+  <act:parent type="guid">ca</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Fixed Assets</act:name>
+  <act:id type="guid">fa</act:id>
+  <act:type>ASSET</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">a</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Equipment</act:name>
+  <act:id type="guid">eq</act:id>
+  <act:type>ASSET</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">fa</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Liabilities</act:name>
+  <act:id type="guid">l</act:id>
+  <act:type>LIABILITY</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">r</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Visa</act:name>
+  <act:id type="guid">visa</act:id>
+  <act:type>CREDIT</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">l</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Expenses</act:name>
+  <act:id type="guid">x</act:id>
+  <act:type>EXPENSE</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">r</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Auto</act:name>
+  <act:id type="guid">auto</act:id>
+  <act:type>EXPENSE</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">x</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Fuel</act:name>
+  <act:id type="guid">fuel</act:id>
+  <act:type>EXPENSE</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">auto</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Office</act:name>
+  <act:id type="guid">off</act:id>
+  <act:type>EXPENSE</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">x</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Fuel</act:name>
+  <act:id type="guid">fuel2</act:id>
+  <act:type>EXPENSE</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">off</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Income</act:name>
+  <act:id type="guid">i</act:id>
+  <act:type>INCOME</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">r</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Consulting</act:name>
+  <act:id type="guid">cons</act:id>
+  <act:type>INCOME</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">i</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Equity</act:name>
+  <act:id type="guid">e</act:id>
+  <act:type>EQUITY</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:slots>
+    <slot>
+      <slot:key>placeholder</slot:key>
+      <slot:value type="string">true</slot:value>
+    </slot>
+  </act:slots>
+  <act:parent type="guid">r</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Opening Balances</act:name>
+  <act:id type="guid">ob</act:id>
+  <act:type>EQUITY</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+  <act:parent type="guid">e</act:parent>
+</gnc:account>
+<gnc:account version="2.0.0">
+  <act:name>Template Root</act:name>
+  <act:id type="guid">tr</act:id>
+  <act:type>ROOT</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+</gnc:account>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t1</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-04-01 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-01 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Opening balance</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s1</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>500000/100</split:value>
+      <split:quantity>500000/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s2</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-500000/100</split:value>
+      <split:quantity>-500000/100</split:quantity>
+      <split:account type="guid">ob</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t2</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-04-03 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-03 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Z Energy</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s3</split:id>
+      <split:memo>Fuel for the van</split:memo>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>8550/100</split:value>
+      <split:quantity>8550/100</split:quantity>
+      <split:account type="guid">fuel</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s4</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-8550/100</split:value>
+      <split:quantity>-8550/100</split:quantity>
+      <split:account type="guid">visa</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t3</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:num>1001</trn:num>
+  <trn:date-posted>
+    <ts:date>2026-04-05 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-05 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Kea Ltd &amp; Co</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s5</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>115000/100</split:value>
+      <split:quantity>115000/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s6</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-115000/100</split:value>
+      <split:quantity>-115000/100</split:quantity>
+      <split:account type="guid">cons</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t4</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-04-06 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-06 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Laptop</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s7</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>250000/100</split:value>
+      <split:quantity>250000/100</split:quantity>
+      <split:account type="guid">eq</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s8</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-200000/100</split:value>
+      <split:quantity>-200000/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s9</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-50000/100</split:value>
+      <split:quantity>-50000/100</split:quantity>
+      <split:account type="guid">visa</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t5</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>USD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-04-07 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-07 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Paid in US dollars</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s10</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>1000/100</split:value>
+      <split:quantity>1000/100</split:quantity>
+      <split:account type="guid">off</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s11</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-1000/100</split:value>
+      <split:quantity>-1000/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">t6</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-04-08 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-04-08 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Unbalanced</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">s12</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>1000/100</split:value>
+      <split:quantity>1000/100</split:quantity>
+      <split:account type="guid">off</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">s13</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-999/100</split:value>
+      <split:quantity>-999/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+<gnc:template-transactions>
+<gnc:account version="2.0.0">
+  <act:name>Template Root</act:name>
+  <act:id type="guid">tr2</act:id>
+  <act:type>ROOT</act:type>
+  <act:commodity>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </act:commodity>
+  <act:commodity-scu>100</act:commodity-scu>
+</gnc:account>
+<gnc:transaction version="2.0.0">
+  <trn:id type="guid">tt</trn:id>
+  <trn:currency>
+    <cmdty:space>CURRENCY</cmdty:space>
+    <cmdty:id>NZD</cmdty:id>
+  </trn:currency>
+  <trn:date-posted>
+    <ts:date>2026-05-01 10:59:00 +1300</ts:date>
+  </trn:date-posted>
+  <trn:date-entered>
+    <ts:date>2026-05-01 21:15:10 +1300</ts:date>
+  </trn:date-entered>
+  <trn:description>Monthly rent (scheduled)</trn:description>
+  <trn:splits>
+    <trn:split>
+      <split:id type="guid">ts1</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>100000/100</split:value>
+      <split:quantity>100000/100</split:quantity>
+      <split:account type="guid">off</split:account>
+    </trn:split>
+    <trn:split>
+      <split:id type="guid">ts2</split:id>
+      <split:reconciled-state>n</split:reconciled-state>
+      <split:value>-100000/100</split:value>
+      <split:quantity>-100000/100</split:quantity>
+      <split:account type="guid">chq</split:account>
+    </trn:split>
+  </trn:splits>
+</gnc:transaction>
+</gnc:template-transactions>
+</gnc:book>
+</gnc-v2>

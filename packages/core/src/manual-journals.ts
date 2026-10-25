@@ -74,6 +74,13 @@ export interface ManualJournal {
    * out, rather than finding nothing at all.
    */
   deleted?: { at: string; by: string };
+  /**
+   * An adjusting entry: one an accountant makes after the period's trading is
+   * in -- an accrual, a prepayment, a correction found at review. Marked so it
+   * can be listed on its own and a report drawn without it, to show what the
+   * books said before the adjustments and what each one changed.
+   */
+  adjusting?: boolean;
 }
 
 /** What is wrong with a manual journal. Named apart from the report reader's. */
@@ -231,7 +238,64 @@ export function reversalOf(journal: ManualJournal, date: IsoDate, id: string): M
       ...(line.gst !== undefined ? { gst: line.gst } : {}),
     })),
     reverses: journal.id,
+    // Undoing an adjustment is part of the same adjustment.
+    ...(journal.adjusting === true ? { adjusting: true } : {}),
   };
+}
+
+/**
+ * Whether a posted journal is an adjusting entry: a manual journal marked as
+ * one, or a year-end adjustment the books work out themselves (private use of
+ * a vehicle, a prepayment), which are adjustments by their nature.
+ */
+export function isAdjustingEntry(journal: PostedJournal, manual: readonly ManualJournal[]): boolean {
+  if (journal.source === "adjustment") return true;
+  if (journal.source !== "manual") return false;
+  return manual.some((m) => m.adjusting === true && `manual:${m.id}` === journal.transactionId);
+}
+
+/** The posted journals with the adjusting entries left out. */
+export function withoutAdjusting(posted: readonly PostedJournal[], manual: readonly ManualJournal[]): PostedJournal[] {
+  const marked = new Set(manual.filter((m) => m.adjusting === true).map((m) => `manual:${m.id}`));
+  return posted.filter((j) => j.source !== "adjustment" && !(j.source === "manual" && marked.has(j.transactionId)));
+}
+
+/** The adjusting entries posted between two dates, oldest first. */
+export function adjustingEntries(
+  posted: readonly PostedJournal[],
+  manual: readonly ManualJournal[],
+  period: { from: IsoDate; to: IsoDate },
+): PostedJournal[] {
+  const marked = new Set(manual.filter((m) => m.adjusting === true).map((m) => `manual:${m.id}`));
+  return posted
+    .filter((j) => j.date >= period.from && j.date <= period.to)
+    .filter((j) => j.source === "adjustment" || (j.source === "manual" && marked.has(j.transactionId)))
+    .sort((a, b) => a.date.localeCompare(b.date) || a.transactionId.localeCompare(b.transactionId));
+}
+
+function csvCell(text: string): string {
+  return /[",\r\n]/.test(text) ? `"${text.replace(/"/g, '""')}"` : text;
+}
+
+/** The adjusting entries as CSV, a row per line: date, narration, account, debit, credit. */
+export function adjustingEntriesCsv(entries: readonly PostedJournal[]): string {
+  const rows = [["Date", "Narration", "Kind", "Account code", "Account", "Description", "Debit", "Credit"]];
+  const money = (cents: number): string => (cents / 100).toFixed(2);
+  for (const j of entries) {
+    for (const line of j.lines) {
+      rows.push([
+        j.date,
+        j.narration,
+        j.source === "manual" ? "Manual journal" : "Year-end adjustment",
+        line.accountCode,
+        line.accountName,
+        line.description ?? "",
+        line.amount > 0 ? money(line.amount) : "",
+        line.amount < 0 ? money(-line.amount) : "",
+      ]);
+    }
+  }
+  return rows.map((r) => r.map(csvCell).join(",")).join("\r\n") + "\r\n";
 }
 
 /**

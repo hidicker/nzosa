@@ -1,3 +1,6 @@
+import { attachmentsBox } from "../attachments-ui.js";
+import { creditOnAccountSection } from "./credit-on-account.js";
+import { invoiceWordingPanel } from "./invoice-wording.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
 import {
@@ -5,6 +8,7 @@ import {
   billEntities,
   billsAvailable,
   controlAccountFor,
+  ensureExchangeAccount,
   invoiceAssignments,
   invoiceBalanceMap,
   record,
@@ -16,7 +20,7 @@ import {
 import { combobox } from "../combobox.js";
 import { renderRecurring } from "./recurring.js";
 import type { Combobox } from "../combobox.js";
-import { knownCodes } from "../reconcile.js";
+import { knownCodes, pickableCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { save as saveLedger, savePart } from "../store.js";
 import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
@@ -36,6 +40,15 @@ import {
   findItem,
   isPosted,
   isEstimate,
+  isCreditNote,
+  duplicateInvoice,
+  defaultInvoiceMessage,
+  RECEIPT_METHODS,
+  WALK_IN_CUSTOMER,
+  formatUnitPrice,
+  lineAmount,
+  parseQuantity,
+  parseUnitPrice,
   linesWithoutAccount,
   matchInvoices,
   nextInvoiceNumber,
@@ -81,6 +94,16 @@ let editingInvoice: string | null = null;
  */
 let editorOn: "invoices" | "bills" = "invoices";
 
+/** The document a new one is being copied from, while the editor is open on it. */
+let copyingFrom: Invoice | null = null;
+
+/**
+ * The document just saved by Save and next: the next one starts with its
+ * date, entity, account and tax treatment, since a pile of paper invoices
+ * entered after the fact usually shares them. Read once, by the next editor.
+ */
+let nextAfter: Invoice | null = null;
+
 /** The GST treatments an invoice line can carry, named as Xero names them. */
 const INVOICE_TAX_TYPES = [
   { value: "15% GST on Income", label: "15% GST on Income", rate: 15 },
@@ -123,8 +146,31 @@ function rateOf(taxType: string): number {
  * rather than at a coincidence of numbers.
  */
 
+/**
+ * What a document offered before it is an invoice is called: a quote in New
+ * Zealand, where that is the word, an estimate elsewhere. Kept with the
+ * status "Estimate" either way, so nothing that reads it changes.
+ */
+function quoteWord(): string {
+  return booksCountry().id === "nz" ? "Quote" : "Estimate";
+}
+
 function suggestInvoiceNumber(kind: InvoiceKind): string {
   return nextInvoiceNumber(kind, state.ledger.invoices ?? []);
+}
+
+/** A blank document carrying on from one just saved: its date, entity, account and treatment. */
+function following(last: Invoice): Invoice {
+  const blank = blankInvoice();
+  const first = last.lines[0];
+  return {
+    ...blank,
+    issued: last.issued,
+    ...(last.entityId !== undefined ? { entityId: last.entityId } : {}),
+    lines: blank.lines.map((line, index) =>
+      index === 0 && first !== undefined ? { ...line, accountCode: first.accountCode, taxType: first.taxType } : line,
+    ),
+  };
 }
 
 function blankInvoice(): Invoice {
@@ -197,13 +243,22 @@ export function renderInvoiceEditor(): void {
   // leaves the invoice exactly as it was.
   const draft: Invoice = existing
     ? { ...existing, lines: existing.lines.map((l) => ({ ...l })) }
-    : blankInvoice();
+    : copyingFrom !== null
+      ? duplicateInvoice(copyingFrom, suggestInvoiceNumber(copyingFrom.kind), new Date().toLocaleDateString("en-CA"))
+      : nextAfter !== null
+        ? following(nextAfter)
+        : blankInvoice();
+  nextAfter = null;
 
   const box = document.createElement("div");
   box.className = "invoice-editor";
 
   const heading = document.createElement("h3");
-  heading.textContent = existing ? `Edit ${existing.number}` : asBill ? "New bill" : "New invoice";
+  heading.textContent = existing
+    ? `Edit ${existing.number}`
+    : copyingFrom !== null
+      ? `New ${asBill ? "bill" : "invoice"}, copied from ${copyingFrom.number}`
+      : asBill ? "New bill" : "New invoice";
   box.append(heading);
 
   const grid = document.createElement("div");
@@ -315,12 +370,98 @@ export function renderInvoiceEditor(): void {
       "The books keep the link, not the file.",
   );
 
+  // The message at the foot of a sales invoice: a saved one, or typed here.
+  const messages = state.ledger.invoiceMessages ?? [];
+  const startingNote = existing !== undefined || copyingFrom !== null ? (draft.note ?? "") : (defaultInvoiceMessage(messages)?.text ?? "");
+  const noteBox = document.createElement("textarea");
+  noteBox.rows = 2;
+  noteBox.value = startingNote;
+  noteBox.placeholder = "Optional: how to pay, a thank-you";
+  if (!asBill) {
+    if (messages.length > 0) {
+      const pick = document.createElement("select");
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = "Choose a saved message…";
+      pick.append(none);
+      for (const m of messages) {
+        const option = document.createElement("option");
+        option.value = m.id;
+        option.textContent = m.name + (m.isDefault === true ? " (default)" : "");
+        pick.append(option);
+      }
+      pick.addEventListener("change", () => {
+        const chosen = messages.find((m) => m.id === pick.value);
+        if (chosen !== undefined) noteBox.value = chosen.text;
+      });
+      field("Saved messages", pick);
+    }
+    field("Message on the invoice", noteBox, "Printed at the foot of the invoice. Saved messages are kept under Messages and email wording, below the list.");
+  }
+
+  // A sale paid there and then: the document becomes a receipt. The books
+  // still take the money from the bank line it arrives on, as for any invoice.
+  const paidNow = document.createElement("input");
+  paidNow.type = "checkbox";
+  paidNow.checked = draft.receipt !== undefined;
+  const method = document.createElement("select");
+  for (const m of ["", ...RECEIPT_METHODS]) {
+    const option = document.createElement("option");
+    option.value = m;
+    option.textContent = m === "" ? "How paid…" : m;
+    option.selected = (draft.receipt?.method ?? "") === m;
+    method.append(option);
+  }
+  method.hidden = !paidNow.checked;
+  paidNow.addEventListener("change", () => {
+    method.hidden = !paidNow.checked;
+  });
+  if (!asBill) {
+    const wrap = document.createElement("span");
+    const tickLabel = document.createElement("label");
+    tickLabel.append(paidNow, " a sales receipt ");
+    wrap.append(tickLabel, method);
+    field(
+      "Paid on the spot",
+      wrap,
+      "The document is a receipt, paid in full. The money still comes into the books from the bank line it arrives on, matched on Reconcile.",
+    );
+  }
+
+  // Files kept with the document: the bill as it arrived, a signed quote.
+  // Only once it is saved, since a document not saved has nothing to hold them.
+  if (existing !== undefined) {
+    const files = attachmentsBox({ kind: "invoice", id: `${existing.kind}:${existing.number}` }, existing.number);
+    grid.append(files);
+  }
+
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
   field(
     asBill ? "Supplier's invoice number" : "Reference",
     reference,
     asBill ? "As it appears on the bill, so it can be found on their statement." : undefined,
   );
+
+  // Another currency: the document's amounts are in it, and the rate on the
+  // day says what they are worth in the books.
+  const currencyBox = text(draft.currency || booksCurrency(), booksCurrency());
+  currencyBox.maxLength = 3;
+  currencyBox.size = 4;
+  currencyBox.style.textTransform = "uppercase";
+  field("Currency", currencyBox, `The document's currency. ${booksCurrency()} unless it says otherwise.`);
+  const fxBox = text(draft.rate === undefined ? "" : String(draft.rate), "e.g. 1.6543");
+  fxBox.inputMode = "decimal";
+  const fxField = field(
+    "Rate",
+    fxBox,
+    `What one unit of its currency was worth in ${booksCurrency()} on the date it was issued. It is posted at this; a payment that settles it puts the difference to the currency gains and losses account.`,
+  );
+  const foreign = (): boolean => (currencyBox.value.trim().toUpperCase() || booksCurrency()) !== booksCurrency();
+  const showFx = (): void => {
+    fxField.hidden = !foreign();
+  };
+  currencyBox.addEventListener("input", showFx);
+  showFx();
 
   // Whose debt this is. Only the entities that keep bills are offered, and a
   // bill already belonging to another keeps it rather than losing it here.
@@ -540,7 +681,7 @@ export function renderInvoiceEditor(): void {
   const totals = document.createElement("p");
   totals.className = "invoice-totals";
 
-  const accounts = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const accounts = pickableCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const lineAccounts = new Map<HTMLElement, Combobox>();
 
   // Products kept in stock, whose lines carry a quantity.
@@ -565,9 +706,21 @@ export function renderInvoiceEditor(): void {
       // A stocked product's line says which, and how many.
       const item = row.dataset["item"];
       const quantity = Number(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
+      // Any other line may be written as a quantity at a price, to four places.
+      const typedQty = parseQuantity(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
+      const typedPrice = parseUnitPrice(row.querySelector<HTMLInputElement>(".line-price")?.value ?? "");
       return {
         description, accountCode: code, taxType, net: gross - tax, tax, gross,
-        ...(item !== undefined ? { itemCode: item, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1 } : {}),
+        ...(item !== undefined
+          ? { itemCode: item, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1 }
+          : {
+              ...(typedQty !== null && typedQty > 0 ? { quantity: typedQty } : {}),
+              // Kept only while the amount is still what they come to: an amount
+              // typed over it afterwards is the line's, and a price beside it would not add up.
+              ...(typedQty !== null && typedQty > 0 && typedPrice !== null && lineAmount(typedQty, typedPrice) === gross
+                ? { unitPrice: typedPrice }
+                : {}),
+            }),
       };
     });
   }
@@ -664,24 +817,43 @@ export function renderInvoiceEditor(): void {
       refreshTotals();
     });
 
-    // How many, for a product kept in stock: shown only on such a line.
+    // How many, and at what price: optional on any line, to four decimal
+    // places. A product kept in stock takes its price from the item.
     const qty = document.createElement("input");
     qty.type = "text";
     qty.inputMode = "decimal";
     qty.className = "line-qty invoice-amount";
-    qty.title = "How many";
+    qty.title = "How many, to four decimal places. Optional.";
     qty.placeholder = "Qty";
-    qty.hidden = true;
+    qty.value = line.quantity === undefined ? "" : String(line.quantity);
+    const price = document.createElement("input");
+    price.type = "text";
+    price.inputMode = "decimal";
+    price.className = "line-price invoice-amount";
+    price.title = `The price of one, to four decimal places${noSalesTax() || usTax ? "" : `, including ${taxTypeLabel("GST")}`}: the amount is the quantity times it. Optional.`;
+    price.placeholder = "Price";
+    price.value = line.unitPrice === undefined ? "" : formatUnitPrice(line.unitPrice);
     const stockedLine = (item: Item | undefined, quantity: number): void => {
       if (item === undefined) {
         delete row.dataset["item"];
-        qty.hidden = true;
+        price.hidden = false;
         return;
       }
       row.dataset["item"] = item.id;
-      qty.hidden = false;
+      price.hidden = true;
       qty.value = String(quantity);
     };
+    // Quantity times price, worked in whole numbers, into the amount.
+    const priced = (): void => {
+      if (row.dataset["item"] !== undefined) return;
+      const n = parseQuantity(qty.value);
+      const each = parseUnitPrice(price.value);
+      qty.classList.toggle("invalid", qty.value.trim() !== "" && n === null);
+      price.classList.toggle("invalid", price.value.trim() !== "" && each === null);
+      if (n !== null && each !== null) gross.value = (lineAmount(n, each) / 100).toFixed(2);
+      refreshTotals();
+    };
+    price.addEventListener("input", priced);
     const already = stockedItems.find((i) => i.id === line.itemCode || i.name === line.itemCode);
     if (already !== undefined) stockedLine(already, line.quantity ?? 1);
     // The unit a quantity is multiplied by: the price on an invoice, which is
@@ -694,6 +866,10 @@ export function renderInvoiceEditor(): void {
           : Math.round(item.unitCost * (1 + (rateOf(tax.value) === 15 ? gstPercent() : 0) / 100))
         : item.price;
     qty.addEventListener("input", () => {
+      if (row.dataset["item"] === undefined) {
+        priced();
+        return;
+      }
       const item = stockedItems.find((i) => i.id === row.dataset["item"]);
       const unit = item === undefined ? undefined : unitOf(item);
       const n = Number(qty.value.replace(",", "."));
@@ -704,7 +880,7 @@ export function renderInvoiceEditor(): void {
     // Where there is no sales tax there is no treatment to choose; in the
     // United States, only once the invoice has a rate.
     tax.hidden = usTax ? chosenRate() === null : noSalesTax();
-    row.append(description, qty, account.element, tax, gross, drop);
+    row.append(description, qty, price, account.element, tax, gross, drop);
     lineHost.append(row);
     // A name that is an item's fills in what is still empty: its account, its
     // price, and the words the line should say.
@@ -763,29 +939,38 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, receipt: _receipt, rate: _fx, ...rest } = draft;
+    const currencyValue = currencyBox.value.trim().toUpperCase() || booksCurrency();
+    const fxRate = foreign() ? Number(fxBox.value.trim()) : NaN;
+    const noteValue = asBill ? "" : noteBox.value.trim();
+    const receipt = !asBill && paidNow.checked && statusValue !== "Estimate";
     const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
       ...rest,
       number: number.value.trim(),
       kind: asBill ? "purchase" : (kind.value as InvoiceKind),
-      contact: contact.value.trim(),
+      // Nobody named on a receipt: somebody who walked in and paid.
+      contact: contact.value.trim() === "" && !asBill && paidNow.checked ? WALK_IN_CUSTOMER : contact.value.trim(),
       reference: reference.value.trim(),
       issued: issued.value,
-      due: due.value === "" ? null : due.value,
+      // Paid on the spot is due the day it was sold.
+      due: !asBill && paidNow.checked ? issued.value : due.value === "" ? null : due.value,
       total,
       tax,
       paid: paidCents,
       // Derived, never typed: an outstanding figure that disagreed with the
       // total less what was paid would quietly break every match proposal.
       outstanding: total - paidCents,
-      currency: draft.currency,
+      currency: currencyValue,
+      ...(Number.isFinite(fxRate) && fxRate > 0 ? { rate: fxRate } : {}),
       status: statusValue,
       lines,
       ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
       ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(linkValue !== null ? { documentLink: linkValue } : {}),
+      ...(noteValue !== "" ? { note: noteValue } : {}),
+      ...(receipt ? { receipt: { paidOn: issued.value, ...(method.value !== "" ? { method: method.value } : {}) } } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined
@@ -824,6 +1009,7 @@ export function renderInvoiceEditor(): void {
   cancel.textContent = "Cancel";
   cancel.addEventListener("click", () => {
     editingInvoice = null;
+    copyingFrom = null;
     renderInvoiceEditor();
   });
 
@@ -831,17 +1017,34 @@ export function renderInvoiceEditor(): void {
   // until it is made into one.
   const estimate = document.createElement("button");
   estimate.type = "button";
-  estimate.textContent = "Save as estimate";
-  estimate.title = "Keep it as an estimate: it is not in the books until you make it an invoice.";
+  estimate.textContent = `Save as ${quoteWord().toLowerCase()}`;
+  estimate.title = `Keep it as a ${quoteWord().toLowerCase()}: it is not in the books until you make it an invoice.`;
   // Not offered to New Zealand books yet; the rest of the app is the same.
-  estimate.hidden = asBill || booksCountry().id === "nz";
+  estimate.hidden = asBill;
   estimate.addEventListener("click", () => {
     const built = build("Estimate");
     const stem = built.number.replace(/^INV/i, "EST");
     void saveInvoice({ ...built, number: stem === built.number && existing === undefined ? `EST-${built.number}` : stem }, existing);
   });
 
-  actions.append(...(asBill ? [approve] : []), save, ...(asBill ? [] : [estimate]), cancel);
+  // For a backlog of paper documents: save, and start the next straight away.
+  const saveNext = document.createElement("button");
+  saveNext.type = "button";
+  saveNext.textContent = "Save and next";
+  saveNext.title = "Save this one and start another with the same date, account and tax, for entering a pile of paper documents.";
+  saveNext.hidden = existing !== undefined;
+  saveNext.addEventListener("click", async () => {
+    const built = build(asBill ? statusChoice.value : statusText.value.trim());
+    await saveInvoice(built, existing);
+    // Saved: the editor was closed by the save. Not saved: it is still open, and stays.
+    if (editingInvoice !== null) return;
+    nextAfter = built;
+    editingInvoice = "";
+    redraw("invoiceEditor");
+    host.querySelector<HTMLInputElement>("input")?.focus();
+  });
+
+  actions.append(...(asBill ? [approve] : []), save, saveNext, ...(asBill ? [] : [estimate]), cancel);
 
   if (existing) {
     const remove = document.createElement("button");
@@ -923,6 +1126,12 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     return;
   }
   if (!(await billReady(built))) return;
+  // Another currency needs its rate, or every figure would be posted as if it were the books'.
+  if (built.currency !== booksCurrency() && built.rate === undefined && isPosted(built)) {
+    await tellOnPage(`This ${noun} is in ${built.currency}. Give the rate: what one ${built.currency} was worth in ${booksCurrency()} on ${built.issued}.`);
+    return;
+  }
+  if (built.rate !== undefined) await ensureExchangeAccount();
   if (!(await creditLimitAllows(built, existing))) return;
   if (!(await accountsChosen(built))) return;
   const invoices = [...(state.ledger.invoices ?? [])];
@@ -965,6 +1174,7 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     built.number,
   );
   editingInvoice = null;
+  copyingFrom = null;
   redraw("invoiceEditor");
   redraw("invoices");
   redraw("bills");
@@ -1015,6 +1225,7 @@ async function deleteInvoice(invoice: Invoice): Promise<void> {
     invoice.number,
   );
   editingInvoice = null;
+  copyingFrom = null;
   redraw("invoiceEditor");
   redraw("invoices");
   redraw("bills");
@@ -1064,11 +1275,29 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
   edit.textContent = "edit";
   edit.addEventListener("click", () => {
     editorOn = "invoices";
+    copyingFrom = null;
     editingInvoice = invoice.number;
     redraw("invoiceEditor");
     $("invoice-editor").scrollIntoView({ block: "nearest" });
   });
   td.append(edit);
+
+  // A credit note is written against a sale; copying one is never what is meant.
+  if (invoice.kind === "sales" && !isCreditNote(invoice)) {
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "invoice-send";
+    copy.textContent = "copy";
+    copy.title = "A new invoice like this one: same customer and lines, the next number, dated today. Nothing is saved until you save it.";
+    copy.addEventListener("click", () => {
+      editorOn = "invoices";
+      copyingFrom = invoice;
+      editingInvoice = "";
+      redraw("invoiceEditor");
+      $("invoice-editor").scrollIntoView({ block: "nearest" });
+    });
+    td.append(copy);
+  }
 
   const link = cleanDocumentLink(invoice.documentLink);
   if (link !== null) {
@@ -1100,7 +1329,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1113,7 +1342,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
       make.type = "button";
       make.className = "invoice-send";
       make.textContent = "make invoice";
-      make.title = "Turn this estimate into an invoice: it takes the next invoice number and goes into the books.";
+      make.title = `Turn this ${quoteWord().toLowerCase()} into an invoice: it takes the next invoice number and goes into the books.`;
       make.addEventListener("click", () => {
         void askOnPage(
           `Make ${invoice.number} for ${invoice.contact} an invoice?
@@ -1148,7 +1377,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1161,7 +1390,12 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         const message = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
-          { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) },
+          {
+            ...documentOptions(),
+            ...(isEstimate(invoice) ? { title: quoteWord() } : {}),
+            ...(invoice.note !== undefined ? { note: invoice.note } : {}),
+            ...(state.ledger.emailWording?.invoice !== undefined ? { wording: state.ledger.emailWording.invoice } : {}),
+          },
         );
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +
@@ -1238,6 +1472,7 @@ export function renderInvoices(): void {
           : "No invoices yet: create one above, or load your invoices from a file.",
       ),
     );
+    invoiceWordingPanel(body);
     return;
   }
 
@@ -1372,12 +1607,40 @@ export function renderInvoices(): void {
   // which only the balance can answer.
   const balances = new Map([...invoiceBalanceMap()].filter(([, b]) => shows(b.invoice)));
   creditNoteSection(body, balances, money);
+  creditOnAccountSection(body, balances, "sales", money);
   const owing = [...balances.values()]
     .filter((b) => b.remaining > 0 && isPosted(b.invoice))
     .sort((a, b) => b.remaining - a.remaining);
 
   // Drafts on their own, so they can be found and approved, and are plainly
   // not owing: a draft is not in the books until it is approved.
+  // Quotes (estimates) offered and not yet made invoices: not in the books, so
+  // not in the lists below, but they still need to be found, sent and turned
+  // into invoices.
+  const quotes = invoices.filter((i) => isEstimate(i) && i.kind === "sales");
+  if (quotes.length > 0) {
+    const heading = document.createElement("h3");
+    heading.textContent = `${quoteWord()}s (${quotes.length})`;
+    body.append(
+      heading,
+      note(`Not in the books until made an invoice. "make invoice" gives one the next invoice number and posts it on its date.`),
+    );
+    const table = document.createElement("table");
+    table.className = "report-table owner-table match-table";
+    const head = document.createElement("thead");
+    head.innerHTML = `<tr><th>${quoteWord()}</th><th>Date</th><th>Total</th><th></th></tr>`;
+    const rows = document.createElement("tbody");
+    for (const invoice of [...quotes].sort((a, b) => b.issued.localeCompare(a.issued))) {
+      if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
+      const tr = document.createElement("tr");
+      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(money(invoice.total)));
+      tr.append(editInvoiceCell(invoice));
+      rows.append(tr);
+    }
+    table.append(head, rows);
+    body.append(wideTable(table));
+  }
+
   const drafts = invoices.filter((i) => !isPosted(i) && i.status.trim().toLowerCase() === "draft");
   if (drafts.length > 0) {
     const draftHeading = document.createElement("h3");
@@ -1583,6 +1846,7 @@ export function renderInvoices(): void {
     accTable.append(accHead, accBody);
     body.append(wideTable(accTable));
   }
+  invoiceWordingPanel(body);
 }
 
 /** Record an accepted match, so it is not guessed again. */
@@ -1603,6 +1867,7 @@ async function acceptMatch(transactionId: string, invoiceNumber: string): Promis
  */
 export function startNewInvoice(): void {
   editorOn = "invoices";
+  copyingFrom = null;
   editingInvoice = "";
   redraw("invoiceEditor");
 }
@@ -1623,13 +1888,33 @@ export async function approveBill(number: string): Promise<void> {
 /** Begin a fresh bill, on the Bills page. */
 export function startNewBill(): void {
   editorOn = "bills";
+  copyingFrom = null;
   editingInvoice = "";
   redraw("invoiceEditor");
+}
+
+/** Begin a new bill copied from an old one, on the Bills page. */
+export function copyBill(bill: Invoice): void {
+  editorOn = "bills";
+  copyingFrom = bill;
+  editingInvoice = "";
+  redraw("invoiceEditor");
+  document.getElementById("bill-editor")?.scrollIntoView({ block: "nearest" });
+}
+
+/** Open a sales invoice in the editor, on the Invoices page. */
+export function editInvoice(number: string): void {
+  editorOn = "invoices";
+  copyingFrom = null;
+  editingInvoice = number;
+  redraw("invoiceEditor");
+  document.getElementById("invoice-editor")?.scrollIntoView({ block: "nearest" });
 }
 
 /** Open a bill in the editor, on the Bills page. */
 export function editBill(number: string): void {
   editorOn = "bills";
+  copyingFrom = null;
   editingInvoice = number;
   redraw("invoiceEditor");
   document.getElementById("bill-editor")?.scrollIntoView({ block: "nearest" });

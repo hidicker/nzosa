@@ -1,6 +1,6 @@
 import { aiSuggest } from "./ai-backend.js";
 import { accountsFor, bankReach, gstLookups, invoiceBalanceMap, linesWithUncodedPart, nothingHasAnswered, unregisteredCode } from "./books.js";
-import { classificationToRate, knownCodes, rateLabel, suggest } from "./reconcile.js";
+import { classificationToRate, knownCodes, pickableCodes, rateLabel, suggest } from "./reconcile.js";
 import type { GstRate } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { state } from "./state.js";
@@ -131,7 +131,7 @@ export function suggestFromDirectory(): number {
   directoryFor = { ledger: state.ledger, chart: state.chart };
   const model = state.ledger.entities ?? emptyEntityModel();
   const byId = new Map(model.entities.map((entity) => [entity.id, entity]));
-  const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const labels = pickableCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const spending = state.chart.filter((account) => SPENDING.test(account.type ?? "") && account.code.trim() !== "");
   // The books' own country's list: New Zealand's, Australia's, the United States'.
   const country = booksCountry().id;

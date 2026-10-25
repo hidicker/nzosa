@@ -1,4 +1,5 @@
 import type { GstReturnLine, GstReturnResult } from "./gst.js";
+import { returnFingerprint } from "./fingerprint.js";
 import type { Cents } from "./money.js";
 import { gstWithin } from "./reports.js";
 
@@ -119,7 +120,17 @@ export function gstReturnBoxRows(result: Pick<GstReturnResult, "boxes">): { box:
 }
 
 /** A return, its boxes and its transactions, as CSV. */
-export function formatGstReturn(result: GstReturnResult, title: string): string {
+/** The fingerprint of a GST return's boxes, for printing with it and checking a copy against the books. */
+export function gstReturnFingerprint(result: Pick<GstReturnResult, "boxes" | "period">, whose = ""): string {
+  return returnFingerprint(
+    "GST return",
+    result.period,
+    gstReturnBoxRows(result).map((r) => ({ box: r.box, amount: r.amount })),
+    whose,
+  );
+}
+
+export function formatGstReturn(result: GstReturnResult, title: string, fingerprint?: string): string {
   const money = (cents: Cents): string => (cents / 100).toFixed(2);
   const rows: string[][] = [
     [title],
@@ -133,6 +144,7 @@ export function formatGstReturn(result: GstReturnResult, title: string): string 
     ],
     [`${result.basis.charAt(0).toUpperCase()}${result.basis.slice(1)} basis`],
     [gstOutcomeLabel(result), money(result.boxes.box15)],
+    ...(fingerprint !== undefined ? [["Fingerprint", fingerprint]] : []),
     [],
     ["Box", "Description", "Amount"],
     ...gstReturnBoxRows(result).map((r) => [r.box, r.label, money(r.amount)]),

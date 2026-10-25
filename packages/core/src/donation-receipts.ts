@@ -234,3 +234,83 @@ export function donorYears(
   }
   return [...totals.values()].sort((a, b) => b.year - a.year || a.donor.localeCompare(b.donor));
 }
+
+/**
+ * A donor's giving statement for a tax year: each gift with its date and
+ * receipt, and the total. Not a receipt itself -- the receipts it lists are
+ * what a credit is claimed with -- but the one page a donor asks for at the
+ * year's end. Voided receipts are left out, as donorYears leaves them out.
+ * Several donors' statements in one page print one to a sheet.
+ */
+export function givingStatementHtml(
+  organisation: { name: string; address?: string | undefined },
+  np: NonProfit,
+  receipts: readonly DonationReceipt[],
+  year: number,
+  taxYearOf: (date: IsoDate) => number,
+  donors?: readonly string[],
+): string {
+  const standing = receipts.filter((r) => r.voided === undefined && (r.year ?? taxYearOf(r.date)) === year);
+  const byDonor = new Map<string, DonationReceipt[]>();
+  for (const r of standing) {
+    const key = r.donor.trim().toLowerCase();
+    byDonor.set(key, [...(byDonor.get(key) ?? []), r]);
+  }
+  const wanted = donors === undefined ? [...byDonor.keys()].sort() : donors.map((d) => d.trim().toLowerCase());
+  const pages = wanted
+    .map((key) => byDonor.get(key))
+    .filter((list): list is DonationReceipt[] => list !== undefined && list.length > 0)
+    .map((list) => {
+      const sorted = [...list].sort((a, b) => a.date.localeCompare(b.date) || a.number.localeCompare(b.number));
+      const first = sorted[0]!;
+      const address = [...sorted].reverse().find((r) => (r.address ?? "").trim() !== "")?.address?.trim() ?? "";
+      const total = sorted.reduce((s, r) => s + r.amount, 0) as Cents;
+      const rows = sorted
+        .map(
+          (r) =>
+            `<tr><td>${escape(r.year !== undefined ? `Year to ${dateSaid(r.date)}` : dateSaid(r.date))}</td><td>${escape(r.number)}</td><td class="num">${escape(amountSaid(r.amount))}</td></tr>`,
+        )
+        .join("\n");
+      return `<section>
+<header>
+  <h1>${escape(organisation.name)}</h1>
+  ${organisation.address !== undefined && organisation.address.trim() !== "" ? `<p class="address">${escape(organisation.address.trim())}</p>` : ""}
+  <p class="ids">IRD number: ${escape((np.irdNumber ?? "").trim())}${np.registeredCharity === true && (np.charityNumber ?? "").trim() !== "" ? ` &middot; Charities Services registration number: ${escape((np.charityNumber ?? "").trim())}` : ""}</p>
+</header>
+<h2>Your giving in the year ended 31 March ${year}</h2>
+<p class="address">${escape(first.donor.trim())}${address !== "" ? `<br>${escape(address).replace(/\n/g, "<br>")}` : ""}</p>
+<table>
+<thead><tr><th>Given</th><th>Receipt</th><th class="num">Amount</th></tr></thead>
+<tbody>
+${rows}
+<tr class="total"><td>Total</td><td></td><td class="num">${escape(amountSaid(total))}</td></tr>
+</tbody>
+</table>
+<p>Thank you. This statement lists the receipts issued to you for the year; it is not a receipt itself. Keep the receipts: they are what a donation tax credit is claimed with.</p>
+</section>`;
+    });
+  return `<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<title>Giving statement${pages.length === 1 ? "" : "s"}, year ended 31 March ${year}</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; color: #111; }
+  section { page-break-after: always; break-after: page; margin-bottom: 3rem; }
+  section:last-child { page-break-after: auto; break-after: auto; }
+  header { border-bottom: 2px solid #111; padding-bottom: 0.6rem; margin-bottom: 1.2rem; }
+  h1 { margin: 0; font-size: 1.6rem; }
+  h2 { font-size: 1.15rem; margin: 0 0 0.6rem; }
+  .ids, .address { font-size: 0.9rem; color: #333; margin: 0.2rem 0 1rem; }
+  table { width: 100%; border-collapse: collapse; margin-bottom: 1.2rem; }
+  th, td { padding: 0.35rem 0; text-align: left; border-bottom: 1px solid #ddd; }
+  .num { text-align: right; }
+  .total td { font-weight: 700; border-top: 2px solid #111; }
+</style>
+</head>
+<body>
+${pages.length === 0 ? "<p>No receipts stand for this year.</p>" : pages.join("\n")}
+</body>
+</html>
+`;
+}

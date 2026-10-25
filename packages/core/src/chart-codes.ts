@@ -64,7 +64,7 @@ export interface RuleFile extends RuleSet {
 export function knownCodes(
   rules: RuleSet | undefined,
   overrides: Overrides,
-  chart: readonly { code: string; name: string }[] = [],
+  chart: readonly { code: string; name: string; inactive?: boolean }[] = [],
 ): string[] {
   const codes = new Set<string>();
   const file = rules as RuleFile | undefined;
@@ -91,6 +91,26 @@ export function knownCodes(
   }
 
   return [...codes].sort();
+}
+
+/**
+ * The accounts to offer when something is being coded: every known account
+ * but the inactive ones, under any of their names. Only for pickers -- the
+ * books still read and report what was coded to an inactive account, so
+ * everything else asks `knownCodes`.
+ */
+export function pickableCodes(
+  rules: RuleSet | undefined,
+  overrides: Overrides,
+  chart: readonly { code: string; name: string; inactive?: boolean }[] = [],
+): string[] {
+  const inactive = chart.filter((a) => a.inactive === true);
+  const retired = (label: string): boolean =>
+    inactive.some((a) => {
+      const code = a.code.trim();
+      return code !== "" ? new RegExp(`\\b${code}\\b`).test(label) : label === a.name.trim();
+    });
+  return knownCodes(rules, overrides, chart).filter((label) => !retired(label));
 }
 
 /**

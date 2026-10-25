@@ -1,11 +1,13 @@
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
-import { employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
-import { itemsEditor } from "./payroll-items.js";
-import type { PayDeduction, PayItem } from "@nzosa/core";
+import { employerDeductionsByMonth, noticesTaken, nextPayPeriod, nzAccount, nzBankOf, nzPaymentFile, nzPayslip, NZ_BANK_NAMES, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
+import type { PayRun } from "@nzosa/core";
+import { documentOptions } from "../country.js";
+import { itemsEditor, noticesEditor } from "./payroll-items.js";
+import type { DeductionNotice, PayDeduction, PayItem } from "@nzosa/core";
 import { renderLeave } from "./payroll-leave.js";
-import { payrollAccounts, reclassify, record } from "../books.js";
+import { payrollAccounts, payrollEmployer, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
 import { askOnPage, download, escapeHtml, note, tellOnPage } from "../ui.js";
@@ -235,7 +237,67 @@ function renderContact(container: HTMLElement, payroll: PayrollData): void {
     return wrap;
   };
   row.append(box("Payroll contact", "name", 20), box("Phone", "phone", 12), box("Email", "email", 60));
+
+  // The account wages leave from: its bank decides which bank file is made.
+  const from = document.createElement("label");
+  from.className = "payroll-employer-label";
+  const account = document.createElement("input");
+  account.type = "text";
+  account.placeholder = "12-3456-0123456-00";
+  account.value = payroll.payFrom ?? "";
+  const which = document.createElement("span");
+  which.className = "payroll-ird-feedback hint";
+  const say = (): void => {
+    const raw = account.value.trim();
+    const bank = nzBankOf(raw);
+    which.textContent =
+      raw === "" ? "for the bank's bulk payment file"
+        : bank !== null ? `${NZ_BANK_NAMES[bank]} bulk payment file`
+          : nzAccount(raw) === null ? "not an account number" : "no bulk file for this bank here: key the payments in";
+  };
+  account.addEventListener("input", say);
+  account.addEventListener("change", () => {
+    payroll.payFrom = account.value.trim();
+    void commitPayroll(payroll, "Account wages are paid from changed");
+  });
+  say();
+  from.append("Pay wages from ", account, " ", which);
+  row.append(from);
   container.append(row);
+}
+
+/** The bank's bulk payment file for a pay run's net pay. */
+async function downloadBankFile(run: PayRun): Promise<void> {
+  const payroll = getPayroll();
+  const fromAccount = payroll.payFrom?.trim() ?? "";
+  const bank = nzBankOf(fromAccount);
+  if (bank === null) {
+    await tellOnPage(
+      fromAccount === ""
+        ? "Enter the account wages are paid from, at the top of this page, first: its bank decides the file's layout."
+        : "There is no bulk payment file here for the bank wages are paid from. ANZ, ASB, BNZ, Kiwibank and Westpac are covered.",
+    );
+    return;
+  }
+  // One payment an employee: a schedular line is paid with their wages.
+  const owed = new Map<string, number>();
+  for (const line of run.lines) owed.set(line.employeeId, (owed.get(line.employeeId) ?? 0) + line.netPay);
+  const reference = `PAY ${run.payDate.slice(8, 10)}${run.payDate.slice(5, 7)}${run.payDate.slice(2, 4)}`;
+  const items = [...owed].map(([id, amount]) => {
+    const person = payroll.employees.find((e) => e.id === id);
+    return { name: person?.name ?? run.lines.find((l) => l.employeeId === id)?.employeeName ?? id, account: person?.bankAccount ?? "", amount, particulars: "WAGES", reference };
+  });
+  const who = payrollEmployer(payroll.accounts?.wages);
+  const file = nzPaymentFile(items, { bank, fromAccount, payerName: who?.name ?? "", date: run.payDate, wages: true, batchReference: reference });
+  if (file.problems.length > 0) {
+    await tellOnPage(`The bank file cannot be made yet:\n\n${file.problems.join("\n")}`);
+    return;
+  }
+  download(file.text, file.fileName, "text/plain;charset=us-ascii");
+  await tellOnPage(
+    `${file.count} payments, ${formatAmount(file.total)} in all, are in ${file.fileName}. ` +
+      `Upload it to ${NZ_BANK_NAMES[bank]}'s internet banking as a bulk or batch payment, check the payments it lists, and approve them there. Nothing has been paid from here.`,
+  );
 }
 
 /** Where pay runs post. Nothing posts until the three that must be there are chosen. */
@@ -660,6 +722,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
   let templateAllowances = (existing?.allowances ?? []) as PayItem[];
   let templateReimbursements = (existing?.reimbursements ?? []) as PayItem[];
   let templateDeductions = (existing?.deductions ?? []) as PayDeduction[];
+  let notices = (existing?.notices ?? []) as DeductionNotice[];
   const template = document.createElement("div");
   template.className = "payroll-template";
   const templateTitle = document.createElement("h4");
@@ -674,6 +737,9 @@ function renderEmployeeEditor(container: HTMLElement): void {
     }),
     itemsEditor("deduction", templateDeductions, (items) => {
       templateDeductions = items as PayDeduction[];
+    }),
+    noticesEditor(notices, existing === undefined || existing === null ? new Map() : noticesTaken(getPayroll().payRuns, existing.id), (list) => {
+      notices = list;
     }),
   );
   card.append(template);
@@ -749,6 +815,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       ...(templateAllowances.length > 0 ? { allowances: templateAllowances } : {}),
       ...(templateReimbursements.length > 0 ? { reimbursements: templateReimbursements } : {}),
       ...(templateDeductions.length > 0 ? { deductions: templateDeductions } : {}),
+      ...(notices.length > 0 ? { notices } : {}),
       ...(detailsUi.read() !== undefined ? { details: detailsUi.read() } : {}),
     };
 
@@ -1410,7 +1477,13 @@ function renderPayRunsList(container: HTMLElement): void {
       }
     });
 
-    actionsBar.append(dlBtn, viewBtn, delBtn);
+    const bankBtn = document.createElement("button");
+    bankBtn.type = "button";
+    bankBtn.textContent = "Bank file";
+    bankBtn.title = "Everybody's net pay as one bulk payment file to upload to your bank. Nothing is paid from here.";
+    bankBtn.addEventListener("click", () => void downloadBankFile(run));
+
+    actionsBar.append(dlBtn, bankBtn, viewBtn, delBtn);
     card.append(actionsBar);
     for (const said of run.notes ?? []) card.append(note(said));
 
@@ -1435,6 +1508,7 @@ function renderPayRunsList(container: HTMLElement): void {
             <th style="text-align: right;">ESCT</th>
             <th style="text-align: right;">Child Support</th>
             <th style="text-align: right;">Net Pay</th>
+            <th>Payslip</th>
           </tr>
         </thead>
       `;
@@ -1455,6 +1529,9 @@ function renderPayRunsList(container: HTMLElement): void {
           <td style="text-align: right;">${formatAmount(line.childSupport)}</td>
           <td style="text-align: right;"><strong>${formatAmount(line.netPay)}</strong></td>
         `;
+        // A schedular line shares the employee's slip with their wages.
+        const firstForEmployee = run.lines.find((l) => l.employeeId === line.employeeId) === line;
+        tr.append(firstForEmployee ? payslipCell(run, line.employeeId) : document.createElement("td"));
         tbody.append(tr);
       }
 
@@ -1467,6 +1544,55 @@ function renderPayRunsList(container: HTMLElement): void {
   }
 
   container.append(list);
+}
+
+/** The payslip and email buttons for one employee in a saved pay run. */
+function payslipCell(run: PayRun, employeeId: string): HTMLTableCellElement {
+  const td = document.createElement("td");
+  const payroll = getPayroll();
+  const person = payroll.employees.find((e) => e.id === employeeId);
+  const slip = nzPayslip(run, employeeId, {
+    history: payroll.payRuns,
+    ...(person?.hourlyRate !== undefined ? { hourlyRate: person.hourlyRate } : {}),
+    ...(person?.bankAccount ? { bankAccount: person.bankAccount } : {}),
+  });
+  const who = payrollEmployer(payroll.accounts?.wages);
+  const { dateStyle, lang, taxIdLabel } = documentOptions();
+  const options = { ...(dateStyle ? { dateStyle } : {}), ...(lang ? { lang } : {}), ...(taxIdLabel ? { taxIdLabel } : {}) };
+  const save = (): void => {
+    if (slip === null || who === null) return;
+    download(payslipDocument(slip, who, options), payslipFileName(slip), "text/html;charset=utf-8");
+  };
+
+  const doc = document.createElement("button");
+  doc.type = "button";
+  doc.className = "small";
+  doc.textContent = "payslip";
+  const mail = document.createElement("button");
+  mail.type = "button";
+  mail.className = "small";
+  mail.textContent = "email";
+  if (slip === null || who === null) {
+    doc.disabled = mail.disabled = true;
+    doc.title = mail.title =
+      "These books have no entity to name as the employer. Name one on the Entities page, or choose the wages account above.";
+  } else {
+    doc.title = "The payslip as an HTML file: open it to print or save as PDF.";
+    doc.addEventListener("click", save);
+    const address = person?.details?.email?.trim() ?? "";
+    mail.title =
+      "Opens a new message in your own mail program and saves the payslip to attach to it. Nothing is sent from here." +
+      (address === "" ? " No email address is kept for this employee: add one under their details." : "");
+    mail.addEventListener("click", () => {
+      save();
+      const message = payslipEmail(slip, who.name, address, options);
+      window.location.href =
+        `mailto:${encodeURIComponent(message.to).replace(/%40/g, "@")}?subject=${encodeURIComponent(message.subject)}` +
+        `&body=${encodeURIComponent(message.body)}`;
+    });
+  }
+  td.append(doc, " ", mail);
+  return td;
 }
 
 /** Main Page Renderer */

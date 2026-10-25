@@ -40,7 +40,6 @@ function reportKinds() {
 /** Reports with nothing to save as a file of their own. */
 const NO_DOWNLOAD = new Set([
   "home",
-  "balancesheet",
   "cashflow",
   "shareholders",
   "ir10",
@@ -57,6 +56,7 @@ const NO_DOWNLOAD = new Set([
   "payrolltax",
   "budget",
   "byclass",
+  "byjob",
   "aurental",
   "bas",
   "krbusiness",
@@ -64,6 +64,8 @@ const NO_DOWNLOAD = new Set([
   "krvat",
   "autax",
   "krtax",
+  // Moves lines; there is nothing to save as a file.
+  "reclassify",
 ]);
 
 test("every report kind either has a download or hides the button", () => {
@@ -80,7 +82,9 @@ test("the eleven that fell through to the P&L", () => {
   assert.equal(REPORT_DOWNLOADS.general, "General ledger");
   assert.equal(REPORT_DOWNLOADS.journal, "General ledger");
   assert.equal(REPORT_DOWNLOADS.extract, "Account transactions");
-  for (const kind of ["balancesheet", "cashflow", "shareholders", "ir10", "manual", "yearend", "between", "charts"]) {
+  // The balance sheet has a CSV of its own now, for the accountant's package.
+  assert.equal(REPORT_DOWNLOADS.balancesheet, "Balance sheet");
+  for (const kind of ["cashflow", "shareholders", "ir10", "manual", "yearend", "between", "charts"]) {
     assert.equal(hasDownload(kind), false, kind);
   }
   assert.equal(hasDownload("toString"), false);

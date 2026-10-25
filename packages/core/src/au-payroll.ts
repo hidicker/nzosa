@@ -1,3 +1,4 @@
+import type { AbaSettings } from "./payment-files.js";
 import type { Cents } from "./money.js";
 import type { IsoDate } from "./dates.js";
 import type { PostedJournal, PostedLine } from "./posting.js";
@@ -41,6 +42,9 @@ export interface AuEmployee {
   usualGross?: Cents;
   /** The last day worked, once they have left. */
   ended?: IsoDate;
+  /** Where their pay goes, for the ABA file: a BSB and an account number. */
+  bsb?: string;
+  bankAccount?: string;
 }
 
 export interface AuPayLine {
@@ -70,6 +74,8 @@ export interface AuPayroll {
   payRuns: AuPayRun[];
   /** Chart codes: wages, super expense, PAYG withholding payable, super payable, net pay clearing. */
   accounts?: { wages?: string; superExpense?: string; paygPayable?: string; superPayable?: string; wagesPayable?: string };
+  /** What the bank's ABA file needs: its three-letter code, the direct entry user, and the account paid from. */
+  aba?: AbaSettings;
 }
 
 /** The financial year a date falls in, by the year it ends: 2026-07-01 is 2027. */

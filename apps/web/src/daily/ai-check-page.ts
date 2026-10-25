@@ -11,6 +11,7 @@ import {
   yearsInBooks,
 } from "../ai-review.js";
 import { downloadExcelReport } from "./excel-export.js";
+import { quickAnalysesPanel } from "./ai-quick.js";
 import { IRD_FORMS_INDEX, IRD_GUIDES, guidePrompt, guidesForBooks } from "../ai-guides.js";
 import type { GuideId } from "../ai-guides.js";
 import { taxYearEndSaid } from "../tax-year.js";
@@ -92,6 +93,8 @@ export function renderAiCheck(): void {
     carryPanel(pickYear.pick),
     step("Or check against Inland Revenue's own guides", "Attach the guide, copy, paste back"),
     guidePanel(pickYear.pick),
+    step("Or ask one thing", "One-click questions about the year"),
+    quickAnalysesPanel(pickYear.pick),
   );
 
   if (result !== null) body.append(answerPanel(result));

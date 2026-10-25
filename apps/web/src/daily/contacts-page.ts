@@ -1,3 +1,4 @@
+import { attachmentsBox } from "../attachments-ui.js";
 import { redraw } from "../app.js";
 import { invoiceBalanceMap, record } from "../books.js";
 import { supplierFor } from "./invoices.js";
@@ -6,6 +7,12 @@ import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
+  accountEmailFrom,
+  similarContacts,
+  paidToContact,
+  spreadsheetCell,
+  emailForContact,
+  mailtoLink,
   collectionLetter,
   contactKey,
   customerStatement,
@@ -18,6 +25,7 @@ import {
 } from "@nzosa/core";
 import type { Contact, ContactKind, Invoice } from "@nzosa/core";
 import { booksCountry, booksCurrency, noSalesTax } from "../country.js";
+import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Customers and vendors: who the books deal with.
@@ -34,6 +42,8 @@ let filter: Filter = "all";
 let query = "";
 /** The id being edited, or "new" for a record not made yet. */
 let editing: string | null = null;
+/** The supplier whose payments are open, by id. */
+let showingPayments: string | null = null;
 
 const KIND_WORD: Record<ContactKind, string> = { customer: "Customer", vendor: "Vendor", both: "Customer and vendor" };
 
@@ -102,6 +112,160 @@ function statementLines(mine: readonly { invoice: Invoice; remaining: number }[]
     owing: b.remaining,
     reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
   }));
+}
+
+/**
+ * A statement or a reminder for a customer: the document saved, and a message
+ * to them opened in the person's own mail program with it to attach. Nothing
+ * is sent from here.
+ */
+async function sendToCustomer(contact: Contact, kind: "statement" | "reminder", email: boolean): Promise<void> {
+  const mine = salesFor(contact.name);
+  const first = mine[0]?.invoice;
+  const supplier = first === undefined ? null : supplierFor(first);
+  if (supplier === null) {
+    await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
+    return;
+  }
+  const sums = owing().get(contactKey(contact.name));
+  const stage = reminderStageFor(sums?.lateDays ?? 0);
+  const html =
+    kind === "reminder"
+      ? collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions())
+      : customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
+  download(html, `${kind}-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+  if (!email) return;
+  const to = contact.email ?? emailForContact(state.ledger.invoices ?? [], contact.name) ?? "";
+  const { dateStyle } = documentOptions();
+  const wording = state.ledger.emailWording?.[kind];
+  const message = accountEmailFrom(
+    kind,
+    contact.name,
+    kind === "reminder" ? (sums?.pastDue ?? 0) : (sums?.owedToUs ?? 0),
+    today(),
+    { name: supplier.name, ...(supplier.payTo !== undefined ? { payTo: supplier.payTo } : {}) },
+    { to, ...(wording !== undefined ? { wording } : {}), ...(dateStyle !== undefined ? { dateStyle } : {}) },
+  );
+  window.location.href = mailtoLink(message);
+}
+
+/**
+ * Everybody with something past due, in one list: the person works down it,
+ * one message each, since a mail program opens one message at a time.
+ */
+function overdueList(body: HTMLElement, all: readonly Contact[]): void {
+  const sums = owing();
+  // A customer invoiced but never added here is still owed money.
+  const known = new Set(all.map((c) => contactKey(c.name)));
+  const invoiced = new Map<string, Contact>();
+  for (const b of invoiceBalanceMap().values()) {
+    const key = contactKey(b.invoice.contact);
+    if (b.invoice.kind === "sales" && !known.has(key) && !invoiced.has(key)) {
+      invoiced.set(key, { id: "", name: b.invoice.contact, kind: "customer" });
+    }
+  }
+  const late = [...all, ...invoiced.values()]
+    .filter((c) => c.active !== false && c.kind !== "vendor")
+    .map((c) => ({ contact: c, sums: sums.get(contactKey(c.name)) }))
+    .filter((x): x is { contact: Contact; sums: Owing } => x.sums !== undefined && x.sums.pastDue > 0)
+    .sort((a, b) => b.sums.pastDue - a.sums.pastDue);
+  if (late.length === 0) return;
+  const box = document.createElement("details");
+  box.className = "payroll-add";
+  const summary = document.createElement("summary");
+  const total = late.reduce((s, x) => s + x.sums.pastDue, 0);
+  summary.textContent = `Overdue: ${late.length} customer${late.length === 1 ? "" : "s"}, ${booksMoney(total)} past due`;
+  box.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML = "<thead><tr><th>Customer</th><th>Past due</th><th>Oldest</th><th>Email</th><th></th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const { contact, sums: one } of late) {
+    const tr = document.createElement("tr");
+    const address = contact.email ?? emailForContact(state.ledger.invoices ?? [], contact.name) ?? "";
+    for (const text of [contact.name, booksMoney(one.pastDue), `${one.lateDays} days`, address || "none kept"]) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      tr.append(td);
+    }
+    const actions = document.createElement("td");
+    for (const [label, kind] of [["Email statement", "statement"], ["Email reminder", "reminder"]] as const) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "small";
+      b.textContent = label;
+      b.addEventListener("click", () => {
+        b.textContent = `${label} ✓`;
+        void sendToCustomer(contact, kind, true);
+      });
+      actions.append(b);
+    }
+    tr.append(actions);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  box.append(
+    note(
+      "Each button saves the document and opens a message to the customer in your own mail program, with the " +
+        "document to attach. A tick marks the ones done. The wording is yours to change under Messages and email wording on Invoices.",
+    ),
+    table,
+  );
+  body.append(box);
+}
+
+/** What was paid to a supplier from the bank: this financial year, all time, and the lines. */
+function paymentsRow(contact: Contact, columns: number): HTMLTableRowElement {
+  const year = taxYearOf(today());
+  const paid = paidToContact(
+    state.ledger.transactions,
+    contact.name,
+    { from: taxYearStart(year), to: taxYearEnd(year) },
+    new Set(Object.keys(state.ledger.transfers ?? {})),
+  );
+  const tr = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = columns;
+  if (paid.lines.length === 0) {
+    cell.append(note(`No bank lines out are to a payee that reads as ${contact.name}.`));
+    tr.append(cell);
+    return tr;
+  }
+  const lastYear = paid.lines
+    .filter((l) => l.date >= taxYearStart(year - 1) && l.date <= taxYearEnd(year - 1))
+    .reduce((sum, l) => sum + l.amount, 0);
+  const said = document.createElement("p");
+  said.textContent =
+    `Paid this financial year (to ${taxYearEnd(year)}): ${booksMoney(paid.inPeriod)}. Last year: ${booksMoney(lastYear)}. ` +
+    `All time: ${booksMoney(paid.allTime)}, in ${paid.lines.length} payment${paid.lines.length === 1 ? "" : "s"}.`;
+  const csv = document.createElement("button");
+  csv.type = "button";
+  csv.className = "small";
+  csv.textContent = "Payments CSV";
+  csv.addEventListener("click", () => {
+    const rows = [["Date", "Payee as the bank shows it", "Reference", "Account", "Amount"], ...paid.lines.map((l) => [l.date, l.payee, l.reference, l.account, (l.amount / 100).toFixed(2)])];
+    download(rows.map((r) => r.map(spreadsheetCell).join(",")).join("\n") + "\n", `payments-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.csv`, "text/csv");
+  });
+  const list = document.createElement("table");
+  list.className = "report-table";
+  list.innerHTML = "<thead><tr><th>Date</th><th>Payee</th><th>Reference</th><th class=\"report-amount\">Paid</th></tr></thead>";
+  const body = document.createElement("tbody");
+  for (const l of paid.lines.slice(0, 12)) {
+    const row = document.createElement("tr");
+    for (const [text, cls] of [[l.date, "report-date"], [l.payee, "report-name"], [l.reference, "report-name"], [booksMoney(l.amount), "report-amount"]] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      row.append(td);
+    }
+    body.append(row);
+  }
+  list.append(body);
+  cell.append(said, list);
+  if (paid.lines.length > 12) cell.append(note(`The latest 12 of ${paid.lines.length}; the CSV has them all.`));
+  cell.append(csv);
+  tr.append(cell);
+  return tr;
 }
 
 /**
@@ -281,6 +445,10 @@ function form(existing: Contact | null): HTMLElement {
     option.selected = existing?.defaultAccount === a.code.trim();
     usual.append(option);
   }
+  const bankAccount = input(existing?.bankAccount);
+  bankAccount.placeholder = booksCountry().id === "au" ? "Account number" : "12-3456-0123456-00";
+  const bsb = input(existing?.bsb);
+  bsb.placeholder = "062-000";
   const notes = document.createElement("textarea");
   notes.rows = 2;
   notes.value = existing?.notes ?? "";
@@ -302,7 +470,7 @@ function form(existing: Contact | null): HTMLElement {
   save.type = "button";
   save.className = "primary";
   save.textContent = existing === null ? "Add" : "Save";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const said = name.value.trim();
     if (said === "") {
       problem.textContent = "A name, as it appears on invoices and bills.";
@@ -316,6 +484,20 @@ function form(existing: Contact | null): HTMLElement {
     const clash = held().find((c) => contactKey(c.name) === contactKey(said) && c.id !== existing?.id);
     if (clash !== undefined) {
       problem.textContent = `${clash.name} is already here.`;
+      return;
+    }
+    // A name like one already here is asked about, not refused: two real
+    // customers can be that close. A name not changed by an edit is not asked again.
+    const renamed = existing === null || contactKey(existing.name) !== contactKey(said);
+    const alike = renamed ? similarContacts(said, held(), existing?.id) : [];
+    if (
+      alike.length > 0 &&
+      !(await askOnPage(
+        `${alike.map((c) => c.name).join(", ")} ${alike.length === 1 ? "is" : "are"} already here, and ${alike.length === 1 ? "looks" : "look"} like ${said}.\n\n` +
+          `${existing === null ? "Add" : "Rename to"} ${said} as well?`,
+        existing === null ? "Add it" : "Rename it",
+      ))
+    ) {
       return;
     }
     const fields = {
@@ -333,6 +515,8 @@ function form(existing: Contact | null): HTMLElement {
       ...(exempt.checked ? { taxExempt: true } : {}),
       ...(limitCents !== null && limitCents > 0 ? { creditLimit: limitCents } : {}),
       ...(usual.value !== "" ? { defaultAccount: usual.value } : {}),
+      ...(bankAccount.value.trim() !== "" ? { bankAccount: bankAccount.value.trim() } : {}),
+      ...(bsb.value.trim() !== "" && booksCountry().id === "au" ? { bsb: bsb.value.trim() } : {}),
     };
     editing = null;
     if (existing === null) {
@@ -365,9 +549,13 @@ function form(existing: Contact | null): HTMLElement {
     field(booksCountry().id === "us" ? "Tax ID (EIN or SSN)" : booksCountry().id === "nz" ? "IRD or GST number" : "Tax ID", taxId),
     field("Credit limit (customers)", limit),
     field("Bills usually coded to (vendors)", usual),
+    // Where their bills are paid, for the bank payment file on Bills.
+    ...(booksCountry().id === "au" ? [field("BSB (vendors)", bsb)] : []),
+    ...(booksCountry().id === "nz" || booksCountry().id === "au" ? [field("Bank account, to pay bills into (vendors)", bankAccount)] : []),
     // The W-9 and the 1099-NEC are the United States' own.
     ...(booksCountry().id === "us" ? [ticks] : []),
     field("Notes", notes),
+    ...(existing !== null ? [attachmentsBox({ kind: "contact", id: existing.id }, existing.name)] : []),
     problem,
   );
   const row = document.createElement("div");
@@ -375,6 +563,12 @@ function form(existing: Contact | null): HTMLElement {
   row.append(save, cancel);
   box.append(row);
   return box;
+}
+
+/** Show the contacts list narrowed to one name, as a search found it. */
+export function showContactNamed(name: string): void {
+  filter = "all";
+  query = name;
 }
 
 export function renderContacts(): void {
@@ -425,6 +619,7 @@ export function renderContacts(): void {
   writeOff.addEventListener("click", () => void writeOffSmall());
   controls.append(choose, search, add, writeOff);
   body.append(controls);
+  overdueList(body, all);
 
   if (editing === "new") body.append(form(null));
 
@@ -503,16 +698,7 @@ export function renderContacts(): void {
       const stage = reminderStageFor(sums.lateDays);
       remind.title =
         stage === 1 ? "A first, friendly reminder" : stage === 2 ? "A second notice" : "A final notice";
-      remind.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const supplier = mine[0] === undefined ? null : supplierFor(mine[0].invoice);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions());
-        download(html, `reminder-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
-      });
+      remind.addEventListener("click", () => void sendToCustomer(contact, "reminder", false));
       const fee = document.createElement("button");
       fee.type = "button";
       fee.className = "small";
@@ -527,21 +713,30 @@ export function renderContacts(): void {
       statement.type = "button";
       statement.className = "small";
       statement.textContent = "Statement";
-      statement.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const first = mine[0]?.invoice;
-        const supplier = first === undefined ? null : supplierFor(first);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
-        download(html, `statement-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+      statement.addEventListener("click", () => void sendToCustomer(contact, "statement", false));
+      const mail = document.createElement("button");
+      mail.type = "button";
+      mail.className = "small";
+      mail.textContent = "Email";
+      mail.title = "Save the statement and open a message to them in your own mail program. Nothing is sent from here.";
+      mail.addEventListener("click", () => void sendToCustomer(contact, "statement", true));
+      actions.append(statement, mail);
+    }
+    if (contact.kind !== "customer") {
+      const payments = document.createElement("button");
+      payments.type = "button";
+      payments.className = "small";
+      payments.textContent = showingPayments === contact.id ? "Hide payments" : "Payments";
+      payments.title = "What was paid to them from the bank, this financial year and all time.";
+      payments.addEventListener("click", () => {
+        showingPayments = showingPayments === contact.id ? null : contact.id;
+        redraw("contacts");
       });
-      actions.append(statement);
+      actions.append(payments);
     }
     tr.append(actions);
     tbody.append(tr);
+    if (showingPayments === contact.id) tbody.append(paymentsRow(contact, 7));
     if (editing === contact.id) {
       const editor = document.createElement("tr");
       const cell = document.createElement("td");

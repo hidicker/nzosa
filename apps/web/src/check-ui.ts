@@ -11,6 +11,8 @@ import {
   parseQuickBooksBooks,
   quickBooksChartFrom,
   isIif,
+  isGnuCashXml,
+  parseGnuCashBooks,
   parseIifBooks,
   isSlowBooksLedger,
   isQuickBooksBankExport,
@@ -45,7 +47,7 @@ import type {
   SheetRows,
 } from "@nzosa/core";
 import { state } from "./state.js";
-import { booksCountry } from "./country.js";
+import { booksCountry, booksCurrency } from "./country.js";
 import { isUnusedStarterChart } from "./new-books-country.js";
 import { readQuickBooksExport } from "./migrate/qbo-export-set.js";
 
@@ -277,13 +279,13 @@ export async function loadReference(
         lines.push(...notHeldAlready(file.name, quickBooksBankCoding(text, file.name, booksCountry().dayFirst)));
         continue;
       }
-      if (isIif(text) || isSlowBooksLedger(text) || isQuickBooksDesktopDetail(text)) {
+      if (isIif(text) || isSlowBooksLedger(text) || isQuickBooksDesktopDetail(text) || isGnuCashXml(text)) {
         // The books' own chart to add to -- but not an unused starter chart,
         // which the file's accounts replace: merged, SlowBooks' 4000 Service
         // Income sat beside the starter's 4000 Sales on the same number.
         const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
-        const reader = isIif(text) ? parseIifBooks : isSlowBooksLedger(text) ? parseSlowBooksBooks : parseQuickBooksDesktopDetailBooks;
-        const read = reader(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name });
+        const reader = isIif(text) ? parseIifBooks : isSlowBooksLedger(text) ? parseSlowBooksBooks : isGnuCashXml(text) ? parseGnuCashBooks : parseQuickBooksDesktopDetailBooks;
+        const read = reader(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name, currency: booksCurrency() });
         if (read.chart.accounts !== known) chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
         lines.push(...read.reference);
         for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);

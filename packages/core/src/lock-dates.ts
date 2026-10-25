@@ -129,3 +129,60 @@ export function lockBroken(
   }
   return null;
 }
+
+/**
+ * Each lock at the later of two settings: how far it has ever reached, when
+ * one is the furthest it has been and the other is where it is now.
+ */
+export function laterLocks(a: LockDates | undefined, b: LockDates | undefined): LockDates {
+  const later = (x: IsoDate | undefined, y: IsoDate | undefined): IsoDate | undefined => {
+    const xs = x === undefined || x === "" ? undefined : x;
+    const ys = y === undefined || y === "" ? undefined : y;
+    if (xs === undefined) return ys;
+    if (ys === undefined) return xs;
+    return xs > ys ? xs : ys;
+  };
+  const gst = later(a?.gst, b?.gst);
+  const year = later(a?.year, b?.year);
+  return { ...(gst !== undefined ? { gst } : {}), ...(year !== undefined ? { year } : {}) };
+}
+
+/**
+ * The periods that were locked once and are open now: each lock that has been
+ * moved back, at the date it once reached. Null when no lock is behind where
+ * it has been.
+ */
+export function reopenedLocks(now: LockDates | undefined, once: LockDates | undefined): LockDates | null {
+  const reached = laterLocks(once, now);
+  const open: LockDates = {};
+  if (reached.gst !== undefined && (now?.gst === undefined || now.gst === "" || now.gst < reached.gst)) open.gst = reached.gst;
+  if (reached.year !== undefined && (now?.year === undefined || now.year === "" || now.year < reached.year)) open.year = reached.year;
+  return open.gst === undefined && open.year === undefined ? null : open;
+}
+
+/** Whether a change of locks moves either one back, or takes it off. */
+export function locksMovedBack(before: LockDates | null | undefined, after: LockDates | null | undefined): boolean {
+  return reopenedLocks(after ?? undefined, before ?? undefined) !== null;
+}
+
+/** A History entry, as far as the report of changes into locked periods needs one. */
+export interface LockHistoryEntry {
+  kind: string;
+  before: unknown;
+  after: unknown;
+  /** Set when the change moved a figure in a period that had been locked. */
+  intoLocked?: LockDates;
+}
+
+/**
+ * The History entries a reviewer of locked periods needs: each time a lock was
+ * moved back or taken off, and each change that then moved a figure in a
+ * period that had been locked. In the order given.
+ */
+export function changesIntoLocked<E extends LockHistoryEntry>(events: readonly E[]): E[] {
+  return events.filter(
+    (e) =>
+      e.intoLocked !== undefined ||
+      (e.kind === "lockDates" && locksMovedBack(e.before as LockDates | null, e.after as LockDates | null)),
+  );
+}

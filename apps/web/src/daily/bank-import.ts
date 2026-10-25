@@ -1,3 +1,4 @@
+import { renderRegister } from "./register.js";
 import { rememberHeldAlready } from "./lines-held-already.js";
 import { bankIdThenName } from "./balance-sheet-label.js";
 import { askForColumns, looksLikeBankFile, rememberedLayout, renderColumnChooser } from "./bank-columns.js";
@@ -1311,6 +1312,7 @@ export async function checkBankBalances(file: File): Promise<void> {
 }
 
 export function render(): void {
+  renderRegister($("register-body"));
   renderStatus();
   renderLockedArrivals();
   renderReports();

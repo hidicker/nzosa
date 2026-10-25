@@ -59,3 +59,19 @@ test("the chart fills the picker on books nobody has coded yet", () => {
   assert.ok(codes.includes("Advertising - 400"));
   assert.ok(codes.includes("NZD Wise"));
 });
+
+test("an inactive account is not offered for new coding, under any of its names", async () => {
+  const { pickableCodes } = await import("../dist/index.js");
+  const chart = [
+    { code: "400", name: "Advertising" },
+    { code: "404", name: "Bank Fees", inactive: true },
+    { code: "4040", name: "Bank Fees Old" },
+    { code: "", name: "Petty cash", inactive: true },
+  ];
+  const offered = pickableCodes({ rules: [{ code: "Bank Fees - 404", match: "x" }] }, { t1: { code: "Bank Fees - 404" } }, chart);
+  assert.ok(offered.includes("Advertising - 400"));
+  assert.ok(offered.includes("Bank Fees Old - 4040"), "a longer code that begins the same is a different account");
+  assert.ok(!offered.some((c) => /\b404\b/.test(c)));
+  assert.ok(!offered.includes("Petty cash"));
+  assert.ok(knownCodes({}, {}, chart).includes("Bank Fees - 404"), "the books still know it");
+});

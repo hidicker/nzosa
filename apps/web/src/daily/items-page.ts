@@ -3,13 +3,105 @@ import { postedJournals, record, saveManualJournals, stockAccounts, stockTracked
 import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
-import { itemKey, parseAmount, stockAdjustment, stockValue } from "@nzosa/core";
-import type { Item, StockCount } from "@nzosa/core";
+import { download, note } from "../ui.js";
+import { applyItemPlan, formatItemsCsv, itemImportPlan, itemKey, parseAmount, parseItemsCsv, spreadsheetCell, stockAdjustment, stockValuation, stockValue } from "@nzosa/core";
+import type { Item, ItemImportPlan, StockCount, StockMovement } from "@nzosa/core";
 
 /** Products and services: a price list that fills in an invoice line from a name. */
 
 let editing: string | null = null;
+
+/** A file of items read and not yet applied: what it would do. */
+let pendingFile: { file: string; plan: ItemImportPlan; problems: string[] } | null = null;
+
+/** Download and bring in the list as CSV, with what a file would do shown before it is applied. */
+function itemFileTools(): HTMLElement {
+  const wrap = document.createElement("div");
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  const save = document.createElement("button");
+  save.type = "button";
+  save.textContent = "Download the list (CSV)";
+  save.disabled = held().length === 0;
+  save.addEventListener("click", () => download(formatItemsCsv(held()), `products-and-services-${new Date().toLocaleDateString("en-CA")}.csv`, "text/csv"));
+  const input = document.createElement("input");
+  input.type = "file";
+  input.hidden = true;
+  input.accept = ".csv,text/csv";
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (file === undefined) return;
+    void file.text().then((text) => {
+      const read = parseItemsCsv(text, booksCurrency());
+      pendingFile = { file: file.name, plan: itemImportPlan(held(), read.items), problems: read.problems };
+      redraw("items");
+    });
+  });
+  const bring = document.createElement("button");
+  bring.type = "button";
+  bring.textContent = "Bring in from CSV…";
+  bring.title = "Columns: Name, Kind, Description, Price, Account, Unit cost, Reorder point, Taxable, Active. Matched by name; shown first.";
+  bring.addEventListener("click", () => input.click());
+  actions.append(save, bring, input);
+  wrap.append(actions);
+  if (pendingFile === null) return wrap;
+
+  const { file, plan, problems } = pendingFile;
+  const box = document.createElement("div");
+  box.className = "invoice-editor";
+  const h = document.createElement("h4");
+  h.textContent = `What ${file} would do`;
+  box.append(h);
+  const nothing = plan.add.length === 0 && plan.change.length === 0;
+  box.append(
+    note(
+      nothing
+        ? `Nothing to change${plan.unchanged > 0 ? `: ${plan.unchanged} already as the file has them` : ""}.`
+        : `${plan.add.length} to add, ${plan.change.length} to update, ${plan.unchanged} already the same. Nothing is removed.`,
+    ),
+  );
+  const list = (title: string, rows: string[]): void => {
+    if (rows.length === 0) return;
+    const head = document.createElement("h4");
+    head.textContent = `${title} (${rows.length})`;
+    const ul = document.createElement("ul");
+    for (const r of rows.slice(0, 200)) {
+      const li = document.createElement("li");
+      li.textContent = r;
+      ul.append(li);
+    }
+    box.append(head, ul);
+  };
+  list("Added", plan.add.map((i) => `${i.name}${i.price === undefined ? "" : ` · ${booksMoney(i.price)}`}${i.kind === "product" ? " · product" : ""}`));
+  list("Updated", plan.change.map((c) => `${c.before.name}: ${c.fields.join(", ")}`));
+  list("Not brought in", [...problems, ...plan.problems]);
+  const buttons = document.createElement("div");
+  buttons.className = "migration-actions";
+  if (!nothing) {
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "primary";
+    go.textContent = "Apply these changes";
+    go.addEventListener("click", () => {
+      const stamp = Date.now().toString(36);
+      const next = applyItemPlan(held(), plan, (n) => `item-${stamp}-${n}`);
+      pendingFile = null;
+      void keep(next, `Products and services from ${file}: ${plan.add.length} added, ${plan.change.length} updated`);
+    });
+    buttons.append(go);
+  }
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = nothing ? "Close" : "Leave the list as it is";
+  cancel.addEventListener("click", () => {
+    pendingFile = null;
+    redraw("items");
+  });
+  buttons.append(cancel);
+  box.append(buttons);
+  wrap.append(box);
+  return wrap;
+}
 
 const held = (): Item[] => state.ledger.items ?? [];
 
@@ -163,7 +255,7 @@ export function renderItems(): void {
     editing = "new";
     redraw("items");
   });
-  body.append(add);
+  body.append(add, itemFileTools());
   if (editing === "new") body.append(form(null));
   if (held().length === 0 && editing !== "new") {
     body.append(note("No products or services yet."));
@@ -243,6 +335,49 @@ function bookedAt(code: string, date: string): number {
   return sum;
 }
 
+/** Which product's movements are open. */
+let showingMovements: string | null = null;
+
+/** A product's movements, newest first: what changed, why, and what was left. */
+function movementsRow(moves: readonly StockMovement[]): HTMLTableRowElement {
+  const tr = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = 6;
+  if (moves.length === 0) {
+    cell.append(note("Not bought, sold or counted yet."));
+    tr.append(cell);
+    return tr;
+  }
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    "<thead><tr><th>Date</th><th>What</th><th>Document</th><th>Change</th><th>Value</th><th>On hand after</th><th>Worth after</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const m of [...moves].reverse().slice(0, 40)) {
+    const row = document.createElement("tr");
+    for (const [text, cls] of [
+      [m.date, "report-date"],
+      [m.kind, "report-name"],
+      [m.reference, "report-name"],
+      [`${m.quantity > 0 ? "+" : ""}${Math.round(m.quantity * 10_000) / 10_000}`, "report-amount"],
+      [booksMoney(m.value), "report-amount"],
+      [String(Math.round(m.onHand * 10_000) / 10_000), "report-amount"],
+      [booksMoney(m.valueAfter), "report-amount"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      row.append(td);
+    }
+    tbody.append(row);
+  }
+  table.append(tbody);
+  cell.append(table);
+  if (moves.length > 40) cell.append(note(`The latest 40 of ${moves.length}.`));
+  tr.append(cell);
+  return tr;
+}
+
 /**
  * Stock: products kept in stock are counted at a date and valued at their
  * unit cost, and the inventory account is put to that value.
@@ -259,38 +394,104 @@ function stockSection(body: HTMLElement): void {
   // What is on hand now, from the bills, invoices and counts.
   const tracked = stockTracked();
   if (tracked !== null) {
+    const valued = stockValuation(held(), tracked.onHand);
+    const low = valued.rows.filter((r) => r.low);
+    if (low.length > 0) {
+      body.append(
+        note(
+          `Time to order: ${low.map((r) => `${r.name} (${r.quantity} on hand, reorder at ${r.reorderPoint})`).join("; ")}.`,
+        ),
+      );
+    }
     const table = document.createElement("table");
     table.className = "report-table owner-table";
-    table.innerHTML = "<thead><tr><th>Product</th><th>On hand</th><th>Average cost</th><th>Value</th></tr></thead>";
+    table.innerHTML =
+      "<thead><tr><th>Product</th><th>On hand</th><th>Reorder at</th><th>Average cost</th><th>Value</th><th></th></tr></thead>";
     const tbody = document.createElement("tbody");
-    let total = 0;
-    for (const item of stocked) {
-      const held = tracked.onHand.get(item.id) ?? { quantity: 0, value: 0 };
-      total += held.value;
+    for (const row of valued.rows) {
       const tr = document.createElement("tr");
+      if (row.low) tr.classList.add("match-off");
+      const cells: [string, string][] = [
+        [row.name + (row.low ? " · low" : ""), "report-name"],
+        [String(row.quantity), "report-amount"],
+      ];
+      for (const [text, cls] of cells) {
+        const td = document.createElement("td");
+        td.className = cls;
+        td.textContent = text;
+        tr.append(td);
+      }
+      // The reorder point, set where it is read.
+      const reorderCell = document.createElement("td");
+      const reorder = document.createElement("input");
+      reorder.type = "text";
+      reorder.inputMode = "decimal";
+      reorder.size = 5;
+      reorder.placeholder = "none";
+      reorder.value = row.reorderPoint === undefined ? "" : String(row.reorderPoint);
+      reorder.addEventListener("change", () => {
+        const text = reorder.value.trim();
+        const at = text === "" ? undefined : Number(text.replace(",", "."));
+        if (at !== undefined && (!Number.isFinite(at) || at < 0)) {
+          reorder.setCustomValidity("A number of units, such as 10, or nothing.");
+          reorder.reportValidity();
+          return;
+        }
+        const next = held().map((i) => {
+          if (i.id !== row.itemId) return i;
+          const { reorderPoint: _old, ...rest } = i;
+          return at === undefined ? rest : { ...rest, reorderPoint: at };
+        });
+        void keep(next, at === undefined ? `${row.name}: no reorder point` : `${row.name}: reorder at ${at}`);
+      });
+      reorderCell.append(reorder);
+      tr.append(reorderCell);
       for (const [text, cls] of [
-        [item.name, "report-name"],
-        [String(Math.round(held.quantity * 100) / 100), "report-amount"],
-        [held.quantity > 0 ? booksMoney(Math.round(held.value / held.quantity)) : booksMoney(item.unitCost ?? 0), "report-amount"],
-        [booksMoney(held.value), "report-amount"],
+        [booksMoney(row.averageCost), "report-amount"],
+        [booksMoney(row.value), "report-amount"],
       ] as const) {
         const td = document.createElement("td");
         td.className = cls;
         td.textContent = text;
         tr.append(td);
       }
+      const actions = document.createElement("td");
+      const toggle = document.createElement("button");
+      toggle.type = "button";
+      toggle.className = "small";
+      toggle.textContent = showingMovements === row.itemId ? "Hide movements" : "Movements";
+      toggle.addEventListener("click", () => {
+        showingMovements = showingMovements === row.itemId ? null : row.itemId;
+        redraw("items");
+      });
+      actions.append(toggle);
+      tr.append(actions);
       tbody.append(tr);
+      if (showingMovements === row.itemId) tbody.append(movementsRow(tracked.movements.get(row.itemId) ?? []));
     }
     const foot = document.createElement("tr");
     foot.className = "report-total";
-    foot.innerHTML = '<td class="report-name">Total</td><td></td><td></td>';
+    foot.innerHTML = '<td class="report-name">Total</td><td></td><td></td><td></td>';
     const sum = document.createElement("td");
     sum.className = "report-amount";
-    sum.textContent = booksMoney(total);
-    foot.append(sum);
+    sum.textContent = booksMoney(valued.total);
+    foot.append(sum, document.createElement("td"));
     tbody.append(foot);
     table.append(tbody);
     body.append(table);
+    const csv = document.createElement("button");
+    csv.type = "button";
+    csv.textContent = "Stock valuation CSV";
+    csv.addEventListener("click", () => {
+      const money = (c: number): string => (c / 100).toFixed(2);
+      const rows = [
+        ["Product", "On hand", "Reorder at", "Average cost", "Value"],
+        ...valued.rows.map((r) => [r.name, String(r.quantity), r.reorderPoint === undefined ? "" : String(r.reorderPoint), money(r.averageCost), money(r.value)]),
+        ["Total", "", "", "", money(valued.total)],
+      ];
+      download(rows.map((r) => r.map(spreadsheetCell).join(",")).join("\n") + "\n", `stock-valuation-${new Date().toLocaleDateString("en-CA")}.csv`, "text/csv");
+    });
+    body.append(csv);
     const { inventory, cost } = stockAccounts();
     body.append(
       note(

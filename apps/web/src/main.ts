@@ -66,14 +66,18 @@ import {
 } from "./daily/reconcile-page.js";
 import {
   renderReportsPage,
+  startNewJournal,
   wireReports,
 } from "./daily/reports.js";
 import {
   renderInvoiceEditor,
   renderInvoices,
+  startNewBill,
+  startNewInvoice,
   wireInvoices,
 } from "./daily/invoices.js";
 import { renderBills, wireBills } from "./daily/bills.js";
+import { wireShortcuts } from "./shortcuts.js";
 import { markActions, renderActions } from "./daily/actions.js";
 import { renderIrdRecords, wireIrdRecords } from "./daily/ird-records.js";
 import { renderRentalsPage } from "./daily/rentals-page.js";
@@ -83,6 +87,7 @@ import { renderStatements } from "./daily/statements-page.js";
 import { renderBudgets } from "./daily/budgets-page.js";
 import { renderItems } from "./daily/items-page.js";
 import { renderClasses } from "./daily/classes-page.js";
+import { renderJobs } from "./daily/jobs-page.js";
 import { renderApps } from "./daily/apps-page.js";
 import { renderTime } from "./daily/time-page.js";
 import { renderAuPayroll } from "./daily/au-payroll-page.js";
@@ -125,7 +130,8 @@ import {
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
 import { applyCountry, booksCountry } from "./country.js";
-import { reportsFromMenu, wireMenu } from "./menu.js";
+import { openReport, reportsFromMenu, wireMenu } from "./menu.js";
+import { wireRecordSearch } from "./search-wiring.js";
 import { $, state } from "./state.js";
 import {
   dedupeReference,
@@ -188,6 +194,7 @@ async function init(): Promise<void> {
     budgets: renderBudgets,
     items: renderItems,
     classes: renderClasses,
+    jobs: renderJobs,
     apps: renderApps,
     time: renderTime,
     aupayroll: renderAuPayroll,
@@ -458,6 +465,7 @@ function wireUp(): void {
   // those do.
   wireChrome();
   wireMenu();
+  wireRecordSearch();
 
   // Leaving while a save is still on its way: a tick on Reconcile moves on
   // before the server has answered, so closing or reloading straight after
@@ -539,6 +547,20 @@ function wireUp(): void {
   wirePayroll();
   wireOpeningBalances();
   wireBooksPage();
+  wireShortcuts({
+    invoice: () => {
+      showPage("invoices", "top");
+      startNewInvoice();
+    },
+    bill: () => {
+      showPage("bills", "top");
+      startNewBill();
+    },
+    journal: () => {
+      startNewJournal();
+      openReport("manual");
+    },
+  });
 }
 
 /** Fill the header selector from the entities that exist. */

@@ -19,6 +19,8 @@ export interface Item {
   unitCost?: Cents;
   /** Charged sales tax where the invoice has a rate (United States); taxable unless false. */
   taxable?: boolean;
+  /** For a stocked product: at or below this many on hand, it is time to order more. */
+  reorderPoint?: number;
 }
 
 export function itemKey(name: string): string {

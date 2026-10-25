@@ -145,7 +145,8 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   time: "time tracking hours timesheet billable rate unbilled invoice time",
   aupayroll: "payroll pay run wages employees payg withholding super superannuation stp single touch payroll w1 w2",
   apps: "modules apps features turn on off menu",
-  classes: "class classes department location job project segment tag profit and loss by class",
+  classes: "class classes department location segment tag profit and loss by class",
+  jobs: "jobs job project contract customer work job costing profitability profit by job quote",
   items: "products services price list catalog inventory sku",
   budgets: "budget plan forecast target spend limit variance",
   contacts: "customers vendors suppliers clients address email phone w-9 w9 1099 contact list",
@@ -154,6 +155,8 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   personalyear: "ir3 individual income tax return personal year end pack provisional tax pie kiwisaver interest dividends",
   payroll: "wages salaries paye kiwisaver payday filing ird employee employer esct student loan",
   manual: "journal entries adjustments year end accountant",
+  adjusting: "adjusting entries adjustments accruals accountant before after unadjusted trial balance",
+  reclassify: "reclassify move recode lines transactions another account wrong account bulk",
   assets: "depreciation register disposals purchases",
   yearend: "vehicle logbook private use prepayments balance date adjustments",
   reports: "all reports",
@@ -243,7 +246,21 @@ function destinations(): Destination[] {
   return found;
 }
 
+/**
+ * What else a search finds besides places: contacts, documents and bank lines,
+ * from main.ts, so the menu need not know any page.
+ */
+let recordSearch: ((query: string) => Destination[]) | null = null;
+
+export function setRecordSearch(search: (query: string) => { label: string; where: string; go: () => void }[]): void {
+  recordSearch = (query) => search(query).map((hit) => ({ ...hit, words: "" }));
+}
+
 function matches(query: string): Destination[] {
+  return [...placeMatches(query), ...(recordSearch?.(query) ?? [])];
+}
+
+function placeMatches(query: string): Destination[] {
   const words = query.toLowerCase().split(/\s+/).filter((word) => word !== "");
   if (words.length === 0) return [];
   const phrase = words.join(" ");
@@ -289,7 +306,7 @@ function wireSearch(): void {
     if (shown.length === 0) {
       const none = document.createElement("div");
       none.className = "menu-search-empty";
-      none.textContent = "Nothing called that.";
+      none.textContent = "Nothing called that, and nothing in the books says it.";
       results.append(none);
       return;
     }

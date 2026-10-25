@@ -7,6 +7,7 @@ import {
   belowCreditMinimum,
   donorYears,
   emptyEntityModel,
+  givingStatementHtml,
   nextReceiptNumber,
   organisationProblems,
   parseAmount,
@@ -352,7 +353,16 @@ function table(entity: Entity, receipts: DonationReceipt[]): HTMLElement {
   return wrap;
 }
 
-function summary(receipts: DonationReceipt[]): HTMLElement | null {
+/** Giving statements for the year, one donor's or everybody's, as a page to print. */
+function openStatements(entity: Entity, receipts: DonationReceipt[], year: number, donors?: string[]): void {
+  if (entity.nonprofit === undefined) return;
+  const html = givingStatementHtml({ name: entity.name, address: entity.address }, entity.nonprofit, receipts, year, taxYearOf, donors);
+  const url = URL.createObjectURL(new Blob([html], { type: "text/html" }));
+  window.open(url, "_blank");
+  setTimeout(() => URL.revokeObjectURL(url), 60_000);
+}
+
+function summary(receipts: DonationReceipt[], entity: Entity): HTMLElement | null {
   const rows = donorYears(receipts, taxYearOf);
   if (rows.length === 0) return null;
   const years = [...new Set(rows.map((r) => r.year))].sort((a, b) => b - a);
@@ -373,16 +383,24 @@ function summary(receipts: DonationReceipt[]): HTMLElement | null {
   const mine = rows.filter((r) => r.year === summaryYear);
   const t = document.createElement("table");
   t.className = "report-table";
-  t.innerHTML = "<thead><tr><th>Donor</th><th>Receipts</th><th>Given</th></tr></thead>";
+  t.innerHTML = "<thead><tr><th>Donor</th><th>Receipts</th><th>Given</th><th></th></tr></thead>";
   const body = document.createElement("tbody");
   for (const r of mine) {
     const tr = document.createElement("tr");
-    tr.append(nameCell(r.donor), amountCell(String(r.receipts)), amountCell(money(r.amount)));
+    const statement = document.createElement("button");
+    statement.type = "button";
+    statement.className = "small";
+    statement.textContent = "Statement";
+    statement.title = "Their giving this year: each receipt, and the total, as a page to print or save as a PDF";
+    statement.addEventListener("click", () => openStatements(entity, receipts, summaryYear, [r.donor]));
+    const cell = document.createElement("td");
+    cell.append(statement);
+    tr.append(nameCell(r.donor), amountCell(String(r.receipts)), amountCell(money(r.amount)), cell);
     body.append(tr);
   }
   const sum = mine.reduce((s, r) => s + r.amount, 0);
   const foot = document.createElement("tr");
-  foot.append(nameCell("Total"), amountCell(""), amountCell(money(sum)));
+  foot.append(nameCell("Total"), amountCell(""), amountCell(money(sum)), nameCell(""));
   body.append(foot);
   t.append(body);
   const wrap = document.createElement("div");
@@ -397,7 +415,12 @@ function summary(receipts: DonationReceipt[]): HTMLElement | null {
       .join("\r\n");
     download(text, `donations-by-donor-${summaryYear}.csv`, "text/csv");
   });
-  box.append(pick, wrap, save);
+  const every = document.createElement("button");
+  every.type = "button";
+  every.textContent = "Every donor's statement";
+  every.title = "One page a donor, ready to print";
+  every.addEventListener("click", () => openStatements(entity, receipts, summaryYear));
+  box.append(pick, wrap, save, " ", every);
   return box;
 }
 
@@ -458,7 +481,7 @@ export function renderDonationsPage(): void {
     const h = document.createElement("h3");
     h.textContent = "Receipts issued";
     body.append(h, table(entity, receipts));
-    const s = summary(receipts);
+    const s = summary(receipts, entity);
     if (s !== null) {
       const sh = document.createElement("h3");
       sh.textContent = "Given by each donor";

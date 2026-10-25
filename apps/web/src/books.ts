@@ -11,6 +11,7 @@ import { filedByPeriod, filedKey,
 import type { CarriesGst } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
+import { takeIntoLocked } from "./locked-note.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { describeRules } from "./rules-ui.js";
@@ -74,6 +75,7 @@ import {
   sameEntityBanks as coreSameEntityBanks,
 } from "@nzosa/core";
 import type {
+  InvoiceSupplier,
   FiledReturn,
   Account,
   Cents,
@@ -104,7 +106,7 @@ import type {
   GstSide,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart, depreciationRules } from "./tax-year.js";
-import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
+import { booksCountry, booksLocale, moneyPlaces, noSalesTax } from "./country.js";
 import { tellOnPage } from "./ui.js";
 
 /**
@@ -646,7 +648,9 @@ export async function record(
   after: unknown,
   targetId?: string,
 ): Promise<void> {
-  const event = makeEvent(state.who, kind, summary, before, after, targetId);
+  const made = makeEvent(state.who, kind, summary, before, after, targetId);
+  const intoLocked = takeIntoLocked();
+  const event = intoLocked === null ? made : { ...made, intoLocked };
   state.events = appendEvent(state.events, event);
   await saveEvents(state.events);
 }
@@ -1255,6 +1259,7 @@ export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
     splits: state.ledger.splits ?? {},
     assignments: invoiceAssignments(),
     credits: state.ledger.creditNotes ?? {},
+    applications: state.ledger.creditApplications ?? {},
   });
 }
 
@@ -1949,6 +1954,11 @@ export function reportEngine(): CodingEngine | null {
  * to. The sheet is turned into the text the reader already understands.
  */
 export async function asCsvText(name: string, bytes: Uint8Array): Promise<string> {
+  // Gzipped, as a GnuCash book is saved: unpacked by the browser, then read as text.
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b && typeof DecompressionStream !== "undefined") {
+    const unpacked = new Response(new Blob([bytes as unknown as BlobPart]).stream().pipeThrough(new DecompressionStream("gzip")));
+    return asCsvText(name.replace(/\.gz$/i, ""), new Uint8Array(await unpacked.arrayBuffer()));
+  }
   // The old Excel format: QuickBooks Online exports its lists in it.
   if (isXls(bytes)) {
     const sheet = readXls(bytes).sheets[0];
@@ -2113,6 +2123,34 @@ export function ledgerFromStart(): boolean {
   );
 }
 
+const EXCHANGE = /currency gains|exchange (gains|losses)|foreign exchange/i;
+
+/** Where gains and losses on documents in another currency go, where the chart has the account. */
+export function exchangeAccount(): { code: string; name: string } | undefined {
+  const account = state.chart.find((a) => EXCHANGE.test(a.name));
+  return account === undefined ? undefined : { code: account.code, name: account.name };
+}
+
+/** Add the currency gains and losses account to the chart, the first time a document needs it. */
+export async function ensureExchangeAccount(): Promise<void> {
+  if (exchangeAccount() !== undefined) return;
+  const taken = new Set(state.chart.map((a) => a.code));
+  const code = ["499", "498", "497", "496", "4990", "4991"].find((c) => !taken.has(c)) ?? `fx${Date.now().toString(36)}`;
+  const account: Account = {
+    code,
+    name: "Foreign Currency Gains and Losses",
+    type: "Overhead",
+    taxCode: noSalesTax() ? "" : "No GST",
+    description: "What the rate moved between a document in another currency being issued and being paid.",
+    gstTreatment: "out-of-scope",
+  };
+  const chart = [...state.chart, account];
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record("chart", `${account.name} added for documents in another currency`, null, account, `${account.code}|${account.name}`);
+}
+
 export function postedJournals(): PostedJournal[] {
   // Composition is in core, where the three rules that go expensively wrong --
   // a settled invoice not counting as a fresh sale, a transfer posting once
@@ -2131,6 +2169,7 @@ export function postedJournals(): PostedJournal[] {
     return { code: digits || account?.code || "", name: account?.name ?? name };
   };
 
+  const exchange = exchangeAccount();
   const posted = postLedger({
     transactions: engine.transactions,
     codeOf: engine.codeOf,
@@ -2150,6 +2189,7 @@ export function postedJournals(): PostedJournal[] {
     gstAccountFor: gstAccountForEntities(),
     ...(booksStartKnown() !== undefined ? { startDate: booksStartKnown()! } : {}),
     transfers: state.ledger.transfers ?? {},
+    ...(exchange !== undefined ? { exchangeAccount: exchange } : {}),
     // A property manager's statement posts as a journal of its own, derived
     // each time so an edited statement cannot leave its old journal behind.
     manualJournals: [...(state.ledger.manualJournals ?? []), ...agentStatementJournals()],
@@ -2563,4 +2603,74 @@ export function proposalState(proposal: {
   if (held === proposal.invoiceNumber) return "accepted";
   if (held === undefined || held === "") return "waiting";
   return "elsewhere";
+}
+
+/**
+ * Who employs, for the top of a payslip: the entity the wages account belongs
+ * to, or the only entity there is, or the only one that is not a rental or
+ * personal. Both payrolls use it.
+ */
+export function payrollEmployer(wages: string | undefined): InvoiceSupplier | null {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const account = wages === undefined ? undefined : state.chart.find((a) => a.code.trim() === wages.trim());
+  const id = account === undefined ? undefined : model.accounts[accountEntityKey(account)];
+  const entity =
+    (id === undefined ? undefined : model.entities.find((e) => e.id === id)) ??
+    (model.entities.length === 1 ? model.entities[0] : undefined) ??
+    // A rental or personal entity beside one business: the business employs.
+    onlyOne(model.entities.filter((e) => e.kind !== "personal" && e.kind !== "residential"));
+  if (entity === undefined) return null;
+  return {
+    name: entity.name,
+    ...(entity.address === undefined ? {} : { address: entity.address }),
+    ...(entity.gstNumber === undefined ? {} : { gstNumber: entity.gstNumber }),
+    ...(entity.logo === undefined ? {} : { logo: entity.logo }),
+  };
+}
+
+function onlyOne<T>(items: readonly T[]): T | undefined {
+  return items.length === 1 ? items[0] : undefined;
+}
+
+/**
+ * The chart accounts something in the books still names, by code (or by name
+ * where an account has no code).
+ *
+ * Kept on the cautious side: an account counts as used if any line is coded
+ * or posted to it -- every journal the books post, payroll and depreciation
+ * included -- or if anything else kept with the books names its code: an
+ * invoice or bill of any status, an opening balance, an item, a contact's
+ * usual account, a payroll setting, a rule. Removing an account that is
+ * wrongly thought unused would quietly break whatever named it; keeping one
+ * that is not used costs a line in the chart.
+ */
+export function accountsInUse(): Set<string> {
+  const used = new Set<string>();
+  for (const journal of postedJournals()) for (const line of journal.lines) used.add(line.accountCode.trim());
+  for (const [label, count] of codingProgress().byCode) if (count > 0) used.add(label);
+  // Everything else kept with the books, read as text: a code quoted as a
+  // value anywhere is a use. The chart itself, the transactions and the
+  // entity assignments (keyed by every account) are left out.
+  const { chart: _c, transactions: _t, entities: _e, ...rest } = state.ledger;
+  const kept = JSON.stringify(rest) + JSON.stringify(state.rules ?? {});
+  for (const { account, label } of accountsForEditing()) {
+    const code = account.code.trim();
+    if (used.has(label)) used.add(code === "" ? account.name : code);
+    if (code !== "" && kept.includes(`"${code}"`)) used.add(code);
+    if (kept.includes(JSON.stringify(label))) used.add(code === "" ? account.name : code);
+  }
+  return used;
+}
+
+/** Every bank line with its coding, on every account of the entity chosen at the top: what Reconcile shows, unfiltered. */
+export function everyCodedLine(): Suggestion[] {
+  return suggest(
+    state.ledger.transactions,
+    state.rules,
+    state.ledger.overrides ?? {},
+    accountsFor([]),
+    unregisteredCode(),
+    gstLookups(),
+    linesWithUncodedPart(),
+  );
 }

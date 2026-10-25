@@ -75,6 +75,84 @@ export interface PayDeduction {
   account?: string | undefined;
 }
 
+/**
+ * A deduction notice: an instruction to take a set amount from each pay and
+ * pay it on -- child support or an Inland Revenue deduction notice for tax
+ * owed, both paid to Inland Revenue, or an attachment order from the
+ * Ministry of Justice for fines. Kept on the employee, so every pay run takes
+ * it without anybody remembering to, and it stops once what is owed has been
+ * taken or its end date passes.
+ */
+export interface DeductionNotice {
+  id: string;
+  kind: "child-support" | "ird" | "court-fines" | "other";
+  /** Who it is paid to: Inland Revenue, the Ministry of Justice. */
+  payTo: string;
+  /** The notice's own reference, which goes with each payment. */
+  reference: string;
+  /** Asked for each pay. */
+  amount: Cents;
+  from?: IsoDate | undefined;
+  until?: IsoDate | undefined;
+  /** What is owed in all, where the notice says: nothing more is taken once it has been. */
+  owing?: Cents | undefined;
+  /** The account what is taken is held in until paid on; otherwise the wages payable side. */
+  account?: string | undefined;
+}
+
+export const NOTICE_KINDS: Readonly<Record<DeductionNotice["kind"], string>> = {
+  "child-support": "Child support",
+  ird: "IR deduction notice",
+  "court-fines": "Fines attachment order",
+  other: "Deduction notice",
+};
+
+/** How much of each notice earlier pay runs have taken, by notice id. */
+export function noticesTaken(history: readonly PayRun[], employeeId: string, before?: IsoDate): Map<string, Cents> {
+  const taken = new Map<string, Cents>();
+  for (const run of history) {
+    if (before !== undefined && run.payDate >= before) continue;
+    for (const line of run.lines) {
+      if (line.employeeId !== employeeId) continue;
+      for (const n of line.notices ?? []) taken.set(n.id, (taken.get(n.id) ?? 0) + n.amount);
+    }
+  }
+  return taken;
+}
+
+/**
+ * What an employee's notices ask of a pay on this date: child support, which
+ * is reported in its own place and protected to 60% of net pay when worked
+ * out, and the rest as deductions from net pay. Each is cut to what is still
+ * owing.
+ */
+export function noticesForPay(
+  employee: Pick<Employee, "id" | "notices">,
+  payDate: IsoDate,
+  history: readonly PayRun[],
+): { childSupport: { id: string; amount: Cents }[]; deductions: (PayDeduction & { notice: string })[] } {
+  const taken = noticesTaken(history, employee.id, payDate);
+  const childSupport: { id: string; amount: Cents }[] = [];
+  const deductions: (PayDeduction & { notice: string })[] = [];
+  for (const n of employee.notices ?? []) {
+    if (n.amount <= 0) continue;
+    if (n.from !== undefined && n.from > payDate) continue;
+    if (n.until !== undefined && n.until < payDate) continue;
+    const left = n.owing === undefined ? n.amount : Math.min(n.amount, Math.max(0, n.owing - (taken.get(n.id) ?? 0)));
+    if (left <= 0) continue;
+    if (n.kind === "child-support") childSupport.push({ id: n.id, amount: left });
+    else {
+      deductions.push({
+        name: `${NOTICE_KINDS[n.kind]}${n.reference.trim() === "" ? "" : ` ${n.reference.trim()}`}`,
+        amount: left,
+        notice: n.id,
+        ...(n.account !== undefined && n.account !== "" ? { account: n.account } : {}),
+      });
+    }
+  }
+  return { childSupport, deductions };
+}
+
 /** A pay item as paid: its amount worked out. */
 export interface PaidItem {
   name: string;
@@ -135,6 +213,8 @@ export interface Employee {
   allowances?: PayItem[] | undefined;
   reimbursements?: PayItem[] | undefined;
   deductions?: PayDeduction[] | undefined;
+  /** Deduction notices: child support, IR or court fines, taken from every pay until done. */
+  notices?: DeductionNotice[] | undefined;
   /** What IR's Employee Details file needs beyond the pay: see employee-details.ts. */
   details?: EmployeeDetails | undefined;
 }
@@ -227,6 +307,8 @@ export interface PayLine {
   unpaidWeeks?: number | undefined;
   /** A schedular payment (withholding income) paid alongside wages, on its own WT line. */
   withholding?: boolean | undefined;
+  /** What each deduction notice took from this pay, child support included. */
+  notices?: { id: string; amount: Cents }[] | undefined;
 }
 
 export interface PayRun {
@@ -793,15 +875,18 @@ export function buildPayRun(params: {
     const withholding = template.filter((i) => i.category === "withholding");
     const allowances = paid(template.filter((i) => i.category !== "withholding"));
     const reimbursements = paid(input.reimbursements ?? emp.reimbursements);
-    const deductions = (input.deductions ?? emp.deductions ?? [])
+    // Notices first worked out from what earlier pays took, so one that is paid off stops.
+    const noticed = noticesForPay(emp, params.payDate, params.history ?? []);
+    const deductions = [...(input.deductions ?? emp.deductions ?? []), ...noticed.deductions]
       .filter((d) => d.amount !== 0)
       .map((d) => ({ name: d.name, amount: d.amount, ...(d.account ? { account: d.account } : {}) }));
+    const askedChildSupport = input.childSupport ?? (noticed.childSupport.length > 0 ? noticed.childSupport.reduce((s, n) => s + n.amount, 0) : undefined);
     gross += allowances.reduce((s, i) => s + i.amount, 0);
 
     const line =
       calculatePayLine(emp, gross, year, {
         earningsNotLiableAcc: input.earningsNotLiableAcc,
-        childSupport: input.childSupport,
+        childSupport: askedChildSupport,
         hours,
         ...(extra > 0
           ? {
@@ -824,6 +909,16 @@ export function buildPayRun(params: {
       });
     const reimbursed = reimbursements.reduce((s, i) => s + i.amount, 0);
     const deducted = deductions.reduce((s, i) => s + i.amount, 0);
+    // Child support as protected, shared among the notices in order; typed in by hand, it is no notice's.
+    let protectedLeft = input.childSupport === undefined ? line.childSupport : 0;
+    const took = [
+      ...noticed.childSupport.map((n) => {
+        const amount = Math.min(n.amount, protectedLeft);
+        protectedLeft -= amount;
+        return { id: n.id, amount };
+      }),
+      ...noticed.deductions.map((d) => ({ id: d.notice, amount: d.amount })),
+    ].filter((n) => n.amount > 0);
     lines.push({
       ...line,
       ...(allowances.length > 0 ? { allowances } : {}),
@@ -831,6 +926,7 @@ export function buildPayRun(params: {
       ...(deductions.length > 0 ? { deductions } : {}),
       ...(input.daysPaid !== undefined ? { daysPaid: input.daysPaid } : {}),
       ...(input.unpaidWeeks !== undefined && input.unpaidWeeks > 0 ? { unpaidWeeks: input.unpaidWeeks } : {}),
+      ...(took.length > 0 ? { notices: took } : {}),
       netPay: line.netPay + reimbursed - deducted,
     });
 

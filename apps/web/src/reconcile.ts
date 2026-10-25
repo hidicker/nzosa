@@ -404,5 +404,5 @@ export function transferCandidates(
  * Now in the core, so the command line uses the same list. Re-exported here
  * because this is where the app has always reached for it.
  */
-export { knownCodes } from "@nzosa/core";
+export { knownCodes, pickableCodes } from "@nzosa/core";
 

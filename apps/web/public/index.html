@@ -249,6 +249,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 16h3l9-9-3-3-9 9z"/><path d="M11 6l3 3"/></svg>
                 <span>Manual journals</span>
               </button>
+              <button type="button" data-report="reclassify">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 7h11l-3-3M16 13H5l3 3"/></svg>
+                <span>Reclassify</span>
+              </button>
               <button type="button" data-page="assets" data-module="assets">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3z"/><path d="M7 7V5h6v2"/><path d="M3 11h14"/></svg>
                 <span>Fixed assets</span>
@@ -269,6 +273,10 @@
               <button type="button" data-page="classes" hidden data-module="classes">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 4h6v5H3zM11 4h6v5h-6zM3 11h6v5H3zM11 11h6v5h-6z"/></svg>
                 <span>Classes</span>
+              </button>
+              <button type="button" data-page="jobs" hidden data-module="jobs">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3z"/><path d="M7 7V4h6v3"/></svg>
+                <span>Jobs</span>
               </button>
             </div>
           </div>
@@ -555,7 +563,7 @@
         <div id="setup-drop" class="dropzone dropzone-mini" hidden>
           <span class="dropzone-mini-text">Drop exported files here, or</span>
           <button id="setup-pick" type="button" class="small">Choose files</button>
-          <input id="setup-input" type="file" accept=".csv,.xlsx,.xls,.txt,.iif,.zip" multiple hidden />
+          <input id="setup-input" type="file" accept=".csv,.xlsx,.xls,.txt,.iif,.zip,.gnucash,.gz,.xml" multiple hidden />
           <div id="setup-loaded"></div>
         </div>
       </section>
@@ -582,7 +590,7 @@
           <h2>Invoices</h2>
           <div class="page-actions">
             <input id="invoice-search" type="search" placeholder="Search contact, number&hellip;" />
-            <button id="invoice-new" type="button" class="primary">New invoice</button>
+            <button id="invoice-new" type="button" class="primary" title="Alt+Shift+I from anywhere">New invoice</button>
             <button id="invoices-pick" type="button">Load invoices&hellip;</button>
             <input id="invoices-input" type="file" accept=".csv,text/csv" hidden />
             <button id="allocations-pick" type="button" data-module="xero">Load allocations&hellip;</button>
@@ -603,7 +611,7 @@
           <div class="page-actions">
             <select id="bill-filter" aria-label="Show"></select>
             <input id="bill-search" type="search" placeholder="Search supplier, number&hellip;" />
-            <button id="bill-new" type="button" class="primary">New bill</button>
+            <button id="bill-new" type="button" class="primary" title="Alt+Shift+B from anywhere">New bill</button>
           </div>
         </div>
         <p class="page-hint">
@@ -776,6 +784,16 @@
         <div id="classes-body"></div>
       </section>
 
+      <section id="page-jobs" class="page" hidden>
+        <div class="page-head">
+          <h2>Jobs</h2>
+        </div>
+        <p class="page-hint">
+          Work done for a customer: a build, a contract, an event. Give a job to the invoices, bills, bank lines and journals that belong to it, and see what each job earned and cost over its whole life. This page does not change the books.
+        </p>
+        <div id="jobs-body"></div>
+      </section>
+
       <section id="page-budgets" class="page" hidden>
         <div class="page-head">
           <h2>Budgets</h2>
@@ -865,6 +883,8 @@
                 <option value="journal">Journal report and trial balance</option>
                 <option value="general">General ledger detail</option>
                 <option value="manual">Manual journals</option>
+                <option value="reclassify">Reclassify transactions</option>
+                <option value="adjusting">Adjusting entries</option>
               </optgroup>
               <optgroup label="Transactions">
                 <option value="bankreconcile">Bank reconciliation</option>
@@ -873,6 +893,8 @@
               <optgroup label="Payables and receivables">
                 <option value="agedpayables" data-module="business company nonprofit">Aged payables</option>
                 <option value="agedreceivables" data-module="business nonprofit">Aged receivables</option>
+                <option value="salescustomer" data-module="business nonprofit">Sales by customer</option>
+                <option value="salesitem" data-module="business nonprofit">Sales by item</option>
               </optgroup>
               <optgroup label="Rentals and owners">
                 <option value="rentals" data-module="rentals">Rental schedules</option>
@@ -895,10 +917,14 @@
             <label id="report-compare-label" class="report-compare" hidden>
               <input type="checkbox" id="report-compare" /> Compare with a year earlier
             </label>
+            <label id="report-unadjusted-label" class="report-compare" hidden title="Leave out the adjusting entries: the books before the accountant's adjustments">
+              <input type="checkbox" id="report-unadjusted" /> Without adjusting entries
+            </label>
             <button id="journals-pick" type="button">Load ledger&hellip;</button>
             <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
             <button id="report-download" type="button">Download CSV</button>
             <button id="report-download-excel" type="button">Excel detailed extract</button>
+            <button id="report-package" type="button" title="One zip for the period: statements, trial balance, ledger, agings, reconciliations, adjusting entries and History">Accountant's package</button>
           </div>
         </div>
         <p class="page-hint" id="reports-hint"></p>
@@ -1025,6 +1051,16 @@
         </p>
           <div id="balances-entry"></div>
           <div id="balances-body"></div>
+        </section>
+
+        <section id="import-register" class="import-subsection">
+          <div class="import-subsection-head">
+            <h3>Type lines in: cash and accounts with no bank file</h3>
+          </div>
+          <p class="page-hint">
+            Petty cash, a cash tin, an account no bank file or feed reaches: type its lines here, with a running balance. Each is coded as it is typed, or split across accounts, and is a bank line like any other from then on.
+          </p>
+          <div id="register-body"></div>
         </section>
 
         <!-- 3. Import bank files -->

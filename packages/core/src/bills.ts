@@ -1,3 +1,5 @@
+import { bookedTotal, foreignRate, inBooks } from "./foreign-currency.js";
+import type { CreditApplication } from "./invoices.js";
 import type { Cents } from "./money.js";
 import { daysBetween } from "./dates.js";
 import type { IsoDate } from "./dates.js";
@@ -125,6 +127,8 @@ export function agedReport(options: {
   payments: readonly DatedPayment[];
   /** Credit note number to the document it credits. */
   credits?: Readonly<Record<string, string>>;
+  /** Credit held on account and applied in parts, by the document it came from. */
+  applications?: Readonly<Record<string, readonly CreditApplication[]>>;
   asAt: IsoDate;
   /** Only documents this says yes to, e.g. one entity's. */
   include?: (invoice: Invoice) => boolean;
@@ -163,14 +167,33 @@ export function agedReport(options: {
     credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
   }
 
+  // Credit applied in parts counts from the day it was applied (or the day of
+  // the document it came from), on both: the giver owes that much more, the
+  // receiver that much less.
+  const given = new Map<string, Cents>();
+  for (const [from, list] of Object.entries(options.applications ?? {})) {
+    const source = byNumber.get(from);
+    if (source === undefined) continue;
+    for (const one of list) {
+      if (!byNumber.has(one.invoice) || one.amount <= 0 || (one.on ?? source.issued) > asAt) continue;
+      credited.set(one.invoice, (credited.get(one.invoice) ?? 0) + one.amount);
+      given.set(from, (given.get(from) ?? 0) + one.amount);
+    }
+  }
+
   const contacts = new Map<string, AgedContact>();
   for (const doc of docs) {
     let owing: Cents;
     if (isCreditNote(doc)) {
       if (applied.has(doc.number)) continue;
-      owing = (doc.broughtForward ?? doc.total) + (paid.get(doc.number) ?? 0);
+      owing = (doc.broughtForward ?? doc.total) + (paid.get(doc.number) ?? 0) + (given.get(doc.number) ?? 0);
+    } else if (foreignRate(doc) !== null) {
+      // In another currency: owed at what it was booked at until a payment
+      // settles it, which it does in full (see foreign-currency.ts).
+      owing = (paid.get(doc.number) ?? 0) > 0 ? 0 : bookedTotal(doc) - inBooks(doc, credited.get(doc.number) ?? 0);
     } else {
-      owing = (doc.broughtForward ?? doc.total) - (paid.get(doc.number) ?? 0) - (credited.get(doc.number) ?? 0);
+      owing =
+        (doc.broughtForward ?? doc.total) - (paid.get(doc.number) ?? 0) - (credited.get(doc.number) ?? 0) + (given.get(doc.number) ?? 0);
     }
     if (owing === 0) continue;
     const daysOverdue = daysBetween(doc.due ?? doc.issued, asAt);

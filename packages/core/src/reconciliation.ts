@@ -69,3 +69,53 @@ export function reconciliationFigures(
   const sum = ticked.reduce((total, t) => total + t.amount, 0);
   return { statement, beginning, ticked: sum, difference: statement - (beginning + sum) };
 }
+
+/** A finished statement set out again: what it started from, what it cleared, and what was still to come. */
+export interface ReconciliationReport {
+  reconciliation: BankReconciliation;
+  /** The account's balance when the statement began: its opening balance and every earlier statement's lines. */
+  beginning: Cents;
+  cleared: Transaction[];
+  clearedTotal: Cents;
+  /** The statement's figure, in the ledger's direction. */
+  statement: Cents;
+  /** Lines dated on or before the statement that no statement had cleared by then: in the books, not yet on a statement. */
+  outstanding: Transaction[];
+  outstandingTotal: Cents;
+}
+
+/**
+ * The report of one finished statement. "Earlier" is the order statements
+ * were finished on the account, which is the order their beginnings were
+ * worked out in; a statement finished later can never have changed one
+ * already finished.
+ */
+export function reconciliationReport(
+  transactions: readonly Transaction[],
+  done: readonly BankReconciliation[],
+  id: string,
+  opening: Cents = 0,
+): ReconciliationReport | null {
+  const index = done.findIndex((r) => r.id === id);
+  const reconciliation = done[index];
+  if (reconciliation === undefined) return null;
+  const earlier = done.slice(0, index).filter((r) => r.account === reconciliation.account);
+  const before = clearedLines(earlier, reconciliation.account);
+  const now = new Set(reconciliation.cleared);
+  const onAccount = transactions.filter((t) => t.account === reconciliation.account);
+  const byDate = (a: Transaction, b: Transaction): number => a.date.localeCompare(b.date) || a.id.localeCompare(b.id);
+  const cleared = onAccount.filter((t) => now.has(t.id)).sort(byDate);
+  const outstanding = onAccount
+    .filter((t) => !now.has(t.id) && !before.has(t.id) && t.date <= reconciliation.statementDate)
+    .sort(byDate);
+  const beginning = onAccount.filter((t) => before.has(t.id)).reduce((s, t) => s + t.amount, opening);
+  return {
+    reconciliation,
+    beginning,
+    cleared,
+    clearedTotal: cleared.reduce((s, t) => s + t.amount, 0),
+    statement: reconciliation.owed ? -reconciliation.statementBalance : reconciliation.statementBalance,
+    outstanding,
+    outstandingTotal: outstanding.reduce((s, t) => s + t.amount, 0),
+  };
+}

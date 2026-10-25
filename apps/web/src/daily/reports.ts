@@ -1,6 +1,11 @@
-import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
-import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { periodSaid, spreadsheetCell } from "@nzosa/core";
+import { attachmentsBox } from "../attachments-ui.js";
+import { renderReclassify } from "./reclassify-page.js";
+import { renderSalesReport, salesCsv } from "./sales-report.js";
+import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
+import { renderAnalytics } from "./analytics-section.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
+import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, nestLines, periodSaid, resolveAccount, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -36,8 +41,14 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
-import { downloadExcelReport } from "./excel-export.js";
+import { amountCell, askOnPage, download as saveFile, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
+import { downloadBytes, downloadExcelReport } from "./excel-export.js";
+import { historyCsv } from "./history.js";
+import { ir3Fingerprint } from "./ir3-pack.js";
+import { lockedChangesCsv } from "./lock-dates.js";
+import { reconciliationsCsv } from "./statements-page.js";
+import { getReconcileAccounts, setActiveReconcileAccount } from "./bank-reconcile-report.js";
+import { REPORT_DOWNLOADS } from "./report-downloads.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
 import {
@@ -372,8 +383,17 @@ export function ownerSummaryFor(owner: string, year: number): OwnerSummary {
   );
 }
 
+/**
+ * The postings a report is drawn from: all of them, or without the adjusting
+ * entries when the report is to show the books before them.
+ */
+function reportJournals(): PostedJournal[] {
+  const all = postedJournals();
+  return unadjusted() ? withoutAdjusting(all, state.ledger.manualJournals ?? []) : all;
+}
+
 function ourAccrualJournals(): Journal[] {
-  return postedJournals().map((journal, index) => ({
+  return reportJournals().map((journal, index) => ({
     id: journal.transactionId,
     date: journal.date,
     narration: journal.narration,
@@ -414,6 +434,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "Write a journal";
+  add.title = "Alt+Shift+J from anywhere";
   add.disabled = journalDraft !== null;
   add.addEventListener("click", () => {
     journalDraft = {
@@ -472,6 +493,12 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const title = document.createElement("p");
     title.className = "journal-narration";
     title.textContent = `${journal.date} — ${journal.narration}`;
+    if (journal.adjusting === true) {
+      const tag = document.createElement("span");
+      tag.className = "journal-tag";
+      tag.textContent = "Adjusting entry";
+      title.append(" ", tag);
+    }
     card.append(title);
 
     if (journal.deleted !== undefined) {
@@ -526,6 +553,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const reversed = all.find((j) => j.reverses === journal.id && j.deleted === undefined);
     if (reversed !== undefined) card.append(note(`Reversed by the journal of ${reversed.date}.`));
     card.append(journalActions(journal, reversed !== undefined));
+    card.append(attachmentsBox({ kind: "journal", id: journal.id }, `the journal of ${journal.date}`));
     body.append(card);
   }
 }
@@ -543,6 +571,8 @@ interface JournalDraft {
   date: string;
   narration: string;
   lines: JournalDraftLine[];
+  /** Marked as an adjusting entry. */
+  adjusting?: boolean;
 }
 
 /**
@@ -552,6 +582,13 @@ interface JournalDraft {
  * a change of year -- does not throw away what has been typed.
  */
 let journalDraft: JournalDraft | null = null;
+
+/** Open a new journal, dated today, unless one is already being written. */
+export function startNewJournal(): void {
+  if (journalDraft === null) {
+    journalDraft = { date: new Date().toLocaleDateString("en-CA"), narration: "", lines: [blankJournalLine(), blankJournalLine()] };
+  }
+}
 
 function blankJournalLine(): JournalDraftLine {
   return { code: "", debit: "", credit: "", description: "", gst: "" };
@@ -600,7 +637,17 @@ function journalEditor(draft: JournalDraft): HTMLElement {
     draft.narration = narration.value;
     refresh();
   });
-  head.append(date, narration);
+  const adjustingLabel = document.createElement("label");
+  adjustingLabel.className = "report-compare";
+  const adjusting = document.createElement("input");
+  adjusting.type = "checkbox";
+  adjusting.checked = draft.adjusting === true;
+  adjusting.addEventListener("change", () => {
+    draft.adjusting = adjusting.checked;
+  });
+  adjustingLabel.title = "An accrual, a prepayment or a correction found at review: listed under Adjusting entries, and left out when a report is drawn without them";
+  adjustingLabel.append(adjusting, " Adjusting entry");
+  head.append(date, narration, adjustingLabel);
   wrap.append(head);
 
   const columns = document.createElement("div");
@@ -744,6 +791,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
       date: draft.date,
       narration: draft.narration.trim(),
       lines,
+      ...(draft.adjusting === true ? { adjusting: true } : {}),
     };
     // The rules the journal is posted under, so this form cannot accept one the
     // ledger would then refuse. Asked once the line-by-line checks have nothing
@@ -907,6 +955,18 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     });
     return box;
   }
+
+  button(journal.adjusting === true ? "Not an adjusting entry" : "Mark as adjusting", () => {
+    const marked = all().map((j) => {
+      if (j.id !== journal.id) return j;
+      const { adjusting: _was, ...rest } = j;
+      return journal.adjusting === true ? rest : { ...rest, adjusting: true };
+    });
+    void saveManualJournals(
+      marked,
+      `${journal.adjusting === true ? "No longer an adjusting entry" : "Marked as adjusting"}: ${journal.narration}`,
+    );
+  });
 
   if (reversing?.id === journal.id) {
     const date = document.createElement("input");
@@ -1154,7 +1214,7 @@ function positionJournals(): {
   const basis = $<HTMLSelectElement>("report-basis").value;
   const imported = state.ledger.journals ?? [];
   const fromImport = basis === "accrual" && imported.length > 0;
-  if (!fromImport) return { journals: postedJournals(), basis, fromImport };
+  if (!fromImport) return { journals: reportJournals(), basis, fromImport };
   const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
   return {
     journals: postedFromImported(imported, (name) =>
@@ -1418,16 +1478,15 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
  * is only the movement since the first bank line. That is not a smaller balance
  * sheet, it is a wrong one, and it is said rather than left to be discovered.
  */
-function renderBalanceSheet(body: HTMLElement, year: number): void {
-  const asAt = reportRange(year).to;
+/** The balance sheet on a day, from these journals, set out as the books' kind of entity sets one out. */
+function balanceSheetMaker(journals: PostedJournal[]): (date: string) => ReturnType<typeof computeBalanceSheet> {
   const opening = state.ledger.openingBalances;
-  const { journals, basis, fromImport } = positionJournals();
   // Set out as signed statements are: a company's shareholder current accounts
   // as one current liability, and the year's profit inside retained earnings.
   const company = companyBooks();
   // Shareholder current accounts are New Zealand's way of setting a company's out.
   const currentAccounts = company && booksCountry().id === "nz";
-  const sheetAt = (date: string) =>
+  return (date) =>
     computeBalanceSheet({
       asAt: date,
       ...(opening ? { openingBalances: opening } : {}),
@@ -1436,6 +1495,15 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
       shareholderCurrentAccounts: currentAccounts,
       profitInRetainedEarnings: company,
     });
+}
+
+function renderBalanceSheet(body: HTMLElement, year: number): void {
+  const asAt = reportRange(year).to;
+  const opening = state.ledger.openingBalances;
+  const { journals, basis, fromImport } = positionJournals();
+  // Set out as signed statements are: a company's shareholder current accounts
+  // as one current liability, and the year's profit inside retained earnings.
+  const sheetAt = balanceSheetMaker(journals);
   const sheet = sheetAt(asAt);
   // The same day a year earlier, as a column of its own; the opening and
   // movement columns make way for it.
@@ -1603,7 +1671,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   table.append(head, tbody);
   body.append(table);
 
-  if (currentAccounts) {
+  if (companyBooks() && booksCountry().id === "nz") {
     body.append(
       note(
         "Shareholder current accounts are the director's loan, drawings and funds introduced as " +
@@ -1628,7 +1696,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 function renderJournal(body: HTMLElement, year: number): void {
   const { from, to } = reportRange(year);
   const inEntity = journalInEntity();
-  const journals = postedJournals().filter((j) => {
+  const journals = reportJournals().filter((j) => {
     if (j.date < from || j.date > to) return false;
     return inEntity === null || inEntity(j);
   });
@@ -2521,6 +2589,7 @@ function renderGstReturn(body: HTMLElement, year: number): void {
   } else {
     renderGstBoxes(body, result, money);
   }
+  body.append(fingerprintCheck("GST return", gstReturnFingerprint(result, entity?.name ?? "")));
 
   // --- filing ---
   if (filed === undefined && result.period.to < today) {
@@ -2559,6 +2628,36 @@ function renderGstReturn(body: HTMLElement, year: number): void {
       ),
     );
   }
+}
+
+/**
+ * A return's fingerprint, as printed on it, and a box to check a printed copy
+ * against the books as they are now.
+ */
+function fingerprintCheck(what: string, fingerprint: string): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "fingerprint";
+  const said = document.createElement("p");
+  said.className = "page-hint";
+  said.textContent = `Fingerprint of these figures: ${fingerprint}. It is printed on the ${what} and its download; a copy whose fingerprint differs has a figure that is not what the books say now.`;
+  const typed = document.createElement("input");
+  typed.type = "text";
+  typed.placeholder = "Check a printed fingerprint";
+  typed.size = 22;
+  typed.setAttribute("aria-label", `Check a printed ${what} fingerprint`);
+  const answer = document.createElement("span");
+  typed.addEventListener("input", () => {
+    const tidy = typed.value.replace(/[^0-9a-f]/gi, "");
+    answer.textContent =
+      tidy.length < 16
+        ? ""
+        : sameFingerprint(typed.value, fingerprint)
+          ? " Matches: the copy shows the figures the books give now."
+          : " Does not match: a figure on the copy, or in the books since it was printed, is different.";
+    answer.className = tidy.length < 16 ? "" : sameFingerprint(typed.value, fingerprint) ? "journal-balanced" : "journal-out";
+  });
+  box.append(said, typed, answer);
+  return box;
 }
 
 function renderGstBoxes(body: HTMLElement, result: GstReturnResult, money: (cents: Cents) => string): void {
@@ -3108,6 +3207,7 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
   }
   table.append(tbody);
   body.append(table);
+  body.append(fingerprintCheck("IR3 pack", ir3Fingerprint(owner, year, result.boxes)));
 
   // This year's provisional tax: set by last year's residual income tax, which
   // last year's filed return gives where it is held.
@@ -3634,6 +3734,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   salestax: "Sales tax collected and paid, by the account it sits in, and what is still owed.",
   payrolltax: "Wages and the payroll taxes withheld, by quarter, read from the payroll accounts, for checking a 941.",
   byclass: "Income and expense for the year, a column for each class and one for what has none.",
+  byjob: "Income and expense for the year, a column for each job and one for what is no job's.",
   budget: "Each account's budget for the year beside what the books hold, and the year to date.",
   aurental: "Each rental on the ATO's rental property schedule labels.",
   bas: "GST for each quarter as the BAS asks for it: G1, 1A and 1B.",
@@ -3891,6 +3992,15 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "adjusting") {
+    return "The manual journals marked as adjusting entries, and the year-end adjustments the books work out, for the period chosen.";
+  }
+  if (kind === "reclassify") {
+    return "Move bank lines from one account to another in one change: choose the account and the period, untick any to keep, and choose where they go.";
+  }
+  if (kind === "salescustomer" || kind === "salesitem") {
+    return "The sales invoices dated in the period, added up by customer or by item, credit notes taken off. Choose a month, a quarter or any dates beside the year.";
+  }
   if (kind === "agedpayables" || kind === "agedreceivables") {
     return (
       "What was owing on the day chosen, aged by due date. Payments made after that day still count " +
@@ -4136,8 +4246,10 @@ export function renderReportsPage(): void {
   // Built from the coding, so said plainly when some of it is still only a
   // suggestion. Not held back: the figures are more useful with the likely
   // answer in them than without it, as long as nobody mistakes them for final.
-  const entryPage = kind === "manual" || kind === "agents" || kind === "yearend";
-  if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage) {
+  const entryPage = kind === "manual" || kind === "agents" || kind === "yearend" || kind === "reclassify";
+  // The sales reports read invoices, not coded bank lines: a note about unconfirmed coding is not theirs.
+  const fromInvoices = kind === "salescustomer" || kind === "salesitem";
+  if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage && !fromInvoices) {
     const provisional = provisionalNote(chosenYearNow);
     if (provisional) body.append(provisional);
   }
@@ -4151,6 +4263,29 @@ export function renderReportsPage(): void {
   if (kind === "cashflow") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderCashFlow(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "reclassify") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderReclassify(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "adjusting") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderAdjusting(body, chosenYearNow, journalInEntity());
+    return;
+  }
+
+  // Said above the figures, so a report drawn without them is never read as the final one.
+  if (unadjusted() && (kind === "journal" || basisNow === "posted" || (kind === "balancesheet" && basisNow !== "accrual"))) {
+    body.append(note("Without adjusting entries: the marked manual journals and the year-end adjustments are left out of these figures."));
+  }
+
+  if (kind === "salescustomer" || kind === "salesitem") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderSalesReport(body, kind, chosenYearNow);
     return;
   }
 
@@ -4248,6 +4383,7 @@ export function renderReportsPage(): void {
     payrolltax: renderPayrollTax,
     budget: renderBudgetVsActual,
     byclass: renderProfitByClass,
+    byjob: renderProfitByJob,
     aurental: renderAuRentalSchedule,
     bas: renderBas,
     krbusiness: renderKrBusiness,
@@ -4425,9 +4561,21 @@ export function renderReportsPage(): void {
     addRow(group.title, "", "report-section");
     const sign = (line: { net: number }): number => (income ? line.net : -line.net);
     const priorByCode = new Map((before?.lines ?? []).map((line) => [line.code, sign(line)]));
-    for (const line of group.lines) {
-      addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
-      priorByCode.delete(line.code);
+    // Sub-accounts under their parent, the parent carrying their total.
+    const parentOf = subAccountParent();
+    for (const row of nestLines(group.lines, (line) => parentOf(line.code), (line) => resolveAccount(line.code, state.chart)?.code ?? "", sign)) {
+      if (row.kind === "line") {
+        const line = row.line;
+        addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+        priorByCode.delete(line.code);
+        continue;
+      }
+      const priorTotal = prior === null ? undefined : row.children.reduce((s, line) => s + (priorByCode.get(line.code) ?? 0), 0);
+      addRow(row.label, money(row.total), "report-parent", "", undefined, against(row.total, priorTotal));
+      for (const line of row.children) {
+        addRow(line.code, money(sign(line)), "report-indent", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+        priorByCode.delete(line.code);
+      }
     }
     // Accounts only the year before had: shown, at nothing now.
     for (const [code, then] of priorByCode) {
@@ -4721,6 +4869,8 @@ function renderCharts(body: HTMLElement, year: number): void {
     body.append(where, rankedBars(biggest));
   }
 
+  renderAnalytics(body, whole.report, year);
+
   // The numbers behind the pictures, for anybody the pictures do not serve.
   const table = document.createElement("table");
   table.className = "extract-table";
@@ -4872,7 +5022,22 @@ function ledgerTaxWords(code: string): string {
 }
 
 /** Said where the report is, when a download has nothing to hold. */
+/**
+ * The files gathered for the accountant's package while it is being made:
+ * each report's download lands here instead of with the browser.
+ */
+let gathering: { name: string; text: string }[] | null = null;
+
+function download(text: string, name: string, type: string): void {
+  if (gathering !== null) {
+    gathering.push({ name, text });
+    return;
+  }
+  saveFile(text, name, type);
+}
+
 function nothingToDownload(): void {
+  if (gathering !== null) return;
   const body = $("reports-body");
   body.querySelector(".report-nothing")?.remove();
   const said = note("Nothing to download for this year.");
@@ -4917,6 +5082,31 @@ export function downloadReport(): void {
       const csv = agedCsv("sales", year ?? new Date().getFullYear());
       download(csv.text, csv.name, "text/csv");
     },
+    salescustomer: () => {
+      const csv = year === undefined ? null : salesCsv("salescustomer", year);
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
+    salesitem: () => {
+      const csv = year === undefined ? null : salesCsv("salesitem", year);
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
+    balancesheet: () => {
+      if (year === undefined) return nothingToDownload();
+      const asAt = reportRange(year).to;
+      const sheet = balanceSheetMaker(positionJournals().journals)(asAt);
+      download(
+        balanceSheetCsv(sheet, `${reportingEntity()?.name ?? "All accounts"}: balance sheet${unadjusted() ? " without adjusting entries" : ""}`),
+        `balance-sheet-${asAt}.csv`,
+        "text/csv",
+      );
+    },
+    adjusting: () => {
+      const csv = year === undefined ? null : adjustingCsv(year, journalInEntity());
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
     bankreconcile: () => {
       const csv = bankReconcileCsv(year);
       download(csv.text, csv.name, "text/csv");
@@ -4926,7 +5116,7 @@ export function downloadReport(): void {
       const chosen = chosenGstReturn(year);
       if (chosen === undefined) return;
       download(
-        formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`),
+        formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`, gstReturnFingerprint(chosen, reportingEntity()?.name ?? "")),
         `gst-return-${chosen.period.to}.csv`,
         "text/csv",
       );
@@ -4955,6 +5145,83 @@ export function downloadReport(): void {
     },
   };
   downloads[kind]();
+}
+
+/**
+ * The accountant's package: one zip of everything an accountant asks for at a
+ * period end -- the profit and loss, balance sheet and trial balance, the
+ * general ledger, the agings, each bank account's reconciliation and every
+ * statement finished in the period, the adjusting entries, the changes made
+ * into locked periods, and History -- for the period and entity chosen.
+ */
+export function downloadAccountantPackage(): void {
+  const years = bookYears();
+  const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
+  if (year === undefined) return nothingToDownload();
+  const kindSelect = $<HTMLSelectElement>("report-kind");
+  const was = kindSelect.value;
+  const files: { name: string; text: string }[] = [];
+  const left: string[] = [];
+  const take = (kind: keyof typeof REPORT_DOWNLOADS, folder = ""): void => {
+    kindSelect.value = kind;
+    const before = files.length;
+    try {
+      downloadReport();
+    } catch (error) {
+      left.push(`${REPORT_DOWNLOADS[kind]}: ${error instanceof Error ? error.message : "could not be made"}`);
+      return;
+    }
+    if (files.length === before) left.push(`${REPORT_DOWNLOADS[kind]}: nothing in this period`);
+    for (const f of files.slice(before)) f.name = folder + f.name;
+  };
+  const range = reportRange(year);
+  gathering = files;
+  try {
+    take("pl");
+    take("balancesheet");
+    // The trial balance of the journal report: the period's postings.
+    kindSelect.value = "journal";
+    const inEntity = journalInEntity();
+    const posted = reportJournals().filter((j) => j.date >= range.from && j.date <= range.to && (inEntity === null || inEntity(j)));
+    files.push({ name: `trial-balance-${periodFileName(year)}.csv`, text: trialBalanceCsv(trialBalance(posted), `Trial balance, ${periodHeading(year)}`) });
+    take("general");
+    take("agedreceivables");
+    take("agedpayables");
+    take("adjusting");
+    const accounts = getReconcileAccounts();
+    for (const account of accounts) {
+      setActiveReconcileAccount(account.id);
+      take("bankreconcile", "bank-reconciliations/");
+    }
+    if (accounts[0] !== undefined) setActiveReconcileAccount(accounts[0].id);
+  } finally {
+    gathering = null;
+    kindSelect.value = was;
+  }
+  for (const f of reconciliationsCsv(range.from, range.to)) files.push({ name: `statements/${f.name}`, text: f.text });
+  const locked = lockedChangesCsv();
+  if (locked !== null) files.push({ name: "changes-into-locked-periods.csv", text: locked });
+  const history = historyCsv();
+  if (history !== null) files.push({ name: "history.csv", text: history });
+
+  const entity = reportingEntity()?.name ?? "All entities";
+  const basis = $<HTMLSelectElement>("report-basis").selectedOptions[0]?.textContent ?? "";
+  const readme = [
+    `Accountant's package: ${entity}, ${periodHeading(year)} (${range.from} to ${range.to})`,
+    `Made ${new Date().toLocaleString(booksLocale())}${state.who.trim() === "" ? "" : ` by ${state.who.trim()}`}.`,
+    `Basis: ${basis}.${unadjusted() ? " Without adjusting entries." : ""}`,
+    "",
+    "In this package:",
+    ...files.map((f) => `  ${f.name}`),
+    ...(left.length === 0 ? [] : ["", "Not in it:", ...left.map((l) => `  ${l}`)]),
+    "",
+    "Amounts are in dollars with two places; in the ledger and the trial balance debits are positive.",
+    "History is every change kept with the books, newest first, not only this period's.",
+    "",
+  ].join("\r\n");
+  const zip = createZip([{ name: "README.txt", data: encodeUtf8(readme) }, ...files.map((f) => ({ name: f.name, data: encodeUtf8(f.text) }))]);
+  const slug = entity.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  downloadBytes(zip, `accountants-package-${slug}-${periodFileName(year)}.zip`, "application/zip");
 }
 
 function downloadGeneralLedger(year: number | undefined): void {
@@ -4995,6 +5262,16 @@ function downloadProfitAndLoss(): void {
   );
 }
 
+/** A report line's parent account, by the line's account label, where the chart sets one. */
+function subAccountParent(): (label: string) => { code: string; label: string } | null {
+  const byCode = new Map(state.chart.map((a) => [a.code, a]));
+  return (label) => {
+    const account = resolveAccount(label, state.chart);
+    const parent = account?.parent === undefined ? undefined : byCode.get(account.parent);
+    return parent === undefined ? null : { code: parent.code, label: `${parent.name} - ${parent.code}` };
+  };
+}
+
 /** The five choices that decide which report is shown, and downloading it. */
 export function wireReports(): void {
 
@@ -5004,10 +5281,11 @@ export function wireReports(): void {
   $("report-kind").addEventListener("change", () => redraw("reports"));
   $("report-owner").addEventListener("change", () => redraw("reports"));
   $("report-year").addEventListener("change", () => redraw("reports"));
-  for (const id of ["report-period", "report-from", "report-to", "report-compare"]) {
+  for (const id of ["report-period", "report-from", "report-to", "report-compare", "report-unadjusted"]) {
     document.getElementById(id)?.addEventListener("change", () => redraw("reports"));
   }
   $("report-download").addEventListener("click", () => downloadReport());
+  document.getElementById("report-package")?.addEventListener("click", () => downloadAccountantPackage());
   $("report-download-excel").addEventListener("click", () => downloadExcelReport());
 }
 

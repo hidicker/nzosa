@@ -7,6 +7,7 @@ import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
+import { isGnuCashXml } from "./gnucash.js";
 import { isQuickBooksDesktopDetail } from "./qb-desktop-detail.js";
 import { isQuickBooksExportJournal } from "./qbo-export.js";
 import { isProductList } from "./product-lists.js";
@@ -56,6 +57,7 @@ export type ExportKind =
   | "quickbooks-ledger"
   | "quickbooks-iif"
   | "slowbooks-ledger"
+  | "gnucash"
   | "quickbooks-desktop-detail"
   | "quickbooks-export"
   | "product-list"
@@ -217,6 +219,10 @@ export function identifyExport(text: string): Identified {
   // knows, holding the chart, the lists and every transaction at once.
   if (isIif(text)) {
     return { kind: "quickbooks-iif", what: "QuickBooks Desktop IIF file" };
+  }
+  // GnuCash's own book, saved as XML (unpacked from its gzip before it gets here).
+  if (isGnuCashXml(text)) {
+    return { kind: "gnucash", what: "GnuCash book" };
   }
   // SlowBooks Pro's general ledger: one row a posting, with its source.
   if (isSlowBooksLedger(text)) {

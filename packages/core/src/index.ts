@@ -88,7 +88,7 @@ export type {
 } from "./rule-inference.js";
 
 export { canonicalCodeFor, matchAccountName, bareAccountName } from "./coding-names.js";
-export { knownCodes, labelForChartAccount, chartTreatments, accountLabel, splitAccountLabel, withoutStaleTreatments } from "./chart-codes.js";
+export { knownCodes, pickableCodes, labelForChartAccount, chartTreatments, accountLabel, splitAccountLabel, withoutStaleTreatments } from "./chart-codes.js";
 export { starterChart } from "./starter-chart.js";
 export { isSuffix, standardAccounts, suggestSuffix, suffixedCode } from "./standard-accounts.js";
 export { ACCOUNT_CODE, codeIn, isAccountCode } from "./account-code.js";
@@ -291,7 +291,7 @@ export type {
   RuleSet,
 } from "./rules.js";
 
-export { overrideFor, gstOverride } from "./overrides.js";
+export { overrideFor, gstOverride, reclassifyLines } from "./overrides.js";
 export type { TransactionOverride, Overrides } from "./overrides.js";
 
 export { validateSplits, expandSplits, splitPartId, uncodedParts } from "./splits.js";
@@ -309,8 +309,16 @@ export {
   isCreditNote,
   isPosted,
   isEstimate,
+  duplicateInvoice,
+  WALK_IN_CUSTOMER,
+  RECEIPT_METHODS,
   linesWithoutAccount,
+  parseQuantity,
+  parseUnitPrice,
+  formatUnitPrice,
+  lineAmount,
   paidOutsideTotal,
+  creditOnAccount,
 } from "./invoices.js";
 export type {
   Invoice,
@@ -321,6 +329,7 @@ export type {
   PaymentAllocation,
   AllocationImportResult,
   InvoiceBalance,
+  CreditApplication,
   InvoiceAssignment,
   InvoiceStatus,
   OutsidePayment,
@@ -332,6 +341,17 @@ export * from "./journals.js";
 export * from "./chart.js";
 export * from "./variance.js";
 export * from "./xlsx.js";
+export * from "./zip.js";
+export * from "./fingerprint.js";
+export * from "./search.js";
+export * from "./analytics.js";
+export * from "./jobs.js";
+export * from "./sub-accounts.js";
+export * from "./gnucash.js";
+export * from "./foreign-currency.js";
+export * from "./statement-csv.js";
+export * from "./chart-import.js";
+export * from "./items-csv.js";
 export * from "./akahu.js";
 export * from "./filed-returns.js";
 export * from "./coding-check.js";
@@ -479,3 +499,8 @@ export * from "./product-lists.js";
 export * from "./document-dates.js";
 export * from "./xls.js";
 export * from "./simplefin.js";
+export * from "./payslip.js";
+export * from "./payment-files.js";
+export * from "./wording.js";
+export * from "./sales-analysis.js";
+export * from "./register.js";

@@ -3,7 +3,8 @@ import { computeOurReturns } from "./variance.js";
 import { state } from "./state.js";
 import { booksReadOnly, setSaveGuard } from "./store.js";
 import type { StoredLedger } from "./store.js";
-import { lockBroken, lockedFigures } from "@nzosa/core";
+import { lockBroken, lockedFigures, reopenedLocks } from "@nzosa/core";
+import { noteIntoLocked } from "./locked-note.js";
 import type { Account, LockDates, LockedFigures } from "@nzosa/core";
 import { tellOnPage } from "./ui.js";
 
@@ -87,6 +88,7 @@ export function resetLockBaseline(): void {
 }
 
 function guard(ledger: StoredLedger): void {
+  noteIntoLocked(null);
   // Read only refuses everything, and the same way a lock does: the books go
   // back as they were opened, so nothing on screen pretends to be saved.
   if (booksReadOnly() && baseline !== null) {
@@ -96,6 +98,7 @@ function guard(ledger: StoredLedger): void {
   }
   const locks = ledger.lockDates;
   if (baseline === null || (!hasLocks(locks) && !hasLocks(baseline.ledger.lockDates))) {
+    if (baseline !== null) markIntoLocked(baseline, ledger);
     baseline = { ledger, chart: state.chart, figures: null, key: "" };
     return;
   }
@@ -112,7 +115,21 @@ function guard(ledger: StoredLedger): void {
     state.chart = baseline.chart;
     throw new LockedChange(broken);
   }
+  markIntoLocked(baseline, ledger);
   baseline = { ledger, chart: state.chart, figures: after, key };
+}
+
+/**
+ * Allowed, but said: a change that moves a figure in a period that was locked
+ * once and has been opened again, by moving its lock back. Worked out only
+ * while a lock is behind where it has been, which is seldom and brief.
+ */
+function markIntoLocked(from: Baseline, ledger: StoredLedger): void {
+  const reopened = reopenedLocks(ledger.lockDates, ledger.lockedOnce);
+  if (reopened === null) return;
+  const before = figuresOf(from.ledger, from.chart, reopened);
+  const after = ledger === state.ledger ? figuresNow(reopened) : figuresOf(ledger, state.chart, reopened);
+  if (lockBroken(reopened, before, after) !== null) noteIntoLocked(reopened);
 }
 
 /**

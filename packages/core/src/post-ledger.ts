@@ -1,3 +1,4 @@
+import { bookedTotal, foreignRate } from "./foreign-currency.js";
 import type { Account } from "./chart.js";
 import type { GstClassification } from "./gst.js";
 import type { Invoice } from "./invoices.js";
@@ -70,6 +71,8 @@ export interface PostLedgerOptions {
    * entity owns that account. Undefined falls back to 610 or 800.
    */
   controlFor?: (invoice: Invoice) => { code: string; name: string } | undefined;
+  /** Where exchange gains and losses on documents in another currency go. */
+  exchangeAccount?: { code: string; name: string };
   /** The books' GST account, where it is not 820. */
   gstAccount?: { code: string; name: string };
   /**
@@ -195,6 +198,9 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
             kind: invoice.kind,
             taxType: taxTypeFromRate(invoice.lines[0]?.taxType ?? "", invoice.kind),
             total: invoice.total,
+            ...(foreignRate(invoice) !== null
+              ? { booked: bookedTotal(invoice), ...(options.exchangeAccount !== undefined ? { exchange: options.exchangeAccount } : {}) }
+              : {}),
           },
         }),
       ];

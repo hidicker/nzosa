@@ -84,3 +84,29 @@ export function gstOverride(
     reason: `Manual override: ${override.note}`,
   };
 }
+
+/**
+ * Move chosen lines from one account to another, as one change.
+ *
+ * Each line keeps what a person already decided about it -- its contact, a
+ * GST treatment set by hand, a claim moved to a later return -- and takes the
+ * new account, confirmed, with a note saying where it came from. What each
+ * line held before is returned beside the result, so the whole move can be
+ * undone as one.
+ */
+export function reclassifyLines(
+  overrides: Overrides,
+  ids: readonly string[],
+  to: string,
+  note: string,
+  at?: string,
+): { overrides: Record<string, TransactionOverride>; before: { id: string; before: TransactionOverride | null }[] } {
+  const next: Record<string, TransactionOverride> = { ...overrides };
+  const before: { id: string; before: TransactionOverride | null }[] = [];
+  for (const id of new Set(ids)) {
+    const held = overrides[id];
+    before.push({ id, before: held === undefined ? null : { ...held } });
+    next[id] = { ...(held ?? {}), code: to, confirmed: true, note, ...(at !== undefined ? { at } : {}) };
+  }
+  return { overrides: next, before };
+}

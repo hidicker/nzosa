@@ -1,3 +1,4 @@
+import { foreignRate } from "./foreign-currency.js";
 import type { Cents } from "./money.js";
 import { formatAmount, parseAmount } from "./money.js";
 import type { IsoDate } from "./dates.js";
@@ -37,6 +38,13 @@ export interface InvoiceLine {
   /** `net` plus `tax`: what the customer actually pays for this line. */
   gross: Cents;
   quantity?: number;
+  /**
+   * The price of one, in ten-thousandths of the currency unit, where the line
+   * was written as a quantity times a price: 12345 is 1.2345. Whole numbers,
+   * like every amount here; the line's amount is what it came to, rounded to
+   * the cent, and is what the books use.
+   */
+  unitPrice?: number;
   itemCode?: string;
   /**
    * The liability account this line's tax is owed in, where it is not the
@@ -66,6 +74,13 @@ export interface Invoice {
   /** How much is still outstanding, as stated by the source. */
   outstanding: Cents;
   currency: string;
+  /**
+   * For a document in another currency than the books': what one unit of its
+   * currency was worth in the books' on the day it was issued. It is posted
+   * at this rate, and a payment that settles it moves the difference to the
+   * exchange account (see foreign-currency.ts). Absent for the books' own.
+   */
+  rate?: number;
   status: string;
   lines: InvoiceLine[];
   /** The United States sales tax rate the invoice was charged at, by its id. */
@@ -112,7 +127,26 @@ export interface Invoice {
    * hold no files, and the file stays in the owner's own storage.
    */
   documentLink?: string;
+  /**
+   * A sales invoice's message, printed at its foot: how to pay, a thank-you.
+   * The words themselves, not which saved message they came from, so changing
+   * a saved message later never changes an invoice already sent.
+   */
+  note?: string;
+  /**
+   * A sale paid for on the spot: the document is a receipt. The books are
+   * unchanged by it -- the sale is owed until the money is matched to it on
+   * Reconcile, like any invoice -- so marking a receipt can never count a
+   * payment twice. What changes is the document the customer is given.
+   */
+  receipt?: { paidOn: IsoDate; method?: string };
 }
+
+/** The customer a sale with no name is made to: somebody who walked in and paid. */
+export const WALK_IN_CUSTOMER = "Walk-in customer";
+
+/** How a receipt can say it was paid. */
+export const RECEIPT_METHODS: readonly string[] = ["Cash", "EFTPOS", "Card", "Bank transfer"];
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */
 export function cleanDocumentLink(raw: string | undefined): string | null {
@@ -566,6 +600,14 @@ export type InvoiceStatus =
   | "overpaid"
   | "credit note";
 
+/** Part of a credit applied to a document: which, and how much (positive). */
+export interface CreditApplication {
+  invoice: string;
+  amount: Cents;
+  /** When it was applied, for the record. */
+  on?: IsoDate;
+}
+
 export interface InvoiceBalance {
   invoice: Invoice;
   /** Total of the bank lines assigned to it, always positive. */
@@ -583,6 +625,17 @@ export interface InvoiceBalance {
    * for ever is a debtors figure that cannot be collected.
    */
   credited: Cents;
+  /**
+   * For a credit note, or an invoice paid more than it was for: how much of
+   * that credit has been applied to other documents, as a positive amount.
+   */
+  applied: Cents;
+  /**
+   * For a credit note or an overpaid invoice: the credit still held on the
+   * account, not yet applied or refunded, as a positive amount. Nothing
+   * otherwise.
+   */
+  available: Cents;
   /**
    * What the imported file said was still owing, when it said anything.
    *
@@ -621,6 +674,31 @@ export function isEstimate(invoice: Invoice): boolean {
 }
 
 /**
+ * A new document copied from an old one: the same customer or supplier,
+ * lines, reference and terms, under a new number and dated today, with the
+ * due date as far after it as the original's was.
+ *
+ * What belonged to the old one alone is left behind: what was paid on it, a
+ * balance brought forward, and the link to its own file. A bill comes out a
+ * draft, to be approved like any other; an estimate stays an estimate.
+ */
+export function duplicateInvoice(source: Invoice, number: string, today: IsoDate): Invoice {
+  const { paidOutside: _paid, broughtForward: _brought, documentLink: _link, ...kept } = source;
+  const gap = source.due === null ? null : Math.round((Date.parse(`${source.due}T00:00:00Z`) - Date.parse(`${source.issued}T00:00:00Z`)) / 86_400_000);
+  const due = gap === null ? null : new Date(Date.parse(`${today}T00:00:00Z`) + gap * 86_400_000).toISOString().slice(0, 10);
+  return {
+    ...kept,
+    number,
+    issued: today,
+    due,
+    paid: 0,
+    outstanding: source.total,
+    status: isEstimate(source) ? source.status : source.kind === "purchase" ? "Draft" : "Awaiting Payment",
+    lines: source.lines.map((line) => ({ ...line })),
+  };
+}
+
+/**
  * Whether an invoice belongs in the ledger.
  *
  * A blank status counts as posted. An invoice keyed in here, or a file that
@@ -646,6 +724,12 @@ export function invoiceBalances(
    * wrong invoice quietly, which is worse than leaving it unapplied.
    */
   credits: Readonly<Record<string, string>> = {},
+  /**
+   * Credit held on account and applied in parts: a credit note's, or what an
+   * invoice was overpaid by, applied to other documents of the same kind, so
+   * much to each. Beside `credits`, which applies a whole note to one invoice.
+   */
+  applications: Readonly<Record<string, readonly CreditApplication[]>> = {},
 ): Map<string, InvoiceBalance> {
   const assigned = new Map<string, Cents>();
   for (const item of assignments) {
@@ -657,23 +741,41 @@ export function invoiceBalances(
   // What each invoice has been credited, from the credit notes pointed at it.
   const byNumber = new Map(invoices.map((invoice) => [invoice.number, invoice]));
   const credited = new Map<string, Cents>();
+  const applied = new Map<string, Cents>();
   for (const [note, target] of Object.entries(credits)) {
     const source = byNumber.get(note);
     if (source === undefined || target === "") continue;
     credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
+    applied.set(note, (applied.get(note) ?? 0) + Math.abs(source.total));
+  }
+  for (const [from, list] of Object.entries(applications)) {
+    if (!byNumber.has(from)) continue;
+    for (const one of list) {
+      if (!byNumber.has(one.invoice) || one.amount <= 0) continue;
+      credited.set(one.invoice, (credited.get(one.invoice) ?? 0) + one.amount);
+      applied.set(from, (applied.get(from) ?? 0) + one.amount);
+    }
   }
 
   const out = new Map<string, InvoiceBalance>();
   for (const invoice of invoices) {
-    const paid = assigned.get(invoice.number) ?? 0;
+    // A payment of a document in another currency settles it in full: the
+    // money arrives in the books' currency, and what the rate moved is the
+    // exchange account's, not still owing.
+    const paid = foreignRate(invoice) !== null && (assigned.get(invoice.number) ?? 0) > 0
+      ? Math.max(0, (invoice.broughtForward ?? invoice.total) - (credited.get(invoice.number) ?? 0) - paidOutsideTotal(invoice))
+      : (assigned.get(invoice.number) ?? 0);
     const off = credited.get(invoice.number) ?? 0;
     const outside = paidOutsideTotal(invoice);
     // A credit note is measured as itself. Subtracting what it is "owed"
     // reported every one of them as overpaid before any money had moved.
     const from = invoice.broughtForward ?? invoice.total;
+    const given = applied.get(invoice.number) ?? 0;
+    // An overpaid invoice whose excess has been applied elsewhere has given
+    // that money away: it is that much less overpaid.
     const remaining = isCreditNote(invoice)
       ? from + paid + outside
-      : from - paid - off - outside;
+      : from - paid - off - outside + given;
     const status: InvoiceStatus = isCreditNote(invoice)
       ? "credit note"
       : remaining < 0
@@ -689,6 +791,10 @@ export function invoiceBalances(
       remaining,
       paidOutside: outside,
       credited: off,
+      applied: given,
+      // A credit note's credit, less what was refunded through the bank and
+      // what was applied; an overpaid invoice's excess.
+      available: isCreditNote(invoice) ? Math.max(0, -remaining - given) : Math.max(0, -remaining),
       status,
       fileRemaining: imported(invoice) ? invoice.outstanding : null,
     });
@@ -703,4 +809,64 @@ export function invoiceBalances(
  */
 export function linesWithoutAccount(invoice: Pick<Invoice, "lines">): InvoiceLine[] {
   return invoice.lines.filter((line) => line.gross !== 0 && line.accountCode.trim() === "");
+}
+
+/** Four decimal places at most, as typed: "1.2345", "12", "0.5". Null for anything else. */
+function fourPlaces(text: string): { whole: bigint; scaled: bigint } | null {
+  const cleaned = text.replace(/[\s,$]/g, "");
+  const match = /^(\d*)(?:\.(\d{0,4}))?$/.exec(cleaned);
+  if (match === null || cleaned === "" || cleaned === ".") return null;
+  const scaled = BigInt(`${match[1] || "0"}${(match[2] ?? "").padEnd(4, "0")}`);
+  return { whole: BigInt(match[1] || "0"), scaled };
+}
+
+/** A quantity typed with up to four decimal places, or null. */
+export function parseQuantity(text: string): number | null {
+  const read = fourPlaces(text);
+  return read === null ? null : Number(read.scaled) / 10_000;
+}
+
+/** A unit price typed with up to four decimal places, in ten-thousandths, or null. */
+export function parseUnitPrice(text: string): number | null {
+  const read = fourPlaces(text);
+  return read === null ? null : Number(read.scaled);
+}
+
+/** A unit price in ten-thousandths, written with two to four decimal places: 12345 is "1.2345", 150000 is "15.00". */
+export function formatUnitPrice(unitPrice: number): string {
+  const [whole, places = ""] = (unitPrice / 10_000).toFixed(4).split(".");
+  return `${whole}.${places.replace(/0+$/, "").padEnd(2, "0")}`;
+}
+
+/**
+ * What a quantity at a unit price comes to, in cents, rounded half away from
+ * zero -- worked in whole numbers so 3 x 0.3333 is 1.00 and not 0.99999.
+ */
+export function lineAmount(quantity: number, unitPrice: number): Cents {
+  // Both to four places: the product is in 1e-8 of a unit, a cent is 1e6 of those.
+  const q = BigInt(Math.round(quantity * 10_000));
+  const product = q * BigInt(unitPrice);
+  const negative = product < 0n;
+  const magnitude = negative ? -product : product;
+  const cents = (magnitude + 500_000n) / 1_000_000n;
+  return Number(negative ? -cents : cents);
+}
+
+/**
+ * The credit each customer or supplier holds on account: every credit note
+ * and overpayment not yet applied or refunded, by contact and kind.
+ */
+export function creditOnAccount(
+  balances: Iterable<InvoiceBalance>,
+): { contact: string; kind: InvoiceKind; available: Cents; from: string[] }[] {
+  const out = new Map<string, { contact: string; kind: InvoiceKind; available: Cents; from: string[] }>();
+  for (const b of balances) {
+    if (b.available <= 0 || !isPosted(b.invoice)) continue;
+    const key = `${b.invoice.kind}\u0000${b.invoice.contact.trim().toLowerCase().replace(/\s+/g, " ")}`;
+    const one = out.get(key) ?? { contact: b.invoice.contact.trim(), kind: b.invoice.kind, available: 0, from: [] };
+    one.available += b.available;
+    one.from.push(b.invoice.number);
+    out.set(key, one);
+  }
+  return [...out.values()].sort((a, b) => b.available - a.available);
 }

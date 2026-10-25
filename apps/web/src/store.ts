@@ -1,4 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
+import type { AbaSettings, CreditApplication, InvoiceMessage, JobsHeld, WordingKind } from "@nzosa/core";
 import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
@@ -36,7 +37,7 @@ import type {
 import type { LedgerEvent } from "./events.js";
 import { MAX_EVENTS } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { currentSession, loadPart as loadCloudPart, loadNamedParts, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, deleteStoredFile, getStoredFile, putStoredFile, loadPart as loadCloudPart, loadNamedParts, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
 import type { PartChange, SaveOutcome } from "./cloud.js";
 
 /**
@@ -93,6 +94,8 @@ export interface PayrollData {
   leave?: LeaveTaken[] | undefined;
   /** Each employee's days a week, pay-as-you-go 8%, and opening balances. */
   leaveSettings?: LeaveSettings[] | undefined;
+  /** The account wages are paid from, for the bank's bulk payment file. */
+  payFrom?: string | undefined;
 }
 
 /** A filed return as kept: whose it is, and where it was read from. */
@@ -217,6 +220,18 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Files attached to documents: which, and what each is. The bytes are kept apart (see putAttachmentFile). */
+  attachments?: Attachment[] | undefined;
+  /** Registers typed into, by account id, kept even before their first line. */
+  registers?: string[] | undefined;
+  /** Time must be approved before it is invoiced. */
+  timeApproval?: boolean | undefined;
+  /** Messages kept to print on invoices, one of them the default. */
+  invoiceMessages?: InvoiceMessage[] | undefined;
+  /** The person's own wording for invoice, statement and reminder emails, where they changed it. */
+  emailWording?: Partial<Record<WordingKind, { subject: string; body: string }>> | undefined;
+  /** Paying bills by bank file: the account they leave from, and for Australia the ABA details. */
+  billPayment?: { payFrom?: string; aba?: AbaSettings } | undefined;
   /** Bank statements an account has been reconciled to, and the lines each cleared. */
   reconciliations?: BankReconciliation[];
   /** Annual budgets in cents: year, then account code. */
@@ -225,6 +240,8 @@ export interface StoredLedger {
   items?: Item[];
   /** Classes: their names, and the class each source of income or expense is given. */
   classes?: { names: string[]; assigned: Record<string, string> };
+  /** Jobs done for customers, and which postings belong to each. */
+  jobs?: JobsHeld;
   /** Time worked for customers, until it is invoiced. */
   timeEntries?: TimeEntry[];
   /** Stock counted, and the journal each put the inventory account to. */
@@ -369,6 +386,11 @@ export interface StoredLedger {
    */
   creditNotes?: Record<string, string>;
   /**
+   * Credit held on account and applied in parts: by the credit note or the
+   * overpaid document it came from, the documents it went to and how much.
+   */
+  creditApplications?: Record<string, CreditApplication[]>;
+  /**
    * Bank transaction id to the opposite leg of the transfer it is half of.
    *
    * Written for both legs, so either one finds its partner in a single lookup
@@ -406,6 +428,11 @@ export interface StoredLedger {
   beforeStartLeft?: string[];
   /** Periods that are finished: filed GST returns, and years signed off. */
   lockDates?: LockDates;
+  /**
+   * How far each lock has ever reached. A lock moved back leaves the period
+   * it opened marked, so a change made there while it was open is reported.
+   */
+  lockedOnce?: LockDates;
   /**
    * Bank lines that arrived dated in a locked period, held for a decision
    * rather than posted there: a feed line from last month after its return
@@ -875,6 +902,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.salesTaxRates && ledger.salesTaxRates.length > 0 ? { salesTaxRates: ledger.salesTaxRates } : {}),
     ...(ledger.bankLayouts && Object.keys(ledger.bankLayouts).length > 0 ? { bankLayouts: ledger.bankLayouts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
+    ...(ledger.jobs && (ledger.jobs.jobs.length > 0 || Object.keys(ledger.jobs.assigned).length > 0) ? { jobs: ledger.jobs } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),
@@ -919,6 +947,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
+    ...(ledger.lockedOnce ? { lockedOnce: ledger.lockedOnce } : {}),
     ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
     ...(ledger.betweenLines ? { betweenLines: ledger.betweenLines } : {}),
     ...(ledger.gstKeptFrom ? { gstKeptFrom: ledger.gstKeptFrom } : {}),
@@ -2257,4 +2286,108 @@ export async function loadUser(): Promise<string> {
 
 export async function saveUser(who: string): Promise<boolean> {
   return put(USER_KEY, who);
+}
+
+// --- attachments ---------------------------------------------------------------
+
+/** A file attached to a document: what it is, and what it belongs to. */
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  /** Bytes. */
+  size: number;
+  addedAt: string;
+  to: { kind: "invoice" | "journal" | "contact" | "line"; id: string };
+}
+
+/**
+ * Where the bytes of an attached file live: in the books' folder when there
+ * is one, in this browser's own database when the books are kept here.
+ * Books kept online have nowhere for them yet (that needs a storage bucket on
+ * the project), so attaching says so rather than keeping a file somewhere it
+ * would quietly be lost.
+ */
+export function attachmentsKeptHere(): boolean {
+  return backend === "folder" || backend === "browser" || (backend === "cloud" && openCloudBookId() !== "");
+}
+
+/** Where a file is kept online: under its books' id, as the bucket's policies read it. */
+function storedPath(id: string): string {
+  return `${openCloudBookId()}/${id}`;
+}
+
+function bytesOf(base64: string): Uint8Array {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
+async function base64Of(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(text);
+}
+
+const ATTACHMENT_KEY = (id: string): string => `attachment:${id}`;
+
+export async function putAttachmentFile(id: string, type: string, data: string): Promise<void> {
+  if (backend === "folder") {
+    const response = await fetch(`/api/attachments/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type, data }),
+    });
+    if (!response.ok) throw new Error(`The file could not be kept (${response.status}).`);
+    return;
+  }
+  if (backend === "cloud") {
+    await putStoredFile(storedPath(id), new Blob([bytesOf(data) as unknown as BlobPart], { type }), type);
+    return;
+  }
+  if (backend !== "browser") throw new Error("Files are not kept with these books.");
+  const db = await open();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put({ type, data }, ATTACHMENT_KEY(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+export async function getAttachmentFile(id: string): Promise<{ type: string; data: string } | null> {
+  if (backend === "folder") {
+    const response = await fetch(`/api/attachments/${encodeURIComponent(id)}`);
+    return response.ok ? ((await response.json()) as { type: string; data: string }) : null;
+  }
+  if (backend === "cloud") {
+    const blob = await getStoredFile(storedPath(id));
+    return blob === null ? null : { type: blob.type || "application/octet-stream", data: await base64Of(blob) };
+  }
+  if (backend !== "browser") return null;
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE, "readonly").objectStore(STORE).get(ATTACHMENT_KEY(id));
+    request.onsuccess = () => resolve((request.result as { type: string; data: string } | undefined) ?? null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function deleteAttachmentFile(id: string): Promise<void> {
+  if (backend === "folder") {
+    await fetch(`/api/attachments/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+  if (backend === "cloud") {
+    await deleteStoredFile(storedPath(id));
+    return;
+  }
+  if (backend !== "browser") return;
+  const db = await open();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(ATTACHMENT_KEY(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 }

@@ -1,7 +1,9 @@
 import type { Cents } from "./money.js";
 import { formatAmount } from "./money.js";
 import type { Invoice, InvoiceLine } from "./invoices.js";
-import { cleanEmailAddress } from "./invoices.js";
+import { formatUnitPrice } from "./invoices.js";
+import { invoiceEmailFrom, RECEIPT_WORDING } from "./wording.js";
+import { asLines, escapeHtml, DOCUMENT_STYLE as STYLE, written } from "./document-html.js";
 
 /**
  * An invoice as a document you could actually send somebody.
@@ -83,39 +85,13 @@ export interface InvoiceDocumentOptions {
   salesTaxLabel?: string;
 }
 
-function escapeHtml(value: string): string {
-  return value
-    .replace(/&/g, "&amp;")
-    .replace(/</g, "&lt;")
-    .replace(/>/g, "&gt;")
-    .replace(/"/g, "&quot;");
-}
-
-/** Free text as HTML, with the writer's own line breaks kept. */
-function asLines(value: string): string {
-  return value
-    .split(/\r?\n/)
-    .map((line) => line.trim())
-    .filter((line) => line !== "")
-    .map(escapeHtml)
-    .join("<br>");
-}
-
-/** A date as the reader writes it: a New Zealander's day first unless said. */
-function written(iso: string, style: "dmy" | "mdy" | "ymd" = "dmy"): string {
-  const [year, month, day] = iso.split("-");
-  if (!(year && month && day)) return iso;
-  if (style === "mdy") return `${month}/${day}/${year}`;
-  if (style === "ymd") return `${year}/${month}/${day}`;
-  return `${day}/${month}/${year}`;
-}
-
-function lineRow(line: InvoiceLine, noTax = false): string {
+function lineRow(line: InvoiceLine, noTax = false, priced = false): string {
   const quantity = line.quantity === undefined ? "" : String(line.quantity);
   return (
     "<tr>" +
     `<td>${escapeHtml(line.description)}</td>` +
     `<td class="n">${escapeHtml(quantity)}</td>` +
+    (priced ? `<td class="n">${line.unitPrice === undefined ? "" : formatUnitPrice(line.unitPrice)}</td>` : "") +
     `<td class="n">${formatAmount(line.net)}</td>` +
     (noTax ? "" : `<td class="n">${formatAmount(line.tax)}</td>`) +
     // Sales tax is added to the invoice, not to each line, where there is no GST.
@@ -124,43 +100,6 @@ function lineRow(line: InvoiceLine, noTax = false): string {
   );
 }
 
-const STYLE = `
-  :root { --accent: #1f4e79; --ink: #1b1f24; --muted: #5d6670; --line: #dde1e6; }
-  * { box-sizing: border-box; }
-  body { font: 13.5px/1.55 -apple-system, "Segoe UI", system-ui, sans-serif; color: var(--ink);
-    max-width: 46em; margin: 2.5em auto; padding: 0 1.5em; }
-  .head { display: flex; justify-content: space-between; align-items: flex-start; gap: 2em;
-    padding-bottom: 1.4em; margin-bottom: 1.6em; border-bottom: 3px solid var(--accent); }
-  .logo { display: block; max-height: 4.5em; max-width: 14em; margin-bottom: 0.8em; }
-  .who strong { display: block; font-size: 1.15em; margin-bottom: 0.25em; }
-  .who { color: var(--muted); }
-  .who strong { color: var(--ink); }
-  .meta { text-align: right; white-space: nowrap; }
-  h1 { font-size: 1.9em; margin: 0 0 0.5em; color: var(--accent); font-weight: 700;
-    letter-spacing: 0.04em; text-transform: uppercase; line-height: 1.1; }
-  /* The block is right-aligned, so the label needs its own left alignment and
-     a gap: without them "Number" sat flush against "INV-1042". */
-  .meta .k { display: inline-block; min-width: 5em; margin-right: 0.8em;
-    text-align: left; color: var(--muted); }
-  .to { margin-bottom: 1.8em; font-size: 1.05em; }
-  .k-block { display: block; color: var(--accent); font-size: 0.75em; font-weight: 600;
-    text-transform: uppercase; letter-spacing: 0.1em; margin-bottom: 0.3em; }
-  table { width: 100%; border-collapse: collapse; margin-bottom: 1.6em; }
-  thead th { text-align: left; font-size: 0.75em; font-weight: 600; text-transform: uppercase;
-    letter-spacing: 0.08em; color: var(--accent); background: #f1f5f9;
-    border-bottom: 1px solid var(--accent); padding: 0.55em 0.6em; }
-  td { padding: 0.6em; border-bottom: 1px solid var(--line); vertical-align: top; }
-  th.n, td.n { text-align: right; white-space: nowrap; }
-  tfoot td { border: 0; padding-top: 0.35em; padding-bottom: 0.35em; color: var(--muted); }
-  tfoot .due td { font-weight: 700; font-size: 1.15em; color: var(--ink);
-    border-top: 2px solid var(--accent); padding-top: 0.6em; }
-  .pay { background: #f1f5f9; border-left: 4px solid var(--accent);
-    padding: 0.9em 1.1em; margin-top: 0.5em; }
-  .note { margin-top: 1.5em; font-size: 0.92em; color: var(--muted); }
-  .check { margin-top: 1.5em; font-size: 0.85em; color: #a33; }
-  @media print { body { margin: 0; max-width: none; }
-    thead th, .pay { -webkit-print-color-adjust: exact; print-color-adjust: exact; } }
-`;
 
 /**
  * The invoice as one self-contained HTML file.
@@ -172,6 +111,16 @@ const STYLE = `
  * is the one thing it must never do. Where they differ, both are shown and the
  * sender is told to look.
  */
+/**
+ * What a sales document is called. A sale paid on the spot is a receipt; a
+ * registered supplier's is also its tax invoice, and says both.
+ */
+function documentTitle(invoice: Invoice, registered: boolean, noTax: boolean): string {
+  const taxInvoice = !noTax && (registered || invoice.tax !== 0);
+  if (invoice.receipt !== undefined) return taxInvoice ? "Tax invoice / receipt" : "Receipt";
+  return taxInvoice ? "Tax invoice" : "Invoice";
+}
+
 export function invoiceDocument(
   invoice: Invoice,
   supplier: InvoiceSupplier,
@@ -181,9 +130,11 @@ export function invoiceDocument(
   const nzDate = (iso: string): string => written(iso, options.dateStyle);
   const gstNumber = noTax ? "" : (supplier.gstNumber ?? "").trim();
   const registered = gstNumber !== "";
-  const title = options.title ?? (!noTax && (registered || invoice.tax !== 0) ? "Tax invoice" : "Invoice");
-  // Columns before the total: description, quantity, amount, and GST where there is any.
-  const span = noTax ? 3 : 4;
+  const title = options.title ?? documentTitle(invoice, registered, noTax);
+  // Columns before the total: description, quantity, a price where any line has
+  // one, amount, and GST where there is any.
+  const priced = invoice.lines.some((l) => l.unitPrice !== undefined);
+  const span = (noTax ? 3 : 4) + (priced ? 1 : 0);
   const logo = cleanLogo(supplier.logo);
 
   const net = invoice.lines.reduce((sum: Cents, line) => sum + line.net, 0);
@@ -193,7 +144,11 @@ export function invoiceDocument(
   const detail = (label: string, value: string): string =>
     value === "" ? "" : `<div><span class="k">${label}</span>${value}</div>`;
 
-  const totals = invoice.paid !== 0
+  const receipt = invoice.receipt;
+  const totals = receipt !== undefined
+    ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
+      <tr class="due"><td colspan="${span}" class="n">Paid in full on ${nzDate(receipt.paidOn)}${receipt.method ? `, ${escapeHtml(receipt.method)}` : ""}</td><td class="n">${formatAmount(invoice.total)}</td></tr>`
+    : invoice.paid !== 0
     ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
       <tr><td colspan="${span}" class="n">Already paid</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
       <tr class="due"><td colspan="${span}" class="n">Amount due</td><td class="n">${formatAmount(invoice.outstanding)}</td></tr>`
@@ -231,13 +186,13 @@ export function invoiceDocument(
   <table>
     <thead>
       <tr>
-        <th>Description</th><th class="n">Qty</th>
+        <th>Description</th><th class="n">Qty</th>${priced ? '<th class="n">Price</th>' : ""}
         <th class="n">Amount</th>${noTax ? "" : '<th class="n">GST</th>'}
         <th class="n">Total ${escapeHtml(invoice.currency)}</th>
       </tr>
     </thead>
     <tbody>
-      ${invoice.lines.map((line) => lineRow(line, noTax)).join("\n      ")}
+      ${invoice.lines.map((line) => lineRow(line, noTax, priced)).join("\n      ")}
     </tbody>
     <tfoot>
       ${
@@ -246,8 +201,8 @@ export function invoiceDocument(
             ? ""
             : `<tr><td colspan="${span}" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
       <tr><td colspan="${span}" class="n">${escapeHtml(options.salesTaxLabel ?? "Sales tax")}</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
-          : `<tr><td colspan="4" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
-      <tr><td colspan="4" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
+          : `<tr><td colspan="${span}" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
+      <tr><td colspan="${span}" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
       }
       ${totals}
     </tfoot>
@@ -277,32 +232,17 @@ export function invoiceDocument(
 export function invoiceEmail(
   invoice: Invoice,
   supplier: InvoiceSupplier,
-  options: InvoiceDocumentOptions = {},
+  options: InvoiceDocumentOptions & { wording?: { subject: string; body: string } } = {},
 ): { to: string; subject: string; body: string } {
   const registered = options.noTax !== true && (supplier.gstNumber ?? "").trim() !== "";
-  const title = options.title ?? (registered || (options.noTax !== true && invoice.tax !== 0) ? "Tax invoice" : "Invoice");
-  const number = invoice.number.trim();
-  const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
-
-  const lines = [
-    "Hello,",
-    "",
-    `Please find ${title.toLowerCase()} ${number} attached.`.replace("  ", " "),
-    "",
-    `Amount due: ${formatAmount(owing)}`,
-  ];
-  if (invoice.due !== null) lines.push(`Due: ${written(invoice.due, options.dateStyle)}`);
-  if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
-  const payTo = (supplier.payTo ?? "").trim();
-  if (payTo !== "") lines.push("", `Payment details: ${payTo}`);
-  if (options.note !== undefined && options.note.trim() !== "") lines.push("", options.note.trim());
-  lines.push("", "Thank you,", supplier.name);
-
-  return {
-    to: cleanEmailAddress(invoice.email) ?? "",
-    subject: `${title} ${number} from ${supplier.name}`.replace(/\s+/g, " "),
-    body: lines.join("\r\n"),
-  };
+  const title = options.title ?? documentTitle(invoice, registered, options.noTax === true);
+  return invoiceEmailFrom(invoice, { name: supplier.name, ...(supplier.payTo !== undefined ? { payTo: supplier.payTo.trim() } : {}) }, {
+    title,
+    // A receipt is not asking for anything, so it has words of its own.
+    ...(invoice.receipt !== undefined ? { wording: RECEIPT_WORDING } : options.wording !== undefined ? { wording: options.wording } : {}),
+    ...(options.dateStyle !== undefined ? { dateStyle: options.dateStyle } : {}),
+    ...(options.note !== undefined ? { note: options.note } : {}),
+  });
 }
 
 export interface StatementLine {

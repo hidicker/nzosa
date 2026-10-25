@@ -2147,6 +2147,16 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* Payslips shown on the page, to print or save. */
 .ask-on-page.payslip-view { width: min(760px, 94vw); max-width: none; }
 .ask-on-page.payment-file-view { width: min(760px, 94vw); max-width: none; }
+.ask-on-page.move-lines-view { width: min(980px, 96vw); max-width: none; }
+.move-lines-view h3 { margin: 0 0 12px; }
+.move-lines-table { width: 100%; max-width: none; font-size: 0.85rem; }
+.move-lines-table td:nth-child(2) { white-space: nowrap; }
+.move-lines-view .payment-file-fields .combo, .move-lines-view .payment-file-fields input { width: 100%; box-sizing: border-box; min-width: 0; }
+.move-lines-view .payment-file-fields label { min-width: 0; }
+.move-lines-scroll { max-height: 45vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
+.move-lines-scroll thead th { position: sticky; top: 0; background: var(--surface, #fff); z-index: 1; }
+.move-lines-table th:first-child, .move-lines-table td:first-child { width: 2.2em; }
+.move-lines-locked { color: var(--muted); }
 .payment-file-view h3 { margin: 0 0 12px; }
 .payment-file-fields { display: grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 10px 16px; margin-bottom: 14px; }
 .payment-file-fields small { color: var(--muted); font-size: 0.78rem; }

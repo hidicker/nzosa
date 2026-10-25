@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { persistRules, reclassify } from "../books.js";
-import { KIND_LABELS, MAX_EVENTS, canReverse, reverse, reverseRule } from "../events.js";
+import { KIND_LABELS, MAX_EVENTS, canReverse, movableBooks, reverse, reverseRule } from "../events.js";
 import type { LedgerEvent } from "../events.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
@@ -8,7 +8,8 @@ import { save, saveEvents } from "../store.js";
 import { note, tellOnPage } from "../ui.js";
 import type { RuleSet } from "@nzosa/core";
 import { postedJournals } from "../books.js";
-import { daysWork, formatAmount, localDay, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
+import { daysWork, formatAmount, localDay, moveStillHolds, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
+import type { MoveSnapshot } from "@nzosa/core";
 import type { PostedJournal } from "@nzosa/core";
 import { amountCell, nameCell } from "../ui.js";
 import { applyModules } from "../modules.js";
@@ -29,6 +30,12 @@ export async function undo(event: LedgerEvent): Promise<void> {
   const allowed = canReverse(state.events, event);
   if (!allowed.ok) {
     await tellOnPage(allowed.why);
+    return;
+  }
+  // Moved lines come back only while each is as the move left it: a line
+  // coded again since would lose that later coding.
+  if (event.kind === "reclassify" && !moveStillHolds(movableBooks(state.ledger), event.after as MoveSnapshot)) {
+    await tellOnPage("Some of these lines have been changed again since they were moved. Undo those changes first, or move the lines back on Entities & accounts.");
     return;
   }
 

@@ -483,3 +483,5 @@ export * from "./xls.js";
 export * from "./simplefin.js";
 export { abaFile, auAccountParts, bankText, NZ_BANK_FORMATS, nzAccountParts, nzHashTotal, nzPaymentFile } from "./payment-files.js";
 export type { AbaOptions, BankPayment, NzBankFormat, NzPaymentFileOptions, PaymentFile, SkippedPayment } from "./payment-files.js";
+export { lineKey, moveLines, moveStillHolds, restoreMove } from "./move-lines.js";
+export type { AccountLine, LineRef, MovableBooks, MoveResult, MoveSnapshot } from "./move-lines.js";

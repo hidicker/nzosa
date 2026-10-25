@@ -1,5 +1,6 @@
 import { moduleOn } from "../modules.js";
 import { bankWithId } from "./balance-sheet-label.js";
+import { openMoveLines } from "./move-lines-ui.js";
 import { redraw, showPage } from "../app.js";
 import {
   NOT_IN_LEDGER,
@@ -1376,7 +1377,13 @@ export function renderEntities(): void {
     // account carries -- so letting somebody type over it would detach the
     // account from its own transactions, which is not a rename.
     const actions = removalCell(account, label);
-    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label));
+    const move = document.createElement("button");
+    move.type = "button";
+    move.className = "small";
+    move.textContent = "Move lines";
+    move.title = "Move some of this account's lines to another account.";
+    move.addEventListener("click", () => openMoveLines(account, label));
+    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label), " ", move, " ");
     tr.append(actions);
     chartBody.append(tr);
   }

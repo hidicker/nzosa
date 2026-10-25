@@ -10,6 +10,8 @@ import type {
   TransactionOverride,
   VarianceNote,
 } from "@nzosa/core";
+import { restoreMove } from "@nzosa/core";
+import type { MovableBooks, MoveSnapshot } from "@nzosa/core";
 import type { StoredLedger } from "./store.js";
 
 /**
@@ -156,7 +158,13 @@ export type EventKind =
   /** The fixed asset register, whole. */
   | "assets"
   /** The explanations of GST return differences, whole. */
-  | "varianceNote";
+  | "varianceNote"
+  /**
+   * Lines moved from one account to another in one change. Before and after
+   * hold only the items moved: bank codings, split bank lines, journals and
+   * documents, each whole.
+   */
+  | "reclassify";
 
 /**
  * A match and the coding it produced, recorded together.
@@ -537,7 +545,21 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return ledger;
     case "varianceNote":
       return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
+    case "reclassify": {
+      const books = restoreMove(movableBooks(ledger), event.before as MoveSnapshot);
+      return { ...ledger, overrides: books.overrides, splits: books.splits, manualJournals: [...books.manualJournals], invoices: [...books.invoices] };
+    }
   }
+}
+
+/** What moving lines between accounts can change, as these books hold it. */
+export function movableBooks(ledger: StoredLedger): MovableBooks {
+  return {
+    overrides: ledger.overrides ?? {},
+    splits: ledger.splits ?? {},
+    manualJournals: ledger.manualJournals ?? [],
+    invoices: ledger.invoices ?? [],
+  };
 }
 
 /** Rule changes are reversed against the rule set, not the ledger. */
@@ -615,6 +637,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   payroll: "Payroll",
   assets: "Fixed assets",
   varianceNote: "GST explanation",
+  reclassify: "Lines moved to another account",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

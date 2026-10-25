@@ -415,6 +415,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   const add = document.createElement("button");
   add.type = "button";
   add.textContent = "Write a journal";
+  add.title = "Alt+Shift+J from anywhere";
   add.disabled = journalDraft !== null;
   add.addEventListener("click", () => {
     journalDraft = {
@@ -553,6 +554,13 @@ interface JournalDraft {
  * a change of year -- does not throw away what has been typed.
  */
 let journalDraft: JournalDraft | null = null;
+
+/** Open a new journal, dated today, unless one is already being written. */
+export function startNewJournal(): void {
+  if (journalDraft === null) {
+    journalDraft = { date: new Date().toLocaleDateString("en-CA"), narration: "", lines: [blankJournalLine(), blankJournalLine()] };
+  }
+}
 
 function blankJournalLine(): JournalDraftLine {
   return { code: "", debit: "", credit: "", description: "", gst: "" };

@@ -66,14 +66,18 @@ import {
 } from "./daily/reconcile-page.js";
 import {
   renderReportsPage,
+  startNewJournal,
   wireReports,
 } from "./daily/reports.js";
 import {
   renderInvoiceEditor,
   renderInvoices,
+  startNewBill,
+  startNewInvoice,
   wireInvoices,
 } from "./daily/invoices.js";
 import { renderBills, wireBills } from "./daily/bills.js";
+import { wireShortcuts } from "./shortcuts.js";
 import { markActions, renderActions } from "./daily/actions.js";
 import { renderIrdRecords, wireIrdRecords } from "./daily/ird-records.js";
 import { renderRentalsPage } from "./daily/rentals-page.js";
@@ -125,7 +129,7 @@ import {
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
 import { applyCountry, booksCountry } from "./country.js";
-import { reportsFromMenu, wireMenu } from "./menu.js";
+import { openReport, reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
 import {
   dedupeReference,
@@ -539,6 +543,20 @@ function wireUp(): void {
   wirePayroll();
   wireOpeningBalances();
   wireBooksPage();
+  wireShortcuts({
+    invoice: () => {
+      showPage("invoices", "top");
+      startNewInvoice();
+    },
+    bill: () => {
+      showPage("bills", "top");
+      startNewBill();
+    },
+    journal: () => {
+      startNewJournal();
+      openReport("manual");
+    },
+  });
 }
 
 /** Fill the header selector from the entities that exist. */

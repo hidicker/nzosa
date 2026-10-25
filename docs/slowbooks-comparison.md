@@ -115,7 +115,7 @@ United States books only), or **No** (with why).
 | **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Partly: the Charts report | Yes |
 | AI: an insights brief, eleven one-click analyses, any of eight providers | Partly: AI suggestions, the AI check, and a conversation with tools | Yes: one-click analyses |
 | Global search across customers, vendors, items, invoices and payments | Partly: Ctrl+K finds pages | Yes |
-| Keyboard shortcuts for new invoice, bill, payment | No | Yes |
+| Keyboard shortcuts for new invoice, bill, payment | Has: Alt+Shift+I, B and J for a new invoice, bill and journal, from any page | — |
 | History of every change, with who | Has, with undo | — |
 | Users and roles; an Accountant role; invite with an end date; last sign-in shown | Partly: roles and invitations online | Yes: an end date and last sign-in |
 | CSV import and export of customers, vendors, items, the chart | Partly: customers and vendors | Yes: items and the chart, with a dry run |
@@ -202,7 +202,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 22. ~~Reconcile through a date~~: already so on Statements; the comparison had it wrong.
 23. ~~Every completed reconciliation listed~~: done 25 October 2026, each with its report.
 24. ~~Inactive accounts, and unused accounts removed in one step~~: done 25 October 2026.
-25. Keyboard shortcuts for a new invoice, bill and journal (S).
+25. ~~Keyboard shortcuts~~: done 25 October 2026.
 26. Sales receipts, and a walk-in customer (M).
 27. Quick entry for a backlog of paper invoices (S).
 

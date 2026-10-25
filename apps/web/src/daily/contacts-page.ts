@@ -1,3 +1,4 @@
+import { attachmentsBox } from "../attachments-ui.js";
 import { redraw } from "../app.js";
 import { invoiceBalanceMap, record } from "../books.js";
 import { supplierFor } from "./invoices.js";
@@ -554,6 +555,7 @@ function form(existing: Contact | null): HTMLElement {
     // The W-9 and the 1099-NEC are the United States' own.
     ...(booksCountry().id === "us" ? [ticks] : []),
     field("Notes", notes),
+    ...(existing !== null ? [attachmentsBox({ kind: "contact", id: existing.id }, existing.name)] : []),
     problem,
   );
   const row = document.createElement("div");

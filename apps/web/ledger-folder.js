@@ -217,6 +217,14 @@ export function copyLedger(from, to, name) {
     copyFileSync(join(from, file), join(to, file));
     copied += 1;
   }
+  // The files attached to documents come too, or the copy would list them and have none.
+  const attached = join(from, ATTACHMENTS);
+  if (existsSync(attached)) {
+    mkdirSync(join(to, ATTACHMENTS), { recursive: true });
+    for (const file of readdirSync(attached)) {
+      if (file.endsWith(".json")) copyFileSync(join(attached, file), join(to, ATTACHMENTS, file));
+    }
+  }
   writeMeta(to, { name, created: new Date().toISOString(), copiedFrom: readMeta(from).name || "" });
   return { copied };
 }
@@ -348,4 +356,44 @@ export function restoreArchive(folder, stamp) {
   }
 
   return { ok: true, restored, saved: saved.archived };
+}
+
+/**
+ * Files attached to documents: a receipt beside its bill, a contract beside a
+ * contact. Kept in `attachments/` inside the books' folder, one file each, as
+ * the type and the bytes in base64 -- so they are backed up and copied with
+ * the books, and survive the books being cleared and restored (clearing moves
+ * only the top-level files). Which document a file belongs to is kept with the
+ * books themselves; this is only where the bytes live.
+ */
+const ATTACHMENTS = "attachments";
+
+/** An id the app made: letters, digits and hyphens, so it can never name a path outside the folder. */
+export function isAttachmentId(id) {
+  return typeof id === "string" && /^[a-z0-9][a-z0-9-]{5,79}$/.test(id);
+}
+
+export function writeAttachment(folder, id, record) {
+  if (!isAttachmentId(id)) throw new Error("not an attachment id");
+  const dir = join(folder, ATTACHMENTS);
+  mkdirSync(dir, { recursive: true });
+  const file = join(dir, `${id}.json`);
+  const temporary = `${file}.writing`;
+  writeFileSync(temporary, JSON.stringify({ type: record.type, data: record.data }));
+  renameSync(temporary, file);
+}
+
+export function readAttachment(folder, id) {
+  if (!isAttachmentId(id)) return null;
+  try {
+    const parsed = JSON.parse(readFileSync(join(folder, ATTACHMENTS, `${id}.json`), "utf8"));
+    return typeof parsed.type === "string" && typeof parsed.data === "string" ? parsed : null;
+  } catch {
+    return null;
+  }
+}
+
+export function deleteAttachment(folder, id) {
+  if (!isAttachmentId(id)) return;
+  rmSync(join(folder, ATTACHMENTS, `${id}.json`), { force: true });
 }

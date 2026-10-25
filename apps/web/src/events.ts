@@ -81,6 +81,8 @@ export type EventKind =
   | "register"
   /** Credit applied in parts, whole. */
   | "creditApplications"
+  /** Which files are attached to which documents, whole. */
+  | "attachments"
   /** Stock counts, whole. */
   | "stock"
   /** One account in the chart. `id` is its code and name. */
@@ -317,6 +319,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
+    case "attachments":
+      return { ...ledger, attachments: (event.before ?? []) as NonNullable<StoredLedger["attachments"]> };
     case "creditApplications":
       return { ...ledger, creditApplications: (event.before ?? {}) as NonNullable<StoredLedger["creditApplications"]> };
     case "register": {
@@ -627,6 +631,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   timeApproval: "Time approval",
   register: "Typed into a register",
   creditApplications: "Credit applied",
+  attachments: "Attachments",
   stock: "Stock count",
   entities: "Entities",
   codingBatch: "Coding (batch)",

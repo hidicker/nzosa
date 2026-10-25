@@ -1,3 +1,4 @@
+import { attachmentsBox } from "../attachments-ui.js";
 import { changesByLine } from "../events.js";
 import { afterNextFrame } from "../busy.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
@@ -450,8 +451,11 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     tag.title = between.title;
     bank.append(tag);
   }
-  if (state.expanded === one.transaction.id)
+  if (state.expanded === one.transaction.id) {
     bank.append(rawFields(one.transaction));
+    // The receipt, kept with the line it is the receipt for.
+    bank.append(attachmentsBox({ kind: "line", id: one.transaction.id }, "this line"));
+  }
 
   const amount = document.createElement("div");
   amount.className =

@@ -1,3 +1,4 @@
+import { attachmentsBox } from "../attachments-ui.js";
 import { renderReclassify } from "./reclassify-page.js";
 import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
@@ -529,6 +530,7 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const reversed = all.find((j) => j.reverses === journal.id && j.deleted === undefined);
     if (reversed !== undefined) card.append(note(`Reversed by the journal of ${reversed.date}.`));
     card.append(journalActions(journal, reversed !== undefined));
+    card.append(attachmentsBox({ kind: "journal", id: journal.id }, `the journal of ${journal.date}`));
     body.append(card);
   }
 }

@@ -220,6 +220,8 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Files attached to documents: which, and what each is. The bytes are kept apart (see putAttachmentFile). */
+  attachments?: Attachment[] | undefined;
   /** Registers typed into, by account id, kept even before their first line. */
   registers?: string[] | undefined;
   /** Time must be approved before it is invoiced. */
@@ -2275,4 +2277,80 @@ export async function loadUser(): Promise<string> {
 
 export async function saveUser(who: string): Promise<boolean> {
   return put(USER_KEY, who);
+}
+
+// --- attachments ---------------------------------------------------------------
+
+/** A file attached to a document: what it is, and what it belongs to. */
+export interface Attachment {
+  id: string;
+  name: string;
+  type: string;
+  /** Bytes. */
+  size: number;
+  addedAt: string;
+  to: { kind: "invoice" | "journal" | "contact" | "line"; id: string };
+}
+
+/**
+ * Where the bytes of an attached file live: in the books' folder when there
+ * is one, in this browser's own database when the books are kept here.
+ * Books kept online have nowhere for them yet (that needs a storage bucket on
+ * the project), so attaching says so rather than keeping a file somewhere it
+ * would quietly be lost.
+ */
+export function attachmentsKeptHere(): boolean {
+  return backend === "folder" || backend === "browser";
+}
+
+const ATTACHMENT_KEY = (id: string): string => `attachment:${id}`;
+
+export async function putAttachmentFile(id: string, type: string, data: string): Promise<void> {
+  if (backend === "folder") {
+    const response = await fetch(`/api/attachments/${encodeURIComponent(id)}`, {
+      method: "PUT",
+      headers: { "content-type": "application/json" },
+      body: JSON.stringify({ type, data }),
+    });
+    if (!response.ok) throw new Error(`The file could not be kept (${response.status}).`);
+    return;
+  }
+  if (backend !== "browser") throw new Error("Files are not kept with books online yet.");
+  const db = await open();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).put({ type, data }, ATTACHMENT_KEY(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+    tx.onabort = () => reject(tx.error);
+  });
+}
+
+export async function getAttachmentFile(id: string): Promise<{ type: string; data: string } | null> {
+  if (backend === "folder") {
+    const response = await fetch(`/api/attachments/${encodeURIComponent(id)}`);
+    return response.ok ? ((await response.json()) as { type: string; data: string }) : null;
+  }
+  if (backend !== "browser") return null;
+  const db = await open();
+  return new Promise((resolve, reject) => {
+    const request = db.transaction(STORE, "readonly").objectStore(STORE).get(ATTACHMENT_KEY(id));
+    request.onsuccess = () => resolve((request.result as { type: string; data: string } | undefined) ?? null);
+    request.onerror = () => reject(request.error);
+  });
+}
+
+export async function deleteAttachmentFile(id: string): Promise<void> {
+  if (backend === "folder") {
+    await fetch(`/api/attachments/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+  if (backend !== "browser") return;
+  const db = await open();
+  await new Promise<void>((resolve, reject) => {
+    const tx = db.transaction(STORE, "readwrite");
+    tx.objectStore(STORE).delete(ATTACHMENT_KEY(id));
+    tx.oncomplete = () => resolve();
+    tx.onerror = () => reject(tx.error);
+  });
 }

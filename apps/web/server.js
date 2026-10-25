@@ -37,6 +37,10 @@ import { fileURLToPath } from "node:url";
 import {
   PARTS,
   archiveLedger,
+  deleteAttachment,
+  isAttachmentId,
+  readAttachment,
+  writeAttachment,
   copyLedger,
   heldBy,
   listArchives,
@@ -754,6 +758,46 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
 `);
         send(response, 200, { version: result.version });
         return;
+      }
+
+      // Files attached to documents, kept in the books' folder. The id is the
+      // app's own and checked to be one, so it can never name another path.
+      const attachmentMatch = /^\/api\/attachments\/([a-z0-9-]+)$/.exec(path);
+      if (attachmentMatch) {
+        const id = attachmentMatch[1];
+        if (!isAttachmentId(id)) {
+          send(response, 400, { error: "not an attachment id" });
+          return;
+        }
+        if (request.method === "GET") {
+          const held = readAttachment(folderOf(current), id);
+          if (held === null) send(response, 404, { error: "no such attachment" });
+          else send(response, 200, held);
+          return;
+        }
+        if (request.method === "PUT") {
+          const body = await readJson(request);
+          // Ten megabytes of file, as base64 is a third longer.
+          if (
+            typeof body.data !== "string" ||
+            !/^[A-Za-z0-9+/]*={0,2}$/.test(body.data) ||
+            body.data.length > 14_000_000 ||
+            typeof body.type !== "string" ||
+            !/^[\w.+-]+\/[\w.+-]+$/.test(body.type)
+          ) {
+            send(response, 400, { error: "an attachment is a type and its bytes, at most 10 MB" });
+            return;
+          }
+          writeAttachment(folderOf(current), id, { type: body.type, data: body.data });
+          process.stdout.write(`wrote attachment ${id}\n`);
+          send(response, 200, { ok: true });
+          return;
+        }
+        if (request.method === "DELETE") {
+          deleteAttachment(folderOf(current), id);
+          send(response, 200, { ok: true });
+          return;
+        }
       }
 
       if (path === "/api/ledger/archive" && request.method === "POST") {

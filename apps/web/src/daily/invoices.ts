@@ -1,3 +1,4 @@
+import { attachmentsBox } from "../attachments-ui.js";
 import { creditOnAccountSection } from "./credit-on-account.js";
 import { invoiceWordingPanel } from "./invoice-wording.js";
 import { moduleOn } from "../modules.js";
@@ -424,6 +425,13 @@ export function renderInvoiceEditor(): void {
       wrap,
       "The document is a receipt, paid in full. The money still comes into the books from the bank line it arrives on, matched on Reconcile.",
     );
+  }
+
+  // Files kept with the document: the bill as it arrived, a signed quote.
+  // Only once it is saved, since a document not saved has nothing to hold them.
+  if (existing !== undefined) {
+    const files = attachmentsBox({ kind: "invoice", id: `${existing.kind}:${existing.number}` }, existing.number);
+    grid.append(files);
   }
 
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");

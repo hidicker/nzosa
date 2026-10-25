@@ -4552,3 +4552,7 @@ select.needs-choice {
 .tut-books-said { grid-template-columns: auto 1fr; align-items: center; column-gap: 0.45rem; }
 .tut-books-said .tut-books-label { grid-column: 1 / -1; }
 .tut-book .country-flag { width: 24px; height: 16px; }
+
+/* Files attached to a document, line or contact. */
+.attachments { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
+.attachments .k-block { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }

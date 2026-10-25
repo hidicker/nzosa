@@ -51,7 +51,7 @@ United States books only), or **No** (with why).
 | Vendor credits held on account, applied to later bills | Has: the same, on Bills | — |
 | Expenses and card charges as documents | Partly: bank and card lines are the entries | — |
 | **Receipt scanning** into a bill or expense (OCR on the computer, no AI) | Partly: an AI can read a PDF bill | Yes: OCR in the page, no AI, no upload |
-| **Attachments**: the receipt or file kept with a bill, expense, invoice, journal, contact | No: a link to a document only | Yes (storage in the folder, or Supabase Storage online) |
+| Attachments: the receipt or file kept with a bill, expense, invoice, journal, contact | Has: on bank lines, invoices and bills, journals and contacts, kept in the books' folder or the browser. Books kept online still keep a link: Supabase Storage is to come | Online: yes |
 | Duplicate-name warning when a customer or vendor is added | Has: a name like one already there (spelling, accents, Limited, a letter apart) is asked about | — |
 | Pay bills screen, printed checks | No | No: cheques are all but gone in New Zealand; bills are matched to bank lines |
 | W-9, 1099 vendors, 1099-NEC and 1096 | Has (US) | — |
@@ -182,7 +182,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 5. ~~Reclassify transactions~~: done 25 October 2026.
 6. ~~A register you can type into~~: done 25 October 2026.
 7. ~~Customer and vendor credits held on account~~: done 25 October 2026.
-8. **Attachments** on invoices, bills, journals and contacts (L).
+8. ~~Attachments~~: done 25 October 2026 for books in a folder or the browser, bank lines included. Books kept online need a Supabase Storage bucket, still to do.
 9. **MYOB import** (L).
 
 **Second: smaller, and quickly done**

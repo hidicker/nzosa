@@ -12,7 +12,7 @@ import {
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, askOnPage, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
-import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
+import { approveBill, copyBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
 import { billPaymentFile } from "./bill-payment-file.js";
 import {
@@ -273,6 +273,9 @@ function actionsCell(bill: Invoice, balance: InvoiceBalance, status: DocumentSta
         document.getElementById("bill-pay")?.scrollIntoView({ block: "nearest" });
       }, "Record a payment that no bank line in these books shows"),
     );
+  }
+  if (status !== "Credit note") {
+    td.append(button("copy", () => copyBill(bill), "A new bill like this one: same supplier and lines, dated today, as a draft."));
   }
   if (status !== "Voided") {
     td.append(button("void", () => void voidBill(bill, balance), "Take it back out of the books"));

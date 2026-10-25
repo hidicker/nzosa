@@ -21,7 +21,7 @@ United States books only), or **No** (with why).
 
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
-| Invoices: create, edit, void, duplicate, mark sent, email as PDF, numbering, terms | Has, except duplicating an invoice | Yes: Duplicate |
+| Invoices: create, edit, void, duplicate, mark sent, email as PDF, numbering, terms | Has | — |
 | Estimates converted to invoices | Has ("Save as estimate", outside New Zealand) | Yes: offer it in New Zealand too, as a quote |
 | Sales receipts (paid on the spot), and a walk-in customer | Partly: an invoice paid at once | Yes |
 | Payments across several invoices, oldest first; batch payments across customers | Partly: a bank line settling several invoices on Reconcile | — (NZOSA matches to bank lines) |
@@ -187,7 +187,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 **Second: smaller, and quickly done**
 
-10. Duplicate an invoice (S).
+10. ~~Duplicate an invoice~~: done 25 October 2026, bills too.
 11. Saved invoice messages, one the default (S).
 12. Editable email wording for invoices, statements and reminders (S).
 13. Email every overdue customer their statement at once (S).

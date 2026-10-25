@@ -36,6 +36,8 @@ import {
   findItem,
   isPosted,
   isEstimate,
+  isCreditNote,
+  duplicateInvoice,
   linesWithoutAccount,
   matchInvoices,
   nextInvoiceNumber,
@@ -80,6 +82,9 @@ let editingInvoice: string | null = null;
  * opens already a bill, belonging to an entity, as a draft until approved.
  */
 let editorOn: "invoices" | "bills" = "invoices";
+
+/** The document a new one is being copied from, while the editor is open on it. */
+let copyingFrom: Invoice | null = null;
 
 /** The GST treatments an invoice line can carry, named as Xero names them. */
 const INVOICE_TAX_TYPES = [
@@ -197,13 +202,19 @@ export function renderInvoiceEditor(): void {
   // leaves the invoice exactly as it was.
   const draft: Invoice = existing
     ? { ...existing, lines: existing.lines.map((l) => ({ ...l })) }
-    : blankInvoice();
+    : copyingFrom !== null
+      ? duplicateInvoice(copyingFrom, suggestInvoiceNumber(copyingFrom.kind), new Date().toLocaleDateString("en-CA"))
+      : blankInvoice();
 
   const box = document.createElement("div");
   box.className = "invoice-editor";
 
   const heading = document.createElement("h3");
-  heading.textContent = existing ? `Edit ${existing.number}` : asBill ? "New bill" : "New invoice";
+  heading.textContent = existing
+    ? `Edit ${existing.number}`
+    : copyingFrom !== null
+      ? `New ${asBill ? "bill" : "invoice"}, copied from ${copyingFrom.number}`
+      : asBill ? "New bill" : "New invoice";
   box.append(heading);
 
   const grid = document.createElement("div");
@@ -824,6 +835,7 @@ export function renderInvoiceEditor(): void {
   cancel.textContent = "Cancel";
   cancel.addEventListener("click", () => {
     editingInvoice = null;
+    copyingFrom = null;
     renderInvoiceEditor();
   });
 
@@ -965,6 +977,7 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     built.number,
   );
   editingInvoice = null;
+  copyingFrom = null;
   redraw("invoiceEditor");
   redraw("invoices");
   redraw("bills");
@@ -1015,6 +1028,7 @@ async function deleteInvoice(invoice: Invoice): Promise<void> {
     invoice.number,
   );
   editingInvoice = null;
+  copyingFrom = null;
   redraw("invoiceEditor");
   redraw("invoices");
   redraw("bills");
@@ -1064,11 +1078,29 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
   edit.textContent = "edit";
   edit.addEventListener("click", () => {
     editorOn = "invoices";
+    copyingFrom = null;
     editingInvoice = invoice.number;
     redraw("invoiceEditor");
     $("invoice-editor").scrollIntoView({ block: "nearest" });
   });
   td.append(edit);
+
+  // A credit note is written against a sale; copying one is never what is meant.
+  if (invoice.kind === "sales" && !isCreditNote(invoice)) {
+    const copy = document.createElement("button");
+    copy.type = "button";
+    copy.className = "invoice-send";
+    copy.textContent = "copy";
+    copy.title = "A new invoice like this one: same customer and lines, the next number, dated today. Nothing is saved until you save it.";
+    copy.addEventListener("click", () => {
+      editorOn = "invoices";
+      copyingFrom = invoice;
+      editingInvoice = "";
+      redraw("invoiceEditor");
+      $("invoice-editor").scrollIntoView({ block: "nearest" });
+    });
+    td.append(copy);
+  }
 
   const link = cleanDocumentLink(invoice.documentLink);
   if (link !== null) {
@@ -1603,6 +1635,7 @@ async function acceptMatch(transactionId: string, invoiceNumber: string): Promis
  */
 export function startNewInvoice(): void {
   editorOn = "invoices";
+  copyingFrom = null;
   editingInvoice = "";
   redraw("invoiceEditor");
 }
@@ -1623,13 +1656,24 @@ export async function approveBill(number: string): Promise<void> {
 /** Begin a fresh bill, on the Bills page. */
 export function startNewBill(): void {
   editorOn = "bills";
+  copyingFrom = null;
   editingInvoice = "";
   redraw("invoiceEditor");
+}
+
+/** Begin a new bill copied from an old one, on the Bills page. */
+export function copyBill(bill: Invoice): void {
+  editorOn = "bills";
+  copyingFrom = bill;
+  editingInvoice = "";
+  redraw("invoiceEditor");
+  document.getElementById("bill-editor")?.scrollIntoView({ block: "nearest" });
 }
 
 /** Open a bill in the editor, on the Bills page. */
 export function editBill(number: string): void {
   editorOn = "bills";
+  copyingFrom = null;
   editingInvoice = number;
   redraw("invoiceEditor");
   document.getElementById("bill-editor")?.scrollIntoView({ block: "nearest" });

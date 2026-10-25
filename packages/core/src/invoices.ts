@@ -621,6 +621,31 @@ export function isEstimate(invoice: Invoice): boolean {
 }
 
 /**
+ * A new document copied from an old one: the same customer or supplier,
+ * lines, reference and terms, under a new number and dated today, with the
+ * due date as far after it as the original's was.
+ *
+ * What belonged to the old one alone is left behind: what was paid on it, a
+ * balance brought forward, and the link to its own file. A bill comes out a
+ * draft, to be approved like any other; an estimate stays an estimate.
+ */
+export function duplicateInvoice(source: Invoice, number: string, today: IsoDate): Invoice {
+  const { paidOutside: _paid, broughtForward: _brought, documentLink: _link, ...kept } = source;
+  const gap = source.due === null ? null : Math.round((Date.parse(`${source.due}T00:00:00Z`) - Date.parse(`${source.issued}T00:00:00Z`)) / 86_400_000);
+  const due = gap === null ? null : new Date(Date.parse(`${today}T00:00:00Z`) + gap * 86_400_000).toISOString().slice(0, 10);
+  return {
+    ...kept,
+    number,
+    issued: today,
+    due,
+    paid: 0,
+    outstanding: source.total,
+    status: isEstimate(source) ? source.status : source.kind === "purchase" ? "Draft" : "Awaiting Payment",
+    lines: source.lines.map((line) => ({ ...line })),
+  };
+}
+
+/**
  * Whether an invoice belongs in the ledger.
  *
  * A blank status counts as posted. An invoice keyed in here, or a file that

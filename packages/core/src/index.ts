@@ -309,6 +309,7 @@ export {
   isCreditNote,
   isPosted,
   isEstimate,
+  duplicateInvoice,
   linesWithoutAccount,
   paidOutsideTotal,
 } from "./invoices.js";

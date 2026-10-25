@@ -1,6 +1,6 @@
 import { record } from "./books.js";
 import { state } from "./state.js";
-import { attachmentsKeptHere, getAttachmentFile, putAttachmentFile, savePart } from "./store.js";
+import { attachmentsKeptHere, booksReadOnly, getAttachmentFile, putAttachmentFile, savePart } from "./store.js";
 import type { Attachment } from "./store.js";
 import { askOnPage, tellOnPage } from "./ui.js";
 
@@ -10,7 +10,8 @@ import { askOnPage, tellOnPage } from "./ui.js";
  * way to open each and to attach another.
  *
  * Only which file belongs to which document is kept with the books; the bytes
- * are kept apart by the store, in the books' folder or this browser. Removing
+ * are kept apart by the store: in the books' folder, this browser, or for
+ * books online in their Storage bucket. Removing
  * a file takes it off the document and leaves the bytes, so History can put
  * it back.
  */
@@ -89,6 +90,7 @@ export function attachmentsBox(to: Attachment["to"], what: string): HTMLElement 
       remove.type = "button";
       remove.className = "small";
       remove.textContent = "Remove";
+      remove.hidden = booksReadOnly();
       remove.addEventListener("click", async () => {
         if (!(await askOnPage(`Take ${one.name} off ${what}? History can put it back.`, "Take it off"))) return;
         await keep(held().filter((a) => a.id !== one.id), `${one.name} taken off ${what}`);
@@ -97,10 +99,12 @@ export function attachmentsBox(to: Attachment["to"], what: string): HTMLElement 
       row.append(open, " ", remove);
       box.append(row);
     }
+    // Somebody who may only read these books opens what is attached, and adds nothing.
+    if (booksReadOnly()) return;
     if (!attachmentsKeptHere()) {
       const said = document.createElement("p");
       said.className = "page-hint";
-      said.textContent = "Books kept online do not keep files yet. Put the file in your own Drive or Dropbox and keep its link instead.";
+      said.textContent = "These books cannot keep files here. Put the file in your own Drive or Dropbox and keep its link instead.";
       box.append(said);
       return;
     }

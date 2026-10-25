@@ -37,7 +37,7 @@ import type {
 import type { LedgerEvent } from "./events.js";
 import { MAX_EVENTS } from "./events.js";
 import { cloudConfigured } from "./cloud-config.js";
-import { currentSession, loadPart as loadCloudPart, loadNamedParts, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
+import { currentSession, deleteStoredFile, getStoredFile, putStoredFile, loadPart as loadCloudPart, loadNamedParts, loadParts as loadCloudParts, rpc, saveChanges as saveCloudChanges, savePart as saveCloudPart, signedIn } from "./cloud.js";
 import type { PartChange, SaveOutcome } from "./cloud.js";
 
 /**
@@ -2309,7 +2309,23 @@ export interface Attachment {
  * would quietly be lost.
  */
 export function attachmentsKeptHere(): boolean {
-  return backend === "folder" || backend === "browser";
+  return backend === "folder" || backend === "browser" || (backend === "cloud" && openCloudBookId() !== "");
+}
+
+/** Where a file is kept online: under its books' id, as the bucket's policies read it. */
+function storedPath(id: string): string {
+  return `${openCloudBookId()}/${id}`;
+}
+
+function bytesOf(base64: string): Uint8Array {
+  return Uint8Array.from(atob(base64), (c) => c.charCodeAt(0));
+}
+
+async function base64Of(blob: Blob): Promise<string> {
+  const bytes = new Uint8Array(await blob.arrayBuffer());
+  let text = "";
+  for (let i = 0; i < bytes.length; i += 0x8000) text += String.fromCharCode(...bytes.subarray(i, i + 0x8000));
+  return btoa(text);
 }
 
 const ATTACHMENT_KEY = (id: string): string => `attachment:${id}`;
@@ -2324,7 +2340,11 @@ export async function putAttachmentFile(id: string, type: string, data: string):
     if (!response.ok) throw new Error(`The file could not be kept (${response.status}).`);
     return;
   }
-  if (backend !== "browser") throw new Error("Files are not kept with books online yet.");
+  if (backend === "cloud") {
+    await putStoredFile(storedPath(id), new Blob([bytesOf(data) as unknown as BlobPart], { type }), type);
+    return;
+  }
+  if (backend !== "browser") throw new Error("Files are not kept with these books.");
   const db = await open();
   await new Promise<void>((resolve, reject) => {
     const tx = db.transaction(STORE, "readwrite");
@@ -2340,6 +2360,10 @@ export async function getAttachmentFile(id: string): Promise<{ type: string; dat
     const response = await fetch(`/api/attachments/${encodeURIComponent(id)}`);
     return response.ok ? ((await response.json()) as { type: string; data: string }) : null;
   }
+  if (backend === "cloud") {
+    const blob = await getStoredFile(storedPath(id));
+    return blob === null ? null : { type: blob.type || "application/octet-stream", data: await base64Of(blob) };
+  }
   if (backend !== "browser") return null;
   const db = await open();
   return new Promise((resolve, reject) => {
@@ -2352,6 +2376,10 @@ export async function getAttachmentFile(id: string): Promise<{ type: string; dat
 export async function deleteAttachmentFile(id: string): Promise<void> {
   if (backend === "folder") {
     await fetch(`/api/attachments/${encodeURIComponent(id)}`, { method: "DELETE" });
+    return;
+  }
+  if (backend === "cloud") {
+    await deleteStoredFile(storedPath(id));
     return;
   }
   if (backend !== "browser") return;

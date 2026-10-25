@@ -182,7 +182,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 5. ~~Reclassify transactions~~: done 25 October 2026.
 6. ~~A register you can type into~~: done 25 October 2026.
 7. ~~Customer and vendor credits held on account~~: done 25 October 2026.
-8. ~~Attachments~~: done 25 October 2026 for books in a folder or the browser, bank lines included. Books kept online need a Supabase Storage bucket, still to do.
+8. ~~Attachments~~: done 25 October 2026 for books in a folder, the browser, and online (a private Supabase Storage bucket, members only), bank lines included.
 9. **MYOB import** (L). Waiting on sample files: MYOB's own help does not give the exact export layout, and an importer guessed from it would fail on real files.
 
 **Second: smaller, and quickly done**

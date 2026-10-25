@@ -740,3 +740,46 @@ export async function feedStatus(
     ? { connected: false, accounts: {}, settings: {} }
     : { connected: row.connected, accounts: row.accounts, settings: row.settings };
 }
+
+/**
+ * A file in Supabase Storage's private attachments bucket, under its books'
+ * id. Who may read or write it is the bucket's policies' to say; this only
+ * carries the request with the signed-in person's token.
+ */
+async function storage(method: string, path: string, body?: Blob, type?: string): Promise<Response | null> {
+  const token = await freshToken();
+  if (token === null) return null;
+  const at = path.split("/").map(encodeURIComponent).join("/");
+  const url = method === "GET" ? `${CLOUD.url}/storage/v1/object/authenticated/attachments/${at}` : `${CLOUD.url}/storage/v1/object/attachments/${at}`;
+  try {
+    return await fetch(url, {
+      method,
+      headers: {
+        apikey: CLOUD.publishableKey,
+        authorization: `Bearer ${token}`,
+        ...(type !== undefined ? { "content-type": type, "x-upsert": "true" } : {}),
+      },
+      ...(body !== undefined ? { body } : {}),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function putStoredFile(path: string, file: Blob, type: string): Promise<void> {
+  const response = await storage("POST", path, file, type);
+  if (response === null) throw new Error("The file could not be sent: no connection to the server.");
+  if (!response.ok) {
+    const said = (await response.json().catch(() => ({}))) as { message?: string; error?: string };
+    throw new Error(`The file could not be kept online: ${said.message ?? said.error ?? `the server said ${response.status}`}.`);
+  }
+}
+
+export async function getStoredFile(path: string): Promise<Blob | null> {
+  const response = await storage("GET", path);
+  return response !== null && response.ok ? response.blob() : null;
+}
+
+export async function deleteStoredFile(path: string): Promise<void> {
+  await storage("DELETE", path);
+}

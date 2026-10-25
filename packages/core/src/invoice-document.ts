@@ -1,6 +1,7 @@
 import type { Cents } from "./money.js";
 import { formatAmount } from "./money.js";
 import type { Invoice, InvoiceLine } from "./invoices.js";
+import { formatUnitPrice } from "./invoices.js";
 import { invoiceEmailFrom } from "./wording.js";
 import { asLines, escapeHtml, DOCUMENT_STYLE as STYLE, written } from "./document-html.js";
 
@@ -84,12 +85,13 @@ export interface InvoiceDocumentOptions {
   salesTaxLabel?: string;
 }
 
-function lineRow(line: InvoiceLine, noTax = false): string {
+function lineRow(line: InvoiceLine, noTax = false, priced = false): string {
   const quantity = line.quantity === undefined ? "" : String(line.quantity);
   return (
     "<tr>" +
     `<td>${escapeHtml(line.description)}</td>` +
     `<td class="n">${escapeHtml(quantity)}</td>` +
+    (priced ? `<td class="n">${line.unitPrice === undefined ? "" : formatUnitPrice(line.unitPrice)}</td>` : "") +
     `<td class="n">${formatAmount(line.net)}</td>` +
     (noTax ? "" : `<td class="n">${formatAmount(line.tax)}</td>`) +
     // Sales tax is added to the invoice, not to each line, where there is no GST.
@@ -119,8 +121,10 @@ export function invoiceDocument(
   const gstNumber = noTax ? "" : (supplier.gstNumber ?? "").trim();
   const registered = gstNumber !== "";
   const title = options.title ?? (!noTax && (registered || invoice.tax !== 0) ? "Tax invoice" : "Invoice");
-  // Columns before the total: description, quantity, amount, and GST where there is any.
-  const span = noTax ? 3 : 4;
+  // Columns before the total: description, quantity, a price where any line has
+  // one, amount, and GST where there is any.
+  const priced = invoice.lines.some((l) => l.unitPrice !== undefined);
+  const span = (noTax ? 3 : 4) + (priced ? 1 : 0);
   const logo = cleanLogo(supplier.logo);
 
   const net = invoice.lines.reduce((sum: Cents, line) => sum + line.net, 0);
@@ -168,13 +172,13 @@ export function invoiceDocument(
   <table>
     <thead>
       <tr>
-        <th>Description</th><th class="n">Qty</th>
+        <th>Description</th><th class="n">Qty</th>${priced ? '<th class="n">Price</th>' : ""}
         <th class="n">Amount</th>${noTax ? "" : '<th class="n">GST</th>'}
         <th class="n">Total ${escapeHtml(invoice.currency)}</th>
       </tr>
     </thead>
     <tbody>
-      ${invoice.lines.map((line) => lineRow(line, noTax)).join("\n      ")}
+      ${invoice.lines.map((line) => lineRow(line, noTax, priced)).join("\n      ")}
     </tbody>
     <tfoot>
       ${
@@ -183,8 +187,8 @@ export function invoiceDocument(
             ? ""
             : `<tr><td colspan="${span}" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
       <tr><td colspan="${span}" class="n">${escapeHtml(options.salesTaxLabel ?? "Sales tax")}</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
-          : `<tr><td colspan="4" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
-      <tr><td colspan="4" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
+          : `<tr><td colspan="${span}" class="n">Subtotal</td><td class="n">${formatAmount(net)}</td></tr>
+      <tr><td colspan="${span}" class="n">GST</td><td class="n">${formatAmount(invoice.tax)}</td></tr>`
       }
       ${totals}
     </tfoot>

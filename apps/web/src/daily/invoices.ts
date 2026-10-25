@@ -40,6 +40,10 @@ import {
   isCreditNote,
   duplicateInvoice,
   defaultInvoiceMessage,
+  formatUnitPrice,
+  lineAmount,
+  parseQuantity,
+  parseUnitPrice,
   linesWithoutAccount,
   matchInvoices,
   nextInvoiceNumber,
@@ -607,9 +611,21 @@ export function renderInvoiceEditor(): void {
       // A stocked product's line says which, and how many.
       const item = row.dataset["item"];
       const quantity = Number(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
+      // Any other line may be written as a quantity at a price, to four places.
+      const typedQty = parseQuantity(row.querySelector<HTMLInputElement>(".line-qty")?.value ?? "");
+      const typedPrice = parseUnitPrice(row.querySelector<HTMLInputElement>(".line-price")?.value ?? "");
       return {
         description, accountCode: code, taxType, net: gross - tax, tax, gross,
-        ...(item !== undefined ? { itemCode: item, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1 } : {}),
+        ...(item !== undefined
+          ? { itemCode: item, quantity: Number.isFinite(quantity) && quantity > 0 ? quantity : 1 }
+          : {
+              ...(typedQty !== null && typedQty > 0 ? { quantity: typedQty } : {}),
+              // Kept only while the amount is still what they come to: an amount
+              // typed over it afterwards is the line's, and a price beside it would not add up.
+              ...(typedQty !== null && typedQty > 0 && typedPrice !== null && lineAmount(typedQty, typedPrice) === gross
+                ? { unitPrice: typedPrice }
+                : {}),
+            }),
       };
     });
   }
@@ -706,24 +722,43 @@ export function renderInvoiceEditor(): void {
       refreshTotals();
     });
 
-    // How many, for a product kept in stock: shown only on such a line.
+    // How many, and at what price: optional on any line, to four decimal
+    // places. A product kept in stock takes its price from the item.
     const qty = document.createElement("input");
     qty.type = "text";
     qty.inputMode = "decimal";
     qty.className = "line-qty invoice-amount";
-    qty.title = "How many";
+    qty.title = "How many, to four decimal places. Optional.";
     qty.placeholder = "Qty";
-    qty.hidden = true;
+    qty.value = line.quantity === undefined ? "" : String(line.quantity);
+    const price = document.createElement("input");
+    price.type = "text";
+    price.inputMode = "decimal";
+    price.className = "line-price invoice-amount";
+    price.title = `The price of one, to four decimal places${noSalesTax() || usTax ? "" : `, including ${taxTypeLabel("GST")}`}: the amount is the quantity times it. Optional.`;
+    price.placeholder = "Price";
+    price.value = line.unitPrice === undefined ? "" : formatUnitPrice(line.unitPrice);
     const stockedLine = (item: Item | undefined, quantity: number): void => {
       if (item === undefined) {
         delete row.dataset["item"];
-        qty.hidden = true;
+        price.hidden = false;
         return;
       }
       row.dataset["item"] = item.id;
-      qty.hidden = false;
+      price.hidden = true;
       qty.value = String(quantity);
     };
+    // Quantity times price, worked in whole numbers, into the amount.
+    const priced = (): void => {
+      if (row.dataset["item"] !== undefined) return;
+      const n = parseQuantity(qty.value);
+      const each = parseUnitPrice(price.value);
+      qty.classList.toggle("invalid", qty.value.trim() !== "" && n === null);
+      price.classList.toggle("invalid", price.value.trim() !== "" && each === null);
+      if (n !== null && each !== null) gross.value = (lineAmount(n, each) / 100).toFixed(2);
+      refreshTotals();
+    };
+    price.addEventListener("input", priced);
     const already = stockedItems.find((i) => i.id === line.itemCode || i.name === line.itemCode);
     if (already !== undefined) stockedLine(already, line.quantity ?? 1);
     // The unit a quantity is multiplied by: the price on an invoice, which is
@@ -736,6 +771,10 @@ export function renderInvoiceEditor(): void {
           : Math.round(item.unitCost * (1 + (rateOf(tax.value) === 15 ? gstPercent() : 0) / 100))
         : item.price;
     qty.addEventListener("input", () => {
+      if (row.dataset["item"] === undefined) {
+        priced();
+        return;
+      }
       const item = stockedItems.find((i) => i.id === row.dataset["item"]);
       const unit = item === undefined ? undefined : unitOf(item);
       const n = Number(qty.value.replace(",", "."));
@@ -746,7 +785,7 @@ export function renderInvoiceEditor(): void {
     // Where there is no sales tax there is no treatment to choose; in the
     // United States, only once the invoice has a rate.
     tax.hidden = usTax ? chosenRate() === null : noSalesTax();
-    row.append(description, qty, account.element, tax, gross, drop);
+    row.append(description, qty, price, account.element, tax, gross, drop);
     lineHost.append(row);
     // A name that is an item's fills in what is still empty: its account, its
     // price, and the words the line should say.

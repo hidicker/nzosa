@@ -311,6 +311,10 @@ export {
   isEstimate,
   duplicateInvoice,
   linesWithoutAccount,
+  parseQuantity,
+  parseUnitPrice,
+  formatUnitPrice,
+  lineAmount,
   paidOutsideTotal,
 } from "./invoices.js";
 export type {

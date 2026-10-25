@@ -37,6 +37,13 @@ export interface InvoiceLine {
   /** `net` plus `tax`: what the customer actually pays for this line. */
   gross: Cents;
   quantity?: number;
+  /**
+   * The price of one, in ten-thousandths of the currency unit, where the line
+   * was written as a quantity times a price: 12345 is 1.2345. Whole numbers,
+   * like every amount here; the line's amount is what it came to, rounded to
+   * the cent, and is what the books use.
+   */
+  unitPrice?: number;
   itemCode?: string;
   /**
    * The liability account this line's tax is owed in, where it is not the
@@ -734,4 +741,45 @@ export function invoiceBalances(
  */
 export function linesWithoutAccount(invoice: Pick<Invoice, "lines">): InvoiceLine[] {
   return invoice.lines.filter((line) => line.gross !== 0 && line.accountCode.trim() === "");
+}
+
+/** Four decimal places at most, as typed: "1.2345", "12", "0.5". Null for anything else. */
+function fourPlaces(text: string): { whole: bigint; scaled: bigint } | null {
+  const cleaned = text.replace(/[\s,$]/g, "");
+  const match = /^(\d*)(?:\.(\d{0,4}))?$/.exec(cleaned);
+  if (match === null || cleaned === "" || cleaned === ".") return null;
+  const scaled = BigInt(`${match[1] || "0"}${(match[2] ?? "").padEnd(4, "0")}`);
+  return { whole: BigInt(match[1] || "0"), scaled };
+}
+
+/** A quantity typed with up to four decimal places, or null. */
+export function parseQuantity(text: string): number | null {
+  const read = fourPlaces(text);
+  return read === null ? null : Number(read.scaled) / 10_000;
+}
+
+/** A unit price typed with up to four decimal places, in ten-thousandths, or null. */
+export function parseUnitPrice(text: string): number | null {
+  const read = fourPlaces(text);
+  return read === null ? null : Number(read.scaled);
+}
+
+/** A unit price in ten-thousandths, written with two to four decimal places: 12345 is "1.2345", 150000 is "15.00". */
+export function formatUnitPrice(unitPrice: number): string {
+  const [whole, places = ""] = (unitPrice / 10_000).toFixed(4).split(".");
+  return `${whole}.${places.replace(/0+$/, "").padEnd(2, "0")}`;
+}
+
+/**
+ * What a quantity at a unit price comes to, in cents, rounded half away from
+ * zero -- worked in whole numbers so 3 x 0.3333 is 1.00 and not 0.99999.
+ */
+export function lineAmount(quantity: number, unitPrice: number): Cents {
+  // Both to four places: the product is in 1e-8 of a unit, a cent is 1e6 of those.
+  const q = BigInt(Math.round(quantity * 10_000));
+  const product = q * BigInt(unitPrice);
+  const negative = product < 0n;
+  const magnitude = negative ? -product : product;
+  const cents = (magnitude + 500_000n) / 1_000_000n;
+  return Number(negative ? -cents : cents);
 }

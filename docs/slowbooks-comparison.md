@@ -35,7 +35,7 @@ United States books only), or **No** (with why).
 | **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | No: one currency per set of books | Yes (large; the same work as Wise balances in other currencies) |
 | **Online payment link** (Stripe, PayPal, Square) and a public pay page | No | Yes, with a decision on the provider and on keys held online |
 | **Quick entry** of a backlog of paper invoices, save and next | No | Yes |
-| Quantities and unit prices to four decimal places | No: two | Yes |
+| Quantities and unit prices to four decimal places | Has: an optional quantity and price on any line, worked in whole numbers to the cent | — |
 | Logo on invoices | Has | — |
 | Per-line sales tax, tax-exempt customers, reseller permits, Pay Sales Tax | Partly: a sales tax report from the liability accounts | US |
 
@@ -47,7 +47,7 @@ United States books only), or **No** (with why).
 | Vendor page: paid this year and all time, payments CSV | Has: Payments on each supplier in Customers & vendors, from the bank lines paid to them | — |
 | Purchase orders to bills | Has | — |
 | Bills, edited after posting | Has | — |
-| **A bill line as an amount alone** (no quantity and rate) | No: a line takes a quantity and a price | Yes |
+| A bill line as an amount alone (no quantity and rate) | Has: a line is an amount, with a quantity and price only if wanted | — |
 | **Vendor credits held on account**, applied to later bills | Partly: credit notes against a bill | Yes (with customer credits) |
 | Expenses and card charges as documents | Partly: bank and card lines are the entries | — |
 | **Receipt scanning** into a bill or expense (OCR on the computer, no AI) | Partly: an AI can read a PDF bill | Yes: OCR in the page, no AI, no upload |
@@ -195,8 +195,8 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 15. ~~Income by customer, and sales by item~~: done 25 October 2026.
 16. ~~Paid this year and all time, per supplier~~: done 25 October 2026.
 17. ~~A duplicate-name warning~~: done 25 October 2026.
-18. A bill line as an amount alone (S).
-19. Quantities and prices to four decimal places (S).
+18. ~~A bill line as an amount alone~~: already so; the comparison had it wrong.
+19. ~~Quantities and prices to four decimal places~~: done 25 October 2026.
 20. Quotes offered in New Zealand (S).
 21. Time approval (S).
 22. Reconcile: lines through a date, and the statement balance corrected in place (S).

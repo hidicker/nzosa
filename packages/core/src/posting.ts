@@ -1,3 +1,4 @@
+import { bookedTotal, foreignRate, inBooks } from "./foreign-currency.js";
 import type { Cents } from "./money.js";
 import type { DisposalAccounts, DisposalPosting } from "./disposal.js";
 import type { IsoDate } from "./dates.js";
@@ -181,6 +182,13 @@ export interface SettledInvoice {
   taxType: TaxType;
   /** GST-inclusive total of the invoice, for the return's gross box. */
   total: Cents;
+  /**
+   * For a document in another currency: what it was posted at in the books'
+   * currency. The payment clears that much from receivables or payables and
+   * puts what is left over -- the rate's doing -- to `exchange`.
+   */
+  booked?: Cents;
+  exchange?: { code: string; name: string };
 }
 
 /** The GST within an amount, given how the line is treated. */
@@ -269,6 +277,23 @@ export function postTransaction(
       taxBase: transaction.amount,
       description: `Settles ${settles.number}`,
     });
+    if (settles.booked !== undefined) {
+      // Receivables give up what the document was booked at, not what came in;
+      // the difference is the exchange account's.
+      const cleared = receivable ? -settles.booked : settles.booked;
+      const control = lines[lines.length - 1]!;
+      const difference = control.amount - cleared;
+      control.amount = cleared;
+      if (difference !== 0) {
+        lines.push({
+          accountCode: settles.exchange?.code ?? "",
+          accountName: settles.exchange?.name ?? "Foreign Currency Gains and Losses",
+          amount: difference,
+          taxType: "NONE",
+          description: `Exchange on ${settles.number}`,
+        });
+      }
+    }
     return {
       transactionId: transaction.id,
       date: transaction.date,
@@ -561,21 +586,24 @@ export function postInvoice(invoice: Invoice, options: PostingOptions = {}): Pos
       accountName: sales
         ? (options.receivableName ?? "Accounts Receivable")
         : (options.payableName ?? "Accounts Payable"),
-      amount: sign * invoice.total,
+      amount: sign * (foreignRate(invoice) === null ? invoice.total : bookedTotal(invoice)),
       taxType: "NONE",
       description: `${invoice.number} ${invoice.contact}`.trim(),
     },
   ];
 
+  // A document in another currency is posted at its rate, line by line, and
+  // the control account takes what those come to, so it balances exactly.
+  const convert = (cents: Cents): Cents => inBooks(invoice, cents);
   for (const line of invoice.lines) {
     const account = resolve(line.accountCode);
     const taxType = taxTypeFromRate(line.taxType, invoice.kind);
     lines.push({
       accountCode: account.code,
       accountName: account.name,
-      amount: -sign * line.net,
+      amount: -sign * convert(line.net),
       taxType,
-      ...(line.tax !== 0 ? { taxBase: sign * line.gross } : {}),
+      ...(line.tax !== 0 ? { taxBase: sign * (convert(line.net) + convert(line.tax)) } : {}),
       description: line.description,
     });
     if (line.tax !== 0) {
@@ -584,7 +612,7 @@ export function postInvoice(invoice: Invoice, options: PostingOptions = {}): Pos
       lines.push({
         accountCode: gst.code,
         accountName: gst.name,
-        amount: -sign * line.tax,
+        amount: -sign * convert(line.tax),
         taxType,
         description: line.description,
       });

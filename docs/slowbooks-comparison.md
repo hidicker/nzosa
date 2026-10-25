@@ -32,7 +32,7 @@ United States books only), or **No** (with why).
 | Email templates, editable, for invoices, statements and reminders | Has, with fill-ins such as {customer} and {amount} | — |
 | Email all overdue statements from the receivables aging | Has: every overdue customer listed on Customers & vendors, one press each to save the statement or reminder and open the message | — |
 | Customer statements and collection letters | Has | — |
-| **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | No: one currency per set of books | Yes (large; the same work as Wise balances in other currencies) |
+| **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | Has: an invoice or bill in another currency carries its rate, posts at it, and the payment that settles it puts the difference to Foreign Currency Gains and Losses. Paying one in parts, and bank accounts in other currencies, not yet | Yes: bank accounts in other currencies (Wise), and part payments |
 | **Online payment link** (Stripe, PayPal, Square) and a public pay page | No | Yes, with a decision on the provider and on keys held online |
 | Quick entry of a backlog of paper invoices, save and next | Has: Save and next, carrying the date, account and tax to the next one | — |
 | Quantities and unit prices to four decimal places | Has: an optional quantity and price on any line, worked in whole numbers to the cent | — |
@@ -221,7 +221,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 35. ~~One-click AI analyses beside the conversation~~: done 25 October 2026 on the AI check page: asked with the books' own key where there is one, copied for your own assistant where not.
 36. ~~Global search across contacts, invoices, bills and lines~~: done 25 October 2026, in the menu's search; an amount finds what is exactly that much.
 37. Receipt scanning in the page, without AI (L).
-38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
+38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies). ~~Invoices and bills~~ done 25 October 2026, each paid in one payment. Bank accounts in other currencies, and paying a foreign document in parts, still to do.
 39. Online payment links (L; which provider, and keys held online).
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each). ~~GnuCash~~ done 25 October 2026. The rest wait on sample files, as MYOB does: their export layouts are not published in enough detail to read them blind.
 41. ~~Chart import from CSV or hledger with a dry run~~: done 25 October 2026.

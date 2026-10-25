@@ -1,3 +1,4 @@
+import { foreignRate } from "./foreign-currency.js";
 import type { Cents } from "./money.js";
 import { formatAmount, parseAmount } from "./money.js";
 import type { IsoDate } from "./dates.js";
@@ -73,6 +74,13 @@ export interface Invoice {
   /** How much is still outstanding, as stated by the source. */
   outstanding: Cents;
   currency: string;
+  /**
+   * For a document in another currency than the books': what one unit of its
+   * currency was worth in the books' on the day it was issued. It is posted
+   * at this rate, and a payment that settles it moves the difference to the
+   * exchange account (see foreign-currency.ts). Absent for the books' own.
+   */
+  rate?: number;
   status: string;
   lines: InvoiceLine[];
   /** The United States sales tax rate the invoice was charged at, by its id. */
@@ -751,7 +759,12 @@ export function invoiceBalances(
 
   const out = new Map<string, InvoiceBalance>();
   for (const invoice of invoices) {
-    const paid = assigned.get(invoice.number) ?? 0;
+    // A payment of a document in another currency settles it in full: the
+    // money arrives in the books' currency, and what the rate moved is the
+    // exchange account's, not still owing.
+    const paid = foreignRate(invoice) !== null && (assigned.get(invoice.number) ?? 0) > 0
+      ? Math.max(0, (invoice.broughtForward ?? invoice.total) - (credited.get(invoice.number) ?? 0) - paidOutsideTotal(invoice))
+      : (assigned.get(invoice.number) ?? 0);
     const off = credited.get(invoice.number) ?? 0;
     const outside = paidOutsideTotal(invoice);
     // A credit note is measured as itself. Subtracting what it is "owed"

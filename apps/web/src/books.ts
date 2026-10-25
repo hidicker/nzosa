@@ -106,7 +106,7 @@ import type {
   GstSide,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart, depreciationRules } from "./tax-year.js";
-import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
+import { booksCountry, booksLocale, moneyPlaces, noSalesTax } from "./country.js";
 import { tellOnPage } from "./ui.js";
 
 /**
@@ -2123,6 +2123,34 @@ export function ledgerFromStart(): boolean {
   );
 }
 
+const EXCHANGE = /currency gains|exchange (gains|losses)|foreign exchange/i;
+
+/** Where gains and losses on documents in another currency go, where the chart has the account. */
+export function exchangeAccount(): { code: string; name: string } | undefined {
+  const account = state.chart.find((a) => EXCHANGE.test(a.name));
+  return account === undefined ? undefined : { code: account.code, name: account.name };
+}
+
+/** Add the currency gains and losses account to the chart, the first time a document needs it. */
+export async function ensureExchangeAccount(): Promise<void> {
+  if (exchangeAccount() !== undefined) return;
+  const taken = new Set(state.chart.map((a) => a.code));
+  const code = ["499", "498", "497", "496", "4990", "4991"].find((c) => !taken.has(c)) ?? `fx${Date.now().toString(36)}`;
+  const account: Account = {
+    code,
+    name: "Foreign Currency Gains and Losses",
+    type: "Overhead",
+    taxCode: noSalesTax() ? "" : "No GST",
+    description: "What the rate moved between a document in another currency being issued and being paid.",
+    gstTreatment: "out-of-scope",
+  };
+  const chart = [...state.chart, account];
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record("chart", `${account.name} added for documents in another currency`, null, account, `${account.code}|${account.name}`);
+}
+
 export function postedJournals(): PostedJournal[] {
   // Composition is in core, where the three rules that go expensively wrong --
   // a settled invoice not counting as a fresh sale, a transfer posting once
@@ -2141,6 +2169,7 @@ export function postedJournals(): PostedJournal[] {
     return { code: digits || account?.code || "", name: account?.name ?? name };
   };
 
+  const exchange = exchangeAccount();
   const posted = postLedger({
     transactions: engine.transactions,
     codeOf: engine.codeOf,
@@ -2160,6 +2189,7 @@ export function postedJournals(): PostedJournal[] {
     gstAccountFor: gstAccountForEntities(),
     ...(booksStartKnown() !== undefined ? { startDate: booksStartKnown()! } : {}),
     transfers: state.ledger.transfers ?? {},
+    ...(exchange !== undefined ? { exchangeAccount: exchange } : {}),
     // A property manager's statement posts as a journal of its own, derived
     // each time so an edited statement cannot leave its old journal behind.
     manualJournals: [...(state.ledger.manualJournals ?? []), ...agentStatementJournals()],

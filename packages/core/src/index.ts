@@ -348,6 +348,7 @@ export * from "./analytics.js";
 export * from "./jobs.js";
 export * from "./sub-accounts.js";
 export * from "./gnucash.js";
+export * from "./foreign-currency.js";
 export * from "./statement-csv.js";
 export * from "./chart-import.js";
 export * from "./items-csv.js";

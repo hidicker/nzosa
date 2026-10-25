@@ -1,3 +1,4 @@
+import { bookedTotal, foreignRate, inBooks } from "./foreign-currency.js";
 import type { CreditApplication } from "./invoices.js";
 import type { Cents } from "./money.js";
 import { daysBetween } from "./dates.js";
@@ -186,6 +187,10 @@ export function agedReport(options: {
     if (isCreditNote(doc)) {
       if (applied.has(doc.number)) continue;
       owing = (doc.broughtForward ?? doc.total) + (paid.get(doc.number) ?? 0) + (given.get(doc.number) ?? 0);
+    } else if (foreignRate(doc) !== null) {
+      // In another currency: owed at what it was booked at until a payment
+      // settles it, which it does in full (see foreign-currency.ts).
+      owing = (paid.get(doc.number) ?? 0) > 0 ? 0 : bookedTotal(doc) - inBooks(doc, credited.get(doc.number) ?? 0);
     } else {
       owing =
         (doc.broughtForward ?? doc.total) - (paid.get(doc.number) ?? 0) - (credited.get(doc.number) ?? 0) + (given.get(doc.number) ?? 0);

@@ -8,6 +8,7 @@ import {
   billEntities,
   billsAvailable,
   controlAccountFor,
+  ensureExchangeAccount,
   invoiceAssignments,
   invoiceBalanceMap,
   record,
@@ -440,6 +441,27 @@ export function renderInvoiceEditor(): void {
     reference,
     asBill ? "As it appears on the bill, so it can be found on their statement." : undefined,
   );
+
+  // Another currency: the document's amounts are in it, and the rate on the
+  // day says what they are worth in the books.
+  const currencyBox = text(draft.currency || booksCurrency(), booksCurrency());
+  currencyBox.maxLength = 3;
+  currencyBox.size = 4;
+  currencyBox.style.textTransform = "uppercase";
+  field("Currency", currencyBox, `The document's currency. ${booksCurrency()} unless it says otherwise.`);
+  const fxBox = text(draft.rate === undefined ? "" : String(draft.rate), "e.g. 1.6543");
+  fxBox.inputMode = "decimal";
+  const fxField = field(
+    "Rate",
+    fxBox,
+    `What one unit of its currency was worth in ${booksCurrency()} on the date it was issued. It is posted at this; a payment that settles it puts the difference to the currency gains and losses account.`,
+  );
+  const foreign = (): boolean => (currencyBox.value.trim().toUpperCase() || booksCurrency()) !== booksCurrency();
+  const showFx = (): void => {
+    fxField.hidden = !foreign();
+  };
+  currencyBox.addEventListener("input", showFx);
+  showFx();
 
   // Whose debt this is. Only the entities that keep bills are offered, and a
   // bill already belonging to another keeps it rather than losing it here.
@@ -917,7 +939,9 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, receipt: _receipt, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, receipt: _receipt, rate: _fx, ...rest } = draft;
+    const currencyValue = currencyBox.value.trim().toUpperCase() || booksCurrency();
+    const fxRate = foreign() ? Number(fxBox.value.trim()) : NaN;
     const noteValue = asBill ? "" : noteBox.value.trim();
     const receipt = !asBill && paidNow.checked && statusValue !== "Estimate";
     const linkValue = cleanDocumentLink(documentLink.value);
@@ -938,7 +962,8 @@ export function renderInvoiceEditor(): void {
       // Derived, never typed: an outstanding figure that disagreed with the
       // total less what was paid would quietly break every match proposal.
       outstanding: total - paidCents,
-      currency: draft.currency,
+      currency: currencyValue,
+      ...(Number.isFinite(fxRate) && fxRate > 0 ? { rate: fxRate } : {}),
       status: statusValue,
       lines,
       ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
@@ -1101,6 +1126,12 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     return;
   }
   if (!(await billReady(built))) return;
+  // Another currency needs its rate, or every figure would be posted as if it were the books'.
+  if (built.currency !== booksCurrency() && built.rate === undefined && isPosted(built)) {
+    await tellOnPage(`This ${noun} is in ${built.currency}. Give the rate: what one ${built.currency} was worth in ${booksCurrency()} on ${built.issued}.`);
+    return;
+  }
+  if (built.rate !== undefined) await ensureExchangeAccount();
   if (!(await creditLimitAllows(built, existing))) return;
   if (!(await accountsChosen(built))) return;
   const invoices = [...(state.ledger.invoices ?? [])];

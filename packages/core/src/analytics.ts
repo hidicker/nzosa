@@ -1,6 +1,7 @@
 import type { IsoDate } from "./dates.js";
 import type { InvoiceBalance } from "./invoices.js";
 import { isPosted } from "./invoices.js";
+import { inBooks } from "./foreign-currency.js";
 import type { Cents } from "./money.js";
 import type { RecurringInvoice } from "./recurring-invoices.js";
 import { addDays, occurrence } from "./recurring-invoices.js";
@@ -49,7 +50,8 @@ export function documentCashEvents(balances: Iterable<InvoiceBalance>, today: Is
     const sign = i.kind === "sales" ? 1 : -1;
     out.push({
       date: due < today ? today : due,
-      amount: (sign * b.remaining) as Cents,
+      // In the books' currency: a document in another is owed at its rate.
+      amount: (sign * inBooks(i, b.remaining)) as Cents,
       what: `${i.kind === "sales" ? "Invoice" : "Bill"} ${i.number}, ${i.contact}`,
       ...(due < today ? { overdue: true } : {}),
     });

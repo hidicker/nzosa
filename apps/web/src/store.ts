@@ -220,6 +220,8 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Time must be approved before it is invoiced. */
+  timeApproval?: boolean | undefined;
   /** Messages kept to print on invoices, one of them the default. */
   invoiceMessages?: InvoiceMessage[] | undefined;
   /** The person's own wording for invoice, statement and reminder emails, where they changed it. */

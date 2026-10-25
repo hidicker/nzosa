@@ -74,6 +74,8 @@ export type EventKind =
   | "billPayment"
   /** Saved invoice messages and email wording, whole. */
   | "wording"
+  /** Whether time needs approving before it is invoiced. */
+  | "timeApproval"
   /** Stock counts, whole. */
   | "stock"
   /** One account in the chart. `id` is its code and name. */
@@ -310,6 +312,10 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
+    case "timeApproval": {
+      const { timeApproval: _t, ...rest } = ledger;
+      return event.before === true ? { ...rest, timeApproval: true } : (rest as StoredLedger);
+    }
     case "wording": {
       const { invoiceMessages: _m, emailWording: _w, ...rest } = ledger;
       return { ...rest, ...((event.before ?? {}) as Pick<StoredLedger, "invoiceMessages" | "emailWording">) } as StoredLedger;
@@ -592,6 +598,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   aupayroll: "Payroll",
   billPayment: "Paying bills by bank file",
   wording: "Invoice messages and email wording",
+  timeApproval: "Time approval",
   stock: "Stock count",
   entities: "Entities",
   codingBatch: "Coding (batch)",

@@ -20,6 +20,49 @@ export interface TimeEntry {
   className?: string;
   /** The invoice it went on, once it has. */
   invoice?: string;
+  /** Who did the work, where the books keep more than one person's time. */
+  worker?: string;
+  /**
+   * Where the books ask for time to be approved before it is invoiced: sent
+   * in, approved, or sent back. No value is time kept before approval was
+   * asked for, which counts as approved, so turning approval on changes
+   * nothing already there.
+   */
+  approval?: "submitted" | "approved" | "rejected";
+  /** Who approved or sent it back. */
+  approvedBy?: string;
+  /** Why it was sent back. */
+  rejectedBecause?: string;
+}
+
+/** Whether an entry may go on an invoice: approved, or kept before approval was asked for. */
+export function timeApproved(entry: Pick<TimeEntry, "approval">): boolean {
+  return entry.approval === undefined || entry.approval === "approved";
+}
+
+/** Entries waiting to be approved, oldest first. */
+export function timeAwaitingApproval(entries: readonly TimeEntry[]): TimeEntry[] {
+  return entries.filter((e) => e.approval === "submitted").sort((a, b) => a.date.localeCompare(b.date));
+}
+
+/**
+ * An entry approved or sent back. Only one waiting can be decided, and one
+ * already on an invoice never is: approval is about what may be billed.
+ */
+export function decideTime(
+  entry: TimeEntry,
+  decision: "approved" | "rejected",
+  by: string,
+  because = "",
+): TimeEntry {
+  if (entry.approval !== "submitted" || entry.invoice !== undefined) return entry;
+  const { rejectedBecause: _old, ...rest } = entry;
+  return {
+    ...rest,
+    approval: decision,
+    ...(by.trim() !== "" ? { approvedBy: by.trim() } : {}),
+    ...(decision === "rejected" && because.trim() !== "" ? { rejectedBecause: because.trim() } : {}),
+  };
 }
 
 /** What an entry comes to, to the cent. */
@@ -31,7 +74,7 @@ export function timeValue(entry: Pick<TimeEntry, "hours" | "rate">): Cents {
 export function unbilledTime(entries: readonly TimeEntry[]): Map<string, TimeEntry[]> {
   const out = new Map<string, TimeEntry[]>();
   for (const entry of [...entries].sort((a, b) => a.date.localeCompare(b.date))) {
-    if (entry.nonBillable === true || entry.invoice !== undefined) continue;
+    if (entry.nonBillable === true || entry.invoice !== undefined || !timeApproved(entry)) continue;
     out.set(entry.customer, [...(out.get(entry.customer) ?? []), entry]);
   }
   return out;

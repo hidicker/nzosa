@@ -3,8 +3,17 @@ import { record } from "../books.js";
 import { booksCurrency, booksMoney, noSalesTax, gstPercent } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note, tellOnPage } from "../ui.js";
-import { findContact, nextInvoiceNumber, parseAmount, timeInvoiceLines, timeValue, unbilledTime } from "@nzosa/core";
+import { askOnPage, askTextOnPage, note, tellOnPage } from "../ui.js";
+import {
+  decideTime,
+  findContact,
+  nextInvoiceNumber,
+  parseAmount,
+  timeAwaitingApproval,
+  timeInvoiceLines,
+  timeValue,
+  unbilledTime,
+} from "@nzosa/core";
 import type { Invoice, TimeEntry } from "@nzosa/core";
 
 /**
@@ -154,6 +163,11 @@ function entryForm(body: HTMLElement): void {
   const description = document.createElement("input");
   description.type = "text";
   description.placeholder = "What was done";
+  // Whose time it is: the person signed in, unless said otherwise.
+  const worker = document.createElement("input");
+  worker.type = "text";
+  worker.value = state.who;
+  worker.placeholder = "Who did the work";
   // A class, where the books have them: the job or department the time is for.
   const classNames = state.ledger.classes?.names ?? [];
   const klass = document.createElement("select");
@@ -192,6 +206,9 @@ function entryForm(body: HTMLElement): void {
         description: description.value.trim(),
         ...(klass.value !== "" ? { className: klass.value } : {}),
         ...(billable.checked ? {} : { nonBillable: true }),
+        ...(worker.value.trim() !== "" ? { worker: worker.value.trim() } : {}),
+        // Billable time waits to be approved where the books ask for that.
+        ...(state.ledger.timeApproval === true && billable.checked ? { approval: "submitted" as const } : {}),
       };
       void keep([...held(), entry], `${hoursSaid(entry.hours)} h for ${who}`);
     }
@@ -206,6 +223,7 @@ function entryForm(body: HTMLElement): void {
     label("Hours", hours),
     label("Rate per hour", rate),
     label("Description", description),
+    label("Who", worker),
     ...(classNames.length > 0 ? [label("Class", klass)] : []),
     billableLabel,
     problem,
@@ -214,10 +232,103 @@ function entryForm(body: HTMLElement): void {
   body.append(box);
 }
 
+/** The setting, and the time waiting for somebody to approve it. */
+function approvalSection(body: HTMLElement): void {
+  const on = state.ledger.timeApproval === true;
+  const tick = document.createElement("input");
+  tick.type = "checkbox";
+  tick.checked = on;
+  tick.addEventListener("change", async () => {
+    const before = state.ledger.timeApproval === true;
+    const { timeApproval: _t, ...rest } = state.ledger;
+    state.ledger = tick.checked ? { ...rest, timeApproval: true } : rest;
+    state.persistent = await savePart(state.ledger);
+    await record("timeApproval", tick.checked ? "Time now needs approving before it is invoiced" : "Time no longer needs approving", before, tick.checked);
+    redraw("time");
+  });
+  const label = document.createElement("label");
+  label.append(tick, " Time needs approving before it is invoiced");
+  body.append(label);
+
+  const waiting = timeAwaitingApproval(held());
+  if (waiting.length === 0) return;
+  const title = document.createElement("h3");
+  title.textContent = `Waiting for approval (${waiting.length})`;
+  body.append(title);
+  const table = document.createElement("table");
+  table.className = "report-table owner-table";
+  table.innerHTML = "<thead><tr><th>Date</th><th>Who</th><th>Customer</th><th>Description</th><th>Hours</th><th>Value</th><th></th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  const decide = async (entry: TimeEntry, decision: "approved" | "rejected"): Promise<void> => {
+    let because = "";
+    if (decision === "rejected") {
+      const said = await askTextOnPage(`Send back ${hoursSaid(entry.hours)} h for ${entry.customer} on ${entry.date}? Say why:`, "");
+      if (said === null) return;
+      because = said;
+    }
+    const next = held().map((e) => (e.id === entry.id ? decideTime(e, decision, state.who, because) : e));
+    await keep(next, `${decision === "approved" ? "Approved" : "Sent back"} ${hoursSaid(entry.hours)} h for ${entry.customer} on ${entry.date}`);
+  };
+  for (const entry of waiting) {
+    const tr = document.createElement("tr");
+    for (const [text, cls] of [
+      [entry.date, "report-name"],
+      [entry.worker ?? "", "report-name"],
+      [entry.customer, "report-name"],
+      [entry.description, "report-name"],
+      [hoursSaid(entry.hours), "report-amount"],
+      [booksMoney(timeValue(entry)), "report-amount"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    const cell = document.createElement("td");
+    const approve = document.createElement("button");
+    approve.type = "button";
+    approve.className = "small primary";
+    approve.textContent = "Approve";
+    approve.addEventListener("click", () => void decide(entry, "approved"));
+    const back = document.createElement("button");
+    back.type = "button";
+    back.className = "small";
+    back.textContent = "Send back";
+    back.addEventListener("click", () => void decide(entry, "rejected"));
+    cell.append(approve, back);
+    tr.append(cell);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(table);
+  if (waiting.length > 1) {
+    const all = document.createElement("button");
+    all.type = "button";
+    all.textContent = `Approve all ${waiting.length}`;
+    all.addEventListener("click", async () => {
+      if (!(await askOnPage(`Approve all ${waiting.length} entries waiting?`, "Approve them"))) return;
+      const ids = new Set(waiting.map((e) => e.id));
+      await keep(held().map((e) => (ids.has(e.id) ? decideTime(e, "approved", state.who) : e)), `Approved ${waiting.length} time entries`);
+    });
+    body.append(all);
+  }
+}
+
+/** Where an entry stands, in the list of all time. */
+function standing(entry: TimeEntry): string {
+  if (entry.invoice !== undefined) return entry.invoice;
+  if (entry.nonBillable === true) return "Not billable";
+  if (entry.approval === "submitted") return "Waiting for approval";
+  if (entry.approval === "rejected") return `Sent back${entry.rejectedBecause ? `: ${entry.rejectedBecause}` : ""}`;
+  if (entry.approval === "approved") return `Approved${entry.approvedBy ? ` by ${entry.approvedBy}` : ""}`;
+  return "";
+}
+
 export function renderTime(): void {
   const body = $("time-body");
   body.textContent = "";
   entryForm(body);
+  approvalSection(body);
   const all = held();
   if (all.length === 0) {
     body.append(note("No time yet."));
@@ -276,11 +387,11 @@ export function renderTime(): void {
     for (const [text, cls] of [
       [entry.date, "report-name"],
       [entry.customer, "report-name"],
-      [entry.description + (entry.className !== undefined ? ` · ${entry.className}` : ""), "report-name"],
+      [entry.description + (entry.className !== undefined ? ` · ${entry.className}` : "") + (entry.worker !== undefined ? ` · ${entry.worker}` : ""), "report-name"],
       [hoursSaid(entry.hours), "report-amount"],
       [booksMoney(entry.rate), "report-amount"],
       [booksMoney(timeValue(entry)), "report-amount"],
-      [entry.invoice ?? (entry.nonBillable === true ? "Not billable" : ""), "report-name"],
+      [standing(entry), "report-name"],
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;
@@ -300,6 +411,22 @@ export function renderTime(): void {
         );
       });
       cell.append(remove);
+      // Sent back: fixed by deleting and adding again, or sent again as it is.
+      if (entry.approval === "rejected") {
+        const again = document.createElement("button");
+        again.type = "button";
+        again.className = "small";
+        again.textContent = "Send again";
+        again.addEventListener("click", () => {
+          const next = held().map((e) => {
+            if (e.id !== entry.id) return e;
+            const { rejectedBecause: _r, approvedBy: _a, ...rest } = e;
+            return { ...rest, approval: "submitted" as const };
+          });
+          void keep(next, `Sent ${hoursSaid(entry.hours)} h for ${entry.customer} again for approval`);
+        });
+        cell.append(again);
+      }
     }
     tr.append(cell);
     tbody.append(tr);

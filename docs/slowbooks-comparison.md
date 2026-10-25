@@ -90,7 +90,7 @@ United States books only), or **No** (with why).
 | **Jobs** belonging to a customer, job on invoice and bill lines, **job profitability** and **P&L by job** | Partly: classes stand in for jobs | Yes |
 | Cost codes, committed cost, job budget vs actual, burden rates | No | Later: for builders and trades, after jobs |
 | Time entries, invoiced by customer | Has | — |
-| **Time approval** (submit, approve, reject) | No | Yes |
+| Time approval (submit, approve, reject) | Has: an optional setting; time waits, is approved or sent back with a reason, and only approved time is invoiced | — |
 | QuickBooks Desktop timesheets imported | No | US |
 
 ## Accounting and reports
@@ -198,7 +198,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 18. ~~A bill line as an amount alone~~: already so; the comparison had it wrong.
 19. ~~Quantities and prices to four decimal places~~: done 25 October 2026.
 20. ~~Quotes offered in New Zealand~~: done 25 October 2026.
-21. Time approval (S).
+21. ~~Time approval~~: done 25 October 2026.
 22. Reconcile: lines through a date, and the statement balance corrected in place (S).
 23. Every completed reconciliation listed (S).
 24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).

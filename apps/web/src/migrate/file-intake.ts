@@ -319,6 +319,7 @@ async function loadEach(
           continue;
         }
         case "slowbooks-ledger":
+        case "gnucash":
         case "quickbooks-desktop-detail":
         case "quickbooks-export":
         case "quickbooks-iif": {

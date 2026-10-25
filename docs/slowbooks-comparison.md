@@ -154,7 +154,7 @@ United States books only), or **No** (with why).
 | QuickBooks Online's Export data zip | Has | — |
 | Xero | Has, checked against Xero's own reports | — |
 | **MYOB** | No | Yes: MYOB is the other big name in New Zealand and Australia |
-| **Sage 50, Wave, Zoho Books, GnuCash** | No | Yes, smaller |
+| **Sage 50, Wave, Zoho Books, GnuCash** | Has: GnuCash's own book (.gnucash, or its XML). Sage 50, Wave and Zoho Books not yet | Yes, smaller: the other three, once there are sample files |
 | A categorised bank sheet (Transaction Pro layout: bank account, date, payee, account, amount) | No | Yes |
 | Chart from CSV or hledger, with a dry run | Has: Bring in accounts on the chart, shown as what would be added and updated before anything changes; nothing is removed | — |
 | IIF export back to QuickBooks Desktop | No | US |
@@ -223,7 +223,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 37. Receipt scanning in the page, without AI (L).
 38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
 39. Online payment links (L; which provider, and keys held online).
-40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
+40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each). ~~GnuCash~~ done 25 October 2026. The rest wait on sample files, as MYOB does: their export layouts are not published in enough detail to read them blind.
 41. ~~Chart import from CSV or hledger with a dry run~~: done 25 October 2026.
 42. ~~New Zealand deduction notices on pay runs~~: done 25 October 2026. Child support keeps its 60% protection; other notices' protected earnings rates are for the person to check, and the editor says so.
 43. ~~A year's giving statement per donor~~: done 25 October 2026, one donor's or every donor's, one to a page.

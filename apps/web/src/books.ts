@@ -1954,6 +1954,11 @@ export function reportEngine(): CodingEngine | null {
  * to. The sheet is turned into the text the reader already understands.
  */
 export async function asCsvText(name: string, bytes: Uint8Array): Promise<string> {
+  // Gzipped, as a GnuCash book is saved: unpacked by the browser, then read as text.
+  if (bytes[0] === 0x1f && bytes[1] === 0x8b && typeof DecompressionStream !== "undefined") {
+    const unpacked = new Response(new Blob([bytes as unknown as BlobPart]).stream().pipeThrough(new DecompressionStream("gzip")));
+    return asCsvText(name.replace(/\.gz$/i, ""), new Uint8Array(await unpacked.arrayBuffer()));
+  }
   // The old Excel format: QuickBooks Online exports its lists in it.
   if (isXls(bytes)) {
     const sheet = readXls(bytes).sheets[0];

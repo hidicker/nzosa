@@ -1,4 +1,4 @@
-import { applyDueDates, isIif, isQuickBooksExportJournal, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
+import { applyDueDates, isGnuCashXml, parseGnuCashBooks, isIif, isQuickBooksExportJournal, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, hasCoding, postedJournals, reconcileRows, record, reclassify, saveManualJournals } from "../books.js";
 import { booksCountry, booksCurrency, booksMoney } from "../country.js";
@@ -28,9 +28,10 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const options = { dayFirst: booksCountry().dayFirst, currency: booksCurrency(), file: file.name };
 
   const slowBooks = isSlowBooksLedger(text);
+  const gnucash = isGnuCashXml(text);
   const desktop = isQuickBooksDesktopDetail(text);
   const exported = isQuickBooksExportJournal(text);
-  const iif = isIif(text) || slowBooks || desktop || exported;
+  const iif = isIif(text) || slowBooks || desktop || exported || gnucash;
   if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
@@ -45,7 +46,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const fromIif = exported
     ? readQuickBooksExport({ name: file.name, text }, state.chart, { currency: booksCurrency(), dayFirst: booksCountry().dayFirst })
     : iif
-    ? (slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : parseIifBooks)(text, chart, {
+    ? (slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : gnucash ? parseGnuCashBooks : parseIifBooks)(text, chart, {
         currency: booksCurrency(),
         file: file.name,
       })
@@ -55,7 +56,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: exported ? "quickbooks-export" : slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
+      importer: exported ? "quickbooks-export" : slowBooks ? "slowbooks-ledger" : gnucash ? "gnucash" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });
@@ -186,9 +187,10 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   // Journals, replacing the last drop's rather than adding to them.
   let journalCount = 0;
   if (books.journals.length > 0) {
-    const keep = (state.ledger.manualJournals ?? []).filter((j) => j.source !== SOURCE);
+    const source = gnucash ? "GnuCash" : SOURCE;
+    const keep = (state.ledger.manualJournals ?? []).filter((j) => j.source !== source);
     const made: ManualJournal[] = books.journals.map((j, i) => ({
-      id: `qb${i + 1}`,
+      id: `${gnucash ? "gnc" : "qb"}${i + 1}`,
       date: j.date,
       narration: j.narration,
       lines: j.lines.map((l) => ({
@@ -196,7 +198,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
         amount: l.amount,
         ...(l.description !== undefined ? { description: l.description } : {}),
       })),
-      source: SOURCE,
+      source,
     }));
     journalCount = made.length;
     await saveManualJournals([...keep, ...made], `${journalCount} journals from ${file.name}`);

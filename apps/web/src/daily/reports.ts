@@ -1,3 +1,4 @@
+import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
 import { periodSaid, spreadsheetCell } from "@nzosa/core";
@@ -3891,6 +3892,9 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "salescustomer" || kind === "salesitem") {
+    return "The sales invoices dated in the period, added up by customer or by item, credit notes taken off. Choose a month, a quarter or any dates beside the year.";
+  }
   if (kind === "agedpayables" || kind === "agedreceivables") {
     return (
       "What was owing on the day chosen, aged by due date. Payments made after that day still count " +
@@ -4137,7 +4141,9 @@ export function renderReportsPage(): void {
   // suggestion. Not held back: the figures are more useful with the likely
   // answer in them than without it, as long as nobody mistakes them for final.
   const entryPage = kind === "manual" || kind === "agents" || kind === "yearend";
-  if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage) {
+  // The sales reports read invoices, not coded bank lines: a note about unconfirmed coding is not theirs.
+  const fromInvoices = kind === "salescustomer" || kind === "salesitem";
+  if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage && !fromInvoices) {
     const provisional = provisionalNote(chosenYearNow);
     if (provisional) body.append(provisional);
   }
@@ -4151,6 +4157,12 @@ export function renderReportsPage(): void {
   if (kind === "cashflow") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderCashFlow(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "salescustomer" || kind === "salesitem") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderSalesReport(body, kind, chosenYearNow);
     return;
   }
 
@@ -4915,6 +4927,16 @@ export function downloadReport(): void {
     },
     agedreceivables: () => {
       const csv = agedCsv("sales", year ?? new Date().getFullYear());
+      download(csv.text, csv.name, "text/csv");
+    },
+    salescustomer: () => {
+      const csv = year === undefined ? null : salesCsv("salescustomer", year);
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
+    salesitem: () => {
+      const csv = year === undefined ? null : salesCsv("salesitem", year);
+      if (csv === null) return nothingToDownload();
       download(csv.text, csv.name, "text/csv");
     },
     bankreconcile: () => {

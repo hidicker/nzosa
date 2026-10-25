@@ -483,3 +483,4 @@ export * from "./simplefin.js";
 export * from "./payslip.js";
 export * from "./payment-files.js";
 export * from "./wording.js";
+export * from "./sales-analysis.js";

@@ -16,6 +16,8 @@ export const REPORT_DOWNLOADS = {
   depreciation: "Depreciation schedule",
   agedpayables: "Aged payables",
   agedreceivables: "Aged receivables",
+  salescustomer: "Sales by customer",
+  salesitem: "Sales by item",
   bankreconcile: "Bank reconciliation",
   gstreturn: "GST return",
   rentals: "Rental schedules",

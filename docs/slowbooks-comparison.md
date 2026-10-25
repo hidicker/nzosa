@@ -111,7 +111,7 @@ United States books only), or **No** (with why).
 | **Saved reports** with their own addresses; Back returns to them | Partly: favourite reports | Yes |
 | Every report row drills down; the drill-down saves as CSV and PDF | Has | — |
 | Profit and loss, balance sheet, trial balance, general ledger, cash flow, agings | Has | — |
-| **Income by customer**, and sales by item | No | Yes |
+| Income by customer, and sales by item | Has: Sales by customer and Sales by item, for any period, with CSV | — |
 | **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Partly: the Charts report | Yes |
 | AI: an insights brief, eleven one-click analyses, any of eight providers | Partly: AI suggestions, the AI check, and a conversation with tools | Yes: one-click analyses |
 | Global search across customers, vendors, items, invoices and payments | Partly: Ctrl+K finds pages | Yes |
@@ -192,7 +192,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 12. ~~Editable email wording~~: done 25 October 2026.
 13. ~~Overdue customers' statements~~: done 25 October 2026, one message each, since a mail program opens one at a time.
 14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
-15. Income by customer, and sales by item (S).
+15. ~~Income by customer, and sales by item~~: done 25 October 2026.
 16. Vendor page with paid this year and all time (S).
 17. A duplicate-name warning when a contact is added (S).
 18. A bill line as an amount alone (S).

@@ -64,6 +64,7 @@ import { anyModuleOn, applyModules, moduleOn, modulesHere, modulesPanel } from "
 import { booksStartDate, chosenStartDate, onboarding, rememberSource, sourceForTheseBooks } from "./onboarding-state.js";
 import { xeroAgentPrompt } from "./xero-agent-prompt.js";
 import { booksLocale, moneyPlaces } from "../country.js";
+import { shipped } from "../shipped.js";
 
 /**
  * Setting a set of books up, and the steps that say what is left to do.
@@ -242,7 +243,7 @@ export async function loadStartupFiles(folder = "data", replace = false): Promis
   const entries = startupFiles();
   const asked = entries.map((entry) =>
     // `replace` is for a deliberate load, where the point is to overwrite.
-    !replace && entry.have()
+    (!replace && entry.have()) || !shipped(`${folder}/${entry.file}`)
       ? null
       : fetch(`${folder}/${entry.file}`, { cache: "no-cache" }).catch(() => null),
   );

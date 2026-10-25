@@ -76,6 +76,8 @@ export function lastFeedStatus(): FeedStatus | null {
 }
 
 export async function feedStatus(): Promise<FeedStatus | null> {
+  // Books in a browser have no feed, and nobody to ask.
+  if (!feedPossible()) return null;
   try {
     const res = feedIsHosted() ? await there<FeedStatus>("status") : await here<FeedStatus>("");
     heldFeedStatus = res;

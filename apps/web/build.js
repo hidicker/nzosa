@@ -1,5 +1,5 @@
 import { build } from "esbuild";
-import { cpSync, mkdirSync, rmSync } from "node:fs";
+import { cpSync, mkdirSync, readdirSync, rmSync } from "node:fs";
 import { spawn } from "node:child_process";
 import { fileURLToPath } from "node:url";
 import { dirname, join, resolve } from "node:path";
@@ -82,12 +82,29 @@ cpSync(join(root, "..", "..", "NOTICE"), join(outdir, "NOTICE.txt"));
 // Which edition this is. "nz" is NZOSA as it ships; "international" also lets
 // a set of books be kept in another country (Setup, the country choice). Set
 // with --edition international, or NZOSA_EDITION.
+/** Every file under a folder, as paths from the app ("demo/au/bank.csv"). */
+function shippedFiles(folder, prefix) {
+  try {
+    return readdirSync(folder, { recursive: true, withFileTypes: true })
+      .filter((entry) => entry.isFile())
+      .map((entry) => `${prefix}/${join(entry.parentPath ?? entry.path, entry.name).slice(folder.length + 1).replace(/\\/g, "/")}`);
+  } catch {
+    return [];
+  }
+}
+
 const editionArg = process.argv.indexOf("--edition");
 const edition = editionArg >= 0 ? process.argv[editionArg + 1] : (process.env.NZOSA_EDITION ?? "nz");
 
 const options = {
   entryPoints: [join(root, "src/main.ts")],
-  define: { __NZOSA_EDITION__: JSON.stringify(edition) },
+  define: {
+    __NZOSA_EDITION__: JSON.stringify(edition),
+    // The seed files this build ships (shipped.ts): the demo's, and no data/,
+    // which is never copied. Not listed for a development server, whose
+    // folder can change while it runs.
+    __SHIPPED_FILES__: JSON.stringify(serve ? null : shippedFiles(join(root, "public", "demo"), "demo")),
+  },
   bundle: true,
   format: "esm",
   target: ["es2022"],

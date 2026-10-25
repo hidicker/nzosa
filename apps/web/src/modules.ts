@@ -85,9 +85,13 @@ export const MODULES: readonly ModuleInfo[] = [
     name: "Customers & vendors",
     what: "Who the books deal with: addresses, terms and credit limits, statements, reminders and late fees.",
     basis: "data",
-    // On for businesses outside New Zealand, where it came first; asked for in New Zealand.
+    // On for businesses outside New Zealand, where it came first; asked for in
+    // New Zealand -- unless the books already raise invoices, which have
+    // customers whether or not anybody has listed them.
     inferred: () =>
-      (state.ledger.contacts ?? []).length > 0 || (booksCountry().id !== "nz" && businesses().length > 0),
+      (state.ledger.contacts ?? []).length > 0 ||
+      (state.ledger.invoices ?? []).length > 0 ||
+      (booksCountry().id !== "nz" && businesses().length > 0),
     holds: () => count((state.ledger.contacts ?? []).length, "customer or vendor", "customers and vendors"),
     opens: "contacts",
   },

@@ -1,5 +1,5 @@
 import type { Cents, Entity, Ir3Return, OwnerRentalSchedule, TaxExtra } from "@nzosa/core";
-import { emptyEntityModel } from "@nzosa/core";
+import { emptyEntityModel, returnFingerprint } from "@nzosa/core";
 import { ledgerName } from "../store.js";
 import { state } from "../state.js";
 import { booksLocale, moneyPlaces } from "../country.js";
@@ -19,6 +19,16 @@ import { taxYearEndSaid, taxYearStartSaid } from "../tax-year.js";
  * Every figure comes from `ir3Return` and what was entered for the year, so
  * this draws and adds nothing up of its own beyond the totals of its tables.
  */
+
+/** The fingerprint of an IR3's boxes, as printed in the pack and shown beside the IR3 in the books. */
+export function ir3Fingerprint(owner: string, year: number, boxes: readonly { box: string; amount?: number; text?: string }[]): string {
+  return returnFingerprint(
+    "IR3",
+    { from: String(year - 1), to: String(year) },
+    boxes.map((b) => ({ box: b.box, amount: b.text !== undefined ? b.text : (b.amount ?? 0) })),
+    owner,
+  );
+}
 
 function esc(text: string): string {
   return text.replace(/[&<>"]/g, (c) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;" })[c] ?? c);
@@ -294,7 +304,9 @@ export function ir3PackHtml(
           )
           .join("") +
         "</tbody></table>" +
-        (result.notes.length > 0 ? `<h3>Notes</h3><ul>${result.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""),
+        (result.notes.length > 0 ? `<h3>Notes</h3><ul>${result.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : "") +
+        `<p class="note">Fingerprint of these figures: <strong>${esc(ir3Fingerprint(owner, year, result.boxes))}</strong>. ` +
+        "The IR3 page in the books shows the fingerprint of the figures as they are now; if it differs from this one, a figure has changed since this was printed.</p>",
     ),
   );
 

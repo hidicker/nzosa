@@ -4,7 +4,7 @@ import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
-import { balanceSheetCsv, createZip, encodeUtf8, periodSaid, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
+import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, periodSaid, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -43,6 +43,7 @@ import { savePart } from "../store.js";
 import { amountCell, askOnPage, download as saveFile, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
 import { downloadBytes, downloadExcelReport } from "./excel-export.js";
 import { historyCsv } from "./history.js";
+import { ir3Fingerprint } from "./ir3-pack.js";
 import { lockedChangesCsv } from "./lock-dates.js";
 import { reconciliationsCsv } from "./statements-page.js";
 import { getReconcileAccounts, setActiveReconcileAccount } from "./bank-reconcile-report.js";
@@ -2587,6 +2588,7 @@ function renderGstReturn(body: HTMLElement, year: number): void {
   } else {
     renderGstBoxes(body, result, money);
   }
+  body.append(fingerprintCheck("GST return", gstReturnFingerprint(result, entity?.name ?? "")));
 
   // --- filing ---
   if (filed === undefined && result.period.to < today) {
@@ -2625,6 +2627,36 @@ function renderGstReturn(body: HTMLElement, year: number): void {
       ),
     );
   }
+}
+
+/**
+ * A return's fingerprint, as printed on it, and a box to check a printed copy
+ * against the books as they are now.
+ */
+function fingerprintCheck(what: string, fingerprint: string): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "fingerprint";
+  const said = document.createElement("p");
+  said.className = "page-hint";
+  said.textContent = `Fingerprint of these figures: ${fingerprint}. It is printed on the ${what} and its download; a copy whose fingerprint differs has a figure that is not what the books say now.`;
+  const typed = document.createElement("input");
+  typed.type = "text";
+  typed.placeholder = "Check a printed fingerprint";
+  typed.size = 22;
+  typed.setAttribute("aria-label", `Check a printed ${what} fingerprint`);
+  const answer = document.createElement("span");
+  typed.addEventListener("input", () => {
+    const tidy = typed.value.replace(/[^0-9a-f]/gi, "");
+    answer.textContent =
+      tidy.length < 16
+        ? ""
+        : sameFingerprint(typed.value, fingerprint)
+          ? " Matches: the copy shows the figures the books give now."
+          : " Does not match: a figure on the copy, or in the books since it was printed, is different.";
+    answer.className = tidy.length < 16 ? "" : sameFingerprint(typed.value, fingerprint) ? "journal-balanced" : "journal-out";
+  });
+  box.append(said, typed, answer);
+  return box;
 }
 
 function renderGstBoxes(body: HTMLElement, result: GstReturnResult, money: (cents: Cents) => string): void {
@@ -3174,6 +3206,7 @@ function renderIr3(body: HTMLElement, owner: string, year: number): void {
   }
   table.append(tbody);
   body.append(table);
+  body.append(fingerprintCheck("IR3 pack", ir3Fingerprint(owner, year, result.boxes)));
 
   // This year's provisional tax: set by last year's residual income tax, which
   // last year's filed return gives where it is held.
@@ -5066,7 +5099,7 @@ export function downloadReport(): void {
       const chosen = chosenGstReturn(year);
       if (chosen === undefined) return;
       download(
-        formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`),
+        formatGstReturn(chosen, `${reportingEntity()?.name ?? "GST"} — GST return`, gstReturnFingerprint(chosen, reportingEntity()?.name ?? "")),
         `gst-return-${chosen.period.to}.csv`,
         "text/csv",
       );

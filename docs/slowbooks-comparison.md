@@ -120,7 +120,7 @@ United States books only), or **No** (with why).
 | Users and roles; an Accountant role; invite with an end date; last sign-in shown | Has, for books online: an end date on an invitation or a member, enforced by the database, and each person's last sign-in | — |
 | CSV import and export of customers, vendors, items, the chart | Has: items and the chart with a dry run, as well as customers and vendors | — |
 | A documented API with tokens, read and write | Partly: an MCP server, read only | Later, with a decision on writing |
-| Tamper-evident hash on printed tax forms | No | Yes (small) |
+| Tamper-evident hash on printed tax forms | Has: a fingerprint of the figures on the GST return (page and download) and the IR3 pack, with a box to check a printed one against the books | — |
 | Company file encryption, an accountant's copy file | No | No: books online are protected by the server; a folder is the person's own |
 | Dark theme, a sidebar trimmed to what is used | Has (themes, modules) | — |
 
@@ -228,6 +228,6 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 42. New Zealand deduction notices on pay runs (M).
 43. ~~A year's giving statement per donor~~: done 25 October 2026, one donor's or every donor's, one to a page.
 44. ~~Items and the chart exported and imported as CSV~~: done 25 October 2026, each with the same dry run.
-45. A hash on printed returns, to show they are unchanged (S).
+45. ~~A hash on printed returns, to show they are unchanged~~: done 25 October 2026 for the GST return and the IR3 pack.
 
 **Not taking**, and why: printed cheques and deposit slips (cheques are all but gone here), undeposited funds, United States payroll for every state and its forms, Form 990 reports, reseller permits, the employee portal, company file encryption and the accountant's copy file (books online are protected by the server; a folder is the person's own), and QuickBooks 2003's look.

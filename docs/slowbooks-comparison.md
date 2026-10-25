@@ -156,7 +156,7 @@ United States books only), or **No** (with why).
 | **MYOB** | No | Yes: MYOB is the other big name in New Zealand and Australia |
 | **Sage 50, Wave, Zoho Books, GnuCash** | No | Yes, smaller |
 | A categorised bank sheet (Transaction Pro layout: bank account, date, payee, account, amount) | No | Yes |
-| Chart from CSV or hledger, with a dry run | Partly | Yes |
+| Chart from CSV or hledger, with a dry run | Has: Bring in accounts on the chart, shown as what would be added and updated before anything changes; nothing is removed | — |
 | IIF export back to QuickBooks Desktop | No | US |
 
 ## What NZOSA has that SlowBooks does not
@@ -224,10 +224,10 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
 39. Online payment links (L; which provider, and keys held online).
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
-41. Chart import from CSV or hledger with a dry run (S).
+41. ~~Chart import from CSV or hledger with a dry run~~: done 25 October 2026.
 42. New Zealand deduction notices on pay runs (M).
 43. A year's giving statement per donor (S).
-44. Items and the chart exported and imported as CSV (S).
+44. ~~Items and the chart exported and imported as CSV~~: done 25 October 2026, each with the same dry run.
 45. A hash on printed returns, to show they are unchanged (S).
 
 **Not taking**, and why: printed cheques and deposit slips (cheques are all but gone here), undeposited funds, United States payroll for every state and its forms, Form 990 reports, reseller permits, the employee portal, company file encryption and the accountant's copy file (books online are protected by the server; a folder is the person's own), and QuickBooks 2003's look.

@@ -343,6 +343,8 @@ export * from "./variance.js";
 export * from "./xlsx.js";
 export * from "./zip.js";
 export * from "./statement-csv.js";
+export * from "./chart-import.js";
+export * from "./items-csv.js";
 export * from "./akahu.js";
 export * from "./filed-returns.js";
 export * from "./coding-check.js";

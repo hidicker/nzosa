@@ -1,4 +1,5 @@
 import { moduleOn } from "../modules.js";
+import { chartFileTools } from "./chart-file.js";
 import { bankWithId } from "./balance-sheet-label.js";
 import { redraw, showPage } from "../app.js";
 import {
@@ -1144,6 +1145,7 @@ export function renderEntities(): void {
   }
 
 
+  body.append(chartFileTools());
   if (accountRows.length === 0) {
     body.append(addAccountForm(model, accountRows));
     return;

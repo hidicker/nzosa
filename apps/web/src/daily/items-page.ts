@@ -4,12 +4,104 @@ import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { download, note } from "../ui.js";
-import { itemKey, parseAmount, spreadsheetCell, stockAdjustment, stockValuation, stockValue } from "@nzosa/core";
-import type { Item, StockCount, StockMovement } from "@nzosa/core";
+import { applyItemPlan, formatItemsCsv, itemImportPlan, itemKey, parseAmount, parseItemsCsv, spreadsheetCell, stockAdjustment, stockValuation, stockValue } from "@nzosa/core";
+import type { Item, ItemImportPlan, StockCount, StockMovement } from "@nzosa/core";
 
 /** Products and services: a price list that fills in an invoice line from a name. */
 
 let editing: string | null = null;
+
+/** A file of items read and not yet applied: what it would do. */
+let pendingFile: { file: string; plan: ItemImportPlan; problems: string[] } | null = null;
+
+/** Download and bring in the list as CSV, with what a file would do shown before it is applied. */
+function itemFileTools(): HTMLElement {
+  const wrap = document.createElement("div");
+  const actions = document.createElement("div");
+  actions.className = "migration-actions";
+  const save = document.createElement("button");
+  save.type = "button";
+  save.textContent = "Download the list (CSV)";
+  save.disabled = held().length === 0;
+  save.addEventListener("click", () => download(formatItemsCsv(held()), `products-and-services-${new Date().toLocaleDateString("en-CA")}.csv`, "text/csv"));
+  const input = document.createElement("input");
+  input.type = "file";
+  input.hidden = true;
+  input.accept = ".csv,text/csv";
+  input.addEventListener("change", () => {
+    const file = input.files?.[0];
+    if (file === undefined) return;
+    void file.text().then((text) => {
+      const read = parseItemsCsv(text, booksCurrency());
+      pendingFile = { file: file.name, plan: itemImportPlan(held(), read.items), problems: read.problems };
+      redraw("items");
+    });
+  });
+  const bring = document.createElement("button");
+  bring.type = "button";
+  bring.textContent = "Bring in from CSV…";
+  bring.title = "Columns: Name, Kind, Description, Price, Account, Unit cost, Reorder point, Taxable, Active. Matched by name; shown first.";
+  bring.addEventListener("click", () => input.click());
+  actions.append(save, bring, input);
+  wrap.append(actions);
+  if (pendingFile === null) return wrap;
+
+  const { file, plan, problems } = pendingFile;
+  const box = document.createElement("div");
+  box.className = "invoice-editor";
+  const h = document.createElement("h4");
+  h.textContent = `What ${file} would do`;
+  box.append(h);
+  const nothing = plan.add.length === 0 && plan.change.length === 0;
+  box.append(
+    note(
+      nothing
+        ? `Nothing to change${plan.unchanged > 0 ? `: ${plan.unchanged} already as the file has them` : ""}.`
+        : `${plan.add.length} to add, ${plan.change.length} to update, ${plan.unchanged} already the same. Nothing is removed.`,
+    ),
+  );
+  const list = (title: string, rows: string[]): void => {
+    if (rows.length === 0) return;
+    const head = document.createElement("h4");
+    head.textContent = `${title} (${rows.length})`;
+    const ul = document.createElement("ul");
+    for (const r of rows.slice(0, 200)) {
+      const li = document.createElement("li");
+      li.textContent = r;
+      ul.append(li);
+    }
+    box.append(head, ul);
+  };
+  list("Added", plan.add.map((i) => `${i.name}${i.price === undefined ? "" : ` · ${booksMoney(i.price)}`}${i.kind === "product" ? " · product" : ""}`));
+  list("Updated", plan.change.map((c) => `${c.before.name}: ${c.fields.join(", ")}`));
+  list("Not brought in", [...problems, ...plan.problems]);
+  const buttons = document.createElement("div");
+  buttons.className = "migration-actions";
+  if (!nothing) {
+    const go = document.createElement("button");
+    go.type = "button";
+    go.className = "primary";
+    go.textContent = "Apply these changes";
+    go.addEventListener("click", () => {
+      const stamp = Date.now().toString(36);
+      const next = applyItemPlan(held(), plan, (n) => `item-${stamp}-${n}`);
+      pendingFile = null;
+      void keep(next, `Products and services from ${file}: ${plan.add.length} added, ${plan.change.length} updated`);
+    });
+    buttons.append(go);
+  }
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = nothing ? "Close" : "Leave the list as it is";
+  cancel.addEventListener("click", () => {
+    pendingFile = null;
+    redraw("items");
+  });
+  buttons.append(cancel);
+  box.append(buttons);
+  wrap.append(box);
+  return wrap;
+}
 
 const held = (): Item[] => state.ledger.items ?? [];
 
@@ -163,7 +255,7 @@ export function renderItems(): void {
     editing = "new";
     redraw("items");
   });
-  body.append(add);
+  body.append(add, itemFileTools());
   if (editing === "new") body.append(form(null));
   if (held().length === 0 && editing !== "new") {
     body.append(note("No products or services yet."));

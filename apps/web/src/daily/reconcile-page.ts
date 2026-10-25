@@ -1,4 +1,5 @@
 import { changesByLine } from "../events.js";
+import { afterNextFrame } from "../busy.js";
 import { xeroSettles } from "../migrate/coding-reconciliation.js";
 import { booksCountry, booksLocale, noSalesTax, gstPercent, taxTypeLabel } from "../country.js";
 import { offerAsset } from "./assets.js";
@@ -47,7 +48,7 @@ import { $, state } from "../state.js";
 import { startNewAccount } from "./entities.js";
 import { DIRECTORY_VIA, aiSuggestionFor, rateForSuggestion, suggestFromDirectory } from "../ai.js";
 import { save, savePart } from "../store.js";
-import { askOnPage, dollars, note } from "../ui.js";
+import { askOnPage, dollars, note, tellOnPage } from "../ui.js";
 import { fillAccounts, unresolvedNote } from "../widgets.js";
 import {
   accountEntityKey,
@@ -273,10 +274,10 @@ export function renderReconcile(): void {
           settle.title = `Pays ${numbers.join(" and ")}`;
           settle.addEventListener("click", () => {
             settle.disabled = true;
-            void settleInvoicesExactly(t, said).then((done) => {
+            void settleInvoicesExactly(t, said).then(async (done) => {
               if (!done) {
                 settle.disabled = false;
-                alert(
+                await tellOnPage(
                   (numbers.length > 1
                     ? `${numbers.join(" and ")} no longer come to ${formatAmount(t.amount)} exactly. `
                     : `Nothing open under ${numbers[0]} takes ${formatAmount(t.amount)}. `) +
@@ -610,9 +611,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
     // and stops taking clicks, and the work starts once that is on screen.
     row.classList.add("code-row-working");
     const chosen = [codeSelect.value, gstSelect.value as GstRate, description.value, to.value] as const;
-    requestAnimationFrame(() =>
-      setTimeout(() => void confirmLine(one, chosen[0], chosen[1], chosen[2], chosen[3]), 0),
-    );
+    afterNextFrame(() => void confirmLine(one, chosen[0], chosen[1], chosen[2], chosen[3]));
   });
 
   const splitButton = document.createElement("button");
@@ -1195,18 +1194,56 @@ function usualTransferPartner(
 ): string | null {
   const who = (transaction.otherParty ?? "").trim().toLowerCase();
   if (who === "") return null;
-  const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
-  const counts = new Map<string, number>();
-  for (const t of state.ledger.transactions) {
-    if (t.id === transaction.id || t.account !== transaction.account) continue;
-    if (Math.sign(t.amount) !== Math.sign(transaction.amount)) continue;
-    if ((t.otherParty ?? "").trim().toLowerCase() !== who) continue;
-    const partner = byId.get(transfers[t.id] ?? "");
-    if (partner === undefined) continue;
-    counts.set(partner.account, (counts.get(partner.account) ?? 0) + 1);
+  const { index, byId } = transferPartners(transfers);
+  const counts = new Map(index.get(partnerKey(transaction.account, transaction.amount, who)) ?? []);
+  // The line itself is not its own history.
+  const own = byId.get(transfers[transaction.id] ?? "");
+  if (own !== undefined) {
+    const n = counts.get(own.account);
+    if (n !== undefined) counts.set(own.account, n - 1);
   }
   const best = [...counts.entries()].sort((x, y) => y[1] - x[1])[0];
   return best !== undefined && best[1] >= 2 ? best[0] : null;
+}
+
+const partnerKey = (account: string, amount: number, who: string): string =>
+  `${account}\u0000${Math.sign(amount)}\u0000${who}`;
+
+/**
+ * For each account, direction and payee, which accounts its recorded
+ * transfers went to and how often: counted once for all the lines, not again
+ * for each row drawn. Kept while the lines and the transfers are the same
+ * objects -- both are replaced, not changed, when they change.
+ */
+let partnersHeld: {
+  lines: readonly Transaction[];
+  transfers: Readonly<Record<string, string>>;
+  index: Map<string, Map<string, number>>;
+  byId: Map<string, Transaction>;
+} | null = null;
+
+function transferPartners(transfers: Readonly<Record<string, string>>): {
+  index: Map<string, Map<string, number>>;
+  byId: Map<string, Transaction>;
+} {
+  const lines = state.ledger.transactions;
+  if (partnersHeld !== null && partnersHeld.lines === lines && partnersHeld.transfers === transfers) {
+    return partnersHeld;
+  }
+  const byId = new Map(lines.map((t) => [t.id, t]));
+  const index = new Map<string, Map<string, number>>();
+  for (const t of lines) {
+    const who = (t.otherParty ?? "").trim().toLowerCase();
+    if (who === "") continue;
+    const partner = byId.get(transfers[t.id] ?? "");
+    if (partner === undefined) continue;
+    const key = partnerKey(t.account, t.amount, who);
+    const counts = index.get(key) ?? new Map<string, number>();
+    counts.set(partner.account, (counts.get(partner.account) ?? 0) + 1);
+    index.set(key, counts);
+  }
+  partnersHeld = { lines, transfers, index, byId };
+  return partnersHeld;
 }
 
 /**
@@ -1432,7 +1469,7 @@ async function linkTransfer(
     (t) => (state.ledger.splits ?? {})[t.id] !== undefined || invoiceAssignments().has(t.id),
   );
   if (involved.length > 0) {
-    alert(
+    await tellOnPage(
       involved.map((t) => `${t.date} ${formatAmount(t.amount)} ${t.otherParty}`).join("\n") +
         "\n\nThis line is split or settles an invoice, so it cannot also be a transfer. " +
         "Remove the split or invoice match first.",
@@ -1449,7 +1486,7 @@ async function linkTransfer(
       )
       .join("\n");
     if (
-      !confirm(
+      !await askOnPage(
         "A line is either a transfer or coded to an account, not both.\n\n" +
           listed +
           `\n\nRecord the transfer and remove ${removed.length === 1 ? "that coding" : "those codings"}?`,
@@ -2359,7 +2396,7 @@ export async function confirmLine(
     );
     if (
       !held &&
-      confirm(
+      await askOnPage(
         `Coded to ${account.name}. Add it to the fixed asset register at ` +
           `${formatAmount(cost)}${rate === "15" ? " excluding GST" : ""} so it is depreciated?`,
       )

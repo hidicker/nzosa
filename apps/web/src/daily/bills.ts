@@ -11,7 +11,7 @@ import {
 } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, invoiceCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
 import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
 import {
@@ -234,9 +234,9 @@ function payableMissing(entity: Entity): HTMLElement {
   add.textContent = `Add Accounts Payable for ${entity.name}`;
   add.addEventListener("click", () => {
     add.disabled = true;
-    void addPayableFor(entity).then((code) => {
+    void addPayableFor(entity).then(async (code) => {
       state.invoiceMessage = "";
-      alert(`Added ${code} Accounts Payable for ${entity.name}.`);
+      await tellOnPage(`Added ${code} Accounts Payable for ${entity.name}.`);
       redraw("bills");
     });
   });
@@ -448,16 +448,16 @@ function payPanel(bill: Invoice, balance: InvoiceBalance): HTMLElement {
 
   const actions = document.createElement("div");
   actions.className = "invoice-actions";
-  const save = button("Record payment", () => {
+  const save = button("Record payment", async () => {
     const cents = Math.round(Number(amount.value.replace(/[$,\s]/g, "")) * 100);
-    if (!tick.checked) return alert("Tick that no bank line shows this payment first.");
-    if (from.value === "") return alert("Choose the account it was paid from.");
-    if (!Number.isFinite(cents) || cents <= 0) return alert("Enter the amount paid.");
+    if (!tick.checked) return await tellOnPage("Tick that no bank line shows this payment first.");
+    if (from.value === "") return await tellOnPage("Choose the account it was paid from.");
+    if (!Number.isFinite(cents) || cents <= 0) return await tellOnPage("Enter the amount paid.");
     if (cents > balance.remaining) {
-      return alert(`That is more than the ${money(balance.remaining)} still owing.`);
+      return await tellOnPage(`That is more than the ${money(balance.remaining)} still owing.`);
     }
     if (date.value === "" || date.value < bill.issued) {
-      return alert("The payment date can't be before the bill date.");
+      return await tellOnPage("The payment date can't be before the bill date.");
     }
     void recordOutside(bill, {
       date: date.value,
@@ -502,7 +502,7 @@ async function recordOutside(bill: Invoice, payment: OutsidePayment): Promise<vo
 async function removeOutside(bill: Invoice, index: number): Promise<void> {
   const payment = bill.paidOutside?.[index];
   if (payment === undefined) return;
-  if (!confirm(`Remove the ${formatAmount(payment.amount)} payment of ${bill.number} on ${payment.date}?`)) return;
+  if (!await askOnPage(`Remove the ${formatAmount(payment.amount)} payment of ${bill.number} on ${payment.date}?`)) return;
   const rest = (bill.paidOutside ?? []).filter((_, i) => i !== index);
   const { paidOutside: _was, ...without } = bill;
   await replaceBill(
@@ -520,13 +520,13 @@ async function removeOutside(bill: Invoice, index: number): Promise<void> {
  */
 async function voidBill(bill: Invoice, balance: InvoiceBalance): Promise<void> {
   if (balance.assigned > 0 || balance.paidOutside > 0) {
-    alert(
+    await tellOnPage(
       `${bill.number} has payments against it. Unmatch the bank lines on Reconcile, and remove any ` +
         "payment recorded here, before voiding it.",
     );
     return;
   }
-  if (!confirm(`Void ${bill.number} from ${bill.contact}? It leaves the books; History can undo it.`)) return;
+  if (!await askOnPage(`Void ${bill.number} from ${bill.contact}? It leaves the books; History can undo it.`)) return;
   await replaceBill(bill, { ...bill, status: "Voided" }, `Voided ${bill.number} — ${bill.contact} ${formatAmount(bill.total)}`);
 }
 

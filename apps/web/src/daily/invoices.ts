@@ -19,7 +19,7 @@ import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { save as saveLedger, savePart } from "../store.js";
-import { amountCell, askOnPage, download, invoiceCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   accountEntityKey,
   applySalesTax,
@@ -848,8 +848,8 @@ export function renderInvoiceEditor(): void {
     remove.type = "button";
     remove.className = "danger";
     remove.textContent = "Delete";
-    remove.addEventListener("click", () => {
-      if (!confirm(`Delete ${existing.number}? The change log can undo it.`)) return;
+    remove.addEventListener("click", async () => {
+      if (!await askOnPage(`Delete ${existing.number}? The change log can undo it.`)) return;
       void deleteInvoice(existing);
     });
     actions.append(remove);
@@ -877,7 +877,7 @@ function accountLabelFor(code: string): string {
  * it is refused, as Xero refuses it. A draft is not in the books yet and is
  * saved without asking.
  */
-function accountsChosen(built: Invoice): boolean {
+async function accountsChosen(built: Invoice): Promise<boolean> {
   if (!isPosted(built)) return true;
   const missing = linesWithoutAccount(built);
   if (missing.length === 0) return true;
@@ -887,7 +887,7 @@ function accountsChosen(built: Invoice): boolean {
     .join("\n");
   // As Xero: a line with an amount needs an account before the document is in
   // the books. A draft may wait; a line with no amount is a note.
-  alert(
+  await tellOnPage(
     `${missing.length === 1 ? "A line" : `${missing.length} lines`} of this ${noun} ${missing.length === 1 ? "has" : "have"} no account:\n\n` +
       `${said}\n\n` +
       "Choose an account for each line with an amount before approving it, or save it as a draft to finish later.",
@@ -899,7 +899,7 @@ function accountsChosen(built: Invoice): boolean {
  * Whether a customer's credit limit, where one is set, lets this invoice go
  * in: over it, the person is asked. A limit is a warning, not a refusal.
  */
-function creditLimitAllows(built: Invoice, existing: Invoice | undefined): boolean {
+async function creditLimitAllows(built: Invoice, existing: Invoice | undefined): Promise<boolean> {
   if (built.kind !== "sales" || !isPosted(built)) return true;
   const limit = findContact(state.ledger.contacts ?? [], built.contact)?.creditLimit;
   if (limit === undefined) return true;
@@ -911,7 +911,7 @@ function creditLimitAllows(built: Invoice, existing: Invoice | undefined): boole
   }
   const after = owed + built.total - built.paid;
   if (after <= limit) return true;
-  return confirm(
+  return await askOnPage(
     `${built.contact} would owe ${booksMoney(after)}, over their credit limit of ${booksMoney(limit)}.\n\nSave it anyway?`,
   );
 }
@@ -919,16 +919,16 @@ function creditLimitAllows(built: Invoice, existing: Invoice | undefined): boole
 async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promise<void> {
   const noun = built.kind === "purchase" ? "bill" : "invoice";
   if (built.number === "") {
-    alert(`Give the ${noun} a number.`);
+    await tellOnPage(`Give the ${noun} a number.`);
     return;
   }
   if (!(await billReady(built))) return;
-  if (!creditLimitAllows(built, existing)) return;
-  if (!accountsChosen(built)) return;
+  if (!(await creditLimitAllows(built, existing))) return;
+  if (!(await accountsChosen(built))) return;
   const invoices = [...(state.ledger.invoices ?? [])];
   const clash = invoices.findIndex((i) => i.number === built.number);
   if (clash >= 0 && invoices[clash] !== existing) {
-    alert(`There is already an invoice numbered ${built.number}.`);
+    await tellOnPage(`There is already an invoice numbered ${built.number}.`);
     return;
   }
 
@@ -942,7 +942,7 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
     );
     if (
       twin !== undefined &&
-      !confirm(
+      !await askOnPage(
         `${twin.number} already uses number ${mine.value}.\n\n` +
           `Save ${built.number} as well? ${suggestInvoiceNumber(built.kind)} is free.`,
       )
@@ -982,12 +982,12 @@ async function billReady(bill: Invoice): Promise<boolean> {
   const approved = !["draft", "voided"].includes(bill.status.trim().toLowerCase());
   if (approved) {
     if (bill.entityId === undefined) {
-      alert("Choose whose bill this is before approving it.");
+      await tellOnPage("Choose whose bill this is before approving it.");
       return false;
     }
     if (controlAccountFor(bill.entityId, "purchase") === undefined) {
       const entity = (state.ledger.entities ?? emptyEntityModel()).entities.find((e) => e.id === bill.entityId);
-      alert(
+      await tellOnPage(
         `${entity?.name ?? "This entity"} has no Accounts Payable account for the bill to sit in until it ` +
           "is paid. Add one from the Bills page, then approve it.",
       );
@@ -996,7 +996,7 @@ async function billReady(bill: Invoice): Promise<boolean> {
   }
   const warnings = billWarnings(bill, state.ledger.invoices ?? []);
   if (warnings.length === 0) return true;
-  return confirm(
+  return await askOnPage(
     `Before saving ${bill.number}:\n\n` +
       warnings.map((w) => `- ${w.message}`).join("\n") +
       "\n\nSave it as it is?",
@@ -1361,7 +1361,7 @@ export function renderInvoices(): void {
       tbody.append(tr);
     }
     table.append(head, tbody);
-    body.append(table);
+    body.append(wideTable(table));
   }
 
   // --- what is still owing ---
@@ -1399,7 +1399,7 @@ export function renderInvoices(): void {
       draftBody.append(tr);
     }
     draftTable.append(draftHead, draftBody);
-    body.append(draftTable);
+    body.append(wideTable(draftTable));
   }
 
   if (owing.length > 0) {
@@ -1447,7 +1447,7 @@ export function renderInvoices(): void {
       tbody.append(tr);
     }
     table.append(head, tbody);
-    body.append(table);
+    body.append(wideTable(table));
   }
 
   // --- matched ---
@@ -1538,7 +1538,7 @@ export function renderInvoices(): void {
 
   heading.textContent = `Matched (${result.matched.length + byInvoice.size})`;
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 
   // --- accepted differences ---
   // Matched, but for an amount that was not the invoice's: the difference is
@@ -1581,7 +1581,7 @@ export function renderInvoices(): void {
       accBody.append(tr);
     }
     accTable.append(accHead, accBody);
-    body.append(accTable);
+    body.append(wideTable(accTable));
   }
 }
 
@@ -1756,7 +1756,7 @@ export function creditNoteSection(
   }
 
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 }
 
 /** Record which invoice a credit note credits, or take the link away. */

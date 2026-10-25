@@ -2139,6 +2139,11 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .migration-guide p, .migration-guide li { font-size: 0.86rem; line-height: 1.5; }
 .migration-guide ol, .migration-guide ul { padding-left: 1.3rem; margin: 0.3rem 0; }
 .migration-table-wrap { overflow-x: auto; margin: 0.5rem 0; }
+/* A table wider than its page scrolls within itself. */
+.wide-table { overflow-x: auto; max-width: 100%; }
+/* A report's chosen dates, and the year-earlier choice, beside its year. */
+.report-dates { display: inline-flex; align-items: center; gap: 6px; }
+.report-compare { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
 .migration-table { max-width: none; }
 .migration-table td { white-space: normal; vertical-align: top; font-size: 0.82rem; }
 
@@ -2422,6 +2427,11 @@ button.working:not(.primary):not(.active) {
 @media (prefers-reduced-motion: reduce) {
   button.working { animation: none; }
 }
+/* A menu item pressed, while its page is drawn: shown at once, so a page
+   that takes a moment in large books is not mistaken for a press missed. */
+.sidebar-nav button.opening,
+.sidebar-foot button.opening { opacity: 0.6; cursor: progress; }
+body.page-opening { cursor: progress; }
 
 /* The same dropzone as the Import page, shorter: the Check page has a table
    under it and does not need a landing pad the height of the window. */

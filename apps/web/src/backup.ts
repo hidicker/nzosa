@@ -13,7 +13,7 @@ import {
   saveRulesArchive,
 } from "./store.js";
 import type { RulesArchive, StoredLedger, StoredRules } from "./store.js";
-import { note } from "./ui.js";
+import { askOnPage, note, tellOnPage } from "./ui.js";
 
 /**
  * A copy of everything, in one file, on the person's own computer.
@@ -218,7 +218,7 @@ export async function downloadBackupNow(books: string): Promise<void> {
 export async function restoreWithConfirm(file: File, books: string): Promise<void> {
   const count = state.ledger.transactions.length;
   if (
-    !confirm(
+    !await askOnPage(
       `Restore from ${file.name}?\n\n` +
         `This replaces what is in ${books === "" ? "the books open now" : books} ` +
         `(${count} transaction${count === 1 ? "" : "s"}) with what is in that file.`,
@@ -231,7 +231,7 @@ export async function restoreWithConfirm(file: File, books: string): Promise<voi
     location.reload();
     return;
   }
-  alert(result.why);
+  await tellOnPage(result.why);
 }
 
 /**
@@ -298,7 +298,7 @@ export function backupTools(body: HTMLElement, books: string, hosted: boolean): 
   input.accept = ".json,application/json";
   input.hidden = true;
   pick.addEventListener("click", () => input.click());
-  input.addEventListener("change", () => {
+  input.addEventListener("change", async () => {
     const file = input.files?.[0];
     input.value = "";
     if (!file) return;
@@ -306,7 +306,7 @@ export function backupTools(body: HTMLElement, books: string, hosted: boolean): 
     // rather than described: "these books" is not a thing anybody can check.
     const count = state.ledger.transactions.length;
     if (
-      !confirm(
+      !await askOnPage(
         `Restore from ${file.name}?\n\n` +
           `This replaces everything in ${books === "" ? "the books open now" : books} ` +
           `(${count} transaction${count === 1 ? "" : "s"}) with what is in that file.`,

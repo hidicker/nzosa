@@ -14,7 +14,7 @@ import {
   suggestSuffix,
   suffixedCode,
 } from "@nzosa/core";
-import type { Account, Entity, EntityKind, EntityModel, RuleSet } from "@nzosa/core";
+import type { Account, Entity, EntityKind, EntityModel, RenameResult, RuleSet } from "@nzosa/core";
 import type { RuleFileShape } from "../rules-ui.js";
 
 /**
@@ -478,12 +478,13 @@ function heldElsewhere(labels: readonly string[]): string[] {
 async function suffixEntity(entity: Entity, suffix: string): Promise<void> {
   const model = state.ledger.entities ?? emptyEntityModel();
   const housePrefixed = accountsForEditing().some((r) => /^NB\s+/i.test(r.label));
-  let refs = {
+  let refs: Omit<RenameResult, "moved"> = {
     chart: state.chart,
     overrides: state.ledger.overrides ?? {},
     splits: state.ledger.splits ?? {},
     rules: state.rules,
     accountEntities: model.accounts,
+    manualJournals: state.ledger.manualJournals,
   };
   let renamed = 0;
   const skipped: string[] = [];
@@ -516,6 +517,7 @@ async function suffixEntity(entity: Entity, suffix: string): Promise<void> {
     chart: refs.chart,
     overrides: refs.overrides,
     splits: refs.splits,
+    ...(refs.manualJournals !== undefined ? { manualJournals: [...refs.manualJournals] } : {}),
     entities: { ...model, entities, accounts: refs.accountEntities },
   };
   // Saved whole, as a single rename is: the chart, the codings and the

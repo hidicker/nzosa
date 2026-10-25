@@ -1,4 +1,4 @@
-import { askOnPage } from "../ui.js";
+import { askOnPage, askTextOnPage, tellOnPage } from "../ui.js";
 import { bankIdThenName, bankWithId } from "./balance-sheet-label.js";
 import { redraw, showPage } from "../app.js";
 import { XERO_TRIAL_BALANCE } from "../migrate/setup-wizard.js";
@@ -909,7 +909,7 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<boole
   const held = state.ledger.openingBalances;
   if (held !== undefined && held.asAt !== draft.asAt && Object.keys(held.accounts).length > 0) {
     if (
-      !confirm(
+      !await askOnPage(
         `Opening balances are already held as at ${held.asAt}. Replace them with these ` +
           `bank balances as at ${draft.asAt}?`,
       )
@@ -1122,12 +1122,12 @@ function enteredBalances(held: OpeningBalances): HTMLElement {
 }
 
 /** Add or change one opening balance. */
-function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): void {
+async function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): Promise<void> {
   const held = state.ledger.openingBalances;
   const asAt = targetAsAt ?? held?.asAt ?? chosenStartDate() ?? startOfFinancialYear();
-  const which = window.prompt("Account code, or a bank account number", code);
+  const which = await askTextOnPage("Account code, or a bank account number", code);
   if (which === null || which.trim() === "") return;
-  const amount = window.prompt(
+  const amount = await askTextOnPage(
     `Balance for ${which.trim()} as at ${asAt}.\n\n` +
       "Debit positive, credit negative: an asset is positive, a liability negative.",
     (cents / 100).toFixed(2),
@@ -1135,7 +1135,7 @@ function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): void {
   if (amount === null) return;
   const parsed = parseAmount(amount.trim());
   if (parsed === null) {
-    alert(`"${amount}" is not an amount.`);
+    await tellOnPage(`"${amount}" is not an amount.`);
     return;
   }
   void saveOpeningBalance(which.trim(), parsed, code, asAt);
@@ -1303,7 +1303,7 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
     // A trial balance with nothing in it -- an organisation that had no
     // balances on that date -- is said as that, not as some other file.
     const asAt = /As at\s+([^,\n]+)/i.exec(text)?.[1]?.trim();
-    alert(
+    await tellOnPage(
       /Account Code|Account Type/i.test(text)
         ? `${file.name} is a trial balance with no balances in it${asAt ? `, as at ${asAt}` : ""}. ` +
             "Check the date it was run for: the year end before these books start. If there really was " +
@@ -1313,7 +1313,7 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
     return false;
   }
   if (parsed.dates.length === 0) {
-    alert(`${file.name} has no balance columns, only movements.`);
+    await tellOnPage(`${file.name} has no balance columns, only movements.`);
     return false;
   }
 
@@ -1332,7 +1332,7 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
       ? dates[0]
       : dayBefore !== undefined && dates.includes(dayBefore)
         ? dayBefore
-        : window.prompt(
+        : await askTextOnPage(
             "Which column? The ledger opens the day after the date you pick.\n\n" + dates.join("\n"),
             dates[0],
           );
@@ -1340,7 +1340,7 @@ export async function loadOpeningBalances(file: File): Promise<boolean> {
   // Said, not dropped: a date typed that the file does not carry loaded
   // nothing and told nobody, and the books went on with no opening balances.
   if (!dates.includes(chosen.trim())) {
-    alert(
+    await tellOnPage(
       `${file.name} has no balances for ${chosen.trim()}. The dates it holds are ` +
         `${dates.join(", ")}.\n\nNothing was loaded. For books starting ${start ?? "after it"}, ` +
         "export the trial balance as at the day before they start.",

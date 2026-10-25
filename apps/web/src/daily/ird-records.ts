@@ -6,7 +6,7 @@ import { gstSummaryReturns } from "@nzosa/core";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import type { StoredIncomeReturn, StoredIrdRecord } from "../store.js";
-import { amountCell, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, nameCell, note } from "../ui.js";
 import { computeOurReturns } from "../variance.js";
 import { ir3For } from "./reports.js";
 import {
@@ -659,7 +659,7 @@ function filedIr3From(one: Extract<IrdRecord, { kind: "ir3" }>, balanceDate: Iso
 }
 
 async function removeRecord(one: StoredIrdRecord): Promise<void> {
-  if (!confirm(`Remove ${describe(one)}? History can undo it.`)) return;
+  if (!await askOnPage(`Remove ${describe(one)}? History can undo it.`)) return;
   const before = state.ledger.irdRecords ?? [];
   const after = before.filter((r) => r.id !== one.id);
   state.ledger = { ...state.ledger, irdRecords: after };

@@ -50,7 +50,7 @@ test("a rename carries every reference to the account with it", () => {
   assert.equal("400" in after.accountEntities, false);
 
   assert.deepEqual(after.moved, {
-    codings: 1, splitParts: 1, rules: 2, treatment: true, entity: true,
+    codings: 1, splitParts: 1, rules: 2, treatment: true, entity: true, journalLines: 0,
   });
 });
 
@@ -164,4 +164,47 @@ test("merging a category into an existing account carries its codings and keeps 
 test("a label that was merged reads as the account it became", () => {
   const rules = { aliases: { Ads: "Advertising - 400" } };
   assert.equal(mapToOurVocabulary("Ads", { chart: CHART, rules, overrides: {} }), "Advertising - 400");
+});
+
+test("journal lines follow a rename, whatever words they name the account in", () => {
+  const journals = [
+    {
+      id: "j1",
+      date: "2025-03-31",
+      narration: "Year end",
+      lines: [
+        { code: "Advertising - 400", amount: 1000 },
+        { code: "NB Advertising - 400", amount: 500 },
+        { code: "Subscriptions - 485", amount: -1500 },
+      ],
+    },
+    { id: "j2", date: "2025-03-31", narration: "Other", lines: [{ code: "Subscriptions - 485", amount: 0 }] },
+  ];
+  const after = renameAccount(
+    { ...BEFORE, manualJournals: journals },
+    { code: "400", name: "Advertising" },
+    { code: "401", name: "Marketing" },
+    "Advertising - 400",
+    "Marketing - 401",
+  );
+  assert.deepEqual(after.manualJournals[0].lines.map((l) => l.code), ["Marketing - 401", "Marketing - 401", "Subscriptions - 485"]);
+  assert.equal(after.manualJournals[1], journals[1], "a journal not touching it is the same object");
+  assert.equal(after.moved.journalLines, 2);
+  assert.equal(journals[0].lines[0].code, "Advertising - 400", "what was given is not changed");
+});
+
+test("a merge carries journal lines into the account kept", () => {
+  const after = mergeAccount(
+    { ...BEFORE, manualJournals: [{ id: "j", date: "2025-03-31", narration: "n", lines: [{ code: "Advertising - 400", amount: 1 }] }] },
+    { code: "400", name: "Advertising" },
+    { code: "485", name: "Subscriptions" },
+    "Advertising - 400",
+    "Subscriptions - 485",
+  );
+  assert.equal(after.manualJournals[0].lines[0].code, "Subscriptions - 485");
+});
+
+test("without journals given, none come back", () => {
+  const after = renameAccount(BEFORE, { code: "400", name: "Advertising" }, { code: "401", name: "Marketing" }, "Advertising - 400", "Marketing - 401");
+  assert.equal("manualJournals" in after, false);
 });

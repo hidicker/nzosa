@@ -1,7 +1,7 @@
 import { redraw } from "../app.js";
 import { applyBetweenNow, betweenEntities, betweenLinesDiffering, saveEntities } from "../books.js";
 import { state } from "../state.js";
-import { note } from "../ui.js";
+import { askOnPage, note, tellOnPage } from "../ui.js";
 import { booksLocale, moneyPlaces } from "../country.js";
 import { emptyEntityModel, isSeparatePerson, owedBetween, pairKey } from "@nzosa/core";
 import type { EntityModel, IsoDate } from "@nzosa/core";
@@ -19,14 +19,14 @@ export function applyButton(ids: readonly string[], between: string, how: string
   button.className = "link-button";
   button.textContent = `Apply to ${ids.length} confirmed line${ids.length === 1 ? "" : "s"}`;
   button.title = "Lines already confirmed keep how they were recorded until this is applied to them.";
-  button.addEventListener("click", () => {
-    const sure = confirm(
+  button.addEventListener("click", async () => {
+    const sure = await askOnPage(
       `Record the ${ids.length} confirmed line${ids.length === 1 ? "" : "s"} between ${between} as: ${how.replace(/ \(usual\)$/, "")}?\n\n` +
         "Lines in a locked year are left as they are. This is recorded in History, where it can be undone.",
     );
     if (!sure) return;
-    void applyBetweenNow(ids, `Money between ${between}, applied`).then(({ applied, locked }) => {
-      if (locked > 0) alert(`${applied} line${applied === 1 ? "" : "s"} changed. ${locked} in a locked year left as they were.`);
+    void applyBetweenNow(ids, `Money between ${between}, applied`).then(async ({ applied, locked }) => {
+      if (locked > 0) await tellOnPage(`${applied} line${applied === 1 ? "" : "s"} changed. ${locked} in a locked year left as they were.`);
       redraw("entities");
       redraw("rules");
     });

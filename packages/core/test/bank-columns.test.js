@@ -88,3 +88,49 @@ test("a file with no headings, as Commonwealth Bank exports it, is read from its
   ]);
   assert.equal(read.problems.length, 0);
 });
+
+const SEVERAL = [
+  "Date,Amount,Payee,Description,Reference,Account",
+  "01/07/2025,-45.10,Woolworths,Groceries,,Everyday Account",
+  "02/07/2025,1200.00,ACME Pty Ltd,Invoice 17,INV17,Business Cheque",
+  "03/07/2025,-19.99,Netflix,Subscription,,Everyday Account",
+].join("\n");
+
+test("an Account column is found, and each line goes on the account it names", () => {
+  const { layout, columns } = guessBankLayout(SEVERAL);
+  assert.equal(columns[layout.account], "Account");
+  assert.equal(columns[layout.payee], "Payee");
+  const result = importWithLayout(SEVERAL, layout, { file: "f.csv", account: "chosen", accountLabel: "Chosen", currency: "AUD" });
+  assert.deepEqual(
+    result.transactions.map((t) => [t.account, t.extras.accountLabel, t.amount]),
+    [
+      ["everyday-account", "Everyday Account", -4510],
+      ["business-cheque", "Business Cheque", 120000],
+      ["everyday-account", "Everyday Account", -1999],
+    ],
+  );
+  assert.equal(result.account, "everyday-account");
+  // The same line on two accounts is two lines.
+  const ids = new Set(result.transactions.map((t) => t.id));
+  assert.equal(ids.size, 3);
+});
+
+test("a file whose Account column names one account goes on the account chosen, as before", () => {
+  const one = SEVERAL.replace(/Business Cheque/g, "Everyday Account");
+  const { layout } = guessBankLayout(one);
+  const result = importWithLayout(one, layout, { file: "f.csv", account: "chosen", accountLabel: "Chosen", currency: "AUD" });
+  assert.ok(result.transactions.every((t) => t.account === "chosen" && t.extras.accountLabel === "Chosen"));
+  assert.equal(result.account, "chosen");
+});
+
+test("the other party's account is not the account", () => {
+  const text = ["Date,Amount,Other Party Account,Description", "01/07/2025,-5.00,12-3456-7890123-00,Fee"].join("\n");
+  assert.equal(guessBankLayout(text).layout.account, -1);
+});
+
+test("a layout kept before there was an Account column still reads", () => {
+  const { layout } = guessBankLayout(US);
+  const { account: _gone, ...old } = layout;
+  const result = read(US, old);
+  assert.ok(result.transactions.length === 2 && result.transactions.every((t) => t.account === "acct"));
+});

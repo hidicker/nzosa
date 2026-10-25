@@ -3,7 +3,7 @@ import { record } from "../books.js";
 import { booksCurrency, booksMoney, noSalesTax, gstPercent } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
+import { note, tellOnPage } from "../ui.js";
 import { findContact, nextInvoiceNumber, parseAmount, timeInvoiceLines, timeValue, unbilledTime } from "@nzosa/core";
 import type { Invoice, TimeEntry } from "@nzosa/core";
 
@@ -103,7 +103,7 @@ async function invoiceTime(customer: string, entries: readonly TimeEntry[]): Pro
   state.persistent = await savePart(state.ledger);
   await record("invoice", `Created ${number} — ${customer} ${booksMoney(total)} from time`, null, draft, number);
   await record("time", `${entries.length} entries put on ${number}`, before, after);
-  window.alert(`${number} for ${booksMoney(total)} is drafted on Invoices. Approve it there to post it.`);
+  await tellOnPage(`${number} for ${booksMoney(total)} is drafted on Invoices. Approve it there to post it.`);
   redraw("time");
   redraw("invoices");
 }

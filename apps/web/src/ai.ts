@@ -171,9 +171,25 @@ export function suggestFromDirectory(): number {
   return got;
 }
 
-/** Every line, coded the way the Reconcile page codes them: rules first. */
+/**
+ * Every line, coded the way the Reconcile page codes them: rules first.
+ *
+ * Worked out once for each piece of work and shared by everything in it. The
+ * Reconcile page asks for each line it draws -- how the same payee was coded
+ * before -- and working out every line in the books for each of two hundred
+ * rows made a tick on eight years of bank lines take most of a minute. The
+ * answer is kept only until the work in hand is done, and only while the
+ * books, the rules and the chart are the ones it was worked out from: every
+ * change replaces one of those, so nothing is answered from before it.
+ *
+ * Shared, so read only: callers filter and sort copies, never the list.
+ */
 export function allLines(): Suggestion[] {
-  return suggest(
+  const held = linesHeld;
+  if (held !== null && held.ledger === state.ledger && held.rules === state.rules && held.chart === state.chart) {
+    return held.lines;
+  }
+  const lines = suggest(
     state.ledger.transactions,
     state.rules,
     state.ledger.overrides ?? {},
@@ -182,6 +198,35 @@ export function allLines(): Suggestion[] {
     gstLookups(),
     linesWithUncodedPart(),
   );
+  linesHeld = { lines, ledger: state.ledger, rules: state.rules, chart: state.chart };
+  queueMicrotask(() => {
+    if (linesHeld?.lines === lines) linesHeld = null;
+  });
+  return lines;
+}
+
+let linesHeld: { lines: Suggestion[]; ledger: unknown; rules: unknown; chart: unknown } | null = null;
+
+/**
+ * The most recent confirmed line for each payee's first word and account, from
+ * a list of lines: looked up once per row rather than searched for.
+ */
+const latestByPayee = new WeakMap<readonly Suggestion[], Map<string, Suggestion>>();
+
+function latestConfirmed(lines: readonly Suggestion[]): Map<string, Suggestion> {
+  const known = latestByPayee.get(lines);
+  if (known !== undefined) return known;
+  const latest = new Map<string, Suggestion>();
+  for (const one of lines) {
+    if (!one.confirmed || one.code === null) continue;
+    const lead = leadWord(one.transaction);
+    if (lead === "") continue;
+    const key = `${lead}\u0000${one.code}`;
+    const was = latest.get(key);
+    if (was === undefined || one.transaction.date > was.transaction.date) latest.set(key, one);
+  }
+  latestByPayee.set(lines, latest);
+  return latest;
 }
 
 /**
@@ -340,15 +385,21 @@ export function rateForSuggestion(
 ): { rate: GstRate; why: string } | null {
   const lead = leadWord(transaction);
   if (lead !== "") {
-    const before = allLines()
-      .filter(
-        (one) =>
-          one.confirmed &&
-          one.code === code &&
-          one.transaction.id !== transaction.id &&
-          leadWord(one.transaction) === lead,
-      )
-      .sort((a, b) => b.transaction.date.localeCompare(a.transaction.date))[0];
+    const lines = allLines();
+    let before = latestConfirmed(lines).get(`${lead}\u0000${code}`);
+    // The line itself does not count as its own history: the next most
+    // recent, looked for the long way, as this is the rare case.
+    if (before !== undefined && before.transaction.id === transaction.id) {
+      before = lines
+        .filter(
+          (one) =>
+            one.confirmed &&
+            one.code === code &&
+            one.transaction.id !== transaction.id &&
+            leadWord(one.transaction) === lead,
+        )
+        .sort((a, b) => b.transaction.date.localeCompare(a.transaction.date))[0];
+    }
     if (before !== undefined) {
       return { rate: classificationToRate(before.classification), why: `as ${before.transaction.date}'s was` };
     }

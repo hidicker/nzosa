@@ -50,7 +50,7 @@ import type { AiSuggestion, GstSide, GstTreatment } from "@nzosa/core";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, nameCell, note, tellOnPage } from "../ui.js";
 import {
   accountEntityKey,
   splitAccountLabel,
@@ -76,6 +76,7 @@ import type {
   SheetRows,
   SplitPart,
   Transaction,
+  TransactionOverride,
 } from "@nzosa/core";
 import { clearCheck } from "../migrate/file-intake.js";
 import { journalLinesFor } from "../daily/balance-diagnostics.js";
@@ -85,6 +86,7 @@ import { booksLocale, noSalesTax } from "../country.js";
 import { isUnusedStarterChart } from "../new-books-country.js";
 import { trialBalanceFinding } from "./quickbooks.js";
 import type { CodingComparison, ManualJournal } from "@nzosa/core";
+import { showWorking } from "../busy.js";
 
 /** What the imported coding is called, mid-sentence: Xero, QuickBooks, SlowBooks, or the spreadsheet these books came from. */
 const imported = (): string => {
@@ -308,10 +310,28 @@ export async function acceptAllShown(): Promise<void> {
   }
 
   if (lines.length === 0 && pairs.length === 0) {
+    // Why, in the words the rows use. It said "already settled or has no
+    // suggestion" over a screen of suggested lines that had only been left
+    // out for their caution, which read as the button not working.
+    const why: [number, string, string][] = [
+      [
+        ruleCautioned,
+        "the lines go the opposite way to the account suggested (money in to an expense account, for example)",
+        "go the opposite way to the account suggested (money in to an expense account, for example)",
+      ],
+      [cautioned, "the AI gave each a caution", "have a caution from the AI"],
+      [held.size, "each could be a transfer with more than one possible match", "could be a transfer with more than one possible match"],
+    ];
+    const reasons = why.filter(([n]) => n > 0);
+    const total = reasons.reduce((sum, [n]) => sum + n, 0);
+    const these = total === 1 ? "this line needs" : `each of these ${total} needs`;
+    const because =
+      reasons.length === 1
+        ? `This is because ${total === 1 ? (reasons[0]?.[2] ?? "").replace(/^go /, "it goes ").replace(/^have /, "it has ").replace(/^could /, "it could ") : reasons[0]?.[1]}.`
+        : `This is because ${reasons.map(([n, , some]) => `${n} ${some}`).join(", and ")}.`;
     await askOnPage(
-      (held.size > 0
-        ? `Nothing accepted: the ${held.size === 1 ? "line" : `${held.size} lines`} left could be a ` +
-          "transfer with more than one possible match. Check each one individually."
+      (reasons.length > 0
+        ? `Nothing accepted: ${these} to be ✓ manually. ${because}`
         : "Nothing to accept: every line shown is already settled or has no suggestion.") +
         (unfinished > 0
           ? `\n\n${unfinished} ${unfinished === 1 ? "has" : "have"} a split with a part that has no account ` +
@@ -328,7 +348,7 @@ export async function acceptAllShown(): Promise<void> {
   // in those words.
   if (lines.length === 0) {
     if (
-      !confirm(
+      !await askOnPage(
         `Pair ${pairs.length} transfer${pairs.length === 1 ? "" : "s"} between your own accounts?` +
           "\n\n" +
           pairs
@@ -363,7 +383,7 @@ export async function acceptAllShown(): Promise<void> {
         ? `all to ${[...accounts][0]}`
         : `across ${accounts.size} accounts`;
   if (
-    !confirm(
+    !await askOnPage(
       `Accept ${lines.length} suggestion${lines.length === 1 ? "" : "s"}, ${summary}?` +
         "\n\n" +
         (held.size > 0
@@ -405,54 +425,58 @@ export async function acceptAllShown(): Promise<void> {
     return;
   }
 
-  const overrides = { ...(state.ledger.overrides ?? {}) };
-  const batch: CodingBatchEntry[] = [];
-  const today = new Date().toISOString().slice(0, 10);
-  for (const one of lines) {
-    batch.push({ id: one.transaction.id, before: overrides[one.transaction.id] ?? null });
-    const code = codeFor(one);
-    const said = modelSaid(one);
-    // A model's account is not what the line was classified by -- that was
-    // the uncoded default -- so its GST is the account's own, as picking the
-    // account by hand would give.
-    const history = one.code === null && code !== null ? rateForSuggestion(one.transaction, code) : null;
-    const own =
-      one.code === null && code !== null
-        ? history !== null
-          ? rateToClassification(history.rate, one.transaction.amount)
-          : accountDefault(code, one.transaction.amount)
-        : null;
-    overrides[one.transaction.id] = {
-      ...(code !== null ? { code } : {}),
-      confirmed: true,
-      treatment: own?.treatment ?? one.classification.treatment,
-      side: own?.side ?? one.classification.side,
-      // Read a year later by somebody asking why an account was chosen, where
-      // "a rule said so" and "a model guessed, this confidently, because"
-      // are not the same answer. Written down at the moment it stops being a
-      // suggestion, because the suggestion itself is only in memory and does
-      // not survive the reload.
-      note:
-        said === undefined
-          ? (one.description ?? "Suggestion accepted unchanged, with others")
-          : "AI suggestion accepted unchanged, with others" +
-            (said.via === undefined ? "" : ` (${said.via})`) +
-            ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,
-      at: today,
-    };
-  }
+  // Thousands of lines can take some seconds, all of it in the page: the
+  // button says so first.
+  await showWorking(document.getElementById("accept-all"), `Accepting ${lines.length}…`, async () => {
+    const overrides = { ...(state.ledger.overrides ?? {}) };
+    const batch: CodingBatchEntry[] = [];
+    const today = new Date().toISOString().slice(0, 10);
+    for (const one of lines) {
+      batch.push({ id: one.transaction.id, before: overrides[one.transaction.id] ?? null });
+      const code = codeFor(one);
+      const said = modelSaid(one);
+      // A model's account is not what the line was classified by -- that was
+      // the uncoded default -- so its GST is the account's own, as picking the
+      // account by hand would give.
+      const history = one.code === null && code !== null ? rateForSuggestion(one.transaction, code) : null;
+      const own =
+        one.code === null && code !== null
+          ? history !== null
+            ? rateToClassification(history.rate, one.transaction.amount)
+            : accountDefault(code, one.transaction.amount)
+          : null;
+      overrides[one.transaction.id] = {
+        ...(code !== null ? { code } : {}),
+        confirmed: true,
+        treatment: own?.treatment ?? one.classification.treatment,
+        side: own?.side ?? one.classification.side,
+        // Read a year later by somebody asking why an account was chosen, where
+        // "a rule said so" and "a model guessed, this confidently, because"
+        // are not the same answer. Written down at the moment it stops being a
+        // suggestion, because the suggestion itself is only in memory and does
+        // not survive the reload.
+        note:
+          said === undefined
+            ? (one.description ?? "Suggestion accepted unchanged, with others")
+            : "AI suggestion accepted unchanged, with others" +
+              (said.via === undefined ? "" : ` (${said.via})`) +
+              ` — ${Math.round(said.confidence * 100)}% sure: ${said.because}`,
+        at: today,
+      };
+    }
 
-  state.ledger = { ...state.ledger, overrides };
-  state.persistent = await save(state.ledger);
-  await record(
-    "codingBatch",
-    `Accepted ${lines.length} suggestions ${summary}` +
-      (guessed > 0 ? ` (${guessed} from the model)` : ""),
-    batch,
-    null,
-  );
-  reclassify();
-  redraw("reconcile");
+    state.ledger = { ...state.ledger, overrides };
+    state.persistent = await save(state.ledger);
+    await record(
+      "codingBatch",
+      `Accepted ${lines.length} suggestions ${summary}` +
+        (guessed > 0 ? ` (${guessed} from the model)` : ""),
+      batch,
+      null,
+    );
+    reclassify();
+    redraw("reconcile");
+  });
 }
 
 export async function loadCheckFiles(files: File[]): Promise<void> {
@@ -1738,6 +1762,10 @@ function section(
     const canUseRules = proposed !== "" && proposed !== coded;
     const canUseXero = imported !== "" && !isSplit;
     const canUseSplit = isSplit;
+    // What "Keep mine" keeps: the account itself, never the words shown for
+    // it -- "(unconfirmed)", or "settles INV-0135" on a matched payment.
+    const keepCode = override?.code ?? "";
+    const canKeep = coded !== "";
 
     return {
       row,
@@ -1751,6 +1779,8 @@ function section(
       canUseXero,
       canUseSplit,
       settlesInvoice,
+      keepCode,
+      canKeep,
     };
   });
 
@@ -1758,6 +1788,7 @@ function section(
   const totalXero = rowOptions.filter((o) => o.canUseXero).length;
   const totalRules = rowOptions.filter((o) => o.canUseRules).length;
   const totalSplits = rowOptions.filter((o) => o.canUseSplit).length;
+  const totalKeep = rowOptions.filter((o) => o.canKeep).length;
 
   const actionsBar = document.createElement("div");
   actionsBar.className = "check-section-actions";
@@ -1794,6 +1825,15 @@ function section(
     btnRules = document.createElement("button");
     btnRules.type = "button";
     actionsBar.append(btnRules);
+  }
+
+  // Your own coding, kept on every line that has some: the row's Keep mine,
+  // all at once.
+  let btnKeep: HTMLButtonElement | null = null;
+  if (totalKeep > 0) {
+    btnKeep = document.createElement("button");
+    btnKeep.type = "button";
+    actionsBar.append(btnKeep);
   }
 
   wrap.append(actionsBar);
@@ -1860,6 +1900,19 @@ function section(
       }
     }
 
+    if (btnKeep) {
+      if (noneChecked) {
+        btnKeep.textContent = `Keep mine for all (${totalKeep})`;
+        btnKeep.disabled = totalKeep === 0;
+      } else {
+        const count = rowOptions.filter(
+          (o) => selectedIds.has(o.row.transaction.id) && o.canKeep,
+        ).length;
+        btnKeep.textContent = `Keep mine for ${count} selected`;
+        btnKeep.disabled = count === 0;
+      }
+    }
+
     if (btnSplits) {
       if (noneChecked) {
         btnSplits.textContent = `Use all splits (${totalSplits}) (recommended)`;
@@ -1923,6 +1976,25 @@ function section(
     });
   }
 
+  if (btnKeep) {
+    btnKeep.addEventListener("click", () => {
+      const selectedIds = new Set(
+        Array.from(tbody.querySelectorAll<HTMLInputElement>("input.check-row-select:checked")).map(
+          (cb) => cb.dataset.id!,
+        ),
+      );
+      const targets = (
+        selectedIds.size > 0
+          ? rowOptions.filter((o) => selectedIds.has(o.row.transaction.id) && o.canKeep)
+          : rowOptions.filter((o) => o.canKeep)
+      ).map((o) => ({ transaction: o.row.transaction, code: o.keepCode }));
+      if (targets.length === 0) return;
+      btnKeep!.disabled = true;
+      btnKeep!.classList.add("working");
+      void keepOurCodingBulk(targets);
+    });
+  }
+
   if (btnSplits) {
     btnSplits.addEventListener("click", () => {
       const selectedIds = new Set(
@@ -1963,8 +2035,7 @@ function section(
 
   for (const opt of rowOptions) {
     const {
-      row, override, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit,
-      settlesInvoice,
+      row, proposed, coded, imported, parts, canUseRules, canUseXero, canUseSplit,
     } = opt;
     const tr = document.createElement("tr");
 
@@ -2097,10 +2168,11 @@ function section(
       keep.className = "small";
       keep.textContent = "Keep mine";
       keep.title = `${coded} — records that this was checked and stands`;
-      // Keeping a match keeps the coding the line already has; the words
-      // "settles INV-0135" are a description, not an account to write back.
-      const keeping = settlesInvoice ? (override?.code ?? "") : coded;
-      keep.addEventListener("click", () => void keepOurCoding(row.transaction, keeping));
+      // The account the line already has: "settles INV-0135" and
+      // "(unconfirmed)" are words shown for it, not an account to write back.
+      // Kept from the label, an unconfirmed line was given an account named
+      // "Sales - 200 (unconfirmed)".
+      keep.addEventListener("click", () => void keepOurCoding(row.transaction, opt.keepCode));
       actions.append(keep);
     }
     tr.append(actions);
@@ -2583,16 +2655,16 @@ function transferDiffersSection(rows: readonly CodingRow[]): HTMLElement {
       act.className = "small";
       if (mapped === null) {
         act.textContent = "match the file's name";
-        act.addEventListener("click", () => {
-          if (!showCodingMatch(name)) alert(`"${name}" is not matched to an account.`);
+        act.addEventListener("click", async () => {
+          if (!showCodingMatch(name)) await tellOnPage(`"${name}" is not matched to an account.`);
         });
       } else {
         act.textContent = `not a transfer — use ${mapped}`;
-        act.addEventListener("click", () => {
+        act.addEventListener("click", async () => {
           const other =
             partner === undefined ? "" : ` (${partner.date} in ${bankLabel(partner.account)})`;
           if (
-            !confirm(
+            !await askOnPage(
               `Undo this transfer and code ${row.transaction.date} ` +
                 `${formatAmount(row.transaction.amount)} to ${mapped}?\n\n` +
                 `The other side${other} is left uncoded, to be coded on its own.`,
@@ -3065,7 +3137,7 @@ async function acceptCodesBulk(
   }
 
   if (unmapped.size > 0) {
-    alert(
+    await tellOnPage(
       `Not matched to an account yet: "${[...unmapped].join('", "')}". ` +
         (applied > 0
           ? `${applied} other line${applied === 1 ? " was" : "s were"} updated. `
@@ -3185,14 +3257,14 @@ async function acceptSplitsBulk(
   }
 
   if (unmappedAll.size > 0) {
-    alert(
+    await tellOnPage(
       `No account in your rules matches: ${[...unmappedAll].join(", ")}. ` +
         "Set a GST treatment for it first so the GST is not assumed.",
     );
   }
 
   if (mismatchIds.size > 0) {
-    alert(`${mismatchIds.size} split(s) could not be applied because part amounts did not match the bank line.`);
+    await tellOnPage(`${mismatchIds.size} split(s) could not be applied because part amounts did not match the bank line.`);
   }
 
   if (applied === 0) {
@@ -3237,7 +3309,7 @@ async function acceptCode(
       // people to add it to the chart made a second account beside the one
       // it meant, so the answer is the match table, opened at that name.
       if (!showCodingMatch(code)) {
-        alert(`"${code}" is not matched to an account. Match it in the file's coding table.`);
+        await tellOnPage(`"${code}" is not matched to an account. Match it in the file's coding table.`);
       }
       return;
     }
@@ -3331,7 +3403,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
   }
 
   if (unmapped.length > 0) {
-    alert(
+    await tellOnPage(
       `No account in your rules matches ${unmapped.join(", ")}. ` +
         "Set a GST treatment for it first so the GST is not assumed.",
     );
@@ -3340,7 +3412,7 @@ async function acceptSplit(transaction: Transaction, parts: readonly ReferencePa
 
   const total = mapped.reduce((sum, part) => sum + part.amount, 0);
   if (total !== transaction.amount) {
-    alert(`The parts total ${formatAmount(total)} but the bank line is ${formatAmount(transaction.amount)}.`);
+    await tellOnPage(`The parts total ${formatAmount(total)} but the bank line is ${formatAmount(transaction.amount)}.`);
     return;
   }
 
@@ -3802,9 +3874,9 @@ function renderRuleSuggestions(body: HTMLElement, withHeading = true): void {
     const to = mapToOurVocabulary(proposal.rule.code);
     if (to === null || to === "") {
       accept.textContent = "Match the name";
-      accept.addEventListener("click", () => {
+      accept.addEventListener("click", async () => {
         if (!showCodingMatch(proposal.rule.code)) {
-          alert(
+          await tellOnPage(
             `"${proposal.rule.code}" is not matched to an account yet. Match it in the file's ` +
               "coding table, on the Coded history step or the Coding reconciliation page.",
           );
@@ -4212,15 +4284,15 @@ function wireAiButton(): void {
     button.classList.add("working");
     button.setAttribute("aria-busy", "true");
     void askAboutLines(waiting, howMany)
-      .then(({ got, said: trouble }) => {
-        if (trouble !== "") alert(trouble);
+      .then(async ({ got, said: trouble }) => {
+        if (trouble !== "") await tellOnPage(trouble);
         if (got > 0) showTheAiOnes();
         redraw("reconcile");
       })
-      .catch((error: unknown) => {
+      .catch(async (error: unknown) => {
         // Nothing below this throws today, but a button left saying "Asking
         // AI" for good is the wrong way to find out that changed.
-        alert((error as Error).message);
+        await tellOnPage((error as Error).message);
       })
       .finally(() => {
         button.classList.remove("working");
@@ -4307,6 +4379,9 @@ export function wireCodingReconciliation(): void {
   wireSheetAi();
 
   $("accept-all").addEventListener("click", () => void acceptAllShown());
+  // A tick, a bulk accept or a rule made in passing is undone on History and
+  // Undo; from the page where it was done, that is one press away.
+  $("reconcile-undo").addEventListener("click", () => showPage("history"));
   wireAiButton();
   $("check-pick").addEventListener("click", () => $<HTMLInputElement>("check-input").click());
   $("check-template").addEventListener("click", () =>
@@ -4329,14 +4404,15 @@ export function wireCodingReconciliation(): void {
  * whole point. A return built afterwards can be defended by pointing at the
  * decision rather than at the absence of one.
  */
-async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
-  if (codingRefusedForTransfer(transaction)) return;
+/** The override that records a line's own coding as checked and kept. */
+function keptOverride(
+  transaction: Transaction,
+  code: string,
+  was: TransactionOverride | undefined,
+): TransactionOverride {
   const one = state.suggestions?.get(transaction.id);
-  const overrides = { ...(state.ledger.overrides ?? {}) };
-  const was = overrides[transaction.id];
   const side = one?.classification.side;
-
-  overrides[transaction.id] = {
+  return {
     ...(was ?? {}),
     confirmed: true,
     code,
@@ -4345,6 +4421,47 @@ async function keepOurCoding(transaction: Transaction, code: string): Promise<vo
     note: "Checked against the imported coding and kept, on the Coding reconciliation page.",
     at: new Date().toISOString().slice(0, 10),
   };
+}
+
+/**
+ * Keep the coding already here on many lines at once: "Keep mine for all".
+ *
+ * Each as the row's own Keep mine keeps it, saved once, and written to
+ * History as one entry that can still be undone line by line.
+ */
+async function keepOurCodingBulk(
+  targets: readonly { transaction: Transaction; code: string }[],
+): Promise<void> {
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const batchEvents: CodingBatchEntry[] = [];
+  for (const { transaction, code } of targets) {
+    if (code === "" || codingRefusedForTransfer(transaction)) continue;
+    const was = overrides[transaction.id];
+    overrides[transaction.id] = keptOverride(transaction, code, was);
+    batchEvents.push({ id: transaction.id, before: was ?? null });
+  }
+  if (batchEvents.length === 0) {
+    redraw("check");
+    return;
+  }
+  state.ledger = { ...state.ledger, overrides };
+  state.persistent = await savePart(state.ledger);
+  await record(
+    "codingBatch",
+    `Kept own coding for ${batchEvents.length} line${batchEvents.length === 1 ? "" : "s"}, ` +
+      "against the imported coding, on the Coding reconciliation page",
+    batchEvents,
+    null,
+  );
+  reclassify();
+  redraw("check");
+}
+
+async function keepOurCoding(transaction: Transaction, code: string): Promise<void> {
+  if (codingRefusedForTransfer(transaction)) return;
+  const overrides = { ...(state.ledger.overrides ?? {}) };
+  const was = overrides[transaction.id];
+  overrides[transaction.id] = keptOverride(transaction, code, was);
 
   state.ledger = { ...state.ledger, overrides };
   state.persistent = await savePart(state.ledger);

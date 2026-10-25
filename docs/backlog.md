@@ -91,20 +91,6 @@ works).
   foreign-currency bank account in the chart, and the realised gain or loss
   on conversion posted. Xero's chart had no row for Wise KRW either, so the
   link step needs a way to add a bank row for one.
-- **Ask on the page everywhere, not in the browser's confirm box.** An
-  embedded browser (the Claude desktop app's pane, for one) answers
-  `confirm()` "Cancel" at once without showing it, so whatever it guards is
-  refused in silence. `askOnPage` in `ui.ts` asks in the page instead; the
-  trial balance, Leave out after all, Bring in as a journal and taking the
-  year-end journals from the journal report use it, and `askTextOnPage`
-  (the same box with a field) asks for the name of a new set of books and of
-  a copy. About 44 `confirm()` calls in 28 files remain, and `alert()` and
-  `prompt()` (entity names, donation reasons, asset and opening amounts) have
-  the same problem. Each needs its handler made async.
-  First of them: Delete on the online Books page (`cloud-books.ts`) asks for
-  the set's name with `prompt()`, so in such a browser the button does
-  nothing at all. Replace everything on the server, there, and the two
-  backup restores in `backup.ts` ask with `confirm()`.
 - **Reconcile tick, stage 2: redraw only the ticked line.** Stage 1 is done: a
   tick no longer waits for its saves (about 0.3 s on books online, down from
   0.8–2.6 s), and the writes queue in order (`writeQueue` in core). What is
@@ -114,26 +100,40 @@ works).
   in full as now. Held until asked for. Not yet tested by hand: cutting the
   connection mid-tick (the "not saved" warning, and the warning on leaving
   with saves outstanding), and two tabs on the same books.
-- **History is rewritten whole on every change.** Each coding sends the
-  entire event log (77 KB on AI Test, growing), so every write gets slower as
-  the books age. Append one event at a time instead -- a table of rows on the
-  server rather than a part, with the browser and folder backends to match.
-- **Arrow Rock is 0.03 from Xero's P&L for FY2026**, after the bills, credit
-  notes and the Google One journal with GST were sorted. Not yet traced.
-- **Say it is working while the other bulk actions on Reconcile run.** "Split
-  N" now shows the `working` style and "Splitting 12 of 40…" on its button
-  until it is done. Accept all and AI suggestions may need the same: check
-  how long each takes on a large set of books.
-- **A journal keeps an account's old name after the account is renamed.** Manual
-  journal lines store "Name - CODE" as text; the figures follow the code, but
-  the journal list shows the name as it was.
-- **Each page change asks the local server for `/api/status` and `/api/ai`
-  twice.** Harmless, but chatty; one of each is enough.
-- **At about 800 pixels wide, Entities & accounts scrolls sideways.** The
-  accounts table is wider than the page.
+- **Books in a folder still write each changed part whole.** Books online
+  now send only what changed (`save_part_changes`, and `part-changes.ts` in
+  core), with the coding and its history entry in one request. A folder is
+  the app on the same computer, so the size matters far less there, but the
+  history file is still rewritten on every change. The same change lists
+  could go to `PUT api/ledger/parts/:part` if it ever shows.
+- **The rules go whole when a tick makes or changes one.** Changes reach
+  two levels into a part, and the list of rules is the third (`rules.rules`),
+  so it is sent whole: 7–17 KB on the books online in Oct 2026, against a
+  few hundred bytes for the coding. Small, but the biggest piece of such a
+  tick. Reaching a third level means `apply_part_ops` taking longer paths.
+- **What each online save replaced is all kept.** The owner decided on
+  22 Oct 2026 to keep all of it (then about 68 MB of an 87 MB database, from
+  the whole copies saves used to keep). Saves now keep the change rather
+  than a whole copy, with a whole copy at most once a day per part, so it
+  grows slowly. Revisit only if the database nears the free plan's 500 MB:
+  `prune_part_history(interval)` removes rows older than the interval and
+  keeps each part rebuildable.
 - **The lock guard works out every GST return from the first transaction on
-  every save.** Fine on the books tried so far; on books with many years it
-  may make saving slow. Worth measuring before changing.
+  every save.** Measured 24 Oct 2026 on invented books in the browser, eight
+  years and 11,800 bank lines: with lock dates set, about 230 ms a save (525
+  ms the save that sets them); with none, nothing. Noticeable, not the slow
+  part (below). Working out only the periods up to the lock would cut it.
+- **Reconcile on large books with many lines still to code.** On invented
+  books of eight years (11,800 lines, none coded at first) a tick took
+  18-23 s, nearly all of it in the redraw: each row worked out every line in
+  the books again (how its payee was coded before, and its usual transfer
+  partner), and the transfer search compared every line with every other.
+  Fixed 24 Oct 2026 -- worked out once per redraw, and transfers searched by
+  amount -- with the page shown identical before and after; a tick there is
+  now about 2 s, most of it the full redraw (Reconcile tick, stage 2).
+  Accept all of 8,321 lines there went from 57 s to 6 s (the account list
+  was rebuilt for every line), and its button now says "Accepting 8321…"
+  while it runs.
 
 ## Online books
 
@@ -154,10 +154,6 @@ works).
     per-person record (a `last_opened_at` on the membership row, set on
     opening); in a folder, a note beside the books. Shown as a column, and
     the list sorted by it.
-- **Rename and Delete are offered to people who cannot use them.** The online
-  Books page shows both on every row, whatever the person's role. The server
-  lets only an owner do either, so a bookkeeper, accountant or reader is
-  refused after pressing. Show them to owners only.
 - **Bring the GitHub workflows up to date.** The "Deploy website" run on
   10 October 2026 warned that `actions/checkout@v4` and `actions/setup-node@v4`
   target Node.js 20, which GitHub has deprecated (they are being run on
@@ -187,11 +183,6 @@ works).
   accounts are treated as loans (financing) rather than cash. Fixing it moves
   any other loan account out of cash in New Zealand's cash flow statements
   too, so it waits for a decision. Found 17 October 2026.
-- **The bank file column picker has no Account column.** A bank CSV that
-  names the account on each row (Date, Amount, Payee, Description,
-  Reference, Account) is read into one account named after the file, as the
-  picker for an unknown layout offers no column for the account. Found by an
-  outside tester on Australian books, 17 October 2026.
 - **SimpleFIN for books kept online.** The SimpleFIN feed works on the
   desktop app only: its Access URL is kept in `.simplefin.json` by the local
   server. Books kept online need it in Supabase Vault with an edge function

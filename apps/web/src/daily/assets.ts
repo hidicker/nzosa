@@ -4,7 +4,7 @@ import { booksCountry, booksMoney } from "../country.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, askTextOnPage, download, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   DEPRECIATION_METHODS,
   depreciationSchedule,
@@ -210,7 +210,7 @@ function renderDisposals(body: HTMLElement): void {
   }
 
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
   body.append(
     note(
       booksCountry().id === "au"
@@ -223,8 +223,8 @@ function renderDisposals(body: HTMLElement): void {
   );
 }
 
-function askProceeds(number: string, name: string, current: Cents): void {
-  const amount = window.prompt(
+async function askProceeds(number: string, name: string, current: Cents): Promise<void> {
+  const amount = await askTextOnPage(
     `What did ${number} ${name} sell for, excluding GST?\n\n` +
       "Enter 0 if it was scrapped; the book value is then a loss on sale.",
     (current / 100).toFixed(2),
@@ -232,7 +232,7 @@ function askProceeds(number: string, name: string, current: Cents): void {
   if (amount === null) return;
   const parsed = parseAmount(amount.trim());
   if (parsed === null) {
-    alert(`"${amount}" is not an amount.`);
+    await tellOnPage(`"${amount}" is not an amount.`);
     return;
   }
   void saveProceeds(number, Math.abs(parsed));
@@ -552,7 +552,7 @@ async function saveAsset(asset: FixedAsset, replacing: string | null, proceeds: 
 }
 
 async function removeAsset(asset: FixedAsset): Promise<void> {
-  if (!confirm(`Remove ${asset.number} ${asset.name} from the register? Its depreciation goes with it.`)) return;
+  if (!await askOnPage(`Remove ${asset.number} ${asset.name} from the register? Its depreciation goes with it.`)) return;
   const before = state.ledger.assets ?? [];
   const assets = before.filter((a) => a.number !== asset.number);
   // Its sale proceeds go with it. Left behind, they would sit under a number no
@@ -693,7 +693,7 @@ export function renderAssetsPage(): void {
     tbody.append(tr);
   }
   table.append(head, tbody);
-  body.append(table);
+  body.append(wideTable(table));
 
   renderDisposals(body);
 }

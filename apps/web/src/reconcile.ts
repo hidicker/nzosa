@@ -334,6 +334,30 @@ export interface TransferSearch {
   windowDays?: number;
 }
 
+/**
+ * The lines of one list grouped by amount, in the list's own order.
+ *
+ * Only a line of the same amount the other way can be a transfer's other leg,
+ * so each search looks at those alone rather than at every line -- which, for
+ * every line on eight years of books, was a hundred million comparisons. Kept
+ * for as long as the list itself: the app replaces the list when lines come
+ * or go, never changes it in place.
+ */
+const byAmountHeld = new WeakMap<readonly Transaction[], Map<number, Transaction[]>>();
+
+function linesByAmount(all: readonly Transaction[]): Map<number, Transaction[]> {
+  const held = byAmountHeld.get(all);
+  if (held !== undefined) return held;
+  const out = new Map<number, Transaction[]>();
+  for (const one of all) {
+    const same = out.get(one.amount);
+    if (same === undefined) out.set(one.amount, [one]);
+    else same.push(one);
+  }
+  byAmountHeld.set(all, out);
+  return out;
+}
+
 export function transferCandidates(
   transaction: Transaction,
   all: readonly Transaction[],
@@ -343,7 +367,7 @@ export function transferCandidates(
   const when = Date.parse(transaction.date);
   const candidates: TransferCandidate[] = [];
 
-  for (const other of all) {
+  for (const other of linesByAmount(all).get(-transaction.amount) ?? []) {
     if (other.id === transaction.id) continue;
     if (search.taken.has(other.id)) continue;
     // The opposite leg is the same money the other way: same size, other sign.

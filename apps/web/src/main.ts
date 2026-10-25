@@ -1,7 +1,10 @@
 import { applyNewBooksCountry } from "./new-books-country.js";
 import { wirePresentation } from "./presentation.js";
+import { afterPress, watchBusyButtons } from "./busy.js";
 import { INBOX_FRESH_HOURS, readMorning, restoreMorning } from "./nightly.js";
-import { registerPages, showPage } from "./app.js";
+import { redraw, registerPages, showPage } from "./app.js";
+import type { PageName } from "./app.js";
+import { applyModules } from "./modules.js";
 import {
   dismissLoading,
   wireChrome,
@@ -145,6 +148,7 @@ import {
   savePart,
   saveUser,
   setBeforeSave,
+  keepBooksInMemory,
   backendKind,
   openCloudBookId,
   ledgerId,
@@ -228,6 +232,35 @@ async function init(): Promise<void> {
   // Every confirmed line keeps its own GST, and its choice for money between
   // entities, stored by the save that confirmed it.
   setBeforeSave((ledger) => storeBetweenChoices(storeConfirmedGst(ledger)));
+  // A save refused because somebody else saved these books first takes in
+  // what they changed, here, and tries again with this change on top.
+  keepBooksInMemory({
+    ledger: () => state.ledger,
+    setLedger: (ledger) => {
+      state.ledger = ledger;
+      state.chart = ledger.chart ?? [];
+    },
+    events: () => state.events,
+    setEvents: (events) => {
+      state.events = events;
+    },
+    rules: () =>
+      state.rules === undefined
+        ? undefined
+        : { version: 1, name: state.rulesName, loadedAt: state.rulesLoadedAt, rules: state.rules },
+    setRules: (stored) => {
+      const held = stored as { name?: string; loadedAt?: string; rules?: typeof state.rules } | null;
+      if (!held?.rules) return;
+      state.rules = held.rules;
+      state.rulesName = held.name ?? state.rulesName;
+      state.rulesLoadedAt = held.loadedAt ?? state.rulesLoadedAt;
+    },
+    shown: () => {
+      reclassify();
+      applyModules();
+      redraw(state.page as PageName);
+    },
+  });
   for (const link of document.querySelectorAll<HTMLAnchorElement>("#sidebar-rules-sublinks a")) {
     link.addEventListener("click", (e) => {
       e.preventDefault();
@@ -394,10 +427,12 @@ function wireUp(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>(
     ".sidebar-nav button[data-page], .sidebar-foot button[data-page]",
   )) {
-    button.addEventListener("click", () => {
-      if (button.dataset["page"] === "reports") reportsFromMenu();
-      showPage(button.dataset["page"] ?? "reconcile");
-    });
+    button.addEventListener("click", () =>
+      afterPress(button, () => {
+        if (button.dataset["page"] === "reports") reportsFromMenu();
+        showPage(button.dataset["page"] ?? "reconcile");
+      }),
+    );
   }
 
   $<HTMLSelectElement>("entity-filter").addEventListener("change", () => {
@@ -484,6 +519,8 @@ function wireUp(): void {
       banner.hidden = false;
     }
   }
+  // Before anything can be pressed: a button left waiting says so.
+  watchBusyButtons();
   wireBankImport();
   wireFileIntake();
   wireReconcile();

@@ -8,7 +8,7 @@ import { renderLeave } from "./payroll-leave.js";
 import { payrollAccounts, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
-import { download, escapeHtml, note } from "../ui.js";
+import { askOnPage, download, escapeHtml, note, tellOnPage } from "../ui.js";
 import {
   accountEntityKey,
   buildPayRun,
@@ -864,7 +864,7 @@ function renderEmployeesTable(container: HTMLElement): void {
     });
 
     tr.querySelector(".del-emp")?.addEventListener("click", async () => {
-      if (confirm(`Remove employee "${emp.name}"?`)) {
+      if (await askOnPage(`Remove employee "${emp.name}"?`)) {
         payroll.employees = payroll.employees.filter((e) => e.id !== emp.id);
         await commitPayroll(payroll, `${emp.name}: employee removed`);
       }
@@ -1009,7 +1009,7 @@ function renderPayRunCreator(container: HTMLElement): void {
 
   const payroll = getPayroll();
   if (payroll.employees.length === 0) {
-    alert("Add at least one employee before running payroll.");
+    void tellOnPage("Add at least one employee before running payroll.");
     creatingPayRun = false;
     return;
   }
@@ -1268,11 +1268,11 @@ function renderPayRunCreator(container: HTMLElement): void {
 
   confirmBtn.addEventListener("click", async () => {
     if (!payroll.employerIrd || !isValidIrdNumber(payroll.employerIrd)) {
-      alert("Enter a valid employer IRD number at the top of the page before saving the pay run.");
+      await tellOnPage("Enter a valid employer IRD number at the top of the page before saving the pay run.");
       return;
     }
     if (!payRunDraft.periodStart || !payRunDraft.periodEnd || !payRunDraft.payDate) {
-      alert("Enter the period start, period end and pay date.");
+      await tellOnPage("Enter the period start, period end and pay date.");
       return;
     }
 
@@ -1374,11 +1374,11 @@ function renderPayRunsList(container: HTMLElement): void {
       <span>Download Payday Filing (myIR CSV)</span>
     `;
     dlBtn.title = "Export Inland Revenue Employment Information (EI) CSV";
-    dlBtn.addEventListener("click", () => {
+    dlBtn.addEventListener("click", async () => {
       const contact = payroll.contact ?? { name: "", phone: "", email: "" };
       const problems = paydayFilingProblems(run, contact);
       if (problems.length > 0) {
-        alert(`The file cannot be made yet: ${problems.join("; ")}.`);
+        await tellOnPage(`The file cannot be made yet: ${problems.join("; ")}.`);
         return;
       }
       const csv = generatePaydayFilingCsv(run, contact);
@@ -1403,7 +1403,7 @@ function renderPayRunsList(container: HTMLElement): void {
     delBtn.textContent = "Delete";
     delBtn.title = "Delete this pay run";
     delBtn.addEventListener("click", async () => {
-      if (confirm(`Delete the pay run for ${run.payDate}?`)) {
+      if (await askOnPage(`Delete the pay run for ${run.payDate}?`)) {
         // Its journal goes with it: journals are derived from the pay runs kept.
         payroll.payRuns = payroll.payRuns.filter((r) => r.id !== run.id);
         await commitPayroll(payroll, `Pay run for ${run.payDate} removed`);

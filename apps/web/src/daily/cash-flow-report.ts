@@ -3,8 +3,14 @@ import { state } from "../state.js";
 import { note } from "../ui.js";
 import { cashFlowStatement, emptyEntityModel } from "@nzosa/core";
 import type { CashFlowStatement, DateRange } from "@nzosa/core";
-import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid, monthsOfTaxYear } from "../tax-year.js";
+import { taxYearEndSaid, monthsOfTaxYear } from "../tax-year.js";
 import { booksLocale, moneyPlaces } from "../country.js";
+import { periodHeading, reportRange, wholeYear } from "./report-period.js";
+
+/** A day in words: "1 April 2025". */
+function daySaid(date: string): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString(booksLocale(), { day: "numeric", month: "long", year: "numeric" });
+}
 
 /**
  * The statement of cash flows, for the entity the page is filtered to.
@@ -68,7 +74,9 @@ let byMonth = false;
 export function renderCashFlow(body: HTMLElement, year: number): void {
   const { banks, title } = banksNow();
   const heading = document.createElement("h3");
-  heading.textContent = `${title} — Statement of cash flows, year to ${taxYearEndSaid(year)}`;
+  heading.textContent = wholeYear(year)
+    ? `${title} — Statement of cash flows, year to ${taxYearEndSaid(year)}`
+    : `${title} — Statement of cash flows, ${periodHeading(year)}`;
   body.append(heading);
   if (banks.size === 0) {
     body.append(
@@ -79,7 +87,7 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
     );
     return;
   }
-  const period = { from: taxYearStart(year), to: taxYearEnd(year) };
+  const period = reportRange(year);
   const statement = statementFor(period, banks);
   if (statement === null) {
     body.append(note("No transactions yet."));
@@ -125,8 +133,8 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
       row(`Net cash from ${section.activity} activities`, section.total, "report-total");
     }
     row("Net increase (decrease) in cash", statement.netChange, "report-total");
-    row(`Cash at ${taxYearStartSaid(year)}`, statement.openingCash);
-    row(`Cash at ${taxYearEndSaid(year)}`, statement.closingCash, "report-total");
+    row(`Cash at ${daySaid(period.from)}`, statement.openingCash);
+    row(`Cash at ${daySaid(period.to)}`, statement.closingCash, "report-total");
     table.append(tbody);
     body.append(table);
   }
@@ -165,7 +173,10 @@ export function renderCashFlow(body: HTMLElement, year: number): void {
 function monthly(year: number, banks: ReadonlySet<string>): HTMLElement {
   const months: { label: string; s: CashFlowStatement | null }[] = [];
   // The books' own year: April to March in New Zealand, July to June in Australia.
+  // The months of the period chosen, or of the whole year.
+  const period = reportRange(year);
   for (const { label, from, to } of monthsOfTaxYear(year, booksLocale())) {
+    if (to < period.from || from > period.to) continue;
     months.push({ label, s: statementFor({ from, to }, banks) });
   }
   const table = document.createElement("table");

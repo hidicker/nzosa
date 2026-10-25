@@ -105,6 +105,7 @@ import type {
 } from "@nzosa/core";
 import { taxYearEnd, taxYearOf, taxYearStart, depreciationRules } from "./tax-year.js";
 import { booksCountry, booksLocale, moneyPlaces } from "./country.js";
+import { tellOnPage } from "./ui.js";
 
 /**
  * What every page asks of the books, and what changes them.
@@ -373,7 +374,7 @@ export async function unpairTransfer(transactionId: string): Promise<boolean> {
  */
 export function codingRefusedForTransfer(transaction: Transaction): boolean {
   if ((state.ledger.transfers ?? {})[transaction.id] === undefined) return false;
-  alert(
+  void tellOnPage(
     `${transaction.date} ${formatAmount(transaction.amount)} ${transaction.otherParty} is recorded as a ` +
       "transfer between your own accounts, so it cannot also be coded to an account.\n\n" +
       'If it is not a transfer, choose "not a transfer" on the Reconcile page, then code it.',
@@ -1812,6 +1813,25 @@ export function gstDiffers(one: Suggestion): boolean {
 }
 
 export function unregisteredCode(): (code: string) => boolean {
+  // Asked once for every line by Accept all, and it reads the whole chart:
+  // eight thousand lines accepted spent most of a minute here. Worked out
+  // once for the work in hand, while the books, chart and rules are the same.
+  const held = unregisteredHeld;
+  if (held !== null && held.ledger === state.ledger && held.chart === state.chart && held.rules === state.rules) {
+    return held.test;
+  }
+  const test = unregisteredCodeNow();
+  unregisteredHeld = { test, ledger: state.ledger, chart: state.chart, rules: state.rules };
+  queueMicrotask(() => {
+    if (unregisteredHeld?.test === test) unregisteredHeld = null;
+  });
+  return test;
+}
+
+let unregisteredHeld: { test: (code: string) => boolean; ledger: unknown; chart: unknown; rules: unknown } | null =
+  null;
+
+function unregisteredCodeNow(): (code: string) => boolean {
   const model = state.ledger.entities ?? emptyEntityModel();
   const unregistered = new Set(
     model.entities.filter((e) => e.gstRegistered === false).map((e) => e.id),

@@ -1,4 +1,5 @@
 import { refreshPresentation } from "./presentation.js";
+import { afterPress } from "./busy.js";
 import { showPage } from "./app.js";
 import { toggleNarrow } from "./chrome.js";
 import { $, state } from "./state.js";
@@ -350,7 +351,7 @@ function wireSearch(): void {
 
 export function wireMenu(): void {
   for (const button of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav button[data-report]")) {
-    button.addEventListener("click", () => openReport(button.dataset["report"] ?? "home"));
+    button.addEventListener("click", () => afterPress(button, () => openReport(button.dataset["report"] ?? "home")));
   }
   for (const heading of document.querySelectorAll<HTMLButtonElement>(".sidebar-nav .sidebar-heading")) {
     heading.addEventListener("click", () => {

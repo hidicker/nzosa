@@ -4,7 +4,7 @@ import { state } from "../state.js";
 import { openCloudBookId } from "../store.js";
 import { feedIsHosted, feedPossible } from "../feed-route.js";
 import { callFunction } from "../cloud.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 import { chosenStartDate } from "../migrate/onboarding-state.js";
 import { feedRequestFrom, fromWise, onOrAfter, wiseAccountId } from "@nzosa/core";
 import type { IsoDate, WiseStatementLine } from "@nzosa/core";
@@ -128,8 +128,8 @@ export async function renderWise(): Promise<void> {
   head.textContent =
     `Connected with token ${status.token}.` +
     (status.lastFetch ? ` Last fetched ${new Date(status.lastFetch).toLocaleString(booksLocale())}.` : "");
-  const disconnect = button("Disconnect", () => {
-    if (!confirm("Forget the Wise token for these books? The lines already brought in stay.")) return;
+  const disconnect = button("Disconnect", async () => {
+    if (!await askOnPage("Forget the Wise token for these books? The lines already brought in stay.")) return;
     void call("", { method: "DELETE" }).then(() => {
       listed = null;
       void renderWise();
@@ -319,9 +319,9 @@ async function fetchStatements(
       const back = document.createElement("button");
       back.type = "button";
       back.textContent = "Bring them back";
-      back.addEventListener("click", () => {
+      back.addEventListener("click", async () => {
         if (
-          !confirm(
+          !await askOnPage(
             `Bring back the ${skipped} Wise line${skipped === 1 ? "" : "s"} removed earlier` +
               (start ? `, from ${start} on` : "") + "?",
           )

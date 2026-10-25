@@ -45,7 +45,7 @@
     </aside>
     <aside id="tabs-banner" class="save-banner" hidden>
       <div class="save-banner-content">
-        <span>These books are open in another tab too. A change made in one may be refused in the other: close one of them.</span>
+        <span id="tabs-banner-text">These books are open in another tab too.</span>
       </div>
     </aside>
     <aside id="save-banner" class="save-banner" hidden>
@@ -407,6 +407,7 @@
                 <button type="button" data-how="prompt" id="reconcile-ai-prompt"></button>
               </div>
             </span>
+            <button id="reconcile-undo" type="button" title="See what was changed, and undo any of it, on History and Undo">Undo</button>
           </div>
         </div>
         <p id="reconcile-ai-notice" class="page-hint ai-notice" hidden></p>
@@ -886,6 +887,14 @@
             </select>
             <select id="report-owner"></select>
             <select id="report-year"></select>
+            <select id="report-period" title="Which part of the year" hidden></select>
+            <span id="report-dates" class="report-dates" hidden>
+              <input type="date" id="report-from" aria-label="From" /> to
+              <input type="date" id="report-to" aria-label="To" />
+            </span>
+            <label id="report-compare-label" class="report-compare" hidden>
+              <input type="checkbox" id="report-compare" /> Compare with a year earlier
+            </label>
             <button id="journals-pick" type="button">Load ledger&hellip;</button>
             <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />
             <button id="report-download" type="button">Download CSV</button>

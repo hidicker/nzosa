@@ -1,5 +1,6 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
-import { spreadsheetCell } from "@nzosa/core";
+import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
+import { periodSaid, spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -35,7 +36,7 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, download, nameCell, note } from "../ui.js";
+import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
 import { downloadExcelReport } from "./excel-export.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
@@ -225,6 +226,15 @@ function lineRoles(): (code: string) => string {
   };
 }
 
+/** A day in words: "30 September 2025", or short, "30 Sep 2025". */
+function daySaid(date: string, short = false): string {
+  return new Date(`${date}T00:00:00`).toLocaleDateString(booksLocale(), {
+    day: "numeric",
+    month: short ? "short" : "long",
+    year: "numeric",
+  });
+}
+
 /** Build the report currently selected, or null when there is nothing to build. */
 export function currentReport(
   /**
@@ -264,7 +274,7 @@ export function currentReport(
   // separate lines with nothing tying them to the cost, so there is no gross
   // to report and pretending otherwise would just show the net twice.
   const includeGst = $<HTMLSelectElement>("report-gst").value === "gross" && basis !== "accrual";
-  const period = over ?? { from: taxYearStart(chosenYear), to: taxYearEnd(chosenYear) };
+  const period = over ?? reportRange(chosenYear);
 
   if (basis === "posted") {
     const ours = ourAccrualJournals();
@@ -909,10 +919,10 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     box.append("Reverse on ", date, " ");
     button(
       "Post reversal",
-      () => {
+      async () => {
         const on = date.value;
         if (on === "" || on < journal.date) {
-          alert("Choose a date on or after the journal's own.");
+          await tellOnPage("Choose a date on or after the journal's own.");
           return;
         }
         reversing = null;
@@ -943,9 +953,9 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     box.append(reversed ? "" : "In a locked year: reverse it to correct it.");
     return box;
   }
-  button("Delete", () => {
+  button("Delete", async () => {
     if (
-      !confirm(
+      !await askOnPage(
         `Delete this journal?
 
 ${journal.date} — ${journal.narration}
@@ -1409,7 +1419,7 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
  * sheet, it is a wrong one, and it is said rather than left to be discovered.
  */
 function renderBalanceSheet(body: HTMLElement, year: number): void {
-  const asAt = taxYearEnd(year);
+  const asAt = reportRange(year).to;
   const opening = state.ledger.openingBalances;
   const { journals, basis, fromImport } = positionJournals();
   // Set out as signed statements are: a company's shareholder current accounts
@@ -1417,17 +1427,29 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   const company = companyBooks();
   // Shareholder current accounts are New Zealand's way of setting a company's out.
   const currentAccounts = company && booksCountry().id === "nz";
-  const sheet = computeBalanceSheet({
-    asAt,
-    ...(opening ? { openingBalances: opening } : {}),
-    journals,
-    chart: state.chart,
-    shareholderCurrentAccounts: currentAccounts,
-    profitInRetainedEarnings: company,
-  });
+  const sheetAt = (date: string) =>
+    computeBalanceSheet({
+      asAt: date,
+      ...(opening ? { openingBalances: opening } : {}),
+      journals,
+      chart: state.chart,
+      shareholderCurrentAccounts: currentAccounts,
+      profitInRetainedEarnings: company,
+    });
+  const sheet = sheetAt(asAt);
+  // The same day a year earlier, as a column of its own; the opening and
+  // movement columns make way for it.
+  const earlierAt = comparing() ? earlierRange(year).to : null;
+  const earlier = earlierAt === null ? null : sheetAt(earlierAt);
+  const earlierClosing = new Map<string, Cents>();
+  if (earlier !== null) {
+    for (const part of [earlier.currentAssets, earlier.nonCurrentAssets, earlier.currentLiabilities, earlier.nonCurrentLiabilities, earlier.equity]) {
+      for (const line of part.lines) earlierClosing.set(balanceSheetLabel(line), line.closing);
+    }
+  }
 
   const heading = document.createElement("h3");
-  heading.textContent = `Balance sheet as at ${taxYearEndSaid(year)}`;
+  heading.textContent = `Balance sheet as at ${daySaid(asAt)}` + (earlierAt === null ? "" : `, beside ${daySaid(earlierAt)}`);
   body.append(heading);
 
   if (basis === "accrual" && !fromImport) body.append(note(NO_JOURNAL_REPORT));
@@ -1472,7 +1494,9 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   table.className = "report-table balance-sheet";
   const head = document.createElement("thead");
   head.innerHTML =
-    `<tr><th>Account</th><th>Opening</th><th>Movement</th><th>As at ${taxYearEndShort(year)}</th></tr>`;
+    earlier === null || earlierAt === null
+      ? `<tr><th>Account</th><th>Opening</th><th>Movement</th><th>As at ${escapeHtml(daySaid(asAt, true))}</th></tr>`
+      : `<tr><th>Account</th><th>As at ${escapeHtml(daySaid(asAt, true))}</th><th>As at ${escapeHtml(daySaid(earlierAt, true))}</th><th>Change</th></tr>`;
   const tbody = document.createElement("tbody");
 
   // A section's own total is left off where a grand total below says the same.
@@ -1490,6 +1514,42 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
     cell.textContent = title;
     header.append(cell);
     tbody.append(header);
+
+    // With a year earlier beside: this date, that date and the change; an
+    // account only last year had still shows, at nothing now.
+    if (earlier !== null) {
+      const shown = new Set<string>();
+      const rowOf = (label: string, now: Cents, then: Cents): void => {
+        const row = document.createElement("tr");
+        row.append(nameCell(label));
+        row.append(amountCell(money(now)));
+        row.append(amountCell(money(then)));
+        row.append(amountCell(now === then ? "" : money((now - then) as Cents)));
+        tbody.append(row);
+      };
+      for (const line of lines) {
+        const label = balanceSheetLabel(line);
+        shown.add(label);
+        rowOf(label, line.closing, earlierClosing.get(label) ?? (0 as Cents));
+      }
+      const before = [earlier.currentAssets, earlier.nonCurrentAssets, earlier.currentLiabilities, earlier.nonCurrentLiabilities, earlier.equity].find(
+        (part) => part.title === title,
+      );
+      for (const line of before?.lines ?? []) {
+        const label = balanceSheetLabel(line);
+        if (!shown.has(label) && line.closing !== 0) rowOf(label, 0 as Cents, line.closing);
+      }
+      if (!withTotal) return;
+      const sum = document.createElement("tr");
+      sum.className = "bs-total";
+      const then = before?.total ?? (0 as Cents);
+      sum.append(nameCell(`Total ${title.toLowerCase()}`));
+      sum.append(amountCell(money(total)));
+      sum.append(amountCell(money(then)));
+      sum.append(amountCell(total === then ? "" : money((total - then) as Cents)));
+      tbody.append(sum);
+      return;
+    }
 
     for (const line of lines) {
       const row = document.createElement("tr");
@@ -1510,29 +1570,35 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
     tbody.append(sum);
   };
 
-  const grand = (label: string, amount: Cents): void => {
+  const grand = (label: string, amount: Cents, then?: Cents): void => {
     const row = document.createElement("tr");
     row.className = "bs-grand";
     row.append(nameCell(label));
-    row.append(amountCell(""));
-    row.append(amountCell(""));
-    row.append(amountCell(money(amount)));
+    if (earlier !== null && then !== undefined) {
+      row.append(amountCell(money(amount)));
+      row.append(amountCell(money(then)));
+      row.append(amountCell(amount === then ? "" : money((amount - then) as Cents)));
+    } else {
+      row.append(amountCell(""));
+      row.append(amountCell(""));
+      row.append(amountCell(money(amount)));
+    }
     tbody.append(row);
   };
 
   section(sheet.currentAssets.title, sheet.currentAssets.lines, sheet.currentAssets.total);
   section(sheet.nonCurrentAssets.title, sheet.nonCurrentAssets.lines, sheet.nonCurrentAssets.total);
-  grand("Total assets", sheet.totalAssets);
+  grand("Total assets", sheet.totalAssets, earlier?.totalAssets);
   section(sheet.currentLiabilities.title, sheet.currentLiabilities.lines, sheet.currentLiabilities.total);
   section(
     sheet.nonCurrentLiabilities.title,
     sheet.nonCurrentLiabilities.lines,
     sheet.nonCurrentLiabilities.total,
   );
-  grand("Total liabilities", sheet.totalLiabilities);
-  grand("Net assets", sheet.netAssets);
+  grand("Total liabilities", sheet.totalLiabilities, earlier?.totalLiabilities);
+  grand("Net assets", sheet.netAssets, earlier?.netAssets);
   section(sheet.equity.title, sheet.equity.lines, sheet.equity.total, false);
-  grand("Total equity", sheet.totalEquity);
+  grand("Total equity", sheet.totalEquity, earlier?.totalEquity);
 
   table.append(head, tbody);
   body.append(table);
@@ -1560,8 +1626,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 }
 
 function renderJournal(body: HTMLElement, year: number): void {
-  const from = taxYearStart(year);
-  const to = taxYearEnd(year);
+  const { from, to } = reportRange(year);
   const inEntity = journalInEntity();
   const journals = postedJournals().filter((j) => {
     if (j.date < from || j.date > to) return false;
@@ -1569,7 +1634,7 @@ function renderJournal(body: HTMLElement, year: number): void {
   });
 
   const heading = document.createElement("h3");
-  heading.textContent = `Journal and trial balance, FY${year}`;
+  heading.textContent = `Journal and trial balance, ${periodHeading(year)}`;
   body.append(heading);
 
   if (journals.length === 0) {
@@ -2294,7 +2359,7 @@ async function saveAgentStatement(statement: AgentStatement): Promise<void> {
 }
 
 async function removeAgentStatement(statement: AgentStatement): Promise<void> {
-  if (!confirm(`Remove the ${statement.agent} statement for ${statement.from} to ${statement.to}? Its journal goes with it.`)) {
+  if (!await askOnPage(`Remove the ${statement.agent} statement for ${statement.from} to ${statement.to}? Its journal goes with it.`)) {
     return;
   }
   const before = state.ledger.agentStatements ?? [];
@@ -2466,13 +2531,13 @@ function renderGstReturn(body: HTMLElement, year: number): void {
     mark.className = "primary";
     mark.textContent = "Mark as filed";
     mark.title = "Keep this return as it stands today, to compare the books against later.";
-    mark.addEventListener("click", () => {
+    mark.addEventListener("click", async () => {
       const owedText =
         result.boxes.outcome === "refund"
           ? `a refund of ${money(result.boxes.box15)}`
           : `${money(result.boxes.box15)} to pay`;
       if (
-        !confirm(
+        !await askOnPage(
           `Record the return for ${result.period.from} to ${result.period.to} as filed, with ${owedText}? ` +
             "It is kept as these books show it now, and the GST reconciliation compares against it.",
         )
@@ -3208,7 +3273,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
   save.type = "button";
   save.className = "primary";
   save.textContent = "Save";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const next: Ir3Details = { owner, year };
     for (const [input, key, what] of [
       [paid, "provisionalTaxPaid", "Provisional tax paid"],
@@ -3217,7 +3282,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
       if (input.value.trim() === "") continue;
       const amount = parseAmount(input.value);
       if (amount === null) {
-        alert(`${what} needs to be an amount.`);
+        await tellOnPage(`${what} needs to be an amount.`);
         return;
       }
       next[key] = amount;
@@ -3226,7 +3291,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
     if (monthsOut.value.trim() !== "") {
       const months = Number(monthsOut.value);
       if (!Number.isInteger(months) || months < 0 || months > 12) {
-        alert("Months ruled out needs to be a whole number from 0 to 12.");
+        await tellOnPage("Months ruled out needs to be a whole number from 0 to 12.");
         return;
       }
       next.ietcMonthsOut = months;
@@ -3478,10 +3543,10 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
   add.type = "button";
   add.className = "primary";
   add.textContent = "Add";
-  add.addEventListener("click", () => {
+  add.addEventListener("click", async () => {
     const amount = parseAmount(gross.value);
     if (amount === null) {
-      alert("Give a gross amount.");
+      await tellOnPage("Give a gross amount.");
       return;
     }
     void addExtra({
@@ -4066,6 +4131,7 @@ export function renderReportsPage(): void {
   ownerSelect.hidden = kind !== "owner" && kind !== "ir3";
 
   const chosenYearNow = Number($<HTMLSelectElement>("report-year").value) || years[0];
+  drawPeriodControls(chosenYearNow, kind);
 
   // Built from the coding, so said plainly when some of it is still only a
   // suggestion. Not held back: the figures are more useful with the likely
@@ -4252,7 +4318,7 @@ export function renderReportsPage(): void {
       : usingAccrual
         ? "accrual, from the imported ledger"
         : "cash";
-  heading.textContent = `${title} — Profit and Loss, FY${year} (${how})`;
+  heading.textContent = `${title} — Profit and Loss, ${periodHeading(year)} (${how})` + (comparing() ? ", beside a year earlier" : "");
   body.append(heading);
   if (!usingAccrual && basisChoice === "accrual") {
     body.append(
@@ -4271,12 +4337,26 @@ export function renderReportsPage(): void {
   const money = (cents: number): string =>
     booksMoney(cents);
 
+  // The same period a year earlier, when asked for: built the same way, on
+  // the same basis, entity and GST choice, so the two columns are alike.
+  const prior = comparing() ? currentReport(earlierRange(year)) : null;
+  const priorGrouped = prior === null ? null : groupProfitAndLoss(prior.report, reportLookups().classOf);
+  if (prior !== null) {
+    const head = document.createElement("thead");
+    const was = earlierRange(year);
+    head.innerHTML =
+      `<tr><th>Account</th><th></th><th>${escapeHtml(periodHeading(year))}</th>` +
+      `<th>${escapeHtml(periodSaid(was))}</th><th>Change</th></tr>`;
+    table.append(head);
+  }
+
   const addRow = (
     label: string,
     value: string,
     cls = "",
     count = "",
     line?: ReportLine,
+    then?: { value: string; change: string },
   ): void => {
     const tr = document.createElement("tr");
     if (cls !== "") tr.className = cls;
@@ -4316,6 +4396,15 @@ export function renderReportsPage(): void {
     }
 
     tr.append(name, n, amount);
+    if (prior !== null) {
+      const before = document.createElement("td");
+      before.className = "report-amount";
+      before.textContent = then?.value ?? "";
+      const change = document.createElement("td");
+      change.className = "report-amount";
+      change.textContent = then?.change ?? "";
+      tr.append(before, change);
+    }
     tbody.append(tr);
   };
 
@@ -4324,21 +4413,35 @@ export function renderReportsPage(): void {
   // flatter it. The grouping is a partition of the same lines, so the net
   // profit below is the report's own.
   const grouped = groupProfitAndLoss(report, reportLookups().classOf);
-  const showGroup = (group: PlGroup, income: boolean): void => {
-    if (group.lines.length === 0) return;
+  // A year earlier's figure and the change, for a row: blank where there is
+  // no comparison.
+  const against = (now: number, then: number | undefined): { value: string; change: string } | undefined =>
+    prior === null ? undefined : { value: money(then ?? 0), change: now === (then ?? 0) ? "" : money(now - (then ?? 0)) };
+  const priorGroup = (key: "trading" | "costOfSales" | "otherIncome" | "operatingExpenses"): PlGroup | undefined =>
+    priorGrouped === null ? undefined : priorGrouped[key];
+  const showGroup = (group: PlGroup, income: boolean, key: "trading" | "costOfSales" | "otherIncome" | "operatingExpenses"): void => {
+    const before = priorGroup(key);
+    if (group.lines.length === 0 && (before === undefined || before.lines.length === 0)) return;
     addRow(group.title, "", "report-section");
+    const sign = (line: { net: number }): number => (income ? line.net : -line.net);
+    const priorByCode = new Map((before?.lines ?? []).map((line) => [line.code, sign(line)]));
     for (const line of group.lines) {
-      addRow(line.code, money(income ? line.net : -line.net), "", String(line.count), line);
+      addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+      priorByCode.delete(line.code);
     }
-    addRow(`Total ${group.title}`, money(group.total), "report-total");
+    // Accounts only the year before had: shown, at nothing now.
+    for (const [code, then] of priorByCode) {
+      if (then !== 0) addRow(code, money(0), "", "", undefined, against(0, then));
+    }
+    addRow(`Total ${group.title}`, money(group.total), "report-total", "", undefined, against(group.total, before?.total));
   };
 
-  showGroup(grouped.trading, true);
-  showGroup(grouped.costOfSales, false);
-  addRow("Gross Profit", money(grouped.grossProfit), "report-total");
-  showGroup(grouped.otherIncome, true);
-  showGroup(grouped.operatingExpenses, false);
-  addRow("Net Profit", money(grouped.netProfit), "report-net");
+  showGroup(grouped.trading, true, "trading");
+  showGroup(grouped.costOfSales, false, "costOfSales");
+  addRow("Gross Profit", money(grouped.grossProfit), "report-total", "", undefined, against(grouped.grossProfit, priorGrouped?.grossProfit));
+  showGroup(grouped.otherIncome, true, "otherIncome");
+  showGroup(grouped.operatingExpenses, false, "operatingExpenses");
+  addRow("Net Profit", money(grouped.netProfit), "report-net", "", undefined, against(grouped.netProfit, priorGrouped?.netProfit));
   table.append(tbody);
   body.append(table);
 
@@ -4382,7 +4485,7 @@ export function renderReportsPage(): void {
   if (report.uncoded.count > 0) {
     body.append(
       note(
-        `${report.uncoded.count} transactions in FY${year} are not coded at all, ` +
+        `${report.uncoded.count} transactions in ${periodHeading(year)} are not coded at all, ` +
           `totalling ${money(report.uncoded.gross)}. They are in no figure above.`,
       ),
     );
@@ -4409,8 +4512,7 @@ function extractFor(year: number) {
   const engine = reportEngine();
   if (engine === null) return null;
 
-  const from = taxYearStart(year);
-  const to = taxYearEnd(year);
+  const { from, to } = reportRange(year);
   // Bank accounts picked: those accounts. An entity chosen and none picked:
   // its own accounts' lines, and lines coded to it from anybody's.
   const scope = accountsFor(state.varianceAccounts);
@@ -4451,7 +4553,7 @@ function accountTransactionsCsv(year: number): { text: string; name: string } | 
   if (extract === null || extract.rows.length === 0) return null;
   return {
     text: formatAccountTransactions(extract.rows, extract.options),
-    name: `account-transactions-fy${year}.csv`,
+    name: `account-transactions-${periodFileName(year)}.csv`,
   };
 }
 
@@ -4656,8 +4758,7 @@ function renderCharts(body: HTMLElement, year: number): void {
  */
 /** The year's entries for the chosen entity, as the journal reports list them. */
 function journalsForYear(year: number): ReturnType<typeof postedJournals> {
-  const from = taxYearStart(year);
-  const to = taxYearEnd(year);
+  const { from, to } = reportRange(year);
   // The entity's journals: those through its own bank accounts, and those
   // posting to its accounts from anybody's.
   const inEntity = journalInEntity();
@@ -4671,7 +4772,7 @@ function generalLedgerOptions(year: number): { entity?: string; period: { from: 
   const entity = reportingEntity();
   return {
     ...(entity !== undefined ? { entity: entity.name } : {}),
-    period: { from: taxYearStart(year), to: taxYearEnd(year) },
+    period: reportRange(year),
   };
 }
 
@@ -4679,7 +4780,7 @@ function generalLedgerOptions(year: number): { entity?: string; period: { from: 
 function generalLedgerCsv(year: number): { text: string; name: string } | null {
   const journals = journalsForYear(year);
   if (journals.length === 0) return null;
-  return { text: formatGeneralLedger(journals, generalLedgerOptions(year)), name: `general-ledger-fy${year}.csv` };
+  return { text: formatGeneralLedger(journals, generalLedgerOptions(year)), name: `general-ledger-${periodFileName(year)}.csv` };
 }
 
 function renderGeneralLedger(body: HTMLElement, year: number): void {
@@ -4884,12 +4985,12 @@ function downloadProfitAndLoss(): void {
   download(
     formatProfitAndLoss(
       built.report,
-      `${built.title} — Profit and Loss, FY${built.year}`,
+      `${built.title} — Profit and Loss, ${periodHeading(built.year)}`,
       exportNote,
       reportLookups().classOf,
       lineRoles(),
     ),
-    `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${built.year}.csv`,
+    `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${periodFileName(built.year)}.csv`,
     "text/csv",
   );
 }
@@ -4903,6 +5004,9 @@ export function wireReports(): void {
   $("report-kind").addEventListener("change", () => redraw("reports"));
   $("report-owner").addEventListener("change", () => redraw("reports"));
   $("report-year").addEventListener("change", () => redraw("reports"));
+  for (const id of ["report-period", "report-from", "report-to", "report-compare"]) {
+    document.getElementById(id)?.addEventListener("change", () => redraw("reports"));
+  }
   $("report-download").addEventListener("click", () => downloadReport());
   $("report-download-excel").addEventListener("click", () => downloadExcelReport());
 }
@@ -4929,7 +5033,7 @@ function behindRow(
   const row = document.createElement("tr");
   row.className = "report-behind";
   const cell = document.createElement("td");
-  cell.colSpan = 3;
+  cell.colSpan = comparing() ? 5 : 3;
 
   const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
   const engine = reportEngine();

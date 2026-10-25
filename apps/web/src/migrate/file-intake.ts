@@ -12,7 +12,7 @@ import { setQuickBooksExportCompanions } from "./qbo-export-set.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
 import { ledgerName, save, savePart } from "../store.js";
-import { askOnPage } from "../ui.js";
+import { askOnPage, tellOnPage } from "../ui.js";
 import { downloadBackupNow, restoreWithConfirm } from "../backup.js";
 import { readFiledReturns } from "../variance.js";
 import { readIrdFiles } from "../daily/ird-records.js";
@@ -450,7 +450,7 @@ export async function loadJournals(file: File): Promise<void> {
 
   const parsed = parseXeroJournalReport(text);
   if (parsed.journals.length === 0) {
-    alert(
+    await tellOnPage(
       `${file.name} holds no journals. Export one from Xero as ` +
         "Accounting > Reports > Journal Report.",
     );
@@ -476,7 +476,7 @@ export async function loadJournals(file: File): Promise<void> {
       .map((j) => `  ${j.date}  ${j.narration.slice(0, 58)}`)
       .join("\n");
     const more = lost.length > 8 ? `\n  and ${lost.length - 8} more` : "";
-    const ok = confirm(
+    const ok = await askOnPage(
       `${file.name} holds ${parsed.journals.length} journals, and does not include ` +
         `${lost.length} that carry a narration:\n\n${listed}${more}\n\n` +
         "These year-end entries cannot be recreated. Load this report anyway?",
@@ -576,7 +576,7 @@ async function offerManualJournals(journals: readonly Journal[]): Promise<void> 
 export async function loadAssets(file: File): Promise<void> {
   const parsed = parseFixedAssets(await file.text());
   if (parsed.assets.length === 0) {
-    alert(
+    await tellOnPage(
       `${file.name} holds no assets. Export one from Xero as Accounting > Fixed assets > Export.`,
     );
     return;
@@ -584,7 +584,7 @@ export async function loadAssets(file: File): Promise<void> {
   const before = state.ledger.assets ?? [];
   if (
     before.length > 0 &&
-    !confirm(
+    !await askOnPage(
       `Replace the ${before.length} asset${before.length === 1 ? "" : "s"} held with the ` +
         `${parsed.assets.length} in ${file.name}? It can be undone from History.`,
     )
@@ -595,7 +595,7 @@ export async function loadAssets(file: File): Promise<void> {
   state.persistent = await savePart(state.ledger, "assets");
   await record("assets", `Fixed asset register loaded from ${file.name}`, before, parsed.assets);
   if (parsed.problems.length > 0) {
-    alert(
+    await tellOnPage(
       `${parsed.assets.length} assets loaded. ${parsed.problems.length} could not be read:\n` +
         parsed.problems.slice(0, 5).map((p) => p.message).join("\n"),
     );
@@ -610,7 +610,7 @@ export async function loadInvoices(file: File): Promise<string> {
     const none =
       `${file.name} holds no invoices or bills. Export them from Xero as Business > Invoices > Export, ` +
       "or Business > Bills to pay > Export.";
-    alert(none);
+    await tellOnPage(none);
     return none;
   }
   // Sales invoices and bills come in separate files. Loading one replaces
@@ -707,7 +707,7 @@ async function creditNotesByNumber(): Promise<number> {
 export async function loadAllocations(file: File): Promise<void> {
   const parsed = parseXeroAllocations(await readXeroText(file));
   if (parsed.allocations.length === 0) {
-    alert(`${file.name} holds no payment allocations.`);
+    await tellOnPage(`${file.name} holds no payment allocations.`);
     return;
   }
   state.ledger = { ...state.ledger, allocations: parsed.allocations };

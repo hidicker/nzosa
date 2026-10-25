@@ -1,7 +1,7 @@
 import { record, reclassify, tripAccounts, tripsFor } from "../books.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, nameCell, note } from "../ui.js";
+import { amountCell, nameCell, note, tellOnPage } from "../ui.js";
 import { KILOMETRE_RATES, emptyEntityModel, emptyTripLog, isRental, ownersOf, totalKmFor, tripKm } from "@nzosa/core";
 import type { Cents, Trip, TripLog, VehicleFuel } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart, taxYearStartSaid } from "../tax-year.js";
@@ -102,10 +102,10 @@ export function vehiclesPanel(year: number, rerender: () => void): HTMLElement {
   const vAdd = document.createElement("button");
   vAdd.type = "button";
   vAdd.textContent = "Add vehicle";
-  vAdd.addEventListener("click", () => {
+  vAdd.addEventListener("click", async () => {
     const name = vName.value.trim();
     if (name === "") {
-      alert("Give the vehicle a name.");
+      await tellOnPage("Give the vehicle a name.");
       return;
     }
     const vehicle = {
@@ -268,7 +268,7 @@ export function tripsPanel(year: number, rerender: () => void, only?: string): H
   const save = document.createElement("button");
   save.type = "button";
   save.textContent = "Add trip";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const distance = Number(kmBox.value);
     const problems = [
       date.value === "" ? "the date" : "",
@@ -278,7 +278,7 @@ export function tripsPanel(year: number, rerender: () => void, only?: string): H
       purpose.value.trim() === "" ? "why the trip was made" : "",
     ].filter(Boolean);
     if (problems.length > 0) {
-      alert(`Fill in ${problems.join(", ")}. Inland Revenue expects each trip's purpose to be recorded.`);
+      await tellOnPage(`Fill in ${problems.join(", ")}. Inland Revenue expects each trip's purpose to be recorded.`);
       return;
     }
     const trip: Trip = {

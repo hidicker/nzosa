@@ -1,7 +1,7 @@
 import { record } from "../books.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
+import { askOnPage, note } from "../ui.js";
 import { completeTask, taskOpen } from "@nzosa/core";
 import type { CareRepeat, CareTask, IsoDate, PropertyCare } from "@nzosa/core";
 import { booksLocale } from "../country.js";
@@ -160,8 +160,8 @@ export function propertyCarePanel(entityId: string, rerender: () => void): HTMLE
     drop.className = "link-button";
     drop.textContent = "✕";
     drop.title = "Remove this job";
-    drop.addEventListener("click", () => {
-      if (confirm(`Remove "${task.what}"?`)) replace(task, null, `Removed: ${task.what}`);
+    drop.addEventListener("click", async () => {
+      if (await askOnPage(`Remove "${task.what}"?`)) replace(task, null, `Removed: ${task.what}`);
     });
     dropCell.append(drop);
 

@@ -469,6 +469,19 @@ export async function listBooks(): Promise<CloudBook[]> {
 }
 
 /**
+ * The role the person signed in has in each set of books they are in: owner,
+ * bookkeeper, accountant or readonly. Null when it could not be read.
+ */
+export async function myRoles(): Promise<Map<string, string> | null> {
+  const me = currentSession()?.userId ?? "";
+  if (me === "") return null;
+  const response = await rest(`book_members?user_id=eq.${encodeURIComponent(me)}&select=book_id,role`);
+  if (response === null || !response.ok) return null;
+  const rows = (await response.json().catch(() => null)) as { book_id: string; role: string }[] | null;
+  return Array.isArray(rows) ? new Map(rows.map((row) => [row.book_id, row.role])) : null;
+}
+
+/**
  * A new set of books, owned by whoever made it.
  *
  * Through a function rather than by inserting a row, and not for tidiness:
@@ -531,6 +544,19 @@ export async function loadParts(bookId: string): Promise<Record<string, CloudPar
     version: number;
     data: unknown;
   }[];
+  const parts: Record<string, CloudPart> = {};
+  for (const row of rows) parts[row.part] = { version: row.version, data: swapChars(row.data, STAND_IN, NUL) };
+  return parts;
+}
+
+/** Some parts of one set of books, as they are now; null if they could not be read. */
+export async function loadNamedParts(bookId: string, names: readonly string[]): Promise<Record<string, CloudPart> | null> {
+  const list = names.map((name) => encodeURIComponent(name)).join(",");
+  const response = await rest(
+    `book_parts?book_id=eq.${encodeURIComponent(bookId)}&part=in.(${list})&select=part,version,data`,
+  );
+  if (response === null || !response.ok) return null;
+  const rows = (await response.json().catch(() => [])) as { part: string; version: number; data: unknown }[];
   const parts: Record<string, CloudPart> = {};
   for (const row of rows) parts[row.part] = { version: row.version, data: swapChars(row.data, STAND_IN, NUL) };
   return parts;
@@ -606,6 +632,51 @@ export async function savePart(
   if (error.code === "42501") {
     return { kind: "refused", why: "You do not have permission to change these books." };
   }
+  return { kind: "failed", why: error.message ?? `Save failed (${response.status}).` };
+}
+
+/** One part in a save of several: its changes, or the part whole. */
+export type PartChange =
+  | { part: string; version: number; ops: unknown[] }
+  | { part: string; version: number; data: unknown };
+
+export type ChangesOutcome =
+  | { kind: "saved"; versions: number[] }
+  | { kind: "conflict" }
+  | { kind: "refused"; why: string }
+  | { kind: "failed"; why: string }
+  /** The project has no save_part_changes: one set up before it existed. */
+  | { kind: "missing" };
+
+/**
+ * Save several parts in one request, each as its changes or whole.
+ *
+ * All of them or none: a coding and the history entry that records it are
+ * saved together, so the history never tells of a change that did not save.
+ * Each names the version it was built on, as with `savePart`.
+ */
+export async function saveChanges(bookId: string, changes: readonly PartChange[]): Promise<ChangesOutcome> {
+  const response = await rest("rpc/save_part_changes", {
+    method: "POST",
+    body: JSON.stringify({ p_book: bookId, p_changes: swapChars(changes, NUL, STAND_IN) }),
+  });
+  if (response === null) return { kind: "failed", why: "Not signed in, or no connection." };
+
+  if (response.ok) {
+    const next = (await response.json().catch(() => null)) as unknown;
+    return Array.isArray(next) && next.length === changes.length && next.every((v) => typeof v === "number")
+      ? { kind: "saved", versions: next as number[] }
+      : { kind: "failed", why: "The server did not say which versions it wrote." };
+  }
+
+  const error = (await response.json().catch(() => ({}))) as PostgrestError;
+  if (response.status === 409 || error.code === "PT409") return { kind: "conflict" };
+  if (error.code === "42501") {
+    return { kind: "refused", why: "You do not have permission to change these books." };
+  }
+  // PostgREST's "no such function": a project of somebody's own, set up from
+  // an older own-project.sql.
+  if (error.code === "PGRST202" || (response.status === 404 && error.code === undefined)) return { kind: "missing" };
   return { kind: "failed", why: error.message ?? `Save failed (${response.status}).` };
 }
 

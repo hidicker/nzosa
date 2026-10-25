@@ -53,7 +53,7 @@ export function looksLikeBankFile(text: string): boolean {
 const accountId = (label: string): string =>
   label.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "") || "bank";
 
-type Field = "date" | "amount" | "moneyOut" | "moneyIn" | "payee" | "description" | "reference" | "balance";
+type Field = "date" | "amount" | "moneyOut" | "moneyIn" | "payee" | "description" | "reference" | "balance" | "account";
 const FIELDS: readonly [Field, string][] = [
   ["date", "Date"],
   ["amount", "Amount (money out as minus)"],
@@ -63,6 +63,7 @@ const FIELDS: readonly [Field, string][] = [
   ["description", "Description"],
   ["reference", "Reference"],
   ["balance", "Balance"],
+  ["account", "Account, for a file of several"],
 ];
 
 /**
@@ -100,7 +101,7 @@ function card(one: Waiting, host: HTMLElement, importFiles: (files: File[]) => P
       option.textContent = name === "" ? `Column ${i + 1}` : name;
       select.append(option);
     });
-    select.value = String(one.layout[field]);
+    select.value = String(one.layout[field] ?? -1);
     select.addEventListener("change", () => {
       one.layout = { ...one.layout, [field]: Number(select.value) };
       // One amount, or the pair: choosing one clears the other.
@@ -160,7 +161,12 @@ function card(one: Waiting, host: HTMLElement, importFiles: (files: File[]) => P
   });
   const accountLabel = document.createElement("label");
   accountLabel.className = "contact-field";
-  accountLabel.append(Object.assign(document.createElement("span"), { textContent: "Bank account" }), account);
+  accountLabel.append(
+    Object.assign(document.createElement("span"), {
+      textContent: (one.layout.account ?? -1) >= 0 ? "Bank account, when the file names only one" : "Bank account",
+    }),
+    account,
+  );
   grid.append(orderLabel, accountLabel, flipLabel);
   box.append(grid);
 
@@ -174,14 +180,22 @@ function card(one: Waiting, host: HTMLElement, importFiles: (files: File[]) => P
       account: accountId(one.label),
       currency: booksCurrency(),
     });
+    // Which account each line goes on, where the file holds several.
+    const accounts = new Set(read.transactions.map((t) => t.account));
+    const several = accounts.size > 1;
     const table = document.createElement("table");
     table.className = "report-table";
-    table.innerHTML = "<thead><tr><th>Date</th><th>Payee</th><th>Description</th><th>Amount</th></tr></thead>";
+    table.innerHTML =
+      "<thead><tr><th>Date</th>" +
+      (several ? "<th>Account</th>" : "") +
+      "<th>Payee</th><th>Description</th><th>Amount</th></tr></thead>";
     const body = document.createElement("tbody");
     for (const t of read.transactions.slice(0, 5)) {
       const tr = document.createElement("tr");
+      const label = t.extras?.["accountLabel"];
       for (const [text, cls] of [
         [t.date, "report-name"],
+        ...(several ? [[typeof label === "string" ? label : t.account, "report-name"] as const] : []),
         [t.otherParty, "report-name"],
         [t.particulars, "report-name"],
         [booksMoney(t.amount), "report-amount"],
@@ -199,6 +213,7 @@ function card(one: Waiting, host: HTMLElement, importFiles: (files: File[]) => P
     count.className = "page-hint";
     count.textContent =
       `${read.transactions.length} line${read.transactions.length === 1 ? "" : "s"} would come in` +
+      (several ? `, on ${accounts.size} accounts` : "") +
       (read.problems.length > 0 ? `, ${read.problems.length} left out (totals and lines with no date)` : "") +
       ". Check the amounts: money out should be minus.";
     preview.append(count);

@@ -112,7 +112,7 @@ United States books only), or **No** (with why).
 | Every report row drills down; the drill-down saves as CSV and PDF | Has | — |
 | Profit and loss, balance sheet, trial balance, general ledger, cash flow, agings | Has | — |
 | Income by customer, and sales by item | Has: Sales by customer and Sales by item, for any period, with CSV | — |
-| **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Partly: the Charts report | Yes |
+| **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Has, on the Charts report: the months, the biggest costs, days to be paid, gross and net margin, and a 13-week cash forecast with a CSV | — |
 | AI: an insights brief, eleven one-click analyses, any of eight providers | Partly: AI suggestions, the AI check, and a conversation with tools | Yes: one-click analyses |
 | Global search across customers, vendors, items, invoices and payments | Has: Ctrl+K finds pages, contacts, invoices, quotes, bills and bank lines, by words or by amount | — |
 | Keyboard shortcuts for new invoice, bill, payment | Has: Alt+Shift+I, B and J for a new invoice, bill and journal, from any page | — |
@@ -217,7 +217,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 32. Jobs belonging to customers, job profitability and P&L by job (L).
 33. Sub-accounts in the chart (L).
-34. Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast (M).
+34. ~~Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast~~: done 25 October 2026 on the Charts report. The forecast counts only what is known: documents owing and recurring invoices.
 35. One-click AI analyses beside the conversation (S).
 36. ~~Global search across contacts, invoices, bills and lines~~: done 25 October 2026, in the menu's search; an amount finds what is exactly that much.
 37. Receipt scanning in the page, without AI (L).

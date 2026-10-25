@@ -309,7 +309,8 @@ export function rankedBars(items: readonly RankedItem[]): HTMLElement {
  * net is a picture of something a person reads faster as three numbers.
  */
 export function statTiles(
-  tiles: readonly { label: string; value: Cents; note?: string }[],
+  /** `format` for a figure that is not money: days, a percentage. */
+  tiles: readonly { label: string; value: Cents; note?: string; format?: (value: number) => string }[],
 ): HTMLElement {
   const row = document.createElement("div");
   row.className = "chart-tiles";
@@ -321,7 +322,7 @@ export function statTiles(
     label.textContent = tile.label;
     const value = document.createElement("strong");
     value.className = "chart-tile-value";
-    value.textContent = formatAmount(tile.value);
+    value.textContent = tile.format !== undefined ? tile.format(tile.value) : formatAmount(tile.value);
     box.append(label, value);
     if (tile.note !== undefined) {
       const note = document.createElement("span");

@@ -2,6 +2,7 @@ import { attachmentsBox } from "../attachments-ui.js";
 import { renderReclassify } from "./reclassify-page.js";
 import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
+import { renderAnalytics } from "./analytics-section.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
 import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, periodSaid, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
@@ -4853,6 +4854,8 @@ function renderCharts(body: HTMLElement, year: number): void {
         : `Where it went: the ten biggest of ${whole.report.expenses.length} accounts, FY${year}`;
     body.append(where, rankedBars(biggest));
   }
+
+  renderAnalytics(body, whole.report, year);
 
   // The numbers behind the pictures, for anybody the pictures do not serve.
   const table = document.createElement("table");

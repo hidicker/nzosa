@@ -228,9 +228,17 @@ function lineRoles(): (code: string) => string {
 
 /** A day in words: "30 September 2025", or short, "30 Sep 2025". */
 function daySaid(date: string, short = false): string {
+  // Short months are the same three letters the period list uses ("Sep"),
+  // not the browser's own ("Sept" in New Zealand English), so a heading and
+  // its columns agree.
+  if (short) {
+    const [y = "", m = "1", d = "1"] = date.split("-");
+    const months = ["Jan", "Feb", "Mar", "Apr", "May", "Jun", "Jul", "Aug", "Sep", "Oct", "Nov", "Dec"];
+    return `${Number(d)} ${months[Number(m) - 1] ?? ""} ${y}`;
+  }
   return new Date(`${date}T00:00:00`).toLocaleDateString(booksLocale(), {
     day: "numeric",
-    month: short ? "short" : "long",
+    month: "long",
     year: "numeric",
   });
 }
@@ -4563,7 +4571,7 @@ function renderExtract(body: HTMLElement, year: number): void {
     body.append(note("No transactions yet. Import some bank data first."));
     return;
   }
-  const { engine, rows, options, scope, to } = extract;
+  const { engine, rows, options, scope } = extract;
 
   const built = accountTransactionRows(rows, options);
   const byId = new Map(rows.map((t) => [t.id, t]));
@@ -4571,7 +4579,7 @@ function renderExtract(body: HTMLElement, year: number): void {
 
   body.append(
     note(
-      `${built.length} lines for the year to ${to}` +
+      `${built.length} line${built.length === 1 ? "" : "s"} for ${periodHeading(year)}` +
         (scope.length > 0 ? `, on ${scope.length} account${scope.length === 1 ? "" : "s"}` : "") +
         (uncoded > 0
           ? `. ${uncoded} have no coding and show as "(not coded)".`

@@ -79,6 +79,8 @@ export type EventKind =
   | "timeApproval"
   /** A line typed into a register, or taken out of one, with its coding and split. */
   | "register"
+  /** Credit applied in parts, whole. */
+  | "creditApplications"
   /** Stock counts, whole. */
   | "stock"
   /** One account in the chart. `id` is its code and name. */
@@ -315,6 +317,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
+    case "creditApplications":
+      return { ...ledger, creditApplications: (event.before ?? {}) as NonNullable<StoredLedger["creditApplications"]> };
     case "register": {
       // Undone, a line typed in goes, and one deleted comes back, each with
       // its coding and split.
@@ -622,6 +626,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   wording: "Invoice messages and email wording",
   timeApproval: "Time approval",
   register: "Typed into a register",
+  creditApplications: "Credit applied",
   stock: "Stock count",
   entities: "Entities",
   codingBatch: "Coding (batch)",

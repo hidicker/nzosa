@@ -592,6 +592,14 @@ export type InvoiceStatus =
   | "overpaid"
   | "credit note";
 
+/** Part of a credit applied to a document: which, and how much (positive). */
+export interface CreditApplication {
+  invoice: string;
+  amount: Cents;
+  /** When it was applied, for the record. */
+  on?: IsoDate;
+}
+
 export interface InvoiceBalance {
   invoice: Invoice;
   /** Total of the bank lines assigned to it, always positive. */
@@ -609,6 +617,17 @@ export interface InvoiceBalance {
    * for ever is a debtors figure that cannot be collected.
    */
   credited: Cents;
+  /**
+   * For a credit note, or an invoice paid more than it was for: how much of
+   * that credit has been applied to other documents, as a positive amount.
+   */
+  applied: Cents;
+  /**
+   * For a credit note or an overpaid invoice: the credit still held on the
+   * account, not yet applied or refunded, as a positive amount. Nothing
+   * otherwise.
+   */
+  available: Cents;
   /**
    * What the imported file said was still owing, when it said anything.
    *
@@ -697,6 +716,12 @@ export function invoiceBalances(
    * wrong invoice quietly, which is worse than leaving it unapplied.
    */
   credits: Readonly<Record<string, string>> = {},
+  /**
+   * Credit held on account and applied in parts: a credit note's, or what an
+   * invoice was overpaid by, applied to other documents of the same kind, so
+   * much to each. Beside `credits`, which applies a whole note to one invoice.
+   */
+  applications: Readonly<Record<string, readonly CreditApplication[]>> = {},
 ): Map<string, InvoiceBalance> {
   const assigned = new Map<string, Cents>();
   for (const item of assignments) {
@@ -708,10 +733,20 @@ export function invoiceBalances(
   // What each invoice has been credited, from the credit notes pointed at it.
   const byNumber = new Map(invoices.map((invoice) => [invoice.number, invoice]));
   const credited = new Map<string, Cents>();
+  const applied = new Map<string, Cents>();
   for (const [note, target] of Object.entries(credits)) {
     const source = byNumber.get(note);
     if (source === undefined || target === "") continue;
     credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
+    applied.set(note, (applied.get(note) ?? 0) + Math.abs(source.total));
+  }
+  for (const [from, list] of Object.entries(applications)) {
+    if (!byNumber.has(from)) continue;
+    for (const one of list) {
+      if (!byNumber.has(one.invoice) || one.amount <= 0) continue;
+      credited.set(one.invoice, (credited.get(one.invoice) ?? 0) + one.amount);
+      applied.set(from, (applied.get(from) ?? 0) + one.amount);
+    }
   }
 
   const out = new Map<string, InvoiceBalance>();
@@ -722,9 +757,12 @@ export function invoiceBalances(
     // A credit note is measured as itself. Subtracting what it is "owed"
     // reported every one of them as overpaid before any money had moved.
     const from = invoice.broughtForward ?? invoice.total;
+    const given = applied.get(invoice.number) ?? 0;
+    // An overpaid invoice whose excess has been applied elsewhere has given
+    // that money away: it is that much less overpaid.
     const remaining = isCreditNote(invoice)
       ? from + paid + outside
-      : from - paid - off - outside;
+      : from - paid - off - outside + given;
     const status: InvoiceStatus = isCreditNote(invoice)
       ? "credit note"
       : remaining < 0
@@ -740,6 +778,10 @@ export function invoiceBalances(
       remaining,
       paidOutside: outside,
       credited: off,
+      applied: given,
+      // A credit note's credit, less what was refunded through the bank and
+      // what was applied; an overpaid invoice's excess.
+      available: isCreditNote(invoice) ? Math.max(0, -remaining - given) : Math.max(0, -remaining),
       status,
       fileRemaining: imported(invoice) ? invoice.outstanding : null,
     });
@@ -795,4 +837,23 @@ export function lineAmount(quantity: number, unitPrice: number): Cents {
   const magnitude = negative ? -product : product;
   const cents = (magnitude + 500_000n) / 1_000_000n;
   return Number(negative ? -cents : cents);
+}
+
+/**
+ * The credit each customer or supplier holds on account: every credit note
+ * and overpayment not yet applied or refunded, by contact and kind.
+ */
+export function creditOnAccount(
+  balances: Iterable<InvoiceBalance>,
+): { contact: string; kind: InvoiceKind; available: Cents; from: string[] }[] {
+  const out = new Map<string, { contact: string; kind: InvoiceKind; available: Cents; from: string[] }>();
+  for (const b of balances) {
+    if (b.available <= 0 || !isPosted(b.invoice)) continue;
+    const key = `${b.invoice.kind}\u0000${b.invoice.contact.trim().toLowerCase().replace(/\s+/g, " ")}`;
+    const one = out.get(key) ?? { contact: b.invoice.contact.trim(), kind: b.invoice.kind, available: 0, from: [] };
+    one.available += b.available;
+    one.from.push(b.invoice.number);
+    out.set(key, one);
+  }
+  return [...out.values()].sort((a, b) => b.available - a.available);
 }

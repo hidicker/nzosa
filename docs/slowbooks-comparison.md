@@ -25,7 +25,7 @@ United States books only), or **No** (with why).
 | Estimates converted to invoices | Has: "Save as quote" in New Zealand, "Save as estimate" elsewhere, listed on Invoices until made an invoice | — |
 | Sales receipts (paid on the spot), and a walk-in customer | Has: Paid on the spot makes the document a receipt, with how it was paid; no name is a walk-in customer. The money is still matched from the bank line | — |
 | Payments across several invoices, oldest first; batch payments across customers | Partly: a bank line settling several invoices on Reconcile | — (NZOSA matches to bank lines) |
-| **Customer credits**: an overpayment or credit note held on the customer's account and applied later | Partly: credit notes against a named invoice | Yes |
+| Customer credits: an overpayment or credit note held on the customer's account and applied later | Has: Credit on account on Invoices, applied in parts to later invoices | — |
 | Credit limits, late fees, writing off small balances | Has | — |
 | Recurring invoices | Has | — |
 | Saved invoice messages (how to pay, a thank-you), one the default | Has | — |
@@ -48,7 +48,7 @@ United States books only), or **No** (with why).
 | Purchase orders to bills | Has | — |
 | Bills, edited after posting | Has | — |
 | A bill line as an amount alone (no quantity and rate) | Has: a line is an amount, with a quantity and price only if wanted | — |
-| **Vendor credits held on account**, applied to later bills | Partly: credit notes against a bill | Yes (with customer credits) |
+| Vendor credits held on account, applied to later bills | Has: the same, on Bills | — |
 | Expenses and card charges as documents | Partly: bank and card lines are the entries | — |
 | **Receipt scanning** into a bill or expense (OCR on the computer, no AI) | Partly: an AI can read a PDF bill | Yes: OCR in the page, no AI, no upload |
 | **Attachments**: the receipt or file kept with a bill, expense, invoice, journal, contact | No: a link to a document only | Yes (storage in the folder, or Supabase Storage online) |
@@ -181,7 +181,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 4. ~~Direct credit files~~: done 25 October 2026 (ANZ, ASB, BNZ, Kiwibank, Westpac; ABA). TSB and the smaller banks still to come.
 5. ~~Reclassify transactions~~: done 25 October 2026.
 6. ~~A register you can type into~~: done 25 October 2026.
-7. **Customer and vendor credits held on account**, applied later (M).
+7. ~~Customer and vendor credits held on account~~: done 25 October 2026.
 8. **Attachments** on invoices, bills, journals and contacts (L).
 9. **MYOB import** (L).
 

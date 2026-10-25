@@ -1,3 +1,4 @@
+import { creditOnAccountSection } from "./credit-on-account.js";
 import { redraw, showPage } from "../app.js";
 import {
   bankLabel,
@@ -111,6 +112,7 @@ export function renderBills(): void {
     new Map([...balances].filter(([, b]) => b.invoice.kind === "purchase")),
     money,
   );
+  creditOnAccountSection(body, balances, "purchase", money);
 
   if (paying !== null) {
     const row = rows.find((r) => r.bill.number === paying);

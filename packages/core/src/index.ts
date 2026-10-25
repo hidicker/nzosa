@@ -318,6 +318,7 @@ export {
   formatUnitPrice,
   lineAmount,
   paidOutsideTotal,
+  creditOnAccount,
 } from "./invoices.js";
 export type {
   Invoice,
@@ -328,6 +329,7 @@ export type {
   PaymentAllocation,
   AllocationImportResult,
   InvoiceBalance,
+  CreditApplication,
   InvoiceAssignment,
   InvoiceStatus,
   OutsidePayment,

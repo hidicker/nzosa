@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { AbaSettings, InvoiceMessage, WordingKind } from "@nzosa/core";
+import type { AbaSettings, CreditApplication, InvoiceMessage, WordingKind } from "@nzosa/core";
 import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
@@ -381,6 +381,11 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /**
+   * Credit held on account and applied in parts: by the credit note or the
+   * overpaid document it came from, the documents it went to and how much.
+   */
+  creditApplications?: Record<string, CreditApplication[]>;
   /**
    * Bank transaction id to the opposite leg of the transfer it is half of.
    *

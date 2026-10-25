@@ -61,6 +61,7 @@ function build(kind: InvoiceKind, asAt: string): AgedReport {
     kind,
     payments: datedInvoicePayments(),
     credits: state.ledger.creditNotes ?? {},
+    applications: state.ledger.creditApplications ?? {},
     asAt,
     ...(chosen !== "" ? { include: (i: Invoice) => belongsTo(i, chosen) } : {}),
   });

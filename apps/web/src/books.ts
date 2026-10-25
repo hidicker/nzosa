@@ -1256,6 +1256,7 @@ export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
     splits: state.ledger.splits ?? {},
     assignments: invoiceAssignments(),
     credits: state.ledger.creditNotes ?? {},
+    applications: state.ledger.creditApplications ?? {},
   });
 }
 

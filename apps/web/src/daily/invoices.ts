@@ -1,3 +1,4 @@
+import { creditOnAccountSection } from "./credit-on-account.js";
 import { invoiceWordingPanel } from "./invoice-wording.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
@@ -1567,6 +1568,7 @@ export function renderInvoices(): void {
   // which only the balance can answer.
   const balances = new Map([...invoiceBalanceMap()].filter(([, b]) => shows(b.invoice)));
   creditNoteSection(body, balances, money);
+  creditOnAccountSection(body, balances, "sales", money);
   const owing = [...balances.values()]
     .filter((b) => b.remaining > 0 && isPosted(b.invoice))
     .sort((a, b) => b.remaining - a.remaining);

@@ -7,6 +7,7 @@ import type {
   CategoryRule,
   Invoice,
   SplitPart,
+  Transaction,
   TransactionOverride,
   VarianceNote,
 } from "@nzosa/core";
@@ -76,6 +77,8 @@ export type EventKind =
   | "wording"
   /** Whether time needs approving before it is invoiced. */
   | "timeApproval"
+  /** A line typed into a register, or taken out of one, with its coding and split. */
+  | "register"
   /** Stock counts, whole. */
   | "stock"
   /** One account in the chart. `id` is its code and name. */
@@ -312,6 +315,25 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, reconciliations: (event.before ?? []) as NonNullable<StoredLedger["reconciliations"]> };
     case "contacts":
       return { ...ledger, contacts: (event.before ?? []) as NonNullable<StoredLedger["contacts"]> };
+    case "register": {
+      // Undone, a line typed in goes, and one deleted comes back, each with
+      // its coding and split.
+      type Typed = { transaction: Transaction; override?: TransactionOverride; split?: SplitPart[] };
+      const added = event.before === null || event.before === undefined;
+      const one = (added ? event.after : event.before) as Typed;
+      const id = one.transaction.id;
+      const overrides = { ...(ledger.overrides ?? {}) };
+      const splits = { ...(ledger.splits ?? {}) };
+      if (added) {
+        delete overrides[id];
+        delete splits[id];
+        return { ...ledger, transactions: ledger.transactions.filter((t) => t.id !== id), overrides, splits };
+      }
+      if (one.override !== undefined) overrides[id] = one.override;
+      if (one.split !== undefined) splits[id] = one.split;
+      const transactions = ledger.transactions.some((t) => t.id === id) ? ledger.transactions : [...ledger.transactions, one.transaction];
+      return { ...ledger, transactions, overrides, splits };
+    }
     case "timeApproval": {
       const { timeApproval: _t, ...rest } = ledger;
       return event.before === true ? { ...rest, timeApproval: true } : (rest as StoredLedger);
@@ -599,6 +621,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   billPayment: "Paying bills by bank file",
   wording: "Invoice messages and email wording",
   timeApproval: "Time approval",
+  register: "Typed into a register",
   stock: "Stock count",
   entities: "Entities",
   codingBatch: "Coding (batch)",

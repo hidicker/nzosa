@@ -62,7 +62,7 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Bank feeds | Has: Akahu (NZ), Wise, SimpleFIN on the desktop | SimpleFIN online is in the backlog |
 | OFX, QFX and any CSV, column picker, an Account column | Has | — |
-| **A register you can type into**: a cash or petty-cash account's lines entered by hand, a running balance, an entry split across accounts | No: lines come from files and feeds only | Yes |
+| A register you can type into: a cash or petty-cash account's lines entered by hand, a running balance, an entry split across accounts | Has: on Bank import, each line coded or split as it is typed, then a bank line like any other | — |
 | Bank rules, a rule from a line | Has (rules learnt from coding) | — |
 | Transfers, card payments | Has | — |
 | Reconcile to a statement, mark all, lock | Has | — |
@@ -180,7 +180,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 3. ~~Payslips~~: done 25 October 2026.
 4. ~~Direct credit files~~: done 25 October 2026 (ANZ, ASB, BNZ, Kiwibank, Westpac; ABA). TSB and the smaller banks still to come.
 5. ~~Reclassify transactions~~: done 25 October 2026.
-6. **A register you can type into**, for cash, petty cash and accounts with no feed, entries split across accounts (M).
+6. ~~A register you can type into~~: done 25 October 2026.
 7. **Customer and vendor credits held on account**, applied later (M).
 8. **Attachments** on invoices, bills, journals and contacts (L).
 9. **MYOB import** (L).

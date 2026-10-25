@@ -7,6 +7,8 @@ import { savePart } from "../store.js";
 import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
   accountEmailFrom,
+  paidToContact,
+  spreadsheetCell,
   emailForContact,
   mailtoLink,
   collectionLetter,
@@ -21,6 +23,7 @@ import {
 } from "@nzosa/core";
 import type { Contact, ContactKind, Invoice } from "@nzosa/core";
 import { booksCountry, booksCurrency, noSalesTax } from "../country.js";
+import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 
 /**
  * Customers and vendors: who the books deal with.
@@ -37,6 +40,8 @@ let filter: Filter = "all";
 let query = "";
 /** The id being edited, or "new" for a record not made yet. */
 let editing: string | null = null;
+/** The supplier whose payments are open, by id. */
+let showingPayments: string | null = null;
 
 const KIND_WORD: Record<ContactKind, string> = { customer: "Customer", vendor: "Vendor", both: "Customer and vendor" };
 
@@ -205,6 +210,60 @@ function overdueList(body: HTMLElement, all: readonly Contact[]): void {
     table,
   );
   body.append(box);
+}
+
+/** What was paid to a supplier from the bank: this financial year, all time, and the lines. */
+function paymentsRow(contact: Contact, columns: number): HTMLTableRowElement {
+  const year = taxYearOf(today());
+  const paid = paidToContact(
+    state.ledger.transactions,
+    contact.name,
+    { from: taxYearStart(year), to: taxYearEnd(year) },
+    new Set(Object.keys(state.ledger.transfers ?? {})),
+  );
+  const tr = document.createElement("tr");
+  const cell = document.createElement("td");
+  cell.colSpan = columns;
+  if (paid.lines.length === 0) {
+    cell.append(note(`No bank lines out are to a payee that reads as ${contact.name}.`));
+    tr.append(cell);
+    return tr;
+  }
+  const lastYear = paid.lines
+    .filter((l) => l.date >= taxYearStart(year - 1) && l.date <= taxYearEnd(year - 1))
+    .reduce((sum, l) => sum + l.amount, 0);
+  const said = document.createElement("p");
+  said.textContent =
+    `Paid this financial year (to ${taxYearEnd(year)}): ${booksMoney(paid.inPeriod)}. Last year: ${booksMoney(lastYear)}. ` +
+    `All time: ${booksMoney(paid.allTime)}, in ${paid.lines.length} payment${paid.lines.length === 1 ? "" : "s"}.`;
+  const csv = document.createElement("button");
+  csv.type = "button";
+  csv.className = "small";
+  csv.textContent = "Payments CSV";
+  csv.addEventListener("click", () => {
+    const rows = [["Date", "Payee as the bank shows it", "Reference", "Account", "Amount"], ...paid.lines.map((l) => [l.date, l.payee, l.reference, l.account, (l.amount / 100).toFixed(2)])];
+    download(rows.map((r) => r.map(spreadsheetCell).join(",")).join("\n") + "\n", `payments-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.csv`, "text/csv");
+  });
+  const list = document.createElement("table");
+  list.className = "report-table";
+  list.innerHTML = "<thead><tr><th>Date</th><th>Payee</th><th>Reference</th><th class=\"report-amount\">Paid</th></tr></thead>";
+  const body = document.createElement("tbody");
+  for (const l of paid.lines.slice(0, 12)) {
+    const row = document.createElement("tr");
+    for (const [text, cls] of [[l.date, "report-date"], [l.payee, "report-name"], [l.reference, "report-name"], [booksMoney(l.amount), "report-amount"]] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      row.append(td);
+    }
+    body.append(row);
+  }
+  list.append(body);
+  cell.append(said, list);
+  if (paid.lines.length > 12) cell.append(note(`The latest 12 of ${paid.lines.length}; the CSV has them all.`));
+  cell.append(csv);
+  tr.append(cell);
+  return tr;
 }
 
 /**
@@ -640,8 +699,21 @@ export function renderContacts(): void {
       mail.addEventListener("click", () => void sendToCustomer(contact, "statement", true));
       actions.append(statement, mail);
     }
+    if (contact.kind !== "customer") {
+      const payments = document.createElement("button");
+      payments.type = "button";
+      payments.className = "small";
+      payments.textContent = showingPayments === contact.id ? "Hide payments" : "Payments";
+      payments.title = "What was paid to them from the bank, this financial year and all time.";
+      payments.addEventListener("click", () => {
+        showingPayments = showingPayments === contact.id ? null : contact.id;
+        redraw("contacts");
+      });
+      actions.append(payments);
+    }
     tr.append(actions);
     tbody.append(tr);
+    if (showingPayments === contact.id) tbody.append(paymentsRow(contact, 7));
     if (editing === contact.id) {
       const editor = document.createElement("tr");
       const cell = document.createElement("td");

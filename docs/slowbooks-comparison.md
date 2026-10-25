@@ -44,7 +44,7 @@ United States books only), or **No** (with why).
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
 | Vendor records, usual account, inactive | Has | — |
-| **Vendor page: paid this year and all time, payments CSV** | No | Yes |
+| Vendor page: paid this year and all time, payments CSV | Has: Payments on each supplier in Customers & vendors, from the bank lines paid to them | — |
 | Purchase orders to bills | Has | — |
 | Bills, edited after posting | Has | — |
 | **A bill line as an amount alone** (no quantity and rate) | No: a line takes a quantity and a price | Yes |
@@ -193,7 +193,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 13. ~~Overdue customers' statements~~: done 25 October 2026, one message each, since a mail program opens one at a time.
 14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
 15. ~~Income by customer, and sales by item~~: done 25 October 2026.
-16. Vendor page with paid this year and all time (S).
+16. ~~Paid this year and all time, per supplier~~: done 25 October 2026.
 17. A duplicate-name warning when a contact is added (S).
 18. A bill line as an amount alone (S).
 19. Quantities and prices to four decimal places (S).

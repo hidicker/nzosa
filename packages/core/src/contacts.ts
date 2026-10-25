@@ -117,3 +117,53 @@ export function findContact(contacts: readonly Contact[], name: string): Contact
   const parent = parentName(name);
   return parent === null ? undefined : contacts.find((c) => contactKey(c.name) === contactKey(parent));
 }
+
+/**
+ * Whether a bank line's payee is this contact. Banks shorten and capitalise
+ * names ("GREEN BEAN IMPORT"), and the books write them in full ("Green Bean
+ * Importers Limited"), so both are reduced to their letters and digits, a
+ * company ending is dropped, and one may begin the other -- but only for a
+ * name long enough that a short one cannot catch everybody.
+ */
+export function payeeMatches(payee: string, name: string): boolean {
+  const plain = (text: string): string =>
+    text
+      .toLowerCase()
+      .normalize("NFD")
+      .replace(/[̀-ͯ]/g, "")
+      .replace(/\b(limited|ltd|co|company|inc|llc|pty|nz)\b/g, "")
+      .replace(/[^a-z0-9]+/g, "");
+  const a = plain(payee);
+  const b = plain(name);
+  if (a === "" || b === "") return false;
+  if (a === b) return true;
+  const shorter = a.length < b.length ? a : b;
+  const longer = a.length < b.length ? b : a;
+  return shorter.length >= 6 && longer.startsWith(shorter);
+}
+
+/** What was paid to a contact from the bank: each line, and the totals for a period and all time. */
+export interface PaidToContact {
+  lines: { id: string; date: string; amount: number; account: string; payee: string; reference: string }[];
+  /** Money out to them, as a positive figure, in the period asked about. */
+  inPeriod: number;
+  allTime: number;
+}
+
+export function paidToContact(
+  transactions: readonly { id: string; date: string; amount: number; account: string; otherParty: string; reference: string; particulars: string }[],
+  name: string,
+  period: { from: string; to: string },
+  /** Lines that are transfers between the books' own accounts, never a payment to anybody. */
+  transferIds: ReadonlySet<string> = new Set(),
+): PaidToContact {
+  const lines = transactions
+    .filter((t) => t.amount < 0 && !transferIds.has(t.id) && payeeMatches(t.otherParty, name))
+    .map((t) => ({ id: t.id, date: t.date, amount: -t.amount, account: t.account, payee: t.otherParty, reference: t.reference || t.particulars }))
+    .sort((x, y) => y.date.localeCompare(x.date));
+  return {
+    lines,
+    inPeriod: lines.filter((l) => l.date >= period.from && l.date <= period.to).reduce((s, l) => s + l.amount, 0),
+    allTime: lines.reduce((s, l) => s + l.amount, 0),
+  };
+}

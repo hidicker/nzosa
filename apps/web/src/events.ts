@@ -6,6 +6,7 @@ import type {
   OpeningBalances,
   CategoryRule,
   Invoice,
+  LockDates,
   SplitPart,
   Transaction,
   TransactionOverride,
@@ -214,6 +215,11 @@ export interface LedgerEvent {
   after: unknown;
   /** Set once this event has been undone, so it is not undone twice. */
   reverted?: boolean;
+  /**
+   * Set when the change moved a figure in a period that had been locked and
+   * was open again: the dates the locks had reached.
+   */
+  intoLocked?: LockDates;
 }
 
 /**

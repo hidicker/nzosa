@@ -4,9 +4,9 @@ import { rpc } from "../cloud.js";
 import { state } from "../state.js";
 import { backendKind, openCloudBookId, save } from "../store.js";
 import { addTransactions } from "./bank-import.js";
-import { nameCell, note } from "../ui.js";
+import { download, nameCell, note } from "../ui.js";
 import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
-import { firstOpenDay } from "@nzosa/core";
+import { changesIntoLocked, firstOpenDay, laterLocks, locksMovedBack } from "@nzosa/core";
 import type { IsoDate, LockDates, Transaction } from "@nzosa/core";
 
 /**
@@ -117,23 +117,101 @@ export function renderLockDates(): void {
     void setLocks(next);
   });
   body.append(saveIt, said);
+  lockedChangesSection(body);
+}
+
+/** Each lock dates in words: "GST to 2026-03-31, year to 2026-03-31". */
+function locksSaid(l: LockDates | null | undefined): string {
+  if (l === null || l === undefined || (l.gst === undefined && l.year === undefined)) return "none";
+  return [l.gst ? `GST to ${l.gst}` : "", l.year ? `year to ${l.year}` : ""].filter((p) => p !== "").join(", ");
+}
+
+/** The History entries of locks moved back and changes made into periods that had been locked, oldest first. */
+function lockedChanges(): { at: string; who: string; what: string; locked: string; undone: boolean }[] {
+  return [...changesIntoLocked(state.events)].reverse().map((e) => ({
+    at: e.at,
+    who: e.who,
+    what:
+      e.kind === "lockDates" && locksMovedBack(e.before as LockDates | null, e.after as LockDates | null)
+        ? `Lock moved back: ${locksSaid(e.before as LockDates | null)} → ${locksSaid(e.after as LockDates | null)}`
+        : e.summary,
+    locked: e.intoLocked === undefined ? "" : `Changed a period locked ${locksSaid(e.intoLocked)}`,
+    undone: e.reverted === true,
+  }));
+}
+
+/** The same list as CSV, for the accountant. Null when there is nothing in it. */
+export function lockedChangesCsv(): string | null {
+  const rows = lockedChanges();
+  if (rows.length === 0) return null;
+  const cell = (t: string): string => (/[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t);
+  return (
+    [["When", "Who", "What", "Locked period", "Undone"], ...rows.map((r) => [r.at, r.who, r.what, r.locked, r.undone ? "yes" : ""])]
+      .map((r) => r.map(cell).join(","))
+      .join("\r\n") + "\r\n"
+  );
+}
+
+/**
+ * Changes made into locked periods. A lock refuses any change inside it, so
+ * the way into a finished period is to move its lock back: each time that was
+ * done is listed, and every change made while it was open that moved a figure
+ * in the period it had covered.
+ */
+function lockedChangesSection(body: HTMLElement): void {
+  const rows = lockedChanges();
+  const heading = document.createElement("h4");
+  heading.textContent = `Changes made into locked periods${rows.length === 0 ? "" : ` (${rows.length})`}`;
+  body.append(heading);
+  if (rows.length === 0) {
+    body.append(note("None. A lock moved back, and anything changed in the period it opened, will be listed here for whoever signs the period off."));
+    return;
+  }
+  body.append(note("Each time a lock was moved back or taken off, and each change that then moved a figure in the period it had covered. From History."));
+  const table = document.createElement("table");
+  table.className = "report-table owner-table";
+  table.innerHTML = "<thead><tr><th>When</th><th>Who</th><th>What</th><th>Locked period</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const r of rows) {
+    const tr = document.createElement("tr");
+    tr.append(
+      nameCell(new Date(r.at).toLocaleString(booksLocale())),
+      nameCell(r.who),
+      nameCell(r.undone ? `${r.what} (undone)` : r.what),
+      nameCell(r.locked),
+    );
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  const scroller = document.createElement("div");
+  scroller.className = "table-scroll";
+  scroller.append(table);
+  const csv = document.createElement("button");
+  csv.type = "button";
+  csv.className = "small";
+  csv.textContent = "Download CSV";
+  csv.addEventListener("click", () => {
+    const text = lockedChangesCsv();
+    if (text !== null) download(text, `changes-into-locked-periods-${today()}.csv`, "text/csv");
+  });
+  body.append(scroller, csv);
 }
 
 async function setLocks(next: LockDates): Promise<void> {
   const before = state.ledger.lockDates ?? null;
   const empty = next.gst === undefined && next.year === undefined;
+  // How far the locks have reached is kept whatever they are moved to: it is
+  // what marks a change in a period that was locked and has been opened.
+  const reached = laterLocks(laterLocks(state.ledger.lockedOnce, before ?? undefined), next);
+  const once = reached.gst !== undefined || reached.year !== undefined ? { lockedOnce: reached } : {};
   if (empty) {
-    const { lockDates: _gone, ...rest } = state.ledger;
-    state.ledger = rest;
+    const { lockDates: _gone, lockedOnce: _was, ...rest } = state.ledger;
+    state.ledger = { ...rest, ...once };
   } else {
-    state.ledger = { ...state.ledger, lockDates: next };
+    state.ledger = { ...state.ledger, lockDates: next, ...once };
   }
   state.persistent = await save(state.ledger);
-  const words = (l: LockDates | null): string =>
-    l === null || (l.gst === undefined && l.year === undefined)
-      ? "none"
-      : [l.gst ? `GST to ${l.gst}` : "", l.year ? `year to ${l.year}` : ""].filter((p) => p !== "").join(", ");
-  await record("lockDates", `Lock dates: ${words(before)} → ${words(empty ? null : next)}`, before, empty ? null : next);
+  await record("lockDates", `Lock dates: ${locksSaid(before)} → ${locksSaid(empty ? null : next)}`, before, empty ? null : next);
   redraw("setup");
   redraw("actionsBadge");
 }

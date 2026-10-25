@@ -427,6 +427,11 @@ export interface StoredLedger {
   /** Periods that are finished: filed GST returns, and years signed off. */
   lockDates?: LockDates;
   /**
+   * How far each lock has ever reached. A lock moved back leaves the period
+   * it opened marked, so a change made there while it was open is reported.
+   */
+  lockedOnce?: LockDates;
+  /**
    * Bank lines that arrived dated in a locked period, held for a decision
    * rather than posted there: a feed line from last month after its return
    * was filed would otherwise change the return.
@@ -939,6 +944,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
+    ...(ledger.lockedOnce ? { lockedOnce: ledger.lockedOnce } : {}),
     ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
     ...(ledger.betweenLines ? { betweenLines: ledger.betweenLines } : {}),
     ...(ledger.gstKeptFrom ? { gstKeptFrom: ledger.gstKeptFrom } : {}),

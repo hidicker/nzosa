@@ -11,6 +11,7 @@ import { filedByPeriod, filedKey,
 import type { CarriesGst } from "@nzosa/core";
 import { appendEvent, makeEvent } from "./events.js";
 import type { EventKind } from "./events.js";
+import { takeIntoLocked } from "./locked-note.js";
 import { knownCodes, suggest, transferCandidates } from "./reconcile.js";
 import type { Suggestion } from "./reconcile.js";
 import { describeRules } from "./rules-ui.js";
@@ -647,7 +648,9 @@ export async function record(
   after: unknown,
   targetId?: string,
 ): Promise<void> {
-  const event = makeEvent(state.who, kind, summary, before, after, targetId);
+  const made = makeEvent(state.who, kind, summary, before, after, targetId);
+  const intoLocked = takeIntoLocked();
+  const event = intoLocked === null ? made : { ...made, intoLocked };
   state.events = appendEvent(state.events, event);
   await saveEvents(state.events);
 }

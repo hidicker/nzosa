@@ -103,7 +103,7 @@ United States books only), or **No** (with why).
 | Manual journals, reversing, opening balances, fixed assets, depreciation, disposal | Has | — |
 | **Adjusting entries marked**, a report of them, and P&L or trial balance without them | Has: Adjusting entry on a manual journal, the Adjusting entries report, and Without adjusting entries on the P&L, balance sheet and trial balance | Yes |
 | Closing date | Has: lock dates, enforced on the server for the dates themselves | — |
-| **Changes made into a locked period, reported** | No | Yes |
+| **Changes made into a locked period, reported** | Has: on Setup → Lock dates, each lock moved back and every change that then moved a figure in the period it had covered, with a CSV | Yes |
 | **Accountant's package**: one zip of the statements, ledger and trial balance as CSV, agings, reconciliations, adjusting entries and history for a period | Partly: year-end packs and the Excel extract | Yes |
 | Reclassify transactions: pick an account and a period, tick lines, move them to another account in one change | Has: Reclassify, under Accounting, undone as one from History | — |
 | Compare with last year on the profit and loss and balance sheet | Has: the same period a year earlier beside it, with the change | — |
@@ -209,7 +209,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 **Third: for accountants**
 
 28. ~~Adjusting entries marked, reported, and left out of a report on request~~: done 25 October 2026. The year-end adjustments for vehicles and prepayments count as adjusting entries without being marked.
-29. Changes made into a locked period, reported (M).
+29. ~~Changes made into a locked period, reported~~: done 25 October 2026. A lock refuses changes inside it, so what is reported is each time a lock was moved back and what was changed while it was.
 30. The accountant's package: one zip for a period (M).
 31. An end date on an invitation, and each person's last sign-in (S).
 

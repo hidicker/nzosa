@@ -1,11 +1,11 @@
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
-import { employerDeductionsByMonth, nextPayPeriod, nzAccount, nzBankOf, nzPaymentFile, nzPayslip, NZ_BANK_NAMES, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
+import { employerDeductionsByMonth, noticesTaken, nextPayPeriod, nzAccount, nzBankOf, nzPaymentFile, nzPayslip, NZ_BANK_NAMES, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
 import type { PayRun } from "@nzosa/core";
 import { documentOptions } from "../country.js";
-import { itemsEditor } from "./payroll-items.js";
-import type { PayDeduction, PayItem } from "@nzosa/core";
+import { itemsEditor, noticesEditor } from "./payroll-items.js";
+import type { DeductionNotice, PayDeduction, PayItem } from "@nzosa/core";
 import { renderLeave } from "./payroll-leave.js";
 import { payrollAccounts, payrollEmployer, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
@@ -722,6 +722,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
   let templateAllowances = (existing?.allowances ?? []) as PayItem[];
   let templateReimbursements = (existing?.reimbursements ?? []) as PayItem[];
   let templateDeductions = (existing?.deductions ?? []) as PayDeduction[];
+  let notices = (existing?.notices ?? []) as DeductionNotice[];
   const template = document.createElement("div");
   template.className = "payroll-template";
   const templateTitle = document.createElement("h4");
@@ -736,6 +737,9 @@ function renderEmployeeEditor(container: HTMLElement): void {
     }),
     itemsEditor("deduction", templateDeductions, (items) => {
       templateDeductions = items as PayDeduction[];
+    }),
+    noticesEditor(notices, existing === undefined || existing === null ? new Map() : noticesTaken(getPayroll().payRuns, existing.id), (list) => {
+      notices = list;
     }),
   );
   card.append(template);
@@ -811,6 +815,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       ...(templateAllowances.length > 0 ? { allowances: templateAllowances } : {}),
       ...(templateReimbursements.length > 0 ? { reimbursements: templateReimbursements } : {}),
       ...(templateDeductions.length > 0 ? { deductions: templateDeductions } : {}),
+      ...(notices.length > 0 ? { notices } : {}),
       ...(detailsUi.read() !== undefined ? { details: detailsUi.read() } : {}),
     };
 

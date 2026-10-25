@@ -131,7 +131,7 @@ United States books only), or **No** (with why).
 | Pay runs, journals, year-to-date | Has: New Zealand (PAYE, KiwiSaver, student loan, payday filing, Holidays Act leave) and Australia (PAYG, super, STP figures) | — |
 | Pay stubs as PDFs | Has: a payslip per employee per pay run, New Zealand and Australian, to print or save as PDF, and to email from your own mail program | — |
 | Direct deposit file for the bank | Has: bulk payment files for ANZ, ASB, BNZ, Kiwibank and Westpac, and ABA for Australia, from a pay run or from bills ticked on Bills | — |
-| Garnishments | No | Yes: New Zealand deduction notices (child support, IRD), as deductions on a pay run |
+| Garnishments | Has: deduction notices on the employee (child support, IR deduction notices, fines attachment orders), taken every pay until what is owed is paid | — |
 | Leave requests, approved | Partly: leave taken is recorded | Later |
 | Onboarding checklist, new-hire report | No | Later (New Zealand: IR330, KiwiSaver forms) |
 | Employee portal | No | No for now |
@@ -225,7 +225,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 39. Online payment links (L; which provider, and keys held online).
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
 41. ~~Chart import from CSV or hledger with a dry run~~: done 25 October 2026.
-42. New Zealand deduction notices on pay runs (M).
+42. ~~New Zealand deduction notices on pay runs~~: done 25 October 2026. Child support keeps its 60% protection; other notices' protected earnings rates are for the person to check, and the editor says so.
 43. ~~A year's giving statement per donor~~: done 25 October 2026, one donor's or every donor's, one to a page.
 44. ~~Items and the chart exported and imported as CSV~~: done 25 October 2026, each with the same dry run.
 45. ~~A hash on printed returns, to show they are unchanged~~: done 25 October 2026 for the GST return and the IR3 pack.

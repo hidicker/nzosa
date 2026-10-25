@@ -1,5 +1,5 @@
-import { parseAmount } from "@nzosa/core";
-import type { Cents, PayDeduction, PayItem } from "@nzosa/core";
+import { NOTICE_KINDS, parseAmount } from "@nzosa/core";
+import type { Cents, DeductionNotice, IsoDate, PayDeduction, PayItem } from "@nzosa/core";
 import { state } from "../state.js";
 
 /**
@@ -198,6 +198,126 @@ export function itemsEditor(
   add.textContent = `+ Add ${kind}`;
   add.addEventListener("click", () => {
     rows.push({ name: "", units: 1, rate: 0 as Cents });
+    draw();
+  });
+  wrap.append(list, add);
+  return wrap;
+}
+
+const PAY_TO: Readonly<Record<DeductionNotice["kind"], string>> = {
+  "child-support": "Inland Revenue",
+  ird: "Inland Revenue",
+  "court-fines": "Ministry of Justice",
+  other: "",
+};
+
+/**
+ * An employee's deduction notices, to edit: what each asks for each pay, who
+ * it is paid to, its reference and dates, and what is owed in all where the
+ * notice says. `taken` is what earlier pay runs have taken of each.
+ */
+export function noticesEditor(
+  notices: readonly DeductionNotice[],
+  taken: ReadonlyMap<string, Cents>,
+  onChange: (notices: DeductionNotice[]) => void,
+): HTMLElement {
+  const wrap = document.createElement("div");
+  wrap.className = "payroll-items";
+  const title = document.createElement("strong");
+  title.textContent = "Deduction notices";
+  const hint = document.createElement("small");
+  hint.textContent =
+    " Child support, an IR deduction notice or a fines attachment order: taken from every pay between its dates, " +
+    "and no more once what is owed has been taken. Child support is protected to 60% of net pay; check the protected " +
+    "earnings rate on any other notice.";
+  wrap.append(title, hint);
+  const rows: DeductionNotice[] = notices.map((n) => ({ ...n }));
+  const emit = (): void => onChange(rows.filter((n) => n.amount > 0).map((n) => ({ ...n })));
+  const list = document.createElement("div");
+  const input = (type: string, value: string, placeholder: string, set: (v: string) => void, width?: string): HTMLInputElement => {
+    const box = document.createElement("input");
+    box.type = type;
+    box.value = value;
+    box.placeholder = placeholder;
+    box.title = placeholder;
+    if (width !== undefined) box.style.width = width;
+    box.addEventListener("change", () => {
+      set(box.value);
+      emit();
+    });
+    return box;
+  };
+  const draw = (): void => {
+    list.textContent = "";
+    rows.forEach((n, index) => {
+      const line = document.createElement("div");
+      line.className = "payroll-item-row";
+      const kind = document.createElement("select");
+      for (const [value, caption] of Object.entries(NOTICE_KINDS)) {
+        const option = document.createElement("option");
+        option.value = value;
+        option.textContent = caption;
+        option.selected = value === n.kind;
+        kind.append(option);
+      }
+      kind.addEventListener("change", () => {
+        const was = PAY_TO[n.kind];
+        n.kind = kind.value as DeductionNotice["kind"];
+        if (n.payTo === "" || n.payTo === was) n.payTo = PAY_TO[n.kind];
+        emit();
+        draw();
+      });
+      const money = (cents: number | undefined): string => (cents === undefined ? "" : (cents / 100).toFixed(2));
+      line.append(
+        kind,
+        input("text", n.payTo, "Paid to", (v) => (n.payTo = v.trim())),
+        input("text", n.reference, "Notice reference", (v) => (n.reference = v.trim())),
+        input("text", money(n.amount), "Each pay", (v) => (n.amount = parseAmount(v.trim()) ?? 0), "6rem"),
+        input("text", money(n.owing), "Owing in all (if said)", (v) => {
+          const cents = v.trim() === "" ? undefined : (parseAmount(v.trim()) ?? undefined);
+          if (cents === undefined) delete n.owing;
+          else n.owing = cents;
+        }, "8rem"),
+        input("date", n.from ?? "", "From", (v) => {
+          if (v === "") delete n.from;
+          else n.from = v as IsoDate;
+        }),
+        input("date", n.until ?? "", "Until", (v) => {
+          if (v === "") delete n.until;
+          else n.until = v as IsoDate;
+        }),
+        accountSelect(n.account, (code) => {
+          if (code === undefined) delete n.account;
+          else n.account = code;
+          emit();
+        }),
+      );
+      const done = taken.get(n.id) ?? 0;
+      if (done > 0 || n.owing !== undefined) {
+        const said = document.createElement("small");
+        said.textContent = ` Taken so far ${money(done)}${n.owing === undefined ? "" : ` of ${money(n.owing)}${done >= n.owing ? ": paid off" : ""}`}`;
+        line.append(said);
+      }
+      const remove = document.createElement("button");
+      remove.type = "button";
+      remove.className = "small";
+      remove.textContent = "Remove";
+      remove.addEventListener("click", () => {
+        rows.splice(index, 1);
+        emit();
+        draw();
+      });
+      line.append(remove);
+      list.append(line);
+    });
+  };
+  draw();
+  const add = document.createElement("button");
+  add.type = "button";
+  add.className = "small";
+  add.textContent = "Add a notice";
+  add.addEventListener("click", () => {
+    rows.push({ id: `notice-${Date.now().toString(36)}`, kind: "child-support", payTo: PAY_TO["child-support"], reference: "", amount: 0 });
     draw();
   });
   wrap.append(list, add);

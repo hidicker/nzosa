@@ -3,8 +3,8 @@ import { bankLabel, banks, record } from "../books.js";
 import { booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
-import { beginningBalance, clearedLines, parseAmount, reconciliationFigures } from "@nzosa/core";
+import { download, note } from "../ui.js";
+import { beginningBalance, clearedLines, parseAmount, reconciliationFigures, reconciliationReport, spreadsheetCell } from "@nzosa/core";
 import type { BankReconciliation, IsoDate, Transaction } from "@nzosa/core";
 
 /**
@@ -42,6 +42,81 @@ function looksLikeCard(id: string): boolean {
 
 function opening(id: string): number {
   return state.ledger.openingBalances?.accounts?.[id] ?? 0;
+}
+
+/** A finished statement as a CSV: where it began, its lines, its end, and what was still outstanding. */
+function downloadReport(r: BankReconciliation): void {
+  const report = reconciliationReport(state.ledger.transactions, done(), r.id, opening(r.account));
+  if (report === null) return;
+  const money = (c: number): string => (c / 100).toFixed(2);
+  const line = (t: Transaction): string[] => [t.date, t.otherParty || t.particulars, t.reference, money(t.amount)];
+  const rows: string[][] = [
+    [`Bank reconciliation: ${bankLabel(r.account)}, statement of ${r.statementDate}`],
+    [`Finished ${r.finishedAt.slice(0, 10)}${r.by ? ` by ${r.by}` : ""}`],
+    [],
+    ["Beginning balance", "", "", money(report.beginning)],
+    [],
+    ["Cleared on this statement"],
+    ["Date", "Payee", "Reference", "Amount"],
+    ...report.cleared.map(line),
+    ["Total cleared", "", "", money(report.clearedTotal)],
+    [],
+    ["Statement ending balance", "", "", money(report.statement)],
+    ["Difference", "", "", money(report.statement - report.beginning - report.clearedTotal)],
+    [],
+    [`In the books by ${r.statementDate}, not on this statement`],
+    ["Date", "Payee", "Reference", "Amount"],
+    ...report.outstanding.map(line),
+    ["Total outstanding", "", "", money(report.outstandingTotal)],
+  ];
+  download(
+    rows.map((row) => row.map(spreadsheetCell).join(",")).join("\n") + "\n",
+    `reconciliation-${bankLabel(r.account).replace(/[^A-Za-z0-9]+/g, "-")}-${r.statementDate}.csv`,
+    "text/csv",
+  );
+}
+
+function reportButton(r: BankReconciliation): HTMLButtonElement {
+  const b = document.createElement("button");
+  b.type = "button";
+  b.className = "small";
+  b.textContent = "report";
+  b.title = "The statement as a CSV: its beginning balance, the lines it cleared, its ending balance, and what was in the books but not yet on it.";
+  b.addEventListener("click", () => downloadReport(r));
+  return b;
+}
+
+/** Every finished statement on every account, newest first. */
+function allStatements(body: HTMLElement): void {
+  const every = [...done()].sort((a, b) => b.statementDate.localeCompare(a.statementDate) || bankLabel(a.account).localeCompare(bankLabel(b.account)));
+  if (every.length === 0 || new Set(every.map((r) => r.account)).size < 2) return;
+  const heading = document.createElement("h3");
+  heading.textContent = "Every finished statement";
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML = "<thead><tr><th>Account</th><th>Statement</th><th>Ending balance</th><th>Lines</th><th>Finished</th><th></th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const r of every) {
+    const tr = document.createElement("tr");
+    for (const [text, cls] of [
+      [bankLabel(r.account), "report-name"],
+      [r.statementDate, "report-date"],
+      [`${booksMoney(r.statementBalance)}${r.owed ? " owed" : ""}`, "report-amount"],
+      [String(r.cleared.length), "report-amount"],
+      [`${r.finishedAt.slice(0, 10)}${r.by ? `, ${r.by}` : ""}`, "report-name"],
+    ] as const) {
+      const td = document.createElement("td");
+      td.className = cls;
+      td.textContent = text;
+      tr.append(td);
+    }
+    const cell = document.createElement("td");
+    cell.append(reportButton(r));
+    tr.append(cell);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  body.append(heading, table);
 }
 
 export function renderStatements(): void {
@@ -249,6 +324,7 @@ export function renderStatements(): void {
     past.forEach((r, index) => {
       const li = document.createElement("li");
       li.textContent = `${r.statementDate}: ${booksMoney(r.statementBalance)}${r.owed ? " owed" : ""}, ${r.cleared.length} lines `;
+      li.append(reportButton(r), " ");
       if (index === 0) {
         const undo = document.createElement("button");
         undo.type = "button";
@@ -266,5 +342,6 @@ export function renderStatements(): void {
     });
     body.append(list);
   }
+  allStatements(body);
   paintFigures();
 }

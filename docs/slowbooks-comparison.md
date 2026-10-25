@@ -66,8 +66,8 @@ United States books only), or **No** (with why).
 | Bank rules, a rule from a line | Has (rules learnt from coding) | — |
 | Transfers, card payments | Has | — |
 | Reconcile to a statement, mark all, lock | Has | — |
-| **Reconcile: show only lines through a date; correct the statement's ending balance in place** | Partly: each day's balance is checked against the statement's | Yes |
-| **Reconciliation reports**: every completed one listed, with its report | Partly: the report for one reconciliation | Yes |
+| Reconcile: show only lines through a date; correct the statement's ending balance in place | Has: Statements shows the lines to the statement's date, and the ending balance is open until the statement is finished | — |
+| Reconciliation reports: every completed one listed, with its report | Has: every finished statement on every account, each with a report of its beginning, the lines it cleared, its end and what was still outstanding | — |
 | **Possible duplicates** in a bank account: same amount, similar payee, within three days, "not a duplicate" remembered | Has: duplicates found on import, with "kept on purpose" | — |
 | Undeposited funds, make deposits, deposit slips | No | No for now: cheques are rare here; cash takings already come in as bank lines |
 
@@ -199,8 +199,8 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 19. ~~Quantities and prices to four decimal places~~: done 25 October 2026.
 20. ~~Quotes offered in New Zealand~~: done 25 October 2026.
 21. ~~Time approval~~: done 25 October 2026.
-22. Reconcile: lines through a date, and the statement balance corrected in place (S).
-23. Every completed reconciliation listed (S).
+22. ~~Reconcile through a date~~: already so on Statements; the comparison had it wrong.
+23. ~~Every completed reconciliation listed~~: done 25 October 2026, each with its report.
 24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).
 25. Keyboard shortcuts for a new invoice, bill and journal (S).
 26. Sales receipts, and a walk-in customer (M).

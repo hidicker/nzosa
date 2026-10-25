@@ -101,7 +101,7 @@ United States books only), or **No** (with why).
 | **Sub-accounts** (an account under a parent, totals rolled up) | No: read from QuickBooks only as a name | Yes |
 | Inactive accounts, and removing the starter chart's unused accounts in one step | Has: Make inactive keeps an account and its history out of the pickers; Remove unused takes out every account nothing uses | — |
 | Manual journals, reversing, opening balances, fixed assets, depreciation, disposal | Has | — |
-| **Adjusting entries marked**, a report of them, and P&L or trial balance without them | No | Yes |
+| **Adjusting entries marked**, a report of them, and P&L or trial balance without them | Has: Adjusting entry on a manual journal, the Adjusting entries report, and Without adjusting entries on the P&L, balance sheet and trial balance | Yes |
 | Closing date | Has: lock dates, enforced on the server for the dates themselves | — |
 | **Changes made into a locked period, reported** | No | Yes |
 | **Accountant's package**: one zip of the statements, ledger and trial balance as CSV, agings, reconciliations, adjusting entries and history for a period | Partly: year-end packs and the Excel extract | Yes |
@@ -183,7 +183,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 6. ~~A register you can type into~~: done 25 October 2026.
 7. ~~Customer and vendor credits held on account~~: done 25 October 2026.
 8. ~~Attachments~~: done 25 October 2026 for books in a folder or the browser, bank lines included. Books kept online need a Supabase Storage bucket, still to do.
-9. **MYOB import** (L).
+9. **MYOB import** (L). Waiting on sample files: MYOB's own help does not give the exact export layout, and an importer guessed from it would fail on real files.
 
 **Second: smaller, and quickly done**
 
@@ -208,7 +208,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 **Third: for accountants**
 
-28. Adjusting entries marked, reported, and left out of a report on request (M).
+28. ~~Adjusting entries marked, reported, and left out of a report on request~~: done 25 October 2026. The year-end adjustments for vehicles and prepayments count as adjusting entries without being marked.
 29. Changes made into a locked period, reported (M).
 30. The accountant's package: one zip for a period (M).
 31. An end date on an invitation, and each person's last sign-in (S).

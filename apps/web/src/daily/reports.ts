@@ -1,9 +1,10 @@
 import { attachmentsBox } from "../attachments-ui.js";
 import { renderReclassify } from "./reclassify-page.js";
 import { renderSalesReport, salesCsv } from "./sales-report.js";
+import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
-import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { periodSaid, spreadsheetCell } from "@nzosa/core";
+import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
+import { periodSaid, spreadsheetCell, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -375,8 +376,17 @@ export function ownerSummaryFor(owner: string, year: number): OwnerSummary {
   );
 }
 
+/**
+ * The postings a report is drawn from: all of them, or without the adjusting
+ * entries when the report is to show the books before them.
+ */
+function reportJournals(): PostedJournal[] {
+  const all = postedJournals();
+  return unadjusted() ? withoutAdjusting(all, state.ledger.manualJournals ?? []) : all;
+}
+
 function ourAccrualJournals(): Journal[] {
-  return postedJournals().map((journal, index) => ({
+  return reportJournals().map((journal, index) => ({
     id: journal.transactionId,
     date: journal.date,
     narration: journal.narration,
@@ -476,6 +486,12 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const title = document.createElement("p");
     title.className = "journal-narration";
     title.textContent = `${journal.date} — ${journal.narration}`;
+    if (journal.adjusting === true) {
+      const tag = document.createElement("span");
+      tag.className = "journal-tag";
+      tag.textContent = "Adjusting entry";
+      title.append(" ", tag);
+    }
     card.append(title);
 
     if (journal.deleted !== undefined) {
@@ -548,6 +564,8 @@ interface JournalDraft {
   date: string;
   narration: string;
   lines: JournalDraftLine[];
+  /** Marked as an adjusting entry. */
+  adjusting?: boolean;
 }
 
 /**
@@ -612,7 +630,17 @@ function journalEditor(draft: JournalDraft): HTMLElement {
     draft.narration = narration.value;
     refresh();
   });
-  head.append(date, narration);
+  const adjustingLabel = document.createElement("label");
+  adjustingLabel.className = "report-compare";
+  const adjusting = document.createElement("input");
+  adjusting.type = "checkbox";
+  adjusting.checked = draft.adjusting === true;
+  adjusting.addEventListener("change", () => {
+    draft.adjusting = adjusting.checked;
+  });
+  adjustingLabel.title = "An accrual, a prepayment or a correction found at review: listed under Adjusting entries, and left out when a report is drawn without them";
+  adjustingLabel.append(adjusting, " Adjusting entry");
+  head.append(date, narration, adjustingLabel);
   wrap.append(head);
 
   const columns = document.createElement("div");
@@ -756,6 +784,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
       date: draft.date,
       narration: draft.narration.trim(),
       lines,
+      ...(draft.adjusting === true ? { adjusting: true } : {}),
     };
     // The rules the journal is posted under, so this form cannot accept one the
     // ledger would then refuse. Asked once the line-by-line checks have nothing
@@ -919,6 +948,18 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     });
     return box;
   }
+
+  button(journal.adjusting === true ? "Not an adjusting entry" : "Mark as adjusting", () => {
+    const marked = all().map((j) => {
+      if (j.id !== journal.id) return j;
+      const { adjusting: _was, ...rest } = j;
+      return journal.adjusting === true ? rest : { ...rest, adjusting: true };
+    });
+    void saveManualJournals(
+      marked,
+      `${journal.adjusting === true ? "No longer an adjusting entry" : "Marked as adjusting"}: ${journal.narration}`,
+    );
+  });
 
   if (reversing?.id === journal.id) {
     const date = document.createElement("input");
@@ -1166,7 +1207,7 @@ function positionJournals(): {
   const basis = $<HTMLSelectElement>("report-basis").value;
   const imported = state.ledger.journals ?? [];
   const fromImport = basis === "accrual" && imported.length > 0;
-  if (!fromImport) return { journals: postedJournals(), basis, fromImport };
+  if (!fromImport) return { journals: reportJournals(), basis, fromImport };
   const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
   return {
     journals: postedFromImported(imported, (name) =>
@@ -1640,7 +1681,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 function renderJournal(body: HTMLElement, year: number): void {
   const { from, to } = reportRange(year);
   const inEntity = journalInEntity();
-  const journals = postedJournals().filter((j) => {
+  const journals = reportJournals().filter((j) => {
     if (j.date < from || j.date > to) return false;
     return inEntity === null || inEntity(j);
   });
@@ -3903,6 +3944,9 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "adjusting") {
+    return "The manual journals marked as adjusting entries, and the year-end adjustments the books work out, for the period chosen.";
+  }
   if (kind === "reclassify") {
     return "Move bank lines from one account to another in one change: choose the account and the period, untick any to keep, and choose where they go.";
   }
@@ -4178,6 +4222,17 @@ export function renderReportsPage(): void {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderReclassify(body, chosenYearNow);
     return;
+  }
+
+  if (kind === "adjusting") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderAdjusting(body, chosenYearNow, journalInEntity());
+    return;
+  }
+
+  // Said above the figures, so a report drawn without them is never read as the final one.
+  if (unadjusted() && (kind === "journal" || basisNow === "posted" || (kind === "balancesheet" && basisNow !== "accrual"))) {
+    body.append(note("Without adjusting entries: the marked manual journals and the year-end adjustments are left out of these figures."));
   }
 
   if (kind === "salescustomer" || kind === "salesitem") {
@@ -4959,6 +5014,11 @@ export function downloadReport(): void {
       if (csv === null) return nothingToDownload();
       download(csv.text, csv.name, "text/csv");
     },
+    adjusting: () => {
+      const csv = year === undefined ? null : adjustingCsv(year, journalInEntity());
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
     bankreconcile: () => {
       const csv = bankReconcileCsv(year);
       download(csv.text, csv.name, "text/csv");
@@ -5046,7 +5106,7 @@ export function wireReports(): void {
   $("report-kind").addEventListener("change", () => redraw("reports"));
   $("report-owner").addEventListener("change", () => redraw("reports"));
   $("report-year").addEventListener("change", () => redraw("reports"));
-  for (const id of ["report-period", "report-from", "report-to", "report-compare"]) {
+  for (const id of ["report-period", "report-from", "report-to", "report-compare", "report-unadjusted"]) {
     document.getElementById(id)?.addEventListener("change", () => redraw("reports"));
   }
   $("report-download").addEventListener("click", () => downloadReport());

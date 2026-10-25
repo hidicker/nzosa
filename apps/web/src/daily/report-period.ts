@@ -22,10 +22,20 @@ export const PERIOD_REPORTS: ReadonlySet<string> = new Set([
   "salescustomer",
   "salesitem",
   "reclassify",
+  "adjusting",
 ]);
 
 /** The two that offer a column for the same period a year earlier. */
 export const COMPARE_REPORTS: ReadonlySet<string> = new Set(["pl", "balancesheet"]);
+
+/** The ones that can be drawn without the adjusting entries. */
+export const UNADJUSTED_REPORTS: ReadonlySet<string> = new Set(["pl", "balancesheet", "journal"]);
+
+/** Whether the report now showing is to leave the adjusting entries out. */
+export function unadjusted(): boolean {
+  const box = document.getElementById("report-unadjusted");
+  return UNADJUSTED_REPORTS.has(kindNow()) && box instanceof HTMLInputElement && box.checked;
+}
 
 /** Today, in this computer's time zone. */
 function today(): string {
@@ -94,6 +104,8 @@ export function drawPeriodControls(year: number | undefined, kind: string): void
   const usesPeriod = year !== undefined && PERIOD_REPORTS.has(kind);
   select.hidden = !usesPeriod;
   if (compare !== null) compare.hidden = !(year !== undefined && COMPARE_REPORTS.has(kind));
+  const unadjustedLabel = document.getElementById("report-unadjusted-label");
+  if (unadjustedLabel !== null) unadjustedLabel.hidden = !(year !== undefined && UNADJUSTED_REPORTS.has(kind));
   if (!usesPeriod) {
     if (dates !== null) dates.hidden = true;
     return;

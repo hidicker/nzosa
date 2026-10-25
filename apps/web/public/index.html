@@ -870,6 +870,7 @@
                 <option value="general">General ledger detail</option>
                 <option value="manual">Manual journals</option>
                 <option value="reclassify">Reclassify transactions</option>
+                <option value="adjusting">Adjusting entries</option>
               </optgroup>
               <optgroup label="Transactions">
                 <option value="bankreconcile">Bank reconciliation</option>
@@ -901,6 +902,9 @@
             </span>
             <label id="report-compare-label" class="report-compare" hidden>
               <input type="checkbox" id="report-compare" /> Compare with a year earlier
+            </label>
+            <label id="report-unadjusted-label" class="report-compare" hidden title="Leave out the adjusting entries: the books before the accountant's adjustments">
+              <input type="checkbox" id="report-unadjusted" /> Without adjusting entries
             </label>
             <button id="journals-pick" type="button">Load ledger&hellip;</button>
             <input id="journals-input" type="file" accept=".csv,.xlsx,text/csv" hidden />

@@ -18,6 +18,7 @@ export const REPORT_DOWNLOADS = {
   agedreceivables: "Aged receivables",
   salescustomer: "Sales by customer",
   salesitem: "Sales by item",
+  adjusting: "Adjusting entries",
   bankreconcile: "Bank reconciliation",
   gstreturn: "GST return",
   rentals: "Rental schedules",

@@ -1,3 +1,4 @@
+import { invoiceWordingPanel } from "./invoice-wording.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
 import {
@@ -38,6 +39,7 @@ import {
   isEstimate,
   isCreditNote,
   duplicateInvoice,
+  defaultInvoiceMessage,
   linesWithoutAccount,
   matchInvoices,
   nextInvoiceNumber,
@@ -325,6 +327,35 @@ export function renderInvoiceEditor(): void {
     "Optional. A share link to the PDF or receipt in your own Google Drive or Dropbox. " +
       "The books keep the link, not the file.",
   );
+
+  // The message at the foot of a sales invoice: a saved one, or typed here.
+  const messages = state.ledger.invoiceMessages ?? [];
+  const startingNote = existing !== undefined || copyingFrom !== null ? (draft.note ?? "") : (defaultInvoiceMessage(messages)?.text ?? "");
+  const noteBox = document.createElement("textarea");
+  noteBox.rows = 2;
+  noteBox.value = startingNote;
+  noteBox.placeholder = "Optional: how to pay, a thank-you";
+  if (!asBill) {
+    if (messages.length > 0) {
+      const pick = document.createElement("select");
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = "Choose a saved message…";
+      pick.append(none);
+      for (const m of messages) {
+        const option = document.createElement("option");
+        option.value = m.id;
+        option.textContent = m.name + (m.isDefault === true ? " (default)" : "");
+        pick.append(option);
+      }
+      pick.addEventListener("change", () => {
+        const chosen = messages.find((m) => m.id === pick.value);
+        if (chosen !== undefined) noteBox.value = chosen.text;
+      });
+      field("Saved messages", pick);
+    }
+    field("Message on the invoice", noteBox, "Printed at the foot of the invoice. Saved messages are kept under Messages and email wording, below the list.");
+  }
 
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
   field(
@@ -774,7 +805,8 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, ...rest } = draft;
+    const noteValue = asBill ? "" : noteBox.value.trim();
     const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
@@ -797,6 +829,7 @@ export function renderInvoiceEditor(): void {
       ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
       ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(linkValue !== null ? { documentLink: linkValue } : {}),
+      ...(noteValue !== "" ? { note: noteValue } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined
@@ -1132,7 +1165,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1180,7 +1213,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1193,7 +1226,12 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         const message = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
-          { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) },
+          {
+            ...documentOptions(),
+            ...(isEstimate(invoice) ? { title: "Estimate" } : {}),
+            ...(invoice.note !== undefined ? { note: invoice.note } : {}),
+            ...(state.ledger.emailWording?.invoice !== undefined ? { wording: state.ledger.emailWording.invoice } : {}),
+          },
         );
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +
@@ -1270,6 +1308,7 @@ export function renderInvoices(): void {
           : "No invoices yet: create one above, or load your invoices from a file.",
       ),
     );
+    invoiceWordingPanel(body);
     return;
   }
 
@@ -1615,6 +1654,7 @@ export function renderInvoices(): void {
     accTable.append(accHead, accBody);
     body.append(wideTable(accTable));
   }
+  invoiceWordingPanel(body);
 }
 
 /** Record an accepted match, so it is not guessed again. */

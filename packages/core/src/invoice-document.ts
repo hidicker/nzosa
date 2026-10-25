@@ -1,7 +1,7 @@
 import type { Cents } from "./money.js";
 import { formatAmount } from "./money.js";
 import type { Invoice, InvoiceLine } from "./invoices.js";
-import { cleanEmailAddress } from "./invoices.js";
+import { invoiceEmailFrom } from "./wording.js";
 import { asLines, escapeHtml, DOCUMENT_STYLE as STYLE, written } from "./document-html.js";
 
 /**
@@ -214,32 +214,16 @@ export function invoiceDocument(
 export function invoiceEmail(
   invoice: Invoice,
   supplier: InvoiceSupplier,
-  options: InvoiceDocumentOptions = {},
+  options: InvoiceDocumentOptions & { wording?: { subject: string; body: string } } = {},
 ): { to: string; subject: string; body: string } {
   const registered = options.noTax !== true && (supplier.gstNumber ?? "").trim() !== "";
   const title = options.title ?? (registered || (options.noTax !== true && invoice.tax !== 0) ? "Tax invoice" : "Invoice");
-  const number = invoice.number.trim();
-  const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
-
-  const lines = [
-    "Hello,",
-    "",
-    `Please find ${title.toLowerCase()} ${number} attached.`.replace("  ", " "),
-    "",
-    `Amount due: ${formatAmount(owing)}`,
-  ];
-  if (invoice.due !== null) lines.push(`Due: ${written(invoice.due, options.dateStyle)}`);
-  if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
-  const payTo = (supplier.payTo ?? "").trim();
-  if (payTo !== "") lines.push("", `Payment details: ${payTo}`);
-  if (options.note !== undefined && options.note.trim() !== "") lines.push("", options.note.trim());
-  lines.push("", "Thank you,", supplier.name);
-
-  return {
-    to: cleanEmailAddress(invoice.email) ?? "",
-    subject: `${title} ${number} from ${supplier.name}`.replace(/\s+/g, " "),
-    body: lines.join("\r\n"),
-  };
+  return invoiceEmailFrom(invoice, { name: supplier.name, ...(supplier.payTo !== undefined ? { payTo: supplier.payTo.trim() } : {}) }, {
+    title,
+    ...(options.wording !== undefined ? { wording: options.wording } : {}),
+    ...(options.dateStyle !== undefined ? { dateStyle: options.dateStyle } : {}),
+    ...(options.note !== undefined ? { note: options.note } : {}),
+  });
 }
 
 export interface StatementLine {

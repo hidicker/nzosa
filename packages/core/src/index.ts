@@ -482,3 +482,4 @@ export * from "./xls.js";
 export * from "./simplefin.js";
 export * from "./payslip.js";
 export * from "./payment-files.js";
+export * from "./wording.js";

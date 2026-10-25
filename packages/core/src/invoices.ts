@@ -112,6 +112,12 @@ export interface Invoice {
    * hold no files, and the file stays in the owner's own storage.
    */
   documentLink?: string;
+  /**
+   * A sales invoice's message, printed at its foot: how to pay, a thank-you.
+   * The words themselves, not which saved message they came from, so changing
+   * a saved message later never changes an invoice already sent.
+   */
+  note?: string;
 }
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */

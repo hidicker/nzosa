@@ -6,6 +6,9 @@ import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
+  accountEmailFrom,
+  emailForContact,
+  mailtoLink,
   collectionLetter,
   contactKey,
   customerStatement,
@@ -102,6 +105,106 @@ function statementLines(mine: readonly { invoice: Invoice; remaining: number }[]
     owing: b.remaining,
     reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
   }));
+}
+
+/**
+ * A statement or a reminder for a customer: the document saved, and a message
+ * to them opened in the person's own mail program with it to attach. Nothing
+ * is sent from here.
+ */
+async function sendToCustomer(contact: Contact, kind: "statement" | "reminder", email: boolean): Promise<void> {
+  const mine = salesFor(contact.name);
+  const first = mine[0]?.invoice;
+  const supplier = first === undefined ? null : supplierFor(first);
+  if (supplier === null) {
+    await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
+    return;
+  }
+  const sums = owing().get(contactKey(contact.name));
+  const stage = reminderStageFor(sums?.lateDays ?? 0);
+  const html =
+    kind === "reminder"
+      ? collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions())
+      : customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
+  download(html, `${kind}-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+  if (!email) return;
+  const to = contact.email ?? emailForContact(state.ledger.invoices ?? [], contact.name) ?? "";
+  const { dateStyle } = documentOptions();
+  const wording = state.ledger.emailWording?.[kind];
+  const message = accountEmailFrom(
+    kind,
+    contact.name,
+    kind === "reminder" ? (sums?.pastDue ?? 0) : (sums?.owedToUs ?? 0),
+    today(),
+    { name: supplier.name, ...(supplier.payTo !== undefined ? { payTo: supplier.payTo } : {}) },
+    { to, ...(wording !== undefined ? { wording } : {}), ...(dateStyle !== undefined ? { dateStyle } : {}) },
+  );
+  window.location.href = mailtoLink(message);
+}
+
+/**
+ * Everybody with something past due, in one list: the person works down it,
+ * one message each, since a mail program opens one message at a time.
+ */
+function overdueList(body: HTMLElement, all: readonly Contact[]): void {
+  const sums = owing();
+  // A customer invoiced but never added here is still owed money.
+  const known = new Set(all.map((c) => contactKey(c.name)));
+  const invoiced = new Map<string, Contact>();
+  for (const b of invoiceBalanceMap().values()) {
+    const key = contactKey(b.invoice.contact);
+    if (b.invoice.kind === "sales" && !known.has(key) && !invoiced.has(key)) {
+      invoiced.set(key, { id: "", name: b.invoice.contact, kind: "customer" });
+    }
+  }
+  const late = [...all, ...invoiced.values()]
+    .filter((c) => c.active !== false && c.kind !== "vendor")
+    .map((c) => ({ contact: c, sums: sums.get(contactKey(c.name)) }))
+    .filter((x): x is { contact: Contact; sums: Owing } => x.sums !== undefined && x.sums.pastDue > 0)
+    .sort((a, b) => b.sums.pastDue - a.sums.pastDue);
+  if (late.length === 0) return;
+  const box = document.createElement("details");
+  box.className = "payroll-add";
+  const summary = document.createElement("summary");
+  const total = late.reduce((s, x) => s + x.sums.pastDue, 0);
+  summary.textContent = `Overdue: ${late.length} customer${late.length === 1 ? "" : "s"}, ${booksMoney(total)} past due`;
+  box.append(summary);
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML = "<thead><tr><th>Customer</th><th>Past due</th><th>Oldest</th><th>Email</th><th></th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  for (const { contact, sums: one } of late) {
+    const tr = document.createElement("tr");
+    const address = contact.email ?? emailForContact(state.ledger.invoices ?? [], contact.name) ?? "";
+    for (const text of [contact.name, booksMoney(one.pastDue), `${one.lateDays} days`, address || "none kept"]) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      tr.append(td);
+    }
+    const actions = document.createElement("td");
+    for (const [label, kind] of [["Email statement", "statement"], ["Email reminder", "reminder"]] as const) {
+      const b = document.createElement("button");
+      b.type = "button";
+      b.className = "small";
+      b.textContent = label;
+      b.addEventListener("click", () => {
+        b.textContent = `${label} ✓`;
+        void sendToCustomer(contact, kind, true);
+      });
+      actions.append(b);
+    }
+    tr.append(actions);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  box.append(
+    note(
+      "Each button saves the document and opens a message to the customer in your own mail program, with the " +
+        "document to attach. A tick marks the ones done. The wording is yours to change under Messages and email wording on Invoices.",
+    ),
+    table,
+  );
+  body.append(box);
 }
 
 /**
@@ -434,6 +537,7 @@ export function renderContacts(): void {
   writeOff.addEventListener("click", () => void writeOffSmall());
   controls.append(choose, search, add, writeOff);
   body.append(controls);
+  overdueList(body, all);
 
   if (editing === "new") body.append(form(null));
 
@@ -512,16 +616,7 @@ export function renderContacts(): void {
       const stage = reminderStageFor(sums.lateDays);
       remind.title =
         stage === 1 ? "A first, friendly reminder" : stage === 2 ? "A second notice" : "A final notice";
-      remind.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const supplier = mine[0] === undefined ? null : supplierFor(mine[0].invoice);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions());
-        download(html, `reminder-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
-      });
+      remind.addEventListener("click", () => void sendToCustomer(contact, "reminder", false));
       const fee = document.createElement("button");
       fee.type = "button";
       fee.className = "small";
@@ -536,18 +631,14 @@ export function renderContacts(): void {
       statement.type = "button";
       statement.className = "small";
       statement.textContent = "Statement";
-      statement.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const first = mine[0]?.invoice;
-        const supplier = first === undefined ? null : supplierFor(first);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
-        download(html, `statement-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
-      });
-      actions.append(statement);
+      statement.addEventListener("click", () => void sendToCustomer(contact, "statement", false));
+      const mail = document.createElement("button");
+      mail.type = "button";
+      mail.className = "small";
+      mail.textContent = "Email";
+      mail.title = "Save the statement and open a message to them in your own mail program. Nothing is sent from here.";
+      mail.addEventListener("click", () => void sendToCustomer(contact, "statement", true));
+      actions.append(statement, mail);
     }
     tr.append(actions);
     tbody.append(tr);

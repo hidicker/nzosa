@@ -28,9 +28,9 @@ United States books only), or **No** (with why).
 | **Customer credits**: an overpayment or credit note held on the customer's account and applied later | Partly: credit notes against a named invoice | Yes |
 | Credit limits, late fees, writing off small balances | Has | — |
 | Recurring invoices | Has | — |
-| **Saved invoice messages** (how to pay, a thank-you), one the default | No | Yes |
-| **Email templates**, editable, for invoices, statements and reminders | Partly: a fixed message | Yes |
-| **Email all overdue statements** from the receivables aging | No: one statement at a time | Yes |
+| Saved invoice messages (how to pay, a thank-you), one the default | Has | — |
+| Email templates, editable, for invoices, statements and reminders | Has, with fill-ins such as {customer} and {amount} | — |
+| Email all overdue statements from the receivables aging | Has: every overdue customer listed on Customers & vendors, one press each to save the statement or reminder and open the message | — |
 | Customer statements and collection letters | Has | — |
 | **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | No: one currency per set of books | Yes (large; the same work as Wise balances in other currencies) |
 | **Online payment link** (Stripe, PayPal, Square) and a public pay page | No | Yes, with a decision on the provider and on keys held online |
@@ -188,9 +188,9 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 **Second: smaller, and quickly done**
 
 10. ~~Duplicate an invoice~~: done 25 October 2026, bills too.
-11. Saved invoice messages, one the default (S).
-12. Editable email wording for invoices, statements and reminders (S).
-13. Email every overdue customer their statement at once (S).
+11. ~~Saved invoice messages~~: done 25 October 2026.
+12. ~~Editable email wording~~: done 25 October 2026.
+13. ~~Overdue customers' statements~~: done 25 October 2026, one message each, since a mail program opens one at a time.
 14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
 15. Income by customer, and sales by item (S).
 16. Vendor page with paid this year and all time (S).

@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { AbaSettings } from "@nzosa/core";
+import type { AbaSettings, InvoiceMessage, WordingKind } from "@nzosa/core";
 import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
@@ -220,6 +220,10 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Messages kept to print on invoices, one of them the default. */
+  invoiceMessages?: InvoiceMessage[] | undefined;
+  /** The person's own wording for invoice, statement and reminder emails, where they changed it. */
+  emailWording?: Partial<Record<WordingKind, { subject: string; body: string }>> | undefined;
   /** Paying bills by bank file: the account they leave from, and for Australia the ABA details. */
   billPayment?: { payFrom?: string; aba?: AbaSettings } | undefined;
   /** Bank statements an account has been reconciled to, and the lines each cleared. */

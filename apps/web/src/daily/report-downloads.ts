@@ -9,6 +9,7 @@
  */
 export const REPORT_DOWNLOADS = {
   pl: "Profit and loss",
+  balancesheet: "Balance sheet",
   // The journal report's entries, line by line: the general ledger's format.
   journal: "General ledger",
   general: "General ledger",

@@ -341,6 +341,8 @@ export * from "./journals.js";
 export * from "./chart.js";
 export * from "./variance.js";
 export * from "./xlsx.js";
+export * from "./zip.js";
+export * from "./statement-csv.js";
 export * from "./akahu.js";
 export * from "./filed-returns.js";
 export * from "./coding-check.js";

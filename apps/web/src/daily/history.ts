@@ -281,3 +281,22 @@ function todaySection(body: HTMLElement): void {
   table.append(head, tbody);
   fold.append(table);
 }
+/** History as CSV, newest first: when, who, what kind of change, what, and whether it was undone. */
+export function historyCsv(): string | null {
+  if (state.events.length === 0) return null;
+  const cell = (t: string): string => (/[",\r\n]/.test(t) ? `"${t.replace(/"/g, '""')}"` : t);
+  const said = (l: { gst?: string; year?: string }): string =>
+    [l.gst ? `GST to ${l.gst}` : "", l.year ? `year to ${l.year}` : ""].filter((p) => p !== "").join(", ");
+  const rows = [
+    ["When", "Who", "Kind", "What", "Undone", "Into a period that had been locked"],
+    ...state.events.map((e) => [
+      e.at,
+      e.who,
+      KIND_LABELS[e.kind] ?? e.kind,
+      e.summary,
+      e.reverted === true ? "yes" : "",
+      e.intoLocked === undefined ? "" : said(e.intoLocked),
+    ]),
+  ];
+  return rows.map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
+}

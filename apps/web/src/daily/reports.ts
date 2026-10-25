@@ -4,7 +4,7 @@ import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
-import { periodSaid, spreadsheetCell, withoutAdjusting } from "@nzosa/core";
+import { balanceSheetCsv, createZip, encodeUtf8, periodSaid, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -40,8 +40,13 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
-import { downloadExcelReport } from "./excel-export.js";
+import { amountCell, askOnPage, download as saveFile, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
+import { downloadBytes, downloadExcelReport } from "./excel-export.js";
+import { historyCsv } from "./history.js";
+import { lockedChangesCsv } from "./lock-dates.js";
+import { reconciliationsCsv } from "./statements-page.js";
+import { getReconcileAccounts, setActiveReconcileAccount } from "./bank-reconcile-report.js";
+import { REPORT_DOWNLOADS } from "./report-downloads.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
 import {
@@ -1471,16 +1476,15 @@ function companyTaxSection(year: number, taxableProfit: Cents): HTMLElement {
  * is only the movement since the first bank line. That is not a smaller balance
  * sheet, it is a wrong one, and it is said rather than left to be discovered.
  */
-function renderBalanceSheet(body: HTMLElement, year: number): void {
-  const asAt = reportRange(year).to;
+/** The balance sheet on a day, from these journals, set out as the books' kind of entity sets one out. */
+function balanceSheetMaker(journals: PostedJournal[]): (date: string) => ReturnType<typeof computeBalanceSheet> {
   const opening = state.ledger.openingBalances;
-  const { journals, basis, fromImport } = positionJournals();
   // Set out as signed statements are: a company's shareholder current accounts
   // as one current liability, and the year's profit inside retained earnings.
   const company = companyBooks();
   // Shareholder current accounts are New Zealand's way of setting a company's out.
   const currentAccounts = company && booksCountry().id === "nz";
-  const sheetAt = (date: string) =>
+  return (date) =>
     computeBalanceSheet({
       asAt: date,
       ...(opening ? { openingBalances: opening } : {}),
@@ -1489,6 +1493,15 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
       shareholderCurrentAccounts: currentAccounts,
       profitInRetainedEarnings: company,
     });
+}
+
+function renderBalanceSheet(body: HTMLElement, year: number): void {
+  const asAt = reportRange(year).to;
+  const opening = state.ledger.openingBalances;
+  const { journals, basis, fromImport } = positionJournals();
+  // Set out as signed statements are: a company's shareholder current accounts
+  // as one current liability, and the year's profit inside retained earnings.
+  const sheetAt = balanceSheetMaker(journals);
   const sheet = sheetAt(asAt);
   // The same day a year earlier, as a column of its own; the opening and
   // movement columns make way for it.
@@ -1656,7 +1669,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
   table.append(head, tbody);
   body.append(table);
 
-  if (currentAccounts) {
+  if (companyBooks() && booksCountry().id === "nz") {
     body.append(
       note(
         "Shareholder current accounts are the director's loan, drawings and funds introduced as " +
@@ -4959,7 +4972,22 @@ function ledgerTaxWords(code: string): string {
 }
 
 /** Said where the report is, when a download has nothing to hold. */
+/**
+ * The files gathered for the accountant's package while it is being made:
+ * each report's download lands here instead of with the browser.
+ */
+let gathering: { name: string; text: string }[] | null = null;
+
+function download(text: string, name: string, type: string): void {
+  if (gathering !== null) {
+    gathering.push({ name, text });
+    return;
+  }
+  saveFile(text, name, type);
+}
+
 function nothingToDownload(): void {
+  if (gathering !== null) return;
   const body = $("reports-body");
   body.querySelector(".report-nothing")?.remove();
   const said = note("Nothing to download for this year.");
@@ -5014,6 +5042,16 @@ export function downloadReport(): void {
       if (csv === null) return nothingToDownload();
       download(csv.text, csv.name, "text/csv");
     },
+    balancesheet: () => {
+      if (year === undefined) return nothingToDownload();
+      const asAt = reportRange(year).to;
+      const sheet = balanceSheetMaker(positionJournals().journals)(asAt);
+      download(
+        balanceSheetCsv(sheet, `${reportingEntity()?.name ?? "All accounts"}: balance sheet${unadjusted() ? " without adjusting entries" : ""}`),
+        `balance-sheet-${asAt}.csv`,
+        "text/csv",
+      );
+    },
     adjusting: () => {
       const csv = year === undefined ? null : adjustingCsv(year, journalInEntity());
       if (csv === null) return nothingToDownload();
@@ -5057,6 +5095,83 @@ export function downloadReport(): void {
     },
   };
   downloads[kind]();
+}
+
+/**
+ * The accountant's package: one zip of everything an accountant asks for at a
+ * period end -- the profit and loss, balance sheet and trial balance, the
+ * general ledger, the agings, each bank account's reconciliation and every
+ * statement finished in the period, the adjusting entries, the changes made
+ * into locked periods, and History -- for the period and entity chosen.
+ */
+export function downloadAccountantPackage(): void {
+  const years = bookYears();
+  const year = Number($<HTMLSelectElement>("report-year").value) || years[0];
+  if (year === undefined) return nothingToDownload();
+  const kindSelect = $<HTMLSelectElement>("report-kind");
+  const was = kindSelect.value;
+  const files: { name: string; text: string }[] = [];
+  const left: string[] = [];
+  const take = (kind: keyof typeof REPORT_DOWNLOADS, folder = ""): void => {
+    kindSelect.value = kind;
+    const before = files.length;
+    try {
+      downloadReport();
+    } catch (error) {
+      left.push(`${REPORT_DOWNLOADS[kind]}: ${error instanceof Error ? error.message : "could not be made"}`);
+      return;
+    }
+    if (files.length === before) left.push(`${REPORT_DOWNLOADS[kind]}: nothing in this period`);
+    for (const f of files.slice(before)) f.name = folder + f.name;
+  };
+  const range = reportRange(year);
+  gathering = files;
+  try {
+    take("pl");
+    take("balancesheet");
+    // The trial balance of the journal report: the period's postings.
+    kindSelect.value = "journal";
+    const inEntity = journalInEntity();
+    const posted = reportJournals().filter((j) => j.date >= range.from && j.date <= range.to && (inEntity === null || inEntity(j)));
+    files.push({ name: `trial-balance-${periodFileName(year)}.csv`, text: trialBalanceCsv(trialBalance(posted), `Trial balance, ${periodHeading(year)}`) });
+    take("general");
+    take("agedreceivables");
+    take("agedpayables");
+    take("adjusting");
+    const accounts = getReconcileAccounts();
+    for (const account of accounts) {
+      setActiveReconcileAccount(account.id);
+      take("bankreconcile", "bank-reconciliations/");
+    }
+    if (accounts[0] !== undefined) setActiveReconcileAccount(accounts[0].id);
+  } finally {
+    gathering = null;
+    kindSelect.value = was;
+  }
+  for (const f of reconciliationsCsv(range.from, range.to)) files.push({ name: `statements/${f.name}`, text: f.text });
+  const locked = lockedChangesCsv();
+  if (locked !== null) files.push({ name: "changes-into-locked-periods.csv", text: locked });
+  const history = historyCsv();
+  if (history !== null) files.push({ name: "history.csv", text: history });
+
+  const entity = reportingEntity()?.name ?? "All entities";
+  const basis = $<HTMLSelectElement>("report-basis").selectedOptions[0]?.textContent ?? "";
+  const readme = [
+    `Accountant's package: ${entity}, ${periodHeading(year)} (${range.from} to ${range.to})`,
+    `Made ${new Date().toLocaleString(booksLocale())}${state.who.trim() === "" ? "" : ` by ${state.who.trim()}`}.`,
+    `Basis: ${basis}.${unadjusted() ? " Without adjusting entries." : ""}`,
+    "",
+    "In this package:",
+    ...files.map((f) => `  ${f.name}`),
+    ...(left.length === 0 ? [] : ["", "Not in it:", ...left.map((l) => `  ${l}`)]),
+    "",
+    "Amounts are in dollars with two places; in the ledger and the trial balance debits are positive.",
+    "History is every change kept with the books, newest first, not only this period's.",
+    "",
+  ].join("\r\n");
+  const zip = createZip([{ name: "README.txt", data: encodeUtf8(readme) }, ...files.map((f) => ({ name: f.name, data: encodeUtf8(f.text) }))]);
+  const slug = entity.toLowerCase().replace(/[^a-z0-9]+/g, "-").replace(/^-|-$/g, "");
+  downloadBytes(zip, `accountants-package-${slug}-${periodFileName(year)}.zip`, "application/zip");
 }
 
 function downloadGeneralLedger(year: number | undefined): void {
@@ -5110,6 +5225,7 @@ export function wireReports(): void {
     document.getElementById(id)?.addEventListener("change", () => redraw("reports"));
   }
   $("report-download").addEventListener("click", () => downloadReport());
+  document.getElementById("report-package")?.addEventListener("click", () => downloadAccountantPackage());
   $("report-download-excel").addEventListener("click", () => downloadExcelReport());
 }
 

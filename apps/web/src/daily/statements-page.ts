@@ -46,8 +46,21 @@ function opening(id: string): number {
 
 /** A finished statement as a CSV: where it began, its lines, its end, and what was still outstanding. */
 function downloadReport(r: BankReconciliation): void {
+  const csv = reconciliationCsv(r);
+  if (csv !== null) download(csv.text, csv.name, "text/csv");
+}
+
+/** Every statement finished with a date in the period, each as its report. */
+export function reconciliationsCsv(from: string, to: string): { name: string; text: string }[] {
+  return done()
+    .filter((r) => r.statementDate >= from && r.statementDate <= to)
+    .map(reconciliationCsv)
+    .filter((c): c is { name: string; text: string } => c !== null);
+}
+
+function reconciliationCsv(r: BankReconciliation): { name: string; text: string } | null {
   const report = reconciliationReport(state.ledger.transactions, done(), r.id, opening(r.account));
-  if (report === null) return;
+  if (report === null) return null;
   const money = (c: number): string => (c / 100).toFixed(2);
   const line = (t: Transaction): string[] => [t.date, t.otherParty || t.particulars, t.reference, money(t.amount)];
   const rows: string[][] = [
@@ -69,11 +82,10 @@ function downloadReport(r: BankReconciliation): void {
     ...report.outstanding.map(line),
     ["Total outstanding", "", "", money(report.outstandingTotal)],
   ];
-  download(
-    rows.map((row) => row.map(spreadsheetCell).join(",")).join("\n") + "\n",
-    `reconciliation-${bankLabel(r.account).replace(/[^A-Za-z0-9]+/g, "-")}-${r.statementDate}.csv`,
-    "text/csv",
-  );
+  return {
+    text: rows.map((row) => row.map(spreadsheetCell).join(",")).join("\n") + "\n",
+    name: `reconciliation-${bankLabel(r.account).replace(/[^A-Za-z0-9]+/g, "-")}-${r.statementDate}.csv`,
+  };
 }
 
 function reportButton(r: BankReconciliation): HTMLButtonElement {

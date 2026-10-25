@@ -130,6 +130,7 @@ import {
 import { sessionFromUrl, signedIn } from "./cloud.js";
 import { applyCountry, booksCountry } from "./country.js";
 import { openReport, reportsFromMenu, wireMenu } from "./menu.js";
+import { wireRecordSearch } from "./search-wiring.js";
 import { $, state } from "./state.js";
 import {
   dedupeReference,
@@ -462,6 +463,7 @@ function wireUp(): void {
   // those do.
   wireChrome();
   wireMenu();
+  wireRecordSearch();
 
   // Leaving while a save is still on its way: a tick on Reconcile moves on
   // before the server has answered, so closing or reloading straight after

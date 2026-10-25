@@ -114,7 +114,7 @@ United States books only), or **No** (with why).
 | Income by customer, and sales by item | Has: Sales by customer and Sales by item, for any period, with CSV | — |
 | **Analytics**: revenue trend, expenses by category, aging charts, days sales outstanding, margin, **90-day cash forecast**, export | Partly: the Charts report | Yes |
 | AI: an insights brief, eleven one-click analyses, any of eight providers | Partly: AI suggestions, the AI check, and a conversation with tools | Yes: one-click analyses |
-| Global search across customers, vendors, items, invoices and payments | Partly: Ctrl+K finds pages | Yes |
+| Global search across customers, vendors, items, invoices and payments | Has: Ctrl+K finds pages, contacts, invoices, quotes, bills and bank lines, by words or by amount | — |
 | Keyboard shortcuts for new invoice, bill, payment | Has: Alt+Shift+I, B and J for a new invoice, bill and journal, from any page | — |
 | History of every change, with who | Has, with undo | — |
 | Users and roles; an Accountant role; invite with an end date; last sign-in shown | Has, for books online: an end date on an invitation or a member, enforced by the database, and each person's last sign-in | — |
@@ -219,7 +219,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 33. Sub-accounts in the chart (L).
 34. Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast (M).
 35. One-click AI analyses beside the conversation (S).
-36. Global search across contacts, invoices, bills and lines (M).
+36. ~~Global search across contacts, invoices, bills and lines~~: done 25 October 2026, in the menu's search; an amount finds what is exactly that much.
 37. Receipt scanning in the page, without AI (L).
 38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
 39. Online payment links (L; which provider, and keys held online).

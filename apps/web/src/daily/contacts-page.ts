@@ -565,6 +565,12 @@ function form(existing: Contact | null): HTMLElement {
   return box;
 }
 
+/** Show the contacts list narrowed to one name, as a search found it. */
+export function showContactNamed(name: string): void {
+  filter = "all";
+  query = name;
+}
+
 export function renderContacts(): void {
   const body = $("contacts-body");
   body.textContent = "";

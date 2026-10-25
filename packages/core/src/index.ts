@@ -343,6 +343,7 @@ export * from "./variance.js";
 export * from "./xlsx.js";
 export * from "./zip.js";
 export * from "./fingerprint.js";
+export * from "./search.js";
 export * from "./statement-csv.js";
 export * from "./chart-import.js";
 export * from "./items-csv.js";

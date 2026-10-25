@@ -1871,6 +1871,15 @@ export function copyBill(bill: Invoice): void {
   document.getElementById("bill-editor")?.scrollIntoView({ block: "nearest" });
 }
 
+/** Open a sales invoice in the editor, on the Invoices page. */
+export function editInvoice(number: string): void {
+  editorOn = "invoices";
+  copyingFrom = null;
+  editingInvoice = number;
+  redraw("invoiceEditor");
+  document.getElementById("invoice-editor")?.scrollIntoView({ block: "nearest" });
+}
+
 /** Open a bill in the editor, on the Bills page. */
 export function editBill(number: string): void {
   editorOn = "bills";

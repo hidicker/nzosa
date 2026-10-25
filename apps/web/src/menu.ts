@@ -245,7 +245,21 @@ function destinations(): Destination[] {
   return found;
 }
 
+/**
+ * What else a search finds besides places: contacts, documents and bank lines,
+ * from main.ts, so the menu need not know any page.
+ */
+let recordSearch: ((query: string) => Destination[]) | null = null;
+
+export function setRecordSearch(search: (query: string) => { label: string; where: string; go: () => void }[]): void {
+  recordSearch = (query) => search(query).map((hit) => ({ ...hit, words: "" }));
+}
+
 function matches(query: string): Destination[] {
+  return [...placeMatches(query), ...(recordSearch?.(query) ?? [])];
+}
+
+function placeMatches(query: string): Destination[] {
   const words = query.toLowerCase().split(/\s+/).filter((word) => word !== "");
   if (words.length === 0) return [];
   const phrase = words.join(" ");
@@ -291,7 +305,7 @@ function wireSearch(): void {
     if (shown.length === 0) {
       const none = document.createElement("div");
       none.className = "menu-search-empty";
-      none.textContent = "Nothing called that.";
+      none.textContent = "Nothing called that, and nothing in the books says it.";
       results.append(none);
       return;
     }

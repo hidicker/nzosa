@@ -106,8 +106,8 @@ United States books only), or **No** (with why).
 | **Changes made into a locked period, reported** | No | Yes |
 | **Accountant's package**: one zip of the statements, ledger and trial balance as CSV, agings, reconciliations, adjusting entries and history for a period | Partly: year-end packs and the Excel extract | Yes |
 | **Reclassify transactions**: pick an account and a period, tick lines, move them to another account in one change | No: rename and merge move everything | Yes |
-| **Compare with last year** on the profit and loss and balance sheet | No: one year at a time | Yes |
-| **Report periods**: this month, this quarter, year to date, any dates | No: financial years only (and BAS quarters) | Yes |
+| Compare with last year on the profit and loss and balance sheet | Has: the same period a year earlier beside it, with the change | — |
+| Report periods: this month, this quarter, year to date, any dates | Has, inside the chosen year; returns and year-end reports stay whole-year | — |
 | **Saved reports** with their own addresses; Back returns to them | Partly: favourite reports | Yes |
 | Every report row drills down; the drill-down saves as CSV and PDF | Has | — |
 | Profit and loss, balance sheet, trial balance, general ledger, cash flow, agings | Has | — |
@@ -175,8 +175,8 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 **First: what bookkeepers here meet every week**
 
-1. **Report periods**: this month, this quarter, year to date, any dates (M).
-2. **Compare with last year** on the profit and loss and balance sheet (S, after 1).
+1. ~~Report periods~~: done 25 October 2026.
+2. ~~Compare with last year~~: done 25 October 2026.
 3. **Payslips**, printed and emailed, for New Zealand and Australian pay runs (M).
 4. **Direct credit files** for New Zealand banks, and ABA for Australia, from a pay run or a list of bills (M).
 5. **Reclassify transactions**: move chosen lines from one account to another in one change, undoable (M).

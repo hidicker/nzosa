@@ -118,7 +118,7 @@ United States books only), or **No** (with why).
 | Keyboard shortcuts for new invoice, bill, payment | Has: Alt+Shift+I, B and J for a new invoice, bill and journal, from any page | — |
 | History of every change, with who | Has, with undo | — |
 | Users and roles; an Accountant role; invite with an end date; last sign-in shown | Has, for books online: an end date on an invitation or a member, enforced by the database, and each person's last sign-in | — |
-| CSV import and export of customers, vendors, items, the chart | Partly: customers and vendors | Yes: items and the chart, with a dry run |
+| CSV import and export of customers, vendors, items, the chart | Has: items and the chart with a dry run, as well as customers and vendors | — |
 | A documented API with tokens, read and write | Partly: an MCP server, read only | Later, with a decision on writing |
 | Tamper-evident hash on printed tax forms | No | Yes (small) |
 | Company file encryption, an accountant's copy file | No | No: books online are protected by the server; a folder is the person's own |
@@ -144,7 +144,7 @@ United States books only), or **No** (with why).
 | Grants, donation receipts | Has, and New Zealand's tier 3 and 4 reports | — |
 | Funds with donor restrictions, releases | No | Later: PBE reporting takes restricted reserves |
 | Statement of activities, functional expenses (Form 990) | No | US |
-| Pledges, in-kind gifts, year-end giving statements | Partly: donation receipts | Yes: a year's giving statement per donor |
+| Pledges, in-kind gifts, year-end giving statements | Has: donation receipts, and a year's giving statement per donor or for every donor | — |
 
 ## Moving in
 
@@ -226,7 +226,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
 41. ~~Chart import from CSV or hledger with a dry run~~: done 25 October 2026.
 42. New Zealand deduction notices on pay runs (M).
-43. A year's giving statement per donor (S).
+43. ~~A year's giving statement per donor~~: done 25 October 2026, one donor's or every donor's, one to a page.
 44. ~~Items and the chart exported and imported as CSV~~: done 25 October 2026, each with the same dry run.
 45. A hash on printed returns, to show they are unchanged (S).
 

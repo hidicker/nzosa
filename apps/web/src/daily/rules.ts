@@ -9,7 +9,7 @@ import { $, state } from "../state.js";
 import { saveRulesArchive } from "../store.js";
 import { askOnPage, download, note } from "../ui.js";
 import { combobox } from "../combobox.js";
-import { knownCodes } from "../reconcile.js";
+import { pickableCodes } from "../reconcile.js";
 import { ruleMatches, ruleSearchText } from "@nzosa/core";
 import type { CategoryRule } from "@nzosa/core";
 
@@ -413,7 +413,7 @@ function ruleEditor(draft: RuleDraft, saveLabel: string): HTMLElement {
       wrapper.className = "rule-field";
       const caption = document.createElement("span");
       caption.textContent = label;
-      const codes = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+      const codes = pickableCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
       const picker = combobox(codes, draft.code === "" ? null : draft.code, "Search accounts…", () => {
         draft.code = picker.value;
         refresh();

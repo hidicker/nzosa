@@ -58,6 +58,12 @@ export interface Account {
    * and the answer is that this ledger holds no money in it.
    */
   ledgerAccount?: string;
+  /**
+   * No longer used for new coding: left out of the account pickers, but kept,
+   * with all its history, in every report. Making it active again brings it
+   * back. Deleting it would lose what was coded to it.
+   */
+  inactive?: boolean;
 }
 
 export interface ChartImportResult {

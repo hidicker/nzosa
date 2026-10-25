@@ -4,6 +4,7 @@ import { redraw, showPage } from "../app.js";
 import {
   NOT_IN_LEDGER,
   accountsForEditing,
+  accountsInUse,
   banks,
   chartBalances,
   chartTreatmentOf,
@@ -1147,6 +1148,7 @@ export function renderEntities(): void {
     body.append(addAccountForm(model, accountRows));
     return;
   }
+  body.append(unusedAccountsButton());
 
   const chartTable = document.createElement("table");
   chartTable.className = "entity-table accounts-table";
@@ -1193,6 +1195,13 @@ export function renderEntities(): void {
     nameCell.className = "entity-left";
     codeCell.textContent = account.code;
     nameCell.textContent = account.name;
+    if (account.inactive === true) {
+      tr.classList.add("event-reverted");
+      const mark = document.createElement("span");
+      mark.className = "cell-said-elsewhere";
+      mark.textContent = " inactive";
+      nameCell.append(mark);
+    }
     tr.append(codeCell, nameCell, balanceCell(account, balances));
 
     // The type decides whether an account is income, an expense, or neither.
@@ -1377,6 +1386,7 @@ export function renderEntities(): void {
     // account from its own transactions, which is not a rename.
     const actions = removalCell(account, label);
     actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label));
+    actions.append(activeToggle(account));
     tr.append(actions);
     chartBody.append(tr);
   }
@@ -1832,32 +1842,99 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
   return cell;
 }
 
+/** Make an account inactive, or active again: it leaves the pickers, its history stays. */
+function activeToggle(account: Account): HTMLButtonElement {
+  const button = document.createElement("button");
+  button.type = "button";
+  button.className = "small";
+  button.textContent = account.inactive === true ? "Make active" : "Make inactive";
+  button.title =
+    account.inactive === true
+      ? "Offer it again when coding."
+      : "No longer offered when coding. Everything already coded to it stays, in every report.";
+  button.addEventListener("click", async () => {
+    const before = state.chart.find((a) => a.code === account.code && a.name === account.name);
+    if (before === undefined) return;
+    const { inactive: _was, ...rest } = before;
+    const after: Account = before.inactive === true ? rest : { ...rest, inactive: true };
+    const chart = state.chart.map((a) => (a === before ? after : a));
+    state.chart = chart;
+    state.ledger = { ...state.ledger, chart };
+    state.persistent = await savePart(state.ledger, "chart");
+    await record("chart", `${account.name} made ${after.inactive === true ? "inactive" : "active"}`, before, after, `${account.code}|${account.name}`);
+    redraw("entities");
+  });
+  return button;
+}
+
+/**
+ * Remove, in one step, the accounts nothing in the books uses: what a starter
+ * chart brought that this business never needed. "Uses" is read cautiously
+ * (see accountsInUse), and bank accounts are never offered.
+ */
+function unusedAccountsButton(): HTMLElement {
+  const used = accountsInUse();
+  const unused = state.chart.filter((a) => {
+    const code = a.code.trim();
+    if (ledgerAccountFor(a.name, a) !== null || /bank/i.test(a.type)) return false;
+    return !used.has(code === "" ? a.name : code);
+  });
+  const wrap = document.createElement("div");
+  wrap.className = "migration-actions";
+  if (unused.length === 0) return wrap;
+  const button = document.createElement("button");
+  button.type = "button";
+  button.textContent = `Remove ${unused.length} unused account${unused.length === 1 ? "" : "s"}…`;
+  button.title = "Accounts nothing is coded or posted to, and nothing in the books names: what a starter chart brought that these books never needed.";
+  button.addEventListener("click", async () => {
+    const names = unused.map((a) => `${a.code} ${a.name}`.trim());
+    const shown = names.slice(0, 25).join("\n") + (names.length > 25 ? `\n…and ${names.length - 25} more` : "");
+    if (!(await askOnPage(`Remove these ${unused.length} accounts? Nothing is coded or posted to them, and nothing in the books names them.\n\n${shown}`, "Remove them"))) return;
+    const labels = accountsForEditing();
+    await removeChartAccounts(unused.map((account) => ({ account, label: labels.find((r) => r.account === account)?.label ?? account.name })));
+  });
+  wrap.append(button);
+  return wrap;
+}
+
 function codedToEach(): Map<string, number> {
   return codingProgress().byCode;
 }
 
 /** Take one account out of the chart, and out of everything keyed to it. */
 async function removeChartAccount(account: Account, label: string): Promise<void> {
-  const chart = state.chart.filter(
-    (a) => !(a.code === account.code && a.name === account.name),
-  );
+  await removeChartAccounts([{ account, label }]);
+}
+
+/**
+ * Take accounts out of the chart, and out of everything keyed to them, in one
+ * save. Each is recorded on its own, so History can bring any one back.
+ */
+async function removeChartAccounts(gone: readonly { account: Account; label: string }[]): Promise<void> {
+  if (gone.length === 0) return;
+  const key = (a: Account): string => `${a.code}|${a.name}`;
+  const leaving = new Set(gone.map((g) => key(g.account)));
+  const chart = state.chart.filter((a) => !leaving.has(key(a)));
   state.chart = chart;
 
-  // The entity assignment goes with it: an assignment keyed to an account that
-  // is gone is a row nothing will ever read and something will one day count.
+  // The entity assignment goes with each: an assignment keyed to an account
+  // that is gone is a row nothing will ever read and something will one day count.
   const model = state.ledger.entities ?? emptyEntityModel();
   const accounts = { ...model.accounts };
-  delete accounts[accountEntityKey(account)];
+  for (const { account } of gone) delete accounts[accountEntityKey(account)];
 
   state.ledger = { ...state.ledger, chart, entities: { ...model, accounts } };
   state.persistent = await savePart(state.ledger, "chart", "entities");
-  await record("chart", `${account.name} removed from the chart`, account, null, `${account.code}|${account.name}`);
+  for (const { account } of gone) {
+    await record("chart", `${account.name} removed from the chart`, account, null, key(account));
+  }
 
-  // And its GST treatment, which lives with the rules.
+  // And their GST treatments, which live with the rules.
   const file = state.rules as RuleFileShape | undefined;
-  if (file?.codeTreatments?.[label] !== undefined) {
+  const treated = gone.filter((g) => file?.codeTreatments?.[g.label] !== undefined);
+  if (file !== undefined && treated.length > 0) {
     const codeTreatments = { ...file.codeTreatments };
-    delete codeTreatments[label];
+    for (const { label } of treated) delete codeTreatments[label];
     state.rules = { ...file, codeTreatments } as RuleSet;
     await persistRules();
   }

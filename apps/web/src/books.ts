@@ -2592,3 +2592,33 @@ export function payrollEmployer(wages: string | undefined): InvoiceSupplier | nu
 function onlyOne<T>(items: readonly T[]): T | undefined {
   return items.length === 1 ? items[0] : undefined;
 }
+
+/**
+ * The chart accounts something in the books still names, by code (or by name
+ * where an account has no code).
+ *
+ * Kept on the cautious side: an account counts as used if any line is coded
+ * or posted to it -- every journal the books post, payroll and depreciation
+ * included -- or if anything else kept with the books names its code: an
+ * invoice or bill of any status, an opening balance, an item, a contact's
+ * usual account, a payroll setting, a rule. Removing an account that is
+ * wrongly thought unused would quietly break whatever named it; keeping one
+ * that is not used costs a line in the chart.
+ */
+export function accountsInUse(): Set<string> {
+  const used = new Set<string>();
+  for (const journal of postedJournals()) for (const line of journal.lines) used.add(line.accountCode.trim());
+  for (const [label, count] of codingProgress().byCode) if (count > 0) used.add(label);
+  // Everything else kept with the books, read as text: a code quoted as a
+  // value anywhere is a use. The chart itself, the transactions and the
+  // entity assignments (keyed by every account) are left out.
+  const { chart: _c, transactions: _t, entities: _e, ...rest } = state.ledger;
+  const kept = JSON.stringify(rest) + JSON.stringify(state.rules ?? {});
+  for (const { account, label } of accountsForEditing()) {
+    const code = account.code.trim();
+    if (used.has(label)) used.add(code === "" ? account.name : code);
+    if (code !== "" && kept.includes(`"${code}"`)) used.add(code);
+    if (kept.includes(JSON.stringify(label))) used.add(code === "" ? account.name : code);
+  }
+  return used;
+}

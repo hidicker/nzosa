@@ -99,7 +99,7 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Chart: add, rename, merge, delete when unused | Has | — |
 | **Sub-accounts** (an account under a parent, totals rolled up) | No: read from QuickBooks only as a name | Yes |
-| **Inactive accounts**, and removing the starter chart's unused accounts in one step | Partly | Yes |
+| Inactive accounts, and removing the starter chart's unused accounts in one step | Has: Make inactive keeps an account and its history out of the pickers; Remove unused takes out every account nothing uses | — |
 | Manual journals, reversing, opening balances, fixed assets, depreciation, disposal | Has | — |
 | **Adjusting entries marked**, a report of them, and P&L or trial balance without them | No | Yes |
 | Closing date | Has: lock dates, enforced on the server for the dates themselves | — |
@@ -201,7 +201,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 21. ~~Time approval~~: done 25 October 2026.
 22. ~~Reconcile through a date~~: already so on Statements; the comparison had it wrong.
 23. ~~Every completed reconciliation listed~~: done 25 October 2026, each with its report.
-24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).
+24. ~~Inactive accounts, and unused accounts removed in one step~~: done 25 October 2026.
 25. Keyboard shortcuts for a new invoice, bill and journal (S).
 26. Sales receipts, and a walk-in customer (M).
 27. Quick entry for a backlog of paper invoices (S).

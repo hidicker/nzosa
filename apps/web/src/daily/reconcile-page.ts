@@ -37,6 +37,7 @@ import {
   classificationToRate,
   describeFlow,
   knownCodes,
+  pickableCodes,
   rateLabel,
   rateToClassification,
   transferCandidates,
@@ -297,7 +298,7 @@ export function renderReconcile(): void {
     return;
   }
 
-  const codes = knownCodes(
+  const codes = pickableCodes(
     state.rules,
     state.ledger.overrides ?? {},
     state.chart,

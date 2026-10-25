@@ -17,7 +17,7 @@ import {
 import { combobox } from "../combobox.js";
 import { renderRecurring } from "./recurring.js";
 import type { Combobox } from "../combobox.js";
-import { knownCodes } from "../reconcile.js";
+import { knownCodes, pickableCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { save as saveLedger, savePart } from "../store.js";
 import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
@@ -595,7 +595,7 @@ export function renderInvoiceEditor(): void {
   const totals = document.createElement("p");
   totals.className = "invoice-totals";
 
-  const accounts = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
+  const accounts = pickableCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   const lineAccounts = new Map<HTMLElement, Combobox>();
 
   // Products kept in stock, whose lines carry a quantity.

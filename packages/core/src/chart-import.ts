@@ -133,7 +133,7 @@ function usualTypeIn(chart: readonly Account[], type: string): string {
 export interface ChartChange {
   before: Account;
   after: Account;
-  /** What changes: "type", "tax code", "description", "GST treatment". */
+  /** What changes: "type", "tax code", "description", "GST treatment", "parent". */
   fields: string[];
 }
 
@@ -240,6 +240,10 @@ export function chartImportPlan(
     if (raw.gstTreatment !== undefined && raw.gstTreatment !== (held.gstTreatment ?? "")) {
       after.gstTreatment = raw.gstTreatment;
       fields.push("GST treatment");
+    }
+    if (raw.parent !== undefined && raw.parent !== (held.parent ?? "")) {
+      after.parent = raw.parent;
+      fields.push("parent");
     }
     if (fields.length === 0) plan.unchanged += 1;
     else plan.change.push({ before: held, after, fields });

@@ -98,7 +98,7 @@ United States books only), or **No** (with why).
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
 | Chart: add, rename, merge, delete when unused | Has | — |
-| **Sub-accounts** (an account under a parent, totals rolled up) | No: read from QuickBooks only as a name | Yes |
+| **Sub-accounts** (an account under a parent, totals rolled up) | Has: an account set under another, one level deep; the profit and loss shows the parent with its total and the parts beneath. The balance sheet and the downloads still list each account | — |
 | Inactive accounts, and removing the starter chart's unused accounts in one step | Has: Make inactive keeps an account and its history out of the pickers; Remove unused takes out every account nothing uses | — |
 | Manual journals, reversing, opening balances, fixed assets, depreciation, disposal | Has | — |
 | **Adjusting entries marked**, a report of them, and P&L or trial balance without them | Has: Adjusting entry on a manual journal, the Adjusting entries report, and Without adjusting entries on the P&L, balance sheet and trial balance | Yes |
@@ -216,7 +216,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 **Fourth: larger, or wanting a decision**
 
 32. ~~Jobs belonging to customers, job profitability and P&L by job~~: done 25 October 2026. A job goes on a whole document or line, as a class does; one line of an invoice to one job and another to a second is not yet possible.
-33. Sub-accounts in the chart (L).
+33. ~~Sub-accounts in the chart~~: done 25 October 2026, on the profit and loss. QuickBooks' Parent:Child names are not yet read into it.
 34. ~~Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast~~: done 25 October 2026 on the Charts report. The forecast counts only what is known: documents owing and recurring invoices.
 35. ~~One-click AI analyses beside the conversation~~: done 25 October 2026 on the AI check page: asked with the books' own key where there is one, copied for your own assistant where not.
 36. ~~Global search across contacts, invoices, bills and lines~~: done 25 October 2026, in the menu's search; an amount finds what is exactly that much.

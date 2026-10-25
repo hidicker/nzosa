@@ -57,6 +57,7 @@ import {
   suggestedBankOwner,
   LOGO_MAX_BYTES,
   cleanLogo,
+  parentProblem,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent, invoiceDetailWords } from "../country.js";
@@ -1388,7 +1389,7 @@ export function renderEntities(): void {
     // account from its own transactions, which is not a rename.
     const actions = removalCell(account, label);
     actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label));
-    actions.append(activeToggle(account));
+    actions.append(activeToggle(account), parentPicker(account));
     tr.append(actions);
     chartBody.append(tr);
   }
@@ -1845,6 +1846,54 @@ function removalCell(account: Account, label: string): HTMLTableCellElement {
 }
 
 /** Make an account inactive, or active again: it leaves the pickers, its history stays. */
+/** Which account this one is under, if any: a sub-account is shown inside its parent's total on the profit and loss. */
+function parentPicker(account: Account): HTMLSelectElement {
+  const select = document.createElement("select");
+  select.className = "small";
+  select.title = "Show it as a sub-account: inside another account's total on the profit and loss";
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "Not under another";
+  select.append(none);
+  // Only where the profit and loss would show both in the same section: an
+  // overhead under an overhead, never a direct cost under one.
+  const family = (type: string): string => {
+    const t = type.trim().toLowerCase();
+    if (/^(revenue|sales)$/.test(t)) return "income";
+    if (/^(expense|overhead)$/.test(t)) return "expense";
+    return t;
+  };
+  for (const other of state.chart) {
+    if (other.code === "" || other.code === account.code || (other.parent ?? "") !== "") continue;
+    if (family(other.type) !== family(account.type)) continue;
+    const option = document.createElement("option");
+    option.value = other.code;
+    option.textContent = `Under ${other.code} ${other.name}`;
+    option.selected = other.code === account.parent;
+    select.append(option);
+  }
+  select.addEventListener("change", async () => {
+    const before = state.chart.find((a) => a.code === account.code && a.name === account.name);
+    if (before === undefined) return;
+    const problem = parentProblem(state.chart, before, select.value);
+    if (problem !== null) {
+      select.value = before.parent ?? "";
+      await tellOnPage(problem);
+      return;
+    }
+    const { parent: _was, ...rest } = before;
+    const after: Account = select.value === "" ? rest : { ...rest, parent: select.value };
+    const chart = state.chart.map((a) => (a === before ? after : a));
+    state.chart = chart;
+    state.ledger = { ...state.ledger, chart };
+    state.persistent = await savePart(state.ledger, "chart");
+    const under = state.chart.find((a) => a.code === select.value);
+    await record("chart", select.value === "" ? `${account.name} no longer a sub-account` : `${account.name} put under ${under?.name ?? select.value}`, before, after, `${account.code}|${account.name}`);
+    redraw("entities");
+  });
+  return select;
+}
+
 function activeToggle(account: Account): HTMLButtonElement {
   const button = document.createElement("button");
   button.type = "button";

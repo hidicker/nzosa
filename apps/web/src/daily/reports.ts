@@ -5,7 +5,7 @@ import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
 import { renderAnalytics } from "./analytics-section.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
-import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, periodSaid, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
+import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, nestLines, periodSaid, resolveAccount, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -4561,9 +4561,21 @@ export function renderReportsPage(): void {
     addRow(group.title, "", "report-section");
     const sign = (line: { net: number }): number => (income ? line.net : -line.net);
     const priorByCode = new Map((before?.lines ?? []).map((line) => [line.code, sign(line)]));
-    for (const line of group.lines) {
-      addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
-      priorByCode.delete(line.code);
+    // Sub-accounts under their parent, the parent carrying their total.
+    const parentOf = subAccountParent();
+    for (const row of nestLines(group.lines, (line) => parentOf(line.code), (line) => resolveAccount(line.code, state.chart)?.code ?? "", sign)) {
+      if (row.kind === "line") {
+        const line = row.line;
+        addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+        priorByCode.delete(line.code);
+        continue;
+      }
+      const priorTotal = prior === null ? undefined : row.children.reduce((s, line) => s + (priorByCode.get(line.code) ?? 0), 0);
+      addRow(row.label, money(row.total), "report-parent", "", undefined, against(row.total, priorTotal));
+      for (const line of row.children) {
+        addRow(line.code, money(sign(line)), "report-indent", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+        priorByCode.delete(line.code);
+      }
     }
     // Accounts only the year before had: shown, at nothing now.
     for (const [code, then] of priorByCode) {
@@ -5248,6 +5260,16 @@ function downloadProfitAndLoss(): void {
     `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${periodFileName(built.year)}.csv`,
     "text/csv",
   );
+}
+
+/** A report line's parent account, by the line's account label, where the chart sets one. */
+function subAccountParent(): (label: string) => { code: string; label: string } | null {
+  const byCode = new Map(state.chart.map((a) => [a.code, a]));
+  return (label) => {
+    const account = resolveAccount(label, state.chart);
+    const parent = account?.parent === undefined ? undefined : byCode.get(account.parent);
+    return parent === undefined ? null : { code: parent.code, label: `${parent.name} - ${parent.code}` };
+  };
 }
 
 /** The five choices that decide which report is shown, and downloading it. */

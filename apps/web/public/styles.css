@@ -4557,3 +4557,5 @@ select.needs-choice {
 .attachments { margin-top: 0.5rem; display: flex; flex-direction: column; gap: 0.25rem; align-items: flex-start; }
 .attachments .k-block { font-size: 0.72rem; text-transform: uppercase; letter-spacing: 0.06em; color: var(--muted); }
 .journal-tag { font-size: 0.75rem; font-weight: normal; padding: 0.1rem 0.45rem; border: 1px solid var(--border); border-radius: 999px; background: var(--card); }
+.report-table tr.report-indent td.report-name { padding-left: 1.6rem; }
+.report-table tr.report-parent td { font-weight: 600; }

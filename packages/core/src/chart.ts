@@ -64,6 +64,8 @@ export interface Account {
    * back. Deleting it would lose what was coded to it.
    */
   inactive?: boolean;
+  /** The account this is a sub-account of, by its code; see sub-accounts.ts. */
+  parent?: string;
 }
 
 export interface ChartImportResult {
@@ -112,6 +114,7 @@ export function parseChartOfAccounts(text: string): ChartImportResult {
     const entityOwners = cells.get("Entity Owners");
     const entityKind = cells.get("Entity Kind");
     const ledgerAccount = cells.get("Ledger Account");
+    const parent = cells.get("Parent");
 
     // Xero exports its payroll clearing account ("Wage Payables") with no
     // type at all; a payable is a current liability.
@@ -128,6 +131,7 @@ export function parseChartOfAccounts(text: string): ChartImportResult {
       ...(entityOwners !== "" ? { entityOwners } : {}),
       ...(entityKind !== "" ? { entityKind } : {}),
       ...(ledgerAccount !== "" ? { ledgerAccount } : {}),
+      ...(parent !== "" ? { parent } : {}),
     });
   }
 
@@ -250,7 +254,9 @@ const csvCell = spreadsheetCell;
  * last two living only in a browser database.
  */
 export function formatChartOfAccounts(accounts: readonly Account[]): string {
-  const lines = [[...XERO_COLUMNS, ...OUR_COLUMNS].join(",")];
+  // Parent only where some account has one, so a chart without sub-accounts is written as it always was.
+  const parents = accounts.some((a) => (a.parent ?? "") !== "");
+  const lines = [[...XERO_COLUMNS, ...OUR_COLUMNS, ...(parents ? ["Parent"] : [])].join(",")];
 
   for (const account of accounts) {
     lines.push(
@@ -268,6 +274,7 @@ export function formatChartOfAccounts(accounts: readonly Account[]): string {
         account.entityOwners ?? "",
         account.entityKind ?? "",
         account.ledgerAccount ?? "",
+        ...(parents ? [account.parent ?? ""] : []),
       ]
         .map(csvCell)
         .join(","),

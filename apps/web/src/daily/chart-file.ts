@@ -59,6 +59,7 @@ function field(a: Account, name: string): string {
   if (name === "type") return a.type;
   if (name === "tax code") return a.taxCode;
   if (name === "description") return a.description;
+  if (name === "parent") return a.parent ?? "";
   return a.gstTreatment ?? "";
 }
 

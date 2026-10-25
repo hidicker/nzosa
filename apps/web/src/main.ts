@@ -87,6 +87,7 @@ import { renderStatements } from "./daily/statements-page.js";
 import { renderBudgets } from "./daily/budgets-page.js";
 import { renderItems } from "./daily/items-page.js";
 import { renderClasses } from "./daily/classes-page.js";
+import { renderJobs } from "./daily/jobs-page.js";
 import { renderApps } from "./daily/apps-page.js";
 import { renderTime } from "./daily/time-page.js";
 import { renderAuPayroll } from "./daily/au-payroll-page.js";
@@ -193,6 +194,7 @@ async function init(): Promise<void> {
     budgets: renderBudgets,
     items: renderItems,
     classes: renderClasses,
+    jobs: renderJobs,
     apps: renderApps,
     time: renderTime,
     aupayroll: renderAuPayroll,

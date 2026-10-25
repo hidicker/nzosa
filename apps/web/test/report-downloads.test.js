@@ -56,6 +56,7 @@ const NO_DOWNLOAD = new Set([
   "payrolltax",
   "budget",
   "byclass",
+  "byjob",
   "aurental",
   "bas",
   "krbusiness",

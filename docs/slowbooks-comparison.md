@@ -87,7 +87,7 @@ United States books only), or **No** (with why).
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
 | Classes on every line, P&L by class, a class's own P&L | Has | — |
-| **Jobs** belonging to a customer, job on invoice and bill lines, **job profitability** and **P&L by job** | Partly: classes stand in for jobs | Yes |
+| **Jobs** belonging to a customer, job on invoice and bill lines, **job profitability** and **P&L by job** | Has: jobs with a customer, a quote and open or finished, given to invoices, bills, bank lines and journals; each job's whole-life profit and margin, and a Profit and loss by job report. A job is given to a whole document, not to each of its lines | — |
 | Cost codes, committed cost, job budget vs actual, burden rates | No | Later: for builders and trades, after jobs |
 | Time entries, invoiced by customer | Has | — |
 | Time approval (submit, approve, reject) | Has: an optional setting; time waits, is approved or sent back with a reason, and only approved time is invoiced | — |
@@ -215,7 +215,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 **Fourth: larger, or wanting a decision**
 
-32. Jobs belonging to customers, job profitability and P&L by job (L).
+32. ~~Jobs belonging to customers, job profitability and P&L by job~~: done 25 October 2026. A job goes on a whole document or line, as a class does; one line of an invoice to one job and another to a second is not yet possible.
 33. Sub-accounts in the chart (L).
 34. ~~Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast~~: done 25 October 2026 on the Charts report. The forecast counts only what is known: documents owing and recurring invoices.
 35. ~~One-click AI analyses beside the conversation~~: done 25 October 2026 on the AI check page: asked with the books' own key where there is one, copied for your own assistant where not.

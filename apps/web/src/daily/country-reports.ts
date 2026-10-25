@@ -31,8 +31,7 @@ import {
   splitAccountLabel,
   usIncomeTaxSingle,
   usQbiDeduction,
-  salesTaxByRate,
-} from "@nzosa/core";
+  salesTaxByRate, jobColumns } from "@nzosa/core";
 import type { ContractorPayment, Entity, FormDefinition, FormSchedule, FullBas, IsoDate, Transaction } from "@nzosa/core";
 import { postedJournals, registeredForGst, reportEngine, varianceInput } from "../books.js";
 import { state } from "../state.js";
@@ -907,6 +906,7 @@ export function syncPlanningReports(): void {
   const wanted: [string, string][] = [
     ...(moduleOn("budgets") ? ([["budget", "Budget vs actual"]] as [string, string][]) : []),
     ...(moduleOn("classes") ? ([["byclass", "Profit and loss by class"]] as [string, string][]) : []),
+    ...(moduleOn("jobs") ? ([["byjob", "Profit and loss by job"]] as [string, string][]) : []),
   ];
   if (wanted.length === 0) return;
   const group = document.createElement("optgroup");
@@ -1314,16 +1314,25 @@ export function renderKrTax(body: HTMLElement, year: number): void {
  * up to the profit and loss.
  */
 export function renderProfitByClass(body: HTMLElement, year: number): void {
+  renderProfitByColumns(body, year, "class", state.ledger.classes?.assigned ?? {}, "Classes are given on the Classes page. An invoice's payment goes with the invoice.");
+}
+
+/** The profit and loss for the year with a column for each job, and one for what is no job's. */
+export function renderProfitByJob(body: HTMLElement, year: number): void {
+  renderProfitByColumns(body, year, "job", jobColumns(state.ledger.jobs ?? { jobs: [], assigned: {} }), "Jobs are given on the Jobs page, where each job's whole life is added up too. An invoice's payment goes with the invoice.");
+}
+
+function renderProfitByColumns(body: HTMLElement, year: number, by: string, assigned: Record<string, string>, footnote: string): void {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
   const title = document.createElement("h3");
-  title.textContent = `Profit and loss by class — ${from} to ${to}`;
+  title.textContent = `Profit and loss by ${by} — ${from} to ${to}`;
   body.append(title);
   const incomeType = /revenue|income|sales/i;
   const costType = /expense|overhead|direct|cost/i;
   const accounts = state.chart.filter((a) => incomeType.test(a.type) || costType.test(a.type));
   const codes = new Set(accounts.map((a) => a.code.trim()));
-  const columns = profitAndLossByClass(postedJournals(), state.ledger.classes?.assigned ?? {}, (code) => codes.has(code), {
+  const columns = profitAndLossByClass(postedJournals(), assigned, (code) => codes.has(code), {
     from,
     to,
   });
@@ -1381,5 +1390,5 @@ export function renderProfitByClass(body: HTMLElement, year: number): void {
   const scroller = document.createElement("div");
   scroller.className = "table-scroll";
   scroller.append(table);
-  body.append(scroller, note("Classes are given on the Classes page. An invoice's payment goes with the invoice."));
+  body.append(scroller, note(footnote));
 }

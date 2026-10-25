@@ -68,6 +68,7 @@ export type EventKind =
   | "items"
   /** Classes and what each is given to, whole. */
   | "classes"
+  | "jobs"
   /** Time entries, whole. */
   | "time"
   /** Australian payroll: employees and pay runs, whole. */
@@ -317,6 +318,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, auPayroll: (event.before ?? { employees: [], payRuns: [] }) as NonNullable<StoredLedger["auPayroll"]> };
     case "classes":
       return { ...ledger, classes: (event.before ?? { names: [], assigned: {} }) as NonNullable<StoredLedger["classes"]> };
+    case "jobs":
+      return { ...ledger, jobs: (event.before ?? { jobs: [], assigned: {} }) as NonNullable<StoredLedger["jobs"]> };
     case "items":
       return { ...ledger, items: (event.before ?? []) as NonNullable<StoredLedger["items"]> };
     case "budgets":
@@ -630,6 +633,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   budgets: "Budgets",
   items: "Products and services",
   classes: "Classes",
+  jobs: "Jobs",
   time: "Time",
   aupayroll: "Payroll",
   billPayment: "Paying bills by bank file",

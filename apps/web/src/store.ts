@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { AbaSettings, CreditApplication, InvoiceMessage, WordingKind } from "@nzosa/core";
+import type { AbaSettings, CreditApplication, InvoiceMessage, JobsHeld, WordingKind } from "@nzosa/core";
 import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
@@ -240,6 +240,8 @@ export interface StoredLedger {
   items?: Item[];
   /** Classes: their names, and the class each source of income or expense is given. */
   classes?: { names: string[]; assigned: Record<string, string> };
+  /** Jobs done for customers, and which postings belong to each. */
+  jobs?: JobsHeld;
   /** Time worked for customers, until it is invoiced. */
   timeEntries?: TimeEntry[];
   /** Stock counted, and the journal each put the inventory account to. */
@@ -900,6 +902,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.salesTaxRates && ledger.salesTaxRates.length > 0 ? { salesTaxRates: ledger.salesTaxRates } : {}),
     ...(ledger.bankLayouts && Object.keys(ledger.bankLayouts).length > 0 ? { bankLayouts: ledger.bankLayouts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
+    ...(ledger.jobs && (ledger.jobs.jobs.length > 0 || Object.keys(ledger.jobs.assigned).length > 0) ? { jobs: ledger.jobs } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

@@ -274,6 +274,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 4h6v5H3zM11 4h6v5h-6zM3 11h6v5H3zM11 11h6v5h-6z"/></svg>
                 <span>Classes</span>
               </button>
+              <button type="button" data-page="jobs" hidden data-module="jobs">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3z"/><path d="M7 7V4h6v3"/></svg>
+                <span>Jobs</span>
+              </button>
             </div>
           </div>
           <div class="sidebar-group" data-group="yearend">
@@ -778,6 +782,16 @@
           A second way to cut the profit and loss: by department, location or job. Give a class to a bank line, an invoice or a journal, and everything it posts to income and expense falls under it. The Profit and loss by class report adds them up. This page does not change the books.
         </p>
         <div id="classes-body"></div>
+      </section>
+
+      <section id="page-jobs" class="page" hidden>
+        <div class="page-head">
+          <h2>Jobs</h2>
+        </div>
+        <p class="page-hint">
+          Work done for a customer: a build, a contract, an event. Give a job to the invoices, bills, bank lines and journals that belong to it, and see what each job earned and cost over its whole life. This page does not change the books.
+        </p>
+        <div id="jobs-body"></div>
       </section>
 
       <section id="page-budgets" class="page" hidden>

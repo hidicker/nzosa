@@ -3,7 +3,7 @@ import { renderReclassify } from "./reclassify-page.js";
 import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { adjustingCsv, renderAdjusting } from "./adjusting-report.js";
 import { renderAnalytics } from "./analytics-section.js";
-import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange, unadjusted } from "./report-period.js";
 import { balanceSheetCsv, createZip, encodeUtf8, gstReturnFingerprint, periodSaid, sameFingerprint, spreadsheetCell, trialBalanceCsv, withoutAdjusting } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
@@ -3734,6 +3734,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   salestax: "Sales tax collected and paid, by the account it sits in, and what is still owed.",
   payrolltax: "Wages and the payroll taxes withheld, by quarter, read from the payroll accounts, for checking a 941.",
   byclass: "Income and expense for the year, a column for each class and one for what has none.",
+  byjob: "Income and expense for the year, a column for each job and one for what is no job's.",
   budget: "Each account's budget for the year beside what the books hold, and the year to date.",
   aurental: "Each rental on the ATO's rental property schedule labels.",
   bas: "GST for each quarter as the BAS asks for it: G1, 1A and 1B.",
@@ -4382,6 +4383,7 @@ export function renderReportsPage(): void {
     payrolltax: renderPayrollTax,
     budget: renderBudgetVsActual,
     byclass: renderProfitByClass,
+    byjob: renderProfitByJob,
     aurental: renderAuRentalSchedule,
     bas: renderBas,
     krbusiness: renderKrBusiness,

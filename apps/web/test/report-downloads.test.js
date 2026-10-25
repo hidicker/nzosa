@@ -64,6 +64,8 @@ const NO_DOWNLOAD = new Set([
   "krvat",
   "autax",
   "krtax",
+  // Moves lines; there is nothing to save as a file.
+  "reclassify",
 ]);
 
 test("every report kind either has a download or hides the button", () => {

@@ -77,9 +77,9 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Items, stock on hand at average cost, cost of goods posted | Has | — |
 | Stock counts and adjustments | Has | — |
-| **Reorder points and a low-stock list** | No | Yes |
-| **Stock valuation report** (quantity × average cost, by item) | No | Yes |
-| **An item's movements** (every purchase, sale and adjustment) | No | Yes |
+| Reorder points and a low-stock list | Has: a reorder point on each stocked product, and a note of what is at or below it | — |
+| Stock valuation report (quantity × average cost, by item) | Has, on Items, with a CSV | — |
+| An item's movements (every purchase, sale and adjustment) | Has: Movements on each product, with what it left on hand | — |
 | Opening stock posted as it is entered | Partly: through opening balances | Yes |
 
 ## Jobs and time
@@ -191,7 +191,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 11. ~~Saved invoice messages~~: done 25 October 2026.
 12. ~~Editable email wording~~: done 25 October 2026.
 13. ~~Overdue customers' statements~~: done 25 October 2026, one message each, since a mail program opens one at a time.
-14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
+14. ~~Reorder points, low stock, stock valuation and movements~~: done 25 October 2026.
 15. ~~Income by customer, and sales by item~~: done 25 October 2026.
 16. ~~Paid this year and all time, per supplier~~: done 25 October 2026.
 17. ~~A duplicate-name warning~~: done 25 October 2026.

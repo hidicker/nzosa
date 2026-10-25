@@ -50,3 +50,41 @@ test("the lines with an amount and no account", async () => {
     [300, 20],
   );
 });
+
+test("each item's movements say what changed, why, and where it left the stock", async () => {
+  const { stockValuation } = await import("../dist/index.js");
+  const items = [
+    { id: "gnome", name: "Garden gnome", kind: "product", unitCost: 900, reorderPoint: 15 },
+    { id: "pot", name: "Pot", kind: "product", unitCost: 300, reorderPoint: 2 },
+    { id: "hour", name: "Design hour", kind: "service" },
+  ];
+  const line = (itemCode, quantity, net) => ({ itemCode, quantity, net, description: "" });
+  const docs = [
+    { number: "B1", kind: "purchase", issued: "2026-03-01", credit: false, lines: [line("gnome", 10, 9000)] },
+    { number: "B2", kind: "purchase", issued: "2026-03-05", credit: false, lines: [line("gnome", 10, 11000)] },
+    { number: "INV-1", kind: "sales", issued: "2026-03-10", credit: false, lines: [line("gnome", 4, 10000)] },
+    { number: "CN-1", kind: "sales", issued: "2026-03-12", credit: true, lines: [line("gnome", 1, 2500)] },
+    { number: "DN-1", kind: "purchase", issued: "2026-03-14", credit: true, lines: [line("gnome", 2, 2000)] },
+  ];
+  const counts = [{ id: "c1", date: "2026-03-31", lines: [{ itemId: "gnome", quantity: 14, unitCost: 1000 }] }];
+  const { onHand, movements } = trackStock(items, docs, counts);
+  const moves = movements.get("gnome");
+  assert.deepEqual(moves.map((m) => [m.kind, m.reference, m.quantity, m.onHand]), [
+    ["bought", "B1", 10, 10],
+    ["bought", "B2", 10, 20],
+    ["sold", "INV-1", -4, 16],
+    ["returned by customer", "CN-1", 1, 17],
+    ["sent back to supplier", "DN-1", -2, 15],
+    ["counted", "count", -1, 14],
+  ]);
+  assert.equal(moves[2].value, -4000, "four sold at the average of 10.00");
+  assert.equal(moves.at(-1).valueAfter, 14_000);
+  assert.equal(moves.reduce((s, m) => s + m.value, 0), onHand.get("gnome").value, "the movements add up to what is on hand");
+
+  const valued = stockValuation(items, onHand);
+  assert.deepEqual(valued.rows.map((r) => [r.name, r.quantity, r.averageCost, r.value, r.low]), [
+    ["Garden gnome", 14, 1000, 14_000, true],
+    ["Pot", 0, 300, 0, true],
+  ]);
+  assert.equal(valued.total, 14_000);
+});

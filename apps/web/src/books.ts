@@ -2622,3 +2622,16 @@ export function accountsInUse(): Set<string> {
   }
   return used;
 }
+
+/** Every bank line with its coding, on every account of the entity chosen at the top: what Reconcile shows, unfiltered. */
+export function everyCodedLine(): Suggestion[] {
+  return suggest(
+    state.ledger.transactions,
+    state.rules,
+    state.ledger.overrides ?? {},
+    accountsFor([]),
+    unregisteredCode(),
+    gstLookups(),
+    linesWithUncodedPart(),
+  );
+}

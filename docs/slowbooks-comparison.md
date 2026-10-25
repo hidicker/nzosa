@@ -105,7 +105,7 @@ United States books only), or **No** (with why).
 | Closing date | Has: lock dates, enforced on the server for the dates themselves | — |
 | **Changes made into a locked period, reported** | No | Yes |
 | **Accountant's package**: one zip of the statements, ledger and trial balance as CSV, agings, reconciliations, adjusting entries and history for a period | Partly: year-end packs and the Excel extract | Yes |
-| **Reclassify transactions**: pick an account and a period, tick lines, move them to another account in one change | No: rename and merge move everything | Yes |
+| Reclassify transactions: pick an account and a period, tick lines, move them to another account in one change | Has: Reclassify, under Accounting, undone as one from History | — |
 | Compare with last year on the profit and loss and balance sheet | Has: the same period a year earlier beside it, with the change | — |
 | Report periods: this month, this quarter, year to date, any dates | Has, inside the chosen year; returns and year-end reports stay whole-year | — |
 | **Saved reports** with their own addresses; Back returns to them | Partly: favourite reports | Yes |
@@ -179,7 +179,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 2. ~~Compare with last year~~: done 25 October 2026.
 3. ~~Payslips~~: done 25 October 2026.
 4. ~~Direct credit files~~: done 25 October 2026 (ANZ, ASB, BNZ, Kiwibank, Westpac; ABA). TSB and the smaller banks still to come.
-5. **Reclassify transactions**: move chosen lines from one account to another in one change, undoable (M).
+5. ~~Reclassify transactions~~: done 25 October 2026.
 6. **A register you can type into**, for cash, petty cash and accounts with no feed, entries split across accounts (M).
 7. **Customer and vendor credits held on account**, applied later (M).
 8. **Attachments** on invoices, bills, journals and contacts (L).

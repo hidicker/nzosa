@@ -291,7 +291,7 @@ export type {
   RuleSet,
 } from "./rules.js";
 
-export { overrideFor, gstOverride } from "./overrides.js";
+export { overrideFor, gstOverride, reclassifyLines } from "./overrides.js";
 export type { TransactionOverride, Overrides } from "./overrides.js";
 
 export { validateSplits, expandSplits, splitPartId, uncodedParts } from "./splits.js";

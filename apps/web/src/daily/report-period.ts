@@ -21,6 +21,7 @@ export const PERIOD_REPORTS: ReadonlySet<string> = new Set([
   "extract",
   "salescustomer",
   "salesitem",
+  "reclassify",
 ]);
 
 /** The two that offer a column for the same period a year earlier. */

@@ -1,3 +1,4 @@
+import { renderReclassify } from "./reclassify-page.js";
 import { renderSalesReport, salesCsv } from "./sales-report.js";
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
@@ -3900,6 +3901,9 @@ function renderReportsHome(body: HTMLElement): void {
 }
 
 function reportsHint(basis: string, kind: string): string {
+  if (kind === "reclassify") {
+    return "Move bank lines from one account to another in one change: choose the account and the period, untick any to keep, and choose where they go.";
+  }
   if (kind === "salescustomer" || kind === "salesitem") {
     return "The sales invoices dated in the period, added up by customer or by item, credit notes taken off. Choose a month, a quarter or any dates beside the year.";
   }
@@ -4148,7 +4152,7 @@ export function renderReportsPage(): void {
   // Built from the coding, so said plainly when some of it is still only a
   // suggestion. Not held back: the figures are more useful with the likely
   // answer in them than without it, as long as nobody mistakes them for final.
-  const entryPage = kind === "manual" || kind === "agents" || kind === "yearend";
+  const entryPage = kind === "manual" || kind === "agents" || kind === "yearend" || kind === "reclassify";
   // The sales reports read invoices, not coded bank lines: a note about unconfirmed coding is not theirs.
   const fromInvoices = kind === "salescustomer" || kind === "salesitem";
   if (basisNow !== "accrual" && chosenYearNow !== undefined && !entryPage && !fromInvoices) {
@@ -4165,6 +4169,12 @@ export function renderReportsPage(): void {
   if (kind === "cashflow") {
     ownerSelect.hidden = true;
     if (chosenYearNow !== undefined) renderCashFlow(body, chosenYearNow);
+    return;
+  }
+
+  if (kind === "reclassify") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderReclassify(body, chosenYearNow);
     return;
   }
 

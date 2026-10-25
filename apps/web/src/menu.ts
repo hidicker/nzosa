@@ -154,6 +154,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   personalyear: "ir3 individual income tax return personal year end pack provisional tax pie kiwisaver interest dividends",
   payroll: "wages salaries paye kiwisaver payday filing ird employee employer esct student loan",
   manual: "journal entries adjustments year end accountant",
+  reclassify: "reclassify move recode lines transactions another account wrong account bulk",
   assets: "depreciation register disposals purchases",
   yearend: "vehicle logbook private use prepayments balance date adjustments",
   reports: "all reports",

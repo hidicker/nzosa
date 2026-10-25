@@ -23,7 +23,7 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Invoices: create, edit, void, duplicate, mark sent, email as PDF, numbering, terms | Has | — |
 | Estimates converted to invoices | Has: "Save as quote" in New Zealand, "Save as estimate" elsewhere, listed on Invoices until made an invoice | — |
-| Sales receipts (paid on the spot), and a walk-in customer | Partly: an invoice paid at once | Yes |
+| Sales receipts (paid on the spot), and a walk-in customer | Has: Paid on the spot makes the document a receipt, with how it was paid; no name is a walk-in customer. The money is still matched from the bank line | — |
 | Payments across several invoices, oldest first; batch payments across customers | Partly: a bank line settling several invoices on Reconcile | — (NZOSA matches to bank lines) |
 | **Customer credits**: an overpayment or credit note held on the customer's account and applied later | Partly: credit notes against a named invoice | Yes |
 | Credit limits, late fees, writing off small balances | Has | — |
@@ -203,7 +203,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 23. ~~Every completed reconciliation listed~~: done 25 October 2026, each with its report.
 24. ~~Inactive accounts, and unused accounts removed in one step~~: done 25 October 2026.
 25. ~~Keyboard shortcuts~~: done 25 October 2026.
-26. Sales receipts, and a walk-in customer (M).
+26. ~~Sales receipts, and a walk-in customer~~: done 25 October 2026.
 27. ~~Quick entry for a backlog of paper invoices~~: done 25 October 2026, bills too.
 
 **Third: for accountants**

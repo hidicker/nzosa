@@ -2,7 +2,7 @@ import type { Cents } from "./money.js";
 import { formatAmount } from "./money.js";
 import type { Invoice, InvoiceLine } from "./invoices.js";
 import { formatUnitPrice } from "./invoices.js";
-import { invoiceEmailFrom } from "./wording.js";
+import { invoiceEmailFrom, RECEIPT_WORDING } from "./wording.js";
 import { asLines, escapeHtml, DOCUMENT_STYLE as STYLE, written } from "./document-html.js";
 
 /**
@@ -111,6 +111,16 @@ function lineRow(line: InvoiceLine, noTax = false, priced = false): string {
  * is the one thing it must never do. Where they differ, both are shown and the
  * sender is told to look.
  */
+/**
+ * What a sales document is called. A sale paid on the spot is a receipt; a
+ * registered supplier's is also its tax invoice, and says both.
+ */
+function documentTitle(invoice: Invoice, registered: boolean, noTax: boolean): string {
+  const taxInvoice = !noTax && (registered || invoice.tax !== 0);
+  if (invoice.receipt !== undefined) return taxInvoice ? "Tax invoice / receipt" : "Receipt";
+  return taxInvoice ? "Tax invoice" : "Invoice";
+}
+
 export function invoiceDocument(
   invoice: Invoice,
   supplier: InvoiceSupplier,
@@ -120,7 +130,7 @@ export function invoiceDocument(
   const nzDate = (iso: string): string => written(iso, options.dateStyle);
   const gstNumber = noTax ? "" : (supplier.gstNumber ?? "").trim();
   const registered = gstNumber !== "";
-  const title = options.title ?? (!noTax && (registered || invoice.tax !== 0) ? "Tax invoice" : "Invoice");
+  const title = options.title ?? documentTitle(invoice, registered, noTax);
   // Columns before the total: description, quantity, a price where any line has
   // one, amount, and GST where there is any.
   const priced = invoice.lines.some((l) => l.unitPrice !== undefined);
@@ -134,7 +144,11 @@ export function invoiceDocument(
   const detail = (label: string, value: string): string =>
     value === "" ? "" : `<div><span class="k">${label}</span>${value}</div>`;
 
-  const totals = invoice.paid !== 0
+  const receipt = invoice.receipt;
+  const totals = receipt !== undefined
+    ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
+      <tr class="due"><td colspan="${span}" class="n">Paid in full on ${nzDate(receipt.paidOn)}${receipt.method ? `, ${escapeHtml(receipt.method)}` : ""}</td><td class="n">${formatAmount(invoice.total)}</td></tr>`
+    : invoice.paid !== 0
     ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
       <tr><td colspan="${span}" class="n">Already paid</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
       <tr class="due"><td colspan="${span}" class="n">Amount due</td><td class="n">${formatAmount(invoice.outstanding)}</td></tr>`
@@ -221,10 +235,11 @@ export function invoiceEmail(
   options: InvoiceDocumentOptions & { wording?: { subject: string; body: string } } = {},
 ): { to: string; subject: string; body: string } {
   const registered = options.noTax !== true && (supplier.gstNumber ?? "").trim() !== "";
-  const title = options.title ?? (registered || (options.noTax !== true && invoice.tax !== 0) ? "Tax invoice" : "Invoice");
+  const title = options.title ?? documentTitle(invoice, registered, options.noTax === true);
   return invoiceEmailFrom(invoice, { name: supplier.name, ...(supplier.payTo !== undefined ? { payTo: supplier.payTo.trim() } : {}) }, {
     title,
-    ...(options.wording !== undefined ? { wording: options.wording } : {}),
+    // A receipt is not asking for anything, so it has words of its own.
+    ...(invoice.receipt !== undefined ? { wording: RECEIPT_WORDING } : options.wording !== undefined ? { wording: options.wording } : {}),
     ...(options.dateStyle !== undefined ? { dateStyle: options.dateStyle } : {}),
     ...(options.note !== undefined ? { note: options.note } : {}),
   });

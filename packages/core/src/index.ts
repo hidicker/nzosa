@@ -310,6 +310,8 @@ export {
   isPosted,
   isEstimate,
   duplicateInvoice,
+  WALK_IN_CUSTOMER,
+  RECEIPT_METHODS,
   linesWithoutAccount,
   parseQuantity,
   parseUnitPrice,

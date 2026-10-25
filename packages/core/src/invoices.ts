@@ -125,7 +125,20 @@ export interface Invoice {
    * a saved message later never changes an invoice already sent.
    */
   note?: string;
+  /**
+   * A sale paid for on the spot: the document is a receipt. The books are
+   * unchanged by it -- the sale is owed until the money is matched to it on
+   * Reconcile, like any invoice -- so marking a receipt can never count a
+   * payment twice. What changes is the document the customer is given.
+   */
+  receipt?: { paidOn: IsoDate; method?: string };
 }
+
+/** The customer a sale with no name is made to: somebody who walked in and paid. */
+export const WALK_IN_CUSTOMER = "Walk-in customer";
+
+/** How a receipt can say it was paid. */
+export const RECEIPT_METHODS: readonly string[] = ["Cash", "EFTPOS", "Card", "Bank transfer"];
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */
 export function cleanDocumentLink(raw: string | undefined): string | null {

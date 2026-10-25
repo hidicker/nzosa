@@ -40,6 +40,8 @@ import {
   isCreditNote,
   duplicateInvoice,
   defaultInvoiceMessage,
+  RECEIPT_METHODS,
+  WALK_IN_CUSTOMER,
   formatUnitPrice,
   lineAmount,
   parseQuantity,
@@ -392,6 +394,35 @@ export function renderInvoiceEditor(): void {
       field("Saved messages", pick);
     }
     field("Message on the invoice", noteBox, "Printed at the foot of the invoice. Saved messages are kept under Messages and email wording, below the list.");
+  }
+
+  // A sale paid there and then: the document becomes a receipt. The books
+  // still take the money from the bank line it arrives on, as for any invoice.
+  const paidNow = document.createElement("input");
+  paidNow.type = "checkbox";
+  paidNow.checked = draft.receipt !== undefined;
+  const method = document.createElement("select");
+  for (const m of ["", ...RECEIPT_METHODS]) {
+    const option = document.createElement("option");
+    option.value = m;
+    option.textContent = m === "" ? "How paid…" : m;
+    option.selected = (draft.receipt?.method ?? "") === m;
+    method.append(option);
+  }
+  method.hidden = !paidNow.checked;
+  paidNow.addEventListener("change", () => {
+    method.hidden = !paidNow.checked;
+  });
+  if (!asBill) {
+    const wrap = document.createElement("span");
+    const tickLabel = document.createElement("label");
+    tickLabel.append(paidNow, " a sales receipt ");
+    wrap.append(tickLabel, method);
+    field(
+      "Paid on the spot",
+      wrap,
+      "The document is a receipt, paid in full. The money still comes into the books from the bank line it arrives on, matched on Reconcile.",
+    );
   }
 
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
@@ -877,18 +908,21 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, note: _note, receipt: _receipt, ...rest } = draft;
     const noteValue = asBill ? "" : noteBox.value.trim();
+    const receipt = !asBill && paidNow.checked && statusValue !== "Estimate";
     const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
       ...rest,
       number: number.value.trim(),
       kind: asBill ? "purchase" : (kind.value as InvoiceKind),
-      contact: contact.value.trim(),
+      // Nobody named on a receipt: somebody who walked in and paid.
+      contact: contact.value.trim() === "" && !asBill && paidNow.checked ? WALK_IN_CUSTOMER : contact.value.trim(),
       reference: reference.value.trim(),
       issued: issued.value,
-      due: due.value === "" ? null : due.value,
+      // Paid on the spot is due the day it was sold.
+      due: !asBill && paidNow.checked ? issued.value : due.value === "" ? null : due.value,
       total,
       tax,
       paid: paidCents,
@@ -902,6 +936,7 @@ export function renderInvoiceEditor(): void {
       ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(linkValue !== null ? { documentLink: linkValue } : {}),
       ...(noteValue !== "" ? { note: noteValue } : {}),
+      ...(receipt ? { receipt: { paidOn: issued.value, ...(method.value !== "" ? { method: method.value } : {}) } } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined

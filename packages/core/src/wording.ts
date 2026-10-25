@@ -76,6 +76,12 @@ export const DEFAULT_WORDING: Readonly<Record<WordingKind, { subject: string; bo
   },
 };
 
+/** The email with a receipt: thanks, and the document for their records. */
+export const RECEIPT_WORDING: Readonly<{ subject: string; body: string }> = {
+  subject: "{document} {number} from {sender}",
+  body: ["Hello,", "", "Thank you for your payment of {amount}. Your {document} {number} is attached for your records.", "", "{note}", "", "Thank you,", "{sender}"].join("\n"),
+};
+
 /** The fill-ins each kind of email can use, for saying so beside the box. */
 export const WORDING_FILL_INS: Readonly<Record<WordingKind, readonly string[]>> = {
   invoice: ["customer", "document", "number", "amount", "due", "reference", "payment", "note", "sender"],

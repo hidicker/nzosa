@@ -117,7 +117,7 @@ United States books only), or **No** (with why).
 | Global search across customers, vendors, items, invoices and payments | Partly: Ctrl+K finds pages | Yes |
 | Keyboard shortcuts for new invoice, bill, payment | Has: Alt+Shift+I, B and J for a new invoice, bill and journal, from any page | — |
 | History of every change, with who | Has, with undo | — |
-| Users and roles; an Accountant role; invite with an end date; last sign-in shown | Partly: roles and invitations online | Yes: an end date and last sign-in |
+| Users and roles; an Accountant role; invite with an end date; last sign-in shown | Has, for books online: an end date on an invitation or a member, enforced by the database, and each person's last sign-in | — |
 | CSV import and export of customers, vendors, items, the chart | Partly: customers and vendors | Yes: items and the chart, with a dry run |
 | A documented API with tokens, read and write | Partly: an MCP server, read only | Later, with a decision on writing |
 | Tamper-evident hash on printed tax forms | No | Yes (small) |
@@ -211,7 +211,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 28. ~~Adjusting entries marked, reported, and left out of a report on request~~: done 25 October 2026. The year-end adjustments for vehicles and prepayments count as adjusting entries without being marked.
 29. ~~Changes made into a locked period, reported~~: done 25 October 2026. A lock refuses changes inside it, so what is reported is each time a lock was moved back and what was changed while it was.
 30. ~~The accountant's package: one zip for a period~~: done 25 October 2026. The balance sheet gained a CSV download of its own on the way.
-31. An end date on an invitation, and each person's last sign-in (S).
+31. ~~An end date on an invitation, and each person's last sign-in~~: done 25 October 2026. The end is checked by the database on every request; an owner's access never ends.
 
 **Fourth: larger, or wanting a decision**
 

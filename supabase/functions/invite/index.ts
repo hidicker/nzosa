@@ -104,7 +104,7 @@ Deno.serve(async (request: Request) => {
   const jwt = (request.headers.get("authorization") ?? "").replace(/^Bearer\s+/i, "");
   if (jwt === "") return reply({ error: "not signed in" }, 401);
 
-  let body: { book?: string; email?: string; role?: string };
+  let body: { book?: string; email?: string; role?: string; until?: string };
   try {
     body = await request.json();
   } catch {
@@ -114,9 +114,11 @@ Deno.serve(async (request: Request) => {
   const email = String(body.email ?? "").trim();
   const role = String(body.role ?? "bookkeeper");
   if (book === "" || email === "") return reply({ error: "which books, and whom?" }, 400);
+  // When access ends, if it does: a moment the database checks again.
+  const until = typeof body.until === "string" && !Number.isNaN(Date.parse(body.until)) ? new Date(body.until).toISOString() : null;
 
   // The invitation first, as the caller: the database decides whether they may.
-  const made = await asCaller(jwt, "invite_to_book", { book, who: email, as_role: role });
+  const made = await asCaller(jwt, "invite_to_book", { book, who: email, as_role: role, ...(until !== null ? { until } : {}) });
   if (!made.ok) {
     const said = (made.body as { message?: string } | null)?.message ?? "Could not make that invitation.";
     return reply({ error: said }, 400);
@@ -140,7 +142,7 @@ Deno.serve(async (request: Request) => {
     if (!take.ok) {
       return reply({ invited: true, emailed: false, said: NOT_EMAILED[take.why ?? ""] ?? "No email was sent." });
     }
-    const { subject, text, html } = letter(take.books ?? "", take.role ?? role, who.email, APP_URL);
+    const { subject, text, html } = letter(take.books ?? "", take.role ?? role, who.email, APP_URL, until ?? undefined);
     await send(take.email ?? email, subject, text, html);
     if (take.sent_today === ALERT_AFTER + 1 && ALERT_EMAIL !== "") {
       // Told once, on the eleventh: never in the way of the invitation itself.

@@ -40,7 +40,13 @@ export function letter(
   role: string,
   from: string,
   appUrl: string,
+  /** When access ends, as an ISO time; none for access that does not. */
+  until?: string,
 ): { subject: string; text: string; html: string } {
+  const ends =
+    until === undefined
+      ? ""
+      : ` Your access ends on ${new Date(until).toLocaleDateString("en-NZ", { timeZone: "Pacific/Auckland", day: "numeric", month: "long", year: "numeric" })}.`;
   const who = from !== "" ? from : "Someone";
   const as = ROLES[role] ?? { name: "a member", can: "work on the books" };
   // A line break in the subject would start a mail header of the sender's
@@ -50,7 +56,7 @@ export function letter(
   const text = [
     "Kia ora,",
     "",
-    `${who} has invited you to their books "${books}" in NZOSA, as ${as.name}. You'll be able to ${as.can}.`,
+    `${who} has invited you to their books "${books}" in NZOSA, as ${as.name}. You'll be able to ${as.can}.${ends}`,
     "",
     "To accept:",
     `1. Go to ${appUrl} and sign in, or sign up, with this email address.`,
@@ -74,7 +80,7 @@ export function letter(
 <p style="margin:0 0 6px;font-size:14px;color:#5d6b7f;">Kia ora,</p>
 <h1 style="margin:0 0 16px;font-size:22px;line-height:1.3;">You're invited to ${e.books}</h1>
 <p style="margin:0 0 14px;font-size:15px;line-height:1.55;"><strong>${e.who}</strong> has invited you to their books in NZOSA as <strong>${escape(as.name)}</strong>.</p>
-<p style="margin:0 0 22px;font-size:15px;line-height:1.55;padding:12px 14px;background:#f4f6f9;border-radius:6px;">You'll be able to ${escape(as.can)}.</p>
+<p style="margin:0 0 22px;font-size:15px;line-height:1.55;padding:12px 14px;background:#f4f6f9;border-radius:6px;">You'll be able to ${escape(as.can)}.${escape(ends)}</p>
 <table role="presentation" cellpadding="0" cellspacing="0" style="margin:0 0 24px;"><tr><td style="border-radius:6px;background:#1f6feb;">
 <a href="${e.url}" style="display:inline-block;padding:12px 22px;font-size:15px;font-weight:600;color:#ffffff;text-decoration:none;">Open NZOSA</a>
 </td></tr></table>

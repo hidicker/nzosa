@@ -23,6 +23,10 @@ interface MemberRow {
   email: string;
   role: "owner" | "bookkeeper" | "accountant" | "readonly";
   since: string;
+  /** When their access ends; none for access that does not. */
+  access_until?: string | null;
+  /** When they last signed in, from the server's own record. */
+  last_sign_in?: string | null;
 }
 
 interface InvitationRow {
@@ -30,6 +34,22 @@ interface InvitationRow {
   email: string;
   role: "owner" | "bookkeeper" | "accountant" | "readonly";
   sent: string;
+  access_until?: string | null;
+}
+
+/** The last moment of a day chosen in a date box, in this computer's time zone. */
+function endOfDay(day: string): string {
+  return new Date(`${day}T23:59:59`).toISOString();
+}
+
+/** A moment as the date it falls on here, for a date box. */
+function dayOf(at: string): string {
+  return new Date(at).toLocaleDateString("en-CA");
+}
+
+function whenSaid(at: string | null | undefined): string {
+  if (at === null || at === undefined) return "";
+  return new Date(at).toLocaleDateString(undefined, { day: "numeric", month: "short", year: "numeric" });
 }
 
 const ROLES: readonly (readonly [MemberRow["role"], string, string])[] = [
@@ -48,13 +68,18 @@ function roleName(role: string): string {
  * again sends the email again, within the server's daily limits. The words are
  * the same whether or not that address has an account here.
  */
-async function invite(bookId: string, email: string, role: string): Promise<{ ok: boolean; message: string }> {
-  const after = "These books stay private until they accept.";
+async function invite(
+  bookId: string,
+  email: string,
+  role: string,
+  until: string | null = null,
+): Promise<{ ok: boolean; message: string }> {
+  const after = "These books stay private until they accept." + (until === null ? "" : ` Their access ends on ${whenSaid(until)}.`);
   if (usingOwnProject()) {
     // A project of somebody's own has the tables but not the invite function:
     // the invitation is made by the database itself, and nothing is emailed.
     try {
-      const made = await rpc<string>("invite_to_book", { book: bookId, who: email, as_role: role });
+      const made = await rpc<string>("invite_to_book", { book: bookId, who: email, as_role: role, ...(until !== null ? { until } : {}) });
       if (made === null) return { ok: false, message: "Could not make that invitation. Only an owner may invite." };
       return {
         ok: true,
@@ -70,6 +95,7 @@ async function invite(bookId: string, email: string, role: string): Promise<{ ok
       book: bookId,
       email,
       role,
+      ...(until !== null ? { until } : {}),
     });
     if (answer.invited !== true) return { ok: false, message: "Could not send that invitation." };
     return {
@@ -108,7 +134,8 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       say(said, "Could not read who is in these books.", true);
       return;
     }
-    said.textContent = "";
+    // Cleared of "Looking…" only: what an invitation said stays to be read.
+    if (said.textContent === "Looking…") said.textContent = "";
     list.textContent = "";
 
     const me = currentSession()?.userId ?? "";
@@ -118,7 +145,7 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
     const table = document.createElement("table");
     table.className = "report-table owner-table";
     const head = document.createElement("thead");
-    head.innerHTML = "<tr><th>Person</th><th>Can</th><th></th></tr>";
+    head.innerHTML = "<tr><th>Person</th><th>Can</th><th>Access ends</th><th>Last signed in</th><th></th></tr>";
     const tbody = document.createElement("tbody");
 
     for (const row of rows) {
@@ -132,6 +159,33 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       const what = document.createElement("td");
       what.textContent = roleName(row.role);
       tr.append(what);
+
+      // When access ends: set, moved or cleared by an owner, never on an owner.
+      const ends = document.createElement("td");
+      const ended = row.access_until != null && new Date(row.access_until).getTime() <= Date.now();
+      if (iAmOwner && row.role !== "owner") {
+        const day = document.createElement("input");
+        day.type = "date";
+        day.value = row.access_until == null ? "" : dayOf(row.access_until);
+        day.title = "The last day they can open these books. Empty for no end.";
+        day.addEventListener("change", () => {
+          const until = day.value === "" ? null : endOfDay(day.value);
+          void rpc<string>("set_member_access_until", { book: book.id, who: row.user_id, until }).then((result) => {
+            if (result === null) say(said, "Could not change when their access ends.", true);
+            void draw();
+          });
+        });
+        ends.append(day);
+        if (ended) ends.append(" ended");
+      } else {
+        ends.textContent = row.access_until == null ? (row.role === "owner" ? "" : "No end") : `${ended ? "Ended" : ""} ${whenSaid(row.access_until)}`.trim();
+      }
+      tr.append(ends);
+
+      const seen = document.createElement("td");
+      // Blank from a server not yet updated to say; "Never" only when it says so.
+      seen.textContent = row.last_sign_in === undefined ? "" : row.last_sign_in === null ? "Never" : whenSaid(row.last_sign_in);
+      tr.append(seen);
 
       const actions = document.createElement("td");
       actions.className = "report-amount";
@@ -208,6 +262,21 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       role.append(option);
     }
 
+    // An end to their access, for somebody in for a job: an accountant for the
+    // year end, a bookkeeper covering a month. Never for an owner.
+    const untilLabel = document.createElement("label");
+    untilLabel.className = "report-compare";
+    const until = document.createElement("input");
+    until.type = "date";
+    until.min = new Date().toLocaleDateString("en-CA");
+    untilLabel.title = "The last day they can open these books. Leave empty for no end.";
+    untilLabel.append("Access ends ", until);
+    const ownerChosen = (): void => {
+      untilLabel.hidden = role.value === "owner";
+    };
+    role.addEventListener("change", ownerChosen);
+    ownerChosen();
+
     const go = document.createElement("button");
     go.type = "button";
     go.className = "primary";
@@ -217,22 +286,25 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       if (wanted === "") return;
       go.disabled = true;
       say(said, "Inviting…");
-      void invite(book.id, wanted, role.value).then((result) => {
+      const ending = role.value === "owner" || until.value === "" ? null : endOfDay(until.value);
+      void invite(book.id, wanted, role.value, ending).then((result) => {
         go.disabled = false;
         say(said, result.message, !result.ok);
         if (result.ok) {
           email.value = "";
+          until.value = "";
           void draw();
         }
       });
     });
 
-    add.append(email, role, go);
+    add.append(email, role, untilLabel, go);
     list.append(add);
     list.append(
       note(
         "They are emailed an invitation from NZOSA saying who invited them and how to accept. " +
-          "Read only lets somebody review the books without changing anything.",
+          "Read only lets somebody review the books without changing anything. With an end date, " +
+          "they can open the books up to and including that day, and nothing after it.",
       ),
     );
 
@@ -247,7 +319,7 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       const table = document.createElement("table");
       table.className = "report-table owner-table";
       const head = document.createElement("thead");
-      head.innerHTML = "<tr><th>Person</th><th>Would be</th><th></th></tr>";
+      head.innerHTML = "<tr><th>Person</th><th>Would be</th><th>Access ends</th><th></th></tr>";
       const rows = document.createElement("tbody");
       for (const row of waiting) {
         const tr = document.createElement("tr");
@@ -271,13 +343,15 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
         again.addEventListener("click", () => {
           again.disabled = true;
           say(said, "Sending…");
-          void invite(book.id, row.email, row.role).then((result) => {
+          void invite(book.id, row.email, row.role, row.access_until ?? null).then((result) => {
             again.disabled = false;
             say(said, result.message, !result.ok);
           });
         });
         actions.append(again, " ", take);
-        tr.append(who, what, actions);
+        const ends = document.createElement("td");
+        ends.textContent = row.access_until == null ? "No end" : whenSaid(row.access_until);
+        tr.append(who, what, ends, actions);
         rows.append(tr);
       }
       table.append(head, rows);

@@ -34,7 +34,7 @@ United States books only), or **No** (with why).
 | Customer statements and collection letters | Has | — |
 | **Foreign-currency invoices** at an exchange rate, realised gain or loss on payment | No: one currency per set of books | Yes (large; the same work as Wise balances in other currencies) |
 | **Online payment link** (Stripe, PayPal, Square) and a public pay page | No | Yes, with a decision on the provider and on keys held online |
-| **Quick entry** of a backlog of paper invoices, save and next | No | Yes |
+| Quick entry of a backlog of paper invoices, save and next | Has: Save and next, carrying the date, account and tax to the next one | — |
 | Quantities and unit prices to four decimal places | Has: an optional quantity and price on any line, worked in whole numbers to the cent | — |
 | Logo on invoices | Has | — |
 | Per-line sales tax, tax-exempt customers, reseller permits, Pay Sales Tax | Partly: a sales tax report from the liability accounts | US |
@@ -204,7 +204,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 24. ~~Inactive accounts, and unused accounts removed in one step~~: done 25 October 2026.
 25. ~~Keyboard shortcuts~~: done 25 October 2026.
 26. Sales receipts, and a walk-in customer (M).
-27. Quick entry for a backlog of paper invoices (S).
+27. ~~Quick entry for a backlog of paper invoices~~: done 25 October 2026, bills too.
 
 **Third: for accountants**
 

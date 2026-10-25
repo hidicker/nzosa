@@ -92,6 +92,13 @@ let editorOn: "invoices" | "bills" = "invoices";
 /** The document a new one is being copied from, while the editor is open on it. */
 let copyingFrom: Invoice | null = null;
 
+/**
+ * The document just saved by Save and next: the next one starts with its
+ * date, entity, account and tax treatment, since a pile of paper invoices
+ * entered after the fact usually shares them. Read once, by the next editor.
+ */
+let nextAfter: Invoice | null = null;
+
 /** The GST treatments an invoice line can carry, named as Xero names them. */
 const INVOICE_TAX_TYPES = [
   { value: "15% GST on Income", label: "15% GST on Income", rate: 15 },
@@ -145,6 +152,20 @@ function quoteWord(): string {
 
 function suggestInvoiceNumber(kind: InvoiceKind): string {
   return nextInvoiceNumber(kind, state.ledger.invoices ?? []);
+}
+
+/** A blank document carrying on from one just saved: its date, entity, account and treatment. */
+function following(last: Invoice): Invoice {
+  const blank = blankInvoice();
+  const first = last.lines[0];
+  return {
+    ...blank,
+    issued: last.issued,
+    ...(last.entityId !== undefined ? { entityId: last.entityId } : {}),
+    lines: blank.lines.map((line, index) =>
+      index === 0 && first !== undefined ? { ...line, accountCode: first.accountCode, taxType: first.taxType } : line,
+    ),
+  };
 }
 
 function blankInvoice(): Invoice {
@@ -219,7 +240,10 @@ export function renderInvoiceEditor(): void {
     ? { ...existing, lines: existing.lines.map((l) => ({ ...l })) }
     : copyingFrom !== null
       ? duplicateInvoice(copyingFrom, suggestInvoiceNumber(copyingFrom.kind), new Date().toLocaleDateString("en-CA"))
-      : blankInvoice();
+      : nextAfter !== null
+        ? following(nextAfter)
+        : blankInvoice();
+  nextAfter = null;
 
   const box = document.createElement("div");
   box.className = "invoice-editor";
@@ -934,7 +958,24 @@ export function renderInvoiceEditor(): void {
     void saveInvoice({ ...built, number: stem === built.number && existing === undefined ? `EST-${built.number}` : stem }, existing);
   });
 
-  actions.append(...(asBill ? [approve] : []), save, ...(asBill ? [] : [estimate]), cancel);
+  // For a backlog of paper documents: save, and start the next straight away.
+  const saveNext = document.createElement("button");
+  saveNext.type = "button";
+  saveNext.textContent = "Save and next";
+  saveNext.title = "Save this one and start another with the same date, account and tax, for entering a pile of paper documents.";
+  saveNext.hidden = existing !== undefined;
+  saveNext.addEventListener("click", async () => {
+    const built = build(asBill ? statusChoice.value : statusText.value.trim());
+    await saveInvoice(built, existing);
+    // Saved: the editor was closed by the save. Not saved: it is still open, and stays.
+    if (editingInvoice !== null) return;
+    nextAfter = built;
+    editingInvoice = "";
+    redraw("invoiceEditor");
+    host.querySelector<HTMLInputElement>("input")?.focus();
+  });
+
+  actions.append(...(asBill ? [approve] : []), save, saveNext, ...(asBill ? [] : [estimate]), cancel);
 
   if (existing) {
     const remove = document.createElement("button");

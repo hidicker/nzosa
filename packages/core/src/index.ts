@@ -479,3 +479,4 @@ export * from "./product-lists.js";
 export * from "./document-dates.js";
 export * from "./xls.js";
 export * from "./simplefin.js";
+export * from "./payslip.js";

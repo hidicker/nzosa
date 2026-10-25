@@ -129,7 +129,7 @@ United States books only), or **No** (with why).
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
 | Pay runs, journals, year-to-date | Has: New Zealand (PAYE, KiwiSaver, student loan, payday filing, Holidays Act leave) and Australia (PAYG, super, STP figures) | — |
-| **Pay stubs as PDFs** | No: no payslip | Yes: payslips, printed and emailed |
+| Pay stubs as PDFs | Has: a payslip per employee per pay run, New Zealand and Australian, to print or save as PDF, and to email from your own mail program | — |
 | **Direct deposit file** for the bank | No | Yes: a direct credit (batch payment) file for New Zealand banks, and ABA for Australia — for pay runs and bills |
 | Garnishments | No | Yes: New Zealand deduction notices (child support, IRD), as deductions on a pay run |
 | Leave requests, approved | Partly: leave taken is recorded | Later |
@@ -177,7 +177,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 
 1. ~~Report periods~~: done 25 October 2026.
 2. ~~Compare with last year~~: done 25 October 2026.
-3. **Payslips**, printed and emailed, for New Zealand and Australian pay runs (M).
+3. ~~Payslips~~: done 25 October 2026.
 4. **Direct credit files** for New Zealand banks, and ABA for Australia, from a pay run or a list of bills (M).
 5. **Reclassify transactions**: move chosen lines from one account to another in one change, undoable (M).
 6. **A register you can type into**, for cash, petty cash and accounts with no feed, entries split across accounts (M).

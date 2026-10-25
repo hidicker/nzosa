@@ -1,11 +1,13 @@
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
-import { employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
+import { employerDeductionsByMonth, nextPayPeriod, nzPayslip, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
+import type { PayRun } from "@nzosa/core";
+import { documentOptions } from "../country.js";
 import { itemsEditor } from "./payroll-items.js";
 import type { PayDeduction, PayItem } from "@nzosa/core";
 import { renderLeave } from "./payroll-leave.js";
-import { payrollAccounts, reclassify, record } from "../books.js";
+import { payrollAccounts, payrollEmployer, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
 import { askOnPage, download, escapeHtml, note, tellOnPage } from "../ui.js";
@@ -1435,6 +1437,7 @@ function renderPayRunsList(container: HTMLElement): void {
             <th style="text-align: right;">ESCT</th>
             <th style="text-align: right;">Child Support</th>
             <th style="text-align: right;">Net Pay</th>
+            <th>Payslip</th>
           </tr>
         </thead>
       `;
@@ -1455,6 +1458,9 @@ function renderPayRunsList(container: HTMLElement): void {
           <td style="text-align: right;">${formatAmount(line.childSupport)}</td>
           <td style="text-align: right;"><strong>${formatAmount(line.netPay)}</strong></td>
         `;
+        // A schedular line shares the employee's slip with their wages.
+        const firstForEmployee = run.lines.find((l) => l.employeeId === line.employeeId) === line;
+        tr.append(firstForEmployee ? payslipCell(run, line.employeeId) : document.createElement("td"));
         tbody.append(tr);
       }
 
@@ -1467,6 +1473,55 @@ function renderPayRunsList(container: HTMLElement): void {
   }
 
   container.append(list);
+}
+
+/** The payslip and email buttons for one employee in a saved pay run. */
+function payslipCell(run: PayRun, employeeId: string): HTMLTableCellElement {
+  const td = document.createElement("td");
+  const payroll = getPayroll();
+  const person = payroll.employees.find((e) => e.id === employeeId);
+  const slip = nzPayslip(run, employeeId, {
+    history: payroll.payRuns,
+    ...(person?.hourlyRate !== undefined ? { hourlyRate: person.hourlyRate } : {}),
+    ...(person?.bankAccount ? { bankAccount: person.bankAccount } : {}),
+  });
+  const who = payrollEmployer(payroll.accounts?.wages);
+  const { dateStyle, lang, taxIdLabel } = documentOptions();
+  const options = { ...(dateStyle ? { dateStyle } : {}), ...(lang ? { lang } : {}), ...(taxIdLabel ? { taxIdLabel } : {}) };
+  const save = (): void => {
+    if (slip === null || who === null) return;
+    download(payslipDocument(slip, who, options), payslipFileName(slip), "text/html;charset=utf-8");
+  };
+
+  const doc = document.createElement("button");
+  doc.type = "button";
+  doc.className = "small";
+  doc.textContent = "payslip";
+  const mail = document.createElement("button");
+  mail.type = "button";
+  mail.className = "small";
+  mail.textContent = "email";
+  if (slip === null || who === null) {
+    doc.disabled = mail.disabled = true;
+    doc.title = mail.title =
+      "These books have no entity to name as the employer. Name one on the Entities page, or choose the wages account above.";
+  } else {
+    doc.title = "The payslip as an HTML file: open it to print or save as PDF.";
+    doc.addEventListener("click", save);
+    const address = person?.details?.email?.trim() ?? "";
+    mail.title =
+      "Opens a new message in your own mail program and saves the payslip to attach to it. Nothing is sent from here." +
+      (address === "" ? " No email address is kept for this employee: add one under their details." : "");
+    mail.addEventListener("click", () => {
+      save();
+      const message = payslipEmail(slip, who.name, address, options);
+      window.location.href =
+        `mailto:${encodeURIComponent(message.to).replace(/%40/g, "@")}?subject=${encodeURIComponent(message.subject)}` +
+        `&body=${encodeURIComponent(message.body)}`;
+    });
+  }
+  td.append(doc, " ", mail);
+  return td;
 }
 
 /** Main Page Renderer */

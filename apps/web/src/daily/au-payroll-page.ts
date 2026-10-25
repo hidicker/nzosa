@@ -1,11 +1,14 @@
 import { redraw } from "../app.js";
-import { record } from "../books.js";
-import { booksMoney } from "../country.js";
+import { payrollEmployer, record } from "../books.js";
+import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { note } from "../ui.js";
+import { download, note } from "../ui.js";
 import {
   auPayLine,
+  auPayslip,
+  payslipDocument,
+  payslipFileName,
   auWithholding,
   earnedBeforePay,
   parseAmount,
@@ -346,6 +349,31 @@ function newPayRun(body: HTMLElement): void {
 
 // --- pay runs, super due and STP --------------------------------------------------
 
+/** A payslip for one line of a saved pay run, as an HTML file. */
+function payslipButton(run: AuPayRun, line: AuPayRun["lines"][number]): HTMLButtonElement {
+  const { employees, payRuns, accounts } = held();
+  const person = employees.find((e) => e.id === line.employeeId);
+  // 477 is where the pay runs post wages until another account is chosen.
+  const who = payrollEmployer(accounts?.wages ?? "477");
+  const b = button("payslip", () => {
+    if (person === undefined || who === null) return;
+    const { dateStyle, lang, taxIdLabel } = documentOptions();
+    const slip = auPayslip(run, line, person, payRuns);
+    download(
+      payslipDocument(slip, who, { ...(dateStyle ? { dateStyle } : {}), lang: lang ?? "en-AU", taxIdLabel: taxIdLabel ?? "ABN" }),
+      payslipFileName(slip),
+      "text/html;charset=utf-8",
+    );
+  });
+  if (person === undefined || who === null) {
+    b.disabled = true;
+    b.title = "These books have no entity to name as the employer. Name one, with its ABN, on the Entities page.";
+  } else {
+    b.title = "The payslip as an HTML file: open it to print or save as PDF. A payslip is due within one working day of payday.";
+  }
+  return b;
+}
+
 function payRunsSection(body: HTMLElement): void {
   const { employees, payRuns } = held();
   if (payRuns.length === 0) return;
@@ -370,7 +398,7 @@ function payRunsSection(body: HTMLElement): void {
     const ytd = stpYearToDate(payRuns, run);
     details.append(
       table(
-        ["Employee", "Gross", "PAYG", "Super", "Net", "Year to date: gross", "PAYG", "Super"],
+        ["Employee", "Gross", "PAYG", "Super", "Net", "Year to date: gross", "PAYG", "Super", "Payslip"],
         run.lines.map((l) => {
           const y = ytd.find((t) => t.employeeId === l.employeeId);
           return [
@@ -382,6 +410,7 @@ function payRunsSection(body: HTMLElement): void {
             money(y?.gross ?? 0),
             money(y?.payg ?? 0),
             money(y?.superGuarantee ?? 0),
+            payslipButton(run, l),
           ];
         }),
       ),

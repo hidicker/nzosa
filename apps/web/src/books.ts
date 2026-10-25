@@ -74,6 +74,7 @@ import {
   sameEntityBanks as coreSameEntityBanks,
 } from "@nzosa/core";
 import type {
+  InvoiceSupplier,
   FiledReturn,
   Account,
   Cents,
@@ -2563,4 +2564,31 @@ export function proposalState(proposal: {
   if (held === proposal.invoiceNumber) return "accepted";
   if (held === undefined || held === "") return "waiting";
   return "elsewhere";
+}
+
+/**
+ * Who employs, for the top of a payslip: the entity the wages account belongs
+ * to, or the only entity there is, or the only one that is not a rental or
+ * personal. Both payrolls use it.
+ */
+export function payrollEmployer(wages: string | undefined): InvoiceSupplier | null {
+  const model = state.ledger.entities ?? emptyEntityModel();
+  const account = wages === undefined ? undefined : state.chart.find((a) => a.code.trim() === wages.trim());
+  const id = account === undefined ? undefined : model.accounts[accountEntityKey(account)];
+  const entity =
+    (id === undefined ? undefined : model.entities.find((e) => e.id === id)) ??
+    (model.entities.length === 1 ? model.entities[0] : undefined) ??
+    // A rental or personal entity beside one business: the business employs.
+    onlyOne(model.entities.filter((e) => e.kind !== "personal" && e.kind !== "residential"));
+  if (entity === undefined) return null;
+  return {
+    name: entity.name,
+    ...(entity.address === undefined ? {} : { address: entity.address }),
+    ...(entity.gstNumber === undefined ? {} : { gstNumber: entity.gstNumber }),
+    ...(entity.logo === undefined ? {} : { logo: entity.logo }),
+  };
+}
+
+function onlyOne<T>(items: readonly T[]): T | undefined {
+  return items.length === 1 ? items[0] : undefined;
 }

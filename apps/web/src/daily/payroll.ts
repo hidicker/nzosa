@@ -1,7 +1,7 @@
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
-import { employerDeductionsByMonth, nextPayPeriod, nzPayslip, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
+import { employerDeductionsByMonth, nextPayPeriod, nzAccount, nzBankOf, nzPaymentFile, nzPayslip, NZ_BANK_NAMES, payslipDocument, payslipEmail, payslipFileName } from "@nzosa/core";
 import type { PayRun } from "@nzosa/core";
 import { documentOptions } from "../country.js";
 import { itemsEditor } from "./payroll-items.js";
@@ -237,7 +237,67 @@ function renderContact(container: HTMLElement, payroll: PayrollData): void {
     return wrap;
   };
   row.append(box("Payroll contact", "name", 20), box("Phone", "phone", 12), box("Email", "email", 60));
+
+  // The account wages leave from: its bank decides which bank file is made.
+  const from = document.createElement("label");
+  from.className = "payroll-employer-label";
+  const account = document.createElement("input");
+  account.type = "text";
+  account.placeholder = "12-3456-0123456-00";
+  account.value = payroll.payFrom ?? "";
+  const which = document.createElement("span");
+  which.className = "payroll-ird-feedback hint";
+  const say = (): void => {
+    const raw = account.value.trim();
+    const bank = nzBankOf(raw);
+    which.textContent =
+      raw === "" ? "for the bank's bulk payment file"
+        : bank !== null ? `${NZ_BANK_NAMES[bank]} bulk payment file`
+          : nzAccount(raw) === null ? "not an account number" : "no bulk file for this bank here: key the payments in";
+  };
+  account.addEventListener("input", say);
+  account.addEventListener("change", () => {
+    payroll.payFrom = account.value.trim();
+    void commitPayroll(payroll, "Account wages are paid from changed");
+  });
+  say();
+  from.append("Pay wages from ", account, " ", which);
+  row.append(from);
   container.append(row);
+}
+
+/** The bank's bulk payment file for a pay run's net pay. */
+async function downloadBankFile(run: PayRun): Promise<void> {
+  const payroll = getPayroll();
+  const fromAccount = payroll.payFrom?.trim() ?? "";
+  const bank = nzBankOf(fromAccount);
+  if (bank === null) {
+    await tellOnPage(
+      fromAccount === ""
+        ? "Enter the account wages are paid from, at the top of this page, first: its bank decides the file's layout."
+        : "There is no bulk payment file here for the bank wages are paid from. ANZ, ASB, BNZ, Kiwibank and Westpac are covered.",
+    );
+    return;
+  }
+  // One payment an employee: a schedular line is paid with their wages.
+  const owed = new Map<string, number>();
+  for (const line of run.lines) owed.set(line.employeeId, (owed.get(line.employeeId) ?? 0) + line.netPay);
+  const reference = `PAY ${run.payDate.slice(8, 10)}${run.payDate.slice(5, 7)}${run.payDate.slice(2, 4)}`;
+  const items = [...owed].map(([id, amount]) => {
+    const person = payroll.employees.find((e) => e.id === id);
+    return { name: person?.name ?? run.lines.find((l) => l.employeeId === id)?.employeeName ?? id, account: person?.bankAccount ?? "", amount, particulars: "WAGES", reference };
+  });
+  const who = payrollEmployer(payroll.accounts?.wages);
+  const file = nzPaymentFile(items, { bank, fromAccount, payerName: who?.name ?? "", date: run.payDate, wages: true, batchReference: reference });
+  if (file.problems.length > 0) {
+    await tellOnPage(`The bank file cannot be made yet:\n\n${file.problems.join("\n")}`);
+    return;
+  }
+  download(file.text, file.fileName, "text/plain;charset=us-ascii");
+  await tellOnPage(
+    `${file.count} payments, ${formatAmount(file.total)} in all, are in ${file.fileName}. ` +
+      `Upload it to ${NZ_BANK_NAMES[bank]}'s internet banking as a bulk or batch payment, check the payments it lists, and approve them there. Nothing has been paid from here.`,
+  );
 }
 
 /** Where pay runs post. Nothing posts until the three that must be there are chosen. */
@@ -1412,7 +1472,13 @@ function renderPayRunsList(container: HTMLElement): void {
       }
     });
 
-    actionsBar.append(dlBtn, viewBtn, delBtn);
+    const bankBtn = document.createElement("button");
+    bankBtn.type = "button";
+    bankBtn.textContent = "Bank file";
+    bankBtn.title = "Everybody's net pay as one bulk payment file to upload to your bank. Nothing is paid from here.";
+    bankBtn.addEventListener("click", () => void downloadBankFile(run));
+
+    actionsBar.append(dlBtn, bankBtn, viewBtn, delBtn);
     card.append(actionsBar);
     for (const said of run.notes ?? []) card.append(note(said));
 

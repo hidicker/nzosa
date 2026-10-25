@@ -14,6 +14,7 @@ import { savePart } from "../store.js";
 import { amountCell, askOnPage, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
 import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
+import { billPaymentFile } from "./bill-payment-file.js";
 import {
   accountEntityKey,
   daysBetween,
@@ -102,6 +103,7 @@ export function renderBills(): void {
     .filter((r): r is { bill: Invoice; balance: InvoiceBalance; status: DocumentStatus } => r !== null);
 
   body.append(summary(rows, now));
+  billPaymentFile(body, rows);
   // Credit notes from suppliers, each to say which bill it reduces. They
   // could not be assigned anywhere: the list was on Invoices, of sales only.
   creditNoteSection(

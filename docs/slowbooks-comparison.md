@@ -130,7 +130,7 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Pay runs, journals, year-to-date | Has: New Zealand (PAYE, KiwiSaver, student loan, payday filing, Holidays Act leave) and Australia (PAYG, super, STP figures) | — |
 | Pay stubs as PDFs | Has: a payslip per employee per pay run, New Zealand and Australian, to print or save as PDF, and to email from your own mail program | — |
-| **Direct deposit file** for the bank | No | Yes: a direct credit (batch payment) file for New Zealand banks, and ABA for Australia — for pay runs and bills |
+| Direct deposit file for the bank | Has: bulk payment files for ANZ, ASB, BNZ, Kiwibank and Westpac, and ABA for Australia, from a pay run or from bills ticked on Bills | — |
 | Garnishments | No | Yes: New Zealand deduction notices (child support, IRD), as deductions on a pay run |
 | Leave requests, approved | Partly: leave taken is recorded | Later |
 | Onboarding checklist, new-hire report | No | Later (New Zealand: IR330, KiwiSaver forms) |
@@ -178,7 +178,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 1. ~~Report periods~~: done 25 October 2026.
 2. ~~Compare with last year~~: done 25 October 2026.
 3. ~~Payslips~~: done 25 October 2026.
-4. **Direct credit files** for New Zealand banks, and ABA for Australia, from a pay run or a list of bills (M).
+4. ~~Direct credit files~~: done 25 October 2026 (ANZ, ASB, BNZ, Kiwibank, Westpac; ABA). TSB and the smaller banks still to come.
 5. **Reclassify transactions**: move chosen lines from one account to another in one change, undoable (M).
 6. **A register you can type into**, for cash, petty cash and accounts with no feed, entries split across accounts (M).
 7. **Customer and vendor credits held on account**, applied later (M).

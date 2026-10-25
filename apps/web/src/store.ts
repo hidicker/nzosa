@@ -1,4 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
+import type { AbaSettings } from "@nzosa/core";
 import type { PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
@@ -93,6 +94,8 @@ export interface PayrollData {
   leave?: LeaveTaken[] | undefined;
   /** Each employee's days a week, pay-as-you-go 8%, and opening balances. */
   leaveSettings?: LeaveSettings[] | undefined;
+  /** The account wages are paid from, for the bank's bulk payment file. */
+  payFrom?: string | undefined;
 }
 
 /** A filed return as kept: whose it is, and where it was read from. */
@@ -217,6 +220,8 @@ export interface StoredLedger {
   taxExtras?: TaxExtra[];
   /** Customers and vendors, looked up by name from invoices and bills. */
   contacts?: Contact[];
+  /** Paying bills by bank file: the account they leave from, and for Australia the ABA details. */
+  billPayment?: { payFrom?: string; aba?: AbaSettings } | undefined;
   /** Bank statements an account has been reconciled to, and the lines each cleared. */
   reconciliations?: BankReconciliation[];
   /** Annual budgets in cents: year, then account code. */

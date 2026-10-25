@@ -3,9 +3,12 @@ import { payrollEmployer, record } from "../books.js";
 import { booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { download, note } from "../ui.js";
+import { download, note, tellOnPage } from "../ui.js";
 import {
+  abaFile,
   auPayLine,
+  cleanAuAccount,
+  cleanBsb,
   auPayslip,
   payslipDocument,
   payslipFileName,
@@ -208,6 +211,118 @@ function employeeForm(): HTMLElement {
   return wrap;
 }
 
+/** An employee's BSB and account, kept as they are typed and checked on the way out. */
+function bankCell(e: AuEmployee): HTMLElement {
+  const wrap = document.createElement("span");
+  const bsb = input("text", e.bsb ?? "", "BSB");
+  bsb.size = 8;
+  const account = input("text", e.bankAccount ?? "", "Account");
+  account.size = 11;
+  const save = (): void => {
+    const b = bsb.value.trim();
+    const a = account.value.trim();
+    bsb.setCustomValidity(b === "" || cleanBsb(b) !== null ? "" : "A BSB is six digits.");
+    account.setCustomValidity(a === "" || cleanAuAccount(a) !== null ? "" : "An account number is up to nine digits.");
+    const now = held();
+    void keep(
+      {
+        ...now,
+        employees: now.employees.map((x) => {
+          if (x.id !== e.id) return x;
+          const { bsb: _b, bankAccount: _a, ...rest } = x;
+          return { ...rest, ...(b !== "" ? { bsb: b } : {}), ...(a !== "" ? { bankAccount: a } : {}) };
+        }),
+      },
+      `${e.name}'s bank account changed`,
+    );
+  };
+  bsb.addEventListener("change", save);
+  account.addEventListener("change", save);
+  wrap.append(bsb, " ", account);
+  return wrap;
+}
+
+/** What the bank needs before it takes an ABA file. Asked once, kept with the payroll. */
+function abaSettings(body: HTMLElement): void {
+  const now = held();
+  const aba = now.aba ?? { bankCode: "", userName: "", userId: "", fromBsb: "", fromAccount: "" };
+  const box = document.createElement("details");
+  box.className = "payroll-add";
+  const summary = document.createElement("summary");
+  summary.textContent = aba.userId === "" ? "Pay by ABA file: set up" : `Pay by ABA file: ${aba.bankCode} user ${aba.userId}`;
+  box.append(summary);
+  const grid = document.createElement("div");
+  grid.className = "agent-fields";
+  const code = input("text", aba.bankCode, "CBA, WBC, NAB, ANZ");
+  const user = input("text", aba.userName, "As the bank holds it");
+  const id = input("text", aba.userId, "Six digits");
+  const bsb = input("text", aba.fromBsb, "062-000");
+  const acct = input("text", aba.fromAccount, "Account number");
+  const [balanceLabel, balance] = checkbox("Add a balancing debit (some banks need the file to net to nothing; ask yours)", aba.balance === true);
+  grid.append(
+    field("Bank code", code),
+    field("Account name", user),
+    field("Direct entry user ID", id, "The APCA user ID the bank gave you for direct entry."),
+    field("Pay from: BSB", bsb),
+    field("Pay from: account", acct),
+  );
+  const save = button("Save", () => {
+    const latest = held();
+    void keep(
+      {
+        ...latest,
+        aba: {
+          bankCode: code.value.trim().toUpperCase(),
+          userName: user.value.trim(),
+          userId: id.value.trim(),
+          fromBsb: bsb.value.trim(),
+          fromAccount: acct.value.trim(),
+          ...(balance.checked ? { balance: true } : {}),
+        },
+      },
+      "ABA file details changed",
+    );
+  });
+  box.append(grid, balanceLabel, save);
+  body.append(box);
+}
+
+/** A pay run's net pay as one ABA file. */
+function abaButton(run: AuPayRun): HTMLButtonElement {
+  return button("Bank file (ABA)", () => {
+    const { employees, aba } = held();
+    const who = (id: string): AuEmployee | undefined => employees.find((e) => e.id === id);
+    const items = run.lines.map((l) => ({
+      name: who(l.employeeId)?.name ?? l.employeeId,
+      bsb: who(l.employeeId)?.bsb ?? "",
+      account: who(l.employeeId)?.bankAccount ?? "",
+      amount: l.net,
+      reference: `PAY ${run.payDate}`,
+    }));
+    const file = abaFile(items, {
+      bankCode: aba?.bankCode ?? "",
+      userName: aba?.userName ?? "",
+      userId: aba?.userId ?? "",
+      fromBsb: aba?.fromBsb ?? "",
+      fromAccount: aba?.fromAccount ?? "",
+      remitter: payrollEmployer(held().accounts?.wages ?? "477")?.name ?? aba?.userName ?? "",
+      description: "PAYROLL",
+      date: run.payDate,
+      wages: true,
+      ...(aba?.balance === true ? { balance: true } : {}),
+    });
+    if (file.problems.length > 0) {
+      void tellOnPage(`The ABA file cannot be made yet:\n\n${file.problems.join("\n")}`);
+      return;
+    }
+    download(file.text, file.fileName, "text/plain;charset=us-ascii");
+    void tellOnPage(
+      `${file.count} payments, ${money(file.total)} in all, are in ${file.fileName}. Upload it to your bank's business banking ` +
+        "as a direct entry (ABA) payment file, check the payments it lists, and approve them there. Nothing has been paid from here.",
+    );
+  });
+}
+
 function employeesSection(body: HTMLElement): void {
   const h = document.createElement("h3");
   h.textContent = "Employees";
@@ -218,7 +333,7 @@ function employeesSection(body: HTMLElement): void {
   } else {
     body.append(
       table(
-        ["Name", "Paid", "Usual gross", "Tax", "Super fund", ""],
+        ["Name", "Paid", "Usual gross", "Tax", "Super fund", "Paid into (BSB, account)", ""],
         employees.map((e) => [
           e.name + (e.ended !== undefined ? ` (left ${e.ended})` : ""),
           e.payFrequency,
@@ -231,6 +346,7 @@ function employeesSection(body: HTMLElement): void {
             .filter(Boolean)
             .join(", "),
           e.superFund,
+          bankCell(e),
           e.ended === undefined
             ? button("Mark as left", () => {
                 const now = held();
@@ -418,6 +534,8 @@ function payRunsSection(body: HTMLElement): void {
         "The pay event's figures for Single Touch Payroll: report them through STP-enabled software on or before payday. " +
           "Pay the net pay from the bank and code it to Wages Payable; the ATO payment to PAYG Withholdings Payable; the fund payment to Superannuation Payable.",
       ),
+      abaButton(run),
+      " ",
       button("Remove this pay run", () => {
         const now = held();
         void keep({ ...now, payRuns: now.payRuns.filter((r) => r.id !== run.id) }, `Removed pay run ${run.payDate}`);
@@ -447,6 +565,7 @@ export function renderAuPayroll(): void {
   employeesSection(body);
   newPayRun(body);
   payRunsSection(body);
+  if (held().payRuns.length > 0) abaSettings(body);
   body.append(
     note(
       `Super guarantee is 12% of ordinary time earnings, and from 1 July 2026 it must be received by the fund within 7 business ` +

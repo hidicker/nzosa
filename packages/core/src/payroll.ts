@@ -199,6 +199,8 @@ export interface PayLine {
   kiwiSaverEmployerNet?: Cents | undefined;
   /** The employer's contribution was paid as salary (5.20.2); it is inside `gross`. */
   employerKiwiSaverAsSalary?: "gross" | "net" | undefined;
+  /** How much of `gross` that contribution is, for the payslip. */
+  kiwiSaverAsSalary?: Cents | undefined;
   esct: Cents;
   childSupport: Cents;
   /** "P" when child support was cut to protect 60% of net pay. */
@@ -722,7 +724,7 @@ export function calculatePayLine(
     kiwiSaverEmployer,
     kiwiSaverEmployerNet: fund,
     esct,
-    ...(asSalary !== undefined ? { employerKiwiSaverAsSalary: asSalary } : {}),
+    ...(asSalary !== undefined ? { employerKiwiSaverAsSalary: asSalary, kiwiSaverAsSalary: contribution } : {}),
     childSupport,
     ...(childSupportCode !== undefined ? { childSupportCode } : {}),
     ...(extra > 0 ? { extraPay: extra, lumpSumLowRate } : {}),

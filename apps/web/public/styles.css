@@ -2144,6 +2144,9 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 /* A report's chosen dates, and the year-earlier choice, beside its year. */
 .report-dates { display: inline-flex; align-items: center; gap: 6px; }
 .report-compare { display: inline-flex; align-items: center; gap: 6px; white-space: nowrap; }
+/* Payslips shown on the page, to print or save. */
+.ask-on-page.payslip-view { width: min(760px, 94vw); max-width: none; }
+.payslip-frame { width: 100%; height: min(70vh, 900px); border: 1px solid var(--border); border-radius: 8px; background: #f3f5f7; margin-bottom: 12px; }
 .migration-table { max-width: none; }
 .migration-table td { white-space: normal; vertical-align: top; font-size: 0.82rem; }
 

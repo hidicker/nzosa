@@ -4,6 +4,7 @@ import { booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
 import { note } from "../ui.js";
+import { auPayslipsFor, openPayslips } from "./payslips-ui.js";
 import {
   auPayLine,
   auWithholding,
@@ -389,6 +390,8 @@ function payRunsSection(body: HTMLElement): void {
         "The pay event's figures for Single Touch Payroll: report them through STP-enabled software on or before payday. " +
           "Pay the net pay from the bank and code it to Wages Payable; the ATO payment to PAYG Withholdings Payable; the fund payment to Superannuation Payable.",
       ),
+      button("Pay slips", () => openPayslips(auPayslipsFor(run, held()), `pay-slips-${run.payDate}.html`)),
+      " ",
       button("Remove this pay run", () => {
         const now = held();
         void keep({ ...now, payRuns: now.payRuns.filter((r) => r.id !== run.id) }, `Removed pay run ${run.payDate}`);

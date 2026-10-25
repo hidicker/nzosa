@@ -5,6 +5,7 @@ import { employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
 import { itemsEditor } from "./payroll-items.js";
 import type { PayDeduction, PayItem } from "@nzosa/core";
 import { renderLeave } from "./payroll-leave.js";
+import { emailPayslip, openPayslips, payslipsFor } from "./payslips-ui.js";
 import { payrollAccounts, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
@@ -1410,7 +1411,16 @@ function renderPayRunsList(container: HTMLElement): void {
       }
     });
 
-    actionsBar.append(dlBtn, viewBtn, delBtn);
+    // 2. Payslips for everybody on the run, one to a page.
+    const slipsBtn = document.createElement("button");
+    slipsBtn.type = "button";
+    slipsBtn.textContent = "Payslips";
+    slipsBtn.title = "Every payslip for this pay run, ready to print or save as a PDF";
+    slipsBtn.addEventListener("click", () => {
+      openPayslips(payslipsFor(run, payroll), `payslips-${run.payDate}.html`);
+    });
+
+    actionsBar.append(dlBtn, slipsBtn, viewBtn, delBtn);
     card.append(actionsBar);
     for (const said of run.notes ?? []) card.append(note(said));
 
@@ -1435,6 +1445,7 @@ function renderPayRunsList(container: HTMLElement): void {
             <th style="text-align: right;">ESCT</th>
             <th style="text-align: right;">Child Support</th>
             <th style="text-align: right;">Net Pay</th>
+            <th>Payslip</th>
           </tr>
         </thead>
       `;
@@ -1455,6 +1466,29 @@ function renderPayRunsList(container: HTMLElement): void {
           <td style="text-align: right;">${formatAmount(line.childSupport)}</td>
           <td style="text-align: right;"><strong>${formatAmount(line.netPay)}</strong></td>
         `;
+        // One payslip a person: a schedular line beside their wages is on it.
+        const slipCell = document.createElement("td");
+        if (run.lines.find((l) => l.employeeId === line.employeeId) === line) {
+          const print = document.createElement("button");
+          print.type = "button";
+          print.className = "small";
+          print.textContent = "Payslip";
+          print.addEventListener("click", () => {
+            openPayslips(payslipsFor(run, payroll, [line.employeeId]), `payslip-${run.payDate}-${line.employeeName.replace(/[^A-Za-z0-9]+/g, "-")}.html`);
+          });
+          const email = document.createElement("button");
+          email.type = "button";
+          email.className = "small";
+          email.textContent = "Email";
+          const address = payroll.employees.find((e) => e.id === line.employeeId)?.details?.email ?? "";
+          email.title = address === "" ? "No email address on file" : `To ${address}`;
+          email.addEventListener("click", () => {
+            const [slip] = payslipsFor(run, payroll, [line.employeeId]);
+            if (slip !== undefined) void emailPayslip(slip, address);
+          });
+          slipCell.append(print, " ", email);
+        }
+        tr.append(slipCell);
         tbody.append(tr);
       }
 

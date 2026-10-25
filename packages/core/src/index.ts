@@ -443,6 +443,8 @@ export type { WriteQueue } from "./write-queue.js";
 export { applyPartOps, copySize, partChanges, partCopy } from "./part-changes.js";
 export { periodChoiceFrom, periodOptions, periodRange, periodSaid, yearEarlier, yearMonths } from "./report-periods.js";
 export type { PeriodChoice, PeriodOption } from "./report-periods.js";
+export { auPayslip, lastDigits, nzPayslip, payslipText, payslipsHtml } from "./payslips.js";
+export type { Payslip, PayslipLeave, PayslipRow } from "./payslips.js";
 export type { PartChanges, PartCopy, PartOp } from "./part-changes.js";
 export {
   MAX_CATCH_UP,

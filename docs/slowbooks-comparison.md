@@ -22,7 +22,7 @@ United States books only), or **No** (with why).
 | SlowBooks | NZOSA | Take? |
 |---|---|---|
 | Invoices: create, edit, void, duplicate, mark sent, email as PDF, numbering, terms | Has | — |
-| Estimates converted to invoices | Has ("Save as estimate", outside New Zealand) | Yes: offer it in New Zealand too, as a quote |
+| Estimates converted to invoices | Has: "Save as quote" in New Zealand, "Save as estimate" elsewhere, listed on Invoices until made an invoice | — |
 | Sales receipts (paid on the spot), and a walk-in customer | Partly: an invoice paid at once | Yes |
 | Payments across several invoices, oldest first; batch payments across customers | Partly: a bank line settling several invoices on Reconcile | — (NZOSA matches to bank lines) |
 | **Customer credits**: an overpayment or credit note held on the customer's account and applied later | Partly: credit notes against a named invoice | Yes |
@@ -197,7 +197,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 17. ~~A duplicate-name warning~~: done 25 October 2026.
 18. ~~A bill line as an amount alone~~: already so; the comparison had it wrong.
 19. ~~Quantities and prices to four decimal places~~: done 25 October 2026.
-20. Quotes offered in New Zealand (S).
+20. ~~Quotes offered in New Zealand~~: done 25 October 2026.
 21. Time approval (S).
 22. Reconcile: lines through a date, and the statement balance corrected in place (S).
 23. Every completed reconciliation listed (S).

@@ -134,6 +134,15 @@ function rateOf(taxType: string): number {
  * rather than at a coincidence of numbers.
  */
 
+/**
+ * What a document offered before it is an invoice is called: a quote in New
+ * Zealand, where that is the word, an estimate elsewhere. Kept with the
+ * status "Estimate" either way, so nothing that reads it changes.
+ */
+function quoteWord(): string {
+  return booksCountry().id === "nz" ? "Quote" : "Estimate";
+}
+
 function suggestInvoiceNumber(kind: InvoiceKind): string {
   return nextInvoiceNumber(kind, state.ledger.invoices ?? []);
 }
@@ -915,10 +924,10 @@ export function renderInvoiceEditor(): void {
   // until it is made into one.
   const estimate = document.createElement("button");
   estimate.type = "button";
-  estimate.textContent = "Save as estimate";
-  estimate.title = "Keep it as an estimate: it is not in the books until you make it an invoice.";
+  estimate.textContent = `Save as ${quoteWord().toLowerCase()}`;
+  estimate.title = `Keep it as a ${quoteWord().toLowerCase()}: it is not in the books until you make it an invoice.`;
   // Not offered to New Zealand books yet; the rest of the app is the same.
-  estimate.hidden = asBill || booksCountry().id === "nz";
+  estimate.hidden = asBill;
   estimate.addEventListener("click", () => {
     const built = build("Estimate");
     const stem = built.number.replace(/^INV/i, "EST");
@@ -1204,7 +1213,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1217,7 +1226,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
       make.type = "button";
       make.className = "invoice-send";
       make.textContent = "make invoice";
-      make.title = "Turn this estimate into an invoice: it takes the next invoice number and goes into the books.";
+      make.title = `Turn this ${quoteWord().toLowerCase()} into an invoice: it takes the next invoice number and goes into the books.`;
       make.addEventListener("click", () => {
         void askOnPage(
           `Make ${invoice.number} for ${invoice.contact} an invoice?
@@ -1252,7 +1261,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}), ...(invoice.note !== undefined ? { note: invoice.note } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1267,7 +1276,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
           supplier,
           {
             ...documentOptions(),
-            ...(isEstimate(invoice) ? { title: "Estimate" } : {}),
+            ...(isEstimate(invoice) ? { title: quoteWord() } : {}),
             ...(invoice.note !== undefined ? { note: invoice.note } : {}),
             ...(state.ledger.emailWording?.invoice !== undefined ? { wording: state.ledger.emailWording.invoice } : {}),
           },
@@ -1488,6 +1497,33 @@ export function renderInvoices(): void {
 
   // Drafts on their own, so they can be found and approved, and are plainly
   // not owing: a draft is not in the books until it is approved.
+  // Quotes (estimates) offered and not yet made invoices: not in the books, so
+  // not in the lists below, but they still need to be found, sent and turned
+  // into invoices.
+  const quotes = invoices.filter((i) => isEstimate(i) && i.kind === "sales");
+  if (quotes.length > 0) {
+    const heading = document.createElement("h3");
+    heading.textContent = `${quoteWord()}s (${quotes.length})`;
+    body.append(
+      heading,
+      note(`Not in the books until made an invoice. "make invoice" gives one the next invoice number and posts it on its date.`),
+    );
+    const table = document.createElement("table");
+    table.className = "report-table owner-table match-table";
+    const head = document.createElement("thead");
+    head.innerHTML = `<tr><th>${quoteWord()}</th><th>Date</th><th>Total</th><th></th></tr>`;
+    const rows = document.createElement("tbody");
+    for (const invoice of [...quotes].sort((a, b) => b.issued.localeCompare(a.issued))) {
+      if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
+      const tr = document.createElement("tr");
+      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(money(invoice.total)));
+      tr.append(editInvoiceCell(invoice));
+      rows.append(tr);
+    }
+    table.append(head, rows);
+    body.append(wideTable(table));
+  }
+
   const drafts = invoices.filter((i) => !isPosted(i) && i.status.trim().toLowerCase() === "draft");
   if (drafts.length > 0) {
     const draftHeading = document.createElement("h3");

@@ -481,3 +481,5 @@ export * from "./product-lists.js";
 export * from "./document-dates.js";
 export * from "./xls.js";
 export * from "./simplefin.js";
+export { abaFile, auAccountParts, bankText, NZ_BANK_FORMATS, nzAccountParts, nzHashTotal, nzPaymentFile } from "./payment-files.js";
+export type { AbaOptions, BankPayment, NzBankFormat, NzPaymentFileOptions, PaymentFile, SkippedPayment } from "./payment-files.js";

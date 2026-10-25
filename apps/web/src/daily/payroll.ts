@@ -5,7 +5,8 @@ import { employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
 import { itemsEditor } from "./payroll-items.js";
 import type { PayDeduction, PayItem } from "@nzosa/core";
 import { renderLeave } from "./payroll-leave.js";
-import { emailPayslip, openPayslips, payslipsFor } from "./payslips-ui.js";
+import { emailPayslip, employerName, openPayslips, payslipsFor } from "./payslips-ui.js";
+import { openPaymentFile } from "./payment-file-ui.js";
 import { payrollAccounts, reclassify, record } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart, partChanged } from "../store.js";
@@ -1420,7 +1421,39 @@ function renderPayRunsList(container: HTMLElement): void {
       openPayslips(payslipsFor(run, payroll), `payslips-${run.payDate}.html`);
     });
 
-    actionsBar.append(dlBtn, slipsBtn, viewBtn, delBtn);
+    // 3. A file for the bank: everyone's net pay, into their own accounts.
+    const bankBtn = document.createElement("button");
+    bankBtn.type = "button";
+    bankBtn.textContent = "Bank file";
+    bankBtn.title = "Everyone's net pay as a file to upload to your bank";
+    bankBtn.addEventListener("click", () => {
+      const net = new Map<string, number>();
+      for (const l of run.lines) net.set(l.employeeId, (net.get(l.employeeId) ?? 0) + l.netPay);
+      openPaymentFile({
+        title: `Pay run of ${run.payDate}: a file for the bank`,
+        country: "nz",
+        payroll: true,
+        date: run.payDate,
+        payer: employerName(payroll),
+        fileName: "wages",
+        description: "PAYROLL",
+        whereToAdd: "on the Employees tab, under their details",
+        payments: [...net].map(([id, amount]) => {
+          const employee = payroll.employees.find((e) => e.id === id);
+          return {
+            payment: {
+              name: employee?.name ?? run.lines.find((l) => l.employeeId === id)?.employeeName ?? id,
+              account: employee?.bankAccount ?? "",
+              amount,
+              particulars: "Wages",
+              reference: run.periodEnd,
+            },
+          };
+        }),
+      });
+    });
+
+    actionsBar.append(dlBtn, slipsBtn, bankBtn, viewBtn, delBtn);
     card.append(actionsBar);
     for (const said of run.notes ?? []) card.append(note(said));
 

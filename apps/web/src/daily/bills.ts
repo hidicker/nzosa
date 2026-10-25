@@ -19,11 +19,13 @@ import {
   daysBetween,
   documentStatus,
   emptyEntityModel,
+  findContact,
   formatAmount,
   isPosted,
 } from "@nzosa/core";
 import type { DocumentStatus, Entity, Invoice, InvoiceBalance, OutsidePayment } from "@nzosa/core";
-import { booksMoney, noSalesTax } from "../country.js";
+import { booksCountry, booksMoney, noSalesTax } from "../country.js";
+import { openPaymentFile } from "./payment-file-ui.js";
 
 /**
  * Bills: what these books owe suppliers.
@@ -93,6 +95,7 @@ export function renderBills(): void {
 
   const balances = invoiceBalanceMap();
   const now = today();
+  $("bill-bankfile").hidden = !(booksCountry().id === "nz" || booksCountry().id === "au");
   const bills = billsInView();
   const rows = bills
     .map((bill) => {
@@ -530,8 +533,56 @@ async function voidBill(bill: Invoice, balance: InvoiceBalance): Promise<void> {
   await replaceBill(bill, { ...bill, status: "Voided" }, `Voided ${bill.number} — ${bill.contact} ${formatAmount(bill.total)}`);
 }
 
+/**
+ * Bills to pay, as a file for the bank: every approved bill with something
+ * owing, ticked when it is due by the payday chosen. One payment a bill, so
+ * each shows on the statement under its own number, to match on Reconcile.
+ */
+function billsBankFile(): void {
+  const balances = invoiceBalanceMap();
+  const now = today();
+  const open = billsInView()
+    .map((bill) => ({ bill, balance: balances.get(bill.number) }))
+    .filter((r): r is { bill: Invoice; balance: InvoiceBalance } => r.balance !== undefined)
+    .filter((r) => ["Awaiting payment", "Part paid", "Overdue"].includes(documentStatus(r.balance, now)) && r.balance.remaining > 0)
+    .sort((a, b) => (a.bill.due ?? a.bill.issued).localeCompare(b.bill.due ?? b.bill.issued));
+  if (open.length === 0) {
+    void tellOnPage("No approved bills are waiting to be paid.");
+    return;
+  }
+  const contacts = state.ledger.contacts ?? [];
+  const payer = entityName(state.entityFilter || open[0]?.bill.entityId) || entityName(billEntities()[0]?.id);
+  const dueBy = (date: string): boolean[] => open.map((r) => (r.bill.due ?? r.bill.issued) <= date);
+  const country = booksCountry().id === "au" ? "au" : "nz";
+  openPaymentFile({
+    title: "Bills to pay: a file for the bank",
+    country,
+    payroll: false,
+    date: now,
+    payer,
+    fileName: "bills",
+    description: "CREDITORS",
+    whereToAdd: "on Customers & vendors, in the supplier's details",
+    tickFor: dueBy,
+    payments: open.map(({ bill, balance }, i) => ({
+      payment: {
+        name: bill.contact,
+        account: findContact(contacts, bill.contact)?.bankAccount ?? "",
+        amount: balance.remaining,
+        // Their statement: the number on their own invoice. Ours: our bill number.
+        reference: bill.reference.trim() !== "" ? bill.reference : bill.number,
+        ourParticulars: bill.contact,
+        ourReference: bill.number,
+      },
+      detail: `${bill.number}${bill.reference.trim() !== "" ? ` (${bill.reference})` : ""}, due ${bill.due ?? bill.issued}`,
+      ticked: dueBy(now)[i] === true,
+    })),
+  });
+}
+
 export function wireBills(): void {
   $("bill-new").addEventListener("click", () => startNewBill());
+  $("bill-bankfile").addEventListener("click", () => billsBankFile());
   $<HTMLInputElement>("bill-search").addEventListener("input", () => redraw("bills"));
   $<HTMLSelectElement>("bill-filter").addEventListener("change", () => redraw("bills"));
 }

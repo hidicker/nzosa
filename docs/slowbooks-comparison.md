@@ -130,7 +130,7 @@ United States books only), or **No** (with why).
 |---|---|---|
 | Pay runs, journals, year-to-date | Has: New Zealand (PAYE, KiwiSaver, student loan, payday filing, Holidays Act leave) and Australia (PAYG, super, STP figures) | — |
 | **Pay stubs as PDFs** | No: no payslip | Yes: payslips, printed and emailed |
-| **Direct deposit file** for the bank | No | Yes: a direct credit (batch payment) file for New Zealand banks, and ABA for Australia — for pay runs and bills |
+| **Direct deposit file** for the bank | No | Yes: a payment file for BNZ, ANZ and Westpac in New Zealand, and ABA for any Australian bank — for pay runs and bills |
 | Garnishments | No | Yes: New Zealand deduction notices (child support, IRD), as deductions on a pay run |
 | Leave requests, approved | Partly: leave taken is recorded | Later |
 | Onboarding checklist, new-hire report | No | Later (New Zealand: IR330, KiwiSaver forms) |

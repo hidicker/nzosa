@@ -3,8 +3,9 @@ import { record } from "../books.js";
 import { booksMoney } from "../country.js";
 import { $, state } from "../state.js";
 import { save } from "../store.js";
-import { note } from "../ui.js";
-import { auPayslipsFor, openPayslips } from "./payslips-ui.js";
+import { askTextOnPage, note } from "../ui.js";
+import { auEmployer, auPayslipsFor, openPayslips } from "./payslips-ui.js";
+import { openPaymentFile } from "./payment-file-ui.js";
 import {
   auPayLine,
   auWithholding,
@@ -161,6 +162,7 @@ function employeeForm(): HTMLElement {
   }
   const usual = input("text", "", "e.g. 2,400.00");
   const fund = input("text", "", "e.g. AustralianSuper");
+  const bank = input("text", "", "e.g. 062-000 12345678");
   const [tftLabel, tft] = checkbox("Claims the tax-free threshold from you", true);
   const [tfnLabel, tfn] = checkbox("Gave a tax file number (TFN declaration)", true);
   const [foreignLabel, foreign] = checkbox("Foreign resident for tax", false);
@@ -170,6 +172,7 @@ function employeeForm(): HTMLElement {
     field("Paid", frequency),
     field("Usual gross pay", usual, "Each pay run starts with it; change it there for the pay."),
     field("Super fund", fund),
+    field("Bank account", bank, "BSB and account number, for the bank file."),
   );
   const said = document.createElement("p");
   said.className = "feed-said";
@@ -195,6 +198,7 @@ function employeeForm(): HTMLElement {
         ...(foreign.checked ? { foreignResident: true } : {}),
         ...(loan.checked ? { studyLoan: true } : {}),
         superFund: fund.value.trim(),
+        ...(bank.value.trim() !== "" ? { bankAccount: bank.value.trim() } : {}),
         payFrequency: frequency.value as AuPayFrequency,
         ...(gross !== undefined ? { usualGross: gross } : {}),
       };
@@ -216,7 +220,7 @@ function employeesSection(body: HTMLElement): void {
   } else {
     body.append(
       table(
-        ["Name", "Paid", "Usual gross", "Tax", "Super fund", ""],
+        ["Name", "Paid", "Usual gross", "Tax", "Super fund", "Bank account", ""],
         employees.map((e) => [
           e.name + (e.ended !== undefined ? ` (left ${e.ended})` : ""),
           e.payFrequency,
@@ -229,6 +233,25 @@ function employeesSection(body: HTMLElement): void {
             .filter(Boolean)
             .join(", "),
           e.superFund,
+          button(e.bankAccount ?? "Add", () => {
+            void (async () => {
+              const said = await askTextOnPage(`${e.name}'s bank account: BSB and account number.`, e.bankAccount ?? "", "Save");
+              if (said === null) return;
+              const now = held();
+              const value = said.trim();
+              void keep(
+                {
+                  ...now,
+                  employees: now.employees.map((x) => {
+                    if (x.id !== e.id) return x;
+                    const { bankAccount: _old, ...rest } = x;
+                    return value === "" ? rest : { ...rest, bankAccount: value };
+                  }),
+                },
+                `${e.name}'s bank account`,
+              );
+            })();
+          }),
           e.ended === undefined
             ? button("Mark as left", () => {
                 const now = held();
@@ -391,6 +414,27 @@ function payRunsSection(body: HTMLElement): void {
           "Pay the net pay from the bank and code it to Wages Payable; the ATO payment to PAYG Withholdings Payable; the fund payment to Superannuation Payable.",
       ),
       button("Pay slips", () => openPayslips(auPayslipsFor(run, held()), `pay-slips-${run.payDate}.html`)),
+      " ",
+      button("Bank file", () =>
+        openPaymentFile({
+          title: `Pay run of ${run.payDate}: a file for the bank`,
+          country: "au",
+          payroll: true,
+          date: run.payDate,
+          payer: auEmployer().name,
+          fileName: "wages",
+          description: "PAYROLL",
+          whereToAdd: "under Employees, in the Bank account column",
+          payments: run.lines.map((l) => ({
+            payment: {
+              name: nameOf(l.employeeId),
+              account: employees.find((x) => x.id === l.employeeId)?.bankAccount ?? "",
+              amount: l.net,
+              reference: `Pay ${run.payDate}`,
+            },
+          })),
+        }),
+      ),
       " ",
       button("Remove this pay run", () => {
         const now = held();

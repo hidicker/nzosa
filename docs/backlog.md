@@ -189,3 +189,10 @@ works).
   (`supabase/functions/simplefin`, a `simplefin_secret` table and RPCs), as
   `supabase/functions/wise` does for Wise. Left because it changes the
   production database. 18 October 2026.
+- **Bank payment files for ASB and Kiwibank.** The Bank file button
+  (`packages/core/src/payment-files.ts`) writes BNZ, ANZ and Westpac files,
+  each checked against the bank's published guide. ASB's guide (MT9, fixed 160
+  characters, or CSV) refused to download (403) and Kiwibank publishes none
+  that could be found. Add each once its guide is in hand; until then an ASB
+  or Kiwibank customer could try the ANZ file,
+  but that is untested. 25 October 2026.

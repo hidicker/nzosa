@@ -281,6 +281,9 @@ function form(existing: Contact | null): HTMLElement {
     option.selected = existing?.defaultAccount === a.code.trim();
     usual.append(option);
   }
+  const bank = input(existing?.bankAccount);
+  bank.placeholder = booksCountry().id === "au" ? "062-000 12345678" : "12-3456-0123456-00";
+  bank.autocomplete = "off";
   const notes = document.createElement("textarea");
   notes.rows = 2;
   notes.value = existing?.notes ?? "";
@@ -333,6 +336,7 @@ function form(existing: Contact | null): HTMLElement {
       ...(exempt.checked ? { taxExempt: true } : {}),
       ...(limitCents !== null && limitCents > 0 ? { creditLimit: limitCents } : {}),
       ...(usual.value !== "" ? { defaultAccount: usual.value } : {}),
+      ...(bank.value.trim() !== "" ? { bankAccount: bank.value.trim() } : {}),
     };
     editing = null;
     if (existing === null) {
@@ -365,6 +369,10 @@ function form(existing: Contact | null): HTMLElement {
     field(booksCountry().id === "us" ? "Tax ID (EIN or SSN)" : booksCountry().id === "nz" ? "IRD or GST number" : "Tax ID", taxId),
     field("Credit limit (customers)", limit),
     field("Bills usually coded to (vendors)", usual),
+    // Bank payment files are New Zealand's and Australia's.
+    ...(booksCountry().id === "nz" || booksCountry().id === "au"
+      ? [field(booksCountry().id === "au" ? "BSB and account, to pay them (vendors)" : "Bank account, to pay them (vendors)", bank)]
+      : []),
     // The W-9 and the 1099-NEC are the United States' own.
     ...(booksCountry().id === "us" ? [ticks] : []),
     field("Notes", notes),

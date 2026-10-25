@@ -37,6 +37,8 @@ export interface Contact {
   creditLimit?: number;
   /** For a vendor: the chart code their bills are usually coded to. */
   defaultAccount?: string;
+  /** For a vendor: the bank account they are paid into (NZ account number, or BSB and account). */
+  bankAccount?: string;
   notes?: string;
   /** Left off lists and pickers when false; never deleted, so history keeps its name. */
   active?: boolean;
@@ -89,7 +91,7 @@ export function mergeContacts(held: readonly Contact[], incoming: readonly Omit<
     const there = byKey.get(key);
     if (there !== undefined) {
       there.kind = joined(there.kind, one.kind);
-      for (const field of ["company", "email", "phone", "address", "terms", "taxId", "notes", "source"] as const) {
+      for (const field of ["company", "email", "phone", "address", "terms", "taxId", "notes", "source", "bankAccount"] as const) {
         const value = one[field];
         if ((there[field] ?? "") === "" && value !== undefined && value !== "") there[field] = value;
       }

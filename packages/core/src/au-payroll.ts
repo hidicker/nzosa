@@ -36,6 +36,8 @@ export interface AuEmployee {
   /** Has a study or training support loan (HELP and the like): extra is withheld per Schedule 8. */
   studyLoan?: boolean;
   superFund: string;
+  /** Where their pay goes: BSB and account number. */
+  bankAccount?: string;
   payFrequency: AuPayFrequency;
   /** Gross pay for an ordinary period, to start each pay run with. */
   usualGross?: Cents;

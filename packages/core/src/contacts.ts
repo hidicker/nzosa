@@ -126,15 +126,8 @@ export function findContact(contacts: readonly Contact[], name: string): Contact
  * name long enough that a short one cannot catch everybody.
  */
 export function payeeMatches(payee: string, name: string): boolean {
-  const plain = (text: string): string =>
-    text
-      .toLowerCase()
-      .normalize("NFD")
-      .replace(/[̀-ͯ]/g, "")
-      .replace(/\b(limited|ltd|co|company|inc|llc|pty|nz)\b/g, "")
-      .replace(/[^a-z0-9]+/g, "");
-  const a = plain(payee);
-  const b = plain(name);
+  const a = plainName(payee);
+  const b = plainName(name);
   if (a === "" || b === "") return false;
   if (a === b) return true;
   const shorter = a.length < b.length ? a : b;
@@ -166,4 +159,50 @@ export function paidToContact(
     inPeriod: lines.filter((l) => l.date >= period.from && l.date <= period.to).reduce((s, l) => s + l.amount, 0),
     allTime: lines.reduce((s, l) => s + l.amount, 0),
   };
+}
+
+/** Letters and digits only, with a company ending dropped: how two spellings of one name are compared. */
+function plainName(text: string): string {
+  return text
+    .toLowerCase()
+    .normalize("NFD")
+    .replace(/[\u0300-\u036f]/g, "")
+    .replace(/&/g, "and")
+    .replace(/\b(limited|ltd|co|company|inc|llc|pty|nz|the)\b/g, "")
+    .replace(/[^a-z0-9]+/g, "");
+}
+
+/** How many single-letter changes turn one word into the other. */
+function editDistance(a: string, b: string): number {
+  let previous = Array.from({ length: b.length + 1 }, (_, i) => i);
+  for (let i = 1; i <= a.length; i++) {
+    const current = [i];
+    for (let j = 1; j <= b.length; j++) {
+      current[j] = Math.min((previous[j] ?? 0) + 1, (current[j - 1] ?? 0) + 1, (previous[j - 1] ?? 0) + (a[i - 1] === b[j - 1] ? 0 : 1));
+    }
+    previous = current;
+  }
+  return previous[b.length] ?? 0;
+}
+
+/**
+ * Contacts whose names look like this one: the same once case, spacing,
+ * accents and "Limited" are set aside, one the start of the other, or a
+ * letter or two apart -- "Kea Cafe" and "Kea Café Ltd", "Harbour Cafe" and
+ * "Harbor Cafe". A warning, not a refusal: two real customers can have
+ * names this close.
+ */
+export function similarContacts(name: string, contacts: readonly Contact[], exceptId?: string): Contact[] {
+  const wanted = plainName(name);
+  if (wanted === "") return [];
+  return contacts.filter((c) => {
+    if (c.id === exceptId) return false;
+    const other = plainName(c.name);
+    if (other === "") return false;
+    if (other === wanted) return true;
+    const shorter = other.length < wanted.length ? other : wanted;
+    const longer = other.length < wanted.length ? wanted : other;
+    if (shorter.length >= 5 && longer.startsWith(shorter)) return true;
+    return shorter.length >= 6 && editDistance(other, wanted) <= (shorter.length >= 12 ? 2 : 1);
+  });
 }

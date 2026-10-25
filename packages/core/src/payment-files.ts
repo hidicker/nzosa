@@ -123,7 +123,7 @@ export interface PaymentFile {
 export function bankText(text: string | undefined, width: number, upper = false): string {
   const plain = (text ?? "")
     .normalize("NFD")
-    .replace(/[̀-ͯ]/g, "")
+    .replace(/[\u0300-\u036f]/g, "")
     .replace(/[^ -~]/g, "")
     .replace(/[,"]/g, " ")
     .replace(/\s+/g, " ")

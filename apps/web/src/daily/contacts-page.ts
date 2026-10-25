@@ -7,6 +7,7 @@ import { savePart } from "../store.js";
 import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
   accountEmailFrom,
+  similarContacts,
   paidToContact,
   spreadsheetCell,
   emailForContact,
@@ -468,7 +469,7 @@ function form(existing: Contact | null): HTMLElement {
   save.type = "button";
   save.className = "primary";
   save.textContent = existing === null ? "Add" : "Save";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const said = name.value.trim();
     if (said === "") {
       problem.textContent = "A name, as it appears on invoices and bills.";
@@ -482,6 +483,20 @@ function form(existing: Contact | null): HTMLElement {
     const clash = held().find((c) => contactKey(c.name) === contactKey(said) && c.id !== existing?.id);
     if (clash !== undefined) {
       problem.textContent = `${clash.name} is already here.`;
+      return;
+    }
+    // A name like one already here is asked about, not refused: two real
+    // customers can be that close. A name not changed by an edit is not asked again.
+    const renamed = existing === null || contactKey(existing.name) !== contactKey(said);
+    const alike = renamed ? similarContacts(said, held(), existing?.id) : [];
+    if (
+      alike.length > 0 &&
+      !(await askOnPage(
+        `${alike.map((c) => c.name).join(", ")} ${alike.length === 1 ? "is" : "are"} already here, and ${alike.length === 1 ? "looks" : "look"} like ${said}.\n\n` +
+          `${existing === null ? "Add" : "Rename to"} ${said} as well?`,
+        existing === null ? "Add it" : "Rename it",
+      ))
+    ) {
       return;
     }
     const fields = {

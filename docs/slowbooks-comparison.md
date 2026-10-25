@@ -52,7 +52,7 @@ United States books only), or **No** (with why).
 | Expenses and card charges as documents | Partly: bank and card lines are the entries | — |
 | **Receipt scanning** into a bill or expense (OCR on the computer, no AI) | Partly: an AI can read a PDF bill | Yes: OCR in the page, no AI, no upload |
 | **Attachments**: the receipt or file kept with a bill, expense, invoice, journal, contact | No: a link to a document only | Yes (storage in the folder, or Supabase Storage online) |
-| Duplicate-name warning when a customer or vendor is added | No | Yes |
+| Duplicate-name warning when a customer or vendor is added | Has: a name like one already there (spelling, accents, Limited, a letter apart) is asked about | — |
 | Pay bills screen, printed checks | No | No: cheques are all but gone in New Zealand; bills are matched to bank lines |
 | W-9, 1099 vendors, 1099-NEC and 1096 | Has (US) | — |
 
@@ -194,7 +194,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 14. Reorder points, a low-stock list, a stock valuation report and an item's movements (M).
 15. ~~Income by customer, and sales by item~~: done 25 October 2026.
 16. ~~Paid this year and all time, per supplier~~: done 25 October 2026.
-17. A duplicate-name warning when a contact is added (S).
+17. ~~A duplicate-name warning~~: done 25 October 2026.
 18. A bill line as an amount alone (S).
 19. Quantities and prices to four decimal places (S).
 20. Quotes offered in New Zealand (S).

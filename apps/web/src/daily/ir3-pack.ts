@@ -1,5 +1,5 @@
 import type { Cents, Entity, Ir3Return, OwnerRentalSchedule, TaxExtra } from "@nzosa/core";
-import { emptyEntityModel } from "@nzosa/core";
+import { emptyEntityModel, returnFingerprint } from "@nzosa/core";
 import { ledgerName } from "../store.js";
 import { state } from "../state.js";
 import { booksLocale, moneyPlaces } from "../country.js";
@@ -294,6 +294,7 @@ export function ir3PackHtml(
           )
           .join("") +
         "</tbody></table>" +
+        `<p class="fingerprint">Fingerprint ${esc(ir3Fingerprint(owner, year, result.boxes))}: the same figures always give the same fingerprint.</p>` +
         (result.notes.length > 0 ? `<h3>Notes</h3><ul>${result.notes.map((n) => `<li>${esc(n)}</li>`).join("")}</ul>` : ""),
     ),
   );
@@ -309,7 +310,15 @@ export function ir3PackHtml(
   );
 }
 
+/** The IR3's fingerprint: whose, which year, and every box. */
+function ir3Fingerprint(owner: string, year: number, boxes: readonly { box: string; amount?: number | undefined; text?: string | undefined }[]): string {
+  const figures: Record<string, string | number | undefined> = {};
+  for (const b of boxes) figures[b.box] = b.text ?? b.amount ?? 0;
+  return returnFingerprint(`IR3 ${owner.trim()} ${year}`, figures);
+}
+
 const PACK_STYLE = `
+  .fingerprint { font-size: 11px; color: #555; margin-top: 12px; }
   body { font: 13px/1.4 system-ui, -apple-system, "Segoe UI", sans-serif; color: #111; background: #eee; margin: 0; }
   .bar { position: sticky; top: 0; background: #fff; border-bottom: 1px solid #ccc; padding: 8px 16px; }
   .bar button { font: inherit; padding: 6px 14px; }

@@ -1,4 +1,5 @@
 import { spreadsheetCell } from "./csv.js";
+import { returnFingerprint } from "./fingerprint.js";
 import type { GstReturnLine, GstReturnResult } from "./gst.js";
 import type { Cents } from "./money.js";
 import { gstWithin } from "./reports.js";
@@ -120,6 +121,11 @@ export function gstReturnBoxRows(result: Pick<GstReturnResult, "boxes">): { box:
 }
 
 /** A return, its boxes and its transactions, as CSV. */
+/** A GST return's fingerprint: its period, basis and boxes. See fingerprint.ts. */
+export function gstReturnFingerprint(result: Pick<GstReturnResult, "period" | "basis" | "boxes">): string {
+  return returnFingerprint(`GST ${result.period.from}..${result.period.to} ${result.basis}`, { ...result.boxes });
+}
+
 export function formatGstReturn(result: GstReturnResult, title: string): string {
   const money = (cents: Cents): string => (cents / 100).toFixed(2);
   const rows: string[][] = [
@@ -134,6 +140,7 @@ export function formatGstReturn(result: GstReturnResult, title: string): string 
     ],
     [`${result.basis.charAt(0).toUpperCase()}${result.basis.slice(1)} basis`],
     [gstOutcomeLabel(result), money(result.boxes.box15)],
+    ["Fingerprint", gstReturnFingerprint(result)],
     [],
     ["Box", "Description", "Amount"],
     ...gstReturnBoxRows(result).map((r) => [r.box, r.label, money(r.amount)]),

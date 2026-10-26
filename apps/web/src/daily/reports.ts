@@ -1,7 +1,7 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { cashForecast, changeShare, daysSalesOutstanding, isCreditNote, isPosted, formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
+import { cashForecast, changeShare, daysSalesOutstanding, gstReturnFingerprint, isCreditNote, isPosted, formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
 import type { OwingDocument } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
@@ -2631,6 +2631,14 @@ function renderGstReturn(body: HTMLElement, year: number): void {
     renderGstTransactions(body, result, money);
   } else {
     renderGstBoxes(body, result, money);
+    // Printed with the return: worked out again from the books, a different
+    // one means a figure has changed since.
+    const print = note(
+      `Fingerprint ${gstReturnFingerprint(result)}. The same figures always give the same fingerprint: ` +
+        "a printed or downloaded copy showing another has had a figure change since.",
+    );
+    print.classList.add("return-fingerprint");
+    body.append(print);
   }
 
   // --- filing ---

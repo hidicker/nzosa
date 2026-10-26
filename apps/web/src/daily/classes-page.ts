@@ -33,7 +33,7 @@ async function keep(next: Held, what: string): Promise<void> {
   redraw("classes");
 }
 
-interface Source {
+export interface Source {
   id: string;
   date: string;
   narration: string;
@@ -44,7 +44,7 @@ interface Source {
 }
 
 /** Everything in the year that posts to income or expense, one row a source. */
-function sources(from: string, to: string): Source[] {
+export function sources(from: string, to: string): Source[] {
   const incomeOrCost = /revenue|income|sales|expense|overhead|direct|cost/i;
   const names = new Map(
     state.chart.filter((a) => incomeOrCost.test(a.type)).map((a) => [a.code.trim(), `${a.code} ${a.name}`.trim()]),

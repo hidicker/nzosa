@@ -1,4 +1,4 @@
-import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
 import { formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
@@ -3731,6 +3731,7 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   salestax: "Sales tax collected and paid, by the account it sits in, and what is still owed.",
   payrolltax: "Wages and the payroll taxes withheld, by quarter, read from the payroll accounts, for checking a 941.",
   byclass: "Income and expense for the year, a column for each class and one for what has none.",
+  byjob: "Income and expense for the year, a column for each job and one for what has none.",
   budget: "Each account's budget for the year beside what the books hold, and the year to date.",
   aurental: "Each rental on the ATO's rental property schedule labels.",
   bas: "GST for each quarter as the BAS asks for it: G1, 1A and 1B.",
@@ -4405,6 +4406,7 @@ export function renderReportsPage(): void {
     payrolltax: renderPayrollTax,
     budget: renderBudgetVsActual,
     byclass: renderProfitByClass,
+    byjob: renderProfitByJob,
     aurental: renderAuRentalSchedule,
     bas: renderBas,
     krbusiness: renderKrBusiness,

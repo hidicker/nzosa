@@ -503,3 +503,4 @@ export type { SalesBy, SalesRow } from "./sales-by.js";
 export { paidTo } from "./paid-to.js";
 export type { PaidTo } from "./paid-to.js";
 export * from "./quick-entry.js";
+export * from "./jobs.js";

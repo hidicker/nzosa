@@ -67,6 +67,7 @@ export type PageName =
   | "register"
   | "items"
   | "classes"
+  | "jobs"
   | "apps"
   | "time"
   | "aupayroll"
@@ -190,6 +191,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "register") redraw("register");
   if (page === "items") redraw("items");
   if (page === "classes") redraw("classes");
+  if (page === "jobs") redraw("jobs");
   if (page === "apps") redraw("apps");
   if (page === "time") redraw("time");
   if (page === "aupayroll") redraw("aupayroll");

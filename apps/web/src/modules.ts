@@ -41,6 +41,7 @@ export type ModuleId =
   | "time"
   | "aupayroll"
   | "classes"
+  | "jobs"
   | "budgets"
   | "register"
   | "statements";
@@ -122,6 +123,15 @@ export const MODULES: readonly ModuleInfo[] = [
     inferred: () => (state.ledger.classes?.names ?? []).length > 0,
     holds: () => count((state.ledger.classes?.names ?? []).length, "class", "classes"),
     opens: "classes",
+  },
+  {
+    id: "jobs",
+    name: "Jobs",
+    what: "Work done for a customer, and what each job made: its invoices, bills and bank lines, income less costs.",
+    basis: "data",
+    inferred: () => (state.ledger.jobs?.jobs ?? []).length > 0,
+    holds: () => count((state.ledger.jobs?.jobs ?? []).length, "job", "jobs"),
+    opens: "jobs",
   },
   {
     id: "budgets",
@@ -301,6 +311,7 @@ export const ASKED: readonly ModuleId[] = [
   "items",
   "time",
   "classes",
+  "jobs",
   "budgets",
   "register",
   "statements",

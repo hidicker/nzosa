@@ -2,6 +2,7 @@ import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { openQuickEntry } from "./quick-entry.js";
+import { giveDocument, heldJobs, jobChoices } from "./jobs-page.js";
 import type { InvoiceMessage } from "../store.js";
 import { redraw } from "../app.js";
 import {
@@ -451,6 +452,33 @@ export function renderInvoiceEditor(): void {
     entity.append(option);
   }
   const entityField = field("Entity", entity, "Whose bill it is: its costs, its GST and its payables.");
+
+  // The job it is for, where jobs are kept: the customer's own listed first.
+  const jobPick = document.createElement("select");
+  const wasJob = existing === undefined ? "" : (heldJobs().assigned[existing.number] ?? "");
+  const fillJobs = (): void => {
+    const chosen = jobPick.value === "" && jobPick.options.length === 0 ? wasJob : jobPick.value;
+    jobPick.textContent = "";
+    const none = document.createElement("option");
+    none.value = "";
+    none.textContent = "No job";
+    jobPick.append(none);
+    const offered = jobChoices(contact.value);
+    const current = heldJobs().jobs.find((j) => j.id === chosen);
+    if (current !== undefined && !offered.includes(current)) offered.unshift(current);
+    for (const job of offered) {
+      const option = document.createElement("option");
+      option.value = job.id;
+      option.textContent = job.customer.trim() === "" ? job.name : `${job.name} (${job.customer})`;
+      jobPick.append(option);
+    }
+    jobPick.value = offered.some((j) => j.id === chosen) ? chosen : "";
+  };
+  if (moduleOn("jobs") && heldJobs().jobs.length > 0) {
+    fillJobs();
+    contact.addEventListener("change", fillJobs);
+    field("Job", jobPick, asBill ? "The job this cost belongs to, if any." : "The job this is for, if any.");
+  }
   entityField.hidden = !asBill || (entityChoices.length <= 1 && draft.entityId !== undefined);
 
   const issued = document.createElement("input");
@@ -1053,6 +1081,13 @@ export function renderInvoiceEditor(): void {
     };
   };
 
+  // Saved, then given to its job: a document refused by a check gets no job.
+  const saveWithJob = async (built: Invoice): Promise<void> => {
+    await saveInvoice(built, existing);
+    if (jobPick.options.length === 0 || !(state.ledger.invoices ?? []).includes(built)) return;
+    await giveDocument(built.number, jobPick.value, existing?.number);
+  };
+
   const save = document.createElement("button");
   save.type = "button";
   save.className = "primary";
@@ -1071,10 +1106,10 @@ export function renderInvoiceEditor(): void {
       } catch {
         // Only a convenience: the next receipt asks again.
       }
-      void saveInvoice(receipt, existing);
+      void saveWithJob(receipt);
       return;
     }
-    void saveInvoice(build(asBill ? statusChoice.value : statusText.value.trim()), existing);
+    void saveWithJob(build(asBill ? statusChoice.value : statusText.value.trim()));
   });
 
   // Approving is what puts a bill in the books, so it is its own button
@@ -1086,7 +1121,7 @@ export function renderInvoiceEditor(): void {
   approve.title = "Post it: the cost and GST on the bill date, the amount owing in Accounts Payable.";
   approve.hidden = !asBill || (statusChoice.value !== "Draft" && statusChoice.value !== "Purchase order");
   approve.addEventListener("click", () => {
-    void saveInvoice(build("Awaiting Payment"), existing);
+    void saveWithJob(build("Awaiting Payment"));
   });
   statusChoice.addEventListener("change", () => {
     approve.hidden = !asBill || (statusChoice.value !== "Draft" && statusChoice.value !== "Purchase order");

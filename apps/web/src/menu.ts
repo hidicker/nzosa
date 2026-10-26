@@ -148,6 +148,7 @@ const KEYWORDS: Readonly<Record<string, string>> = {
   aupayroll: "payroll pay run wages employees payg withholding super superannuation stp single touch payroll w1 w2",
   apps: "modules apps features turn on off menu",
   classes: "class classes department location job project segment tag profit and loss by class",
+  jobs: "jobs job costing project contract profitability margin customer work profit and loss by job",
   items: "products services price list catalog inventory sku",
   budgets: "budget plan forecast target spend limit variance",
   contacts: "customers vendors suppliers clients address email phone w-9 w9 1099 contact list",

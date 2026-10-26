@@ -234,3 +234,71 @@ export function donorYears(
   }
   return [...totals.values()].sort((a, b) => b.year - a.year || a.donor.localeCompare(b.donor));
 }
+
+/**
+ * A donor's giving statement for a tax year: each receipt issued to them that
+ * stands, its date and amount, and the total -- for their records, and for
+ * the organisation to send once a year.
+ *
+ * Not a receipt itself, and it says so: the credit is claimed with the
+ * receipts, and a statement claimed as well would be the same gifts twice.
+ */
+export function givingStatementHtml(
+  organisation: { name: string; address?: string | undefined },
+  np: NonProfit,
+  donor: string,
+  year: number,
+  receipts: readonly DonationReceipt[],
+  taxYearOf: (date: IsoDate) => number,
+): string {
+  const who = donor.trim().toLowerCase();
+  const mine = receipts
+    .filter((r) => r.voided === undefined && r.donor.trim().toLowerCase() === who && (r.year ?? taxYearOf(r.date)) === year)
+    .sort((a, b) => a.date.localeCompare(b.date) || a.number.localeCompare(b.number));
+  const total = mine.reduce((sum, r) => sum + r.amount, 0);
+  const address = mine.find((r) => (r.address ?? "").trim() !== "")?.address?.trim() ?? "";
+  const rows = mine
+    .map(
+      (r) =>
+        `<tr><td>${escape(r.number)}</td><td>${escape(r.year !== undefined ? `Year to 31 March ${r.year}` : dateSaid(r.date))}</td><td class="n">${escape(amountSaid(r.amount))}</td></tr>`,
+    )
+    .join("\n  ");
+  return `<!doctype html>
+<html lang="en-NZ">
+<head>
+<meta charset="utf-8">
+<title>Giving statement ${escape(donor.trim())} ${year}</title>
+<style>
+  body { font-family: Georgia, "Times New Roman", serif; max-width: 42rem; margin: 2rem auto; padding: 0 1rem; color: #111; }
+  header { border-bottom: 2px solid #111; padding-bottom: 0.6rem; margin-bottom: 1.2rem; }
+  h1 { margin: 0; font-size: 1.6rem; }
+  .address, .ids { font-size: 0.9rem; color: #333; margin: 0.2rem 0 0; white-space: pre-line; }
+  h2 { font-size: 1.15rem; margin: 0 0 0.8rem; }
+  table { width: 100%; border-collapse: collapse; margin: 1rem 0; }
+  th, td { padding: 0.35rem 0.2rem; border-bottom: 1px solid #ddd; text-align: left; }
+  .n { text-align: right; }
+  tfoot td { font-weight: 700; border-top: 2px solid #111; }
+  .small { font-size: 0.85rem; color: #333; margin-top: 1.6rem; }
+</style>
+</head>
+<body>
+<header>
+  <h1>${escape(organisation.name)}</h1>
+  ${organisation.address !== undefined && organisation.address.trim() !== "" ? `<p class="address">${escape(organisation.address.trim())}</p>` : ""}
+  <p class="ids">IRD number: ${escape((np.irdNumber ?? "").trim())}</p>
+</header>
+<h2>Giving statement, 1 April ${year - 1} to 31 March ${year}</h2>
+<p>${escape(donor.trim())}${address !== "" ? `<br>${escape(address).replace(/\n/g, "<br>")}` : ""}</p>
+<p>Thank you. These are the donation receipts issued to you for the year.</p>
+<table>
+  <thead><tr><th>Receipt</th><th>For</th><th class="n">Amount</th></tr></thead>
+  <tbody>
+  ${rows}
+  </tbody>
+  <tfoot><tr><td colspan="2">Total given</td><td class="n">${escape(amountSaid(total))}</td></tr></tfoot>
+</table>
+<p class="small">This statement is not a receipt. A donation tax credit is claimed with the receipts listed above, each of which you were given; claim each gift once.</p>
+</body>
+</html>
+`;
+}

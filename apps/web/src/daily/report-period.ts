@@ -19,6 +19,8 @@ export const PERIOD_REPORTS: ReadonlySet<string> = new Set([
   "journal",
   "general",
   "extract",
+  "bycustomer",
+  "byitem",
 ]);
 
 /** The two that offer a column for the same period a year earlier. */

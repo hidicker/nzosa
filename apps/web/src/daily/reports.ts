@@ -1,7 +1,7 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { periodSaid, spreadsheetCell } from "@nzosa/core";
+import { periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -31,6 +31,7 @@ import {
   betweenTagFor,
   manualJournalGstAccount,
   ledgerFromStart,
+  invoicesInPlay,
 } from "../books.js";
 import { renderBetweenReport } from "./between-report.js";
 import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
@@ -3636,6 +3637,8 @@ const REPORT_DESCRIPTIONS: Record<string, string> = {
   bankreconcile: "Each day's bank balance here against the statement, the bank feed and your previous system.",
   owner: "Income and expenses by owner, for property held jointly.",
   agedpayables: "What is owed to each supplier on a day, by how late, agreed to Accounts Payable.",
+  bycustomer: "What each customer was invoiced in the period, before GST, less credit notes.",
+  byitem: "What each product or service sold for in the period, and how many, from the invoice lines.",
   agedreceivables: "What each customer owes on a day, by how late, agreed to Accounts Receivable.",
   charts: "The year's income and spending, month by month.",
   schedulee: "Each rental property on Schedule E's lines, from its own accounts.",
@@ -4249,6 +4252,12 @@ export function renderReportsPage(): void {
     return;
   }
 
+  if (kind === "bycustomer" || kind === "byitem") {
+    ownerSelect.hidden = true;
+    if (chosenYearNow !== undefined) renderSalesBy(body, chosenYearNow, kind === "bycustomer" ? "customer" : "item");
+    return;
+  }
+
   // Other countries' forms (country-reports.ts).
   const countryReport: Record<string, (body: HTMLElement, year: number) => void> = {
     schedulee: renderScheduleE,
@@ -4635,6 +4644,64 @@ function renderExtract(body: HTMLElement, year: number): void {
   if (built.length > 200) {
     body.append(note(`Showing the first 200 of ${built.length}. The export holds them all.`));
   }
+}
+
+/**
+ * Sales totalled by customer or by what was sold, for the period chosen, from
+ * the sales invoices in the books less their credit notes.
+ */
+function renderSalesBy(body: HTMLElement, year: number, by: "customer" | "item"): void {
+  const period = reportRange(year);
+  const chosen = state.entityFilter;
+  const invoices = invoicesInPlay().filter((i) => chosen === "" || i.entityId === undefined || i.entityId === chosen);
+  const items = state.ledger.items ?? [];
+  const nameOf = (code: string): string | undefined => items.find((i) => i.id === code || i.name.trim().toLowerCase() === code.trim().toLowerCase())?.name;
+  const result = salesBy(invoices, period, by, nameOf);
+  const heading = document.createElement("h3");
+  heading.textContent = `${by === "customer" ? "Income by customer" : "Sales by product or service"}, ${periodHeading(year)}`;
+  body.append(heading);
+  if (result.rows.length === 0) {
+    body.append(note("No sales invoices in this period."));
+    return;
+  }
+  const tax = !noSalesTax();
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML =
+    `<thead><tr><th>${by === "customer" ? "Customer" : "Product or service"}</th>` +
+    `<th style="text-align:right">${by === "customer" ? "Invoices" : "Quantity"}</th>` +
+    `<th style="text-align:right">${tax ? "Before tax" : "Amount"}</th>` +
+    (tax ? '<th style="text-align:right">Tax</th>' : "") +
+    '<th style="text-align:right">Share</th></tr></thead>';
+  const tbody = document.createElement("tbody");
+  const share = (net: number): string => (result.net === 0 ? "" : `${Math.round((net / result.net) * 1000) / 10}%`);
+  for (const row of result.rows) {
+    const tr = document.createElement("tr");
+    tr.append(nameCell(row.name));
+    tr.append(amountCell(by === "customer" ? String(row.count) : row.quantity === 0 ? "" : String(Math.round(row.quantity * 100) / 100)));
+    tr.append(amountCell(booksMoney(row.net)));
+    if (tax) tr.append(amountCell(booksMoney(row.tax)));
+    tr.append(amountCell(share(row.net)));
+    tbody.append(tr);
+  }
+  const total = document.createElement("tr");
+  total.className = "report-total";
+  total.append(nameCell("Total"), amountCell(""), amountCell(booksMoney(result.net)));
+  if (tax) total.append(amountCell(booksMoney(result.tax)));
+  total.append(amountCell(""));
+  tbody.append(total);
+  table.append(tbody);
+  body.append(table);
+  const save = document.createElement("button");
+  save.type = "button";
+  save.textContent = "Export as CSV";
+  save.addEventListener("click", () => {
+    const head = [by === "customer" ? "Customer" : "Product or service", by === "customer" ? "Invoices" : "Quantity", "Before tax", "Tax"];
+    const rows = result.rows.map((r) => [r.name, String(by === "customer" ? r.count : r.quantity), formatAmount(r.net), formatAmount(r.tax)]);
+    const csv = [head, ...rows].map((r) => r.map(spreadsheetCell).join(",")).join("\r\n") + "\r\n";
+    download(csv, `${by === "customer" ? "income-by-customer" : "sales-by-item"}-${periodFileName(year)}.csv`, "text/csv");
+  });
+  body.append(save);
 }
 
 /** The twelve months of a financial year, from its first: April to March in New Zealand. */

@@ -204,7 +204,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).
 25. Keyboard shortcuts for a new invoice, bill and journal (S).
 26. Sales receipts, and a walk-in customer (M).
-27. Quick entry for a backlog of paper invoices (S).
+27. Quick entry for a backlog of paper invoices and bills, one row each, Enter for the next (S).
 
 **Third: for accountants**
 
@@ -229,5 +229,12 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 43. A year's giving statement per donor (S).
 44. Items and the chart exported and imported as CSV (S).
 45. A hash on printed returns, to show they are unchanged (S).
+
+**Added from the SlowBooks bug audit (26 October 2026)**
+
+46. Profit and loss in columns by month or by quarter, with a total, to spot a month a bill was missed (M).
+47. A warning on an invoice, bill, journal or register entry dated far in the past or the future, a typed year likely wrong (S).
+48. A fee taken out of a deposit, as a line of the receipt: the invoice cleared in full, the fee to its account (S).
+49. Number-pad entry: Enter moves to the next field, and an automatic decimal point, each a setting (S).
 
 **Not taking**, and why: printed cheques and deposit slips (cheques are all but gone here), undeposited funds, United States payroll for every state and its forms, Form 990 reports, reseller permits, the employee portal, company file encryption and the accountant's copy file (books online are protected by the server; a folder is the person's own), and QuickBooks 2003's look.

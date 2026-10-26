@@ -1,4 +1,5 @@
 import { redraw } from "../app.js";
+import { attachmentsControl } from "./attachments-ui.js";
 import { invoiceBalanceMap, record } from "../books.js";
 import { supplierFor } from "./invoices.js";
 import { booksMoney, documentOptions } from "../country.js";
@@ -382,6 +383,8 @@ function form(existing: Contact | null): HTMLElement {
   row.className = "migration-actions";
   row.append(save, cancel);
   box.append(row);
+  // A contract, a W-9, a signed form: kept with them once they are saved.
+  if (existing !== null) box.append(attachmentsControl({ kind: "contact", id: existing.id }, existing.name));
   return box;
 }
 

@@ -4599,3 +4599,13 @@ select.needs-choice {
 }
 .register-field[hidden], .register-split[hidden] { display: none; }
 .payment-file-view .contact-field input[type="date"] { max-width: 12em; }
+
+/* Files attached to a document, journal, contact or register line. */
+.attachments { border: 1px dashed var(--border); border-radius: 8px; padding: 8px 10px; margin-top: 12px; font-size: 0.85rem; }
+.attachments-over { border-color: var(--accent, #2b6a8a); background: var(--surface-2); }
+.attachments-head { display: flex; align-items: center; gap: 10px; }
+.attachments-head > span { color: var(--muted); font-weight: 600; }
+.attachments-none { color: var(--muted); margin: 6px 0 0; }
+.attachments-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
+.attachments-size { color: var(--muted); }
+.attachment-image { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto 12px; }

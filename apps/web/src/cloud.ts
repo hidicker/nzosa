@@ -456,6 +456,45 @@ async function rest(path: string, init: RequestInit = {}): Promise<Response | nu
   }
 }
 
+/**
+ * A file attached in books kept online: in the private attachments bucket,
+ * under the books' own id, so only their members can read it and only those
+ * who may change the books can add or remove one (storage policies).
+ */
+async function storage(method: "GET" | "POST" | "DELETE", path: string, body?: Blob): Promise<Response | null> {
+  const token = await freshToken();
+  if (token === null) return null;
+  const where = method === "GET" ? `object/authenticated/attachments/${path}` : `object/attachments/${path}`;
+  try {
+    return await fetch(`${CLOUD.url}/storage/v1/${where}`, {
+      method,
+      headers: {
+        apikey: CLOUD.publishableKey,
+        authorization: `Bearer ${token}`,
+        ...(body !== undefined ? { "content-type": body.type || "application/octet-stream", "x-upsert": "true" } : {}),
+      },
+      ...(body !== undefined ? { body } : {}),
+    });
+  } catch {
+    return null;
+  }
+}
+
+export async function putCloudFile(book: string, id: string, file: Blob): Promise<boolean> {
+  const response = await storage("POST", `${book}/${id}`, file);
+  return response !== null && response.ok;
+}
+
+export async function getCloudFile(book: string, id: string): Promise<Blob | null> {
+  const response = await storage("GET", `${book}/${id}`);
+  return response !== null && response.ok ? await response.blob() : null;
+}
+
+export async function deleteCloudFile(book: string, id: string): Promise<boolean> {
+  const response = await storage("DELETE", `${book}/${id}`);
+  return response !== null && response.ok;
+}
+
 /** Every set of books this person is a member of. */
 export async function listBooks(): Promise<CloudBook[]> {
   const response = await rest("books?select=id,name,created_at&order=name.asc");

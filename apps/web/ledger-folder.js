@@ -18,6 +18,7 @@
  */
 import {
   copyFileSync,
+  cpSync,
   existsSync,
   mkdirSync,
   readFileSync,
@@ -217,6 +218,8 @@ export function copyLedger(from, to, name) {
     copyFileSync(join(from, file), join(to, file));
     copied += 1;
   }
+  // The files attached to them, which the books name by id.
+  if (existsSync(join(from, "attachments"))) cpSync(join(from, "attachments"), join(to, "attachments"), { recursive: true });
   writeMeta(to, { name, created: new Date().toISOString(), copiedFrom: readMeta(from).name || "" });
   return { copied };
 }

@@ -6,7 +6,8 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, saveEvents } from "../store.js";
 import { note, tellOnPage } from "../ui.js";
-import type { Account, RuleSet } from "@nzosa/core";
+import type { Account, Attachment, RuleSet } from "@nzosa/core";
+import { deleteFile } from "../files.js";
 import { renameAccountBack } from "./entities.js";
 import { postedJournals } from "../books.js";
 import { daysWork, formatAmount, localDay, moveStillHolds, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
@@ -37,6 +38,26 @@ export async function undo(event: LedgerEvent): Promise<void> {
   // coded again since would lose that later coding.
   if (event.kind === "reclassify" && !moveStillHolds(movableBooks(state.ledger), event.after as MoveSnapshot)) {
     await tellOnPage("Some of these lines have been changed again since they were moved. Undo those changes first, or move the lines back on Entities & accounts.");
+    return;
+  }
+
+  // A file removed was deleted with it: undoing would list a file that is not
+  // there. Undoing an attach takes the file away again, bytes and all.
+  if (event.kind === "attachments") {
+    const now = new Set((state.ledger.attachments ?? []).map((a) => a.id));
+    const before = (event.before ?? []) as Attachment[];
+    const after = (event.after ?? []) as Attachment[];
+    if (before.some((a) => !after.some((b) => b.id === a.id))) {
+      await tellOnPage("A removed file was deleted with it and cannot be brought back. Attach it again.");
+      return;
+    }
+    const added = after.filter((a) => !before.some((b) => b.id === a.id) && now.has(a.id));
+    state.ledger = { ...state.ledger, attachments: (state.ledger.attachments ?? []).filter((a) => !added.some((b) => b.id === a.id)) };
+    state.persistent = await save(state.ledger);
+    for (const a of added) await deleteFile(a.id);
+    state.events = state.events.map((e) => (e.id === event.id ? { ...e, reverted: true } : e));
+    await saveEvents(state.events);
+    redraw("history");
     return;
   }
 

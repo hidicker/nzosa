@@ -492,3 +492,5 @@ export { isRegisterEntry, REGISTER_IMPORTER, registerProblem, registerRows, regi
 export type { RegisterDraft, RegisterRow } from "./register.js";
 export { allocationProblem, creditsOnAccount, proposeAllocations } from "./credit-on-account.js";
 export type { CreditOnAccount, CreditSource } from "./credit-on-account.js";
+export { ATTACHMENT_LIMIT, attachmentProblem, attachmentsOf, documentOwner, moveAttachments, newAttachmentId, sizeWords } from "./attachments.js";
+export type { Attachment, AttachmentOwner } from "./attachments.js";

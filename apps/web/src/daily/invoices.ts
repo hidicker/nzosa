@@ -1,5 +1,6 @@
 import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
+import { attachmentsControl } from "./attachments-ui.js";
 import { redraw } from "../app.js";
 import {
   bankLabel,
@@ -45,6 +46,9 @@ import {
   splitPartId,
   NOT_TAXABLE,
   TAXABLE,
+  attachmentsOf,
+  documentOwner,
+  moveAttachments,
 } from "@nzosa/core";
 import type {
   SalesTaxRate,
@@ -312,8 +316,8 @@ export function renderInvoiceEditor(): void {
   field(
     "Document link",
     documentLink,
-    "Optional. A share link to the PDF or receipt in your own Google Drive or Dropbox. " +
-      "The books keep the link, not the file.",
+    "Optional. A share link to the PDF or receipt in your own Google Drive or Dropbox" +
+      (existing ? ", or attach the file below." : ". Once saved, the file itself can be attached."),
   );
 
   const reference = text(draft.reference, asBill ? "e.g. INV-2041" : "");
@@ -857,6 +861,7 @@ export function renderInvoiceEditor(): void {
   }
 
   box.append(actions);
+  if (existing) box.append(attachmentsControl(documentOwner(existing.kind, existing.number), existing.number));
   host.append(box);
 }
 
@@ -957,7 +962,15 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
   else invoices.push(built);
 
   state.ledger = { ...state.ledger, invoices };
-  state.persistent = await savePart(state.ledger, "invoices");
+  // A document renumbered keeps its files.
+  const was = existing === undefined ? null : documentOwner(existing.kind, existing.number);
+  const now = documentOwner(built.kind, built.number);
+  if (was !== null && was.id !== now.id && attachmentsOf(state.ledger.attachments, was).length > 0) {
+    state.ledger = { ...state.ledger, attachments: moveAttachments(state.ledger.attachments ?? [], was, now) };
+    state.persistent = await saveLedger(state.ledger);
+  } else {
+    state.persistent = await savePart(state.ledger, "invoices");
+  }
   await record(
     "invoice",
     `${existing ? "Edited" : "Created"} ${built.number} — ${built.contact} ${formatAmount(built.total)}`,

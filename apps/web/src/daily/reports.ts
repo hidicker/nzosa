@@ -1,4 +1,5 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
+import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
 import { periodSaid, spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
@@ -534,6 +535,8 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const reversed = all.find((j) => j.reverses === journal.id && j.deleted === undefined);
     if (reversed !== undefined) card.append(note(`Reversed by the journal of ${reversed.date}.`));
     card.append(journalActions(journal, reversed !== undefined));
+    // The workings behind it: a spreadsheet, the accountant's letter.
+    if (journal.deleted === undefined) card.append(attachmentsControl({ kind: "journal", id: journal.id }, `the journal of ${journal.date}`));
     body.append(card);
   }
 }

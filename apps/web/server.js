@@ -217,6 +217,9 @@ async function readBody(request) {
   return Buffer.concat(chunks).toString("utf8");
 }
 
+/** The largest file that can be attached. */
+const ATTACHMENT_LIMIT = 10 * 1024 * 1024;
+
 /** A request this server cannot read: answered 400, not taken for its own fault. */
 class BadRequest extends Error {}
 
@@ -706,6 +709,49 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           send(response, 500, { error: `Windows would not set it up: ${String(error.stderr ?? error.message).trim()}` });
         }
         return;
+      }
+
+      // Files attached to documents, journals, contacts and register lines,
+      // kept beside the books in an attachments folder, one file an id. The
+      // name, type and what each belongs to are in the books themselves.
+      const attachmentMatch = /^\/api\/attachments\/([a-z0-9-]{8,64})$/.exec(path);
+      if (attachmentMatch) {
+        const folder = join(folderOf(current), "attachments");
+        const file = join(folder, attachmentMatch[1]);
+        if (request.method === "PUT") {
+          const chunks = [];
+          let size = 0;
+          // Read to the end even when it is too big, and keep none of it, so
+          // the answer reaches the page rather than a dropped connection.
+          for await (const chunk of request) {
+            size += chunk.length;
+            if (size <= ATTACHMENT_LIMIT) chunks.push(chunk);
+          }
+          if (size > ATTACHMENT_LIMIT) {
+            send(response, 413, { error: "a file of 10 MB or less" });
+            return;
+          }
+          mkdirSync(folder, { recursive: true });
+          writeFileSync(file, Buffer.concat(chunks));
+          process.stdout.write(`attached ${attachmentMatch[1]} (${size} bytes)
+`);
+          send(response, 200, { ok: true });
+          return;
+        }
+        if (request.method === "GET") {
+          if (!existsSync(file)) {
+            send(response, 404, { error: "no such file" });
+            return;
+          }
+          response.writeHead(200, { "content-type": "application/octet-stream", "cache-control": "no-store", ...NO_FRAMING });
+          response.end(readFileSync(file));
+          return;
+        }
+        if (request.method === "DELETE") {
+          rmSync(file, { force: true });
+          send(response, 200, { ok: true });
+          return;
+        }
       }
 
       if (path === "/api/ledger" && request.method === "GET") {

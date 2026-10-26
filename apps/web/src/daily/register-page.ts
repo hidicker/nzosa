@@ -1,4 +1,5 @@
 import { redraw } from "../app.js";
+import { attachmentsControl } from "./attachments-ui.js";
 import { bankLabel, banks, record, reclassify, reportEngine, saveEntities } from "../books.js";
 import { combobox } from "../combobox.js";
 import type { Combobox } from "../combobox.js";
@@ -9,6 +10,7 @@ import { save } from "../store.js";
 import { askOnPage, note, tellOnPage } from "../ui.js";
 import {
   accountId,
+  attachmentsOf,
   emptyEntityModel,
   isRegisterEntry,
   knownCodes,
@@ -330,6 +332,8 @@ function entryForm(account: string, existing: Transaction | undefined): HTMLElem
   actions.className = "migration-actions";
   actions.append(saveButton, cancel);
   box.append(row, coded, splitHost, said, actions);
+  // The receipt or voucher, kept with the line once it is in.
+  if (existing !== undefined) box.append(attachmentsControl({ kind: "line", id: existing.id }, existing.otherParty || existing.particulars || "this entry"));
   return box;
 }
 
@@ -462,7 +466,9 @@ export function renderRegister(): void {
     if (t.id === editing) tr.classList.add("register-editing");
     const parts = splits[t.id];
     const coded = parts !== undefined ? `Split ${parts.length} ways` : (engine?.codeOf(t) ?? "");
-    for (const text of [t.date, t.otherParty, [t.particulars, t.reference].filter(Boolean).join(" · "), coded || "Not coded"]) {
+    const files = attachmentsOf(state.ledger.attachments, { kind: "line", id: t.id }).length;
+    const filesWord = files === 0 ? "" : `${files} ${files === 1 ? "file" : "files"}`;
+    for (const text of [t.date, t.otherParty, [t.particulars, t.reference, filesWord].filter(Boolean).join(" · "), coded || "Not coded"]) {
       const td = document.createElement("td");
       td.textContent = text;
       tr.append(td);

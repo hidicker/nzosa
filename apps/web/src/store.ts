@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { CreditAllocation, PartCopy, PartOp } from "@nzosa/core";
+import type { Attachment, CreditAllocation, PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -368,6 +368,8 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /** Files attached to documents, journals, contacts and register lines: what each is. */
+  attachments?: Attachment[];
   /** Parts of credits -- credit notes, overpayments -- used against other documents. */
   creditAllocations?: CreditAllocation[];
   /**
@@ -861,6 +863,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     invoiceMatches: ledger.invoiceMatches ?? {},
     creditNotes: ledger.creditNotes ?? {},
     ...(ledger.creditAllocations && ledger.creditAllocations.length > 0 ? { creditAllocations: ledger.creditAllocations } : {}),
+    ...(ledger.attachments && ledger.attachments.length > 0 ? { attachments: ledger.attachments } : {}),
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

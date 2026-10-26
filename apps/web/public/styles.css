@@ -4609,3 +4609,10 @@ select.needs-choice {
 .attachments-list { list-style: none; margin: 6px 0 0; padding: 0; display: flex; flex-direction: column; gap: 4px; }
 .attachments-size { color: var(--muted); }
 .attachment-image { max-width: 100%; max-height: 70vh; display: block; margin: 0 auto 12px; }
+
+/* The message at the foot of an invoice, and the saved ones to choose from. */
+.invoice-message-box { margin: 12px 0; display: flex; flex-direction: column; gap: 6px; }
+.invoice-message-box label { display: flex; flex-direction: column; gap: 4px; }
+.invoice-message-box label > span { color: var(--muted); font-size: 0.85rem; }
+.invoice-message { width: 100%; box-sizing: border-box; }
+.invoice-message-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }

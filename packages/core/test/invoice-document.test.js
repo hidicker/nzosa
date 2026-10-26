@@ -152,3 +152,18 @@ test("an Australian tax invoice shows the supplier's ABN", () => {
   assert.ok(html.includes("Tax invoice"));
   assert.ok(html.includes('lang="en-AU"'));
 });
+
+test("the invoice's own message is at its foot and in its email; none adds nothing", async () => {
+  const { invoiceDocument, invoiceEmail } = await import("../dist/index.js");
+  const inv = {
+    number: "INV-9", kind: "sales", contact: "A", reference: "", issued: "2026-10-26", due: null, total: 1150, tax: 150, paid: 0, outstanding: 1150,
+    currency: "NZD", status: "", lines: [{ description: "x", accountCode: "200", taxType: "15% GST on Income", net: 1000, tax: 150, gross: 1150 }],
+    message: "Thank you!\nPay within 20 days.",
+  };
+  const supplier = { name: "Kea" };
+  assert.ok(invoiceDocument(inv, supplier).includes("Pay within 20 days."));
+  assert.ok(invoiceEmail(inv, supplier).body.includes("Pay within 20 days."));
+  assert.ok(!invoiceDocument({ ...inv, message: "" }, supplier).includes('class="note"'));
+  // A note given for this one document wins over the invoice's own.
+  assert.ok(invoiceDocument(inv, supplier, { note: "Other words" }).includes("Other words"));
+});

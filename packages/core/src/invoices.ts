@@ -108,10 +108,12 @@ export interface Invoice {
   email?: string;
   /**
    * A link to the document this one came from -- the bill as a PDF in the
-   * owner's Google Drive or Dropbox, say. Only the link is kept: the books
-   * hold no files, and the file stays in the owner's own storage.
+   * owner's Google Drive or Dropbox, say. The file itself can be attached
+   * instead (attachments.ts).
    */
   documentLink?: string;
+  /** Words at the foot of the invoice and in its email: terms, a thank you. */
+  message?: string;
 }
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */

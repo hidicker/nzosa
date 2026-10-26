@@ -174,7 +174,9 @@ export type EventKind =
   /** Credit used against other documents, whole. */
   | "creditAllocations"
   /** What files are attached to what, whole. `id` is what they belong to. */
-  | "attachments";
+  | "attachments"
+  /** Saved invoice messages, whole. */
+  | "invoiceMessages";
 
 /** A register line as a change keeps it: the line, its coding and its split. */
 export interface RegisterSnapshot {
@@ -562,6 +564,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return ledger;
     case "varianceNote":
       return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
+    case "invoiceMessages":
+      return { ...ledger, invoiceMessages: (event.before ?? []) as NonNullable<StoredLedger["invoiceMessages"]> };
     case "attachments":
       return { ...ledger, attachments: (event.before ?? []) as NonNullable<StoredLedger["attachments"]> };
     case "creditAllocations":
@@ -677,6 +681,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   register: "Register",
   creditAllocations: "Credit used",
   attachments: "Files",
+  invoiceMessages: "Invoice messages",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

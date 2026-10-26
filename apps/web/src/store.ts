@@ -95,6 +95,15 @@ export interface PayrollData {
   leaveSettings?: LeaveSettings[] | undefined;
 }
 
+/** A message kept to put at the foot of invoices. */
+export interface InvoiceMessage {
+  id: string;
+  name: string;
+  text: string;
+  /** What each new invoice starts with. */
+  isDefault?: boolean;
+}
+
 /** A filed return as kept: whose it is, and where it was read from. */
 /** A myIR record, and whose it is: an entity's account, or an owner's IR3. */
 export type StoredIrdRecord = IrdRecord & {
@@ -368,6 +377,8 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /** Messages for the foot of an invoice, to choose from; one may start each new invoice. */
+  invoiceMessages?: InvoiceMessage[];
   /** Files attached to documents, journals, contacts and register lines: what each is. */
   attachments?: Attachment[];
   /** Parts of credits -- credit notes, overpayments -- used against other documents. */
@@ -864,6 +875,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     creditNotes: ledger.creditNotes ?? {},
     ...(ledger.creditAllocations && ledger.creditAllocations.length > 0 ? { creditAllocations: ledger.creditAllocations } : {}),
     ...(ledger.attachments && ledger.attachments.length > 0 ? { attachments: ledger.attachments } : {}),
+    ...(ledger.invoiceMessages && ledger.invoiceMessages.length > 0 ? { invoiceMessages: ledger.invoiceMessages } : {}),
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

@@ -254,7 +254,7 @@ export function invoiceDocument(
   </table>
 
   ${supplier.payTo ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
-  ${options.note ? `<div class="note">${asLines(options.note)}</div>` : ""}
+  ${(options.note ?? invoice.message ?? "").trim() !== "" ? `<div class="note">${asLines(options.note ?? invoice.message ?? "")}</div>` : ""}
   ${
     disagrees
       ? `<div class="check">The lines come to ${formatAmount(summed)} and the invoice total is recorded as ${formatAmount(invoice.total)}. Check this before sending.</div>`
@@ -295,7 +295,8 @@ export function invoiceEmail(
   if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
   const payTo = (supplier.payTo ?? "").trim();
   if (payTo !== "") lines.push("", `Payment details: ${payTo}`);
-  if (options.note !== undefined && options.note.trim() !== "") lines.push("", options.note.trim());
+  const note = options.note ?? invoice.message;
+  if (note !== undefined && note.trim() !== "") lines.push("", note.trim());
   lines.push("", "Thank you,", supplier.name);
 
   return {

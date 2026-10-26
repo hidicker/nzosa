@@ -1,6 +1,7 @@
 import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
+import type { InvoiceMessage } from "../store.js";
 import { redraw } from "../app.js";
 import {
   bankLabel,
@@ -21,7 +22,7 @@ import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
 import { save as saveLedger, savePart } from "../store.js";
-import { amountCell, askOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
+import { amountCell, askOnPage, askTextOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   accountEntityKey,
   applySalesTax,
@@ -203,6 +204,14 @@ function copyOf(from: Invoice): Invoice {
     outstanding: 0,
     lines: from.lines.map((l) => ({ ...l })),
   };
+}
+
+/** Saved invoice messages, whole, as one change on History. */
+async function keepInvoiceMessages(next: InvoiceMessage[], what: string): Promise<void> {
+  const before = state.ledger.invoiceMessages ?? [];
+  state.ledger = { ...state.ledger, invoiceMessages: next };
+  state.persistent = await saveLedger(state.ledger);
+  await record("invoiceMessages", what, before, next);
 }
 
 /** Cents from what someone typed, tolerating commas, spaces and a $ sign. */
@@ -792,6 +801,80 @@ export function renderInvoiceEditor(): void {
   });
   box.append(addRow, totals);
 
+  // --- the message at the foot ---------------------------------------------
+  // Terms, a thank you, bank details for this customer: kept on the invoice,
+  // printed at its foot and put in its email. Saved ones to choose from, one
+  // of them what a new invoice starts with.
+  const message = document.createElement("textarea");
+  message.rows = 2;
+  message.className = "invoice-message";
+  const savedMessages = (): InvoiceMessage[] => state.ledger.invoiceMessages ?? [];
+  message.value = draft.message ?? (existing === undefined && copiedFrom === null ? (savedMessages().find((m) => m.isDefault)?.text ?? "") : "");
+  if (!asBill) {
+    const messageBox = document.createElement("div");
+    messageBox.className = "invoice-message-box";
+    const label = document.createElement("label");
+    const word = document.createElement("span");
+    word.textContent = "Message on the invoice";
+    label.append(word, message);
+    const saved = document.createElement("select");
+    saved.setAttribute("aria-label", "Saved messages");
+    const fillSaved = (): void => {
+      saved.textContent = "";
+      const first = document.createElement("option");
+      first.value = "";
+      first.textContent = savedMessages().length === 0 ? "No saved messages yet" : "Use a saved message";
+      saved.append(first);
+      for (const m of savedMessages()) {
+        const option = document.createElement("option");
+        option.value = m.id;
+        option.textContent = m.name + (m.isDefault === true ? " (default)" : "");
+        saved.append(option);
+      }
+    };
+    fillSaved();
+    saved.addEventListener("change", () => {
+      const chosen = savedMessages().find((m) => m.id === saved.value);
+      if (chosen !== undefined) message.value = chosen.text;
+    });
+    const keepMessage = document.createElement("button");
+    keepMessage.type = "button";
+    keepMessage.className = "small";
+    keepMessage.textContent = "Save this message";
+    keepMessage.addEventListener("click", async () => {
+      const text = message.value.trim();
+      if (text === "") {
+        await tellOnPage("Write the message first, then save it to use again.");
+        return;
+      }
+      const suggested = (text.split(/\r?\n/)[0] ?? "").slice(0, 40);
+      const name = await askTextOnPage("A name for this message, to choose it by.", suggested, "Save");
+      if (name === null || name.trim() === "") return;
+      await keepInvoiceMessages([...savedMessages(), { id: `msg-${Date.now().toString(36)}`, name: name.trim(), text }], `Saved the invoice message "${name.trim()}"`);
+      fillSaved();
+    });
+    const makeDefault = document.createElement("button");
+    makeDefault.type = "button";
+    makeDefault.className = "small";
+    makeDefault.textContent = "Start new invoices with it";
+    makeDefault.title = "The saved message chosen beside it becomes what each new invoice starts with";
+    makeDefault.addEventListener("click", async () => {
+      const chosen = savedMessages().find((m) => m.id === saved.value);
+      if (chosen === undefined) {
+        await tellOnPage("Choose a saved message first; or save this one, then choose it.");
+        return;
+      }
+      await keepInvoiceMessages(savedMessages().map((m) => ({ ...m, isDefault: m.id === chosen.id })), `New invoices start with "${chosen.name}"`);
+      fillSaved();
+      saved.value = chosen.id;
+    });
+    const tools = document.createElement("div");
+    tools.className = "invoice-message-tools";
+    tools.append(saved, keepMessage, makeDefault);
+    messageBox.append(label, tools);
+    box.append(messageBox);
+  }
+
   // --- actions -------------------------------------------------------------
   const actions = document.createElement("div");
   actions.className = "invoice-actions";
@@ -802,7 +885,8 @@ export function renderInvoiceEditor(): void {
     const total = lines.reduce((sum, l) => sum + l.gross, 0);
     const tax = lines.reduce((sum, l) => sum + l.tax, 0);
     const paidCents = parseMoney(paid.value);
-    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, ...rest } = draft;
+    const { entityId: _was, email: _email, documentLink: _link, salesTaxRateId: _rate, message: _message, ...rest } = draft;
+    const messageValue = asBill ? "" : message.value.trim();
     const linkValue = cleanDocumentLink(documentLink.value);
     const emailValue = asBill ? "" : email.value.trim();
     return {
@@ -825,6 +909,7 @@ export function renderInvoiceEditor(): void {
       ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
       ...(emailValue !== "" ? { email: emailValue } : {}),
       ...(linkValue !== null ? { documentLink: linkValue } : {}),
+      ...(messageValue !== "" ? { message: messageValue } : {}),
       ...(asBill && entity.value !== ""
         ? { entityId: entity.value }
         : draft.entityId !== undefined

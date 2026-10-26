@@ -38,6 +38,28 @@ export function stockAdjustment(
   ];
 }
 
+/** What is on hand of each product as at a date: after the last movement on or before it. */
+export function stockAsAt(history: ReadonlyMap<string, readonly StockMove[]>, date: string): Map<string, StockOnHand> {
+  const out = new Map<string, StockOnHand>();
+  for (const [id, moves] of history) {
+    const last = [...moves].reverse().find((m) => m.date <= date);
+    if (last !== undefined) out.set(id, { quantity: last.onHand, value: last.worth });
+  }
+  return out;
+}
+
+/** Stocked products at or below their reorder point, the furthest below first. */
+export function lowStock<T extends StockItemLike & { reorderAt?: number; active?: boolean }>(
+  items: readonly T[],
+  onHand: ReadonlyMap<string, StockOnHand>,
+): { item: T; onHand: number; reorderAt: number }[] {
+  return items
+    .filter((i) => i.kind === "product" && i.active !== false && i.reorderAt !== undefined)
+    .map((item) => ({ item, onHand: onHand.get(item.id)?.quantity ?? 0, reorderAt: item.reorderAt ?? 0 }))
+    .filter((x) => x.onHand <= x.reorderAt)
+    .sort((a, b) => a.onHand - a.reorderAt - (b.onHand - b.reorderAt));
+}
+
 /**
  * Stock tracked line by line: the perpetual method, alongside the counts.
  *
@@ -69,6 +91,23 @@ export interface StockOnHand {
   value: Cents;
 }
 
+/** One movement of a stocked product, and where it left what is on hand. */
+export interface StockMove {
+  date: string;
+  /** What moved it, in words. */
+  what: "Bought" | "Sent back" | "Sold" | "Returned" | "Counted";
+  /** The invoice or bill, where one moved it. */
+  number: string;
+  /** The change: in positive, out negative. For a count, what it changed by. */
+  quantity: number;
+  /** What it moved, at cost. */
+  value: Cents;
+  /** On hand after it. */
+  onHand: number;
+  /** What that is worth after it. */
+  worth: Cents;
+}
+
 export interface StockCostJournal {
   /** `<invoice number>:cost`. */
   transactionId: string;
@@ -87,10 +126,10 @@ export function trackStock(
   items: readonly StockItemLike[],
   documents: readonly StockDocumentLike[],
   counts: readonly StockCount[],
-): { onHand: Map<string, StockOnHand>; costs: StockCostJournal[] } {
+): { onHand: Map<string, StockOnHand>; costs: StockCostJournal[]; history: Map<string, StockMove[]> } {
   const stocked = items.filter((i) => i.kind === "product" && i.unitCost !== undefined);
   type Move =
-    | { date: string; order: number; kind: "in" | "out"; item: StockItemLike; quantity: number; net: Cents; number: string }
+    | { date: string; order: number; kind: "in" | "out"; item: StockItemLike; quantity: number; net: Cents; number: string; document: string }
     | { date: string; order: number; kind: "count"; item: StockItemLike; quantity: number; unitCost: Cents };
   const moves: Move[] = [];
   for (const doc of documents) {
@@ -109,6 +148,7 @@ export function trackStock(
         quantity,
         net: Math.abs(line.net),
         number: doc.kind === "sales" ? doc.number : "",
+        document: doc.number,
       });
     }
   }
@@ -122,8 +162,10 @@ export function trackStock(
 
   const onHand = new Map<string, StockOnHand>();
   const costs = new Map<string, StockCostJournal>();
+  const history = new Map<string, StockMove[]>();
   for (const move of moves) {
     const held = onHand.get(move.item.id) ?? { quantity: 0, value: 0 };
+    const before = { ...held };
     if (move.kind === "count") {
       held.quantity = move.quantity;
       held.value = Math.round(move.quantity * move.unitCost);
@@ -150,6 +192,19 @@ export function trackStock(
       }
     }
     onHand.set(move.item.id, held);
+    const what: StockMove["what"] =
+      move.kind === "count" ? "Counted" : move.number === "" ? (move.kind === "in" ? "Bought" : "Sent back") : move.kind === "out" ? "Sold" : "Returned";
+    const list = history.get(move.item.id) ?? [];
+    list.push({
+      date: move.date,
+      what,
+      number: move.kind === "count" ? "" : move.document,
+      quantity: held.quantity - before.quantity,
+      value: held.value - before.value,
+      onHand: held.quantity,
+      worth: held.value,
+    });
+    history.set(move.item.id, list);
   }
-  return { onHand, costs: [...costs.values()].filter((j) => j.cost !== 0) };
+  return { onHand, costs: [...costs.values()].filter((j) => j.cost !== 0), history };
 }

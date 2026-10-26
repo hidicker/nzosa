@@ -4,12 +4,71 @@ import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
-import { itemKey, parseAmount, stockAdjustment, stockValue } from "@nzosa/core";
-import type { Item, StockCount } from "@nzosa/core";
+import { itemKey, lowStock, parseAmount, stockAdjustment, stockAsAt, stockValue } from "@nzosa/core";
+import type { Item, StockCount, StockMove } from "@nzosa/core";
 
 /** Products and services: a price list that fills in an invoice line from a name. */
 
 let editing: string | null = null;
+/** The day stock is shown as at, or null for now. */
+let stockDate: string | null = null;
+
+const round = (n: number): number => Math.round(n * 100) / 100;
+
+/** A product's every movement in and out, with what was on hand after each. */
+function openMovements(item: Item, moves: readonly StockMove[]): void {
+  const box = document.createElement("dialog");
+  box.className = "ask-on-page payment-file-view";
+  const heading = document.createElement("h3");
+  heading.textContent = `${item.name}: movements`;
+  const table = document.createElement("table");
+  table.className = "report-table payment-file-table";
+  table.innerHTML =
+    '<thead><tr><th>Date</th><th>What</th><th>Document</th><th style="text-align:right">In</th><th style="text-align:right">Out</th><th style="text-align:right">Cost</th><th style="text-align:right">On hand</th><th style="text-align:right">Worth</th></tr></thead>';
+  const tbody = document.createElement("tbody");
+  for (const m of [...moves].reverse()) {
+    const tr = document.createElement("tr");
+    for (const [text, right] of [
+      [m.date, false],
+      [m.what, false],
+      [m.number, false],
+      [m.quantity > 0 ? String(round(m.quantity)) : "", true],
+      [m.quantity < 0 ? String(round(-m.quantity)) : "", true],
+      [booksMoney(Math.abs(m.value)), true],
+      [String(round(m.onHand)), true],
+      [booksMoney(m.worth), true],
+    ] as const) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (right) td.className = "report-amount";
+      tr.append(td);
+    }
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  const scroll = document.createElement("div");
+  scroll.className = "move-lines-scroll";
+  scroll.append(table);
+  const actions = document.createElement("div");
+  actions.className = "ask-on-page-actions";
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "primary";
+  close.textContent = "Close";
+  actions.append(close);
+  box.append(heading, scroll, actions);
+  const finish = (): void => {
+    box.close();
+    box.remove();
+  };
+  close.addEventListener("click", finish);
+  box.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finish();
+  });
+  document.body.append(box);
+  box.showModal();
+}
 
 const held = (): Item[] => state.ledger.items ?? [];
 
@@ -64,6 +123,11 @@ function form(existing: Item | null): HTMLElement {
   cost.inputMode = "decimal";
   cost.placeholder = "Not kept in stock";
   cost.value = existing?.unitCost === undefined ? "" : (existing.unitCost / 100).toFixed(2);
+  const reorder = document.createElement("input");
+  reorder.type = "text";
+  reorder.inputMode = "decimal";
+  reorder.placeholder = "None";
+  reorder.value = existing?.reorderAt === undefined ? "" : String(existing.reorderAt);
   const account = document.createElement("select");
   const none = document.createElement("option");
   none.value = "";
@@ -106,8 +170,14 @@ function form(existing: Item | null): HTMLElement {
       problem.textContent = "A cost as a number, such as 4.50.";
       return;
     }
+    const reorderAt = reorder.value.trim() === "" ? null : Number(reorder.value.trim());
+    if (reorderAt !== null && (!Number.isFinite(reorderAt) || reorderAt < 0)) {
+      problem.textContent = "A reorder point as a number of units, such as 10.";
+      return;
+    }
     const fields = {
       ...(unit !== null && kind.value === "product" ? { unitCost: unit } : {}),
+      ...(reorderAt !== null && kind.value === "product" ? { reorderAt } : {}),
       name: said,
       kind: kind.value as Item["kind"],
       ...(description.value.trim() !== "" ? { description: description.value.trim() } : {}),
@@ -146,6 +216,7 @@ function form(existing: Item | null): HTMLElement {
     label("Sale coded to", account),
     ...(booksCountry().id === "us" ? [label("Charged sales tax", taxable)] : []),
     label(noSalesTax() ? "Cost a unit, for products kept in stock" : "Cost a unit before GST, for products kept in stock", cost),
+    label("Reorder when this many or fewer are on hand", reorder),
     problem,
     row,
   );
@@ -256,21 +327,47 @@ function stockSection(body: HTMLElement): void {
     body.append(note("Give a product a cost a unit to keep it in stock and count it here."));
     return;
   }
-  // What is on hand now, from the bills, invoices and counts.
+  // What is on hand, from the bills, invoices and counts: now, or as at a day.
   const tracked = stockTracked();
   if (tracked !== null) {
+    const now = new Date().toLocaleDateString("en-CA");
+    const low = lowStock(stocked, tracked.onHand);
+    if (low.length > 0) {
+      const warn = document.createElement("p");
+      warn.className = "variance-note warn";
+      warn.textContent =
+        `Low on ${low.length === 1 ? "one product" : `${low.length} products`}: ` +
+        low.map((x) => `${x.item.name} (${round(x.onHand)} on hand, reorder at ${round(x.reorderAt)})`).join("; ") +
+        ".";
+      body.append(warn);
+    }
+    const asAtWrap = document.createElement("label");
+    asAtWrap.className = "stock-as-at";
+    const asAt = document.createElement("input");
+    asAt.type = "date";
+    asAt.value = stockDate ?? now;
+    asAt.max = now;
+    asAt.addEventListener("change", () => {
+      stockDate = asAt.value === "" || asAt.value >= now ? null : asAt.value;
+      redraw("items");
+    });
+    asAtWrap.append(Object.assign(document.createElement("span"), { textContent: "Stock on hand as at" }), asAt);
+    body.append(asAtWrap);
+    const shown = stockDate === null ? tracked.onHand : stockAsAt(tracked.history, stockDate);
     const table = document.createElement("table");
     table.className = "report-table owner-table";
-    table.innerHTML = "<thead><tr><th>Product</th><th>On hand</th><th>Average cost</th><th>Value</th></tr></thead>";
+    table.innerHTML = "<thead><tr><th>Product</th><th>On hand</th><th>Reorder at</th><th>Average cost</th><th>Value</th><th></th></tr></thead>";
     const tbody = document.createElement("tbody");
     let total = 0;
     for (const item of stocked) {
-      const held = tracked.onHand.get(item.id) ?? { quantity: 0, value: 0 };
+      const held = shown.get(item.id) ?? { quantity: 0, value: 0 };
       total += held.value;
       const tr = document.createElement("tr");
+      if (stockDate === null && item.reorderAt !== undefined && held.quantity <= item.reorderAt) tr.className = "stock-low";
       for (const [text, cls] of [
         [item.name, "report-name"],
-        [String(Math.round(held.quantity * 100) / 100), "report-amount"],
+        [String(round(held.quantity)), "report-amount"],
+        [item.reorderAt === undefined ? "" : String(round(item.reorderAt)), "report-amount"],
         [held.quantity > 0 ? booksMoney(Math.round(held.value / held.quantity)) : booksMoney(item.unitCost ?? 0), "report-amount"],
         [booksMoney(held.value), "report-amount"],
       ] as const) {
@@ -279,15 +376,24 @@ function stockSection(body: HTMLElement): void {
         td.textContent = text;
         tr.append(td);
       }
+      const cell = document.createElement("td");
+      const moves = document.createElement("button");
+      moves.type = "button";
+      moves.className = "small";
+      moves.textContent = "Movements";
+      moves.disabled = (tracked.history.get(item.id) ?? []).length === 0;
+      moves.addEventListener("click", () => openMovements(item, tracked.history.get(item.id) ?? []));
+      cell.append(moves);
+      tr.append(cell);
       tbody.append(tr);
     }
     const foot = document.createElement("tr");
     foot.className = "report-total";
-    foot.innerHTML = '<td class="report-name">Total</td><td></td><td></td>';
+    foot.innerHTML = '<td class="report-name">Total</td><td></td><td></td><td></td>';
     const sum = document.createElement("td");
     sum.className = "report-amount";
     sum.textContent = booksMoney(total);
-    foot.append(sum);
+    foot.append(sum, document.createElement("td"));
     tbody.append(foot);
     table.append(tbody);
     body.append(table);

@@ -4622,3 +4622,7 @@ select.needs-choice {
 .wording-section > summary { font-weight: 600; cursor: pointer; }
 .wording-subject, .wording-body { width: 100%; box-sizing: border-box; margin-top: 6px; font: inherit; }
 .statement-done { color: var(--muted); }
+
+/* Stock: as at a day, and products at or below their reorder point. */
+.stock-as-at { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 0.9rem; }
+.stock-low td { color: var(--warn, #a15c00); font-weight: 600; }

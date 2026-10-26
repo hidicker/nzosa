@@ -50,3 +50,30 @@ test("the lines with an amount and no account", async () => {
     [300, 20],
   );
 });
+
+test("each product's movements, with what is on hand and its worth after each", async () => {
+  const { trackStock, stockAsAt, lowStock } = await import("../dist/index.js");
+  const items = [
+    { id: "beans", name: "Beans 1kg", kind: "product", unitCost: 2_000, reorderAt: 5 },
+    { id: "cups", name: "Cups", kind: "product", unitCost: 50, reorderAt: 10 },
+    { id: "tea", name: "Tea", kind: "product", unitCost: 100 },
+  ];
+  const docs = [
+    { number: "BILL-1", kind: "purchase", issued: "2026-05-01", credit: false, lines: [{ itemCode: "beans", quantity: 10, net: 20_000, description: "" }, { itemCode: "Cups", quantity: 100, net: 5_000, description: "" }] },
+    { number: "INV-1", kind: "sales", issued: "2026-05-10", credit: false, lines: [{ itemCode: "beans", quantity: 6, net: 36_000, description: "" }] },
+    { number: "CN-1", kind: "sales", issued: "2026-05-12", credit: true, lines: [{ itemCode: "beans", quantity: 1, net: 6_000, description: "" }] },
+  ];
+  const counts = [{ id: "c1", date: "2026-05-31", lines: [{ itemId: "cups", quantity: 8, unitCost: 50 }] }];
+  const { history, onHand } = trackStock(items, docs, counts);
+  assert.deepEqual(history.get("beans").map((m) => [m.date, m.what, m.number, m.quantity, m.value, m.onHand, m.worth]), [
+    ["2026-05-01", "Bought", "BILL-1", 10, 20_000, 10, 20_000],
+    ["2026-05-10", "Sold", "INV-1", -6, -12_000, 4, 8_000],
+    ["2026-05-12", "Returned", "CN-1", 1, 2_000, 5, 10_000],
+  ]);
+  assert.deepEqual(history.get("cups").map((m) => [m.what, m.quantity, m.onHand]), [["Bought", 100, 100], ["Counted", -92, 8]]);
+  // As at a date: after the last movement on or before it.
+  assert.deepEqual(stockAsAt(history, "2026-05-11").get("beans"), { quantity: 4, value: 8_000 });
+  assert.equal(stockAsAt(history, "2026-04-30").get("beans"), undefined);
+  // Low: at or below the reorder point, furthest below first; none set, never low.
+  assert.deepEqual(lowStock(items, onHand).map((x) => [x.item.id, x.onHand, x.reorderAt]), [["cups", 8, 10], ["beans", 5, 5]]);
+});

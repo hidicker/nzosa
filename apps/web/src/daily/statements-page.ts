@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { bankLabel, banks, record } from "../books.js";
-import { booksMoney } from "../country.js";
+import { booksMoney, booksCurrency } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { note } from "../ui.js";
@@ -144,7 +144,7 @@ export function renderStatements(): void {
 
   const tableOf = (): Transaction[] => open.filter((t) => ticked.has(t.id));
   function paintFigures(): void {
-    const parsed = parseAmount(balanceText.trim() === "" ? "0" : balanceText, "USD");
+    const parsed = parseAmount(balanceText.trim() === "" ? "0" : balanceText, booksCurrency());
     const f = reconciliationFigures(parsed ?? 0, owed, beginningBalance(state.ledger.transactions, done(), account, opening(account)), tableOf());
     const set = (id: string, cents: number): void => {
       const el = document.getElementById(id);
@@ -222,7 +222,7 @@ export function renderStatements(): void {
   }
 
   finish.addEventListener("click", () => {
-    const parsed = parseAmount(balanceText, "USD");
+    const parsed = parseAmount(balanceText, booksCurrency());
     if (parsed === null) return;
     const made: BankReconciliation = {
       id: `${account}-${statementDate}-${done().length + 1}`,

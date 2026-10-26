@@ -17,7 +17,7 @@ import {
 } from "@nzosa/core";
 import type { Cents, Entity, Ir9Class, Ir9Inputs } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * The IR9: a club or society's income tax return, worked out from the books in
@@ -71,7 +71,7 @@ function dollarsBox(cents: number | undefined, onChange: (c: Cents | undefined) 
   box.placeholder = "0.00";
   box.value = cents === undefined || cents === 0 ? "" : (cents / 100).toFixed(2);
   box.addEventListener("change", () => {
-    const parsed = parseAmount(box.value);
+    const parsed = parseAmount(box.value, booksCurrency());
     onChange(parsed === null || parsed === 0 ? undefined : (parsed as Cents));
   });
   return box;

@@ -1,6 +1,6 @@
 import { redraw, showPage } from "../app.js";
 import { accountsForEditing, importedAssetProceeds, reclassify, record } from "../books.js";
-import { booksCountry, booksMoney } from "../country.js";
+import { booksCountry, booksMoney, booksCurrency } from "../country.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
@@ -230,7 +230,7 @@ async function askProceeds(number: string, name: string, current: Cents): Promis
     (current / 100).toFixed(2),
   );
   if (amount === null) return;
-  const parsed = parseAmount(amount.trim());
+  const parsed = parseAmount(amount.trim(), booksCurrency());
   if (parsed === null) {
     await tellOnPage(`"${amount}" is not an amount.`);
     return;
@@ -325,7 +325,7 @@ function assetFromDraft(draft: AssetDraft): { asset: FixedAsset; proceeds: Cents
   const problems: string[] = [];
   const amount = (text: string, what: string): Cents | null => {
     if (text.trim() === "") return null;
-    const parsed = parseAmount(text.trim());
+    const parsed = parseAmount(text.trim(), booksCurrency());
     if (parsed === null) problems.push(`${what}: that is not an amount`);
     return parsed;
   };

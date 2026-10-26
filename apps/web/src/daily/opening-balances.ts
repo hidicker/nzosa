@@ -16,7 +16,7 @@ import { checkDailyBalances, dayAfter, daysBetween, formatAmount, openingBalance
 import type { BalanceCheck } from "@nzosa/core";
 import { diagnoseAccountDailyBalances, journalLinesFor, openBankReconcileReport } from "./balance-diagnostics.js";
 import { taxYearEndSaid, taxYearEndShort, taxYearOf, taxYearStart, yearEnd } from "../tax-year.js";
-import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, booksCurrency } from "../country.js";
 
 /**
  * Where each year started.
@@ -540,7 +540,7 @@ function workingFor(draft: BankDraft, row: BankDraft["rows"][number]): string {
   if (row.amount.trim() === "" || !/^\d{4}-\d{2}-\d{2}$/.test(draft.on) || !/^\d{4}-\d{2}-\d{2}$/.test(draft.asAt)) {
     return "";
   }
-  const entered = parseAmount(row.amount.trim());
+  const entered = parseAmount(row.amount.trim(), booksCurrency());
   if (entered === null) return "Not an amount.";
   const balance = row.owing ? -Math.abs(entered) : Math.abs(entered);
   if (draft.on === draft.asAt) return "";
@@ -885,7 +885,7 @@ async function saveBankDraft(draft: BankDraft, said: HTMLElement): Promise<boole
   const entered = new Set<string>();
   for (const row of draft.rows) {
     if (row.amount.trim() === "") continue;
-    const cents = parseAmount(row.amount.trim());
+    const cents = parseAmount(row.amount.trim(), booksCurrency());
     if (cents === null) {
       said.textContent = `"${row.amount}" for ${row.label} is not an amount.`;
       return false;
@@ -1133,7 +1133,7 @@ async function openingRow(code: string, cents: Cents, targetAsAt?: IsoDate): Pro
     (cents / 100).toFixed(2),
   );
   if (amount === null) return;
-  const parsed = parseAmount(amount.trim());
+  const parsed = parseAmount(amount.trim(), booksCurrency());
   if (parsed === null) {
     await tellOnPage(`"${amount}" is not an amount.`);
     return;
@@ -1740,8 +1740,8 @@ function readOpeningDraft(draft: OpeningDraft): { accounts: Record<string, Cents
   draft.lines.forEach((line, index) => {
     const n = index + 1;
     if (line.key === "" && line.debit.trim() === "" && line.credit.trim() === "") return;
-    const debit = line.debit.trim() === "" ? 0 : parseAmount(line.debit.trim());
-    const credit = line.credit.trim() === "" ? 0 : parseAmount(line.credit.trim());
+    const debit = line.debit.trim() === "" ? 0 : parseAmount(line.debit.trim(), booksCurrency());
+    const credit = line.credit.trim() === "" ? 0 : parseAmount(line.credit.trim(), booksCurrency());
     if (debit === null || credit === null) {
       problems.push(`line ${n}: that is not an amount`);
       return;
@@ -1871,7 +1871,7 @@ function openingEditor(draft: OpeningDraft): HTMLElement {
     if (total === 0 || key === "") return;
     const existing = draft.lines.find((l) => l.key === key);
     const line = existing ?? { key, label: balanceTo.value, debit: "", credit: "" };
-    const current = (parseAmount(line.debit.trim() || "0") ?? 0) - (parseAmount(line.credit.trim() || "0") ?? 0);
+    const current = (parseAmount(line.debit.trim() || "0", booksCurrency()) ?? 0) - (parseAmount(line.credit.trim() || "0", booksCurrency()) ?? 0);
     const wanted = current - total;
     line.debit = wanted > 0 ? (wanted / 100).toFixed(2) : "";
     line.credit = wanted < 0 ? (-wanted / 100).toFixed(2) : "";

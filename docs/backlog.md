@@ -196,3 +196,9 @@ works).
   that could be found. Add each once its guide is in hand; until then an ASB
   or Kiwibank customer could try the ANZ file,
   but that is untested. 25 October 2026.
+- **Undoing a merge of two accounts.** Undoing a rename now renames the account
+  back, carrying everything with it. Undoing a merge only puts the merged
+  account back in the chart: its codings, rules and documents stay on the
+  account it was merged into, because once merged they cannot be told apart.
+  A merge would need to record which items it moved to be undone fully.
+  26 October 2026.

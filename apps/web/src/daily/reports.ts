@@ -126,7 +126,7 @@ import type {
   Transaction,
 } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearEndShort, taxYearStart, taxYearStartSaid, depreciationRules, monthsOfTaxYear } from "../tax-year.js";
-import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, taxTypeLabel } from "../country.js";
+import { booksCountry, booksLocale, moneyPlaces, booksMoney, noSalesTax, taxTypeLabel, booksCurrency } from "../country.js";
 import { type DownloadKind, hasDownload } from "./report-downloads.js";
 import { balanceSheetLabel } from "./balance-sheet-label.js";
 
@@ -713,8 +713,8 @@ function journalEditor(draft: JournalDraft): HTMLElement {
       const hasCredit = line.credit.trim() !== "";
       if (code === "" && !hasDebit && !hasCredit) return;
 
-      const debit = hasDebit ? parseAmount(line.debit.trim()) : 0;
-      const credit = hasCredit ? parseAmount(line.credit.trim()) : 0;
+      const debit = hasDebit ? parseAmount(line.debit.trim(), booksCurrency()) : 0;
+      const credit = hasCredit ? parseAmount(line.credit.trim(), booksCurrency()) : 0;
       if (debit === null || credit === null) {
         problems.push(`line ${n}: that is not an amount`);
         return;
@@ -768,7 +768,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
     // From what is typed, not from the lines that are already complete: amounts
     // usually go in before the accounts, and totals that ignored them read
     // "balanced" over a journal that was nothing of the kind.
-    const typed = (text: string): Cents => Math.abs(parseAmount(text.trim()) ?? 0);
+    const typed = (text: string): Cents => Math.abs(parseAmount(text.trim(), booksCurrency()) ?? 0);
     const debits = draft.lines.reduce((sum, l) => sum + typed(l.debit), 0);
     const credits = draft.lines.reduce((sum, l) => sum + typed(l.credit), 0);
     const difference = debits - credits;
@@ -1934,7 +1934,7 @@ function statementFromDraft(draft: AgentDraft): { statement: AgentStatement; pro
   const problems: string[] = [];
   const amount = (typed: string, what: string): Cents => {
     if (typed.trim() === "") return 0;
-    const parsed = parseAmount(typed.trim());
+    const parsed = parseAmount(typed.trim(), booksCurrency());
     if (parsed === null) {
       problems.push(`${what}: that is not an amount`);
       return 0;
@@ -3288,7 +3288,7 @@ export function renderIr3Details(body: HTMLElement, owner: string, year: number)
       [carried, "residentialBroughtForward", "Deductions brought forward"],
     ] as const) {
       if (input.value.trim() === "") continue;
-      const amount = parseAmount(input.value);
+      const amount = parseAmount(input.value, booksCurrency());
       if (amount === null) {
         await tellOnPage(`${what} needs to be an amount.`);
         return;
@@ -3552,7 +3552,7 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
   add.className = "primary";
   add.textContent = "Add";
   add.addEventListener("click", async () => {
-    const amount = parseAmount(gross.value);
+    const amount = parseAmount(gross.value, booksCurrency());
     if (amount === null) {
       await tellOnPage("Give a gross amount.");
       return;
@@ -3563,9 +3563,9 @@ export function renderTaxExtras(body: HTMLElement, owner: string, year: number):
       category: category.value as TaxExtraCategory,
       payer: payer.value.trim(),
       gross: amount,
-      credits: parseAmount(credits.value) ?? 0,
-      ...(category.value === "dividends" && parseAmount(imputation.value) !== null
-        ? { imputation: parseAmount(imputation.value) as number }
+      credits: parseAmount(credits.value, booksCurrency()) ?? 0,
+      ...(category.value === "dividends" && parseAmount(imputation.value, booksCurrency()) !== null
+        ? { imputation: parseAmount(imputation.value, booksCurrency()) as number }
         : {}),
     });
   });

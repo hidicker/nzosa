@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { record } from "../books.js";
-import { booksMoney } from "../country.js";
+import { booksMoney, booksCurrency } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { taxYearEndShort, taxYearOf } from "../tax-year.js";
@@ -67,7 +67,7 @@ export function renderBudgets(): void {
     box.setAttribute("aria-label", `Budget for ${account.name}`);
     box.addEventListener("change", () => {
       const text = box.value.trim();
-      const parsed = text === "" ? 0 : parseAmount(text, "USD");
+      const parsed = text === "" ? 0 : parseAmount(text, booksCurrency());
       if (parsed === null) {
         box.value = held[account.code] === undefined ? "" : (held[account.code]! / 100).toFixed(2);
         return;

@@ -106,3 +106,18 @@ test("added to books already in use: the same account whatever its capitals, and
   assert.equal(books.chart.accounts.find((a) => a.name === "Service Income")?.code, "4001");
   assert.deepEqual(books.problems, []);
 });
+
+test("two bank fees alike in every way on one day are two bank lines, not one", () => {
+  const twice = GL.replace(
+    "2026-03-31,,Bank fee,1000,Checking,,15.00,5185.00,manual,Uncategorized",
+    "2026-03-31,,Bank fee,1000,Checking,,15.00,5185.00,manual,Uncategorized\r\n2026-03-31,,Bank fee,1000,Checking,,15.00,5170.00,manual,Uncategorized",
+  ).replace(
+    "2026-03-31,,Bank fee,6200,Bank Charges & Fees,15.00,,15.00,manual,Uncategorized",
+    "2026-03-31,,Bank fee,6200,Bank Charges & Fees,15.00,,15.00,manual,Uncategorized\r\n2026-03-31,,Bank fee,6200,Bank Charges & Fees,15.00,,30.00,manual,Uncategorized",
+  );
+  const books = parseSlowBooksBooks(twice, null);
+  assert.deepEqual(books.problems, []);
+  const fees = books.transactions.filter((t) => t.date === "2026-03-31");
+  assert.deepEqual(fees.map((t) => t.amount), [-1500, -1500]);
+  assert.equal(books.reference.filter((r) => r.amount === -1500 && /Bank Charges/.test(r.code)).length, 2);
+});

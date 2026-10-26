@@ -508,3 +508,21 @@ test("a split that clears a receivable and codes a supply tags only the supply",
   assert.equal(receivable.taxType, "NONE", "no tag, so the invoice basis cannot count it again");
   assert.equal(journal.taxBasis, "both");
 });
+
+test("an invoice's line of words alone, and an invoice for nothing, post no 0.00 lines", () => {
+  const base = { kind: "sales", contact: "Kea", reference: "", issued: "2026-08-01", due: null, paid: 0, outstanding: 0 };
+  const noted = postInvoice({
+    ...base,
+    number: "INV-1",
+    total: 1_150,
+    lines: [
+      { description: "Coffee", accountCode: "200", taxType: "15% GST on Income", net: 1_000, tax: 150, gross: 1_150 },
+      { description: "Thank you for your business", accountCode: "", taxType: "No GST", net: 0, tax: 0, gross: 0 },
+    ],
+  });
+  assert.equal(noted.lines.length, 3);
+  assert.ok(noted.lines.every((l) => l.amount !== 0));
+  assert.equal(noted.lines.reduce((s, l) => s + l.amount, 0), 0);
+  const nothing = postInvoice({ ...base, number: "INV-2", total: 0, lines: [{ description: "Free sample", accountCode: "200", taxType: "No GST", net: 0, tax: 0, gross: 0 }] });
+  assert.deepEqual(nothing.lines, []);
+});

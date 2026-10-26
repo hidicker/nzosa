@@ -62,3 +62,10 @@ test("an asset needs a name, an unused number, a date, a cost and a rate", () =>
   assert.deepEqual(fixedAssetProblems({ ...laptop, rate: 0, method: "No Depreciation" }, []), [], "no rate without depreciation");
   assert.ok(fixedAssetProblems({ ...laptop, disposed: "2025-01-01" }, []).some((p) => /before it was bought/.test(p)));
 });
+
+test("a name that starts like a formula is kept as text in the file", () => {
+  const sneaky = { ...laptop, number: "FA-0013", name: "=HYPERLINK(\"http://x\",\"Laptop\")" };
+  const text = formatFixedAssets([sneaky]);
+  assert.ok(text.includes("\"'=HYPERLINK("), "a leading apostrophe stops a spreadsheet running it");
+  assert.ok(!/(^|,)=/m.test(text), "no cell starts with =");
+});

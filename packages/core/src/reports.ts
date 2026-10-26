@@ -1,3 +1,4 @@
+import { spreadsheetCell } from "./csv.js";
 import type { Cents } from "./money.js";
 import type { DateRange } from "./dates.js";
 import { inRange } from "./dates.js";
@@ -506,7 +507,7 @@ export function formatProfitAndLoss(
   }
 
   return rows
-    .map((row) => row.map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","))
+    .map((row) => row.map(spreadsheetCell).join(","))
     .join("\r\n") + "\r\n";
 }
 
@@ -609,7 +610,7 @@ export function formatOwnerSummary(summary: OwnerSummary, year: number): string 
     money(summary.otherIncome), money(summary.otherExpenses), money(summary.otherNet)]);
 
   return rows
-    .map((row) => row.map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","))
+    .map((row) => row.map(spreadsheetCell).join(","))
     .join("\r\n") + "\r\n";
 }
 

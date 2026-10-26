@@ -1,6 +1,6 @@
 import { combobox } from "./combobox.js";
 import { accountZeroOrExempt } from "./books.js";
-import { booksCountry, gstPercent } from "./country.js";
+import { booksCountry, gstPercent, booksCurrency } from "./country.js";
 import { formatAmount, parseAmount } from "@nzosa/core";
 import type { SplitPart, Transaction } from "@nzosa/core";
 import {
@@ -129,7 +129,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     readRows();
     options.onSave(
       drafts.map((draft) => {
-        const amount = parseAmount(draft.amount) ?? 0;
+        const amount = parseAmount(draft.amount, booksCurrency()) ?? 0;
         // Outside New Zealand a 0% part on a GST-free or input taxed account
         // is that, as on Reconcile, not "no GST": the BAS counts both.
         const own =
@@ -154,7 +154,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
   removeButton.className = "danger";
 
   function total(): number {
-    return drafts.reduce((sum, draft) => sum + (parseAmount(draft.amount) ?? 0), 0);
+    return drafts.reduce((sum, draft) => sum + (parseAmount(draft.amount, booksCurrency()) ?? 0), 0);
   }
 
   /**

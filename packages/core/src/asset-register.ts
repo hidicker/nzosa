@@ -1,3 +1,4 @@
+import { spreadsheetCell } from "./csv.js";
 import type { FixedAsset } from "./assets.js";
 
 /**
@@ -55,7 +56,8 @@ export function isNoDepreciation(method: string): boolean {
 
 const dayFirst = (iso: string | null): string =>
   iso === null ? "" : `${iso.slice(8, 10)}/${iso.slice(5, 7)}/${iso.slice(0, 4)}`;
-const quote = (value: string): string => `"${value.replace(/"/g, '""')}"`;
+/** Kept as text where it starts like a formula: see `spreadsheetCell`. */
+const quote = spreadsheetCell;
 
 /**
  * A register as a fixed asset export: the file the importer reads back.

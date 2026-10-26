@@ -16,7 +16,7 @@ import {
 } from "@nzosa/core";
 import type { Cents, DonationReceipt, Entity, IsoDate, Transaction } from "@nzosa/core";
 import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 import { linesFor } from "./grants-page.js";
 
 /**
@@ -220,7 +220,7 @@ function issueForm(entity: Entity, receipts: DonationReceipt[]): HTMLElement {
       when = picked.map((t) => t.date).sort().at(-1) as IsoDate;
       if (picked.length > 1) year = [...years][0];
     } else {
-      total = parseAmount(amount.value) ?? 0;
+      total = parseAmount(amount.value, booksCurrency()) ?? 0;
     }
     const signer = np?.signatory;
     const draft = { donor: donor.trim(), amount: total, signedBy: signer?.name ?? "" };

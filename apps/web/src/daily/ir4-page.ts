@@ -21,7 +21,7 @@ import {
 } from "@nzosa/core";
 import type { Account, Cents, Entity, Ir4ExpensePlacement, Ir4IncomeClass, Ir4Inputs } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * The IR4: a company's income tax return and its imputation credit account,
@@ -83,7 +83,7 @@ function dollarsBox(cents: number | undefined, onChange: (c: Cents | undefined) 
   if (title !== undefined) box.title = title;
   box.value = cents === undefined || cents === 0 ? "" : (cents / 100).toFixed(2);
   box.addEventListener("change", () => {
-    const parsed = parseAmount(box.value);
+    const parsed = parseAmount(box.value, booksCurrency());
     onChange(parsed === null || parsed === 0 ? undefined : (parsed as Cents));
   });
   return box;

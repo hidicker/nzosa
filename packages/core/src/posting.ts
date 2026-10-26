@@ -595,7 +595,9 @@ export function postInvoice(invoice: Invoice, options: PostingOptions = {}): Pos
     transactionId: invoice.number,
     date: invoice.issued,
     narration: `${invoice.number} ${invoice.contact}`.trim(),
-    lines,
+    // A line of words alone, or a document for nothing, moves no money: left
+    // out, as a bank line's and a journal's are, rather than listed at 0.00.
+    lines: lines.filter((line) => line.amount !== 0 || (line.taxBase ?? 0) !== 0),
     source: sales ? "invoice" : "bill",
     // On a payments basis this tax has not fallen due yet; it does when the
     // money arrives, and the settling journal carries it there.

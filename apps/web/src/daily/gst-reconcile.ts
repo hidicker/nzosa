@@ -1,3 +1,4 @@
+import { booksCurrency } from "../country.js";
 import { recomputeVariance, record, recordFiledReturn, saveEntities, varianceInput, varianceStale } from "../books.js";
 import { bookYearsEnded, gstContexts, myirCard } from "./myir-cards.js";
 import { gstAccountSection } from "./gst-account-panel.js";
@@ -318,7 +319,7 @@ function explanationsFor(row: VarianceRow): HTMLElement {
   add.type = "button";
   add.textContent = "Add explanation";
   add.addEventListener("click", async () => {
-    const cents = parseAmount(amount.value.trim());
+    const cents = parseAmount(amount.value.trim(), booksCurrency());
     if (cents === null || cents === 0) {
       await tellOnPage("Enter the amount this explains, ours less filed: negative where ours is lower.");
       return;
@@ -508,7 +509,7 @@ function boxesFromDraft(draft: FiledDraft): { boxes: ReturnType<typeof gstBoxesF
   const problems: string[] = [];
   const amount = (text: string, what: string): number => {
     if (text.trim() === "") return 0;
-    const parsed = parseAmount(text.trim());
+    const parsed = parseAmount(text.trim(), booksCurrency());
     if (parsed === null) {
       problems.push(`${what}: that is not an amount`);
       return 0;

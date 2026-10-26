@@ -6,7 +6,8 @@ import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, saveEvents } from "../store.js";
 import { note, tellOnPage } from "../ui.js";
-import type { RuleSet } from "@nzosa/core";
+import type { Account, RuleSet } from "@nzosa/core";
+import { renameAccountBack } from "./entities.js";
 import { postedJournals } from "../books.js";
 import { daysWork, formatAmount, localDay, moveStillHolds, sourceIdsOf, transactionIdsIn } from "@nzosa/core";
 import type { MoveSnapshot } from "@nzosa/core";
@@ -36,6 +37,19 @@ export async function undo(event: LedgerEvent): Promise<void> {
   // coded again since would lose that later coding.
   if (event.kind === "reclassify" && !moveStillHolds(movableBooks(state.ledger), event.after as MoveSnapshot)) {
     await tellOnPage("Some of these lines have been changed again since they were moved. Undo those changes first, or move the lines back on Entities & accounts.");
+    return;
+  }
+
+  // A rename is undone by renaming back, which carries its codings, rules,
+  // journals and documents with it; the chart row alone would orphan them.
+  if (event.kind === "chart" && / renamed to /.test(event.summary) && event.before !== null && event.after !== null && event.after !== undefined) {
+    if (!(await renameAccountBack(event.after as Account, event.before as Account))) {
+      await tellOnPage("That account has been changed again since. Rename it on Entities & accounts instead.");
+      return;
+    }
+    state.events = state.events.map((e) => (e.id === event.id ? { ...e, reverted: true } : e));
+    await saveEvents(state.events);
+    redraw("history");
     return;
   }
 

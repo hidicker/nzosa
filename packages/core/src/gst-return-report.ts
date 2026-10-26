@@ -1,3 +1,4 @@
+import { spreadsheetCell } from "./csv.js";
 import type { GstReturnLine, GstReturnResult } from "./gst.js";
 import type { Cents } from "./money.js";
 import { gstWithin } from "./reports.js";
@@ -156,7 +157,7 @@ export function formatGstReturn(result: GstReturnResult, title: string): string 
   }
   return (
     rows
-      .map((row) => row.map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","))
+      .map((row) => row.map(spreadsheetCell).join(","))
       .join("\r\n") + "\r\n"
   );
 }

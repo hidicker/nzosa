@@ -485,3 +485,5 @@ export { abaFile, auAccountParts, bankText, NZ_BANK_FORMATS, nzAccountParts, nzH
 export type { AbaOptions, BankPayment, NzBankFormat, NzPaymentFileOptions, PaymentFile, SkippedPayment } from "./payment-files.js";
 export { lineKey, moveLines, moveStillHolds, restoreMove } from "./move-lines.js";
 export type { AccountLine, LineRef, MovableBooks, MoveResult, MoveSnapshot } from "./move-lines.js";
+export { accountKeyOf, recodeElsewhere } from "./recode-elsewhere.js";
+export type { CodeKeptStores, PayrollAccountsHeld } from "./recode-elsewhere.js";

@@ -9,7 +9,7 @@ import { tripsPanel } from "./vehicle-trips-panel.js";
 import { propertyCarePanel } from "./property-care-panel.js";
 import { vehiclesBox } from "./rental-year-end.js";
 import { taxYearEndSaid, taxYearOf } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * Rental information: each tenancy's rent, its changes and its bond, and
@@ -131,7 +131,7 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   addChange.type = "button";
   addChange.textContent = "Add a change of rent";
   addChange.addEventListener("click", () => {
-    rentInputs.forEach(([f, a], i) => (rents[i] = { from: f.value, amount: parseAmount(a.value) ?? 0 }));
+    rentInputs.forEach(([f, a], i) => (rents[i] = { from: f.value, amount: parseAmount(a.value, booksCurrency()) ?? 0 }));
     rents.push({ from: "", amount: 0 });
     drawRents();
   });
@@ -258,7 +258,7 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
   save.textContent = "Save";
   save.addEventListener("click", () => {
     const changes = rentInputs
-      .map(([f, a], i) => ({ from: (i === 0 ? start.value : f.value) as IsoDate, amount: parseAmount(a.value) ?? 0 }))
+      .map(([f, a], i) => ({ from: (i === 0 ? start.value : f.value) as IsoDate, amount: parseAmount(a.value, booksCurrency()) ?? 0 }))
       .filter((r) => r.from !== "" && r.amount > 0);
     readLines();
     const sources = lines.filter((line) => line.accounts.length > 0);
@@ -273,7 +273,7 @@ function editor(draft: Tenancy, entities: Entity[]): HTMLElement {
       trouble.textContent = `Not saved: ${problems.join("; ")}.`;
       return;
     }
-    const bondCents = parseAmount(bondAmount.value) ?? 0;
+    const bondCents = parseAmount(bondAmount.value, booksCurrency()) ?? 0;
     const next: Tenancy = {
       id: draft.id,
       entityId: entity.value,

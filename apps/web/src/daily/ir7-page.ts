@@ -21,7 +21,7 @@ import {
 } from "@nzosa/core";
 import type { Account, Cents, Entity, Ir7ExpensePlacement, Ir7Holder, Ir7IncomeClass, Ir7Inputs, Ir7Kind } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * The IR7: a partnership or look-through company's income tax return, worked
@@ -77,7 +77,7 @@ function dollarsBox(cents: number | undefined, onChange: (c: Cents | undefined) 
   box.placeholder = "0.00";
   box.value = cents === undefined || cents === 0 ? "" : (cents / 100).toFixed(2);
   box.addEventListener("change", () => {
-    const parsed = parseAmount(box.value);
+    const parsed = parseAmount(box.value, booksCurrency());
     onChange(parsed === null || parsed === 0 ? undefined : (parsed as Cents));
   });
   return box;

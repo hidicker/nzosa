@@ -1,4 +1,4 @@
-import { parseCsvRecords, findHeaderRow } from "./csv.js";
+import { parseCsvRecords, findHeaderRow, spreadsheetCell } from "./csv.js";
 import { ColumnReader } from "./importers/shared.js";
 import type { Cents } from "./money.js";
 import { parseAmount } from "./money.js";
@@ -347,6 +347,6 @@ export function formatDepreciationSchedule(schedule: DepreciationSchedule, title
   }
 
   return rows
-    .map((row) => row.map((cell) => (/[",\r\n]/.test(cell) ? `"${cell.replace(/"/g, '""')}"` : cell)).join(","))
+    .map((row) => row.map(spreadsheetCell).join(","))
     .join("\r\n") + "\r\n";
 }

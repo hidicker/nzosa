@@ -1,3 +1,4 @@
+import { booksCurrency } from "../country.js";
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
@@ -722,8 +723,8 @@ function renderEmployeeEditor(container: HTMLElement): void {
     }
 
     const payType = payTypeSelect.value;
-    const hourlyRate = payType === "hourly" ? (parseAmount(rateInput.value.trim()) ?? undefined) : undefined;
-    const annualSalary = payType === "salary" ? (parseAmount(salaryInput.value.trim()) ?? undefined) : undefined;
+    const hourlyRate = payType === "hourly" ? (parseAmount(rateInput.value.trim(), booksCurrency()) ?? undefined) : undefined;
+    const annualSalary = payType === "salary" ? (parseAmount(salaryInput.value.trim(), booksCurrency()) ?? undefined) : undefined;
     const standardHours = payType === "hourly" ? Number(hoursInput.value) || 40 : undefined;
 
     const empId = existing?.id ?? `emp-${Date.now()}-${Math.random().toString(36).slice(2, 6)}`;
@@ -742,7 +743,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       ...(taxRate !== undefined ? { taxRate } : {}),
       ...(sdr.value.trim() !== "" ? { studentLoanRate: Number(sdr.value) / 100 } : {}),
       ...(slcir.value.trim() !== "" && Number(slcir.value) > 0 ? { slcirRate: Math.min(5, Number(slcir.value)) / 100 } : {}),
-      ...(slbor.value.trim() !== "" ? { slborAmount: parseAmount(slbor.value.trim()) ?? 0 } : {}),
+      ...(slbor.value.trim() !== "" ? { slborAmount: parseAmount(slbor.value.trim(), booksCurrency()) ?? 0 } : {}),
       ...(electedRate.value !== "" ? { extraPayRate: Number(electedRate.value) } : {}),
       ...(asSalary.value !== "" ? { employerKiwiSaverAsSalary: asSalary.value as "gross" | "net" } : {}),
       bankAccount: bankInput.value.trim(),
@@ -937,7 +938,7 @@ function extrasRow(employeeId: string, line: PayLine, refresh: () => void): HTML
     box.className = "payroll-tiny-input";
     box.placeholder = "0.00";
     box.value = value ? (value / 100).toFixed(2) : "";
-    box.addEventListener("change", () => onSet(parseAmount(box.value.trim()) ?? undefined));
+    box.addEventListener("change", () => onSet(parseAmount(box.value.trim(), booksCurrency()) ?? undefined));
     wrap.append(`${label} `, box);
     return wrap;
   };
@@ -1188,7 +1189,7 @@ function renderPayRunCreator(container: HTMLElement): void {
       const currentCs = payRunDraft.inputs.get(emp.id)?.childSupport;
       csInput.value = currentCs ? (currentCs / 100).toFixed(2) : "";
       csInput.addEventListener("change", () => {
-        const cents = parseAmount(csInput.value.trim()) ?? undefined;
+        const cents = parseAmount(csInput.value.trim(), booksCurrency()) ?? undefined;
         const current = payRunDraft.inputs.get(emp.id) ?? {};
         payRunDraft.inputs.set(emp.id, { ...current, childSupport: cents });
         recalculateAndRenderRows();

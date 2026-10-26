@@ -56,6 +56,7 @@ import {
   suggestedBankOwner,
   LOGO_MAX_BYTES,
   cleanLogo,
+  recodeElsewhere,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent, invoiceDetailWords } from "../country.js";
@@ -1947,6 +1948,7 @@ async function renameChartAccount(
     ...(after.manualJournals !== undefined ? { manualJournals: [...after.manualJournals] } : {}),
     entities: { ...model, accounts: after.accountEntities },
   };
+  const elsewhere = carryCodeKeptStores(account, { code, name });
   // Saved whole rather than part by part: a rename moves the chart, the
   // codings, the splits and the entity assignment together, and a half-written
   // rename is the thing this function exists to prevent.
@@ -1961,6 +1963,7 @@ async function renameChartAccount(
     rules > 0 ? `${rules} rule${rules === 1 ? "" : "s"}` : "",
     journalLines > 0 ? `${journalLines} journal line${journalLines === 1 ? "" : "s"}` : "",
     treatment ? "its GST treatment" : "",
+    elsewhere > 0 ? `${elsewhere} other reference${elsewhere === 1 ? "" : "s"} (documents, budgets, opening balances, payroll)` : "",
   ].filter((part) => part !== "");
 
   await record(
@@ -1974,6 +1977,57 @@ async function renameChartAccount(
 
   reclassify();
   redraw("entities");
+}
+
+/**
+ * Everything kept by the bare code -- documents, products, contacts, budgets,
+ * opening balances, year-end adjustments, payroll -- carried from one account
+ * to another, onto the books as they stand. How many references moved.
+ */
+function carryCodeKeptStores(from: { code: string; name: string }, to: { code: string; name: string }): number {
+  const l = state.ledger;
+  const { stores, moved } = recodeElsewhere(
+    {
+      invoices: l.invoices,
+      recurring: l.recurring,
+      items: l.items,
+      contacts: l.contacts,
+      openingBalances: l.openingBalances,
+      budgets: l.budgets,
+      vehicleUse: l.vehicleUse,
+      prepayments: l.prepayments,
+      payroll: l.payroll,
+    },
+    from,
+    to,
+  );
+  if (moved === 0) return 0;
+  state.ledger = {
+    ...l,
+    ...(stores.invoices !== undefined ? { invoices: [...stores.invoices] } : {}),
+    ...(stores.recurring !== undefined ? { recurring: [...stores.recurring] } : {}),
+    ...(stores.items !== undefined ? { items: [...stores.items] } : {}),
+    ...(stores.contacts !== undefined ? { contacts: [...stores.contacts] } : {}),
+    ...(stores.openingBalances !== undefined ? { openingBalances: stores.openingBalances } : {}),
+    ...(stores.budgets !== undefined ? { budgets: stores.budgets as Record<string, Record<string, number>> } : {}),
+    ...(stores.vehicleUse !== undefined ? { vehicleUse: [...stores.vehicleUse] } : {}),
+    ...(stores.prepayments !== undefined ? { prepayments: [...stores.prepayments] } : {}),
+    ...(stores.payroll !== undefined ? { payroll: stores.payroll } : {}),
+  };
+  return moved;
+}
+
+/**
+ * Undo a rename by renaming the account back, so everything the rename
+ * carried -- codings, rules, journals, documents, budgets -- comes back with
+ * it. Putting back the chart row alone left all of those on a name no account
+ * had any more. False when the renamed account is no longer there to rename.
+ */
+export async function renameAccountBack(now: Account, was: Account): Promise<boolean> {
+  const row = accountsForEditing().find((r) => r.account.code === now.code && r.account.name === now.name);
+  if (row === undefined) return false;
+  await renameChartAccount(row.account, row.label, { code: was.code, name: was.name });
+  return true;
 }
 
 /** Fold an account into one that already exists, carrying what points at it. */
@@ -2008,6 +2062,7 @@ async function mergeChartAccount(
     ...(after.manualJournals !== undefined ? { manualJournals: [...after.manualJournals] } : {}),
     entities: { ...model, accounts: after.accountEntities },
   };
+  const elsewhere = carryCodeKeptStores(account, into);
   // Saved whole, as a rename is: the codings and the chart move together.
   state.persistent = await save(state.ledger);
   state.rules = after.rules;
@@ -2019,6 +2074,7 @@ async function mergeChartAccount(
     splitParts > 0 ? `${splitParts} split part${splitParts === 1 ? "" : "s"}` : "",
     rules > 0 ? `${rules} rule${rules === 1 ? "" : "s"}` : "",
     journalLines > 0 ? `${journalLines} journal line${journalLines === 1 ? "" : "s"}` : "",
+    elsewhere > 0 ? `${elsewhere} other reference${elsewhere === 1 ? "" : "s"} (documents, budgets, opening balances, payroll)` : "",
   ].filter((part) => part !== "");
 
   await record(

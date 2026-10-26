@@ -1,3 +1,4 @@
+import { booksCurrency } from "../country.js";
 import { redraw } from "../app.js";
 import { bookYears, postedJournals, record } from "../books.js";
 import { $, state } from "../state.js";
@@ -120,7 +121,7 @@ function dollarsInput(cents: number | undefined, onChange: (c: Cents | undefined
   box.placeholder = "0";
   box.value = cents === undefined || cents === 0 ? "" : (cents / 100).toFixed(2);
   box.addEventListener("change", () => {
-    const parsed = parseAmount(box.value);
+    const parsed = parseAmount(box.value, booksCurrency());
     onChange(parsed === null || parsed === 0 ? undefined : (parsed as Cents));
   });
   return box;
@@ -367,7 +368,7 @@ export function renderPerformancePage(): void {
       box.placeholder = "0";
       box.value = figures[name] === undefined || figures[name] === 0 ? "" : String(figures[name]);
       box.addEventListener("change", () => {
-        const parsed = parseAmount(box.value);
+        const parsed = parseAmount(box.value, booksCurrency());
         if (parsed === null || parsed === 0) delete figures[name];
         else figures[name] = Math.round(parsed / 100);
         patch({ previousFigures: { ...figures } }, "Last year's figures");
@@ -515,7 +516,7 @@ export function renderPerformancePage(): void {
     what.value = row.what;
     const amount = dollarsInput(row.amount, () => {});
     const commit = (): void => {
-      const parsed = parseAmount(amount.value) ?? 0;
+      const parsed = parseAmount(amount.value, booksCurrency()) ?? 0;
       const next = related
         .map((r, j) => (j === i ? { relationship: rel.value.trim(), what: what.value.trim(), amount: parsed as Cents } : r))
         .filter((r) => r.relationship !== "" || r.what !== "");

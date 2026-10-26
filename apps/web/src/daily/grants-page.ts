@@ -19,7 +19,7 @@ import {
 } from "@nzosa/core";
 import type { Account, Cents, Entity, Grant, GrantPosition, IsoDate, Transaction } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearOf } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * The grant register: each grant, what has come in against it, what has been
@@ -144,7 +144,7 @@ function editor(draft: Grant, entities: Entity[]): HTMLElement {
   save.className = "primary";
   save.textContent = "Save";
   save.addEventListener("click", () => {
-    const cents = parseAmount(amount.value) ?? 0;
+    const cents = parseAmount(amount.value, booksCurrency()) ?? 0;
     const problems = [
       funder.value.trim() === "" ? "say who gave it" : "",
       purpose.value.trim() === "" ? "say what it is for" : "",

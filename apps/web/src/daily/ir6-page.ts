@@ -30,7 +30,7 @@ import {
 } from "@nzosa/core";
 import type { Account, BalancePlace, Cents, Entity, ExpensePlacement, SettlementKind, TrustIncomeClass, TrustInputs } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 
 /**
  * The IR6: a trust or estate's income tax return, worked out from the books in
@@ -91,7 +91,7 @@ function dollarsBox(
   const shown = cents ?? filled;
   box.value = shown === undefined || (shown === 0 && filled === undefined) ? "" : (shown / 100).toFixed(2);
   box.addEventListener("change", () => {
-    const parsed = parseAmount(box.value);
+    const parsed = parseAmount(box.value, booksCurrency());
     if (filled !== undefined) {
       // Cleared: back to the worked-out figure. Typed, even 0: kept as typed.
       onChange(box.value.trim() === "" || parsed === null ? undefined : (parsed as Cents));

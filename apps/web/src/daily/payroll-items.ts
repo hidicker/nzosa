@@ -1,3 +1,4 @@
+import { booksCurrency } from "../country.js";
 import { parseAmount } from "@nzosa/core";
 import type { Cents, PayDeduction, PayItem } from "@nzosa/core";
 import { state } from "../state.js";
@@ -168,7 +169,7 @@ export function itemsEditor(
       rate.value = (row.rate / 100).toFixed(2);
       rate.title = kind === "deduction" ? "Amount" : row.category === "acc-first-week" ? "Rate per hour: leave 0.00 for 80% of the ordinary rate" : "Rate per unit";
       rate.addEventListener("change", () => {
-        row.rate = (parseAmount(rate.value.trim()) ?? 0) as Cents;
+        row.rate = (parseAmount(rate.value.trim(), booksCurrency()) ?? 0) as Cents;
         emit();
       });
       const remove = document.createElement("button");

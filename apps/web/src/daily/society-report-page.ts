@@ -21,7 +21,7 @@ import {
 } from "@nzosa/core";
 import type { Account, Cents, Entity, ReportingStandard, SocietyInputs, SocietyYearFigures, Tier3Inputs } from "@nzosa/core";
 import { taxYearEnd, taxYearEndSaid, taxYearStart } from "../tax-year.js";
-import { booksLocale, moneyPlaces } from "../country.js";
+import { booksLocale, moneyPlaces, booksCurrency } from "../country.js";
 import { inputsFor as performanceInputs, legalFormOf, statementFor } from "./performance-report-page.js";
 
 /**
@@ -181,7 +181,7 @@ function priorFiguresTable(entity: Entity, years: number[], shown: PriorYear[], 
       box.placeholder = `${(fallback / 100).toFixed(2)} (books)`;
       box.style.width = "10em";
       box.addEventListener("change", () => {
-        const parsed = box.value.trim() === "" ? null : parseAmount(box.value);
+        const parsed = box.value.trim() === "" ? null : parseAmount(box.value, booksCurrency());
         const next = structuredClone(inputsFor(entity, y));
         const figures: SocietyYearFigures = { ...(next.figures ?? {}) };
         if (parsed === null) delete figures[field];

@@ -5,6 +5,8 @@ import { toggleNarrow } from "./chrome.js";
 import { $, state } from "./state.js";
 import { applyModules } from "./modules.js";
 import { billsAvailable } from "./books.js";
+import { startNewBill, startNewInvoice } from "./daily/invoices.js";
+import { startNewJournal } from "./daily/reports.js";
 
 /**
  * The menu: which item is lit, which groups are open, and finding a page by
@@ -334,6 +336,26 @@ function wireSearch(): void {
     } else if (event.key === "Escape") {
       close();
       input.blur();
+    }
+  });
+
+  // A new invoice, bill or journal from anywhere: Alt+Shift and its letter,
+  // which no browser keeps for itself.
+  document.addEventListener("keydown", (event) => {
+    if (!event.altKey || !event.shiftKey || event.ctrlKey || event.metaKey) return;
+    const key = event.code;
+    if (key === "KeyI") {
+      event.preventDefault();
+      showPage("invoices", "top");
+      startNewInvoice();
+    } else if (key === "KeyB") {
+      if (!billsAvailable()) return;
+      event.preventDefault();
+      showPage("bills", "top");
+      startNewBill();
+    } else if (key === "KeyJ") {
+      event.preventDefault();
+      startNewJournal();
     }
   });
 

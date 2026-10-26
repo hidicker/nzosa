@@ -409,6 +409,22 @@ function ourAccrualJournals(): Journal[] {
  * later. The figures will still be obvious then; why somebody moved 1,287.40
  * out of interest and into drawings will not.
  */
+/** Begin a journal, from anywhere: the Manual journals report, with a fresh one open. */
+export function startNewJournal(): void {
+  if (journalDraft === null) {
+    const year = Number($<HTMLSelectElement>("report-year").value) || bookYears()[0];
+    journalDraft = {
+      date: year === undefined ? new Date().toLocaleDateString("en-CA") : reportRange(year).to,
+      narration: "",
+      lines: [blankJournalLine(), blankJournalLine()],
+    };
+  }
+  const select = document.querySelector<HTMLSelectElement>("#report-kind");
+  if (select) select.value = "manual";
+  showPage("reports", "top");
+  redraw("reports");
+}
+
 function renderManualJournals(body: HTMLElement, year: number): void {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);

@@ -215,6 +215,11 @@ async function keepInvoiceMessages(next: InvoiceMessage[], what: string): Promis
   await record("invoiceMessages", what, before, next);
 }
 
+/** What an estimate is called where the books are kept: a quote in New Zealand. */
+function quoteWord(): "Quote" | "Estimate" {
+  return booksCountry().id === "nz" ? "Quote" : "Estimate";
+}
+
 /** Cents from what someone typed, tolerating commas, spaces and a $ sign. */
 function parseMoney(text: string): number {
   const cleaned = text.replace(/[$,\s]/g, "");
@@ -956,14 +961,14 @@ export function renderInvoiceEditor(): void {
   // until it is made into one.
   const estimate = document.createElement("button");
   estimate.type = "button";
-  estimate.textContent = "Save as estimate";
-  estimate.title = "Keep it as an estimate: it is not in the books until you make it an invoice.";
-  // Not offered to New Zealand books yet; the rest of the app is the same.
-  estimate.hidden = asBill || booksCountry().id === "nz";
+  estimate.textContent = `Save as ${quoteWord().toLowerCase()}`;
+  estimate.title = `Keep it as ${quoteWord() === "Quote" ? "a quote" : "an estimate"}: it is not in the books until you make it an invoice.`;
+  estimate.hidden = asBill;
   estimate.addEventListener("click", () => {
     const built = build("Estimate");
-    const stem = built.number.replace(/^INV/i, "EST");
-    void saveInvoice({ ...built, number: stem === built.number && existing === undefined ? `EST-${built.number}` : stem }, existing);
+    const prefix = quoteWord() === "Quote" ? "QU" : "EST";
+    const stem = built.number.replace(/^INV/i, prefix);
+    void saveInvoice({ ...built, number: stem === built.number && existing === undefined ? `${prefix}-${built.number}` : stem }, existing);
   });
 
   actions.append(...(asBill ? [approve] : []), save, ...(asBill ? [] : [estimate]), cancel);
@@ -1245,7 +1250,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "or save as PDF, or open it in Word to change the wording.";
       send.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1258,7 +1263,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
       make.type = "button";
       make.className = "invoice-send";
       make.textContent = "make invoice";
-      make.title = "Turn this estimate into an invoice: it takes the next invoice number and goes into the books.";
+      make.title = `Turn this ${quoteWord().toLowerCase()} into an invoice: it takes the next invoice number and goes into the books.`;
       make.addEventListener("click", () => {
         void askOnPage(
           `Make ${invoice.number} for ${invoice.contact} an invoice?
@@ -1293,7 +1298,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         "file to attach to it. Nothing is sent from here.";
       mail.addEventListener("click", () => {
         download(
-          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) }),
+          invoiceDocument(invoice, supplier, { ...documentOptions(), ...salesTaxWords(invoice), ...(isEstimate(invoice) ? { title: quoteWord() } : {}) }),
           `${invoice.number || "invoice"}.html`,
           "text/html;charset=utf-8",
         );
@@ -1306,7 +1311,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
         const standard = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
-          { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) },
+          { ...documentOptions(), ...(isEstimate(invoice) ? { title: quoteWord() } : {}) },
         );
         // The books' own wording, where they have changed it.
         const own = state.ledger.emailWording?.invoice;
@@ -1318,7 +1323,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
                 ...fillWording(own, {
                   customer: invoice.contact,
                   business: supplier.name,
-                  title: isEstimate(invoice) ? "Estimate" : (supplier.gstNumber ?? "").trim() !== "" ? "Tax invoice" : "Invoice",
+                  title: isEstimate(invoice) ? quoteWord() : (supplier.gstNumber ?? "").trim() !== "" ? "Tax invoice" : "Invoice",
                   number: invoice.number,
                   amount: booksMoney(invoice.paid !== 0 ? invoice.outstanding : invoice.total),
                   due: invoice.due ?? "",
@@ -1565,6 +1570,30 @@ export function renderInvoices(): void {
     }
     draftTable.append(draftHead, draftBody);
     body.append(wideTable(draftTable));
+  }
+
+  // Quotes (estimates): offered to a customer, in no books until made an
+  // invoice. Listed so they can be found, sent and made into one.
+  const quotes = invoices.filter((i) => isEstimate(i));
+  if (quotes.length > 0) {
+    const quoteHeading = document.createElement("h3");
+    quoteHeading.textContent = `${quoteWord()}s (${quotes.length})`;
+    body.append(quoteHeading);
+    body.append(note("Not in the books and not owing. Make one an invoice when the customer says yes."));
+    const quoteTable = document.createElement("table");
+    quoteTable.className = "report-table owner-table match-table";
+    const quoteHead = document.createElement("thead");
+    quoteHead.innerHTML = `<tr><th>${quoteWord()}</th><th>Date</th><th>Total</th><th></th></tr>`;
+    const quoteBody = document.createElement("tbody");
+    for (const invoice of [...quotes].sort((x, y) => y.issued.localeCompare(x.issued))) {
+      if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
+      const tr = document.createElement("tr");
+      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(money(invoice.total)));
+      tr.append(editInvoiceCell(invoice));
+      quoteBody.append(tr);
+    }
+    quoteTable.append(quoteHead, quoteBody);
+    body.append(wideTable(quoteTable));
   }
 
   if (owing.length > 0) {

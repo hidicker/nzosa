@@ -42,6 +42,7 @@ export type ModuleId =
   | "aupayroll"
   | "classes"
   | "budgets"
+  | "register"
   | "statements";
 
 /** Where an automatic answer comes from, said beside it. */
@@ -130,6 +131,15 @@ export const MODULES: readonly ModuleInfo[] = [
     inferred: () => Object.keys(state.ledger.budgets ?? {}).length > 0,
     holds: () => count(Object.keys(state.ledger.budgets ?? {}).length, "year's budget", "years' budgets"),
     opens: "budgets",
+  },
+  {
+    id: "register",
+    name: "Registers",
+    what: "Cash, petty cash and accounts with no bank feed, typed in line by line.",
+    basis: "data",
+    inferred: () => state.ledger.transactions.some((t) => t.source.importer === "register"),
+    holds: () => count(state.ledger.transactions.filter((t) => t.source.importer === "register").length, "typed entry", "typed entries"),
+    opens: "register",
   },
   {
     id: "statements",
@@ -292,6 +302,7 @@ export const ASKED: readonly ModuleId[] = [
   "time",
   "classes",
   "budgets",
+  "register",
   "statements",
 ];
 

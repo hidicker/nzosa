@@ -7,6 +7,7 @@ import type {
   CategoryRule,
   Invoice,
   SplitPart,
+  Transaction,
   TransactionOverride,
   VarianceNote,
 } from "@nzosa/core";
@@ -164,7 +165,19 @@ export type EventKind =
    * hold only the items moved: bank codings, split bank lines, journals and
    * documents, each whole.
    */
-  | "reclassify";
+  | "reclassify"
+  /**
+   * One line typed into a register: added, changed or deleted. `id` is the
+   * line; before and after hold it with its coding and split, or null.
+   */
+  | "register";
+
+/** A register line as a change keeps it: the line, its coding and its split. */
+export interface RegisterSnapshot {
+  transaction: Transaction;
+  override: TransactionOverride | null;
+  split: SplitPart[] | null;
+}
 
 /**
  * A match and the coding it produced, recorded together.
@@ -545,6 +558,21 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return ledger;
     case "varianceNote":
       return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
+    case "register": {
+      const id = event.targetId ?? "";
+      const was = event.before as RegisterSnapshot | null;
+      const transactions = ledger.transactions.filter((t) => t.id !== id);
+      const overrides = { ...(ledger.overrides ?? {}) };
+      const splits = { ...(ledger.splits ?? {}) };
+      delete overrides[id];
+      delete splits[id];
+      if (was !== null && was !== undefined) {
+        transactions.push(was.transaction);
+        if (was.override !== null) overrides[id] = was.override;
+        if (was.split !== null) splits[id] = was.split;
+      }
+      return { ...ledger, transactions, overrides, splits };
+    }
     case "reclassify": {
       const books = restoreMove(movableBooks(ledger), event.before as MoveSnapshot);
       return { ...ledger, overrides: books.overrides, splits: books.splits, manualJournals: [...books.manualJournals], invoices: [...books.invoices] };
@@ -638,6 +666,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   assets: "Fixed assets",
   varianceNote: "GST explanation",
   reclassify: "Lines moved to another account",
+  register: "Register",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

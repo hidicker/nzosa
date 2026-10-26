@@ -96,6 +96,10 @@
                 <span>Actions required</span>
                 <span class="actions-badge" hidden></span>
               </button>
+              <button type="button" data-page="register" hidden data-module="register">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M4 3h12v14H4z"/><path d="M7 7h6M7 10h6M7 13h4"/></svg>
+                <span>Register</span>
+              </button>
               <button type="button" data-page="import">
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M10 3v9m0 0 3.5-3.5M10 12 6.5 8.5M4 14v2a1 1 0 0 0 1 1h10a1 1 0 0 0 1-1v-2"/></svg>
                 <span>Bank import</span>
@@ -775,6 +779,20 @@
           A second way to cut the profit and loss: by department, location or job. Give a class to a bank line, an invoice or a journal, and everything it posts to income and expense falls under it. The Profit and loss by class report adds them up. This page does not change the books.
         </p>
         <div id="classes-body"></div>
+      </section>
+
+      <section id="page-register" class="page" hidden>
+        <div class="page-head">
+          <h2>Register</h2>
+          <div class="page-actions">
+            <select id="register-account" aria-label="Account"></select>
+            <button id="register-new" type="button">New register</button>
+          </div>
+        </div>
+        <p class="page-hint">
+          Cash, petty cash, or an account with no bank feed: each entry typed in, to one account or split across several, and in the books as it is added.
+        </p>
+        <div id="register-body"></div>
       </section>
 
       <section id="page-budgets" class="page" hidden>

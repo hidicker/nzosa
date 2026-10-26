@@ -81,6 +81,7 @@ import { renderGrantsPage } from "./daily/grants-page.js";
 import { renderContacts } from "./daily/contacts-page.js";
 import { renderStatements } from "./daily/statements-page.js";
 import { renderBudgets } from "./daily/budgets-page.js";
+import { renderRegister, wireRegister } from "./daily/register-page.js";
 import { renderItems } from "./daily/items-page.js";
 import { renderClasses } from "./daily/classes-page.js";
 import { renderApps } from "./daily/apps-page.js";
@@ -186,6 +187,7 @@ async function init(): Promise<void> {
     contacts: renderContacts,
     statements: renderStatements,
     budgets: renderBudgets,
+    register: renderRegister,
     items: renderItems,
     classes: renderClasses,
     apps: renderApps,
@@ -533,6 +535,7 @@ function wireUp(): void {
   wirePresentation();
   wireInvoices();
   wireBills();
+  wireRegister();
   wireIrdRecords();
   wireReports();
   wireAssets();

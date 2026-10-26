@@ -4572,3 +4572,29 @@ select.needs-choice {
 .tut-books-said { grid-template-columns: auto 1fr; align-items: center; column-gap: 0.45rem; }
 .tut-books-said .tut-books-label { grid-column: 1 / -1; }
 .tut-book .country-flag { width: 24px; height: 16px; }
+
+/* Register: the entry form as a card of labelled fields, the lines below. */
+.register-entry { background: var(--surface); border: 1px solid var(--border); border-radius: 10px; padding: 14px 16px; margin-bottom: 16px; }
+.register-entry-fields { display: grid; grid-template-columns: repeat(auto-fill, minmax(8.5em, 1fr)); gap: 10px 12px; }
+.register-field.wide { grid-column: span 2; }
+.register-field { display: flex; flex-direction: column; gap: 4px; min-width: 0; font-size: 0.85rem; }
+.register-field > span { color: var(--muted); }
+.register-field input, .register-field .combo { width: 100%; box-sizing: border-box; min-width: 0; }
+.register-entry-coding { display: flex; align-items: flex-end; gap: 10px; margin-top: 10px; }
+.register-entry-coding .register-field { flex: 0 1 26em; }
+.register-split { margin-top: 10px; display: flex; flex-direction: column; gap: 6px; }
+.register-split-row { display: grid; grid-template-columns: minmax(10em, 26em) 7em max-content; gap: 8px; align-items: center; }
+.register-split-row > button { justify-self: start; }
+.register-split-row .combo { min-width: 0; }
+.register-split > .small { align-self: flex-start; }
+.register-left { color: var(--muted); font-size: 0.85rem; margin: 2px 0 0; }
+.register-entry .migration-actions { margin-top: 10px; }
+.register-table td.report-amount { white-space: nowrap; }
+.register-table td:last-child { white-space: nowrap; }
+.register-editing { background: var(--surface-2); }
+.register-imported { color: var(--muted); font-size: 0.8rem; }
+@media (max-width: 600px) {
+  .register-field.wide { grid-column: 1 / -1; }
+  .register-split-row { grid-template-columns: 1fr 6em max-content; }
+}
+.register-field[hidden], .register-split[hidden] { display: none; }

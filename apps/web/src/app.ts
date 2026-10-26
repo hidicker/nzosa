@@ -64,6 +64,7 @@ export type PageName =
   | "setupProgress"
   | "statements"
   | "budgets"
+  | "register"
   | "items"
   | "classes"
   | "apps"
@@ -186,6 +187,7 @@ export function showPage(page: string, scrollTo?: "top" | "bottom" | number): vo
   if (page === "contacts") redraw("contacts");
   if (page === "statements") redraw("statements");
   if (page === "budgets") redraw("budgets");
+  if (page === "register") redraw("register");
   if (page === "items") redraw("items");
   if (page === "classes") redraw("classes");
   if (page === "apps") redraw("apps");

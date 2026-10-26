@@ -487,3 +487,5 @@ export { lineKey, moveLines, moveStillHolds, restoreMove } from "./move-lines.js
 export type { AccountLine, LineRef, MovableBooks, MoveResult, MoveSnapshot } from "./move-lines.js";
 export { accountKeyOf, recodeElsewhere } from "./recode-elsewhere.js";
 export type { CodeKeptStores, PayrollAccountsHeld } from "./recode-elsewhere.js";
+export { isRegisterEntry, REGISTER_IMPORTER, registerProblem, registerRows, registerTransaction } from "./register.js";
+export type { RegisterDraft, RegisterRow } from "./register.js";

@@ -115,3 +115,28 @@ export function findContact(contacts: readonly Contact[], name: string): Contact
   const parent = parentName(name);
   return parent === null ? undefined : contacts.find((c) => contactKey(c.name) === contactKey(parent));
 }
+
+/**
+ * A name reduced to what tells it apart: no punctuation, and none of the words
+ * every company carries -- Ltd, Limited, Pty, Inc, Co, The, NZ. "Kea Supplies
+ * Ltd" and "Kea Supplies, Limited" come to the same.
+ */
+export function looseContactKey(name: string): string {
+  return contactKey(name)
+    .replace(/[^\p{L}\p{N}\s]+/gu, " ")
+    .split(/\s+/)
+    .filter((word) => word !== "" && !/^(ltd|limited|pty|inc|incorporated|co|company|corp|corporation|llc|the|nz|new zealand)$/.test(word))
+    .join(" ");
+}
+
+/**
+ * Another contact a new name looks like, where it is the same once the
+ * punctuation and company words are set aside: worth asking about before
+ * a second card for one supplier is made. Not the name itself, which is
+ * refused outright elsewhere.
+ */
+export function lookalikeContact(contacts: readonly Contact[], name: string, except?: string): Contact | undefined {
+  const loose = looseContactKey(name);
+  if (loose === "") return undefined;
+  return contacts.find((c) => c.id !== except && contactKey(c.name) !== contactKey(name) && looseContactKey(c.name) === loose);
+}

@@ -17,6 +17,7 @@ import {
   parseAmount,
   reminderStageFor,
   emailForContact,
+  lookalikeContact,
   fillWording,
   STANDARD_WORDING,
   unknownBlanks,
@@ -537,7 +538,7 @@ function form(existing: Contact | null): HTMLElement {
   save.type = "button";
   save.className = "primary";
   save.textContent = existing === null ? "Add" : "Save";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     const said = name.value.trim();
     if (said === "") {
       problem.textContent = "A name, as it appears on invoices and bills.";
@@ -551,6 +552,13 @@ function form(existing: Contact | null): HTMLElement {
     const clash = held().find((c) => contactKey(c.name) === contactKey(said) && c.id !== existing?.id);
     if (clash !== undefined) {
       problem.textContent = `${clash.name} is already here.`;
+      return;
+    }
+    // A second card for one supplier splits their history in two: asked
+    // about when a new name is the same as one already here but for
+    // punctuation and words like Ltd.
+    const alike = existing !== null && contactKey(existing.name) === contactKey(said) ? undefined : lookalikeContact(held(), said, existing?.id);
+    if (alike !== undefined && !(await askOnPage(`${alike.name} is already here, and looks like the same ${alike.kind === "vendor" ? "supplier" : "customer"}. Keep ${said} as well?`, `Keep ${said}`))) {
       return;
     }
     const fields = {

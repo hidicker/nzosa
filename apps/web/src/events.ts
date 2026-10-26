@@ -418,6 +418,21 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
         if (typeof value === "string") return { number: value, override: undefined };
         return value as InvoiceMatchState;
       };
+      // A payment split across invoices (or an invoice and its fee): the line's
+      // split and every part's match go back to what they were.
+      if (event.before !== null && typeof event.before === "object" && "split" in (event.before as object)) {
+        const was = event.before as { split: SplitPart[] | null; match: string | null; parts?: Record<string, string> };
+        const splits = { ...(ledger.splits ?? {}) };
+        for (const key of Object.keys(matches)) if (key.startsWith(`${id}:`)) delete matches[key];
+        if (was.split === null) delete splits[id];
+        else {
+          splits[id] = was.split;
+        }
+        if (was.match === null) delete matches[id];
+        else matches[id] = was.match;
+        for (const [key, number] of Object.entries(was.parts ?? {})) matches[key] = number;
+        return { ...ledger, invoiceMatches: matches, splits };
+      }
       const before = read(event.before);
 
       if (before === null) {

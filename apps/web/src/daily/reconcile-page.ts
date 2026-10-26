@@ -959,6 +959,9 @@ async function applyPayout(
   const before = {
     split: (state.ledger.splits ?? {})[transaction.id] ?? null,
     match: (state.ledger.invoiceMatches ?? {})[transaction.id] ?? null,
+    parts: Object.fromEntries(
+      Object.entries(state.ledger.invoiceMatches ?? {}).filter(([key]) => key.startsWith(`${transaction.id}:`)),
+    ),
   };
   const splits = { ...(state.ledger.splits ?? {}), [transaction.id]: parts };
   const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}) };
@@ -1710,6 +1713,46 @@ function invoiceLineFor(
   add.className = "link-button";
   add.textContent = "and another invoice";
 
+  // A deposit a little short of the invoice: the processor's or the bank's
+  // fee, taken out before the money arrived. The invoice is settled in full
+  // and the fee coded, in one press.
+  const feeBox = document.createElement("span");
+  feeBox.className = "invoice-fee";
+  const feeAccount = document.createElement("select");
+  const feeChoices = state.chart
+    .filter((a) => a.code.trim() !== "" && a.inactive !== true && /expense|overhead|direct|cost/i.test(a.type))
+    .sort((a, b) => {
+      const feeish = (x: typeof a): number => (/fee|charge|merchant|stripe|paypal|commission|square/i.test(x.name) ? 0 : 1);
+      return feeish(a) - feeish(b) || a.code.localeCompare(b.code);
+    });
+  let rememberedFee = "";
+  try {
+    rememberedFee = localStorage.getItem("nzosa.feeAccount") ?? "";
+  } catch {
+    rememberedFee = "";
+  }
+  for (const a of feeChoices) {
+    const option = document.createElement("option");
+    option.value = `${a.name} - ${a.code.trim()}`;
+    option.textContent = `${a.code} ${a.name}`;
+    option.selected = option.value === rememberedFee;
+    feeAccount.append(option);
+  }
+  const feeGo = document.createElement("button");
+  feeGo.type = "button";
+  feeBox.append(feeGo, " to ", feeAccount);
+  feeBox.hidden = true;
+  feeGo.addEventListener("click", () => {
+    const number = numberOf(picker.value) || gathered[0] || "";
+    if (number === "" || feeAccount.value === "") return;
+    try {
+      localStorage.setItem("nzosa.feeAccount", feeAccount.value);
+    } catch {
+      // Only a convenience.
+    }
+    void matchWithFee(transaction, number, feeAccount.value);
+  });
+
   const redraw = (): void => {
     chips.textContent = "";
     for (const number of gathered) {
@@ -1756,6 +1799,11 @@ function invoiceLineFor(
         : all.length === 1 && left > 0
           ? `Match, splitting off ${formatAmount(left)}`
           : "Match";
+    // Short of a single invoice on money in, by what a fee could be (a tenth
+    // of the invoice at most): offer the difference as a fee.
+    const short = all.length === 1 && left < 0 && -left <= taken / 10 && transaction.amount > 0 && feeChoices.length > 0;
+    feeBox.hidden = !short;
+    if (short) feeGo.textContent = `Settle it, the ${formatAmount(-left)} short as a fee`;
     add.hidden = gathered.length === 0 && numberOf(picker.value) === "";
   };
 
@@ -1789,7 +1837,7 @@ function invoiceLineFor(
   });
 
   const openPicker = (): void => {
-    wrap.replaceChildren(label, picker.element, match, add, chips, tally);
+    wrap.replaceChildren(label, picker.element, match, feeBox, add, chips, tally);
     redraw();
     picker.element.querySelector("input")?.focus();
   };
@@ -2025,6 +2073,9 @@ async function matchToInvoices(
   const before = {
     split: (state.ledger.splits ?? {})[transaction.id] ?? null,
     match: (state.ledger.invoiceMatches ?? {})[transaction.id] ?? null,
+    parts: Object.fromEntries(
+      Object.entries(state.ledger.invoiceMatches ?? {}).filter(([key]) => key.startsWith(`${transaction.id}:`)),
+    ),
   };
 
   const splits = { ...(state.ledger.splits ?? {}), [transaction.id]: parts };
@@ -2044,6 +2095,55 @@ async function matchToInvoices(
       (left > 0 ? `, with ${formatAmount(sign * left)} left over` : ""),
     before,
     { split: parts, matches: assigned },
+    transaction.id,
+  );
+  reclassify();
+  redraw("reconcile");
+}
+
+/**
+ * Settle an invoice in full from a deposit short of it by a fee: the line is
+ * split into the invoice's whole balance and the fee, a negative part coded
+ * to the account chosen.
+ *
+ *     +100.00  settles INV-0042
+ *       -3.20  Merchant fees
+ *     = 96.80  the deposit
+ */
+async function matchWithFee(transaction: Transaction, number: string, feeCode: string): Promise<void> {
+  const invoice = invoicesInPlay().find((i) => i.number === number);
+  if (invoice === undefined || transaction.amount <= 0) return;
+  const owing = Math.max((invoiceBalanceMap().get(number)?.remaining ?? invoice.total) + shareOf(transaction, number), 0);
+  const fee = owing - transaction.amount;
+  if (fee <= 0) return;
+  const parts: SplitPart[] = [
+    {
+      amount: owing,
+      treatment: "standard",
+      side: "sales",
+      note: `Settles ${invoice.number} (${invoice.contact})`,
+      ...(codeFromInvoice(invoice) !== null ? { code: codeFromInvoice(invoice) as string } : {}),
+    },
+    { amount: -fee, code: feeCode, note: `Fee taken out of the payment of ${invoice.number}` },
+  ];
+  const before = {
+    split: (state.ledger.splits ?? {})[transaction.id] ?? null,
+    match: (state.ledger.invoiceMatches ?? {})[transaction.id] ?? null,
+    parts: Object.fromEntries(
+      Object.entries(state.ledger.invoiceMatches ?? {}).filter(([key]) => key.startsWith(`${transaction.id}:`)),
+    ),
+  };
+  const splits = { ...(state.ledger.splits ?? {}), [transaction.id]: parts };
+  const invoiceMatches = { ...(state.ledger.invoiceMatches ?? {}) };
+  delete invoiceMatches[transaction.id];
+  invoiceMatches[splitPartId(transaction.id, 0)] = invoice.number;
+  state.ledger = { ...state.ledger, splits, invoiceMatches };
+  state.persistent = await save(state.ledger);
+  await record(
+    "invoiceMatch",
+    `${transaction.date} ${formatAmount(transaction.amount)} settles ${invoice.number}, with a fee of ${formatAmount(fee)}`,
+    before,
+    { split: parts, matches: [invoice.number] },
     transaction.id,
   );
   reclassify();

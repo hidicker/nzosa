@@ -1,6 +1,7 @@
 import { callFunction, currentSession, rpc } from "../cloud.js";
 import { usingOwnProject } from "../cloud-config.js";
 import { askOnPage, note } from "../ui.js";
+import { booksLocale } from "../country.js";
 
 /**
  * Who else can see a set of books kept on the server.
@@ -23,6 +24,9 @@ interface MemberRow {
   email: string;
   role: "owner" | "bookkeeper" | "accountant" | "readonly";
   since: string;
+  /** The last day they may use the books, or null for no end. */
+  access_until?: string | null;
+  last_sign_in?: string | null;
 }
 
 interface InvitationRow {
@@ -30,6 +34,7 @@ interface InvitationRow {
   email: string;
   role: "owner" | "bookkeeper" | "accountant" | "readonly";
   sent: string;
+  access_until?: string | null;
 }
 
 const ROLES: readonly (readonly [MemberRow["role"], string, string])[] = [
@@ -84,6 +89,26 @@ async function invite(bookId: string, email: string, role: string): Promise<{ ok
   }
 }
 
+function today(): string {
+  return new Date().toLocaleDateString("en-CA");
+}
+
+/** "No end", "Until 30 Nov 2026", or "Ended 30 Nov 2026". */
+function untilSaid(until: string | null | undefined): string {
+  if (until === null || until === undefined || until === "") return "No end";
+  const day = new Date(`${until}T00:00:00`).toLocaleDateString(booksLocale(), { dateStyle: "medium" });
+  return until < today() ? `Ended ${day}` : `Until ${day}`;
+}
+
+/** Until when somebody may use the books, on their invitation or membership. */
+async function setUntil(bookId: string, email: string, until: string): Promise<boolean> {
+  try {
+    return (await rpc<string>("set_access_until", { book: bookId, who: email, until: until === "" ? null : until })) === "set";
+  } catch {
+    return false;
+  }
+}
+
 function say(box: HTMLElement, message: string, bad = false): void {
   box.textContent = message;
   box.className = bad ? "cloud-said bad" : "cloud-said";
@@ -114,11 +139,15 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
     const me = currentSession()?.userId ?? "";
     const iAmOwner = rows.some((row) => row.user_id === me && row.role === "owner");
     const owners = rows.filter((row) => row.role === "owner").length;
+    // End dates and sign-ins, where the server keeps them.
+    const dated = rows.some((row) => "access_until" in row);
 
     const table = document.createElement("table");
     table.className = "report-table owner-table";
     const head = document.createElement("thead");
-    head.innerHTML = "<tr><th>Person</th><th>Can</th><th></th></tr>";
+    head.innerHTML = dated
+      ? "<tr><th>Person</th><th>Can</th><th>Access</th><th>Last signed in</th><th></th></tr>"
+      : "<tr><th>Person</th><th>Can</th><th></th></tr>";
     const tbody = document.createElement("tbody");
 
     for (const row of rows) {
@@ -132,6 +161,44 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       const what = document.createElement("td");
       what.textContent = roleName(row.role);
       tr.append(what);
+
+      if (dated) {
+        const access = document.createElement("td");
+        access.className = "member-until";
+        if (iAmOwner && row.role !== "owner") {
+          // An owner sets or moves the end date in place; cleared, there is none.
+          const until = document.createElement("input");
+          until.type = "date";
+          until.value = row.access_until ?? "";
+          until.min = today();
+          until.title = "The last day they may use these books. Clear it for no end.";
+          until.setAttribute("aria-label", `Last day ${row.email} may use these books`);
+          until.addEventListener("change", () => {
+            until.disabled = true;
+            void setUntil(book.id, row.email, until.value).then((ok) => {
+              until.disabled = false;
+              if (!ok) {
+                say(said, "Could not set that date. It has to be today or later.", true);
+                return;
+              }
+              void draw();
+            });
+          });
+          const word = document.createElement("small");
+          word.textContent = ` ${untilSaid(row.access_until)}`;
+          access.append(until, word);
+        } else {
+          access.textContent = untilSaid(row.access_until);
+        }
+        if ((row.access_until ?? "") !== "" && (row.access_until ?? "") < today()) tr.classList.add("member-ended");
+        tr.append(access);
+        const seen = document.createElement("td");
+        seen.textContent =
+          row.last_sign_in === null || row.last_sign_in === undefined
+            ? "Never"
+            : new Date(row.last_sign_in).toLocaleString(booksLocale(), { dateStyle: "medium", timeStyle: "short" });
+        tr.append(seen);
+      }
 
       const actions = document.createElement("td");
       actions.className = "report-amount";
@@ -208,6 +275,20 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       role.append(option);
     }
 
+    // How long for: an accountant in for the year end, say. Not for an owner.
+    const until = document.createElement("input");
+    until.type = "date";
+    until.min = today();
+    until.title = "Optional: the last day they may use these books";
+    until.setAttribute("aria-label", "Last day they may use these books (optional)");
+    const untilLabel = document.createElement("label");
+    untilLabel.className = "cloud-until";
+    untilLabel.append("until ", until);
+    untilLabel.hidden = !dated;
+    role.addEventListener("change", () => {
+      untilLabel.hidden = !dated || role.value === "owner";
+    });
+
     const go = document.createElement("button");
     go.type = "button";
     go.className = "primary";
@@ -217,17 +298,23 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       if (wanted === "") return;
       go.disabled = true;
       say(said, "Inviting…");
-      void invite(book.id, wanted, role.value).then((result) => {
+      const lastDay = untilLabel.hidden ? "" : until.value;
+      void invite(book.id, wanted, role.value).then(async (result) => {
         go.disabled = false;
-        say(said, result.message, !result.ok);
+        if (result.ok && lastDay !== "" && !(await setUntil(book.id, wanted, lastDay))) {
+          say(said, `${result.message} The end date was not set: set it below once they accept.`, true);
+        } else {
+          say(said, result.ok && lastDay !== "" ? `${result.message} Their access ends after ${lastDay}.` : result.message, !result.ok);
+        }
         if (result.ok) {
           email.value = "";
+          until.value = "";
           void draw();
         }
       });
     });
 
-    add.append(email, role, go);
+    add.append(email, role, untilLabel, go);
     list.append(add);
     list.append(
       note(
@@ -247,7 +334,9 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
       const table = document.createElement("table");
       table.className = "report-table owner-table";
       const head = document.createElement("thead");
-      head.innerHTML = "<tr><th>Person</th><th>Would be</th><th></th></tr>";
+      head.innerHTML = dated
+        ? "<tr><th>Person</th><th>Would be</th><th>Access</th><th></th></tr>"
+        : "<tr><th>Person</th><th>Would be</th><th></th></tr>";
       const rows = document.createElement("tbody");
       for (const row of waiting) {
         const tr = document.createElement("tr");
@@ -277,7 +366,13 @@ export function renderMembers(body: HTMLElement, book: { id: string; name: strin
           });
         });
         actions.append(again, " ", take);
-        tr.append(who, what, actions);
+        tr.append(who, what);
+        if (dated) {
+          const access = document.createElement("td");
+          access.textContent = untilSaid(row.access_until);
+          tr.append(access);
+        }
+        tr.append(actions);
         rows.append(tr);
       }
       table.append(head, rows);

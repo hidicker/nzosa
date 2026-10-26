@@ -27,6 +27,7 @@ export const MIGRATIONS = [
   "20261010090000_delete_books",
   "20261012120000_deleted_books_and_locks",
   "20261021120000_save_part_changes",
+  "20261027090000_access_until",
 ];
 
 /** Parts a function adds later; a value added to a type is used by the app, not by this script. */

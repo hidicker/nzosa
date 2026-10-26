@@ -2153,6 +2153,8 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .move-lines-table td:nth-child(2) { white-space: nowrap; }
 .move-lines-view .payment-file-fields .combo, .move-lines-view .payment-file-fields input { width: 100%; box-sizing: border-box; min-width: 0; }
 .move-lines-view .payment-file-fields label { min-width: 0; }
+.journal-tag { display: inline-block; font-size: 0.75em; padding: 1px 6px; border-radius: 8px; background: var(--accent-soft, #e6eef7); color: var(--accent, #23537a); vertical-align: middle; }
+.journal-adjusting { white-space: nowrap; align-self: center; }
 .ask-on-page.quick-entry { width: min(1100px, 96vw); }
 .quick-entry-table td { padding: 2px 3px; }
 .quick-entry-table input, .quick-entry-table select { width: 100%; min-width: 6em; box-sizing: border-box; }

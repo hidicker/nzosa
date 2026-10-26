@@ -382,8 +382,23 @@ export function ownerSummaryFor(owner: string, year: number): OwnerSummary {
   );
 }
 
+/** Reports that can be shown as the books stood before adjusting entries. */
+const ADJUSTABLE_REPORTS = new Set(["pl", "balancesheet", "journal", "general"]);
+
+/** Whether the report showing leaves the adjusting entries out. */
+function beforeAdjusting(): boolean {
+  const wrap = document.getElementById("report-unadjusted-wrap");
+  return wrap !== null && !wrap.hidden && document.querySelector<HTMLInputElement>("#report-unadjusted")?.checked === true;
+}
+
+/** The postings the reports read: all of them, or those before adjusting entries. */
+function reportPostings(): PostedJournal[] {
+  const all = postedJournals();
+  return beforeAdjusting() ? all.filter((j) => j.adjusting !== true) : all;
+}
+
 function ourAccrualJournals(): Journal[] {
-  return postedJournals().map((journal, index) => ({
+  return reportPostings().map((journal, index) => ({
     id: journal.transactionId,
     date: journal.date,
     narration: journal.narration,
@@ -429,7 +444,8 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   const from = taxYearStart(year);
   const to = taxYearEnd(year);
   const all = state.ledger.manualJournals ?? [];
-  const held = all.filter((j) => j.date >= from && j.date <= to);
+  const inYear = all.filter((j) => j.date >= from && j.date <= to);
+  const held = adjustingOnly ? inYear.filter((j) => j.adjusting === true) : inYear;
 
   const heading = document.createElement("h3");
   heading.textContent = `Manual journals, year ended ${taxYearEndSaid(year)}`;
@@ -450,6 +466,20 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     redraw("reports");
   });
   actions.append(add);
+  if (inYear.some((j) => j.adjusting === true) || adjustingOnly) {
+    const only = document.createElement("label");
+    only.className = "checkbox";
+    const tick = document.createElement("input");
+    tick.type = "checkbox";
+    tick.checked = adjustingOnly;
+    tick.addEventListener("change", () => {
+      adjustingOnly = tick.checked;
+      redraw("reports");
+    });
+    const count = inYear.filter((j) => j.adjusting === true && j.deleted === undefined).length;
+    only.append(tick, ` Adjusting entries only (${count})`);
+    actions.append(only);
+  }
 
   // Only offered when there is a report to read them out of, and only for the
   // ones not already held.
@@ -466,6 +496,10 @@ function renderManualJournals(body: HTMLElement, year: number): void {
   body.append(actions);
   if (journalDraft !== null) body.append(journalEditor(journalDraft));
 
+  if (held.length === 0 && adjustingOnly) {
+    body.append(note("No adjusting entries this year."));
+    return;
+  }
   if (held.length === 0) {
     body.append(
       note(
@@ -498,6 +532,12 @@ function renderManualJournals(body: HTMLElement, year: number): void {
     const title = document.createElement("p");
     title.className = "journal-narration";
     title.textContent = `${journal.date} — ${journal.narration}`;
+    if (journal.adjusting === true) {
+      const tag = document.createElement("span");
+      tag.className = "journal-tag";
+      tag.textContent = "Adjusting";
+      title.append(" ", tag);
+    }
     card.append(title);
 
     if (journal.deleted !== undefined) {
@@ -571,6 +611,8 @@ interface JournalDraft {
   date: string;
   narration: string;
   lines: JournalDraftLine[];
+  /** An adjusting entry: year-end, or the accountant's. */
+  adjusting?: boolean;
 }
 
 /**
@@ -580,6 +622,8 @@ interface JournalDraft {
  * a change of year -- does not throw away what has been typed.
  */
 let journalDraft: JournalDraft | null = null;
+/** Whether the manual journals list shows only the adjusting entries. */
+let adjustingOnly = false;
 
 function blankJournalLine(): JournalDraftLine {
   return { code: "", debit: "", credit: "", description: "", gst: "" };
@@ -628,7 +672,17 @@ function journalEditor(draft: JournalDraft): HTMLElement {
     draft.narration = narration.value;
     refresh();
   });
-  head.append(date, narration);
+  const adjusting = document.createElement("label");
+  adjusting.className = "checkbox journal-adjusting";
+  adjusting.title = "A year-end or accountant's adjustment: listed apart, and left out of a report asked for the books before adjustments";
+  const adjustingBox = document.createElement("input");
+  adjustingBox.type = "checkbox";
+  adjustingBox.checked = draft.adjusting === true;
+  adjustingBox.addEventListener("change", () => {
+    draft.adjusting = adjustingBox.checked;
+  });
+  adjusting.append(adjustingBox, " Adjusting entry");
+  head.append(date, narration, adjusting);
   wrap.append(head);
 
   const columns = document.createElement("div");
@@ -772,6 +826,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
       date: draft.date,
       narration: draft.narration.trim(),
       lines,
+      ...(draft.adjusting === true ? { adjusting: true } : {}),
     };
     // The rules the journal is posted under, so this form cannot accept one the
     // ledger would then refuse. Asked once the line-by-line checks have nothing
@@ -966,6 +1021,17 @@ function journalActions(journal: ManualJournal, reversed: boolean): HTMLElement 
     return box;
   }
 
+  button(journal.adjusting === true ? "Not an adjusting entry" : "Mark as adjusting", () => {
+    const marked = all().map((j) => {
+      if (j.id !== journal.id) return j;
+      const { adjusting: _was, ...rest } = j;
+      return journal.adjusting === true ? rest : { ...rest, adjusting: true };
+    });
+    void saveManualJournals(
+      marked,
+      `${journal.adjusting === true ? "No longer an adjusting entry" : "Marked as adjusting"}: ${journal.narration}`,
+    );
+  });
   if (!reversed) {
     button("Reverse…", () => {
       const open = firstOpenDay();
@@ -1182,7 +1248,7 @@ function positionJournals(): {
   const basis = $<HTMLSelectElement>("report-basis").value;
   const imported = state.ledger.journals ?? [];
   const fromImport = basis === "accrual" && imported.length > 0;
-  if (!fromImport) return { journals: postedJournals(), basis, fromImport };
+  if (!fromImport) return { journals: reportPostings(), basis, fromImport };
   const chartByName = new Map(state.chart.map((a) => [a.name.trim().toLowerCase(), a]));
   return {
     journals: postedFromImported(imported, (name) =>
@@ -1656,7 +1722,7 @@ function renderBalanceSheet(body: HTMLElement, year: number): void {
 function renderJournal(body: HTMLElement, year: number): void {
   const { from, to } = reportRange(year);
   const inEntity = journalInEntity();
-  const journals = postedJournals().filter((j) => {
+  const journals = reportPostings().filter((j) => {
     if (j.date < from || j.date > to) return false;
     return inEntity === null || inEntity(j);
   });
@@ -4122,6 +4188,21 @@ export function renderReportsPage(): void {
         ? `${scope.name} is GST registered, so its figures are net of GST.`
         : `${scope.name} is not GST registered, so the GST it paid is part of what things cost.`;
 
+  // Offered where there are adjusting entries to leave out, on the reports
+  // built from our own postings.
+  const unadjustedWrap = $("report-unadjusted-wrap");
+  unadjustedWrap.hidden =
+    !ADJUSTABLE_REPORTS.has(kindNow) || basisNow !== "posted" || !postedJournals().some((j) => j.adjusting === true);
+  if (beforeAdjusting()) {
+    const left = postedJournals().filter((j) => j.adjusting === true).length;
+    body.append(
+      note(
+        `Before adjusting entries: ${left} left out, being the year-end adjustments and the journals ` +
+          "marked as adjusting.",
+      ),
+    );
+  }
+
   $("reports-hint").textContent =
     reportsHint(basisNow, kindNow) +
     (kindNow === "pl" && !noSalesTax()
@@ -4863,7 +4944,7 @@ function journalsForYear(year: number): ReturnType<typeof postedJournals> {
   // The entity's journals: those through its own bank accounts, and those
   // posting to its accounts from anybody's.
   const inEntity = journalInEntity();
-  return postedJournals().filter((journal) => {
+  return reportPostings().filter((journal) => {
     if (journal.date < from || journal.date > to) return false;
     return inEntity === null || inEntity(journal);
   });
@@ -5111,6 +5192,7 @@ export function wireReports(): void {
 
   $("report-basis").addEventListener("change", () => redraw("reports"));
   $("report-gst").addEventListener("change", () => redraw("reports"));
+  $("report-unadjusted").addEventListener("change", () => redraw("reports"));
 
   $("report-kind").addEventListener("change", () => redraw("reports"));
   $("report-owner").addEventListener("change", () => redraw("reports"));

@@ -115,3 +115,12 @@ test("a deleted journal is kept but posts nothing", () => {
   assert.equal(postManualJournal({ ...GOOD, deleted: { at: "2026-10-09T09:00:00Z", by: "Totara" } }), null);
   assert.notEqual(postManualJournal(GOOD), null);
 });
+
+test("an adjusting entry is marked when posted, and its reversal is one too", async () => {
+  const { reversalOf } = await import("../dist/index.js");
+  assert.equal(postManualJournal(GOOD).adjusting, undefined, "an ordinary journal says nothing");
+  const adjusting = { ...GOOD, adjusting: true };
+  assert.equal(postManualJournal(adjusting).adjusting, true);
+  assert.equal(reversalOf(adjusting, "2026-04-01", "r1").adjusting, true);
+  assert.equal(reversalOf(GOOD, "2026-04-01", "r2").adjusting, undefined);
+});

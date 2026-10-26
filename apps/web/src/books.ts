@@ -2496,7 +2496,8 @@ function yearEndJournals(posted: readonly PostedJournal[]): PostedJournal[] {
   if ((state.ledger.prepayments ?? []).length > 0) {
     for (const year of prepaymentYears()) journals.push(...prepaymentsFor(posted, year).journals);
   }
-  return journals;
+  // Each is a year-end adjustment by its nature.
+  return journals.map((j) => ({ ...j, adjusting: true }));
 }
 
 /**

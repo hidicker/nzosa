@@ -132,6 +132,8 @@ export interface PostedJournal {
   lines: PostedLine[];
   source: JournalSource;
   taxBasis: TaxBasis;
+  /** An adjusting entry, which a report can be asked to leave out. */
+  adjusting?: boolean;
 }
 
 /**

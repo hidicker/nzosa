@@ -68,6 +68,13 @@ export interface ManualJournal {
   /** The id of the journal this one reverses, when it is a reversal. */
   reverses?: string;
   /**
+   * An adjusting entry: one made at the year end, or by the accountant, to
+   * bring the books to their final figures -- accruals, a GST correction, a
+   * reclassification. Marked so it can be listed apart, and left out of a
+   * report that asks for the books as they stood before.
+   */
+  adjusting?: boolean;
+  /**
    * When it was deleted, and by whom. A deleted journal stays on the list,
    * marked, and posts nothing -- as Xero keeps a voided journal -- so that
    * somebody reviewing the books can see it was there and that it was taken
@@ -205,6 +212,7 @@ export function postManualJournal(
     // GST on a journal falls due on its date, whichever basis the return is
     // on, as a bank line's does.
     taxBasis: journal.lines.some((l) => l.gst !== undefined) ? "both" : "payments",
+    ...(journal.adjusting === true ? { adjusting: true } : {}),
   };
 }
 
@@ -231,6 +239,8 @@ export function reversalOf(journal: ManualJournal, date: IsoDate, id: string): M
       ...(line.gst !== undefined ? { gst: line.gst } : {}),
     })),
     reverses: journal.id,
+    // Reversing an adjustment is itself one.
+    ...(journal.adjusting === true ? { adjusting: true } : {}),
   };
 }
 

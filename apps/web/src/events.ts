@@ -182,7 +182,9 @@ export type EventKind =
   /** Whether time is approved before it is invoiced. */
   | "timeApproval"
   /** Accounts taken out of the chart together. Before is the accounts. */
-  | "chartRemoved";
+  | "chartRemoved"
+  /** Invoices or bills typed in together on quick entry. After is the documents. */
+  | "invoiceBatch";
 
 /** A register line as a change keeps it: the line, its coding and its split. */
 export interface RegisterSnapshot {
@@ -578,6 +580,10 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       for (const account of back) if (!chart.some((a) => a.code === account.code && a.name === account.name)) chart.push(account);
       return { ...ledger, chart };
     }
+    case "invoiceBatch": {
+      const made = new Set(((event.after ?? []) as Invoice[]).map((i) => i.number));
+      return { ...ledger, invoices: (ledger.invoices ?? []).filter((i) => !made.has(i.number)) };
+    }
     case "timeApproval":
       return { ...ledger, timeApproval: event.before === true };
     case "emailWording":
@@ -703,6 +709,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   emailWording: "Email wording",
   timeApproval: "Time approval",
   chartRemoved: "Chart of accounts",
+  invoiceBatch: "Quick entry",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

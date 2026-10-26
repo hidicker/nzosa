@@ -2153,6 +2153,15 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .move-lines-table td:nth-child(2) { white-space: nowrap; }
 .move-lines-view .payment-file-fields .combo, .move-lines-view .payment-file-fields input { width: 100%; box-sizing: border-box; min-width: 0; }
 .move-lines-view .payment-file-fields label { min-width: 0; }
+.ask-on-page.quick-entry { width: min(1100px, 96vw); }
+.quick-entry-table td { padding: 2px 3px; }
+.quick-entry-table input, .quick-entry-table select { width: 100%; min-width: 6em; box-sizing: border-box; }
+.quick-entry-table input[type="date"] { min-width: 9.5em; }
+.quick-entry-table td:nth-child(2) input, .quick-entry-table td:nth-child(4) input { min-width: 11em; }
+.quick-entry-table td:nth-child(5) input { min-width: 9em; }
+.quick-entry-scroll { overflow-x: auto; }
+.quick-entry-table tr.match-off td { background: var(--warn-bg, #fff4e5); }
+.quick-entry-total { margin: 8px 0 0; color: var(--muted, #555); }
 .move-lines-scroll { max-height: 45vh; overflow-y: auto; border: 1px solid var(--border); border-radius: 8px; }
 .move-lines-scroll thead th { position: sticky; top: 0; background: var(--surface, #fff); z-index: 1; }
 .move-lines-table th:first-child, .move-lines-table td:first-child { width: 2.2em; }

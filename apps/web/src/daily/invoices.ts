@@ -1,6 +1,7 @@
 import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
+import { openQuickEntry } from "./quick-entry.js";
 import type { InvoiceMessage } from "../store.js";
 import { redraw } from "../app.js";
 import {
@@ -2018,6 +2019,7 @@ export function editBill(number: string): void {
 export function wireInvoices(): void {
   $("invoice-new").addEventListener("click", () => startNewInvoice());
   $("receipt-new").addEventListener("click", () => startNewReceipt());
+  $("invoice-quick").addEventListener("click", () => openQuickEntry("sales"));
 
   $("invoices-pick").addEventListener("click", () => $<HTMLInputElement>("invoices-input").click());
   $<HTMLInputElement>("invoices-input").addEventListener("change", (e) => {

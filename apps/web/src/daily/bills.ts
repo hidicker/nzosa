@@ -27,6 +27,7 @@ import type { DocumentStatus, Entity, Invoice, InvoiceBalance, OutsidePayment } 
 import { booksCountry, booksMoney, noSalesTax } from "../country.js";
 import { openPaymentFile } from "./payment-file-ui.js";
 import { creditOnAccountSection } from "./credit-ui.js";
+import { openQuickEntry } from "./quick-entry.js";
 
 /**
  * Bills: what these books owe suppliers.
@@ -581,6 +582,7 @@ function billsBankFile(): void {
 
 export function wireBills(): void {
   $("bill-new").addEventListener("click", () => startNewBill());
+  $("bill-quick").addEventListener("click", () => openQuickEntry("purchase"));
   $("bill-bankfile").addEventListener("click", () => billsBankFile());
   $<HTMLInputElement>("bill-search").addEventListener("input", () => redraw("bills"));
   $<HTMLSelectElement>("bill-filter").addEventListener("change", () => redraw("bills"));

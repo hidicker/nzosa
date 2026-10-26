@@ -1,7 +1,7 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
+import { formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -39,7 +39,8 @@ import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
 import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
-import { downloadExcelReport } from "./excel-export.js";
+import { createZip, downloadBytes, downloadExcelReport } from "./excel-export.js";
+import { bankReconcileCsv as packageBankCsv } from "./bank-reconcile-report.js";
 import { unresolvedNote } from "../widgets.js";
 import { allLines } from "../ai.js";
 import {
@@ -3969,6 +3970,45 @@ function renderReportsHome(body: HTMLElement): void {
     return row;
   };
 
+  // Everything an accountant asks for at the year end, in one file.
+  const packageItem = (): HTMLElement => {
+    const row = document.createElement("div");
+    row.className = "reports-home-item";
+    const spacer = document.createElement("span");
+    const name = document.createElement("span");
+    name.className = "reports-open";
+    name.textContent = "Accountant's package";
+    const about = document.createElement("span");
+    about.className = "reports-about";
+    about.textContent =
+      "One zip for a year: profit and loss, balance sheet, trial balance, general ledger, manual journals, " +
+      `aged receivables and payables, bank reconciliation, assets and depreciation, ${noSalesTax() ? "" : "GST returns, "}` +
+      "the chart of accounts, and any changes made in a locked period.";
+    const controls = document.createElement("div");
+    controls.className = "excel-extract-controls";
+    const yearSelect = document.createElement("select");
+    yearSelect.setAttribute("aria-label", "Which year the package is for");
+    for (const y of years) {
+      const opt = document.createElement("option");
+      opt.value = String(y);
+      opt.textContent = `FY${y} (year to ${taxYearEndShort(y)})`;
+      yearSelect.append(opt);
+    }
+    const go = document.createElement("button");
+    go.type = "button";
+    go.textContent = "Download (.zip)";
+    go.addEventListener("click", () => {
+      const year = Number(yearSelect.value);
+      if (!Number.isFinite(year)) return;
+      const files = accountantPackage(year);
+      downloadBytes(createZip(files), `accountants-package-fy${year}.zip`, "application/zip");
+    });
+    controls.append(yearSelect, go);
+    about.append(controls);
+    row.append(spacer, name, about);
+    return row;
+  };
+
   const placed = new Set<string>();
   for (const group of groups) {
     const rows = group.reports.map(item);
@@ -3981,7 +4021,7 @@ function renderReportsHome(body: HTMLElement): void {
   // Groups the report picker has no reports in, listed after the rest.
   for (const label of [...new Set(elsewhere.filter((e) => !placed.has(e.name)).map((e) => e.group))]) {
     const rows = elsewhere.filter((e) => e.group === label && !placed.has(e.name)).map(pageItem);
-    if (label === "Checks and history") rows.push(excelExtractItem());
+    if (label === "Checks and history") rows.push(excelExtractItem(), packageItem());
     section(label, rows);
   }
 }
@@ -5149,10 +5189,166 @@ export function downloadReport(): void {
   downloads[kind]();
 }
 
+/**
+ * The accountant's package for a year: each report as the page builds it,
+ * for the whole year, from our own postings, adjusting entries included.
+ *
+ * The reports read the page's own choices -- year, basis, period -- so those
+ * are set for the year while the files are made, and put back after.
+ */
+function accountantPackage(year: number): { name: string; data: Uint8Array }[] {
+  const text = (value: string): Uint8Array => new TextEncoder().encode(value);
+  const csv = (rows: (string | number)[][]): string => rows.map((r) => r.map((c) => spreadsheetCell(String(c))).join(",")).join("\r\n") + "\r\n";
+  const cents = (value: number): string => (value / 100).toFixed(2);
+  const kind = $<HTMLSelectElement>("report-kind");
+  const basis = $<HTMLSelectElement>("report-basis");
+  const yearSelect = $<HTMLSelectElement>("report-year");
+  const unadjusted = $<HTMLInputElement>("report-unadjusted");
+  const held = { kind: kind.value, basis: basis.value, year: yearSelect.value, unadjusted: unadjusted.checked };
+  kind.value = "home";
+  basis.value = "posted";
+  if (![...yearSelect.options].some((o) => o.value === String(year))) {
+    const option = document.createElement("option");
+    option.value = String(year);
+    yearSelect.append(option);
+  }
+  yearSelect.value = String(year);
+  unadjusted.checked = false;
+  const files: { name: string; data: Uint8Array }[] = [];
+  const add = (name: string, value: string | null | undefined): void => {
+    if (value !== null && value !== undefined && value.trim() !== "") files.push({ name, data: text(value) });
+  };
+  const { from, to } = { from: taxYearStart(year), to: taxYearEnd(year) };
+  const listed: string[] = [];
+  try {
+    const built = currentReport({ from, to });
+    if (built !== null) {
+      add("profit-and-loss.csv", profitAndLossText(built, "Accrual basis, from our postings."));
+      listed.push("profit-and-loss.csv: the year's income and expenses");
+    }
+
+    const company = companyBooks();
+    const opening = state.ledger.openingBalances;
+    const sheet = computeBalanceSheet({
+      asAt: to,
+      ...(opening ? { openingBalances: opening } : {}),
+      journals: reportPostings(),
+      chart: state.chart,
+      shareholderCurrentAccounts: company && booksCountry().id === "nz",
+      profitInRetainedEarnings: company,
+    });
+    const sheetRows: (string | number)[][] = [[`Balance sheet as at ${to}`], ["Section", "Account", "Opening", "Movement", "Closing"]];
+    for (const part of [sheet.currentAssets, sheet.nonCurrentAssets, sheet.currentLiabilities, sheet.nonCurrentLiabilities, sheet.equity]) {
+      for (const line of part.lines) sheetRows.push([part.title, balanceSheetLabel(line), cents(line.opening), cents(line.movement), cents(line.closing)]);
+      sheetRows.push([part.title, "Total", "", "", cents(part.total)]);
+    }
+    sheetRows.push(["", "Net assets", "", "", cents(sheet.netAssets)], ["", "Total equity", "", "", cents(sheet.totalEquity)]);
+    add("balance-sheet.csv", csv(sheetRows));
+    listed.push("balance-sheet.csv: what is owned and owed at the year end");
+
+    const yearJournals = journalsForYear(year);
+    const balance = trialBalance(yearJournals);
+    const tbRows: (string | number)[][] = [[`Trial balance of the postings in FY${year}`], ["Code", "Account", "Debit", "Credit"]];
+    for (const row of balance.rows) {
+      if (row.balance === 0) continue;
+      tbRows.push([row.accountCode, row.accountName, row.balance > 0 ? cents(row.balance) : "", row.balance < 0 ? cents(-row.balance) : ""]);
+    }
+    add("trial-balance.csv", csv(tbRows));
+    listed.push("trial-balance.csv: each account's postings in the year, debit and credit");
+
+    const ledger = generalLedgerCsv(year);
+    add("general-ledger.csv", ledger?.text);
+    if (ledger !== null) listed.push("general-ledger.csv: every posting, line by line");
+
+    const journals = (state.ledger.manualJournals ?? []).filter((j) => j.date >= from && j.date <= to && j.deleted === undefined);
+    if (journals.length > 0) {
+      const rows: (string | number)[][] = [["Date", "Narration", "Adjusting", "Account", "Debit", "Credit", "Description"]];
+      for (const j of [...journals].sort((a, b) => a.date.localeCompare(b.date))) {
+        for (const l of j.lines) {
+          rows.push([j.date, j.narration, j.adjusting === true ? "yes" : "", l.code, l.amount > 0 ? cents(l.amount) : "", l.amount < 0 ? cents(-l.amount) : "", l.description ?? ""]);
+        }
+      }
+      add("manual-journals.csv", csv(rows));
+      listed.push("manual-journals.csv: the journals written by hand, adjusting entries marked");
+    }
+
+    for (const [docKind, file, said] of [
+      ["sales", "aged-receivables.csv", "what customers owed at the year end"],
+      ["purchase", "aged-payables.csv", "what was owed to suppliers at the year end"],
+    ] as const) {
+      if (!(state.ledger.invoices ?? []).some((i) => i.kind === docKind)) continue;
+      add(file, agedCsv(docKind, year).text);
+      listed.push(`${file}: ${said}`);
+    }
+
+    if (state.ledger.transactions.length > 0) {
+      add("bank-reconciliation.csv", packageBankCsv(year).text);
+      listed.push("bank-reconciliation.csv: each bank account against its statement");
+    }
+
+    const assets = state.ledger.assets ?? [];
+    if (assets.length > 0) {
+      add("fixed-assets.csv", formatFixedAssets(assets));
+      const schedule = depreciationSchedule(assets, { from, to }, depreciationRules());
+      if (schedule.rows.length > 0) add("depreciation-schedule.csv", formatDepreciationSchedule(schedule, `Depreciation schedule, FY${year}`));
+      listed.push("fixed-assets.csv and depreciation-schedule.csv: the asset register and the year's depreciation");
+    }
+
+    if (!noSalesTax()) {
+      const returns = gstReturnsFor(year);
+      for (const one of returns) {
+        add(`gst-returns/gst-return-${one.period.to}.csv`, formatGstReturn(one, `GST return ${one.period.from} to ${one.period.to}`));
+      }
+      if (returns.length > 0) listed.push("gst-returns/: each GST return of the year, as worked out from the coding");
+    }
+
+    add("chart-of-accounts.csv", formatChartOfAccounts(state.chart));
+    listed.push("chart-of-accounts.csv: the accounts");
+
+    const locked = state.ledger.lockedChanges ?? [];
+    if (locked.length > 0) {
+      add(
+        "changes-in-locked-periods.csv",
+        csv([["When", "Who", "What", "Figures moved"], ...locked.map((c) => [c.at, c.who, c.summary, c.moved.join("; ")])]),
+      );
+      listed.push("changes-in-locked-periods.csv: changes made in a period after it was locked");
+    }
+  } finally {
+    kind.value = held.kind;
+    basis.value = held.basis;
+    yearSelect.value = held.year;
+    unadjusted.checked = held.unadjusted;
+  }
+
+  const entity = reportingEntity()?.name;
+  const readme = [
+    `Accountant's package, FY${year} (${from} to ${to})`,
+    entity !== undefined ? `For ${entity}.` : "For all the entities in these books.",
+    `Made ${new Date().toLocaleString(booksLocale())}${state.who.trim() !== "" ? ` by ${state.who.trim()}` : ""}.`,
+    "",
+    "Figures are on the accrual basis, from the postings these books make, adjusting entries included.",
+    "",
+    ...listed.map((l) => `- ${l}`),
+    "",
+  ].join("\r\n");
+  return [{ name: "README.txt", data: text(readme) }, ...files];
+}
+
 function downloadGeneralLedger(year: number | undefined): void {
   const csv = year === undefined ? null : generalLedgerCsv(year);
   if (csv === null) return nothingToDownload();
   download(csv.text, csv.name, "text/csv");
+}
+
+/** A built profit and loss as a CSV, the one way it is written out. */
+function profitAndLossText(built: { report: ProfitAndLoss; title: string; year: number }, said: string): string {
+  return formatProfitAndLoss(
+    built.report,
+    `${built.title} — Profit and Loss, ${periodHeading(built.year)}`,
+    said,
+    reportLookups().classOf,
+    lineRoles(),
+  );
 }
 
 /** The profit and loss as shown: for the P&L only. */
@@ -5175,13 +5371,7 @@ function downloadProfitAndLoss(): void {
       : " GST exclusive.");
 
   download(
-    formatProfitAndLoss(
-      built.report,
-      `${built.title} — Profit and Loss, ${periodHeading(built.year)}`,
-      exportNote,
-      reportLookups().classOf,
-      lineRoles(),
-    ),
+    profitAndLossText(built, exportNote),
     `profit-and-loss-${built.title.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-${periodFileName(built.year)}.csv`,
     "text/csv",
   );

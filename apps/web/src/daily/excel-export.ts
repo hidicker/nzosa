@@ -195,7 +195,7 @@ function dosDateTime(date: Date = new Date()): { time: number; date: number } {
   return { time, date: d };
 }
 
-function createZip(files: { name: string; data: Uint8Array }[]): Uint8Array {
+export function createZip(files: { name: string; data: Uint8Array }[]): Uint8Array {
   const { time, date } = dosDateTime();
   const localHeaders: Uint8Array[] = [];
   const cdHeaders: Uint8Array[] = [];

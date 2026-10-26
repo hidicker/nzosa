@@ -186,7 +186,9 @@ export type EventKind =
   /** Invoices or bills typed in together on quick entry. After is the documents. */
   | "invoiceBatch"
   /** Jobs, whole: the jobs and what is given to each. */
-  | "jobs";
+  | "jobs"
+  /** Accounts brought in from a file. Before and after are the whole chart. */
+  | "chartImport";
 
 /** A register line as a change keeps it: the line, its coding and its split. */
 export interface RegisterSnapshot {
@@ -333,6 +335,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return { ...ledger, timeEntries: (event.before ?? []) as NonNullable<StoredLedger["timeEntries"]> };
     case "aupayroll":
       return { ...ledger, auPayroll: (event.before ?? { employees: [], payRuns: [] }) as NonNullable<StoredLedger["auPayroll"]> };
+    case "chartImport":
+      return { ...ledger, chart: (event.before ?? []) as Account[] };
     case "jobs":
       return { ...ledger, jobs: (event.before ?? { jobs: [], assigned: {} }) as NonNullable<StoredLedger["jobs"]> };
     case "classes":
@@ -715,6 +719,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   chartRemoved: "Chart of accounts",
   invoiceBatch: "Quick entry",
   jobs: "Jobs",
+  chartImport: "Chart of accounts",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

@@ -508,3 +508,4 @@ export * from "./sub-accounts.js";
 export * from "./analytics.js";
 export * from "./search-books.js";
 export * from "./gnucash.js";
+export * from "./chart-import.js";

@@ -38,6 +38,9 @@ import {
   accountEntityKey,
   accountLabel,
   emptyEntityModel,
+  applyChartPlan,
+  chartImportPlan,
+  readChartFile,
   entityCoverage,
   entityId,
   formatOwners,
@@ -1159,7 +1162,22 @@ export function renderEntities(): void {
   tidy.textContent = "Remove unused accounts";
   tidy.title = "Accounts nothing is coded to, posted to or set up with, to take out of the chart together";
   tidy.addEventListener("click", () => openRemoveUnused());
-  body.append(actionsRow(tidy));
+  // Accounts from a file, shown as a plan before anything changes.
+  const load = document.createElement("button");
+  load.type = "button";
+  load.textContent = "Load accounts…";
+  load.title = "A chart of accounts, a spreadsheet of accounts, or hledger's accounts: see what it would add and change first";
+  const loadInput = document.createElement("input");
+  loadInput.type = "file";
+  loadInput.accept = ".csv,.txt,.journal,.ledger,.hledger,text/csv,text/plain";
+  loadInput.hidden = true;
+  load.addEventListener("click", () => loadInput.click());
+  loadInput.addEventListener("change", () => {
+    const file = loadInput.files?.[0];
+    loadInput.value = "";
+    if (file !== undefined) void file.text().then((text) => openChartImport(file.name, text));
+  });
+  body.append(actionsRow(tidy, load, loadInput));
 
   const chartTable = document.createElement("table");
   chartTable.className = "entity-table accounts-table";
@@ -2150,6 +2168,98 @@ async function mergeChartAccount(
  * reload and travel in the saved file.
  */
 /** Make an account inactive, or active again: one change on History. */
+/**
+ * A dry run of bringing accounts in from a file: what would be added, what
+ * would change, and what the file names differently, before anything does.
+ */
+function openChartImport(fileName: string, text: string): void {
+  const read = readChartFile(text);
+  if (read.accounts.length === 0) {
+    void tellOnPage(`${fileName}: ${read.problems[0] ?? "no accounts could be read from it."}`);
+    return;
+  }
+  const plan = chartImportPlan(state.chart, read.accounts);
+  const box = document.createElement("dialog");
+  box.className = "ask-on-page payment-file-view";
+  const heading = document.createElement("h3");
+  heading.textContent = `${fileName}: ${read.accounts.length} accounts, read as ${read.read}`;
+  const said = document.createElement("p");
+  said.className = "payment-file-said";
+  said.textContent =
+    `${plan.added.length} would be added, ${plan.changed.length} would change type or tax code, and ${plan.same} are here already. ` +
+    "Nothing is taken out, and nothing is renamed.";
+  box.append(heading, said);
+  const list = (title: string, rows: string[]): void => {
+    if (rows.length === 0) return;
+    const h = document.createElement("h4");
+    h.textContent = title;
+    const ul = document.createElement("ul");
+    ul.className = "move-lines-scroll chart-plan";
+    for (const r of rows.slice(0, 200)) {
+      const li = document.createElement("li");
+      li.textContent = r;
+      ul.append(li);
+    }
+    if (rows.length > 200) {
+      const li = document.createElement("li");
+      li.textContent = `and ${rows.length - 200} more`;
+      ul.append(li);
+    }
+    box.append(h, ul);
+  };
+  list("Added", plan.added.map((a) => `${a.code ? `${a.code} ` : ""}${a.name}${a.type ? ` · ${a.type}` : " · no type yet"}`));
+  list(
+    "Changed",
+    plan.changed.map((c) => {
+      const parts: string[] = [];
+      if (c.before.type !== c.after.type) parts.push(`type ${c.before.type || "none"} to ${c.after.type}`);
+      if (c.before.taxCode !== c.after.taxCode) parts.push(`tax ${c.before.taxCode || "none"} to ${c.after.taxCode}`);
+      return `${c.before.code ? `${c.before.code} ` : ""}${c.before.name}: ${parts.join(", ")}`;
+    }),
+  );
+  list(
+    "Named differently in the file, kept as they are (rename on the chart to carry the coding with it)",
+    plan.named.map((n) => `${n.account.code ? `${n.account.code} ` : ""}${n.account.name}: the file says ${n.fileName}`),
+  );
+  for (const problem of read.problems.slice(0, 5)) box.append(note(problem));
+  const actions = document.createElement("div");
+  actions.className = "ask-on-page-actions";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "primary";
+  const doing = plan.added.length + plan.changed.length;
+  go.textContent = doing === 0 ? "Nothing to do" : `Add ${plan.added.length}, change ${plan.changed.length}`;
+  go.disabled = doing === 0;
+  actions.append(cancel, go);
+  box.append(actions);
+  const finish = (): void => {
+    box.close();
+    box.remove();
+  };
+  cancel.addEventListener("click", finish);
+  box.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finish();
+  });
+  go.addEventListener("click", () => {
+    void (async () => {
+      const before = state.chart;
+      const chart = applyChartPlan(before, plan);
+      state.chart = chart;
+      state.ledger = { ...state.ledger, chart };
+      state.persistent = await savePart(state.ledger, "chart");
+      await record("chartImport", `${fileName}: ${plan.added.length} accounts added, ${plan.changed.length} changed`, before, chart);
+      finish();
+      redraw("entities");
+    })();
+  });
+  document.body.append(box);
+  box.showModal();
+}
+
 /** Whether an account's type puts it in the profit and loss. */
 function inProfitAndLoss(account: Account): boolean {
   return /revenue|income|sales|expense|overhead|direct|cost|depreciation/i.test(account.type);

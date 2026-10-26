@@ -4646,17 +4646,34 @@ function renderExtract(body: HTMLElement, year: number): void {
   }
 }
 
-/**
- * Sales totalled by customer or by what was sold, for the period chosen, from
- * the sales invoices in the books less their credit notes.
- */
-function renderSalesBy(body: HTMLElement, year: number, by: "customer" | "item"): void {
+/** The sales the two reports total, for the period and entity chosen. */
+function salesFor(year: number, by: "customer" | "item"): ReturnType<typeof salesBy> {
   const period = reportRange(year);
   const chosen = state.entityFilter;
   const invoices = invoicesInPlay().filter((i) => chosen === "" || i.entityId === undefined || i.entityId === chosen);
   const items = state.ledger.items ?? [];
   const nameOf = (code: string): string | undefined => items.find((i) => i.id === code || i.name.trim().toLowerCase() === code.trim().toLowerCase())?.name;
-  const result = salesBy(invoices, period, by, nameOf);
+  return salesBy(invoices, period, by, nameOf);
+}
+
+/** Either report as a file, or null when there is nothing in it. */
+function salesByCsv(year: number, by: "customer" | "item"): { text: string; name: string } | null {
+  const result = salesFor(year, by);
+  if (result.rows.length === 0) return null;
+  const head = [by === "customer" ? "Customer" : "Product or service", by === "customer" ? "Invoices" : "Quantity", "Before tax", "Tax"];
+  const rows = result.rows.map((r) => [r.name, String(by === "customer" ? r.count : r.quantity), formatAmount(r.net), formatAmount(r.tax)]);
+  return {
+    text: [head, ...rows].map((r) => r.map(spreadsheetCell).join(",")).join("\r\n") + "\r\n",
+    name: `${by === "customer" ? "income-by-customer" : "sales-by-item"}-${periodFileName(year)}.csv`,
+  };
+}
+
+/**
+ * Sales totalled by customer or by what was sold, for the period chosen, from
+ * the sales invoices in the books less their credit notes.
+ */
+function renderSalesBy(body: HTMLElement, year: number, by: "customer" | "item"): void {
+  const result = salesFor(year, by);
   const heading = document.createElement("h3");
   heading.textContent = `${by === "customer" ? "Income by customer" : "Sales by product or service"}, ${periodHeading(year)}`;
   body.append(heading);
@@ -4692,16 +4709,6 @@ function renderSalesBy(body: HTMLElement, year: number, by: "customer" | "item")
   tbody.append(total);
   table.append(tbody);
   body.append(table);
-  const save = document.createElement("button");
-  save.type = "button";
-  save.textContent = "Export as CSV";
-  save.addEventListener("click", () => {
-    const head = [by === "customer" ? "Customer" : "Product or service", by === "customer" ? "Invoices" : "Quantity", "Before tax", "Tax"];
-    const rows = result.rows.map((r) => [r.name, String(by === "customer" ? r.count : r.quantity), formatAmount(r.net), formatAmount(r.tax)]);
-    const csv = [head, ...rows].map((r) => r.map(spreadsheetCell).join(",")).join("\r\n") + "\r\n";
-    download(csv, `${by === "customer" ? "income-by-customer" : "sales-by-item"}-${periodFileName(year)}.csv`, "text/csv");
-  });
-  body.append(save);
 }
 
 /** The twelve months of a financial year, from its first: April to March in New Zealand. */
@@ -5021,6 +5028,16 @@ export function downloadReport(): void {
         `ir3-${owner.toLowerCase().replace(/[^a-z0-9]+/g, "-")}-fy${year}.csv`,
         "text/csv",
       );
+    },
+    bycustomer: () => {
+      const csv = year === undefined ? null : salesByCsv(year, "customer");
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
+    },
+    byitem: () => {
+      const csv = year === undefined ? null : salesByCsv(year, "item");
+      if (csv === null) return nothingToDownload();
+      download(csv.text, csv.name, "text/csv");
     },
     owner: () => {
       const owner = $<HTMLSelectElement>("report-owner").value;

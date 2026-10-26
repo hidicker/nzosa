@@ -21,6 +21,8 @@ export const REPORT_DOWNLOADS = {
   rentals: "Rental schedules",
   ir3: "IR3",
   owner: "Income by owner",
+  bycustomer: "Income by customer",
+  byitem: "Sales by product or service",
 } as const;
 
 export type DownloadKind = keyof typeof REPORT_DOWNLOADS;

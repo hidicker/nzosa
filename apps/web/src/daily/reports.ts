@@ -57,6 +57,7 @@ import {
   ownerRentalSchedule,
   rentalSchedule,
   splitAccountLabel,
+  nestSubAccounts,
   IR10_LAYOUT,
   TAX_EXTRA_CATEGORIES,
   accountTransactionRows,
@@ -204,6 +205,19 @@ export function reportLookups(): {
  * account at all. Both are said plainly rather than left as "no type set",
  * which would send somebody looking for a setting that is not the problem.
  */
+/** A sub-account's parent's code, from the chart. */
+function subAccountParent(code: string): string | undefined {
+  const account = state.chart.find((a) => a.code.trim() === code);
+  const parent = account?.parent;
+  return parent !== undefined && state.chart.some((a) => a.code.trim() === parent) ? parent : undefined;
+}
+
+/** An account by its code, as a report names it. */
+function chartLabelOf(code: string): string {
+  const account = state.chart.find((a) => a.code.trim() === code);
+  return account === undefined ? code : `${account.name} - ${code}`;
+}
+
 function lineRoles(): (code: string) => string {
   const lookups = reportLookups();
   const held = new Set<string>();
@@ -4584,8 +4598,22 @@ export function renderReportsPage(): void {
     addRow(group.title, "", "report-section");
     const sign = (line: { net: number }): number => (income ? line.net : -line.net);
     const priorByCode = new Map((before?.lines ?? []).map((line) => [line.code, sign(line)]));
-    for (const line of group.lines) {
-      addRow(line.code, money(sign(line)), "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
+    const priorAll = new Map(priorByCode);
+    // Sub-accounts under their parent, with the group's total after them.
+    const codeOf = (line: { code: string }): string => splitAccountLabel(line.code).code || line.code;
+    for (const row of nestSubAccounts(group.lines, codeOf, subAccountParent)) {
+      if (row.kind === "heading") {
+        addRow(chartLabelOf(row.code), "", "report-sub-heading");
+        continue;
+      }
+      if (row.kind === "total") {
+        const now = row.items.reduce((sum, line) => sum + sign(line), 0);
+        const then = row.items.reduce((sum, line) => sum + (priorAll.get(line.code) ?? 0), 0);
+        addRow(`Total ${chartLabelOf(row.code)}`, money(now), "report-sub-total", "", undefined, against(now, then));
+        continue;
+      }
+      const line = row.item;
+      addRow(line.code, money(sign(line)), row.sub ? "report-sub" : "", String(line.count), line, against(sign(line), priorByCode.get(line.code)));
       priorByCode.delete(line.code);
     }
     // Accounts only the year before had: shown, at nothing now.

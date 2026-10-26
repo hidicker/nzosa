@@ -28,7 +28,7 @@ import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { askOnPage, askTextOnPage, note, tellOnPage, wideTable } from "../ui.js";
+import { askChoiceOnPage, askOnPage, askTextOnPage, note, tellOnPage, wideTable } from "../ui.js";
 import {
   feedAccountForNumber,
   parseXeroBankAccountList,
@@ -1404,8 +1404,18 @@ export function renderEntities(): void {
         ? "Offer it again when coding."
         : "Keep what is in it, and stop offering it when coding. Reports show it as before.";
     sleep.addEventListener("click", () => void setAccountInactive(account, account.inactive !== true));
-    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label), " ", move, " ", sleep, " ");
+    const under = document.createElement("button");
+    under.type = "button";
+    under.className = "small";
+    under.textContent = account.parent !== undefined ? "Sub-account" : "Make sub-account";
+    under.title =
+      account.parent !== undefined
+        ? `A sub-account of ${account.parent}. Change or undo that.`
+        : "Show it under another account, with a total for the two, in the chart and the profit and loss.";
+    under.addEventListener("click", () => void chooseParent(account));
+    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label), " ", move, " ", sleep, " ", under, " ");
     if (account.inactive === true) tr.classList.add("account-inactive");
+    if (account.parent !== undefined && state.chart.some((a) => a.code === account.parent)) nameCell.classList.add("account-sub");
     tr.append(actions);
     chartBody.append(tr);
   }
@@ -1436,7 +1446,7 @@ function groupedAccounts<Row extends { account: Account }>(
   model: EntityModel,
   rows: readonly Row[],
 ): (Row | { heading: string; count: number })[] {
-  if (model.entities.length === 0) return [...rows];
+  if (model.entities.length === 0) return subAccountsUnder(rows);
   const isBank = (row: Row): boolean => row.account.type.trim().toLowerCase() === "bank";
   const known = new Set(model.entities.map((e) => e.id));
   const entityOf = (row: Row): string => {
@@ -1460,7 +1470,29 @@ function groupedAccounts<Row extends { account: Account }>(
   ];
   return groups
     .filter((g) => g.rows.length > 0)
-    .flatMap((g) => [{ heading: g.heading, count: g.rows.length }, ...g.rows]);
+    .flatMap((g) => [{ heading: g.heading, count: g.rows.length }, ...subAccountsUnder(g.rows)]);
+}
+
+/** Rows with each sub-account moved to just after its parent, where both are listed. */
+function subAccountsUnder<Row extends { account: Account }>(rows: readonly Row[]): Row[] {
+  const codes = new Set(rows.map((r) => r.account.code));
+  const placed = new Set<Row>();
+  const out: Row[] = [];
+  for (const row of rows) {
+    const parent = row.account.parent;
+    if (parent !== undefined && codes.has(parent)) continue;
+    out.push(row);
+    placed.add(row);
+    for (const child of rows) {
+      if (child.account.parent === row.account.code && row.account.code !== "" && !placed.has(child)) {
+        out.push(child);
+        placed.add(child);
+      }
+    }
+  }
+  // Any left over -- a parent listed under another heading -- keep their place at the end.
+  for (const row of rows) if (!placed.has(row)) out.push(row);
+  return out;
 }
 
 /**
@@ -2118,6 +2150,68 @@ async function mergeChartAccount(
  * reload and travel in the saved file.
  */
 /** Make an account inactive, or active again: one change on History. */
+/** Whether an account's type puts it in the profit and loss. */
+function inProfitAndLoss(account: Account): boolean {
+  return /revenue|income|sales|expense|overhead|direct|cost|depreciation/i.test(account.type);
+}
+
+/**
+ * Set an account under another, or take it out from under one. One level: an
+ * account with sub-accounts of its own stays at the top, and so does its
+ * parent. The parent is on the same side, the profit and loss or the balance
+ * sheet, so a group's total means something.
+ */
+async function chooseParent(account: Account): Promise<void> {
+  const code = account.code.trim();
+  if (code === "") {
+    await tellOnPage("Give the account a code first: a sub-account names its parent by code.");
+    return;
+  }
+  if (state.chart.some((a) => a.parent === code)) {
+    await tellOnPage(`${code} ${account.name} has sub-accounts of its own, so it stays at the top.`);
+    return;
+  }
+  const side = inProfitAndLoss(account);
+  // Within one entity: a group spanning two would total two sets of books.
+  const owners = (state.ledger.entities ?? emptyEntityModel()).accounts;
+  const whose = (a: Account): string => owners[accountEntityKey(a)] ?? "";
+  const parents = state.chart
+    .filter(
+      (a) =>
+        whose(a) === whose(account) &&
+        a.code.trim() !== "" &&
+        a.code !== code &&
+        a.parent === undefined &&
+        a.type.trim().toLowerCase() !== "bank" &&
+        inProfitAndLoss(a) === side,
+    )
+    .sort((a, b) => a.code.localeCompare(b.code));
+  const choice = await askChoiceOnPage(
+    `Show ${code} ${account.name} under which account?`,
+    [["", "Not a sub-account"], ...parents.map((a) => [a.code, `${a.code} ${a.name}`] as const)],
+    account.parent ?? "",
+    "Save",
+  );
+  if (choice === null || choice === (account.parent ?? "")) return;
+  const chart = state.chart.map((a) => {
+    if (a.code !== account.code || a.name !== account.name) return a;
+    const { parent: _was, ...rest } = a;
+    return choice === "" ? rest : { ...rest, parent: choice };
+  });
+  const after = chart.find((a) => a.code === account.code && a.name === account.name) ?? null;
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record(
+    "chart",
+    choice === "" ? `${code} ${account.name} no longer a sub-account` : `${code} ${account.name} made a sub-account of ${choice}`,
+    account,
+    after,
+    `${account.code}|${account.name}`,
+  );
+  redraw("entities");
+}
+
 async function setAccountInactive(account: Account, inactive: boolean): Promise<void> {
   const chart = state.chart.map((a) => {
     if (a.code !== account.code || a.name !== account.name) return a;

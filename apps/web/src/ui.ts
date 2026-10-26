@@ -254,6 +254,59 @@ export function askNameAndChoiceOnPage(
   });
 }
 
+/** One choice from a list, asked on the page. Null when cancelled. */
+export function askChoiceOnPage(
+  message: string,
+  options: readonly (readonly [string, string])[],
+  initial: string,
+  yes = "OK",
+): Promise<string | null> {
+  return new Promise((resolve) => {
+    const box = document.createElement("dialog");
+    box.className = "ask-on-page";
+    const text = document.createElement("p");
+    text.className = "ask-on-page-text";
+    text.textContent = message;
+    const select = document.createElement("select");
+    select.className = "ask-on-page-input";
+    for (const [value, words] of options) {
+      const option = document.createElement("option");
+      option.value = value;
+      option.textContent = words;
+      option.selected = value === initial;
+      select.append(option);
+    }
+    const ok = document.createElement("button");
+    ok.type = "button";
+    ok.className = "primary";
+    ok.textContent = yes;
+    const cancel = document.createElement("button");
+    cancel.type = "button";
+    cancel.textContent = "Cancel";
+    const actions = document.createElement("div");
+    actions.className = "ask-on-page-actions";
+    actions.append(cancel, ok);
+    box.append(text, select, actions);
+    let answered = false;
+    const finish = (answer: string | null): void => {
+      if (answered) return;
+      answered = true;
+      box.close();
+      box.remove();
+      resolve(answer);
+    };
+    ok.addEventListener("click", () => finish(select.value));
+    cancel.addEventListener("click", () => finish(null));
+    box.addEventListener("cancel", (event) => {
+      event.preventDefault();
+      finish(null);
+    });
+    document.body.append(box);
+    box.showModal();
+    select.focus();
+  });
+}
+
 /** A left-aligned label in a report. */
 export function nameCell(text: string): HTMLTableCellElement {
   const td = document.createElement("td");

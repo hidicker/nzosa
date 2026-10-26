@@ -63,6 +63,11 @@ export interface Account {
    * the account pickers. Reports show it as before.
    */
   inactive?: boolean;
+  /**
+   * The code of the account this one is a sub-account of: shown under it,
+   * with a total for the two, in the chart and the reports. One level only.
+   */
+  parent?: string;
 }
 
 export interface ChartImportResult {
@@ -111,6 +116,8 @@ export function parseChartOfAccounts(text: string): ChartImportResult {
     const entityOwners = cells.get("Entity Owners");
     const entityKind = cells.get("Entity Kind");
     const ledgerAccount = cells.get("Ledger Account");
+    const parent = cells.get("Parent");
+    const inactive = cells.get("Inactive");
 
     // Xero exports its payroll clearing account ("Wage Payables") with no
     // type at all; a payable is a current liability.
@@ -127,6 +134,8 @@ export function parseChartOfAccounts(text: string): ChartImportResult {
       ...(entityOwners !== "" ? { entityOwners } : {}),
       ...(entityKind !== "" ? { entityKind } : {}),
       ...(ledgerAccount !== "" ? { ledgerAccount } : {}),
+      ...(parent !== "" && parent !== code ? { parent } : {}),
+      ...(/^(yes|true|1)$/i.test(inactive) ? { inactive: true } : {}),
     });
   }
 
@@ -233,6 +242,8 @@ const OUR_COLUMNS = [
   "Entity Owners",
   "Entity Kind",
   "Ledger Account",
+  "Parent",
+  "Inactive",
 ] as const;
 
 /** A cell kept as text where it starts like a formula: see `spreadsheetCell`. */
@@ -267,6 +278,8 @@ export function formatChartOfAccounts(accounts: readonly Account[]): string {
         account.entityOwners ?? "",
         account.entityKind ?? "",
         account.ledgerAccount ?? "",
+        account.parent ?? "",
+        account.inactive === true ? "yes" : "",
       ]
         .map(csvCell)
         .join(","),

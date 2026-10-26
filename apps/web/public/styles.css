@@ -2157,6 +2157,10 @@ main:has(#page-check:not([hidden])) { max-width: none; }
 .member-until small { color: var(--muted, #555); }
 tr.member-ended td { color: var(--muted, #777); }
 .cloud-until { display: inline-flex; align-items: center; gap: 4px; }
+.account-sub { padding-left: 1.6em !important; }
+tr.report-sub td.report-name { padding-left: 1.6em; }
+tr.report-sub-heading td.report-name { font-weight: 500; }
+tr.report-sub-total td { font-style: italic; border-top: 1px solid var(--border, #ddd); }
 tr.job-closed td { color: var(--muted, #777); }
 tr.job-open td { background: var(--accent-soft, #eef4fa); }
 .journal-tag { display: inline-block; font-size: 0.75em; padding: 1px 6px; border-radius: 8px; background: var(--accent-soft, #e6eef7); color: var(--accent, #23537a); vertical-align: middle; }

@@ -1,7 +1,7 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { cashForecast, changeShare, daysSalesOutstanding, gstReturnFingerprint, isCreditNote, isPosted, formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
+import { cashForecast, changeShare, dateLooksWrong, daysSalesOutstanding, gstReturnFingerprint, isCreditNote, isPosted, formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
 import type { OwingDocument } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
@@ -754,10 +754,12 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   save.type = "button";
   save.className = "primary";
   save.textContent = "Save journal";
-  save.addEventListener("click", () => {
+  save.addEventListener("click", async () => {
     readRows();
     const { journal, problems } = assemble();
     if (problems.length > 0) return;
+    const slip = dateLooksWrong(journal.date, new Date().toLocaleDateString("en-CA"));
+    if (slip !== null && !(await askOnPage(`${slip}\n\nSave the journal with this date?`))) return;
     journalDraft = null;
     void saveManualJournals(
       [...(state.ledger.manualJournals ?? []), journal],

@@ -510,3 +510,4 @@ export * from "./search-books.js";
 export * from "./gnucash.js";
 export * from "./chart-import.js";
 export * from "./fingerprint.js";
+export * from "./date-check.js";

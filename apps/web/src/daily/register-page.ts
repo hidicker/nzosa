@@ -19,6 +19,7 @@ import {
   registerRows,
   registerTransaction,
 } from "@nzosa/core";
+import { dateLooksWrong } from "@nzosa/core";
 import type { IsoDate, SplitPart, Transaction } from "@nzosa/core";
 
 /**
@@ -253,7 +254,7 @@ function entryForm(account: string, existing: Transaction | undefined): HTMLElem
     redraw("register");
   });
 
-  saveButton.addEventListener("click", () => {
+  saveButton.addEventListener("click", async () => {
     said.textContent = "";
     const outCents = parseAmount(paidOut.value || "0", booksCurrency());
     const inCents = parseAmount(paidIn.value || "0", booksCurrency());
@@ -279,6 +280,9 @@ function entryForm(account: string, existing: Transaction | undefined): HTMLElem
       said.textContent = problem;
       return;
     }
+    // A year typed wrong, asked about before it is saved.
+    const slip = existing !== undefined && existing.date === draft.date ? null : dateLooksWrong(draft.date, new Date().toLocaleDateString("en-CA"));
+    if (slip !== null && !(await askOnPage(`${slip}\n\nSave it with this date?`))) return;
     const sign = draft.amount > 0 ? 1 : -1;
     let coding: { code: string } | { parts: SplitPart[] };
     if (splitHost.hidden) {

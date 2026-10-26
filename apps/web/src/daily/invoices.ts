@@ -55,6 +55,7 @@ import {
   addDays,
   daysBetween,
   fillWording,
+  dateLooksWrong,
 } from "@nzosa/core";
 import type {
   SalesTaxRate,
@@ -1241,6 +1242,11 @@ async function saveInvoice(built: Invoice, existing: Invoice | undefined): Promi
   if (built.number === "") {
     await tellOnPage(`Give the ${noun} a number.`);
     return;
+  }
+  // A year typed wrong: asked when the date is new or changed, not of one imported.
+  if (existing === undefined || existing.issued !== built.issued) {
+    const slip = dateLooksWrong(built.issued, new Date().toLocaleDateString("en-CA"));
+    if (slip !== null && !(await askOnPage(`${slip}\n\nSave the ${noun} with this date?`))) return;
   }
   if (!(await billReady(built))) return;
   if (!(await creditLimitAllows(built, existing))) return;

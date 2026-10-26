@@ -5,6 +5,7 @@ import {
   documentsFromRows,
   termsDays,
   canonicalCodeFor,
+  dateLooksWrong,
   emptyEntityModel,
   findContact,
   formatAmount,
@@ -323,6 +324,10 @@ export function openQuickEntry(kind: InvoiceKind): void {
         await tellOnPage(problems.join("\n"));
         return;
       }
+      // Years typed wrong, asked about together.
+      const now = new Date().toLocaleDateString("en-CA");
+      const slips = typed.map((t, i) => [i, dateLooksWrong(t.date, now)] as const).filter(([, s]) => s !== null);
+      if (slips.length > 0 && !(await askOnPage(`${slips.map(([i, s]) => `Row ${i + 1}: ${s}`).join("\n")}\n\nSave them with these dates?`))) return;
       const owner = entityId();
       if (bills && keepers.length > 0) {
         if (owner === undefined) {

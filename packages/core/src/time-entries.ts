@@ -20,6 +20,8 @@ export interface TimeEntry {
   className?: string;
   /** The invoice it went on, once it has. */
   invoice?: string;
+  /** Who said it can be billed, and when, where time is approved before it is invoiced. */
+  approved?: { by: string; at: string };
 }
 
 /** What an entry comes to, to the cent. */
@@ -27,11 +29,15 @@ export function timeValue(entry: Pick<TimeEntry, "hours" | "rate">): Cents {
   return Math.round(entry.hours * entry.rate);
 }
 
-/** Billable entries not invoiced yet, by customer, in date order. */
-export function unbilledTime(entries: readonly TimeEntry[]): Map<string, TimeEntry[]> {
+/**
+ * Billable entries not invoiced yet, by customer, in date order. Where time is
+ * approved before it is billed, only the approved.
+ */
+export function unbilledTime(entries: readonly TimeEntry[], options: { approvedOnly?: boolean } = {}): Map<string, TimeEntry[]> {
   const out = new Map<string, TimeEntry[]>();
   for (const entry of [...entries].sort((a, b) => a.date.localeCompare(b.date))) {
     if (entry.nonBillable === true || entry.invoice !== undefined) continue;
+    if (options.approvedOnly === true && entry.approved === undefined) continue;
     out.set(entry.customer, [...(out.get(entry.customer) ?? []), entry]);
   }
   return out;

@@ -4626,3 +4626,4 @@ select.needs-choice {
 /* Stock: as at a day, and products at or below their reorder point. */
 .stock-as-at { display: flex; align-items: center; gap: 8px; margin: 8px 0; font-size: 0.9rem; }
 .stock-low td { color: var(--warn, #a15c00); font-weight: 600; }
+.time-approval { display: flex; align-items: center; gap: 6px; margin: 10px 0; }

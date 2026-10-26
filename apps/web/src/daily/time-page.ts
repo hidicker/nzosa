@@ -2,7 +2,7 @@ import { redraw } from "../app.js";
 import { record } from "../books.js";
 import { booksCurrency, booksMoney, noSalesTax, gstPercent } from "../country.js";
 import { $, state } from "../state.js";
-import { savePart } from "../store.js";
+import { save as saveLedger, savePart } from "../store.js";
 import { note, tellOnPage } from "../ui.js";
 import { findContact, nextInvoiceNumber, parseAmount, timeInvoiceLines, timeValue, unbilledTime } from "@nzosa/core";
 import type { Invoice, TimeEntry } from "@nzosa/core";
@@ -214,6 +214,17 @@ function entryForm(body: HTMLElement): void {
   body.append(box);
 }
 
+/** Say these entries can be billed: who, and when. */
+async function approve(ids: readonly string[]): Promise<void> {
+  const by = state.who.trim() || "the bookkeeper";
+  const at = new Date().toISOString();
+  const wanted = new Set(ids);
+  await keep(
+    held().map((e) => (wanted.has(e.id) && e.approved === undefined ? { ...e, approved: { by, at } } : e)),
+    `Approved ${ids.length} time ${ids.length === 1 ? "entry" : "entries"}`,
+  );
+}
+
 export function renderTime(): void {
   const body = $("time-body");
   body.textContent = "";
@@ -224,7 +235,74 @@ export function renderTime(): void {
     return;
   }
 
-  const open = unbilledTime(all);
+  // Approval: where it is asked for, time is billed only once somebody has
+  // said it can be.
+  const approving = state.ledger.timeApproval === true;
+  const switchLabel = document.createElement("label");
+  switchLabel.className = "time-approval";
+  const toggle = document.createElement("input");
+  toggle.type = "checkbox";
+  toggle.checked = approving;
+  toggle.addEventListener("change", () => {
+    void (async () => {
+      const before = approving;
+      state.ledger = { ...state.ledger, timeApproval: toggle.checked };
+      state.persistent = await saveLedger(state.ledger);
+      await record("timeApproval", toggle.checked ? "Time is approved before it is invoiced" : "Time is invoiced without approval", before, toggle.checked);
+      redraw("time");
+    })();
+  });
+  switchLabel.append(toggle, " Time is approved before it is invoiced");
+  body.append(switchLabel);
+
+  if (approving) {
+    const waiting = all
+      .filter((e) => e.nonBillable !== true && e.invoice === undefined && e.approved === undefined)
+      .sort((a, b) => a.date.localeCompare(b.date));
+    if (waiting.length > 0) {
+      const title = document.createElement("h3");
+      title.textContent = `Waiting for approval (${waiting.length})`;
+      body.append(title);
+      const approveAll = document.createElement("button");
+      approveAll.type = "button";
+      approveAll.className = "small";
+      approveAll.textContent = "Approve all of it";
+      approveAll.addEventListener("click", () => void approve(waiting.map((e) => e.id)));
+      body.append(approveAll);
+      const table = document.createElement("table");
+      table.className = "report-table owner-table";
+      table.innerHTML = "<thead><tr><th>Date</th><th>Customer</th><th>Description</th><th>Hours</th><th>Value</th><th></th></tr></thead>";
+      const tbody = document.createElement("tbody");
+      for (const entry of waiting) {
+        const tr = document.createElement("tr");
+        for (const [text, cls] of [
+          [entry.date, "report-name"],
+          [entry.customer, "report-name"],
+          [entry.description, "report-name"],
+          [hoursSaid(entry.hours), "report-amount"],
+          [booksMoney(timeValue(entry)), "report-amount"],
+        ] as const) {
+          const td = document.createElement("td");
+          td.className = cls;
+          td.textContent = text;
+          tr.append(td);
+        }
+        const cell = document.createElement("td");
+        const ok = document.createElement("button");
+        ok.type = "button";
+        ok.className = "small";
+        ok.textContent = "Approve";
+        ok.addEventListener("click", () => void approve([entry.id]));
+        cell.append(ok);
+        tr.append(cell);
+        tbody.append(tr);
+      }
+      table.append(tbody);
+      body.append(table);
+    }
+  }
+
+  const open = unbilledTime(all, { approvedOnly: approving });
   if (open.size > 0) {
     const title = document.createElement("h3");
     title.textContent = "Not invoiced yet";
@@ -280,7 +358,17 @@ export function renderTime(): void {
       [hoursSaid(entry.hours), "report-amount"],
       [booksMoney(entry.rate), "report-amount"],
       [booksMoney(timeValue(entry)), "report-amount"],
-      [entry.invoice ?? (entry.nonBillable === true ? "Not billable" : ""), "report-name"],
+      [
+        entry.invoice ??
+          (entry.nonBillable === true
+            ? "Not billable"
+            : approving
+              ? entry.approved !== undefined
+                ? `Approved by ${entry.approved.by}`
+                : "Waiting for approval"
+              : ""),
+        "report-name",
+      ],
     ] as const) {
       const td = document.createElement("td");
       td.className = cls;

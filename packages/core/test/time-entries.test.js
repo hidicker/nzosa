@@ -26,3 +26,13 @@ test("a line an entry, with its hours and rate", () => {
   assert.equal(lines[1].gross, 23750);
   assert.equal(lines[1].quantity, 2.5);
 });
+
+test("where time is approved before it is billed, only approved time is offered", async () => {
+  const { unbilledTime } = await import("../dist/index.js");
+  const entries = [
+    { id: "a", date: "2026-10-01", customer: "Ana", hours: 1, rate: 9_500, description: "x", approved: { by: "Tom", at: "2026-10-02" } },
+    { id: "b", date: "2026-10-03", customer: "Ana", hours: 2, rate: 9_500, description: "y" },
+  ];
+  assert.deepEqual(unbilledTime(entries).get("Ana").map((e) => e.id), ["a", "b"]);
+  assert.deepEqual(unbilledTime(entries, { approvedOnly: true }).get("Ana").map((e) => e.id), ["a"]);
+});

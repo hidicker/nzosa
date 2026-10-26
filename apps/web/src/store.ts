@@ -377,6 +377,8 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /** Time is approved before it can be invoiced. */
+  timeApproval?: boolean;
   /** What the invoice, statement and reminder emails say, where changed from the standard. */
   emailWording?: Partial<Record<WordingKind, Wording>>;
   /** Messages for the foot of an invoice, to choose from; one may start each new invoice. */
@@ -879,6 +881,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.attachments && ledger.attachments.length > 0 ? { attachments: ledger.attachments } : {}),
     ...(ledger.invoiceMessages && ledger.invoiceMessages.length > 0 ? { invoiceMessages: ledger.invoiceMessages } : {}),
     ...(ledger.emailWording && Object.keys(ledger.emailWording).length > 0 ? { emailWording: ledger.emailWording } : {}),
+    ...(ledger.timeApproval === true ? { timeApproval: true } : {}),
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

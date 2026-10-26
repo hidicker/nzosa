@@ -3,7 +3,8 @@ import { computeOurReturns } from "./variance.js";
 import { state } from "./state.js";
 import { booksReadOnly, setSaveGuard } from "./store.js";
 import type { StoredLedger } from "./store.js";
-import { lockBroken, lockedFigures } from "@nzosa/core";
+import { lockBroken, lockedDifferences, lockedFigures } from "@nzosa/core";
+import { noteLockedMove } from "./locked-changes.js";
 import type { Account, LockDates, LockedFigures } from "@nzosa/core";
 import { tellOnPage } from "./ui.js";
 
@@ -86,6 +87,25 @@ export function resetLockBaseline(): void {
   baseline = { ledger: state.ledger, chart: state.chart, figures: null, key: "" };
 }
 
+/**
+ * Whether this save moved figures in a period that had been locked and has
+ * been opened again, to be put on record. The furthest the locks ever
+ * reached is kept on the books; a lock moved back to make a change leaves
+ * that span unguarded, and so watched.
+ */
+function noteOnceLocked(ledger: StoredLedger): void {
+  if (baseline === null) return;
+  const high = ledger.lockHighWater;
+  if (!hasLocks(high)) return;
+  const now = ledger.lockDates;
+  // Nothing beyond the locks in force: those the guard itself keeps.
+  if ((high?.year ?? "") <= (now?.year ?? "") && (high?.gst ?? "") <= (now?.gst ?? "")) return;
+  const before = figuresOf(baseline.ledger, baseline.chart, high);
+  const after = ledger === state.ledger ? figuresNow(high) : figuresOf(ledger, state.chart, high);
+  const moved = lockedDifferences(before, after);
+  if (moved.length > 0) noteLockedMove(moved);
+}
+
 function guard(ledger: StoredLedger): void {
   // Read only refuses everything, and the same way a lock does: the books go
   // back as they were opened, so nothing on screen pretends to be saved.
@@ -96,6 +116,7 @@ function guard(ledger: StoredLedger): void {
   }
   const locks = ledger.lockDates;
   if (baseline === null || (!hasLocks(locks) && !hasLocks(baseline.ledger.lockDates))) {
+    noteOnceLocked(ledger);
     baseline = { ledger, chart: state.chart, figures: null, key: "" };
     return;
   }
@@ -112,6 +133,7 @@ function guard(ledger: StoredLedger): void {
     state.chart = baseline.chart;
     throw new LockedChange(broken);
   }
+  noteOnceLocked(ledger);
   baseline = { ledger, chart: state.chart, figures: after, key };
 }
 

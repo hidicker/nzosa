@@ -6,8 +6,8 @@ import { backendKind, openCloudBookId, save } from "../store.js";
 import { addTransactions } from "./bank-import.js";
 import { nameCell, note } from "../ui.js";
 import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
-import { firstOpenDay } from "@nzosa/core";
-import type { IsoDate, LockDates, Transaction } from "@nzosa/core";
+import { firstOpenDay, furthestLocks } from "@nzosa/core";
+import type { IsoDate, LockDates, LockedChange, Transaction } from "@nzosa/core";
 
 /**
  * Setting the lock dates, and the bank lines that arrive for a locked period.
@@ -117,16 +117,93 @@ export function renderLockDates(): void {
     void setLocks(next);
   });
   body.append(saveIt, said);
+  body.append(lockedChangesList());
+}
+
+/**
+ * Every change made in a period after it had been locked: the lock moved
+ * back, and each change made while it was, with what it moved. An accountant
+ * reviewing a signed-off year reads this first.
+ */
+function lockedChangesList(): HTMLElement {
+  const box = document.createElement("div");
+  box.className = "locked-changes";
+  const list = state.ledger.lockedChanges ?? [];
+  const heading = document.createElement("h4");
+  heading.textContent = `Changes in locked periods (${list.length})`;
+  box.append(heading);
+  if (list.length === 0) {
+    box.append(note("None. Nothing has been changed in a period after it was locked."));
+    return box;
+  }
+  box.append(
+    note(
+      "A locked period can only be changed by moving its lock back. Each time that happened is listed, " +
+        "with every change made in the period while it was open and the figures it moved.",
+    ),
+  );
+  const table = document.createElement("table");
+  table.className = "report-table owner-table";
+  const head = document.createElement("thead");
+  head.innerHTML = "<tr><th>When</th><th>Who</th><th>What</th><th>Figures moved</th></tr>";
+  const tbody = document.createElement("tbody");
+  for (const one of [...list].reverse()) {
+    const tr = document.createElement("tr");
+    tr.append(
+      nameCell(new Date(one.at).toLocaleString(booksLocale(), { dateStyle: "medium", timeStyle: "short" })),
+      nameCell(one.who),
+      nameCell(one.summary),
+    );
+    const moved = document.createElement("td");
+    moved.className = "report-name";
+    for (const line of one.moved.slice(0, 12)) {
+      const div = document.createElement("div");
+      div.textContent = line;
+      moved.append(div);
+    }
+    if (one.moved.length > 12) {
+      const more = document.createElement("div");
+      more.textContent = `and ${one.moved.length - 12} more`;
+      moved.append(more);
+    }
+    tr.append(moved);
+    tbody.append(tr);
+  }
+  table.append(head, tbody);
+  box.append(table);
+  return box;
 }
 
 async function setLocks(next: LockDates): Promise<void> {
   const before = state.ledger.lockDates ?? null;
   const empty = next.gst === undefined && next.year === undefined;
+  // How far the books had been finished, kept when a lock is moved back.
+  const high = furthestLocks(furthestLocks(state.ledger.lockHighWater, before ?? undefined), next);
+  // A lock moved back opens a finished period: that goes on record too.
+  const opened: LockedChange[] = [];
+  const by = state.who.trim() === "" ? "unattributed" : state.who.trim();
+  for (const [name, was, now] of [
+    ["GST lock", before?.gst, next.gst],
+    ["Year lock", before?.year, next.year],
+  ] as const) {
+    if (was === undefined || (now !== undefined && now >= was)) continue;
+    opened.push({
+      at: new Date().toISOString(),
+      who: by,
+      summary: now === undefined ? `${name} taken off; it was at ${was}` : `${name} moved back from ${was} to ${now}`,
+      moved: [],
+    });
+  }
+  const kept = {
+    ...state.ledger,
+    lockHighWater: high,
+    ...(opened.length > 0 ? { lockedChanges: [...(state.ledger.lockedChanges ?? []), ...opened] } : {}),
+  };
   if (empty) {
-    const { lockDates: _gone, ...rest } = state.ledger;
+    const { lockDates: _gone, ...rest } = kept;
     state.ledger = rest;
   } else {
-    state.ledger = { ...state.ledger, lockDates: next };
+    state.ledger = { ...kept, lockDates: next };
   }
   state.persistent = await save(state.ledger);
   const words = (l: LockDates | null): string =>

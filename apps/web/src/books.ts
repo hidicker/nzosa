@@ -22,6 +22,7 @@ import type { RuleFileShape } from "./rules-ui.js";
 import { caches, state } from "./state.js";
 import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
+import { takeLockedMove } from "./locked-changes.js";
 import type { StoredLedger } from "./store.js";
 import { resetLockBaseline } from "./lock.js";
 import { applyModules } from "./modules.js";
@@ -652,6 +653,16 @@ export async function record(
   const event = makeEvent(state.who, kind, summary, before, after, targetId);
   state.events = appendEvent(state.events, event);
   await saveEvents(state.events);
+  // A change into a period that had been locked goes on the books' own record,
+  // which lasts as long as they do, where History is only the recent past.
+  const moved = takeLockedMove();
+  if (moved !== null) {
+    state.ledger = {
+      ...state.ledger,
+      lockedChanges: [...(state.ledger.lockedChanges ?? []), { at: event.at, who: event.who, summary, moved }],
+    };
+    state.persistent = await save(state.ledger);
+  }
 }
 
 /**

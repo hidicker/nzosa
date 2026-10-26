@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { Attachment, CreditAllocation, PartCopy, PartOp, Wording, WordingKind } from "@nzosa/core";
+import type { Attachment, CreditAllocation, LockedChange, PartCopy, PartOp, Wording, WordingKind } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -425,6 +425,10 @@ export interface StoredLedger {
   beforeStartLeft?: string[];
   /** Periods that are finished: filed GST returns, and years signed off. */
   lockDates?: LockDates;
+  /** The furthest each lock has ever reached, so a lock moved back is still known. */
+  lockHighWater?: LockDates;
+  /** Changes made in a period after it had been locked, on record. */
+  lockedChanges?: LockedChange[];
   /**
    * Bank lines that arrived dated in a locked period, held for a decision
    * rather than posted there: a feed line from last month after its return
@@ -943,6 +947,8 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
+    ...(ledger.lockHighWater ? { lockHighWater: ledger.lockHighWater } : {}),
+    ...(ledger.lockedChanges && ledger.lockedChanges.length > 0 ? { lockedChanges: ledger.lockedChanges } : {}),
     ...(ledger.lockedArrivals ? { lockedArrivals: ledger.lockedArrivals } : {}),
     ...(ledger.betweenLines ? { betweenLines: ledger.betweenLines } : {}),
     ...(ledger.gstKeptFrom ? { gstKeptFrom: ledger.gstKeptFrom } : {}),

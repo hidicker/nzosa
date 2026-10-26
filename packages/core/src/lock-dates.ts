@@ -3,6 +3,7 @@ import type { GstReturnResult } from "./gst.js";
 import type { PostedJournal } from "./posting.js";
 import type { EntityModel } from "./entities.js";
 import { reportsNetOfGst } from "./entities.js";
+import { formatAmount } from "./money.js";
 
 /**
  * Lock dates: periods that are finished, and stay as they were finished.
@@ -128,4 +129,81 @@ export function lockBroken(
     return `That would change a GST return up to ${locks.gst}, which is locked as filed.`;
   }
   return null;
+}
+
+/**
+ * The furthest each lock has reached, of two: so moving a lock back to make a
+ * change leaves on record how far the books had been finished.
+ */
+export function furthestLocks(a: LockDates | undefined, b: LockDates | undefined): LockDates {
+  const later = (x: IsoDate | undefined, y: IsoDate | undefined): IsoDate | undefined =>
+    x === undefined || x === "" ? (y === "" ? undefined : y) : y === undefined || y === "" ? x : x > y ? x : y;
+  const gst = later(a?.gst, b?.gst);
+  const year = later(a?.year, b?.year);
+  return { ...(gst !== undefined ? { gst } : {}), ...(year !== undefined ? { year } : {}) };
+}
+
+/** A change made in a period that had been locked, as it is reported. */
+export interface LockedChange {
+  /** When it was made, as a full timestamp. */
+  at: string;
+  who: string;
+  /** What the change was, as History has it. */
+  summary: string;
+  /** Each figure it moved: an account on a day, or a box of a return. */
+  moved: string[];
+}
+
+
+/**
+ * What moved between two sets of locked figures, in words: each account on a
+ * day whose total changed, and each box of a return that did.
+ */
+export function lockedDifferences(before: LockedFigures, after: LockedFigures): string[] {
+  const out: string[] = [];
+  const totals = (text: string): Map<string, number> =>
+    new Map(
+      text
+        .split("\n")
+        .filter((l) => l.includes("="))
+        .map((l) => {
+          const at = l.lastIndexOf("=");
+          return [l.slice(0, at), Number(l.slice(at + 1))] as [string, number];
+        }),
+    );
+  const was = totals(before.year);
+  const now = totals(after.year);
+  for (const key of [...new Set([...was.keys(), ...now.keys()])].sort()) {
+    const a = was.get(key) ?? 0;
+    const b = now.get(key) ?? 0;
+    if (a === b) continue;
+    const [day, account] = key.split("|");
+    out.push(`${day} ${account}: ${formatAmount(a)} to ${formatAmount(b)}`);
+  }
+  const returns = (text: string): Map<string, Record<string, number>> =>
+    new Map(
+      text
+        .split("\n")
+        .filter((l) => l.includes(":"))
+        .map((l) => {
+          const at = l.indexOf(":");
+          return [l.slice(0, at), JSON.parse(l.slice(at + 1)) as Record<string, number>] as [string, Record<string, number>];
+        }),
+    );
+  const filedWas = returns(before.gst);
+  const filedNow = returns(after.gst);
+  for (const period of [...new Set([...filedWas.keys(), ...filedNow.keys()])].sort()) {
+    const a = filedWas.get(period) ?? {};
+    const b = filedNow.get(period) ?? {};
+    const boxes = [...new Set([...Object.keys(a), ...Object.keys(b)])]
+      .filter((box) => (a[box] ?? 0) !== (b[box] ?? 0))
+      .sort((x, y) => Number(x.replace(/\D/g, "")) - Number(y.replace(/\D/g, "")));
+    if (boxes.length === 0) continue;
+    const [from, to] = period.split("..");
+    out.push(
+      `GST return ${from} to ${to}: ` +
+        boxes.map((box) => `${box.replace(/^box/i, "Box ")} ${formatAmount(a[box] ?? 0)} to ${formatAmount(b[box] ?? 0)}`).join(", "),
+    );
+  }
+  return out;
 }

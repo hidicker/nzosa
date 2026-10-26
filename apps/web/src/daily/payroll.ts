@@ -2,9 +2,10 @@ import { booksCurrency } from "../country.js";
 import { employeeDetailsFields, employeeDetailsFile } from "./payroll-employee-details.js";
 import { moduleOn } from "../modules.js";
 import { redraw } from "../app.js";
-import { employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
+import { childSupportFromNotices, employerDeductionsByMonth, nextPayPeriod } from "@nzosa/core";
 import { itemsEditor } from "./payroll-items.js";
-import type { PayDeduction, PayItem } from "@nzosa/core";
+import type { DeductionNotice, PayDeduction, PayItem } from "@nzosa/core";
+import { noticesEditor } from "./payroll-notices.js";
 import { renderLeave } from "./payroll-leave.js";
 import { emailPayslip, employerName, openPayslips, payslipsFor } from "./payslips-ui.js";
 import { openPaymentFile } from "./payment-file-ui.js";
@@ -680,6 +681,12 @@ function renderEmployeeEditor(container: HTMLElement): void {
     }),
   );
   card.append(template);
+  let notices = (existing?.notices ?? []) as DeductionNotice[];
+  card.append(
+    noticesEditor(notices, (list) => {
+      notices = list;
+    }),
+  );
 
   // Error message container
   const errorMsg = document.createElement("p");
@@ -752,6 +759,7 @@ function renderEmployeeEditor(container: HTMLElement): void {
       ...(templateAllowances.length > 0 ? { allowances: templateAllowances } : {}),
       ...(templateReimbursements.length > 0 ? { reimbursements: templateReimbursements } : {}),
       ...(templateDeductions.length > 0 ? { deductions: templateDeductions } : {}),
+      ...(notices.length > 0 ? { notices } : {}),
       ...(detailsUi.read() !== undefined ? { details: detailsUi.read() } : {}),
     };
 
@@ -1188,6 +1196,12 @@ function renderPayRunCreator(container: HTMLElement): void {
       csInput.placeholder = "0.00";
       const currentCs = payRunDraft.inputs.get(emp.id)?.childSupport;
       csInput.value = currentCs ? (currentCs / 100).toFixed(2) : "";
+      // Left empty, the employee's child support notice is what is taken.
+      const noticed = childSupportFromNotices(emp, payRunDraft.payDate || new Date().toLocaleDateString("en-CA"));
+      if (noticed > 0) {
+        csInput.placeholder = (noticed / 100).toFixed(2);
+        csInput.title = "From the employee's child support notice. Type an amount to take something else this pay.";
+      }
       csInput.addEventListener("change", () => {
         const cents = parseAmount(csInput.value.trim(), booksCurrency()) ?? undefined;
         const current = payRunDraft.inputs.get(emp.id) ?? {};

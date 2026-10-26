@@ -73,6 +73,8 @@ export interface PayDeduction {
   name: string;
   amount: Cents;
   account?: string | undefined;
+  /** The deduction notice it was taken under, by its id. */
+  notice?: string | undefined;
 }
 
 /** A pay item as paid: its amount worked out. */
@@ -80,6 +82,96 @@ export interface PaidItem {
   name: string;
   amount: Cents;
   account?: string | undefined;
+  /** The deduction notice it was taken under, by its id. */
+  notice?: string | undefined;
+}
+
+/**
+ * A notice telling the employer to take money from an employee's pay: child
+ * support, an Inland Revenue deduction notice for a tax or student loan debt,
+ * or a court's attachment order for a fine. Taken each pay from its start
+ * date until its end date, or until its total has been taken.
+ *
+ * Child support goes through the pay's child support field, so it is filed
+ * and protected (60% of net pay kept) as IR's specification says. The others
+ * are deductions after tax, paid on to whoever issued the notice from the
+ * account named.
+ */
+export interface DeductionNotice {
+  id: string;
+  kind: "child-support" | "ird" | "court-fine";
+  /** The notice's own reference: IR's, or the court's. */
+  reference: string;
+  /** Each pay, a fixed amount... */
+  amount?: Cents | undefined;
+  /** ...or a share of net pay, e.g. 0.1. */
+  rate?: number | undefined;
+  from: IsoDate;
+  until?: IsoDate | undefined;
+  /** Stop once this much has been taken in all. */
+  total?: Cents | undefined;
+  /** Net pay the employee keeps whatever is asked: an attachment order's protected earnings. */
+  protectedNet?: Cents | undefined;
+  /** Where it is held until paid on, a liability account. */
+  account?: string | undefined;
+}
+
+/** Whether a notice applies to a pay made on this day. */
+export function noticeActive(notice: DeductionNotice, payDate: IsoDate): boolean {
+  return notice.from <= payDate && (notice.until === undefined || notice.until === "" || notice.until >= payDate);
+}
+
+/** Child support the employee's notices ask for this pay. */
+export function childSupportFromNotices(employee: Pick<Employee, "notices">, payDate: IsoDate): Cents {
+  return (employee.notices ?? [])
+    .filter((n) => n.kind === "child-support" && noticeActive(n, payDate))
+    .reduce((sum, n) => sum + (n.amount ?? 0), 0);
+}
+
+/** What has been taken under a notice in earlier pays. */
+export function takenUnderNotice(history: readonly PayRun[], employeeId: string, noticeId: string): Cents {
+  let taken = 0;
+  for (const run of history) {
+    for (const line of run.lines) {
+      if (line.employeeId !== employeeId) continue;
+      for (const d of line.deductions ?? []) if (d.notice === noticeId) taken += d.amount;
+    }
+  }
+  return taken;
+}
+
+/**
+ * The IRD and court notices' deductions for one pay, from what is left of
+ * net pay after tax, KiwiSaver, student loan and child support. Each is cut
+ * to what remains of its total, and so the employee keeps any protected net
+ * pay the notice sets -- and never less than nothing.
+ */
+export function noticeDeductions(
+  employee: Pick<Employee, "id" | "notices">,
+  payDate: IsoDate,
+  netPay: Cents,
+  history: readonly PayRun[],
+): PaidItem[] {
+  const out: PaidItem[] = [];
+  let left = netPay;
+  for (const notice of employee.notices ?? []) {
+    if (notice.kind === "child-support" || !noticeActive(notice, payDate)) continue;
+    let asked = notice.rate !== undefined && notice.rate > 0 ? truncCents(netPay * notice.rate) : (notice.amount ?? 0);
+    if (notice.total !== undefined && notice.total > 0) {
+      asked = Math.min(asked, Math.max(0, notice.total - takenUnderNotice(history, employee.id, notice.id)));
+    }
+    const keep = Math.max(0, notice.protectedNet ?? 0);
+    const amount = Math.max(0, Math.min(asked, left - keep));
+    if (amount <= 0) continue;
+    left -= amount;
+    out.push({
+      name: `${notice.kind === "ird" ? "IRD deduction notice" : "Court fine"} ${notice.reference}`.trim(),
+      amount,
+      notice: notice.id,
+      ...(notice.account ? { account: notice.account } : {}),
+    });
+  }
+  return out;
 }
 
 export interface Employee {
@@ -135,6 +227,8 @@ export interface Employee {
   allowances?: PayItem[] | undefined;
   reimbursements?: PayItem[] | undefined;
   deductions?: PayDeduction[] | undefined;
+  /** Notices to take money from pay: child support, IRD debts, court fines. */
+  notices?: DeductionNotice[] | undefined;
   /** What IR's Employee Details file needs beyond the pay: see employee-details.ts. */
   details?: EmployeeDetails | undefined;
 }
@@ -803,7 +897,8 @@ export function buildPayRun(params: {
     const line =
       calculatePayLine(emp, gross, year, {
         earningsNotLiableAcc: input.earningsNotLiableAcc,
-        childSupport: input.childSupport,
+        // Typed for this pay, or what the employee's notices ask.
+        childSupport: input.childSupport ?? (childSupportFromNotices(emp, params.payDate) || undefined),
         hours,
         ...(extra > 0
           ? {
@@ -825,12 +920,15 @@ export function buildPayRun(params: {
         priorPaye: input.priorPaye,
       });
     const reimbursed = reimbursements.reduce((s, i) => s + i.amount, 0);
-    const deducted = deductions.reduce((s, i) => s + i.amount, 0);
+    // The notices first: taken by law, ahead of what was agreed.
+    const owed = noticeDeductions(emp, params.payDate, line.netPay, params.history ?? []);
+    const taken = [...owed, ...deductions];
+    const deducted = taken.reduce((s, i) => s + i.amount, 0);
     lines.push({
       ...line,
       ...(allowances.length > 0 ? { allowances } : {}),
       ...(reimbursements.length > 0 ? { reimbursements } : {}),
-      ...(deductions.length > 0 ? { deductions } : {}),
+      ...(taken.length > 0 ? { deductions: taken } : {}),
       ...(input.daysPaid !== undefined ? { daysPaid: input.daysPaid } : {}),
       ...(input.unpaidWeeks !== undefined && input.unpaidWeeks > 0 ? { unpaidWeeks: input.unpaidWeeks } : {}),
       netPay: line.netPay + reimbursed - deducted,

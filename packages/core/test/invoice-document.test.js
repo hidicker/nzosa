@@ -167,3 +167,20 @@ test("the invoice's own message is at its foot and in its email; none adds nothi
   // A note given for this one document wins over the invoice's own.
   assert.ok(invoiceDocument(inv, supplier, { note: "Other words" }).includes("Other words"));
 });
+
+test("a sales receipt is printed as paid, with nothing asked for", () => {
+  const sale = invoice({
+    receipt: true, contact: "Walk-in customer", due: null, paid: 23000, outstanding: 0,
+    paidOutside: [{ date: "2026-05-01", amount: 23000, accountCode: "Cash on hand - 090" }],
+  });
+  const html = invoiceDocument(sale, supplier);
+  assert.ok(html.includes("Tax invoice and receipt"));
+  assert.ok(html.includes("Sold to"));
+  assert.ok(html.includes(">Paid<"));
+  assert.ok(!html.includes("02-1100-0022001-000"), "no bank account to pay into");
+  assert.ok(invoiceDocument({ ...sale, tax: 0 }, { name: "Sole Trader" }).includes("<h1>Receipt</h1>"));
+  const mail = invoiceEmail(sale, supplier);
+  assert.ok(mail.body.includes("Paid: 230.00"));
+  assert.ok(!mail.body.includes("Amount due"));
+  assert.ok(!mail.body.includes("Payment details"));
+});

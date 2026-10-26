@@ -69,6 +69,7 @@ import {
   isCreditNote as isCreditDocument,
   trackStock,
   outsidePurchases,
+  outsideSales,
   journalGstFor,
   mapToOurVocabulary as coreMapToOurVocabulary,
   sameEntityBanks as coreSameEntityBanks,
@@ -416,7 +417,9 @@ export function invoicesInPlay(): Invoice[] {
  * receipt matched to one would settle a debt that does not exist.
  */
 export function invoicesToMatch(): Invoice[] {
-  return invoicesInPlay().filter(isPosted);
+  // A sales receipt was paid at the counter: the bank line that banks its
+  // takings moves them out of the cash account, and is not its payment.
+  return invoicesInPlay().filter((i) => isPosted(i) && i.receipt !== true);
 }
 
 export function invoiceAssignments(): Map<string, string> {
@@ -997,7 +1000,7 @@ export function varianceInput(): VarianceInput {
     // the return covering the balance date.
     debitAdjustments: vehicleBox9(accountsFor(state.varianceAccounts)),
     otherPurchases: (period) => [...otherPurchasesFor(period), ...journalGstIn(period).purchases],
-    otherSales: (period) => journalGstIn(period).sales,
+    otherSales: (period) => [...otherSalesFor(period), ...journalGstIn(period).sales],
     settles: settlementOf,
   };
 }
@@ -1239,13 +1242,25 @@ function journalGstIn(period: { from: string; to: string }): { purchases: OtherP
  * bill with no entity said counts when all of them are showing.
  */
 function otherPurchasesFor(period: { from: string; to: string }): OtherPurchase[] {
+  return outsidePurchases(invoicesInPlay(), period, documentCounts);
+}
+
+/** Sales paid other than through a bank line -- cash at the counter -- for Box 5. */
+function otherSalesFor(period: { from: string; to: string }): OtherPurchase[] {
+  return outsideSales(invoicesInPlay(), period, documentCounts);
+}
+
+/**
+ * Whether a document's GST belongs on the return showing: the entity chosen's,
+ * and an entity registered for GST. One with no entity said counts when all
+ * of them are showing.
+ */
+function documentCounts(doc: Invoice): boolean {
   const model = state.ledger.entities ?? emptyEntityModel();
   const chosen = state.entityFilter;
-  return outsidePurchases(invoicesInPlay(), period, (bill) => {
-    if (chosen !== "" && bill.entityId !== chosen) return false;
-    const entity = model.entities.find((e) => e.id === bill.entityId);
-    return entity === undefined || entity.gstRegistered !== false;
-  });
+  if (chosen !== "" && doc.entityId !== chosen) return false;
+  const entity = model.entities.find((e) => e.id === doc.entityId);
+  return entity === undefined || entity.gstRegistered !== false;
 }
 
 export function invoiceBalanceMap(): Map<string, InvoiceBalance> {

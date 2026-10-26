@@ -261,6 +261,41 @@ export function outsidePurchases(
 }
 
 /**
+ * Sales paid for other than through a bank line, in a period, for Box 5.
+ *
+ * Cash taken at the counter, or a payment into a till or undeposited-funds
+ * account: when the money is banked, its bank line moves it from that
+ * account and carries no GST, so on the payments basis the sale's GST would
+ * never be returned at all. Each payment counts when it was received, in
+ * proportion to the tax the invoice carries. A debt written off received
+ * nothing, and is left out.
+ */
+export function outsideSales(
+  invoices: readonly Invoice[],
+  period: { from: IsoDate; to: IsoDate },
+  include: (invoice: Invoice) => boolean = () => true,
+): OtherPurchase[] {
+  const out: OtherPurchase[] = [];
+  for (const sale of invoices) {
+    if (sale.kind !== "sales" || !isPosted(sale) || !include(sale)) continue;
+    if (sale.tax === 0 || sale.total === 0) continue;
+    for (const payment of sale.paidOutside ?? []) {
+      if (payment.writeOff === true) continue;
+      if (payment.date < period.from || payment.date > period.to) continue;
+      const amount = Math.abs(payment.amount);
+      out.push({
+        // Against the size of the sale, so a refund on a credit note comes off.
+        gross: shareOf(amount, Math.abs(sale.total), taxableGross(sale)),
+        gst: shareOf(amount, Math.abs(sale.total), sale.tax),
+        date: payment.date,
+        label: `${sale.number} ${sale.contact}`.trim(),
+      });
+    }
+  }
+  return out;
+}
+
+/**
  * The journals for a document's payments made outside the bank lines.
  *
  * A bill paid by a shareholder:

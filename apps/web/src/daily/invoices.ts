@@ -91,6 +91,53 @@ let editingInvoice: string | null = null;
 let editorOn: "invoices" | "bills" = "invoices";
 /** The document a new one is being copied from, or null for a blank one. */
 let copyingFrom: Invoice | null = null;
+/** A new document is a sales receipt: paid at the counter as it is made. */
+let newReceipt = false;
+
+/** Who a sale paid at the counter is to, when no name is given. */
+const WALK_IN = "Walk-in customer";
+/** Where the account last chosen for receipts is remembered, on this device. */
+const RECEIPT_ACCOUNT_KEY = "nzosa.receiptAccount";
+
+/**
+ * The accounts takings can sit in until they are banked: cash on hand, a
+ * till, undeposited funds. Not a bank account with a feed or a register --
+ * the money would arrive there as a line of its own and be counted twice --
+ * and not a control, tax or prepaid account.
+ */
+function receiptAccounts(): { value: string; label: string }[] {
+  const fits = /current asset|bank|cash/i;
+  const never = /gst|vat|payable|receivable|tax|provision|prepay|inventory|stock|suspense|rounding|historical|tracking|bond|loan|depreciation|held by|manager|agent/i;
+  return state.chart
+    .filter((a) => fits.test(a.type) && !never.test(`${a.type} ${a.name}`))
+    .filter((a) => (a.ledgerAccount ?? "").trim() === "")
+    .map((a) => ({ value: a.code.trim() === "" ? a.name : `${a.name} - ${a.code.trim()}`, label: `${a.code ? `${a.code} ` : ""}${a.name}` }))
+    .sort((a, b) => a.label.localeCompare(b.label));
+}
+
+/** A Cash on hand account, added to the chart for takings to sit in. */
+async function addCashOnHand(): Promise<string> {
+  const taken = new Set(state.chart.map((a) => a.code.trim()));
+  let code = "";
+  for (let n = 90; n < 100 && code === ""; n += 1) {
+    const candidate = String(n).padStart(3, "0");
+    if (!taken.has(candidate)) code = candidate;
+  }
+  const account: Account = {
+    code,
+    name: "Cash on hand",
+    type: "Current Asset",
+    taxCode: "No GST",
+    description: "Takings until they are banked.",
+    gstTreatment: "out-of-scope",
+  };
+  const chart = [...state.chart, account];
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record("chart", `${code} Cash on hand added, for sales receipts`, null, account, `${code}|Cash on hand`);
+  return code === "" ? account.name : `${account.name} - ${code}`;
+}
 
 /** The GST treatments an invoice line can carry, named as Xero names them. */
 const INVOICE_TAX_TYPES = [
@@ -250,14 +297,18 @@ export function renderInvoiceEditor(): void {
       : blankInvoice();
   const copiedFrom = existing === undefined ? copyingFrom : null;
   copyingFrom = null;
+  // A sale paid as it is made: no due date, nothing owing, the money in a
+  // cash or till account until it is banked.
+  const asReceipt = !asBill && (existing !== undefined ? existing.receipt === true : newReceipt || copiedFrom?.receipt === true);
+  if (asReceipt && existing === undefined && draft.contact.trim() === "") draft.contact = WALK_IN;
 
   const box = document.createElement("div");
   box.className = "invoice-editor";
 
   const heading = document.createElement("h3");
   heading.textContent = existing
-    ? `Edit ${existing.number}`
-    : `${asBill ? "New bill" : "New invoice"}${copiedFrom !== null ? `, copied from ${copiedFrom.number}` : ""}`;
+    ? `Edit ${existing.number}${asReceipt ? ", a sales receipt" : ""}`
+    : `${asBill ? "New bill" : asReceipt ? "New sales receipt" : "New invoice"}${copiedFrom !== null ? `, copied from ${copiedFrom.number}` : ""}`;
   box.append(heading);
 
   const grid = document.createElement("div");
@@ -306,7 +357,7 @@ export function renderInvoiceEditor(): void {
   // A bill written on the Bills page is a bill; the choice is only offered
   // where either could be meant.
   const typeField = field("Type", kind);
-  typeField.hidden = asBill;
+  typeField.hidden = asBill || asReceipt;
 
   // Changing what the document is changes what it is called, but only while the
   // number is still the one offered: a number typed by hand is a decision, and
@@ -404,12 +455,71 @@ export function renderInvoiceEditor(): void {
   const issued = document.createElement("input");
   issued.type = "date";
   issued.value = draft.issued;
-  field(asBill ? "Bill date" : "Issued", issued, asBill ? "The date on the bill: when the cost and its GST fall." : undefined);
+  field(
+    asBill ? "Bill date" : asReceipt ? "Sold on" : "Issued",
+    issued,
+    asBill ? "The date on the bill: when the cost and its GST fall." : asReceipt ? "And paid for, the same day." : undefined,
+  );
 
   const due = document.createElement("input");
   due.type = "date";
   due.value = draft.due ?? "";
-  field("Due", due, "Optional.");
+  field("Due", due, "Optional.").hidden = asReceipt;
+
+  // Where the takings sit until they are banked. When they are, that bank
+  // line is coded to the same account, which empties it again.
+  const into = document.createElement("select");
+  const fillInto = (chosen: string): void => {
+    into.textContent = "";
+    const choices = receiptAccounts();
+    if (choices.length === 0) {
+      const none = document.createElement("option");
+      none.value = "";
+      none.textContent = "Choose the account";
+      into.append(none);
+    }
+    for (const choice of choices) {
+      const option = document.createElement("option");
+      option.value = choice.value;
+      option.textContent = choice.label;
+      into.append(option);
+    }
+    if (!state.chart.some((a) => a.name.trim().toLowerCase() === "cash on hand")) {
+      const add = document.createElement("option");
+      add.value = "new";
+      add.textContent = "Add a Cash on hand account…";
+      into.append(add);
+    }
+    const known = (value: string): boolean => choices.some((c) => c.value === value);
+    let remembered = "";
+    try {
+      remembered = localStorage.getItem(RECEIPT_ACCOUNT_KEY) ?? "";
+    } catch {
+      remembered = "";
+    }
+    into.value = known(chosen) ? chosen : known(remembered) ? remembered : (choices[0]?.value ?? "");
+  };
+  const wasInto = draft.paidOutside?.find((p) => p.writeOff !== true)?.accountCode ?? "";
+  if (asReceipt) {
+    fillInto(wasInto);
+    if (wasInto !== "" && into.value !== wasInto) {
+      // An account no longer offered keeps its place on the receipt it paid.
+      const option = document.createElement("option");
+      option.value = wasInto;
+      option.textContent = wasInto;
+      into.prepend(option);
+      into.value = wasInto;
+    }
+    into.addEventListener("change", () => {
+      if (into.value !== "new") return;
+      void addCashOnHand().then((made) => fillInto(made));
+    });
+    field(
+      "Paid into",
+      into,
+      "Cash, a till or undeposited funds: where the money is until it is banked. Code that deposit to the same account.",
+    );
+  }
 
   // A bill's status is one of three decisions, not free text: the rest --
   // part paid, paid, overdue -- are worked out from the money.
@@ -437,14 +547,14 @@ export function renderInvoiceEditor(): void {
         : "Awaiting Payment";
   const statusText = text(draft.status);
   const status = asBill ? statusChoice : statusText;
-  field("Status", status);
+  field("Status", status).hidden = asReceipt;
 
   const paid = text((draft.paid / 100).toFixed(2));
   const paidField = field("Already paid", paid, "Leave at 0.00 for a new invoice.");
   // A bill's payments are bank lines matched on Reconcile, or a payment
   // recorded on the Bills page with its date and account. A bare figure here
   // would have neither.
-  paidField.hidden = asBill && draft.paid === 0;
+  paidField.hidden = (asBill && draft.paid === 0) || asReceipt;
 
   // United States sales tax: one rate for the invoice, the place the sale is
   // made, added on top of the taxable lines and owed in the rate's account.
@@ -924,13 +1034,45 @@ export function renderInvoiceEditor(): void {
     };
   };
 
+  // A receipt is paid in full on its date, into the account chosen: one
+  // payment, worked out again whenever the receipt is saved.
+  const asReceiptDocument = (built: Invoice): Invoice | null => {
+    const account = into.value;
+    if (account === "" || account === "new") return null;
+    const kept = (built.paidOutside ?? []).filter((p) => p.writeOff === true);
+    return {
+      ...built,
+      contact: built.contact === "" ? WALK_IN : built.contact,
+      due: null,
+      status: "Paid",
+      paid: built.total,
+      outstanding: 0,
+      receipt: true,
+      paidOutside: [...kept, { date: built.issued, amount: Math.abs(built.total), accountCode: account, note: "Sales receipt" }],
+    };
+  };
+
   const save = document.createElement("button");
   save.type = "button";
   save.className = "primary";
   save.textContent = asBill
     ? existing === undefined || statusChoice.value === "Draft" ? "Save as draft" : "Save"
-    : "Save invoice";
+    : asReceipt ? "Save receipt" : "Save invoice";
   save.addEventListener("click", () => {
+    if (asReceipt) {
+      const receipt = asReceiptDocument(build("Paid"));
+      if (receipt === null) {
+        void tellOnPage("Choose the account the money was paid into.");
+        return;
+      }
+      try {
+        localStorage.setItem(RECEIPT_ACCOUNT_KEY, into.value);
+      } catch {
+        // Only a convenience: the next receipt asks again.
+      }
+      void saveInvoice(receipt, existing);
+      return;
+    }
     void saveInvoice(build(asBill ? statusChoice.value : statusText.value.trim()), existing);
   });
 
@@ -963,7 +1105,7 @@ export function renderInvoiceEditor(): void {
   estimate.type = "button";
   estimate.textContent = `Save as ${quoteWord().toLowerCase()}`;
   estimate.title = `Keep it as ${quoteWord() === "Quote" ? "a quote" : "an estimate"}: it is not in the books until you make it an invoice.`;
-  estimate.hidden = asBill;
+  estimate.hidden = asBill || asReceipt;
   estimate.addEventListener("click", () => {
     const built = build("Estimate");
     const prefix = quoteWord() === "Quote" ? "QU" : "EST";
@@ -978,7 +1120,7 @@ export function renderInvoiceEditor(): void {
     const duplicate = document.createElement("button");
     duplicate.type = "button";
     duplicate.textContent = "Duplicate";
-    duplicate.title = `A new ${asBill ? "bill" : "invoice"} with the same ${asBill ? "supplier" : "customer"} and lines, dated today`;
+    duplicate.title = `A new ${asBill ? "bill" : asReceipt ? "sales receipt" : "invoice"} with the same ${asBill ? "supplier" : "customer"} and lines, dated today`;
     duplicate.addEventListener("click", () => {
       copyingFrom = existing;
       editingInvoice = "";
@@ -1323,7 +1465,11 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
                 ...fillWording(own, {
                   customer: invoice.contact,
                   business: supplier.name,
-                  title: isEstimate(invoice) ? quoteWord() : (supplier.gstNumber ?? "").trim() !== "" ? "Tax invoice" : "Invoice",
+                  title: isEstimate(invoice)
+                    ? quoteWord()
+                    : (supplier.gstNumber ?? "").trim() !== ""
+                      ? invoice.receipt === true ? "Tax invoice and receipt" : "Tax invoice"
+                      : invoice.receipt === true ? "Receipt" : "Invoice",
                   number: invoice.number,
                   amount: booksMoney(invoice.paid !== 0 ? invoice.outstanding : invoice.total),
                   due: invoice.due ?? "",
@@ -1429,7 +1575,7 @@ export function renderInvoices(): void {
 
   // Drafts are listed, and never matched: nothing is owed on one yet.
   const result = matchInvoices({
-    invoices: invoices.filter(isPosted),
+    invoices: invoices.filter((i) => isPosted(i) && i.receipt !== true),
     transactions: state.ledger.transactions,
     ...(state.ledger.allocations ? { allocations: state.ledger.allocations } : {}),
   });
@@ -1730,7 +1876,37 @@ export function renderInvoices(): void {
     tbody.append(tr);
   }
 
-  heading.textContent = `Matched (${result.matched.length + byInvoice.size})`;
+  // Settled with no bank line at all: a sales receipt paid at the counter,
+  // a balance written off, a payment into undeposited funds.
+  let elsewhere = 0;
+  for (const invoice of invoices) {
+    if ((invoice.paidOutside ?? []).length === 0 || shownAlready.has(invoice.number) || byInvoice.has(invoice.number)) continue;
+    if (!isPosted(invoice) || (balances.get(invoice.number)?.remaining ?? 0) > 0) continue;
+    elsewhere += 1;
+    if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
+    const payments = invoice.paidOutside ?? [];
+    const tr = document.createElement("tr");
+    tr.append(invoiceCell(invoice, invoice.number));
+    tr.append(amountCell(money(invoice.total)));
+    const cell = document.createElement("td");
+    cell.className = "report-name match-lines";
+    for (const p of payments) {
+      const line = document.createElement("div");
+      line.textContent = `${p.date} · ${money(p.amount)} · ${p.accountCode}${p.note ? ` · ${p.note}` : ""}`;
+      cell.append(line);
+    }
+    tr.append(cell);
+    tr.append(amountCell(money(payments.reduce((sum, p) => sum + Math.abs(p.amount), 0))));
+    tr.append(
+      nameCell(
+        invoice.receipt === true ? "sales receipt" : payments.every((p) => p.writeOff === true) ? "written off" : "paid elsewhere",
+      ),
+    );
+    tr.append(editInvoiceCell(invoice));
+    tbody.append(tr);
+  }
+
+  heading.textContent = `Matched (${result.matched.length + byInvoice.size + elsewhere})`;
   table.append(head, tbody);
   body.append(wideTable(table));
 
@@ -1798,6 +1974,15 @@ async function acceptMatch(transactionId: string, invoiceNumber: string): Promis
 export function startNewInvoice(): void {
   editorOn = "invoices";
   editingInvoice = "";
+  newReceipt = false;
+  redraw("invoiceEditor");
+}
+
+/** Begin a sales receipt: a sale paid for as it is made. */
+export function startNewReceipt(): void {
+  editorOn = "invoices";
+  editingInvoice = "";
+  newReceipt = true;
   redraw("invoiceEditor");
 }
 
@@ -1832,6 +2017,7 @@ export function editBill(number: string): void {
 /** Starting an invoice, loading a batch of them, and searching what is there. */
 export function wireInvoices(): void {
   $("invoice-new").addEventListener("click", () => startNewInvoice());
+  $("receipt-new").addEventListener("click", () => startNewReceipt());
 
   $("invoices-pick").addEventListener("click", () => $<HTMLInputElement>("invoices-input").click());
   $<HTMLInputElement>("invoices-input").addEventListener("change", (e) => {

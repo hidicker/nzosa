@@ -114,6 +114,12 @@ export interface Invoice {
   documentLink?: string;
   /** Words at the foot of the invoice and in its email: terms, a thank you. */
   message?: string;
+  /**
+   * A sales receipt: a sale paid for when it was made, at the counter. Its
+   * payment is one of `paidOutside`, into a cash or till account, and it is
+   * printed as a receipt rather than a request to pay.
+   */
+  receipt?: boolean;
 }
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */

@@ -181,7 +181,9 @@ export function invoiceDocument(
   const nzDate = (iso: string): string => written(iso, options.dateStyle);
   const gstNumber = noTax ? "" : (supplier.gstNumber ?? "").trim();
   const registered = gstNumber !== "";
-  const title = options.title ?? (!noTax && (registered || invoice.tax !== 0) ? "Tax invoice" : "Invoice");
+  const taxed = !noTax && (registered || invoice.tax !== 0);
+  const receipt = invoice.receipt === true;
+  const title = options.title ?? (receipt ? (taxed ? "Tax invoice and receipt" : "Receipt") : taxed ? "Tax invoice" : "Invoice");
   // Columns before the total: description, quantity, amount, and GST where there is any.
   const span = noTax ? 3 : 4;
   const logo = cleanLogo(supplier.logo);
@@ -195,7 +197,7 @@ export function invoiceDocument(
 
   const totals = invoice.paid !== 0
     ? `<tr><td colspan="${span}" class="n">Total</td><td class="n">${formatAmount(invoice.total)}</td></tr>
-      <tr><td colspan="${span}" class="n">Already paid</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
+      <tr><td colspan="${span}" class="n">${receipt ? "Paid" : "Already paid"}</td><td class="n">${formatAmount(-invoice.paid)}</td></tr>
       <tr class="due"><td colspan="${span}" class="n">Amount due</td><td class="n">${formatAmount(invoice.outstanding)}</td></tr>`
     : `<tr class="due"><td colspan="${span}" class="n">Total due</td><td class="n">${formatAmount(invoice.total)}</td></tr>`;
 
@@ -224,7 +226,7 @@ export function invoiceDocument(
   </div>
 
   <div class="to">
-    <span class="k-block">Billed to</span>
+    <span class="k-block">${receipt ? "Sold to" : "Billed to"}</span>
     ${escapeHtml(invoice.contact)}
   </div>
 
@@ -253,7 +255,7 @@ export function invoiceDocument(
     </tfoot>
   </table>
 
-  ${supplier.payTo ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
+  ${supplier.payTo && !receipt ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
   ${(options.note ?? invoice.message ?? "").trim() !== "" ? `<div class="note">${asLines(options.note ?? invoice.message ?? "")}</div>` : ""}
   ${
     disagrees
@@ -280,7 +282,9 @@ export function invoiceEmail(
   options: InvoiceDocumentOptions = {},
 ): { to: string; subject: string; body: string } {
   const registered = options.noTax !== true && (supplier.gstNumber ?? "").trim() !== "";
-  const title = options.title ?? (registered || (options.noTax !== true && invoice.tax !== 0) ? "Tax invoice" : "Invoice");
+  const taxed = registered || (options.noTax !== true && invoice.tax !== 0);
+  const receipt = invoice.receipt === true;
+  const title = options.title ?? (receipt ? (taxed ? "Tax invoice and receipt" : "Receipt") : taxed ? "Tax invoice" : "Invoice");
   const number = invoice.number.trim();
   const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
 
@@ -289,12 +293,12 @@ export function invoiceEmail(
     "",
     `Please find ${title.toLowerCase()} ${number} attached.`.replace("  ", " "),
     "",
-    `Amount due: ${formatAmount(owing)}`,
+    receipt ? `Paid: ${formatAmount(invoice.paid)}` : `Amount due: ${formatAmount(owing)}`,
   ];
-  if (invoice.due !== null) lines.push(`Due: ${written(invoice.due, options.dateStyle)}`);
+  if (invoice.due !== null && !receipt) lines.push(`Due: ${written(invoice.due, options.dateStyle)}`);
   if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
   const payTo = (supplier.payTo ?? "").trim();
-  if (payTo !== "") lines.push("", `Payment details: ${payTo}`);
+  if (payTo !== "" && !receipt) lines.push("", `Payment details: ${payTo}`);
   const note = options.note ?? invoice.message;
   if (note !== undefined && note.trim() !== "") lines.push("", note.trim());
   lines.push("", "Thank you,", supplier.name);

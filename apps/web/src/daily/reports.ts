@@ -2730,7 +2730,7 @@ function renderGstTransactions(body: HTMLElement, result: GstReturnResult, money
   // Listed, or the boxes would not add up to the lines.
   for (const [side, list, caption] of [
     ["purchases", result.otherPurchases, "Purchases with no bank line: bills paid elsewhere, and manual journals"],
-    ["sales", result.otherSales, "Sales with no bank line: manual journals"],
+    ["sales", result.otherSales, "Sales with no bank line: receipts and invoices paid in cash, and manual journals"],
   ] as const) {
     if ((gstBoxFocus !== null && gstBoxFocus !== side) || list.length === 0) continue;
     const heading = document.createElement("h4");

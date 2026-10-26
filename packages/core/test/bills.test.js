@@ -8,6 +8,7 @@ import {
   invoiceBalances,
   outsidePaymentJournals,
   outsidePurchases,
+  outsideSales,
   postLedger,
   standardAccounts,
   trialBalance,
@@ -183,4 +184,31 @@ test("a commercial rental's standard accounts include Accounts Payable", () => {
   const set = standardAccounts("commercial", { suffix: "TS" });
   assert.ok(set.some((a) => a.code === "800TS" && a.type === "Accounts Payable"));
   assert.ok(!standardAccounts("residential").some((a) => a.type === "Accounts Payable"));
+});
+
+test("a sale paid in cash reaches Box 5 when it was received, a write-off never", () => {
+  const sale = bill({
+    number: "INV-0300", kind: "sales", contact: "Walk-in customer", total: 23000, tax: 3000, receipt: true,
+    lines: [{ description: "Tandem", accountCode: "200", taxType: "15% GST on Income", gross: 23000, tax: 3000, net: 20000 }],
+    paidOutside: [{ date: "2025-06-03", amount: 23000, accountCode: "090" }],
+  });
+  const period = { from: "2025-06-01", to: "2025-07-31" };
+  assert.deepEqual(outsideSales([sale], period), [
+    { gross: 23000, gst: 3000, date: "2025-06-03", label: "INV-0300 Walk-in customer" },
+  ]);
+  assert.deepEqual(outsideSales([sale], { from: "2025-08-01", to: "2025-09-30" }), []);
+  assert.deepEqual(outsideSales([bill({ paidOutside: [{ date: "2025-06-03", amount: 11500, accountCode: "881" }] })], period), [], "bills are Box 11's");
+  const writtenOff = { ...sale, paidOutside: [{ date: "2025-06-03", amount: 23000, accountCode: "Bad debts", writeOff: true }] };
+  assert.deepEqual(outsideSales([writtenOff], period), []);
+  const refund = { ...sale, number: "CN-0001", total: -23000, tax: -3000,
+    lines: [{ description: "Refund", accountCode: "200", taxType: "15% GST on Income", gross: -23000, tax: -3000, net: -20000 }] };
+  assert.deepEqual(outsideSales([refund], period).map((o) => [o.gross, o.gst]), [[-23000, -3000]]);
+
+  const result = gstReturn([], period, {
+    resolve: () => ({ treatment: "standard", side: "sales" }),
+    basis: "payments",
+    otherSales: outsideSales([sale], period),
+  });
+  assert.equal(result.boxes.box5, 23000);
+  assert.equal(result.boxes.box8, 3000);
 });

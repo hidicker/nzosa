@@ -49,6 +49,8 @@ import {
   attachmentsOf,
   documentOwner,
   moveAttachments,
+  addDays,
+  daysBetween,
 } from "@nzosa/core";
 import type {
   SalesTaxRate,
@@ -85,6 +87,8 @@ let editingInvoice: string | null = null;
  * opens already a bill, belonging to an entity, as a draft until approved.
  */
 let editorOn: "invoices" | "bills" = "invoices";
+/** The document a new one is being copied from, or null for a blank one. */
+let copyingFrom: Invoice | null = null;
 
 /** The GST treatments an invoice line can carry, named as Xero names them. */
 const INVOICE_TAX_TYPES = [
@@ -177,6 +181,30 @@ function blankInvoice(): Invoice {
   };
 }
 
+/**
+ * A new document with another's customer or supplier, lines and terms: a new
+ * number, dated today, nothing paid, and due as many days after today as the
+ * original was after its own date.
+ */
+function copyOf(from: Invoice): Invoice {
+  const blank = blankInvoice();
+  const days = from.due === null ? null : daysBetween(from.issued, from.due);
+  const due = days === null ? null : addDays(blank.issued, days);
+  const { paidOutside: _paid, documentLink: _link, broughtForward: _bf, ...rest } = from;
+  return {
+    ...rest,
+    number: blank.number,
+    // Theirs belonged to the one copied: a supplier's invoice number, a customer's order.
+    reference: "",
+    issued: blank.issued,
+    due,
+    status: blank.status,
+    paid: 0,
+    outstanding: 0,
+    lines: from.lines.map((l) => ({ ...l })),
+  };
+}
+
 /** Cents from what someone typed, tolerating commas, spaces and a $ sign. */
 function parseMoney(text: string): number {
   const cleaned = text.replace(/[$,\s]/g, "");
@@ -202,13 +230,19 @@ export function renderInvoiceEditor(): void {
   // leaves the invoice exactly as it was.
   const draft: Invoice = existing
     ? { ...existing, lines: existing.lines.map((l) => ({ ...l })) }
-    : blankInvoice();
+    : copyingFrom !== null
+      ? copyOf(copyingFrom)
+      : blankInvoice();
+  const copiedFrom = existing === undefined ? copyingFrom : null;
+  copyingFrom = null;
 
   const box = document.createElement("div");
   box.className = "invoice-editor";
 
   const heading = document.createElement("h3");
-  heading.textContent = existing ? `Edit ${existing.number}` : asBill ? "New bill" : "New invoice";
+  heading.textContent = existing
+    ? `Edit ${existing.number}`
+    : `${asBill ? "New bill" : "New invoice"}${copiedFrom !== null ? `, copied from ${copiedFrom.number}` : ""}`;
   box.append(heading);
 
   const grid = document.createElement("div");
@@ -849,6 +883,17 @@ export function renderInvoiceEditor(): void {
   actions.append(...(asBill ? [approve] : []), save, ...(asBill ? [] : [estimate]), cancel);
 
   if (existing) {
+    // The same again: a monthly invoice, a supplier's regular bill.
+    const duplicate = document.createElement("button");
+    duplicate.type = "button";
+    duplicate.textContent = "Duplicate";
+    duplicate.title = `A new ${asBill ? "bill" : "invoice"} with the same ${asBill ? "supplier" : "customer"} and lines, dated today`;
+    duplicate.addEventListener("click", () => {
+      copyingFrom = existing;
+      editingInvoice = "";
+      redraw("invoiceEditor");
+    });
+    actions.append(duplicate);
     const remove = document.createElement("button");
     remove.type = "button";
     remove.className = "danger";

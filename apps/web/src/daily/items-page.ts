@@ -3,8 +3,8 @@ import { postedJournals, record, saveManualJournals, stockAccounts, stockTracked
 import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
-import { itemKey, lowStock, parseAmount, stockAdjustment, stockAsAt, stockValue } from "@nzosa/core";
+import { askOnPage, download, note, tellOnPage } from "../ui.js";
+import { formatItems, itemKey, lowStock, parseAmount, parseProductList, splitAccountLabel, stockAdjustment, stockAsAt, stockValue } from "@nzosa/core";
 import type { Item, StockCount, StockMove } from "@nzosa/core";
 
 /** Products and services: a price list that fills in an invoice line from a name. */
@@ -14,6 +14,55 @@ let editing: string | null = null;
 let stockDate: string | null = null;
 
 const round = (n: number): number => Math.round(n * 100) / 100;
+
+/** A chart code for what a spreadsheet says an item sells to: a code, a coding label, or a name. */
+function chartCodeFor(said: string | undefined): string | undefined {
+  const text = (said ?? "").trim();
+  if (text === "") return undefined;
+  if (state.chart.some((a) => a.code.trim() === text)) return text;
+  const { code, name } = splitAccountLabel(text);
+  if (code !== "" && state.chart.some((a) => a.code.trim() === code)) return code;
+  const byName = state.chart.find((a) => a.name.trim().toLowerCase() === (name || text).trim().toLowerCase() && a.code.trim() !== "");
+  return byName?.code.trim();
+}
+
+/**
+ * Products and services from a spreadsheet: new ones added, and ones already
+ * here (by name) given the file's price, cost and the rest. Asked first.
+ */
+async function loadItems(fileName: string, text: string): Promise<void> {
+  const read = parseProductList(text, booksCurrency());
+  if (read.length === 0) {
+    await tellOnPage(`${fileName}: no products or services could be read. It needs a name, a type and a price or cost.`);
+    return;
+  }
+  const byKey = new Map(held().map((i) => [itemKey(i.name), i]));
+  let added = 0;
+  let changed = 0;
+  const next = [...held()];
+  for (const one of read) {
+    const accountCode = chartCodeFor(one.incomeAccount);
+    const found = byKey.get(itemKey(one.item.name));
+    const merged: Item = {
+      ...(found ?? { id: `item${Date.now().toString(36)}${added}` }),
+      ...one.item,
+      ...(accountCode !== undefined ? { accountCode } : found?.accountCode !== undefined ? { accountCode: found.accountCode } : {}),
+    } as Item;
+    if (found === undefined) {
+      next.push(merged);
+      added += 1;
+    } else if (JSON.stringify(merged) !== JSON.stringify(found)) {
+      next[next.indexOf(found)] = merged;
+      changed += 1;
+    }
+  }
+  if (added + changed === 0) {
+    await tellOnPage(`${fileName}: every product and service in it is here already, as it is.`);
+    return;
+  }
+  if (!await askOnPage(`${fileName}: ${added} new, and ${changed} already here would take the file's price, cost and details. Go ahead?`)) return;
+  await keep(next, `${fileName}: ${added} products and services added, ${changed} updated`);
+}
 
 /** A product's every movement in and out, with what was on hand after each. */
 function openMovements(item: Item, moves: readonly StockMove[]): void {
@@ -234,7 +283,27 @@ export function renderItems(): void {
     editing = "new";
     redraw("items");
   });
-  body.append(add);
+  // The whole list as a spreadsheet, and one brought back in.
+  const save = document.createElement("button");
+  save.type = "button";
+  save.textContent = "Download (CSV)";
+  save.disabled = held().length === 0;
+  save.addEventListener("click", () => download(formatItems(held()), "products-and-services.csv", "text/csv"));
+  const load = document.createElement("button");
+  load.type = "button";
+  load.textContent = "Load from a spreadsheet…";
+  load.title = "A list with a name, a type and a price: this app's download, or QuickBooks' or SlowBooks' products and services";
+  const picker = document.createElement("input");
+  picker.type = "file";
+  picker.accept = ".csv,text/csv";
+  picker.hidden = true;
+  load.addEventListener("click", () => picker.click());
+  picker.addEventListener("change", () => {
+    const file = picker.files?.[0];
+    picker.value = "";
+    if (file !== undefined) void file.text().then((text) => loadItems(file.name, text));
+  });
+  body.append(add, " ", save, " ", load, picker);
   if (editing === "new") body.append(form(null));
   if (held().length === 0 && editing !== "new") {
     body.append(note("No products or services yet."));

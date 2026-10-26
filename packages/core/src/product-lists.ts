@@ -1,4 +1,4 @@
-import { parseCsvRecords } from "./csv.js";
+import { parseCsvRecords, spreadsheetCell } from "./csv.js";
 import type { ReadonlyCsvRecord } from "./csv.js";
 import { parseAmount } from "./money.js";
 import type { Item } from "./items.js";
@@ -20,6 +20,8 @@ const INCOME = ["income account", "sales account"];
 const EXPENSE = ["expense account", "purchase account", "cogs account"];
 const QUANTITY = ["qty on hand", "quantity on hand", "on hand", "qty", "quantity"];
 const ACTIVE = ["active", "status"];
+const REORDER = ["reorder at", "reorder point", "reorder level"];
+const TAXABLE = ["taxable", "sales tax"];
 
 const norm = (text: string): string => text.trim().toLowerCase().replace(/\s*\/\s*/g, "/").replace(/\s+/g, " ");
 const indexOf = (headers: readonly string[], names: readonly string[]): number => {
@@ -71,6 +73,8 @@ export function parseProductList(text: string, currency = "USD"): ProductRead[] 
     expense: indexOf(headers, EXPENSE),
     quantity: indexOf(headers, QUANTITY),
     active: indexOf(headers, ACTIVE),
+    reorder: indexOf(headers, REORDER),
+    taxable: indexOf(headers, TAXABLE),
   };
   const out: ProductRead[] = [];
   for (const record of records.slice(at + 1)) {
@@ -91,6 +95,8 @@ export function parseProductList(text: string, currency = "USD"): ProductRead[] 
     const quantity = Number(cell(column.quantity).replace(/,/g, ""));
     const description = cell(column.description);
     const active = cell(column.active).toLowerCase();
+    const reorder = Number(cell(column.reorder).replace(/,/g, ""));
+    const taxable = cell(column.taxable).toLowerCase();
     out.push({
       item: {
         name,
@@ -100,6 +106,8 @@ export function parseProductList(text: string, currency = "USD"): ProductRead[] 
         // A cost a unit only for what is kept in stock: it is what puts it in stock.
         ...(stocked && cost !== undefined ? { unitCost: cost } : {}),
         ...(active === "false" || active === "inactive" || active === "no" ? { active: false } : {}),
+        ...(stocked && cell(column.reorder) !== "" && Number.isFinite(reorder) ? { reorderAt: reorder } : {}),
+        ...(taxable === "no" || taxable === "false" || taxable === "n" ? { taxable: false } : {}),
       },
       ...(cell(column.income) !== "" ? { incomeAccount: cell(column.income) } : {}),
       ...(cell(column.expense) !== "" ? { expenseAccount: cell(column.expense) } : {}),
@@ -107,4 +115,29 @@ export function parseProductList(text: string, currency = "USD"): ProductRead[] 
     });
   }
   return out;
+}
+
+/**
+ * Products and services as a spreadsheet, in the headings the reading above
+ * takes: a file written here comes back in as it went out. A product kept in
+ * stock is "Inventory", with its unit cost and reorder point.
+ */
+export function formatItems(items: readonly Item[]): string {
+  const cell = spreadsheetCell;
+  const money = (cents: number | undefined): string => (cents === undefined ? "" : (cents / 100).toFixed(2));
+  const rows = [["Name", "Type", "Description", "Sales price", "Unit cost", "Income account", "Reorder at", "Taxable", "Active"]];
+  for (const i of items) {
+    rows.push([
+      i.name,
+      i.kind === "service" ? "Service" : i.unitCost !== undefined ? "Inventory" : "Product",
+      i.description ?? "",
+      money(i.price),
+      money(i.unitCost),
+      i.accountCode ?? "",
+      i.reorderAt === undefined ? "" : String(i.reorderAt),
+      i.taxable === false ? "No" : "",
+      i.active === false ? "No" : "Yes",
+    ]);
+  }
+  return rows.map((r) => r.map(cell).join(",")).join("\r\n") + "\r\n";
 }

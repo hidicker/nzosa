@@ -28,7 +28,7 @@ import { trustSettings } from "./trust-panel.js";
 import type { RuleFileShape } from "../rules-ui.js";
 import { $, state } from "../state.js";
 import { save, savePart } from "../store.js";
-import { askChoiceOnPage, askOnPage, askTextOnPage, note, tellOnPage, wideTable } from "../ui.js";
+import { askChoiceOnPage, askOnPage, askTextOnPage, download, note, tellOnPage, wideTable } from "../ui.js";
 import {
   feedAccountForNumber,
   parseXeroBankAccountList,
@@ -39,6 +39,7 @@ import {
   accountLabel,
   emptyEntityModel,
   applyChartPlan,
+  formatChartOfAccounts,
   chartImportPlan,
   readChartFile,
   entityCoverage,
@@ -1177,7 +1178,12 @@ export function renderEntities(): void {
     loadInput.value = "";
     if (file !== undefined) void file.text().then((text) => openChartImport(file.name, text));
   });
-  body.append(actionsRow(tidy, load, loadInput));
+  const saveChart = document.createElement("button");
+  saveChart.type = "button";
+  saveChart.textContent = "Download (CSV)";
+  saveChart.title = "The chart as a spreadsheet, in Xero's layout with this app's columns after";
+  saveChart.addEventListener("click", () => download(formatChartOfAccounts(state.chart), "chart-of-accounts.csv", "text/csv"));
+  body.append(actionsRow(tidy, load, loadInput, saveChart));
 
   const chartTable = document.createElement("table");
   chartTable.className = "entity-table accounts-table";

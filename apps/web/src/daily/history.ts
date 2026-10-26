@@ -74,6 +74,17 @@ export async function undo(event: LedgerEvent): Promise<void> {
     return;
   }
 
+  // Accounts taken out together, with the GST treatments that went with them.
+  if (event.kind === "chartRemoved") {
+    const held = event.before as { treatments?: Record<string, unknown> } | null;
+    const treatments = held !== null && !Array.isArray(held) ? (held.treatments ?? {}) : {};
+    if (Object.keys(treatments).length > 0) {
+      const file = (state.rules ?? {}) as RuleFileShape;
+      state.rules = { ...file, codeTreatments: { ...(file.codeTreatments ?? {}), ...treatments } } as RuleSet;
+      await persistRules();
+    }
+  }
+
   if (event.kind === "rule" || event.kind === "codeTreatment") {
     const file = state.rules as RuleFileShape | undefined;
     if (!file) return;

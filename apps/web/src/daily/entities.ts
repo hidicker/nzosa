@@ -18,6 +18,7 @@ import {
   bankLabel,
   bankReach,
   betweenLinesDiffering,
+  postedJournals,
 } from "../books.js";
 import { GST_OPTIONS } from "../reconcile.js";
 import { openStandardAccounts, standardPanel } from "./standard-accounts-panel.js";
@@ -57,6 +58,8 @@ import {
   LOGO_MAX_BYTES,
   cleanLogo,
   recodeElsewhere,
+  splitAccountLabel,
+  isGstControlCode,
 } from "@nzosa/core";
 import type { Account, BusinessStructure, Cents, EntityKind, EntityModel, NonProfitForm, RuleSet } from "@nzosa/core";
 import { booksCountry, booksLocale, moneyPlaces, noSalesTax, gstPercent, invoiceDetailWords } from "../country.js";
@@ -1150,6 +1153,14 @@ export function renderEntities(): void {
     return;
   }
 
+  // Accounts nothing uses -- a starter chart's, mostly -- to take out together.
+  const tidy = document.createElement("button");
+  tidy.type = "button";
+  tidy.textContent = "Remove unused accounts";
+  tidy.title = "Accounts nothing is coded to, posted to or set up with, to take out of the chart together";
+  tidy.addEventListener("click", () => openRemoveUnused());
+  body.append(actionsRow(tidy));
+
   const chartTable = document.createElement("table");
   chartTable.className = "entity-table accounts-table";
   const chartHead = document.createElement("thead");
@@ -1384,7 +1395,17 @@ export function renderEntities(): void {
     move.textContent = "Move lines";
     move.title = "Move some of this account's lines to another account.";
     move.addEventListener("click", () => openMoveLines(account, label));
-    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label), " ", move, " ");
+    const sleep = document.createElement("button");
+    sleep.type = "button";
+    sleep.className = "small";
+    sleep.textContent = account.inactive === true ? "Make active" : "Make inactive";
+    sleep.title =
+      account.inactive === true
+        ? "Offer it again when coding."
+        : "Keep what is in it, and stop offering it when coding. Reports show it as before.";
+    sleep.addEventListener("click", () => void setAccountInactive(account, account.inactive !== true));
+    actions.prepend(editCell({ code: codeCell, name: nameCell }, account, label), " ", move, " ", sleep, " ");
+    if (account.inactive === true) tr.classList.add("account-inactive");
     tr.append(actions);
     chartBody.append(tr);
   }
@@ -2096,6 +2117,140 @@ async function mergeChartAccount(
  * Giving it one puts it in the chart, which is also what makes it survive a
  * reload and travel in the saved file.
  */
+/** Make an account inactive, or active again: one change on History. */
+async function setAccountInactive(account: Account, inactive: boolean): Promise<void> {
+  const chart = state.chart.map((a) => {
+    if (a.code !== account.code || a.name !== account.name) return a;
+    const { inactive: _was, ...rest } = a;
+    return inactive ? { ...rest, inactive: true } : rest;
+  });
+  const after = chart.find((a) => a.code === account.code && a.name === account.name) ?? null;
+  state.chart = chart;
+  state.ledger = { ...state.ledger, chart };
+  state.persistent = await savePart(state.ledger, "chart");
+  await record("chart", `${account.code || account.name} ${account.name} made ${inactive ? "inactive" : "active"}`, account, after, `${account.code}|${account.name}`);
+  redraw("entities");
+}
+
+/**
+ * The accounts nothing uses: no posting, rule, coding, product, contact,
+ * budget, opening balance or payroll setting names them, and they are not a
+ * bank account or one the books keep for themselves (GST, receivables,
+ * payables, retained earnings).
+ */
+function unusedAccounts(): Account[] {
+  const used = new Set<string>();
+  const note = (text: string | undefined): void => {
+    if (text === undefined || text.trim() === "") return;
+    const { code, name } = splitAccountLabel(text);
+    if (code !== "") used.add(code);
+    used.add(name.trim().toLowerCase());
+    used.add(text.trim());
+  };
+  for (const journal of postedJournals()) for (const line of journal.lines) note(line.accountCode);
+  for (const o of Object.values(state.ledger.overrides ?? {})) note(o.code);
+  for (const parts of Object.values(state.ledger.splits ?? {})) for (const p of parts) note(p.code);
+  const file = state.rules as RuleFileShape | undefined;
+  for (const r of file?.rules ?? []) note(r.code);
+  for (const r of file?.defaults ?? []) note(r.code);
+  for (const j of state.ledger.manualJournals ?? []) for (const l of j.lines) note(l.code);
+  for (const i of state.ledger.invoices ?? []) for (const l of i.lines) note(l.accountCode);
+  for (const i of state.ledger.items ?? []) note(i.accountCode);
+  for (const c of state.ledger.contacts ?? []) note(c.defaultAccount);
+  for (const key of Object.keys(state.ledger.openingBalances?.accounts ?? {})) note(key);
+  for (const year of Object.values(state.ledger.budgets ?? {})) for (const key of Object.keys(year)) note(key);
+  for (const code of Object.values(state.ledger.payroll?.accounts ?? {})) note(code);
+  return state.chart.filter((a) => {
+    const code = a.code.trim();
+    if (code === "" || (a.ledgerAccount ?? "").trim() !== "") return false;
+    if (/bank|receivable|payable|retained|current year/i.test(`${a.type} ${a.name}`) || isGstControlCode(code) || /GST/i.test(a.name)) return false;
+    return !used.has(code) && !used.has(a.name.trim().toLowerCase());
+  });
+}
+
+/** The unused accounts, ticked, to take out of the chart in one change. */
+function openRemoveUnused(): void {
+  const unused = unusedAccounts();
+  if (unused.length === 0) {
+    void tellOnPage("Every account in the chart is used by something.");
+    return;
+  }
+  const box = document.createElement("dialog");
+  box.className = "ask-on-page payment-file-view";
+  const heading = document.createElement("h3");
+  heading.textContent = `${unused.length} ${unused.length === 1 ? "account is" : "accounts are"} not used`;
+  const intro = document.createElement("p");
+  intro.className = "payment-file-said";
+  intro.textContent = "Nothing is coded or posted to these, and no rule, product, budget or opening balance names them. Untick any to keep.";
+  const list = document.createElement("div");
+  list.className = "move-lines-scroll unused-accounts";
+  const ticks: { account: Account; box: HTMLInputElement }[] = [];
+  for (const account of [...unused].sort((a, b) => a.code.localeCompare(b.code))) {
+    const label = document.createElement("label");
+    const tick = document.createElement("input");
+    tick.type = "checkbox";
+    tick.checked = true;
+    label.append(tick, ` ${account.code} ${account.name}`, Object.assign(document.createElement("span"), { className: "unused-type", textContent: ` ${account.type}` }));
+    list.append(label);
+    ticks.push({ account, box: tick });
+  }
+  const actions = document.createElement("div");
+  actions.className = "ask-on-page-actions";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  const go = document.createElement("button");
+  go.type = "button";
+  go.className = "primary";
+  go.textContent = "Remove the ticked accounts";
+  actions.append(cancel, go);
+  box.append(heading, intro, list, actions);
+  const finish = (): void => {
+    box.close();
+    box.remove();
+  };
+  cancel.addEventListener("click", finish);
+  box.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finish();
+  });
+  go.addEventListener("click", () => {
+    const removed = ticks.filter((t) => t.box.checked).map((t) => t.account);
+    if (removed.length === 0) {
+      finish();
+      return;
+    }
+    const gone = new Set(removed);
+    void (async () => {
+      // Their GST treatments go with them: kept, the page would list each
+      // again from the rules that name it.
+      const labels = new Set(accountsForEditing().filter((r) => gone.has(r.account)).map((r) => r.label));
+      const file = state.rules as RuleFileShape | undefined;
+      const treatments: Record<string, unknown> = {};
+      if (file?.codeTreatments !== undefined) {
+        const kept = { ...file.codeTreatments };
+        for (const label of labels) {
+          if (kept[label] !== undefined) {
+            treatments[label] = kept[label];
+            delete kept[label];
+          }
+        }
+        state.rules = { ...file, codeTreatments: kept } as RuleSet;
+        await persistRules();
+      }
+      const chart = state.chart.filter((a) => !gone.has(a));
+      state.chart = chart;
+      state.ledger = { ...state.ledger, chart };
+      state.persistent = await savePart(state.ledger, "chart");
+      await record("chartRemoved", `${removed.length} unused ${removed.length === 1 ? "account" : "accounts"} taken out of the chart`, { accounts: removed, treatments }, null);
+      finish();
+      redraw("entities");
+    })();
+  });
+  document.body.append(box);
+  box.showModal();
+}
+
 async function setAccountType(account: Account, label: string, type: string): Promise<void> {
   const chart = [...state.chart];
   const index = chart.findIndex((a) => a.code === account.code && a.name === account.name);

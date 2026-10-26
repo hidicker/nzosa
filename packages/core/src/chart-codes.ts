@@ -64,13 +64,15 @@ export interface RuleFile extends RuleSet {
 export function knownCodes(
   rules: RuleSet | undefined,
   overrides: Overrides,
-  chart: readonly { code: string; name: string }[] = [],
+  chart: readonly { code: string; name: string; inactive?: boolean }[] = [],
 ): string[] {
   const codes = new Set<string>();
   const file = rules as RuleFile | undefined;
   for (const rule of file?.rules ?? []) if (rule.code) codes.add(rule.code);
   for (const fallback of file?.defaults ?? []) if (fallback.code) codes.add(fallback.code);
   for (const override of Object.values(overrides)) if (override.code) codes.add(override.code);
+  // What something is already coded to stays offered, whatever the chart says.
+  const used = new Set(codes);
   // A code treatment says what an account is for GST. That is a stronger
   // statement that the account exists than any rule pointing at it, and
   // leaving these out hid sixteen accounts from the picker -- including
@@ -88,6 +90,19 @@ export function knownCodes(
     if (name === "") continue;
     if (code !== "" && [...codes].some((c) => new RegExp(`\\b${code}\\b`).test(c))) continue;
     codes.add(code === "" ? name : `${name} - ${code}`);
+  }
+
+  // An inactive account is offered for nothing new: its label goes, unless a
+  // rule or a coding already uses it.
+  const inactive = chart.filter((a) => a.inactive === true);
+  if (inactive.length > 0) {
+    const codesOff = new Set(inactive.map((a) => a.code.trim()).filter((c) => c !== ""));
+    const namesOff = new Set(inactive.filter((a) => a.code.trim() === "").map((a) => a.name.trim().toLowerCase()));
+    for (const label of [...codes]) {
+      if (used.has(label)) continue;
+      const { code, name } = splitAccountLabel(label);
+      if ((code !== "" && codesOff.has(code)) || (code === "" && namesOff.has(name.toLowerCase()))) codes.delete(label);
+    }
   }
 
   return [...codes].sort();

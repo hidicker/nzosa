@@ -180,7 +180,9 @@ export type EventKind =
   /** What the emails say, whole. */
   | "emailWording"
   /** Whether time is approved before it is invoiced. */
-  | "timeApproval";
+  | "timeApproval"
+  /** Accounts taken out of the chart together. Before is the accounts. */
+  | "chartRemoved";
 
 /** A register line as a change keeps it: the line, its coding and its split. */
 export interface RegisterSnapshot {
@@ -568,6 +570,14 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return ledger;
     case "varianceNote":
       return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
+    case "chartRemoved": {
+      // The treatments go back to the rules in History's undo, which keeps them.
+      const held = event.before as { accounts?: Account[] } | Account[] | null;
+      const back = Array.isArray(held) ? held : (held?.accounts ?? []);
+      const chart = [...(ledger.chart ?? [])];
+      for (const account of back) if (!chart.some((a) => a.code === account.code && a.name === account.name)) chart.push(account);
+      return { ...ledger, chart };
+    }
     case "timeApproval":
       return { ...ledger, timeApproval: event.before === true };
     case "emailWording":
@@ -692,6 +702,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   invoiceMessages: "Invoice messages",
   emailWording: "Email wording",
   timeApproval: "Time approval",
+  chartRemoved: "Chart of accounts",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

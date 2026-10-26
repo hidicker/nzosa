@@ -59,3 +59,18 @@ test("the chart fills the picker on books nobody has coded yet", () => {
   assert.ok(codes.includes("Advertising - 400"));
   assert.ok(codes.includes("NZD Wise"));
 });
+
+test("an inactive account is offered for nothing new, unless something is already coded to it", async () => {
+  const { knownCodes } = await import("../dist/index.js");
+  const chart = [
+    { code: "400", name: "Advertising" },
+    { code: "404", name: "Bank Fees", inactive: true },
+    { code: "420", name: "Entertainment", inactive: true },
+    { code: "", name: "Petty cash float", inactive: true },
+  ];
+  const offered = knownCodes(undefined, { t1: { code: "Entertainment - 420", note: "" } }, chart);
+  assert.ok(offered.includes("Advertising - 400"));
+  assert.ok(!offered.includes("Bank Fees - 404"), "inactive and unused: not offered");
+  assert.ok(offered.includes("Entertainment - 420"), "inactive but coded to: still there");
+  assert.ok(!offered.includes("Petty cash float"));
+});

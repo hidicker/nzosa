@@ -3,8 +3,8 @@ import { bankLabel, banks, record } from "../books.js";
 import { booksMoney, booksCurrency } from "../country.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { note } from "../ui.js";
-import { beginningBalance, clearedLines, parseAmount, reconciliationFigures } from "@nzosa/core";
+import { download, note } from "../ui.js";
+import { beginningBalance, clearedLines, parseAmount, reconciliationFigures, spreadsheetCell } from "@nzosa/core";
 import type { BankReconciliation, IsoDate, Transaction } from "@nzosa/core";
 
 /**
@@ -264,7 +264,50 @@ export function renderStatements(): void {
     const list = document.createElement("ul");
     past.forEach((r, index) => {
       const li = document.createElement("li");
-      li.textContent = `${r.statementDate}: ${booksMoney(r.statementBalance)}${r.owed ? " owed" : ""}, ${r.cleared.length} lines `;
+      li.textContent =
+        `${r.statementDate}: ${booksMoney(r.statementBalance)}${r.owed ? " owed" : ""}, ${r.cleared.length} lines` +
+        `${r.by !== undefined ? `, by ${r.by}` : ""}${r.finishedAt !== undefined ? ` on ${r.finishedAt.slice(0, 10)}` : ""} `;
+      // The lines it cleared: what the statement was agreed with.
+      const lines = document.createElement("details");
+      lines.className = "statement-lines";
+      const summary = document.createElement("summary");
+      summary.textContent = "Lines";
+      lines.append(summary);
+      lines.addEventListener("toggle", () => {
+        if (!lines.open || lines.childElementCount > 1) return;
+        const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
+        const cleared = r.cleared.map((id) => byId.get(id)).filter((t): t is Transaction => t !== undefined).sort((x, y) => x.date.localeCompare(y.date));
+        const table = document.createElement("table");
+        table.className = "report-table";
+        table.innerHTML = "<thead><tr><th>Date</th><th>Payee</th><th>Money in</th><th>Money out</th></tr></thead>";
+        const tbody = document.createElement("tbody");
+        for (const t of cleared) {
+          const tr = document.createElement("tr");
+          for (const [text, cls] of [
+            [t.date, "report-name"],
+            [t.otherParty || t.particulars, "report-name"],
+            [t.amount > 0 ? booksMoney(t.amount) : "", "report-amount"],
+            [t.amount < 0 ? booksMoney(-t.amount) : "", "report-amount"],
+          ] as const) {
+            const td = document.createElement("td");
+            td.className = cls;
+            td.textContent = text;
+            tr.append(td);
+          }
+          tbody.append(tr);
+        }
+        table.append(tbody);
+        const missing = r.cleared.length - cleared.length;
+        const save = document.createElement("button");
+        save.type = "button";
+        save.className = "small";
+        save.textContent = "Save as CSV";
+        save.addEventListener("click", () => {
+          const rows = [["Date", "Payee", "Amount"], ...cleared.map((t) => [t.date, t.otherParty || t.particulars, (t.amount / 100).toFixed(2)])];
+          download(rows.map((row) => row.map(spreadsheetCell).join(",")).join("\r\n") + "\r\n", `reconciliation-${r.statementDate}.csv`, "text/csv");
+        });
+        lines.append(table, ...(missing > 0 ? [note(`${missing} of the lines it cleared are no longer in the books.`)] : []), save);
+      });
       if (index === 0) {
         const undo = document.createElement("button");
         undo.type = "button";
@@ -278,6 +321,7 @@ export function renderStatements(): void {
         });
         li.append(undo);
       }
+      li.append(lines);
       list.append(li);
     });
     body.append(list);

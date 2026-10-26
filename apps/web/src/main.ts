@@ -1,3 +1,4 @@
+import { wireNumberPad } from "./number-pad.js";
 import { applyNewBooksCountry } from "./new-books-country.js";
 import { wirePresentation } from "./presentation.js";
 import { afterPress, watchBusyButtons } from "./busy.js";
@@ -462,6 +463,7 @@ function wireUp(): void {
   // those do.
   wireChrome();
   wireMenu();
+  wireNumberPad();
 
   // Leaving while a save is still on its way: a tick on Reconcile moves on
   // before the server has answered, so closing or reloading straight after

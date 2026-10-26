@@ -202,3 +202,10 @@ works).
   account it was merged into, because once merged they cannot be told apart.
   A merge would need to record which items it moved to be undone fully.
   26 October 2026.
+- **MYOB import: what it does not bring yet.** The accounts list and journal
+  entries come across (`packages/core/src/myob.ts`): every posting, bank lines
+  coded, the rest as journals. MYOB's sales and purchases exports (open
+  invoices and bills, with due dates), its cards (customers and suppliers) and
+  items are not read, so invoices and bills arrive as journals rather than as
+  documents to be paid. Its export formats were taken from MYOB's help pages;
+  no real MYOB file has been tried yet. 26 October 2026.

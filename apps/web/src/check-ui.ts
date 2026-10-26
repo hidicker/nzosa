@@ -13,6 +13,10 @@ import {
   isIif,
   parseIifBooks,
   isSlowBooksLedger,
+  isMyobAccounts,
+  isMyobJournal,
+  parseMyobAccounts,
+  parseMyobBooks,
   isQuickBooksBankExport,
   quickBooksBankCoding,
   parseSlowBooksBooks,
@@ -275,6 +279,18 @@ export async function loadReference(
       if (isQuickBooksBankExport(text)) {
         // Only for the lines it brought in: the rest the ledger already coded.
         lines.push(...notHeldAlready(file.name, quickBooksBankCoding(text, file.name, booksCountry().dayFirst)));
+        continue;
+      }
+      if (isMyobAccounts(text)) {
+        chart.push(...parseMyobAccounts(text, { country: booksCountry().id }).chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        continue;
+      }
+      if (isMyobJournal(text)) {
+        const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
+        const read = parseMyobBooks(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name, dayFirst: booksCountry().dayFirst });
+        chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        lines.push(...read.reference);
+        for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
         continue;
       }
       if (isIif(text) || isSlowBooksLedger(text) || isQuickBooksDesktopDetail(text)) {

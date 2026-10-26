@@ -7,6 +7,7 @@ import { readIrdExport } from "./ird-records.js";
 import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
+import { isMyobAccounts, isMyobJournal } from "./myob.js";
 import { isQuickBooksDesktopDetail } from "./qb-desktop-detail.js";
 import { isQuickBooksExportJournal } from "./qbo-export.js";
 import { isProductList } from "./product-lists.js";
@@ -56,6 +57,8 @@ export type ExportKind =
   | "quickbooks-ledger"
   | "quickbooks-iif"
   | "slowbooks-ledger"
+  | "myob-accounts"
+  | "myob-journal"
   | "quickbooks-desktop-detail"
   | "quickbooks-export"
   | "product-list"
@@ -217,6 +220,13 @@ export function identifyExport(text: string): Identified {
   // knows, holding the chart, the lists and every transaction at once.
   if (isIif(text)) {
     return { kind: "quickbooks-iif", what: "QuickBooks Desktop IIF file" };
+  }
+  // MYOB's exports: its accounts list, and its journal entries.
+  if (isMyobAccounts(text)) {
+    return { kind: "myob-accounts", what: "MYOB accounts list" };
+  }
+  if (isMyobJournal(text)) {
+    return { kind: "myob-journal", what: "MYOB journal entries" };
   }
   // SlowBooks Pro's general ledger: one row a posting, with its source.
   if (isSlowBooksLedger(text)) {

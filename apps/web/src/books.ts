@@ -1347,6 +1347,9 @@ export function accountRate(label: string): "0" | "15" | "100" | "free" | "taxed
     const own = accountZeroOrExempt(label);
     if (own === "zero-rated") return "free";
     if (own === "exempt" && booksCountry().id === "au") return "taxed";
+    // New Zealand has no rate of its own for exempt: there is no GST on it to
+    // claim, so nothing -- not the 15% a line falls back to with no rate.
+    if (own === "exempt") return "0";
   }
   const file = state.rules as RuleFileShape | undefined;
   const rate = rateForTreatment((file?.codeTreatments ?? {})[label] ?? chartTreatmentOf(label));
@@ -2110,7 +2113,7 @@ function stockCostJournals(): PostedJournal[] {
  */
 export function ledgerFromStart(): boolean {
   return state.ledger.transactions.some((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal)$/.test(t.source?.importer ?? ""),
   );
 }
 

@@ -275,6 +275,9 @@ async function loadEach(
     "quickbooks-ledger": 0,
     "quickbooks-iif": -1,
     "slowbooks-ledger": -1,
+    // MYOB's accounts first, so the journal's account numbers have names and types.
+    "myob-accounts": -1,
+    "myob-journal": 0,
     // After the IIF file, whose chart gives its accounts their types.
     "quickbooks-desktop-detail": 0,
     // Its own chart, made from the statements dropped with it.
@@ -318,6 +321,11 @@ async function loadEach(
           say(`${file.name} — ${identified.what}: ${lines}`);
           continue;
         }
+        case "myob-accounts":
+          await loadCheckFiles([file]);
+          say(`${file.name} — ${identified.what}: the accounts are in the chart.`);
+          continue;
+        case "myob-journal":
         case "slowbooks-ledger":
         case "quickbooks-desktop-detail":
         case "quickbooks-export":

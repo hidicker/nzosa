@@ -494,3 +494,5 @@ export { allocationProblem, creditsOnAccount, proposeAllocations } from "./credi
 export type { CreditOnAccount, CreditSource } from "./credit-on-account.js";
 export { ATTACHMENT_LIMIT, attachmentProblem, attachmentsOf, documentOwner, moveAttachments, newAttachmentId, sizeWords } from "./attachments.js";
 export type { Attachment, AttachmentOwner } from "./attachments.js";
+export { isMyobAccounts, isMyobJournal, parseMyobAccounts, parseMyobBooks, parseMyobJournal } from "./myob.js";
+export type { MyobAccounts } from "./myob.js";

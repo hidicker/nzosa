@@ -342,7 +342,7 @@ function said(held: Onboarding, step: Step): string {
       return held.source === "xero"
         ? "Moving from Xero"
         : fromQuickBooks(held)
-          ? "Moving from QuickBooks or SlowBooks"
+          ? "Moving from QuickBooks, SlowBooks or MYOB"
           : held.source === "sheet"
           ? "Moving from a spreadsheet"
           : held.opening === true
@@ -390,7 +390,7 @@ function said(held: Onboarding, step: Step): string {
       if (fromQuickBooks(held)) {
         // The ledger's own lines, not a bank register brought in after it.
         const brought = state.ledger.transactions.filter((t) =>
-          /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""),
+          /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal)$/.test(t.source?.importer ?? ""),
         ).length;
         return brought === 0 ? "Nothing brought in yet" : `${brought} bank and card lines brought in`;
       }
@@ -465,9 +465,9 @@ function sourceQuestion(number: number): HTMLElement {
         ],
         [
           "quickbooks",
-          "Import from QuickBooks or SlowBooks",
+          "Import from QuickBooks, SlowBooks or MYOB",
           "The accounts, bank and card lines, invoices, bills, customers and vendors come across from " +
-            "QuickBooks Online, QuickBooks Desktop or SlowBooks, with the coding",
+            "QuickBooks Online, QuickBooks Desktop, SlowBooks or MYOB, with the coding",
         ],
         ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
       ],
@@ -1574,7 +1574,7 @@ function bankQuestion(number: number, held: Onboarding): HTMLElement {
   const ledgerLast = fromQuickBooks(held)
     ? state.ledger.transactions
         // The ledger's own lines: a bank register brought in after it is not the ledger.
-        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger)$/.test(t.source?.importer ?? ""))
+        .filter((t) => /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal)$/.test(t.source?.importer ?? ""))
         .reduce((last, t) => (t.date > last ? t.date : last), "")
     : "";
   inner.append(
@@ -1769,7 +1769,7 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
  * recognised by what is in it, so they can be dropped together.
  */
 function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
-  const [box, inner] = card(number, "Migration from QuickBooks or SlowBooks");
+  const [box, inner] = card(number, "Migration from QuickBooks, SlowBooks or MYOB");
   inner.append(
     advice(
       "Export these from the system you are leaving, then drop them below, together or one at a time. " +
@@ -1882,15 +1882,38 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
         ],
       ),
     ),
+    folded(
+      "MYOB",
+      table(
+        ["Export", "Where", "Gives", "Needed"],
+        [
+          [
+            "Accounts list",
+            "MYOB Business: Settings (the gear) > Import and export data > Export, Data type: Categories. " +
+              "AccountRight: File > Export Data > Accounts, all fields, first record a header",
+            "The accounts, each with its type and tax code",
+            "Required",
+          ],
+          [
+            "Journal entries",
+            "MYOB Business: Settings > Import and export data > Export, Data type: General journal, all dates. " +
+              "AccountRight: File > Export Data > Journal Entries, all source journals and all dates, all fields, " +
+              "first record a header",
+            "Every entry: bank and card lines with their coding, and the rest as journals",
+            "Required",
+          ],
+        ],
+      ),
+    ),
     note(
-      "Drop them all together, CSV, Excel or a zip as QuickBooks gives it: NZOSA reads the accounts and the ledger first, then the rest. " +
+      "Drop them all together, CSV, Excel or a zip as QuickBooks gives it, or MYOB's text files: NZOSA reads the accounts and the ledger first, then the rest. " +
         "Where a report asks for a date range, choose All dates, so nothing from before it is left out.",
     ),
     dropZone(),
   );
 
   // Once something is in: the coding QuickBooks gave each line, to accept.
-  const brought = state.ledger.transactions.filter((t) => /^(quickbooks|slowbooks)/.test(t.source?.importer ?? "")).length;
+  const brought = state.ledger.transactions.filter((t) => /^(quickbooks|slowbooks|myob)/.test(t.source?.importer ?? "")).length;
   if (brought > 0) {
     inner.append(
       advice(

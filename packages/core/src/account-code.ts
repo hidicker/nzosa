@@ -15,8 +15,12 @@
  *
  * Kept in one place because a pattern repeated in ten files is ten chances for
  * one of them to read `420MS` as `420` -- which is another entity's account.
+ *
+ * Or MYOB's: the kind's digit, a hyphen and four digits, `4-1000` -- its own
+ * numbering, kept as MYOB shows it. Never straight after another digit, so a
+ * name ending in `2024-2025` is not taken for code 4-2025.
  */
-export const ACCOUNT_CODE = String.raw`\d{3,5}(?:[A-Z]{1,3}(?![A-Za-z]))?`;
+export const ACCOUNT_CODE = String.raw`(?:(?<!\d)[1-9]-\d{4}(?!\d)|\d{3,5}(?:[A-Z]{1,3}(?![A-Za-z]))?)`;
 
 const FIRST_CODE = new RegExp(String.raw`\b(${ACCOUNT_CODE})\b`);
 const WHOLE_CODE = new RegExp(String.raw`^${ACCOUNT_CODE}$`);

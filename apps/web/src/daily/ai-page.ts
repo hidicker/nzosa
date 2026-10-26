@@ -12,6 +12,7 @@ import { aiAllowed } from "../ai-consent.js";
 import { aiKeyPanel, refreshAiStatus } from "../ai-key-panel.js";
 import { morningChoice } from "../nightly-ui.js";
 import { emptyEntityModel } from "@nzosa/core";
+import { ANALYSES, analysisPrompt } from "./reports.js";
 import type { Entity } from "@nzosa/core";
 
 /**
@@ -60,6 +61,8 @@ export function renderAi(): void {
       "Both ways ask the same question and check the answers the same way.",
     ),
     carryPanel(),
+    step("About the figures", "One-click analyses"),
+    analysesPanel(),
   );
 
   if (aiRoute() === "none") {
@@ -82,6 +85,55 @@ export function renderAi(): void {
   );
   body.append(step("And separately", "Checking the finished year"), checkPointer());
   void refreshAiStatus("ai");
+}
+
+/**
+ * Questions about the figures, ready for any AI assistant: one press copies
+ * the question and the figures it needs. Nothing is sent from here; the
+ * person pastes it where they choose, beside their own conversation.
+ */
+function analysesPanel(): HTMLElement {
+  const [box, inner] = panel("");
+  inner.append(
+    note(
+      "Each copies a question with the figures it needs, from the latest year's reports, to paste into " +
+        "ChatGPT, Claude, Gemini or any assistant. Nothing is sent from here.",
+    ),
+  );
+  const row = document.createElement("div");
+  row.className = "migration-actions ai-analyses";
+  const shown = document.createElement("textarea");
+  shown.className = "ai-prompt";
+  shown.readOnly = true;
+  shown.rows = 10;
+  shown.hidden = true;
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  for (const [kind, label] of ANALYSES) {
+    row.append(
+      button(label, () => {
+        const text = analysisPrompt(kind);
+        if (text === "") {
+          said.textContent = "There is nothing in the books yet to ask about.";
+          shown.hidden = true;
+          return;
+        }
+        shown.value = text;
+        shown.hidden = false;
+        void navigator.clipboard
+          .writeText(text)
+          .then(() => {
+            said.textContent = `Copied "${label}". Paste it into your AI assistant.`;
+          })
+          .catch(() => {
+            shown.select();
+            said.textContent = "Select the text below and copy it.";
+          });
+      }),
+    );
+  }
+  inner.append(row, said, shown);
+  return box;
 }
 
 /**

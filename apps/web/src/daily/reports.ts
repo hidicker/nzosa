@@ -10,7 +10,7 @@ import { provisionalPaidFromIrd } from "./ird-provisional.js";
 import { renderYearEnd } from "./year-end.js";
 import { agentReaderPanel } from "./agent-statement-reader.js";
 import { anyModuleOn, moduleOn, previousSystem } from "../modules.js";
-import { agedCsv, agedTotal, renderAged } from "./aged-report.js";
+import { agedCsv, agedFor, agedTotal, renderAged } from "./aged-report.js";
 import { renderBankReconcile, bankReconcileCsv } from "./bank-reconcile-report.js";
 import { redraw, showPage } from "../app.js";
 import {
@@ -5076,31 +5076,7 @@ function cashForecastSection(today: string): HTMLElement {
   heading.textContent = "The next 90 days";
   box.append(heading);
 
-  // The bank today: every bank account's balance on the balance sheet.
-  const ids = new Set(banks().accounts);
-  const bankCodes = new Set(state.chart.filter((a) => a.type.trim().toLowerCase() === "bank").map((a) => a.code.trim()));
-  const opening = state.ledger.openingBalances;
-  const sheet = computeBalanceSheet({
-    asAt: today,
-    ...(opening ? { openingBalances: opening } : {}),
-    journals: postedJournals(),
-    chart: state.chart,
-  });
-  let bank = 0;
-  for (const part of [sheet.currentAssets, sheet.currentLiabilities]) {
-    for (const line of part.lines) {
-      if (ids.has(line.code) || bankCodes.has(line.code.trim())) bank += part === sheet.currentAssets ? line.closing : -line.closing;
-    }
-  }
-
-  const owing: OwingDocument[] = [];
-  for (const balance of invoiceBalanceMap().values()) {
-    const doc = balance.invoice;
-    if (!isPosted(doc) || isCreditNote(doc) || doc.receipt === true || balance.remaining <= 0) continue;
-    const expected = doc.due ?? new Date(Date.parse(`${doc.issued}T00:00:00Z`) + 30 * 86_400_000).toISOString().slice(0, 10);
-    owing.push({ kind: doc.kind === "purchase" ? "purchase" : "sales", expected, remaining: balance.remaining });
-  }
-  const buckets = cashForecast(bank, today, owing);
+  const { bank, buckets } = cashForecastFigures(today);
 
   const table = document.createElement("table");
   table.className = "report-table";
@@ -5126,6 +5102,140 @@ function cashForecastSection(today: string): HTMLElement {
     ),
   );
   return box;
+}
+
+/** The bank today, and the next ninety days of what is owing, thirty at a time. */
+function cashForecastFigures(today: string): { bank: number; buckets: ReturnType<typeof cashForecast> } {
+  // The bank today: every bank account's balance on the balance sheet.
+  const ids = new Set(banks().accounts);
+  const bankCodes = new Set(state.chart.filter((a) => a.type.trim().toLowerCase() === "bank").map((a) => a.code.trim()));
+  const opening = state.ledger.openingBalances;
+  const sheet = computeBalanceSheet({
+    asAt: today,
+    ...(opening ? { openingBalances: opening } : {}),
+    journals: postedJournals(),
+    chart: state.chart,
+  });
+  let bank = 0;
+  for (const part of [sheet.currentAssets, sheet.currentLiabilities]) {
+    for (const line of part.lines) {
+      if (ids.has(line.code) || bankCodes.has(line.code.trim())) bank += part === sheet.currentAssets ? line.closing : -line.closing;
+    }
+  }
+
+  const owing: OwingDocument[] = [];
+  for (const balance of invoiceBalanceMap().values()) {
+    const doc = balance.invoice;
+    if (!isPosted(doc) || isCreditNote(doc) || doc.receipt === true || balance.remaining <= 0) continue;
+    const expected = doc.due ?? new Date(Date.parse(`${doc.issued}T00:00:00Z`) + 30 * 86_400_000).toISOString().slice(0, 10);
+    owing.push({ kind: doc.kind === "purchase" ? "purchase" : "sales", expected, remaining: balance.remaining });
+  }
+  return { bank, buckets: cashForecast(bank, today, owing) };
+}
+
+/** The analyses offered beside an AI conversation, one click each. */
+export const ANALYSES = [
+  ["profit", "Explain this year's profit"],
+  ["unusual", "What looks unusual"],
+  ["chase", "Who to chase for money"],
+  ["cash", "The next 90 days of cash"],
+] as const;
+
+export type AnalysisKind = (typeof ANALYSES)[number][0];
+
+/**
+ * A ready question for any AI assistant, with the figures it is about: the
+ * latest year's profit and loss (and the year before), what customers owe, or
+ * the cash forecast. Built from the same reports the pages show.
+ */
+export function analysisPrompt(kind: AnalysisKind): string {
+  const year = bookYears()[0];
+  const today = new Date().toLocaleDateString("en-CA");
+  const kindSelect = $<HTMLSelectElement>("report-kind");
+  const basisSelect = $<HTMLSelectElement>("report-basis");
+  const yearSelect = $<HTMLSelectElement>("report-year");
+  const held = { kind: kindSelect.value, basis: basisSelect.value, year: yearSelect.value };
+  kindSelect.value = "home";
+  basisSelect.value = "posted";
+  if (year !== undefined) {
+    if (![...yearSelect.options].some((o) => o.value === String(year))) {
+      const option = document.createElement("option");
+      option.value = String(year);
+      yearSelect.append(option);
+    }
+    yearSelect.value = String(year);
+  }
+  const lines: string[] = [];
+  const say = (...text: string[]): void => {
+    lines.push(...text);
+  };
+  const money = (cents: number): string => formatAmount(cents);
+  const plLines = (report: ProfitAndLoss): string[] => [
+    "Income:",
+    ...report.income.map((l) => `  ${l.code}: ${money(l.net)}`),
+    `  Total income: ${money(report.totalIncome)}`,
+    "Expenses:",
+    ...report.expenses.map((l) => `  ${l.code}: ${money(-l.net)}`),
+    `  Total expenses: ${money(Math.abs(report.totalExpenses))}`,
+    `Net profit: ${money(report.netProfit)}`,
+  ];
+  try {
+    const country = booksCountry().name;
+    say(
+      `I keep the books of a small business in ${country}. Amounts are in ${booksCurrency()}` +
+        `${noSalesTax() ? "" : ", net of GST"}. Answer in plain words, briefly, for the owner. ` +
+        "Do not give tax or investment advice; say what to look into or ask an accountant about.",
+      "",
+    );
+    if (kind === "profit" || kind === "unusual") {
+      if (year === undefined) return "";
+      const now = currentReport({ from: taxYearStart(year), to: taxYearEnd(year) });
+      if (now === null) return "";
+      const before = currentReport(earlierRange(year));
+      say(`Profit and loss for ${taxYearStart(year)} to ${taxYearEnd(year)}:`, ...plLines(now.report), "");
+      if (before !== null && (before.report.totalIncome !== 0 || before.report.totalExpenses !== 0)) {
+        say(`The same span a year earlier:`, ...plLines(before.report), "");
+      }
+      say(
+        kind === "profit"
+          ? "Explain what made this profit: the main sources of income, the biggest costs, and what changed from the year before. " +
+              "Then list two or three questions the owner should ask about it."
+          : "What in these figures looks unusual: an account far bigger or smaller than the year before, " +
+              "a cost that seems out of proportion to income, or anything that may be coded to the wrong account? " +
+              "List each with the figure and why it stands out, most important first.",
+      );
+    } else if (kind === "chase") {
+      const aged = agedFor("sales", today);
+      say(`What customers owed on ${today}, by how far past due:`);
+      for (const c of [...aged.contacts].sort((a, b) => b.total - a.total)) {
+        const parts = Object.entries(c.buckets)
+          .filter(([, v]) => v !== 0)
+          .map(([k, v]) => `${k === "current" ? "not yet due" : k === "older" ? "over 90 days" : `${k} days`}: ${money(v)}`);
+        say(`  ${c.contact}: ${money(c.total)} (${parts.join(", ")})`);
+      }
+      say(
+        `  Total: ${money(aged.total)}`,
+        "",
+        "Who should I chase first, and how? Put them in order with the reason, and suggest a short, polite " +
+          "reminder for the most overdue.",
+      );
+    } else {
+      const { bank, buckets } = cashForecastFigures(today);
+      say(`The bank on ${today}: ${money(bank)}.`, "Invoices and bills owing over the next 90 days, on their due dates:");
+      for (const b of buckets) say(`  ${b.from} to ${b.to}: in ${money(b.in)}, out ${money(b.out)}, bank at the end ${money(b.closing)}`);
+      say(
+        "Wages, tax, repeating invoices and everyday spending are not in this.",
+        "",
+        "What does this say about cash over the next three months, what should I watch, and what could I do " +
+          "now if it looks tight?",
+      );
+    }
+  } finally {
+    kindSelect.value = held.kind;
+    basisSelect.value = held.basis;
+    yearSelect.value = held.year;
+  }
+  return lines.join("\n");
 }
 
 /**

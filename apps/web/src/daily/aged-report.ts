@@ -54,6 +54,11 @@ function belongsTo(invoice: Invoice, entityId: string): boolean {
   return invoice.lines.some((l) => model.accounts[l.accountCode.trim()] === entityId);
 }
 
+/** The aged report on a day, for the entity chosen. */
+export function agedFor(kind: InvoiceKind, asAt: string): AgedReport {
+  return build(kind, asAt);
+}
+
 /** What was owing on a day, in all: the aged report's total. */
 export function agedTotal(kind: InvoiceKind, asAt: string): number {
   return build(kind, asAt).total;

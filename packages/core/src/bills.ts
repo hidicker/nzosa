@@ -4,6 +4,7 @@ import type { IsoDate } from "./dates.js";
 import { gstContent } from "./gst.js";
 import type { OtherPurchase } from "./gst.js";
 import { isCreditNote, isPosted } from "./invoices.js";
+import type { CreditAllocation } from "./invoices.js";
 import type { Invoice, InvoiceBalance, InvoiceKind } from "./invoices.js";
 import { taxTypeFromRate } from "./posting.js";
 import type { PostedJournal, PostedLine } from "./posting.js";
@@ -125,6 +126,8 @@ export function agedReport(options: {
   payments: readonly DatedPayment[];
   /** Credit note number to the document it credits. */
   credits?: Readonly<Record<string, string>>;
+  /** Parts of credits used against other documents, from their dates. */
+  allocations?: readonly CreditAllocation[];
   asAt: IsoDate;
   /** Only documents this says yes to, e.g. one entity's. */
   include?: (invoice: Invoice) => boolean;
@@ -162,15 +165,22 @@ export function agedReport(options: {
     applied.add(note);
     credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
   }
+  const used = new Map<string, Cents>();
+  for (const a of options.allocations ?? []) {
+    if (a.date > asAt || !byNumber.has(a.from) || !byNumber.has(a.to) || a.amount <= 0) continue;
+    used.set(a.from, (used.get(a.from) ?? 0) + a.amount);
+    credited.set(a.to, (credited.get(a.to) ?? 0) + a.amount);
+  }
 
   const contacts = new Map<string, AgedContact>();
   for (const doc of docs) {
     let owing: Cents;
     if (isCreditNote(doc)) {
       if (applied.has(doc.number)) continue;
-      owing = (doc.broughtForward ?? doc.total) + (paid.get(doc.number) ?? 0);
+      owing = (doc.broughtForward ?? doc.total) + (paid.get(doc.number) ?? 0) + (used.get(doc.number) ?? 0);
     } else {
-      owing = (doc.broughtForward ?? doc.total) - (paid.get(doc.number) ?? 0) - (credited.get(doc.number) ?? 0);
+      owing =
+        (doc.broughtForward ?? doc.total) - (paid.get(doc.number) ?? 0) - (credited.get(doc.number) ?? 0) + (used.get(doc.number) ?? 0);
     }
     if (owing === 0) continue;
     const daysOverdue = daysBetween(doc.due ?? doc.issued, asAt);

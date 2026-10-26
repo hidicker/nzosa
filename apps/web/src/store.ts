@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { PartCopy, PartOp } from "@nzosa/core";
+import type { CreditAllocation, PartCopy, PartOp } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -368,6 +368,8 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /** Parts of credits -- credit notes, overpayments -- used against other documents. */
+  creditAllocations?: CreditAllocation[];
   /**
    * Bank transaction id to the opposite leg of the transfer it is half of.
    *
@@ -858,6 +860,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     splits: ledger.splits ?? {},
     invoiceMatches: ledger.invoiceMatches ?? {},
     creditNotes: ledger.creditNotes ?? {},
+    ...(ledger.creditAllocations && ledger.creditAllocations.length > 0 ? { creditAllocations: ledger.creditAllocations } : {}),
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

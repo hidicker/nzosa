@@ -26,6 +26,7 @@ import {
 import type { DocumentStatus, Entity, Invoice, InvoiceBalance, OutsidePayment } from "@nzosa/core";
 import { booksCountry, booksMoney, noSalesTax } from "../country.js";
 import { openPaymentFile } from "./payment-file-ui.js";
+import { creditOnAccountSection } from "./credit-ui.js";
 
 /**
  * Bills: what these books owe suppliers.
@@ -107,11 +108,9 @@ export function renderBills(): void {
   body.append(summary(rows, now));
   // Credit notes from suppliers, each to say which bill it reduces. They
   // could not be assigned anywhere: the list was on Invoices, of sales only.
-  creditNoteSection(
-    body,
-    new Map([...balances].filter(([, b]) => b.invoice.kind === "purchase")),
-    money,
-  );
+  const purchases = new Map([...balances].filter(([, b]) => b.invoice.kind === "purchase"));
+  creditNoteSection(body, purchases, money);
+  creditOnAccountSection(body, purchases, "purchase");
 
   if (paying !== null) {
     const row = rows.find((r) => r.bill.number === paying);

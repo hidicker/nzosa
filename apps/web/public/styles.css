@@ -4598,3 +4598,4 @@ select.needs-choice {
   .register-split-row { grid-template-columns: 1fr 6em max-content; }
 }
 .register-field[hidden], .register-split[hidden] { display: none; }
+.payment-file-view .contact-field input[type="date"] { max-width: 12em; }

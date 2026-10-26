@@ -599,6 +599,22 @@ export interface InvoiceAssignment {
   amount: Cents;
 }
 
+/**
+ * Part of a credit used against another document of the same customer or
+ * supplier: a credit note, or what an overpaid invoice was paid over, taken
+ * off what another one owes. Nothing moves in the ledger -- receivables or
+ * payables already net the two -- so this only says which documents are
+ * settled, as at its date.
+ */
+export interface CreditAllocation {
+  /** The credit note, or the overpaid document, the credit comes from. */
+  from: string;
+  /** The document it is used against. */
+  to: string;
+  amount: Cents;
+  date: IsoDate;
+}
+
 /** A document billed in the opposite direction to the invoices around it. */
 export function isCreditNote(invoice: Invoice): boolean {
   return invoice.total < 0;
@@ -646,6 +662,8 @@ export function invoiceBalances(
    * wrong invoice quietly, which is worse than leaving it unapplied.
    */
   credits: Readonly<Record<string, string>> = {},
+  /** Parts of credits used against other documents. */
+  allocations: readonly CreditAllocation[] = [],
 ): Map<string, InvoiceBalance> {
   const assigned = new Map<string, Cents>();
   for (const item of assignments) {
@@ -662,6 +680,13 @@ export function invoiceBalances(
     if (source === undefined || target === "") continue;
     credited.set(target, (credited.get(target) ?? 0) + Math.abs(source.total));
   }
+  // Credit used from a note or an overpaid document, and where it went.
+  const used = new Map<string, Cents>();
+  for (const a of allocations) {
+    if (!byNumber.has(a.from) || !byNumber.has(a.to) || a.amount <= 0) continue;
+    used.set(a.from, (used.get(a.from) ?? 0) + a.amount);
+    credited.set(a.to, (credited.get(a.to) ?? 0) + a.amount);
+  }
 
   const out = new Map<string, InvoiceBalance>();
   for (const invoice of invoices) {
@@ -671,9 +696,10 @@ export function invoiceBalances(
     // A credit note is measured as itself. Subtracting what it is "owed"
     // reported every one of them as overpaid before any money had moved.
     const from = invoice.broughtForward ?? invoice.total;
+    const spent = used.get(invoice.number) ?? 0;
     const remaining = isCreditNote(invoice)
-      ? from + paid + outside
-      : from - paid - off - outside;
+      ? from + paid + outside + spent
+      : from - paid - off - outside + spent;
     const status: InvoiceStatus = isCreditNote(invoice)
       ? "credit note"
       : remaining < 0

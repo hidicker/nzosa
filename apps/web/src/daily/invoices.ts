@@ -1,4 +1,5 @@
 import { moduleOn } from "../modules.js";
+import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { redraw } from "../app.js";
 import {
   bankLabel,
@@ -1372,6 +1373,7 @@ export function renderInvoices(): void {
   // which only the balance can answer.
   const balances = new Map([...invoiceBalanceMap()].filter(([, b]) => shows(b.invoice)));
   creditNoteSection(body, balances, money);
+  creditOnAccountSection(body, balances, "sales");
   const owing = [...balances.values()]
     .filter((b) => b.remaining > 0 && isPosted(b.invoice))
     .sort((a, b) => b.remaining - a.remaining);
@@ -1750,7 +1752,10 @@ export function creditNoteSection(
     pick.addEventListener("change", () => {
       void saveCreditNote(cn.number, pick.value);
     });
-    cell.append(pick);
+    // Used in part under Credit on account: applying it whole as well would
+    // count it twice.
+    if (usedInPart(cn.number) && (links[cn.number] ?? "") === "") cell.append("Used in part, under Credit on account");
+    else cell.append(pick);
     tr.append(cell);
     tbody.append(tr);
   }

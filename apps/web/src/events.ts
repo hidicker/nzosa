@@ -170,7 +170,9 @@ export type EventKind =
    * One line typed into a register: added, changed or deleted. `id` is the
    * line; before and after hold it with its coding and split, or null.
    */
-  | "register";
+  | "register"
+  /** Credit used against other documents, whole. */
+  | "creditAllocations";
 
 /** A register line as a change keeps it: the line, its coding and its split. */
 export interface RegisterSnapshot {
@@ -558,6 +560,8 @@ export function reverse(ledger: StoredLedger, event: LedgerEvent): StoredLedger 
       return ledger;
     case "varianceNote":
       return { ...ledger, varianceNotes: (event.before ?? []) as VarianceNote[] };
+    case "creditAllocations":
+      return { ...ledger, creditAllocations: (event.before ?? []) as NonNullable<StoredLedger["creditAllocations"]> };
     case "register": {
       const id = event.targetId ?? "";
       const was = event.before as RegisterSnapshot | null;
@@ -667,6 +671,7 @@ export const KIND_LABELS: Record<EventKind, string> = {
   varianceNote: "GST explanation",
   reclassify: "Lines moved to another account",
   register: "Register",
+  creditAllocations: "Credit used",
 };
 
 /** How often one bank line's coding has been changed, and the latest change. */

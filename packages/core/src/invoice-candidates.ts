@@ -1,3 +1,4 @@
+import type { CreditAllocation } from "./invoices.js";
 import { daysBetween } from "./dates.js";
 import { invoiceBalances } from "./invoices.js";
 import type { Invoice, InvoiceAssignment, InvoiceBalance, InvoiceKind } from "./invoices.js";
@@ -20,6 +21,8 @@ export function invoiceBalancesFor(options: {
   assignments: ReadonlyMap<string, string>;
   /** Credit note number to the invoice it credits, as nominated by a person. */
   credits?: Readonly<Record<string, string>>;
+  /** Parts of credits used against other documents. */
+  allocations?: readonly CreditAllocation[];
 }): Map<string, InvoiceBalance> {
   const { invoices, transactions, splits, assignments } = options;
   const byId = new Map(transactions.map((t) => [t.id, t]));
@@ -40,7 +43,7 @@ export function invoiceBalancesFor(options: {
     const transaction = byId.get(transactionId);
     if (transaction !== undefined) paid.push({ invoiceNumber, amount: transaction.amount });
   }
-  return invoiceBalances(invoices, paid, undefined, options.credits ?? {});
+  return invoiceBalances(invoices, paid, undefined, options.credits ?? {}, options.allocations ?? []);
 }
 
 /**

@@ -321,6 +321,7 @@ export type {
   PaymentAllocation,
   AllocationImportResult,
   InvoiceBalance,
+  CreditAllocation,
   InvoiceAssignment,
   InvoiceStatus,
   OutsidePayment,
@@ -489,3 +490,5 @@ export { accountKeyOf, recodeElsewhere } from "./recode-elsewhere.js";
 export type { CodeKeptStores, PayrollAccountsHeld } from "./recode-elsewhere.js";
 export { isRegisterEntry, REGISTER_IMPORTER, registerProblem, registerRows, registerTransaction } from "./register.js";
 export type { RegisterDraft, RegisterRow } from "./register.js";
+export { allocationProblem, creditsOnAccount, proposeAllocations } from "./credit-on-account.js";
+export type { CreditOnAccount, CreditSource } from "./credit-on-account.js";

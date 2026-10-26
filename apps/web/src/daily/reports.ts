@@ -1,7 +1,8 @@
 import { renderAuRentalSchedule, renderAuTax, renderBas, renderContractors, renderKrBusiness, renderKrRental, renderKrTax, renderKrVat, renderScheduleC, renderBudgetVsActual, renderProfitByClass, renderProfitByJob, renderPayrollTax, renderSalesTax, renderScheduleE, renderUsTax } from "./country-reports.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { comparing, drawPeriodControls, earlierRange, periodFileName, periodHeading, reportRange } from "./report-period.js";
-import { formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
+import { cashForecast, changeShare, daysSalesOutstanding, isCreditNote, isPosted, formatChartOfAccounts, formatFixedAssets, periodSaid, salesBy, spreadsheetCell } from "@nzosa/core";
+import type { OwingDocument } from "@nzosa/core";
 import { computeOurReturns } from "../variance.js";
 import { renderCashFlow } from "./cash-flow-report.js";
 import { INCOME_HEAD, incomeRows } from "./income-rows.js";
@@ -9,7 +10,7 @@ import { provisionalPaidFromIrd } from "./ird-provisional.js";
 import { renderYearEnd } from "./year-end.js";
 import { agentReaderPanel } from "./agent-statement-reader.js";
 import { anyModuleOn, moduleOn, previousSystem } from "../modules.js";
-import { agedCsv, renderAged } from "./aged-report.js";
+import { agedCsv, agedTotal, renderAged } from "./aged-report.js";
 import { renderBankReconcile, bankReconcileCsv } from "./bank-reconcile-report.js";
 import { redraw, showPage } from "../app.js";
 import {
@@ -21,6 +22,7 @@ import {
   bankLabel,
   bookYears,
   banks,
+  invoiceBalanceMap,
   ledgerAccountFor,
   postedJournals,
   record,
@@ -4953,10 +4955,17 @@ function renderCharts(body: HTMLElement, year: number): void {
     body.append(warn);
   }
 
+  if (!nothingYet) body.append(healthTiles(whole.report, year));
+
   const monthly = document.createElement("h3");
   monthly.className = "chart-heading";
   monthly.textContent = `Month by month, FY${year}`;
   body.append(monthly, monthlyColumns(months));
+
+  // Where the bank is heading, from today: with the year we are in, or the
+  // latest the books hold.
+  const today = new Date().toLocaleDateString("en-CA");
+  if ((today >= taxYearStart(year) && today <= taxYearEnd(year)) || year === bookYears()[0]) body.append(cashForecastSection(today));
 
   const biggest = [...whole.report.expenses]
     .sort((a, b) => Math.abs(b.net) - Math.abs(a.net))
@@ -4992,6 +5001,131 @@ function renderCharts(body: HTMLElement, year: number): void {
   summary.textContent = "The figures behind these charts";
   details.append(summary, table);
   body.append(details);
+}
+
+/**
+ * Margins, how long customers take to pay, and income against the year
+ * before: figures, not pictures, as the tiles above are.
+ */
+function healthTiles(report: ProfitAndLoss, year: number): HTMLElement {
+  const grouped = groupProfitAndLoss(report, reportLookups().classOf);
+  const today = new Date().toLocaleDateString("en-CA");
+  const { from, to: end } = reportRange(year);
+  const to = today < end ? today : end;
+  const days = Math.max(1, Math.round((Date.parse(`${to}T00:00:00Z`) - Date.parse(`${from}T00:00:00Z`)) / 86_400_000) + 1);
+  const percent = (share: number | null): string => (share === null ? "—" : `${Math.round(share * 1000) / 10}%`);
+  const tiles: { label: string; value: string; note: string }[] = [];
+  if (grouped.trading.total !== 0 && grouped.costOfSales.total !== 0) {
+    tiles.push({
+      label: "Gross margin",
+      value: percent(grouped.grossProfit / grouped.trading.total),
+      note: "Trading income less cost of sales",
+    });
+  }
+  tiles.push({
+    label: "Net margin",
+    value: percent(report.totalIncome === 0 ? null : report.netProfit / report.totalIncome),
+    note: "Net profit as a share of income",
+  });
+  if ((state.ledger.invoices ?? []).some((i) => i.kind === "sales")) {
+    const dso = daysSalesOutstanding(agedTotal("sales", to), report.totalIncome, days);
+    tiles.push({
+      label: "Days to be paid",
+      value: dso === null ? "—" : `${dso} days`,
+      note: `Owed by customers on ${to}, as days of sales`,
+    });
+  }
+  const before = currentReport(earlierRange(year));
+  const trend = before === null ? null : changeShare(before.report.totalIncome, report.totalIncome);
+  if (trend !== null) {
+    tiles.push({
+      label: "Income on a year earlier",
+      value: `${trend >= 0 ? "+" : ""}${percent(trend)}`,
+      note: `Against ${periodSaid(earlierRange(year))}`,
+    });
+  }
+  const row = document.createElement("div");
+  row.className = "chart-tiles";
+  for (const tile of tiles) {
+    const box = document.createElement("div");
+    box.className = "chart-tile";
+    const label = document.createElement("span");
+    label.className = "chart-tile-label";
+    label.textContent = tile.label;
+    const value = document.createElement("strong");
+    value.className = "chart-tile-value";
+    value.textContent = tile.value;
+    const said = document.createElement("span");
+    said.className = "chart-tile-note";
+    said.textContent = tile.note;
+    box.append(label, value, said);
+    row.append(box);
+  }
+  return row;
+}
+
+/**
+ * The next ninety days of cash: the bank today, what customers owe coming in
+ * on its due date, what is owed to suppliers going out on its own. Repeating
+ * invoices and bank lines not yet written are not in it.
+ */
+function cashForecastSection(today: string): HTMLElement {
+  const box = document.createElement("div");
+  const heading = document.createElement("h3");
+  heading.className = "chart-heading";
+  heading.textContent = "The next 90 days";
+  box.append(heading);
+
+  // The bank today: every bank account's balance on the balance sheet.
+  const ids = new Set(banks().accounts);
+  const bankCodes = new Set(state.chart.filter((a) => a.type.trim().toLowerCase() === "bank").map((a) => a.code.trim()));
+  const opening = state.ledger.openingBalances;
+  const sheet = computeBalanceSheet({
+    asAt: today,
+    ...(opening ? { openingBalances: opening } : {}),
+    journals: postedJournals(),
+    chart: state.chart,
+  });
+  let bank = 0;
+  for (const part of [sheet.currentAssets, sheet.currentLiabilities]) {
+    for (const line of part.lines) {
+      if (ids.has(line.code) || bankCodes.has(line.code.trim())) bank += part === sheet.currentAssets ? line.closing : -line.closing;
+    }
+  }
+
+  const owing: OwingDocument[] = [];
+  for (const balance of invoiceBalanceMap().values()) {
+    const doc = balance.invoice;
+    if (!isPosted(doc) || isCreditNote(doc) || doc.receipt === true || balance.remaining <= 0) continue;
+    const expected = doc.due ?? new Date(Date.parse(`${doc.issued}T00:00:00Z`) + 30 * 86_400_000).toISOString().slice(0, 10);
+    owing.push({ kind: doc.kind === "purchase" ? "purchase" : "sales", expected, remaining: balance.remaining });
+  }
+  const buckets = cashForecast(bank, today, owing);
+
+  const table = document.createElement("table");
+  table.className = "report-table";
+  table.innerHTML = "<thead><tr><th>Days</th><th>From customers</th><th>To suppliers</th><th>Bank at the end</th></tr></thead>";
+  const tbody = document.createElement("tbody");
+  const start = document.createElement("tr");
+  start.append(nameCell("Today"), amountCell(""), amountCell(""), amountCell(booksMoney(bank)));
+  tbody.append(start);
+  buckets.forEach((b, i) => {
+    const tr = document.createElement("tr");
+    const end = amountCell(booksMoney(b.closing));
+    if (b.closing < 0) end.classList.add("match-off");
+    tr.append(nameCell(`${i * 30 + 1} to ${i * 30 + 30} (${b.from} to ${b.to})`), amountCell(booksMoney(b.in)), amountCell(booksMoney(b.out)), end);
+    tbody.append(tr);
+  });
+  table.append(tbody);
+  box.append(
+    table,
+    note(
+      "Invoices and bills still owing, each on its due date (or 30 days after its date where it has none); " +
+        "anything overdue is counted in the first 30 days. Wages, tax, repeating invoices and everyday spending " +
+        "are not in it.",
+    ),
+  );
+  return box;
 }
 
 /**

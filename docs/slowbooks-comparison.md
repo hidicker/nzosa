@@ -199,7 +199,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 19. ~~Quantities and prices to four decimal places (S).~~ Lines are amounts; quantities take decimals.
 20. Quotes offered in New Zealand (S).
 21. Time approval (S).
-22. Reconcile: lines through a date, and the statement balance corrected in place (S).
+22. Reconcile: lines through a date (done), and the statement balance corrected in place (already: it can be changed freely until the statement is finished, which needs a nil difference) (S).
 23. Every completed reconciliation listed (S).
 24. Inactive accounts, and the starter chart's unused accounts removed in one step (S).
 25. Keyboard shortcuts for a new invoice, bill and journal (S).

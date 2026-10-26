@@ -217,7 +217,23 @@ export function renderStatements(): void {
       ticked.clear();
       redraw("statements");
     });
-    actions.append(all, none, finish);
+    // Every line up to a day: a statement read down to where it was got to.
+    const through = document.createElement("input");
+    through.type = "date";
+    through.value = open[open.length - 1]?.date ?? statementDate;
+    through.min = open[0]?.date ?? "";
+    through.max = statementDate;
+    through.setAttribute("aria-label", "Tick the lines through this day");
+    const tickThrough = document.createElement("button");
+    tickThrough.type = "button";
+    tickThrough.textContent = "Tick through";
+    tickThrough.title = "Tick every line dated on or before the day beside it";
+    tickThrough.addEventListener("click", () => {
+      if (through.value === "") return;
+      for (const t of open) if (t.date <= through.value) ticked.add(t.id);
+      redraw("statements");
+    });
+    actions.append(all, none, tickThrough, through, finish);
     body.append(actions, scroller);
   }
 

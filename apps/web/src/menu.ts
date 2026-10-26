@@ -4,8 +4,11 @@ import { showPage } from "./app.js";
 import { toggleNarrow } from "./chrome.js";
 import { $, state } from "./state.js";
 import { applyModules } from "./modules.js";
-import { billsAvailable } from "./books.js";
-import { startNewBill, startNewInvoice } from "./daily/invoices.js";
+import { bankLabel, billsAvailable } from "./books.js";
+import { editBill, editInvoice, startNewBill, startNewInvoice } from "./daily/invoices.js";
+import { booksMoney } from "./country.js";
+import { searchBooks } from "@nzosa/core";
+import type { SearchHit } from "@nzosa/core";
 import { startNewJournal } from "./daily/reports.js";
 
 /**
@@ -246,6 +249,62 @@ function destinations(): Destination[] {
   return found;
 }
 
+/** Put a page's own search box to a query, as if typed. */
+function searchOn(page: string, box: string, query: string, before?: () => void): void {
+  showPage(page, "top");
+  before?.();
+  const input = document.getElementById(box);
+  if (!(input instanceof HTMLInputElement)) return;
+  input.value = query;
+  input.dispatchEvent(new Event("input"));
+}
+
+const KIND_SAID: Record<SearchHit["kind"], string> = {
+  contact: "Contact",
+  invoice: "Invoice",
+  bill: "Bill",
+  line: "Bank line",
+  journal: "Journal",
+};
+
+/** What the books hold that matches: contacts, documents, bank lines, journals. */
+function inTheBooks(query: string): Destination[] {
+  const hits = searchBooks(query, {
+    contacts: state.ledger.contacts ?? [],
+    invoices: state.ledger.invoices ?? [],
+    transactions: state.ledger.transactions,
+    journals: state.ledger.manualJournals ?? [],
+    money: booksMoney,
+    bankName: bankLabel,
+  });
+  return hits.map((hit) => ({
+    label: hit.title,
+    where: hit.detail.startsWith(KIND_SAID[hit.kind]) ? hit.detail : `${KIND_SAID[hit.kind]} · ${hit.detail}`,
+    words: "",
+    go: () => {
+      if (hit.kind === "contact") searchOn("contacts", "contacts-search", hit.id);
+      else if (hit.kind === "invoice") {
+        searchOn("invoices", "invoice-search", hit.id);
+        editInvoice(hit.id);
+      } else if (hit.kind === "bill") {
+        searchOn("bills", "bill-search", hit.id);
+        editBill(hit.id);
+      } else if (hit.kind === "journal") openReport("manual");
+      else {
+        const line = state.ledger.transactions.find((t) => t.id === hit.id);
+        const said = line === undefined ? hit.title : (line.otherParty || line.particulars || (Math.abs(line.amount) / 100).toFixed(2)).trim();
+        searchOn("reconcile", "reconcile-search", said, () => {
+          const filter = document.getElementById("reconcile-filter");
+          if (filter instanceof HTMLSelectElement && filter.value !== "all") {
+            filter.value = "all";
+            filter.dispatchEvent(new Event("change"));
+          }
+        });
+      }
+    },
+  }));
+}
+
 function matches(query: string): Destination[] {
   const words = query.toLowerCase().split(/\s+/).filter((word) => word !== "");
   if (words.length === 0) return [];
@@ -261,8 +320,9 @@ function matches(query: string): Destination[] {
       return [{ destination, score }];
     })
     .sort((a, b) => a.score - b.score)
-    .slice(0, 8)
-    .map((scored) => scored.destination);
+    .slice(0, 5)
+    .map((scored) => scored.destination)
+    .concat(query.trim().length >= 2 ? inTheBooks(query) : []);
 }
 
 function wireSearch(): void {
@@ -292,7 +352,7 @@ function wireSearch(): void {
     if (shown.length === 0) {
       const none = document.createElement("div");
       none.className = "menu-search-empty";
-      none.textContent = "Nothing called that.";
+      none.textContent = "Nothing called that, and nothing in the books.";
       results.append(none);
       return;
     }

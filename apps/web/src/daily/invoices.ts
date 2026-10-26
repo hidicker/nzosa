@@ -2042,6 +2042,15 @@ export function startNewBill(): void {
   redraw("invoiceEditor");
 }
 
+/** Open an invoice in the editor, on the Invoices page. */
+export function editInvoice(number: string): void {
+  editorOn = "invoices";
+  editingInvoice = number;
+  newReceipt = false;
+  redraw("invoiceEditor");
+  document.getElementById("invoice-editor")?.scrollIntoView({ block: "nearest" });
+}
+
 /** Open a bill in the editor, on the Bills page. */
 export function editBill(number: string): void {
   editorOn = "bills";

@@ -506,3 +506,4 @@ export * from "./quick-entry.js";
 export * from "./jobs.js";
 export * from "./sub-accounts.js";
 export * from "./analytics.js";
+export * from "./search-books.js";

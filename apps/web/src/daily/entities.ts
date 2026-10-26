@@ -2163,7 +2163,7 @@ function unusedAccounts(): Account[] {
   return state.chart.filter((a) => {
     const code = a.code.trim();
     if (code === "" || (a.ledgerAccount ?? "").trim() !== "") return false;
-    if (/bank|receivable|payable|retained|current year/i.test(`${a.type} ${a.name}`) || isGstControlCode(code) || /GST/i.test(a.name)) return false;
+    if (/bank|receivable|payable|retained|current year/i.test(`${a.type} ${a.name}`) || isGstControlCode(code) || /\bGST\b/i.test(a.name)) return false;
     return !used.has(code) && !used.has(a.name.trim().toLowerCase());
   });
 }

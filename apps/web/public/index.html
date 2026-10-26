@@ -933,6 +933,11 @@
               <input type="date" id="report-from" aria-label="From" /> to
               <input type="date" id="report-to" aria-label="To" />
             </span>
+            <select id="report-columns" title="One column, or a column for each month or quarter, to spot one that is out of line" hidden>
+              <option value="">One column</option>
+              <option value="month">By month</option>
+              <option value="quarter">By quarter</option>
+            </select>
             <label id="report-compare-label" class="report-compare" hidden>
               <input type="checkbox" id="report-compare" /> Compare with a year earlier
             </label>

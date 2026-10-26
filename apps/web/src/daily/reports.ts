@@ -40,7 +40,7 @@ import { monthlyColumns, rankedBars, statTiles } from "../charts.js";
 import { combobox } from "../combobox.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage } from "../ui.js";
+import { amountCell, askOnPage, download, escapeHtml, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import { createZip, downloadBytes, downloadExcelReport } from "./excel-export.js";
 import { bankReconcileCsv as packageBankCsv } from "./bank-reconcile-report.js";
 import { unresolvedNote } from "../widgets.js";
@@ -4235,6 +4235,7 @@ export function renderReportsPage(): void {
   const gstSelect = $<HTMLSelectElement>("report-gst");
   // No sales tax, nothing to include or exclude.
   gstSelect.hidden = kindNow !== "pl" || basisNow === "accrual" || noSalesTax();
+  $("report-columns").hidden = kindNow !== "pl";
 
   // Registration decides this, so the control follows the entity rather than
   // waiting to be set: a registered entity reports net, an unregistered one
@@ -4501,8 +4502,15 @@ export function renderReportsPage(): void {
       : usingAccrual
         ? "accrual, from the imported ledger"
         : "cash";
-  heading.textContent = `${title} — Profit and Loss, ${periodHeading(year)} (${how})` + (comparing() ? ", beside a year earlier" : "");
+  const columnsBy = $<HTMLSelectElement>("report-columns").value as "" | "month" | "quarter";
+  heading.textContent =
+    `${title} — Profit and Loss, ${periodHeading(year)} (${how})` +
+    (columnsBy !== "" ? `, by ${columnsBy}` : comparing() ? ", beside a year earlier" : "");
   body.append(heading);
+  if (columnsBy !== "") {
+    renderPlColumns(body, year, columnsBy);
+    return;
+  }
   if (!usingAccrual && basisChoice === "accrual") {
     body.append(
       note(
@@ -4889,6 +4897,91 @@ function renderSalesBy(body: HTMLElement, year: number, by: "customer" | "item")
 }
 
 /** The twelve months of a financial year, from its first: April to March in New Zealand. */
+/**
+ * The profit and loss with a column for each month or quarter of the period
+ * chosen, and a total: built by the same builder, once for each column, so
+ * the total is the report's own. A month where a usual cost is missing, or
+ * doubled, stands out across the row.
+ */
+function renderPlColumns(body: HTMLElement, year: number, by: "month" | "quarter"): void {
+  const range = reportRange(year);
+  const months = monthsOfYear(year)
+    .filter((m) => m.to >= range.from && m.from <= range.to)
+    .map((m) => ({ label: m.label, from: m.from < range.from ? range.from : m.from, to: m.to > range.to ? range.to : m.to }));
+  const spans =
+    by === "month"
+      ? months
+      : months.reduce<{ label: string; from: string; to: string }[]>((out, m, i) => {
+          if (i % 3 === 0) out.push({ label: m.label, from: m.from, to: m.to });
+          else {
+            const last = out[out.length - 1]!;
+            last.to = m.to;
+            last.label = `${last.label.split("–")[0]}–${m.label}`;
+          }
+          return out;
+        }, []);
+  const columns = spans.map((s) => {
+    const built = currentReport({ from: s.from, to: s.to });
+    return { span: s, grouped: built === null ? null : groupProfitAndLoss(built.report, reportLookups().classOf) };
+  });
+  const money = (cents: number): string => booksMoney(cents);
+  const table = document.createElement("table");
+  table.className = "report-table pl-columns";
+  const head = document.createElement("thead");
+  const headRow = document.createElement("tr");
+  for (const text of ["Account", ...spans.map((s) => s.label), "Total"]) {
+    const th = document.createElement("th");
+    th.textContent = text;
+    headRow.append(th);
+  }
+  head.append(headRow);
+  const tbody = document.createElement("tbody");
+  const row = (label: string, figures: number[], cls = ""): void => {
+    const tr = document.createElement("tr");
+    if (cls !== "") tr.className = cls;
+    tr.append(nameCell(label));
+    for (const figure of [...figures, figures.reduce((s, f) => s + f, 0)]) tr.append(amountCell(figure === 0 && cls === "" ? "" : money(figure)));
+    tbody.append(tr);
+  };
+  const keys = ["trading", "costOfSales", "otherIncome", "operatingExpenses"] as const;
+  const totals: Record<(typeof keys)[number], number[]> = {
+    trading: columns.map(() => 0),
+    costOfSales: columns.map(() => 0),
+    otherIncome: columns.map(() => 0),
+    operatingExpenses: columns.map(() => 0),
+  };
+  for (const key of keys) {
+    const income = key === "trading" || key === "otherIncome";
+    const codes: string[] = [];
+    let title = "";
+    for (const c of columns) {
+      const group = c.grouped?.[key];
+      if (group === undefined) continue;
+      title = group.title;
+      for (const line of group.lines) if (!codes.includes(line.code)) codes.push(line.code);
+    }
+    if (codes.length === 0) continue;
+    row(title, [], "report-section");
+    for (const code of codes) {
+      const figures = columns.map((c) => {
+        const line = c.grouped?.[key].lines.find((l) => l.code === code);
+        return line === undefined ? 0 : income ? line.net : -line.net;
+      });
+      row(code, figures);
+    }
+    columns.forEach((c, i) => (totals[key][i] = c.grouped?.[key].total ?? 0));
+    row(`Total ${title}`, totals[key], "report-total");
+    if (key === "costOfSales") row("Gross Profit", columns.map((c) => c.grouped?.grossProfit ?? 0), "report-total");
+  }
+  row("Net Profit", columns.map((c) => c.grouped?.netProfit ?? 0), "report-net");
+  // The section heading rows carry no figures.
+  for (const tr of tbody.querySelectorAll("tr.report-section")) {
+    for (const td of [...tr.querySelectorAll("td")].slice(1)) td.textContent = "";
+  }
+  table.append(head, tbody);
+  body.append(wideTable(table));
+}
+
 function monthsOfYear(year: number): { label: string; from: string; to: string }[] {
   return monthsOfTaxYear(year, "en-US");
 }
@@ -5665,6 +5758,7 @@ export function wireReports(): void {
   $("report-basis").addEventListener("change", () => redraw("reports"));
   $("report-gst").addEventListener("change", () => redraw("reports"));
   $("report-unadjusted").addEventListener("change", () => redraw("reports"));
+  $("report-columns").addEventListener("change", () => redraw("reports"));
 
   $("report-kind").addEventListener("change", () => redraw("reports"));
   $("report-owner").addEventListener("change", () => redraw("reports"));

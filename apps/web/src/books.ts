@@ -2139,7 +2139,7 @@ function stockCostJournals(): PostedJournal[] {
  */
 export function ledgerFromStart(): boolean {
   return state.ledger.transactions.some((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal|gnucash-transactions)$/.test(t.source?.importer ?? ""),
   );
 }
 

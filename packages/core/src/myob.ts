@@ -282,7 +282,7 @@ export function parseMyobJournal(text: string, chart: QuickBooksChart | null, op
 }
 
 /** A GST control account: GST Collected, GST Paid, and the like -- not a penalty or interest on it. */
-function isGstAccount(account: Account): boolean {
+export function isGstAccount(account: Account): boolean {
   return /\bGST\b|goods and services tax/i.test(account.name) && !/penalt|interest|expense/i.test(account.name) && !/revenue|expense|overhead|direct/i.test(account.type);
 }
 
@@ -292,7 +292,7 @@ function isGstAccount(account: Account): boolean {
  * cent. An entry with nothing for the GST to go into (paying the GST to IRD)
  * is left as it is.
  */
-function foldGst(entry: QuickBooksEntry, isGst: (name: string) => boolean, isBank: (name: string) => boolean): void {
+export function foldGst(entry: QuickBooksEntry, isGst: (name: string) => boolean, isBank: (name: string) => boolean): void {
   const tax = entry.legs.filter((leg) => isGst(leg.account));
   const total = tax.reduce((sum, leg) => sum + leg.debit, 0);
   if (tax.length === 0 || total === 0) return;

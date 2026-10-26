@@ -247,8 +247,8 @@ export const MODULES: readonly ModuleInfo[] = [
   {
     id: "sheet",
     opens: "check",
-    name: "Spreadsheet, QuickBooks or MYOB import",
-    what: "Bringing in a coded spreadsheet, or books from QuickBooks, SlowBooks or MYOB, and checking these books' coding against it.",
+    name: "Spreadsheet, QuickBooks, MYOB or GnuCash import",
+    what: "Bringing in a coded spreadsheet, or books from QuickBooks, SlowBooks, MYOB or GnuCash, and checking these books' coding against it.",
     basis: "source",
     // Coded history from Xero is the Xero module's; this one is for a
     // spreadsheet. Loading Xero's files switched it on as well, and with it
@@ -395,6 +395,7 @@ export function previousSystem(): string {
       if (importer.startsWith("quickbooks")) return "QuickBooks";
       if (importer.startsWith("slowbooks")) return "SlowBooks";
       if (importer.startsWith("myob")) return "MYOB";
+      if (importer.startsWith("gnucash")) return "GnuCash";
     }
     return "your spreadsheet";
   }

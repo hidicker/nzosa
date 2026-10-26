@@ -342,7 +342,7 @@ function said(held: Onboarding, step: Step): string {
       return held.source === "xero"
         ? "Moving from Xero"
         : fromQuickBooks(held)
-          ? "Moving from QuickBooks, SlowBooks or MYOB"
+          ? "Moving from QuickBooks, SlowBooks, MYOB or GnuCash"
           : held.source === "sheet"
           ? "Moving from a spreadsheet"
           : held.opening === true
@@ -465,9 +465,9 @@ function sourceQuestion(number: number): HTMLElement {
         ],
         [
           "quickbooks",
-          "Import from QuickBooks, SlowBooks or MYOB",
+          "Import from QuickBooks, SlowBooks, MYOB or GnuCash",
           "The accounts, bank and card lines, invoices, bills, customers and vendors come across from " +
-            "QuickBooks Online, QuickBooks Desktop, SlowBooks or MYOB, with the coding",
+            "QuickBooks Online, QuickBooks Desktop, SlowBooks, MYOB or GnuCash, with the coding",
         ],
         ["sheet", "From a spreadsheet", "The coding already in the sheet becomes the rules"],
       ],
@@ -1769,7 +1769,7 @@ function filesQuestion(number: number, held: Onboarding): HTMLElement {
  * recognised by what is in it, so they can be dropped together.
  */
 function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
-  const [box, inner] = card(number, "Migration from QuickBooks, SlowBooks or MYOB");
+  const [box, inner] = card(number, "Migration from QuickBooks, SlowBooks, MYOB or GnuCash");
   inner.append(
     advice(
       "Export these from the system you are leaving, then drop them below, together or one at a time. " +
@@ -1905,8 +1905,28 @@ function quickBooksQuestion(number: number, held: Onboarding): HTMLElement {
         ],
       ),
     ),
+    folded(
+      "GnuCash",
+      table(
+        ["Export", "Where", "Gives", "Needed"],
+        [
+          [
+            "Account tree",
+            "File > Export > Export Account Tree to CSV",
+            "The accounts, each with its type and code",
+            "Recommended",
+          ],
+          [
+            "Transactions",
+            "File > Export > Export Transactions to CSV, all accounts and all dates",
+            "Every transaction: bank and card lines with their coding, and the rest as journals",
+            "Required",
+          ],
+        ],
+      ),
+    ),
     note(
-      "Drop them all together, CSV, Excel or a zip as QuickBooks gives it, or MYOB's text files: NZOSA reads the accounts and the ledger first, then the rest. " +
+      "Drop them all together, CSV, Excel or a zip as QuickBooks gives it, MYOB's text files or GnuCash's CSV: NZOSA reads the accounts and the ledger first, then the rest. " +
         "Where a report asks for a date range, choose All dates, so nothing from before it is left out.",
     ),
     dropZone(),

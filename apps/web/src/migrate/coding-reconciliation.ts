@@ -103,6 +103,7 @@ function otherSystem(): string | null {
     if (importer.startsWith("quickbooks")) return "QuickBooks";
     if (importer.startsWith("slowbooks")) return "SlowBooks";
     if (importer.startsWith("myob")) return "MYOB";
+    if (importer.startsWith("gnucash")) return "GnuCash";
   }
   return null;
 }
@@ -3580,7 +3581,7 @@ export async function applyChartColumns(chart: readonly Account[]): Promise<void
  * order. Says whether it changed anything.
  */
 export async function repairImportedChart(): Promise<boolean> {
-  const imported = state.ledger.transactions.some((t) => /^(quickbooks|slowbooks|myob)/.test(t.source?.importer ?? ""));
+  const imported = state.ledger.transactions.some((t) => /^(quickbooks|slowbooks|myob|gnucash)/.test(t.source?.importer ?? ""));
   if (!imported || state.chart.length === 0) return false;
   const model = state.ledger.entities;
   const unassigned =

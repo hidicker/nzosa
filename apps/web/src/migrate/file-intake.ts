@@ -278,6 +278,9 @@ async function loadEach(
     // MYOB's accounts first, so the journal's account numbers have names and types.
     "myob-accounts": -1,
     "myob-journal": 0,
+    // GnuCash's account tree first, for the same reason.
+    "gnucash-accounts": -1,
+    "gnucash-transactions": 0,
     // After the IIF file, whose chart gives its accounts their types.
     "quickbooks-desktop-detail": 0,
     // Its own chart, made from the statements dropped with it.
@@ -322,10 +325,12 @@ async function loadEach(
           continue;
         }
         case "myob-accounts":
+        case "gnucash-accounts":
           await loadCheckFiles([file]);
           say(`${file.name} — ${identified.what}: the accounts are in the chart.`);
           continue;
         case "myob-journal":
+        case "gnucash-transactions":
         case "slowbooks-ledger":
         case "quickbooks-desktop-detail":
         case "quickbooks-export":

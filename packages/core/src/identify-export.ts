@@ -8,6 +8,7 @@ import { isQuickBooksChart, isQuickBooksLedger } from "./quickbooks.js";
 import { isIif } from "./iif.js";
 import { isSlowBooksLedger } from "./slowbooks.js";
 import { isMyobAccounts, isMyobJournal } from "./myob.js";
+import { isGnuCashAccounts, isGnuCashTransactions } from "./gnucash.js";
 import { isQuickBooksDesktopDetail } from "./qb-desktop-detail.js";
 import { isQuickBooksExportJournal } from "./qbo-export.js";
 import { isProductList } from "./product-lists.js";
@@ -59,6 +60,8 @@ export type ExportKind =
   | "slowbooks-ledger"
   | "myob-accounts"
   | "myob-journal"
+  | "gnucash-accounts"
+  | "gnucash-transactions"
   | "quickbooks-desktop-detail"
   | "quickbooks-export"
   | "product-list"
@@ -220,6 +223,13 @@ export function identifyExport(text: string): Identified {
   // knows, holding the chart, the lists and every transaction at once.
   if (isIif(text)) {
     return { kind: "quickbooks-iif", what: "QuickBooks Desktop IIF file" };
+  }
+  // GnuCash's exports: its account tree, and its transactions.
+  if (isGnuCashAccounts(text)) {
+    return { kind: "gnucash-accounts", what: "GnuCash account tree" };
+  }
+  if (isGnuCashTransactions(text)) {
+    return { kind: "gnucash-transactions", what: "GnuCash transactions" };
   }
   // MYOB's exports: its accounts list, and its journal entries.
   if (isMyobAccounts(text)) {

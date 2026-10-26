@@ -209,3 +209,10 @@ works).
   items are not read, so invoices and bills arrive as journals rather than as
   documents to be paid. Its export formats were taken from MYOB's help pages;
   no real MYOB file has been tried yet. 26 October 2026.
+- **Sage 50, Wave, Zoho Books and the Transaction Pro bank sheet.** Item 40 of
+  the SlowBooks comparison. GnuCash is read (`packages/core/src/gnucash.ts`:
+  the account tree and the transactions CSV, both layouts). The other four
+  export formats vary by version and country and none was in hand to build
+  against; each needs a real export (with invented figures) to write its
+  reader and test it. Like MYOB, no real GnuCash file has been tried yet.
+  27 October 2026.

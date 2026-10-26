@@ -1,4 +1,4 @@
-import { isMyobJournal, parseMyobBooks } from "@nzosa/core";
+import { isGnuCashTransactions, isMyobJournal, parseGnuCashBooks, parseMyobBooks } from "@nzosa/core";
 import { applyDueDates, isIif, isQuickBooksExportJournal, isQuickBooksDesktopDetail, parseQuickBooksDesktopDetailBooks, isQuickBooksTrialBalance, parseQuickBooksTrialBalance, trialBalance, isSlowBooksLedger, mergeContacts, parseDueDates, parseProductList, parseContactList, parseIifBooks, parseSlowBooksBooks, parseQuickBooksBooks, parseQuickBooksLedger, quickBooksChartFrom, splitPartId } from "@nzosa/core";
 import type { Item, ManualJournal, SplitPart } from "@nzosa/core";
 import { asCsvText, hasCoding, postedJournals, reconcileRows, record, reclassify, saveManualJournals } from "../books.js";
@@ -30,9 +30,10 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
 
   const slowBooks = isSlowBooksLedger(text);
   const myob = isMyobJournal(text);
+  const gnucash = isGnuCashTransactions(text);
   const desktop = isQuickBooksDesktopDetail(text);
   const exported = isQuickBooksExportJournal(text);
-  const iif = isIif(text) || slowBooks || desktop || exported || myob;
+  const iif = isIif(text) || slowBooks || desktop || exported || myob || gnucash;
   if (state.chart.length === 0 && !iif) {
     const only = parseQuickBooksLedger(text, options);
     if (only.transactions.length === 0) return "no bank or card lines found in it.";
@@ -47,11 +48,11 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   const fromIif = exported
     ? readQuickBooksExport({ name: file.name, text }, state.chart, { currency: booksCurrency(), dayFirst: booksCountry().dayFirst })
     : iif
-    ? (myob ? parseMyobBooks : slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : parseIifBooks)(text, chart, {
+    ? (gnucash ? parseGnuCashBooks : myob ? parseMyobBooks : slowBooks ? parseSlowBooksBooks : desktop ? parseQuickBooksDesktopDetailBooks : parseIifBooks)(text, chart, {
         currency: booksCurrency(),
         file: file.name,
         // MYOB writes dates as the books' country does; the QuickBooks files keep their own order.
-        ...(myob ? { dayFirst: booksCountry().dayFirst } : {}),
+        ...(myob || gnucash ? { dayFirst: booksCountry().dayFirst } : {}),
       })
     : null;
   const books = fromIif ?? parseQuickBooksBooks(text, chart ?? quickBooksChartFrom([]), options);
@@ -59,7 +60,7 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   if (fromIif !== null) books.contacts = [...fromIif.listed, ...books.contacts];
   if (books.transactions.length > 0) {
     await addTransactions(books.transactions, {
-      importer: exported ? "quickbooks-export" : myob ? "myob-journal" : slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
+      importer: exported ? "quickbooks-export" : gnucash ? "gnucash-transactions" : myob ? "myob-journal" : slowBooks ? "slowbooks-ledger" : desktop ? "quickbooks-desktop-detail" : iif ? "quickbooks-iif" : "quickbooks-ledger",
       file: file.name,
       problems: books.problems,
     });
@@ -191,10 +192,10 @@ export async function loadQuickBooksBankLines(file: File): Promise<string> {
   let journalCount = 0;
   if (books.journals.length > 0) {
     // Named for where they came from, which the journal says on its page.
-    const source = myob ? "MYOB" : SOURCE;
+    const source = gnucash ? "GnuCash" : myob ? "MYOB" : SOURCE;
     const keep = (state.ledger.manualJournals ?? []).filter((j) => j.source !== source);
     const made: ManualJournal[] = books.journals.map((j, i) => ({
-      id: `${myob ? "myob" : "qb"}${i + 1}`,
+      id: `${gnucash ? "gnucash" : myob ? "myob" : "qb"}${i + 1}`,
       date: j.date,
       narration: j.narration,
       lines: j.lines.map((l) => ({
@@ -356,7 +357,7 @@ export function trialBalanceFinding(): string | null {
 
 function trialBalanceCheck(text: string): string | null {
   const fromStart = state.ledger.transactions.filter((t) =>
-    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal)$/.test(t.source?.importer ?? ""),
+    /^(quickbooks-ledger|quickbooks-iif|quickbooks-desktop-detail|quickbooks-export|slowbooks-ledger|myob-journal|gnucash-transactions)$/.test(t.source?.importer ?? ""),
   );
   if (fromStart.length === 0) return null;
   if (!isQuickBooksTrialBalance(text)) return null;

@@ -15,6 +15,10 @@ import {
   isSlowBooksLedger,
   isMyobAccounts,
   isMyobJournal,
+  isGnuCashAccounts,
+  isGnuCashTransactions,
+  parseGnuCashAccounts,
+  parseGnuCashBooks,
   parseMyobAccounts,
   parseMyobBooks,
   isQuickBooksBankExport,
@@ -279,6 +283,18 @@ export async function loadReference(
       if (isQuickBooksBankExport(text)) {
         // Only for the lines it brought in: the rest the ledger already coded.
         lines.push(...notHeldAlready(file.name, quickBooksBankCoding(text, file.name, booksCountry().dayFirst)));
+        continue;
+      }
+      if (isGnuCashAccounts(text)) {
+        chart.push(...parseGnuCashAccounts(text).chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        continue;
+      }
+      if (isGnuCashTransactions(text)) {
+        const known = chart.length > 0 ? chart : isUnusedStarterChart() ? [] : state.chart;
+        const read = parseGnuCashBooks(text, known.length > 0 ? quickBooksChartFrom(known) : null, { file: file.name, dayFirst: booksCountry().dayFirst });
+        chart.push(...read.chart.accounts.filter((a) => !chart.some((c) => c.name === a.name)));
+        lines.push(...read.reference);
+        for (const problem of read.problems) problems.push(`${file.name}: ${problem.message}`);
         continue;
       }
       if (isMyobAccounts(text)) {

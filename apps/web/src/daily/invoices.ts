@@ -52,6 +52,7 @@ import {
   moveAttachments,
   addDays,
   daysBetween,
+  fillWording,
 } from "@nzosa/core";
 import type {
   SalesTaxRate,
@@ -1302,11 +1303,30 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
           emailForContact(state.ledger.invoices ?? [], invoice.contact) ??
           findContact(state.ledger.contacts ?? [], invoice.contact)?.email ??
           null;
-        const message = invoiceEmail(
+        const standard = invoiceEmail(
           invoice.email === undefined && known !== null ? { ...invoice, email: known } : invoice,
           supplier,
           { ...documentOptions(), ...(isEstimate(invoice) ? { title: "Estimate" } : {}) },
         );
+        // The books' own wording, where they have changed it.
+        const own = state.ledger.emailWording?.invoice;
+        const message =
+          own === undefined
+            ? standard
+            : {
+                to: standard.to,
+                ...fillWording(own, {
+                  customer: invoice.contact,
+                  business: supplier.name,
+                  title: isEstimate(invoice) ? "Estimate" : (supplier.gstNumber ?? "").trim() !== "" ? "Tax invoice" : "Invoice",
+                  number: invoice.number,
+                  amount: booksMoney(invoice.paid !== 0 ? invoice.outstanding : invoice.total),
+                  due: invoice.due ?? "",
+                  reference: invoice.reference,
+                  payment: (supplier.payTo ?? "").trim(),
+                  message: invoice.message ?? "",
+                }),
+              };
         window.location.href =
           `mailto:${message.to}?subject=${encodeURIComponent(message.subject)}` +
           `&body=${encodeURIComponent(message.body)}`;

@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { Attachment, CreditAllocation, PartCopy, PartOp } from "@nzosa/core";
+import type { Attachment, CreditAllocation, PartCopy, PartOp, Wording, WordingKind } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -377,6 +377,8 @@ export interface StoredLedger {
    * invoice quietly, which is worse than leaving it unapplied.
    */
   creditNotes?: Record<string, string>;
+  /** What the invoice, statement and reminder emails say, where changed from the standard. */
+  emailWording?: Partial<Record<WordingKind, Wording>>;
   /** Messages for the foot of an invoice, to choose from; one may start each new invoice. */
   invoiceMessages?: InvoiceMessage[];
   /** Files attached to documents, journals, contacts and register lines: what each is. */
@@ -876,6 +878,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.creditAllocations && ledger.creditAllocations.length > 0 ? { creditAllocations: ledger.creditAllocations } : {}),
     ...(ledger.attachments && ledger.attachments.length > 0 ? { attachments: ledger.attachments } : {}),
     ...(ledger.invoiceMessages && ledger.invoiceMessages.length > 0 ? { invoiceMessages: ledger.invoiceMessages } : {}),
+    ...(ledger.emailWording && Object.keys(ledger.emailWording).length > 0 ? { emailWording: ledger.emailWording } : {}),
     transfers: ledger.transfers ?? {},
     legitimateDuplicates: ledger.legitimateDuplicates ?? [],
     removedDuplicates: ledger.removedDuplicates ?? [],

@@ -4616,3 +4616,9 @@ select.needs-choice {
 .invoice-message-box label > span { color: var(--muted); font-size: 0.85rem; }
 .invoice-message { width: 100%; box-sizing: border-box; }
 .invoice-message-tools { display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+
+/* What the emails say: one section a kind. */
+.wording-section { margin: 8px 0; }
+.wording-section > summary { font-weight: 600; cursor: pointer; }
+.wording-subject, .wording-body { width: 100%; box-sizing: border-box; margin-top: 6px; font: inherit; }
+.statement-done { color: var(--muted); }

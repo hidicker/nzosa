@@ -2,9 +2,9 @@ import { redraw } from "../app.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { invoiceBalanceMap, record } from "../books.js";
 import { supplierFor } from "./invoices.js";
-import { booksMoney, documentOptions } from "../country.js";
+import { booksLocale, booksMoney, documentOptions } from "../country.js";
 import { $, state } from "../state.js";
-import { savePart } from "../store.js";
+import { save as saveLedger, savePart } from "../store.js";
 import { askOnPage, askTextOnPage, download, note, tellOnPage } from "../ui.js";
 import {
   collectionLetter,
@@ -16,8 +16,14 @@ import {
   nextInvoiceNumber,
   parseAmount,
   reminderStageFor,
+  emailForContact,
+  fillWording,
+  STANDARD_WORDING,
+  unknownBlanks,
+  WORDING_BLANKS,
+  wordingFor,
 } from "@nzosa/core";
-import type { Contact, ContactKind, Invoice } from "@nzosa/core";
+import type { Contact, ContactKind, Invoice, Wording, WordingKind } from "@nzosa/core";
 import { booksCountry, booksCurrency, noSalesTax } from "../country.js";
 
 /**
@@ -103,6 +109,220 @@ function statementLines(mine: readonly { invoice: Invoice; remaining: number }[]
     owing: b.remaining,
     reference: b.invoice.reference === "QuickBooks" ? "" : b.invoice.reference,
   }));
+}
+
+/**
+ * A customer's statement or reminder: the document saved, and -- where their
+ * email is known -- a new message opened in the person's own mail program,
+ * in the books' own wording, to attach it to. Nothing is sent from here.
+ * True when an email was opened.
+ */
+function sendStatement(name: string, kind: "statement" | "reminder", email: string | undefined): boolean {
+  const mine = salesFor(name);
+  const first = mine[0]?.invoice;
+  const supplier = first === undefined ? null : supplierFor(first);
+  if (supplier === null) {
+    void tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
+    return false;
+  }
+  const sums = owing().get(contactKey(name));
+  const lines = statementLines(mine);
+  const html =
+    kind === "reminder"
+      ? collectionLetter(name, lines, today(), supplier, reminderStageFor(sums?.lateDays ?? 0), documentOptions())
+      : customerStatement(name, lines, today(), supplier, documentOptions());
+  download(html, `${kind}-${name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+  const to = (email ?? emailForContact(state.ledger.invoices ?? [], name) ?? "").trim();
+  if (to === "") return false;
+  const words = fillWording(wordingFor(kind, state.ledger.emailWording), {
+    customer: name,
+    business: supplier.name,
+    date: new Date().toLocaleDateString(booksLocale(), { day: "numeric", month: "short", year: "numeric" }),
+    owing: booksMoney(sums?.owedToUs ?? 0),
+    pastdue: booksMoney(sums?.pastDue ?? 0),
+    payment: (supplier.payTo ?? "").trim(),
+  });
+  window.location.href = `mailto:${encodeURIComponent(to)}?subject=${encodeURIComponent(words.subject)}&body=${encodeURIComponent(words.body)}`;
+  return true;
+}
+
+/** The wording of the three emails, each editable, with what each blank stands for. */
+function openWordingEditor(): void {
+  const box = document.createElement("dialog");
+  box.className = "ask-on-page payment-file-view";
+  const heading = document.createElement("h3");
+  heading.textContent = "What the emails say";
+  const intro = document.createElement("p");
+  intro.className = "payment-file-said";
+  intro.textContent =
+    "Each opens in your own mail program, with the document saved to attach. A word in braces is filled in for each customer; " +
+    "a line whose blank has nothing to fill it is left out.";
+  box.append(heading, intro);
+  const kinds: [WordingKind, string][] = [
+    ["invoice", "Invoice"],
+    ["statement", "Statement"],
+    ["reminder", "Reminder"],
+  ];
+  const fields = new Map<WordingKind, { subject: HTMLInputElement; body: HTMLTextAreaElement }>();
+  for (const [kind, word] of kinds) {
+    const now = wordingFor(kind, state.ledger.emailWording);
+    const section = document.createElement("details");
+    section.className = "wording-section";
+    section.open = kind === "invoice";
+    const summary = document.createElement("summary");
+    summary.textContent = word;
+    const subject = document.createElement("input");
+    subject.type = "text";
+    subject.value = now.subject;
+    subject.className = "wording-subject";
+    subject.setAttribute("aria-label", `${word} email subject`);
+    const body = document.createElement("textarea");
+    body.rows = 9;
+    body.value = now.body;
+    body.className = "wording-body";
+    body.setAttribute("aria-label", `${word} email`);
+    const blanks = document.createElement("p");
+    blanks.className = "payment-file-said";
+    blanks.textContent = WORDING_BLANKS[kind].map((b) => `{${b.name}} ${b.means}`).join(" · ");
+    const reset = document.createElement("button");
+    reset.type = "button";
+    reset.className = "small";
+    reset.textContent = "Back to the standard wording";
+    reset.addEventListener("click", () => {
+      subject.value = STANDARD_WORDING[kind].subject;
+      body.value = STANDARD_WORDING[kind].body;
+    });
+    section.append(summary, subject, body, blanks, reset);
+    box.append(section);
+    fields.set(kind, { subject, body });
+  }
+  const said = document.createElement("p");
+  said.className = "cloud-said";
+  said.setAttribute("role", "alert");
+  const actions = document.createElement("div");
+  actions.className = "ask-on-page-actions";
+  const cancel = document.createElement("button");
+  cancel.type = "button";
+  cancel.textContent = "Cancel";
+  const saveButton = document.createElement("button");
+  saveButton.type = "button";
+  saveButton.className = "primary";
+  saveButton.textContent = "Save";
+  actions.append(cancel, saveButton);
+  box.append(said, actions);
+  const finish = (): void => {
+    box.close();
+    box.remove();
+  };
+  cancel.addEventListener("click", finish);
+  box.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finish();
+  });
+  saveButton.addEventListener("click", () => {
+    const next: Partial<Record<WordingKind, Wording>> = {};
+    for (const [kind, word] of kinds) {
+      const f = fields.get(kind);
+      if (f === undefined) continue;
+      const wording = { subject: f.subject.value.trim(), body: f.body.value.trim() };
+      const unknown = unknownBlanks(kind, wording);
+      if (unknown.length > 0) {
+        said.textContent = `The ${word.toLowerCase()} email has {${unknown.join("}, {")}}, which nothing fills in. The blanks are listed under it.`;
+        return;
+      }
+      const standard = STANDARD_WORDING[kind];
+      // The standard wording is not kept as a copy: it can then be improved.
+      if (wording.subject !== standard.subject || wording.body !== standard.body) next[kind] = wording;
+    }
+    void (async () => {
+      const before = state.ledger.emailWording ?? {};
+      state.ledger = { ...state.ledger, emailWording: next };
+      state.persistent = await saveLedger(state.ledger);
+      await record("emailWording", "Changed what the emails say", before, next);
+      finish();
+    })();
+  });
+  document.body.append(box);
+  box.showModal();
+}
+
+/**
+ * Every customer with something past due, to send each their statement in
+ * turn: one press each opens their email with the statement saved beside it.
+ */
+function openOverdueStatements(): void {
+  const late = [...owing().entries()]
+    .filter(([, sums]) => sums.pastDue > 0)
+    .map(([key, sums]) => {
+      const named = [...invoiceBalanceMap().values()].find((b) => contactKey(b.invoice.contact) === key)?.invoice.contact ?? key;
+      const contact = held().find((c) => contactKey(c.name) === key);
+      const email = contact?.email ?? emailForContact(state.ledger.invoices ?? [], named) ?? "";
+      return { name: contact?.name ?? named, email, sums };
+    })
+    .sort((a, b) => b.sums.lateDays - a.sums.lateDays);
+  if (late.length === 0) {
+    void tellOnPage("No customer has anything past due.");
+    return;
+  }
+  const box = document.createElement("dialog");
+  box.className = "ask-on-page payment-file-view";
+  const heading = document.createElement("h3");
+  heading.textContent = `${late.length} ${late.length === 1 ? "customer has" : "customers have"} something past due`;
+  const intro = document.createElement("p");
+  intro.className = "payment-file-said";
+  intro.textContent = "Each opens a message in your own mail program and saves the statement to attach to it; one at a time, so each goes with its own statement.";
+  const table = document.createElement("table");
+  table.className = "report-table payment-file-table";
+  table.innerHTML = '<thead><tr><th>Customer</th><th>Email</th><th style="text-align:right">Past due</th><th style="text-align:right">Days</th><th></th></tr></thead>';
+  const tbody = document.createElement("tbody");
+  for (const one of late) {
+    const tr = document.createElement("tr");
+    for (const [text, right] of [[one.name, false], [one.email || "none on file", false], [booksMoney(one.sums.pastDue), true], [String(one.sums.lateDays), true]] as const) {
+      const td = document.createElement("td");
+      td.textContent = text;
+      if (right) td.className = "report-amount";
+      tr.append(td);
+    }
+    const cell = document.createElement("td");
+    const send = document.createElement("button");
+    send.type = "button";
+    send.className = "small";
+    send.textContent = one.email === "" ? "Save statement" : "Email statement";
+    send.addEventListener("click", () => {
+      sendStatement(one.name, "statement", one.email || undefined);
+      send.textContent = one.email === "" ? "Saved" : "Opened";
+      tr.classList.add("statement-done");
+    });
+    cell.append(send);
+    tr.append(cell);
+    tbody.append(tr);
+  }
+  table.append(tbody);
+  const actions = document.createElement("div");
+  actions.className = "ask-on-page-actions";
+  const all = document.createElement("button");
+  all.type = "button";
+  all.textContent = "Save every statement";
+  all.addEventListener("click", () => {
+    for (const one of late) sendStatement(one.name, "statement", "");
+  });
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "primary";
+  close.textContent = "Done";
+  actions.append(all, close);
+  box.append(heading, intro, table, actions);
+  const finish = (): void => {
+    box.close();
+    box.remove();
+  };
+  close.addEventListener("click", finish);
+  box.addEventListener("cancel", (event) => {
+    event.preventDefault();
+    finish();
+  });
+  document.body.append(box);
+  box.showModal();
 }
 
 /**
@@ -434,7 +654,16 @@ export function renderContacts(): void {
   writeOff.textContent = "Write off small balances";
   writeOff.title = "Clear what is left on invoices under an amount you choose, to a bad debts account.";
   writeOff.addEventListener("click", () => void writeOffSmall());
-  controls.append(choose, search, add, writeOff);
+  const overdue = document.createElement("button");
+  overdue.type = "button";
+  overdue.textContent = "Statements to overdue customers";
+  overdue.addEventListener("click", () => openOverdueStatements());
+  const wording = document.createElement("button");
+  wording.type = "button";
+  wording.textContent = "Email wording";
+  wording.title = "What the invoice, statement and reminder emails say";
+  wording.addEventListener("click", () => openWordingEditor());
+  controls.append(choose, search, add, writeOff, overdue, wording);
   body.append(controls);
 
   if (editing === "new") body.append(form(null));
@@ -514,15 +743,8 @@ export function renderContacts(): void {
       const stage = reminderStageFor(sums.lateDays);
       remind.title =
         stage === 1 ? "A first, friendly reminder" : stage === 2 ? "A second notice" : "A final notice";
-      remind.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const supplier = mine[0] === undefined ? null : supplierFor(mine[0].invoice);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = collectionLetter(contact.name, statementLines(mine), today(), supplier, stage, documentOptions());
-        download(html, `reminder-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+      remind.addEventListener("click", () => {
+        sendStatement(contact.name, "reminder", contact.email);
       });
       const fee = document.createElement("button");
       fee.type = "button";
@@ -538,16 +760,9 @@ export function renderContacts(): void {
       statement.type = "button";
       statement.className = "small";
       statement.textContent = "Statement";
-      statement.addEventListener("click", async () => {
-        const mine = salesFor(contact.name);
-        const first = mine[0]?.invoice;
-        const supplier = first === undefined ? null : supplierFor(first);
-        if (supplier === null) {
-          await tellOnPage("Say which entity is sending it first: add an entity on Entities & accounts.");
-          return;
-        }
-        const html = customerStatement(contact.name, statementLines(mine), today(), supplier, documentOptions());
-        download(html, `statement-${contact.name.replace(/[^A-Za-z0-9]+/g, "-")}.html`, "text/html;charset=utf-8");
+      statement.title = "Saves their statement, and opens an email to them to attach it to where their email is known";
+      statement.addEventListener("click", () => {
+        sendStatement(contact.name, "statement", contact.email);
       });
       actions.append(statement);
     }

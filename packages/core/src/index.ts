@@ -496,3 +496,5 @@ export { ATTACHMENT_LIMIT, attachmentProblem, attachmentsOf, documentOwner, move
 export type { Attachment, AttachmentOwner } from "./attachments.js";
 export { isMyobAccounts, isMyobJournal, parseMyobAccounts, parseMyobBooks, parseMyobJournal } from "./myob.js";
 export type { MyobAccounts } from "./myob.js";
+export { fillWording, STANDARD_WORDING, unknownBlanks, WORDING_BLANKS, wordingFor } from "./email-wording.js";
+export type { Wording, WordingKind } from "./email-wording.js";

@@ -500,3 +500,5 @@ export { fillWording, STANDARD_WORDING, unknownBlanks, WORDING_BLANKS, wordingFo
 export type { Wording, WordingKind } from "./email-wording.js";
 export { salesBy } from "./sales-by.js";
 export type { SalesBy, SalesRow } from "./sales-by.js";
+export { paidTo } from "./paid-to.js";
+export type { PaidTo } from "./paid-to.js";

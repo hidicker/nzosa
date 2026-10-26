@@ -23,7 +23,9 @@ import {
   WORDING_BLANKS,
   wordingFor,
 } from "@nzosa/core";
-import type { Contact, ContactKind, Invoice, Wording, WordingKind } from "@nzosa/core";
+import type { Contact, ContactKind, Invoice, PaidTo, Wording, WordingKind } from "@nzosa/core";
+import { paidTo } from "@nzosa/core";
+import { taxYearEnd, taxYearOf, taxYearStart } from "../tax-year.js";
 import { booksCountry, booksCurrency, noSalesTax } from "../country.js";
 
 /**
@@ -91,6 +93,15 @@ function owing(): Map<string, Owing> {
     out.set(key, one);
   }
   return out;
+}
+
+/** What a supplier has been paid, this financial year and in all. */
+function paidToThem(name: string): PaidTo {
+  const year = taxYearOf(today());
+  return paidTo(name, state.ledger.transactions, state.ledger.overrides ?? {}, state.ledger.invoices ?? [], {
+    from: taxYearStart(year),
+    to: taxYearEnd(year),
+  });
 }
 
 /** A customer's posted invoices and what is left on each. */
@@ -603,6 +614,18 @@ function form(existing: Contact | null): HTMLElement {
   row.className = "migration-actions";
   row.append(save, cancel);
   box.append(row);
+  // A supplier's payments, said where their details are.
+  if (existing !== null && existing.kind !== "customer") {
+    const paid = paidToThem(existing.name);
+    if (paid.payments > 0) {
+      box.append(
+        note(
+          `Paid ${booksMoney(paid.period)} this financial year and ${booksMoney(paid.allTime)} in all, ` +
+            `over ${paid.payments} ${paid.payments === 1 ? "payment" : "payments"}; the last on ${paid.last ?? ""}.`,
+        ),
+      );
+    }
+  }
   // A contract, a W-9, a signed form: kept with them once they are saved.
   if (existing !== null) box.append(attachmentsControl({ kind: "contact", id: existing.id }, existing.name));
   return box;
@@ -696,8 +719,12 @@ export function renderContacts(): void {
   const table = document.createElement("table");
   table.className = "report-table owner-table contacts-table";
   const head = document.createElement("thead");
+  // Suppliers shown alone: what each has been paid, this year and in all.
+  const vendors = filter === "vendor";
   head.innerHTML =
-    "<tr><th>Name</th><th>Is</th><th>Email</th><th>Phone</th><th>Owes you</th><th>You owe</th><th></th></tr>";
+    "<tr><th>Name</th><th>Is</th><th>Email</th><th>Phone</th><th>Owes you</th><th>You owe</th>" +
+    (vendors ? "<th>Paid this year</th><th>Paid in all</th>" : "") +
+    "<th></th></tr>";
   const tbody = document.createElement("tbody");
   for (const contact of shown) {
     const sums = money.get(contactKey(contact.name));
@@ -710,6 +737,15 @@ export function renderContacts(): void {
       [contact.phone ?? "", "report-name"],
       [sums !== undefined && sums.owedToUs !== 0 ? booksMoney(sums.owedToUs) : "", "report-amount"],
       [sums !== undefined && sums.weOwe !== 0 ? booksMoney(sums.weOwe) : "", "report-amount"],
+      ...(vendors
+        ? ((): [string, string][] => {
+            const paid = paidToThem(contact.name);
+            return [
+              [paid.period === 0 ? "" : booksMoney(paid.period), "report-amount"],
+              [paid.allTime === 0 ? "" : booksMoney(paid.allTime), "report-amount"],
+            ];
+          })()
+        : []),
     ];
     for (const [text, cls] of cells) {
       const td = document.createElement("td");
@@ -771,7 +807,7 @@ export function renderContacts(): void {
     if (editing === contact.id) {
       const editor = document.createElement("tr");
       const cell = document.createElement("td");
-      cell.colSpan = 7;
+      cell.colSpan = vendors ? 9 : 7;
       cell.append(form(contact));
       editor.append(cell);
       tbody.append(editor);

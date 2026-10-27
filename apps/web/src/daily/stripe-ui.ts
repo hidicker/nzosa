@@ -30,7 +30,8 @@ interface Status {
 }
 
 let status: { book: string; answer: Promise<Status | null>; known?: Status | null } | null = null;
-let checkedFor = "";
+/** When Stripe was last asked, for which books: not more than once a minute unless asked. */
+let checked = { book: "", at: 0 };
 
 /** Whether these books can use Stripe at all: kept online, on NZOSA's own server. */
 export function stripePossible(): boolean {
@@ -124,12 +125,12 @@ export async function payLinkFor(invoice: Invoice): Promise<void> {
 
 /**
  * Ask Stripe which links have been paid, and say so on their invoices.
- * Quietly, once a session for each set of books unless asked again.
+ * Each time Invoices is opened, at most once a minute; at once when asked.
  */
 export async function checkCardPayments(force = false): Promise<number> {
   const book = openCloudBookId();
-  if (!stripePossible() || (!force && checkedFor === book)) return 0;
-  checkedFor = book;
+  if (!stripePossible() || (!force && checked.book === book && Date.now() - checked.at < 60_000)) return 0;
+  checked = { book, at: Date.now() };
   const open = (state.ledger.invoices ?? []).filter((i) => i.payLink !== undefined && i.payLink.paidAt === undefined);
   if (open.length === 0) return 0;
   const connected = await stripeStatus();
@@ -152,6 +153,30 @@ export async function checkCardPayments(force = false): Promise<number> {
     marked += 1;
   }
   return marked;
+}
+
+/** Whether any invoice has a card link sent and not yet paid. */
+export function cardLinksWaiting(): boolean {
+  return (state.ledger.invoices ?? []).some((i) => i.payLink !== undefined && i.payLink.paidAt === undefined);
+}
+
+/** A button to ask Stripe now, for the Invoices page, when links are waiting. */
+export function checkCardPaymentsButton(): HTMLElement | null {
+  if (!stripeConnected() || !cardLinksWaiting()) return null;
+  const go = document.createElement("button");
+  go.type = "button";
+  go.textContent = "Check card payments";
+  go.title = "Ask Stripe which card links have been paid";
+  go.addEventListener("click", () => {
+    go.disabled = true;
+    go.textContent = "Asking Stripe…";
+    void checkCardPayments(true).then(async (marked) => {
+      go.disabled = false;
+      go.textContent = "Check card payments";
+      await tellOnPage(marked === 0 ? "Nothing new has been paid by card." : `${marked} ${marked === 1 ? "invoice has" : "invoices have"} been paid by card.`);
+    });
+  });
+  return go;
 }
 
 /** What an invoice's status says about its card payment, or "". */

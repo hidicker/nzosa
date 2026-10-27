@@ -3,7 +3,7 @@ import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { openQuickEntry } from "./quick-entry.js";
-import { cardPaymentSaid, checkCardPayments, payLinkFor, stripeConnected } from "./stripe-ui.js";
+import { cardPaymentSaid, checkCardPayments, checkCardPaymentsButton, payLinkFor, stripeConnected } from "./stripe-ui.js";
 import { COMMON_CURRENCIES } from "./currencies-page.js";
 import { giveDocument, heldJobs, jobChoices } from "./jobs-page.js";
 import type { InvoiceMessage } from "../store.js";
@@ -1613,6 +1613,8 @@ export function renderInvoices(): void {
   if (billsAvailable() && (state.ledger.invoices ?? []).some((i) => i.kind === "purchase")) {
     body.append(note("Bills are on the Bills page."));
   }
+  const cardCheck = checkCardPaymentsButton();
+  if (cardCheck !== null) body.append(cardCheck);
   const invoices = invoicesInPlay().filter(shows);
   const settledBefore = (state.ledger.invoices ?? []).filter(shows).length - invoices.length;
   if (settledBefore > 0) {

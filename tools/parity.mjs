@@ -122,8 +122,18 @@ async function openChrome(port) {
   let id = 0;
   const pending = new Map();
   const problems = [];
+  // Chrome gone -- crashed, or out of memory -- fails what was waiting on it,
+  // rather than leaving the run waiting for an answer that will never come.
+  ws.addEventListener("close", () => {
+    for (const resolve of pending.values()) resolve({ result: { exceptionDetails: { text: "Chrome closed the connection" } } });
+    pending.clear();
+  });
   ws.addEventListener("message", (e) => {
     const m = JSON.parse(e.data);
+    // How far the capture has got, so a long run can be told from a stuck one.
+    if (m.method === "Runtime.consoleAPICalled" && m.params.type === "log" && String(m.params.args?.[0]?.value ?? "").startsWith("parity:")) {
+      process.stdout.write(`    ${String(m.params.args[0].value).slice(7)}\n`);
+    }
     if (m.method === "Runtime.exceptionThrown") problems.push(m.params.exceptionDetails?.exception?.description ?? m.params.exceptionDetails?.text);
     if (m.method === "Runtime.consoleAPICalled" && m.params.type === "error") problems.push(m.params.args.map((a) => a.value ?? a.description).join(" "));
     if (pending.has(m.id)) {
@@ -211,6 +221,7 @@ const CAPTURE = String.raw`
       button.click();
       const body = document.getElementById("page-" + page);
       out[key] = await stable(body);
+      console.log("parity:" + Object.keys(out).length + " views, " + key);
 
       if (page === "reports" && !button.dataset.report) {
         const kind = document.getElementById("report-kind");
@@ -312,6 +323,7 @@ async function captureSide(repo, label, book, port, chromePort) {
   try {
     await chrome.send("Emulation.setDeviceMetricsOverride", { width: 1440, height: 900, deviceScaleFactor: 1, mobile: false });
     await chrome.send("Page.enable");
+    await chrome.send("Runtime.enable");
     await chrome.send("Page.addScriptToEvaluateOnNewDocument", { source: FREEZE_CLOCK });
     await chrome.send("Page.navigate", { url: `http://127.0.0.1:${port}/` });
     await wait(1500);
@@ -356,7 +368,9 @@ for (const book of books) {
     continue;
   }
   console.log(`\n== ${book}`);
+  console.log("  A: " + repoA);
   const a = await captureSide(repoA, "a", book, 3451, 9441);
+  console.log("  B: " + repoB);
   const b = await captureSide(repoB, "b", book, 3452, 9442);
   writeFileSync(join(outDir, `${book}.a.json`), JSON.stringify(a, null, 1));
   writeFileSync(join(outDir, `${book}.b.json`), JSON.stringify(b, null, 1));

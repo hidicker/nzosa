@@ -8,6 +8,7 @@ import { nameCell, note } from "../ui.js";
 import { booksLocale, moneyPlaces, noSalesTax } from "../country.js";
 import { firstOpenDay, furthestLocks } from "@nzosa/core";
 import { numberPadSettings } from "../number-pad.js";
+import { stripeSettings } from "./stripe-ui.js";
 import type { IsoDate, LockDates, LockedChange, Transaction } from "@nzosa/core";
 
 /**
@@ -120,6 +121,7 @@ export function renderLockDates(): void {
   body.append(saveIt, said);
   body.append(lockedChangesList());
   body.append(numberPadSettings());
+  body.append(stripeSettings());
 }
 
 /**

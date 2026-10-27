@@ -227,3 +227,12 @@ works).
   the books' currency only; with several entities the exchange accounts are
   one pair for all; and Reconcile shows a foreign line in its own currency
   with no converted figure beside it. 27 October 2026.
+- **Card payments with Stripe: what the first version leaves out.** Item 39
+  (`supabase/functions/stripe`, `apps/web/src/daily/stripe-ui.ts`). Books kept
+  online only: books in a folder or the browser have nowhere safe for the key
+  (a folder version could keep it beside the ledgers, as Wise's desktop token
+  is). Payments are found by asking Stripe when the Invoices page opens, not
+  by a webhook, so a payment shows the next time it is opened. A link is for
+  the amount owing when it was made; after a part payment a new one is made
+  and the old one closed. The money reaches the books with Stripe's payout,
+  as before. 27 October 2026.

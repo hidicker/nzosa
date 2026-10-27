@@ -172,6 +172,14 @@ const STYLE = `
  * is the one thing it must never do. Where they differ, both are shown and the
  * sender is told to look.
  */
+/** Whether an invoice has a card payment link still to be paid, for the amount it owes. */
+function payable(invoice: Invoice): boolean {
+  const link = invoice.payLink;
+  if (link === undefined || link.paidAt !== undefined || invoice.receipt === true) return false;
+  const owing = invoice.paid !== 0 ? invoice.outstanding : invoice.total;
+  return /^https:\/\//.test(link.url) && link.amount === owing;
+}
+
 export function invoiceDocument(
   invoice: Invoice,
   supplier: InvoiceSupplier,
@@ -256,6 +264,7 @@ export function invoiceDocument(
   </table>
 
   ${supplier.payTo && !receipt ? `<div class="pay"><span class="k-block">Payment</span>${asLines(supplier.payTo)}</div>` : ""}
+  ${payable(invoice) ? `<div class="pay"><span class="k-block">Pay online</span><a href="${escapeHtml(invoice.payLink!.url)}">Pay ${formatAmount(invoice.payLink!.amount)} ${escapeHtml(invoice.payLink!.currency)} by card</a></div>` : ""}
   ${(options.note ?? invoice.message ?? "").trim() !== "" ? `<div class="note">${asLines(options.note ?? invoice.message ?? "")}</div>` : ""}
   ${
     disagrees
@@ -299,6 +308,7 @@ export function invoiceEmail(
   if (invoice.reference.trim() !== "") lines.push(`Reference: ${invoice.reference.trim()}`);
   const payTo = (supplier.payTo ?? "").trim();
   if (payTo !== "" && !receipt) lines.push("", `Payment details: ${payTo}`);
+  if (payable(invoice)) lines.push("", `Pay by card: ${invoice.payLink!.url}`);
   const note = options.note ?? invoice.message;
   if (note !== undefined && note.trim() !== "") lines.push("", note.trim());
   lines.push("", "Thank you,", supplier.name);

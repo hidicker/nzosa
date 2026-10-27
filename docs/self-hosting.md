@@ -126,6 +126,7 @@ npx supabase functions deploy akahu --use-api --project-ref <your-ref>
 
 ```bash
 npx supabase functions deploy wise --use-api --project-ref <your-ref>
+npx supabase functions deploy stripe --use-api --project-ref <your-ref>
 ```
 
 ```bash

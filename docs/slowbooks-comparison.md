@@ -222,7 +222,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 36. Global search across contacts, invoices, bills and lines (M).
 37. ~~Receipt scanning in the page, without AI (L).~~ Declined 27 October 2026: the OCR engine would add several megabytes to the app.
 38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies). Done 27 October 2026: see the Currencies page; what it leaves out is in the backlog.
-39. Online payment links (L; which provider, and keys held online).
+39. Online payment links (L; which provider, and keys held online). Built 27 October 2026 with Stripe, each business its own account; waits on its migration and function being deployed.
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).
 41. Chart import from CSV or hledger with a dry run (S).
 42. New Zealand deduction notices on pay runs (M).

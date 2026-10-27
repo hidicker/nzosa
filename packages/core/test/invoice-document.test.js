@@ -184,3 +184,14 @@ test("a sales receipt is printed as paid, with nothing asked for", () => {
   assert.ok(!mail.body.includes("Amount due"));
   assert.ok(!mail.body.includes("Payment details"));
 });
+
+test("a card payment link is printed and emailed while it is for what is owed, and not once paid", () => {
+  const link = { id: "plink_1", url: "https://buy.stripe.com/test_abc", amount: 23000, currency: "NZD", made: "2026-05-01" };
+  const withLink = invoice({ payLink: link });
+  assert.ok(invoiceDocument(withLink, supplier).includes("https://buy.stripe.com/test_abc"));
+  assert.ok(invoiceEmail(withLink, supplier).body.includes("Pay by card: https://buy.stripe.com/test_abc"));
+  // Part paid since: the link asks for the wrong amount, so it is left off.
+  assert.ok(!invoiceDocument(invoice({ payLink: link, paid: 5000, outstanding: 18000 }), supplier).includes("buy.stripe.com"));
+  assert.ok(!invoiceEmail(invoice({ payLink: { ...link, paidAt: "2026-05-03T01:00:00Z" } }), supplier).body.includes("buy.stripe.com"));
+  assert.ok(!invoiceDocument(invoice({ payLink: { ...link, url: "javascript:alert(1)" } }), supplier).includes("javascript:"));
+});

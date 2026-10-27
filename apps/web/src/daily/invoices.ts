@@ -3,6 +3,7 @@ import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { openQuickEntry } from "./quick-entry.js";
+import { cardPaymentSaid, checkCardPayments, payLinkFor, stripeConnected } from "./stripe-ui.js";
 import { COMMON_CURRENCIES } from "./currencies-page.js";
 import { giveDocument, heldJobs, jobChoices } from "./jobs-page.js";
 import type { InvoiceMessage } from "../store.js";
@@ -1546,6 +1547,24 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
     td.append(mail);
   }
 
+  // A link to pay it by card, through the business's own Stripe account.
+  if (stripeConnected() && invoice.kind === "sales" && isPosted(invoice) && invoice.receipt !== true) {
+    const owing = invoiceBalanceMap().get(invoice.number)?.remaining ?? 0;
+    if (owing > 0) {
+      const pay = document.createElement("button");
+      pay.type = "button";
+      pay.textContent = invoice.payLink !== undefined && invoice.payLink.paidAt === undefined ? "pay link" : "card link";
+      pay.title = "A link the customer pays this invoice at by card, through your Stripe account. Copied, and put on the invoice and its email.";
+      pay.addEventListener("click", () => {
+        pay.disabled = true;
+        void payLinkFor(invoice).finally(() => {
+          pay.disabled = false;
+        });
+      });
+      td.append(pay);
+    }
+  }
+
   return td;
 }
 
@@ -1579,6 +1598,8 @@ function bankCell(transaction: Transaction | undefined): HTMLTableCellElement {
 }
 
 export function renderInvoices(): void {
+  // Card payments made since the books were opened, asked of Stripe once.
+  void checkCardPayments();
   renderRecurring();
   const body = $("invoices-body");
   body.textContent = "";
@@ -1842,7 +1863,9 @@ export function renderInvoices(): void {
       if (differs) fileCell.classList.add("match-why");
       tr.append(fileCell);
 
-      tr.append(nameCell(balance.status));
+      // Paid on Stripe but not yet paid out: said, not counted.
+      const card = cardPaymentSaid(invoice);
+      tr.append(nameCell(card === "" ? balance.status : `${balance.status} · ${card}`));
       tr.append(editInvoiceCell(invoice));
       tbody.append(tr);
     }

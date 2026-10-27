@@ -120,6 +120,26 @@ export interface Invoice {
    * printed as a receipt rather than a request to pay.
    */
   receipt?: boolean;
+  /**
+   * A link the customer pays this invoice by card at, made in the business's
+   * own Stripe account, for the amount owing when it was made. Once paid on
+   * Stripe, when and how much -- the money reaches the books with Stripe's
+   * payout to the bank, as any payout does.
+   */
+  payLink?: PayLink;
+}
+
+export interface PayLink {
+  /** Stripe's id for the link, plink_... */
+  id: string;
+  url: string;
+  /** What it asks for, in `currency`. */
+  amount: Cents;
+  currency: string;
+  made: IsoDate;
+  /** Paid on Stripe: when, and how much. */
+  paidAt?: string;
+  paidAmount?: Cents;
 }
 
 /** A link worth keeping: an http(s) address with no spaces, else null. */

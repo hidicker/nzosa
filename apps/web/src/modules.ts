@@ -4,7 +4,7 @@ import type { PageName } from "./app.js";
 import { onboarding, sourceForTheseBooks } from "./migrate/onboarding-state.js";
 import { state } from "./state.js";
 import { savePart } from "./store.js";
-import { emptyEntityModel } from "@nzosa/core";
+import { emptyEntityModel, isForeign } from "@nzosa/core";
 import type { JurisdictionId } from "@nzosa/core";
 import { booksCountry } from "./country.js";
 
@@ -42,6 +42,7 @@ export type ModuleId =
   | "aupayroll"
   | "classes"
   | "jobs"
+  | "currencies"
   | "budgets"
   | "register"
   | "statements";
@@ -132,6 +133,18 @@ export const MODULES: readonly ModuleInfo[] = [
     inferred: () => (state.ledger.jobs?.jobs ?? []).length > 0,
     holds: () => count((state.ledger.jobs?.jobs ?? []).length, "job", "jobs"),
     opens: "jobs",
+  },
+  {
+    id: "currencies",
+    name: "Currencies",
+    what: "Invoices, bills and bank accounts in other currencies, the exchange rates, and the gains and losses.",
+    basis: "data",
+    inferred: () =>
+      Object.keys(state.ledger.fxRates ?? {}).length > 0 ||
+      state.ledger.transactions.some((t) => isForeign(t.currency, booksCountry().currency)) ||
+      (state.ledger.invoices ?? []).some((i) => isForeign(i.currency, booksCountry().currency)),
+    holds: () => count(Object.keys(state.ledger.fxRates ?? {}).length, "currency", "currencies"),
+    opens: "currencies",
   },
   {
     id: "budgets",
@@ -312,6 +325,7 @@ export const ASKED: readonly ModuleId[] = [
   "time",
   "classes",
   "jobs",
+  "currencies",
   "budgets",
   "register",
   "statements",

@@ -511,3 +511,4 @@ export * from "./gnucash.js";
 export * from "./chart-import.js";
 export * from "./fingerprint.js";
 export * from "./date-check.js";
+export * from "./fx.js";

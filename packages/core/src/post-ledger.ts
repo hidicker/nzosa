@@ -84,6 +84,8 @@ export interface PostLedgerOptions {
    * opening receivables or payables. Posted again here, it counted twice.
    */
   startDate?: string;
+  /** Where an exchange difference on a conversion between two currencies goes. */
+  exchangeAccount?: { code: string; name: string };
 }
 
 export function postLedger(options: PostLedgerOptions): PostedJournal[] {
@@ -116,6 +118,7 @@ export function postLedger(options: PostLedgerOptions): PostedJournal[] {
       return { code: digits || account?.code || "", name: account?.name ?? name };
     },
     nameBankAccount: (account: string) => bankLabels.get(account) ?? account,
+    ...(options.exchangeAccount ? { exchangeAccount: options.exchangeAccount } : {}),
     ...(options.gstAccount ? { gstAccountCode: options.gstAccount.code, gstAccountName: options.gstAccount.name } : {}),
     ...(options.gstAccountFor ? { gstAccountFor: options.gstAccountFor } : {}),
   };

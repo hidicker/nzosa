@@ -236,6 +236,8 @@ export interface StoredLedger {
   classes?: { names: string[]; assigned: Record<string, string> };
   /** Jobs for customers, and the sources given to each. */
   jobs?: JobsHeld;
+  /** Exchange rates for the currencies besides the books' own: the books' currency for one unit, by date. */
+  fxRates?: Record<string, { date: string; rate: number }[]>;
   /** Time worked for customers, until it is invoiced. */
   timeEntries?: TimeEntry[];
   /** Stock counted, and the journal each put the inventory account to. */
@@ -906,6 +908,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.bankLayouts && Object.keys(ledger.bankLayouts).length > 0 ? { bankLayouts: ledger.bankLayouts } : {}),
     ...(ledger.classes && (ledger.classes.names.length > 0 || Object.keys(ledger.classes.assigned).length > 0) ? { classes: ledger.classes } : {}),
     ...(ledger.jobs && (ledger.jobs.jobs.length > 0 || Object.keys(ledger.jobs.assigned).length > 0) ? { jobs: ledger.jobs } : {}),
+    ...(ledger.fxRates && Object.keys(ledger.fxRates).length > 0 ? { fxRates: ledger.fxRates } : {}),
     ...(ledger.ir3Details ? { ir3Details: ledger.ir3Details } : {}),
     ...(ledger.ir3RentalCovers ? { ir3RentalCovers: ledger.ir3RentalCovers } : {}),
     ...(ledger.personalYearAnswers ? { personalYearAnswers: ledger.personalYearAnswers } : {}),

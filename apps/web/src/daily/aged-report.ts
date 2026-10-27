@@ -1,4 +1,5 @@
-import { spreadsheetCell } from "@nzosa/core";
+import { convert, isForeign, rateOn, spreadsheetCell } from "@nzosa/core";
+import { accountingDocument, fxRates } from "../fx-books.js";
 import { redraw } from "../app.js";
 import {
   asCsvText,
@@ -23,9 +24,9 @@ import {
   readAgedDetail,
 } from "@nzosa/core";
 import type { Cents } from "@nzosa/core";
-import type { AgedReport, Invoice, InvoiceKind } from "@nzosa/core";
+import type { AgedReport, DatedPayment, Invoice, InvoiceKind } from "@nzosa/core";
 import { taxYearEnd } from "../tax-year.js";
-import { booksMoney } from "../country.js";
+import { booksCurrency, booksMoney } from "../country.js";
 
 /**
  * Aged payables and aged receivables.
@@ -64,12 +65,40 @@ export function agedTotal(kind: InvoiceKind, asAt: string): number {
   return build(kind, asAt).total;
 }
 
+/**
+ * Documents and their payments as the ledger holds them: one in another
+ * currency at its own date's rate, each payment as the share of it that it
+ * settled. So the report's total agrees with the receivable or payable.
+ */
+function inBooksCurrency(invoices: Invoice[], payments: DatedPayment[]): { invoices: Invoice[]; payments: DatedPayment[] } {
+  const books = booksCurrency();
+  if (!invoices.some((i) => isForeign(i.currency, books))) return { invoices, payments };
+  const rates = fxRates();
+  const byNumber = new Map(invoices.map((i) => [i.number, i]));
+  return {
+    invoices: invoices.map(accountingDocument),
+    payments: payments.map((p) => {
+      const invoice = byNumber.get(p.invoiceNumber);
+      if (invoice === undefined || !isForeign(invoice.currency, books)) return p;
+      const paidIn = (p.currency || books).toUpperCase();
+      const size = Math.abs(p.amount);
+      const inDocument =
+        paidIn === invoice.currency.toUpperCase()
+          ? size
+          : Math.round(convert(size, rateOn(rates, paidIn, p.date, books) ?? 1) / (rateOn(rates, invoice.currency, p.date, books) ?? 1));
+      const issue = rateOn(rates, invoice.currency, invoice.issued, books) ?? 1;
+      return { ...p, amount: Math.sign(p.amount || 1) * convert(inDocument, issue) };
+    }),
+  };
+}
+
 function build(kind: InvoiceKind, asAt: string): AgedReport {
   const chosen = state.entityFilter;
+  const held = inBooksCurrency(invoicesInPlay(), datedInvoicePayments());
   return agedReport({
-    invoices: invoicesInPlay(),
+    invoices: held.invoices,
     kind,
-    payments: datedInvoicePayments(),
+    payments: held.payments,
     credits: state.ledger.creditNotes ?? {},
     allocations: state.ledger.creditAllocations ?? [],
     asAt,

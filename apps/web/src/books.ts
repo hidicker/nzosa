@@ -23,6 +23,9 @@ import { caches, state } from "./state.js";
 import { aiSuggestionFor } from "./ai.js";
 import { clearStore, emptyLedger, save, saveEvents, savePart, saveRules } from "./store.js";
 import { takeLockedMove } from "./locked-changes.js";
+import { accountingDocument, accountingLines, accountingSplitParts, exchangeAccounts, fxRates, paymentInDocumentCurrency } from "./fx-books.js";
+import { isForeign, realisedFxJournals, revaluationJournals } from "@nzosa/core";
+import type { DocumentPayment } from "@nzosa/core";
 import type { StoredLedger } from "./store.js";
 import { resetLockBaseline } from "./lock.js";
 import { applyModules } from "./modules.js";
@@ -980,8 +983,8 @@ export function recomputeVariance(): void {
  */
 export function varianceInput(): VarianceInput {
   return {
-    transactions: state.ledger.transactions,
-    splits: state.ledger.splits ?? {},
+    transactions: accountingLines(),
+    splits: accountingSplitParts(),
     overrides: state.ledger.overrides ?? {},
     rules: state.rules,
     notes: state.ledger.varianceNotes ?? [],
@@ -1204,7 +1207,7 @@ export function datedInvoicePayments(): DatedPayment[] {
     const colon = id.lastIndexOf(":");
     const direct = byId.get(id);
     if (direct !== undefined) {
-      out.push({ invoiceNumber: number, date: direct.date, amount: direct.amount });
+      out.push({ invoiceNumber: number, date: direct.date, amount: direct.amount, ...(direct.currency ? { currency: direct.currency } : {}) });
       continue;
     }
     if (colon < 0) continue;
@@ -1212,7 +1215,7 @@ export function datedInvoicePayments(): DatedPayment[] {
     const index = Number(id.slice(colon + 1)) - 1;
     const part = parent === undefined ? undefined : (state.ledger.splits ?? {})[parent.id]?.[index];
     if (parent !== undefined && part !== undefined) {
-      out.push({ invoiceNumber: number, date: parent.date, amount: part.amount });
+      out.push({ invoiceNumber: number, date: parent.date, amount: part.amount, ...(parent.currency ? { currency: parent.currency } : {}) });
     }
   }
   return out;
@@ -1275,6 +1278,8 @@ function documentCounts(doc: Invoice): boolean {
 }
 
 export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
+  // Owing in each document's own currency: a payment in another is turned into it.
+  const inCurrency = paymentInDocumentCurrency();
   return invoiceBalancesFor({
     invoices: invoicesInPlay(),
     transactions: state.ledger.transactions,
@@ -1282,7 +1287,54 @@ export function invoiceBalanceMap(): Map<string, InvoiceBalance> {
     assignments: invoiceAssignments(),
     credits: state.ledger.creditNotes ?? {},
     allocations: state.ledger.creditAllocations ?? [],
+    ...(inCurrency !== undefined ? { inCurrency } : {}),
   });
+}
+
+/**
+ * Exchange differences: on each payment of a document in another currency,
+ * and on each balance date for a bank account held in one. None for books
+ * with nothing foreign, or with no exchange account in the chart yet.
+ */
+function exchangeJournals(): PostedJournal[] {
+  const books = booksCountry().currency;
+  const accounts = exchangeAccounts();
+  if (accounts === null) return [];
+  const rates = fxRates();
+  const foreignDocs = new Map(invoicesInPlay().filter((i) => isForeign(i.currency, books)).map((i) => [i.number, i]));
+  const payments: DocumentPayment[] = [];
+  if (foreignDocs.size > 0) {
+    const byId = new Map(state.ledger.transactions.map((t) => [t.id, t]));
+    for (const [id, number] of invoiceAssignments()) {
+      const invoice = foreignDocs.get(number);
+      if (invoice === undefined) continue;
+      const direct = byId.get(id);
+      const colon = id.lastIndexOf(":");
+      const parent = direct ?? (colon < 0 ? undefined : byId.get(id.slice(0, colon)));
+      if (parent === undefined) continue;
+      const amount = direct !== undefined ? direct.amount : (state.ledger.splits ?? {})[parent.id]?.[Number(id.slice(colon + 1)) - 1]?.amount;
+      if (amount === undefined) continue;
+      payments.push({ invoice, date: parent.date, amount: Math.abs(amount), currency: parent.currency || books, id });
+    }
+    for (const invoice of foreignDocs.values()) {
+      (invoice.paidOutside ?? []).forEach((p, i) => {
+        if (p.writeOff === true) return;
+        payments.push({ invoice, date: p.date, amount: Math.abs(p.amount), currency: invoice.currency, id: `paid${i + 1}` });
+      });
+    }
+  }
+  const today = new Date().toLocaleDateString("en-CA");
+  const balanceDates = bookYears().map((y) => taxYearEnd(y)).filter((d) => d <= today);
+  return [
+    ...realisedFxJournals(payments, books, rates, {
+      controlFor: (invoice) => documentControl(invoice) ?? (invoice.kind === "sales" ? { code: "610", name: "Accounts Receivable" } : { code: "800", name: "Accounts Payable" }),
+      account: accounts.realised,
+    }),
+    ...revaluationJournals(state.ledger.transactions, books, rates, balanceDates, {
+      nameOf: (account) => bankLabel(account),
+      account: accounts.unrealised,
+    }),
+  ];
 }
 
 export function bankLabel(account: string): string {
@@ -1958,8 +2010,9 @@ export function reportEngine(): CodingEngine | null {
   // the inputs -- and passes the chart lookup rather than repeating it, so a
   // report and the Entities page cannot come to different answers.
   return codingEngine({
-    transactions: state.ledger.transactions,
-    splits: state.ledger.splits ?? {},
+    // In the books' currency: a line in another is converted at its date's rate.
+    transactions: accountingLines(),
+    splits: accountingSplitParts(),
     overrides: state.ledger.overrides ?? {},
     ...(state.rules ? { rules: state.rules as RuleFileShape } : {}),
     chartTreatment: (code: string) => chartTreatmentOf(code) as never,
@@ -2033,7 +2086,7 @@ function disposalJournals(options: {
   return coreDisposalJournals({
     assets: state.ledger.assets ?? [],
     proceeds: assetProceedsInUse(),
-    transactions: state.ledger.transactions,
+    transactions: accountingLines(),
     chart: state.chart,
     posting: options,
     ...depreciationRules(),
@@ -2045,7 +2098,7 @@ function depreciationJournals(): PostedJournal[] {
   // `resolveAccount` this used to take was never read.
   return coreDepreciationJournals({
     assets: state.ledger.assets ?? [],
-    transactions: state.ledger.transactions,
+    transactions: accountingLines(),
     chart: state.chart,
     // Today where the books are kept: the year in progress is posted month by month.
     today: new Date().toLocaleDateString("en-CA", booksCountry().id === "nz" ? { timeZone: "Pacific/Auckland" } : {}),
@@ -2172,9 +2225,11 @@ export function postedJournals(): PostedJournal[] {
         String(t.extras?.["accountLabel"] ?? t.account),
       ]),
     ),
-    byId: new Map(state.ledger.transactions.map((t) => [t.id, t])),
-    invoices: invoicesInPlay(),
+    byId: new Map(accountingLines().map((t) => [t.id, t])),
+    // Each document at its own date's rate, where it is in another currency.
+    invoices: invoicesInPlay().map(accountingDocument),
     settled: invoiceAssignments(),
+    ...(exchangeAccounts() !== null ? { exchangeAccount: exchangeAccounts()!.realised } : {}),
     controlFor: documentControl,
     gstAccount: gstAccount(),
     gstAccountFor: gstAccountForEntities(),
@@ -2195,7 +2250,7 @@ export function postedJournals(): PostedJournal[] {
   // The year-end adjustments come last, because they are worked out from
   // everything else: a share of what the vehicle accounts ended up holding, a
   // part of what a prepayment was coded to.
-  const withYearEnd = [...posted, ...yearEndJournals(posted)];
+  const withYearEnd = [...posted, ...exchangeJournals(), ...yearEndJournals(posted)];
   // Last of all, money that passed between entities: a line coded to one
   // entity on another's bank account leaves each of them out of balance until
   // the owners' money in and out, or a loan, is written on both sides.

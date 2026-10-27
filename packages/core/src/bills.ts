@@ -58,6 +58,8 @@ export interface DatedPayment {
   date: IsoDate;
   /** Signed as the bank had it; only the size is used. */
   amount: Cents;
+  /** The currency it was paid in, where that is not the books'. */
+  currency?: string;
 }
 
 export type AgeBucket = "current" | "1-30" | "31-60" | "61-90" | "older";

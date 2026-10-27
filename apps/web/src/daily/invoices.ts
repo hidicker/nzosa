@@ -1,7 +1,9 @@
+import { documentMoney } from "../fx-books.js";
 import { moduleOn } from "../modules.js";
 import { creditOnAccountSection, usedInPart } from "./credit-ui.js";
 import { attachmentsControl } from "./attachments-ui.js";
 import { openQuickEntry } from "./quick-entry.js";
+import { COMMON_CURRENCIES } from "./currencies-page.js";
 import { giveDocument, heldJobs, jobChoices } from "./jobs-page.js";
 import type { InvoiceMessage } from "../store.js";
 import { redraw } from "../app.js";
@@ -56,6 +58,7 @@ import {
   daysBetween,
   fillWording,
   dateLooksWrong,
+  isForeign,
 } from "@nzosa/core";
 import type {
   SalesTaxRate,
@@ -481,6 +484,21 @@ export function renderInvoiceEditor(): void {
     field("Job", jobPick, asBill ? "The job this cost belongs to, if any." : "The job this is for, if any.");
   }
   entityField.hidden = !asBill || (entityChoices.length <= 1 && draft.entityId !== undefined);
+
+  // The currency it is written in, where the books keep others: its amounts
+  // are in it, and the books count it at its date's rate.
+  const currency = document.createElement("select");
+  const currencies = [...new Set([booksCurrency(), draft.currency, ...Object.keys(state.ledger.fxRates ?? {}), ...COMMON_CURRENCIES])].filter((c) => c !== "");
+  for (const c of currencies) {
+    const option = document.createElement("option");
+    option.value = c;
+    option.textContent = c;
+    option.selected = c === (draft.currency || booksCurrency());
+    currency.append(option);
+  }
+  if (moduleOn("currencies") || isForeign(draft.currency, booksCurrency())) {
+    field("Currency", currency, "The amounts below are in it. Its rate is set on Currencies.");
+  }
 
   const issued = document.createElement("input");
   issued.type = "date";
@@ -1049,7 +1067,7 @@ export function renderInvoiceEditor(): void {
       // Derived, never typed: an outstanding figure that disagreed with the
       // total less what was paid would quietly break every match proposal.
       outstanding: total - paidCents,
-      currency: draft.currency,
+      currency: currency.value || draft.currency,
       status: statusValue,
       lines,
       ...(rate !== null ? { salesTaxRateId: rate.id } : {}),
@@ -1752,7 +1770,7 @@ export function renderInvoices(): void {
     for (const invoice of drafts) {
       if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
       const tr = document.createElement("tr");
-      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(money(invoice.total)));
+      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(documentMoney(invoice, invoice.total)));
       tr.append(editInvoiceCell(invoice));
       draftBody.append(tr);
     }
@@ -1776,7 +1794,7 @@ export function renderInvoices(): void {
     for (const invoice of [...quotes].sort((x, y) => y.issued.localeCompare(x.issued))) {
       if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
       const tr = document.createElement("tr");
-      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(money(invoice.total)));
+      tr.append(invoiceCell(invoice, invoice.number), nameCell(invoice.issued), amountCell(documentMoney(invoice, invoice.total)));
       tr.append(editInvoiceCell(invoice));
       quoteBody.append(tr);
     }
@@ -1809,10 +1827,10 @@ export function renderInvoices(): void {
       const tr = document.createElement("tr");
       tr.append(invoiceCell(invoice, invoice.number));
       tr.append(nameCell(invoice.due ?? ""));
-      tr.append(amountCell(money(invoice.total)));
+      tr.append(amountCell(documentMoney(invoice, invoice.total)));
       tr.append(amountCell(balance.assigned === 0 ? "" : money(balance.assigned)));
 
-      const left = amountCell(money(balance.remaining));
+      const left = amountCell(documentMoney(invoice, balance.remaining));
       left.classList.add("match-off");
       tr.append(left);
 
@@ -1847,7 +1865,7 @@ export function renderInvoices(): void {
     if (!hit(`${match.invoice.number} ${match.invoice.contact} ${match.invoice.reference}`)) continue;
     const tr = document.createElement("tr");
     tr.append(invoiceCell(match.invoice, match.invoice.number));
-    tr.append(amountCell(money(match.invoice.total)));
+    tr.append(amountCell(documentMoney(match.invoice, match.invoice.total)));
 
     // One settling line per row inside the cell. Several instalments run
     // together on a single line was the unreadable part.
@@ -1897,7 +1915,7 @@ export function renderInvoices(): void {
     if (!hit(`${invoice.number} ${invoice.contact} ${invoice.reference}`)) continue;
     const tr = document.createElement("tr");
     tr.append(invoiceCell(invoice, invoice.number));
-    tr.append(amountCell(money(invoice.total)));
+    tr.append(amountCell(documentMoney(invoice, invoice.total)));
     const cell = document.createElement("td");
     cell.className = "report-name match-lines";
     for (const t of lines) {
@@ -1929,7 +1947,7 @@ export function renderInvoices(): void {
     const payments = invoice.paidOutside ?? [];
     const tr = document.createElement("tr");
     tr.append(invoiceCell(invoice, invoice.number));
-    tr.append(amountCell(money(invoice.total)));
+    tr.append(amountCell(documentMoney(invoice, invoice.total)));
     const cell = document.createElement("td");
     cell.className = "report-name match-lines";
     for (const p of payments) {

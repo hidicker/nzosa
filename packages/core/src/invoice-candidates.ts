@@ -23,6 +23,11 @@ export function invoiceBalancesFor(options: {
   credits?: Readonly<Record<string, string>>;
   /** Parts of credits used against other documents. */
   allocations?: readonly CreditAllocation[];
+  /**
+   * A payment in the document's own currency, where the two differ: an NZD
+   * receipt against a USD invoice. Left out, amounts are taken as they are.
+   */
+  inCurrency?: (amount: number, transaction: Transaction, invoice: Invoice) => number;
 }): Map<string, InvoiceBalance> {
   const { invoices, transactions, splits, assignments } = options;
   const byId = new Map(transactions.map((t) => [t.id, t]));
@@ -39,9 +44,13 @@ export function invoiceBalancesFor(options: {
   }
 
   const paid: InvoiceAssignment[] = [];
+  const documents = options.inCurrency === undefined ? null : new Map(invoices.map((i) => [i.number, i]));
   for (const [transactionId, invoiceNumber] of assignments) {
     const transaction = byId.get(transactionId);
-    if (transaction !== undefined) paid.push({ invoiceNumber, amount: transaction.amount });
+    if (transaction === undefined) continue;
+    const invoice = documents?.get(invoiceNumber);
+    const amount = invoice !== undefined && options.inCurrency !== undefined ? options.inCurrency(transaction.amount, transaction, invoice) : transaction.amount;
+    paid.push({ invoiceNumber, amount });
   }
   return invoiceBalances(invoices, paid, undefined, options.credits ?? {}, options.allocations ?? []);
 }

@@ -278,6 +278,10 @@
                 <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><path d="M3 7h14v9H3zM7 7V4h6v3M3 11h14"/></svg>
                 <span>Jobs</span>
               </button>
+              <button type="button" data-page="currencies" hidden data-module="currencies">
+                <svg viewBox="0 0 20 20" aria-hidden="true" focusable="false"><circle cx="7.5" cy="10" r="5"/><circle cx="12.5" cy="10" r="5"/></svg>
+                <span>Currencies</span>
+              </button>
             </div>
           </div>
           <div class="sidebar-group" data-group="yearend">
@@ -776,6 +780,16 @@
           What these books use. Turn a module on and its pages appear in the menu; turn it off and they are only hidden. Nothing in the books changes either way. Most follow the books on their own: a module turns on once the books hold anything for it.
         </p>
         <div id="apps-body"></div>
+      </section>
+
+      <section id="page-currencies" class="page" hidden>
+        <div class="page-head">
+          <h2>Currencies</h2>
+        </div>
+        <p class="page-hint">
+          Invoices, bills and bank accounts in another currency keep their own amounts, and count in the books at the rate on their date. When the money arrives or leaves at another rate, the difference is an exchange gain or loss; a bank account in another currency is revalued at each balance date.
+        </p>
+        <div id="currencies-body"></div>
       </section>
 
       <section id="page-jobs" class="page" hidden>

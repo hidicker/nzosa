@@ -216,3 +216,14 @@ works).
   against; each needs a real export (with invented figures) to write its
   reader and test it. Like MYOB, no real GnuCash file has been tried yet.
   27 October 2026.
+- **Foreign currencies: what the first version leaves out.** Item 38 of the
+  SlowBooks comparison (`packages/core/src/fx.ts`, Currencies page). Documents
+  and bank lines in another currency count at their dates' rates, payments
+  realise the exchange difference, conversions between own accounts post the
+  spread, and foreign bank accounts are revalued at each balance date. Not
+  yet: foreign receivables and payables still open at a balance date are not
+  revalued (they stay at the document's rate); credit notes and credit used
+  across currencies are not converted; quick entry and sales receipts are in
+  the books' currency only; with several entities the exchange accounts are
+  one pair for all; and Reconcile shows a foreign line in its own currency
+  with no converted figure beside it. 27 October 2026.

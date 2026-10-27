@@ -1,3 +1,4 @@
+import { documentMoney } from "../fx-books.js";
 import { redraw, showPage } from "../app.js";
 import {
   bankLabel,
@@ -177,8 +178,8 @@ export function renderBills(): void {
       due.title = `${daysBetween(bill.due, now)} days overdue`;
     }
     tr.append(due);
-    tr.append(amountCell(money(bill.total)));
-    const owing = amountCell(status === "Draft" || status === "Voided" ? "" : money(balance.remaining));
+    tr.append(amountCell(documentMoney(bill, bill.total)));
+    const owing = amountCell(status === "Draft" || status === "Voided" ? "" : documentMoney(bill, balance.remaining));
     tr.append(owing);
     const statusCell = nameCell(status);
     statusCell.className = `report-name bill-status bill-status-${status.toLowerCase().replace(/\s+/g, "-")}`;
@@ -349,7 +350,7 @@ function payPanel(bill: Invoice, balance: InvoiceBalance): HTMLElement {
   box.className = "invoice-editor bill-pay";
 
   const heading = document.createElement("h3");
-  heading.textContent = `Mark ${bill.number} paid (${bill.contact}, ${money(balance.remaining)} owing)`;
+  heading.textContent = `Mark ${bill.number} paid (${bill.contact}, ${documentMoney(bill, balance.remaining)} owing)`;
   box.append(heading);
 
   // The warning comes before the form, because it decides whether the form
@@ -457,7 +458,7 @@ function payPanel(bill: Invoice, balance: InvoiceBalance): HTMLElement {
     if (from.value === "") return await tellOnPage("Choose the account it was paid from.");
     if (!Number.isFinite(cents) || cents <= 0) return await tellOnPage("Enter the amount paid.");
     if (cents > balance.remaining) {
-      return await tellOnPage(`That is more than the ${money(balance.remaining)} still owing.`);
+      return await tellOnPage(`That is more than the ${documentMoney(bill, balance.remaining)} still owing.`);
     }
     if (date.value === "" || date.value < bill.issued) {
       return await tellOnPage("The payment date can't be before the bill date.");

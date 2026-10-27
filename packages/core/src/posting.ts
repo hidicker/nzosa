@@ -108,7 +108,9 @@ export type JournalSource =
   /** A pay run. */
   | "payroll"
   /** Money passing between entities: see between-entities.ts. */
-  | "between";
+  | "between"
+  /** An exchange difference, realised on a payment or from revaluing a balance: see fx.ts. */
+  | "fx";
 
 /**
  * Which basis this journal's tax belongs to.
@@ -159,6 +161,12 @@ export interface PostingOptions {
   resolveAccount?: (code: string) => { code: string; name: string };
   /** How a bank account id is named on the journal. */
   nameBankAccount?: (account: string) => string;
+  /**
+   * Where the difference goes when a transfer's legs were in two currencies
+   * and, turned into the books' currency, no longer come to nothing: the
+   * spread on a conversion. See fx.ts.
+   */
+  exchangeAccount?: { code: string; name: string } | undefined;
   /** Accounts receivable, where a sales invoice sits until it is paid. */
   receivableCode?: string;
   receivableName?: string;
@@ -682,6 +690,21 @@ export function postTransfer(
         taxType: "NONE",
         description: to.otherParty || to.particulars || "",
       },
+      // A conversion between currencies: the legs, each at its own rate, are
+      // not equal, and the difference is an exchange gain or loss.
+      ...((from.extras?.["fxCurrency"] !== undefined || to.extras?.["fxCurrency"] !== undefined) &&
+      from.amount + to.amount !== 0 &&
+      options.exchangeAccount !== undefined
+        ? [
+            {
+              accountCode: options.exchangeAccount.code,
+              accountName: options.exchangeAccount.name,
+              amount: -(from.amount + to.amount),
+              taxType: "NONE" as const,
+              description: "Exchange difference on the conversion",
+            },
+          ]
+        : []),
     ],
     source: "transfer",
     // Not a supply on any basis.

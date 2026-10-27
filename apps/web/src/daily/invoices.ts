@@ -26,7 +26,7 @@ import { renderRecurring } from "./recurring.js";
 import type { Combobox } from "../combobox.js";
 import { knownCodes } from "../reconcile.js";
 import { $, state } from "../state.js";
-import { save as saveLedger, savePart } from "../store.js";
+import { booksReadOnly, save as saveLedger, savePart } from "../store.js";
 import { amountCell, askOnPage, askTextOnPage, download, invoiceCell, nameCell, note, tellOnPage, wideTable } from "../ui.js";
 import {
   accountEntityKey,
@@ -1548,7 +1548,7 @@ function editInvoiceCell(invoice: Invoice): HTMLTableCellElement {
   }
 
   // A link to pay it by card, through the business's own Stripe account.
-  if (stripeConnected() && invoice.kind === "sales" && isPosted(invoice) && invoice.receipt !== true) {
+  if (stripeConnected() && !booksReadOnly() && invoice.kind === "sales" && isPosted(invoice) && invoice.receipt !== true) {
     const owing = invoiceBalanceMap().get(invoice.number)?.remaining ?? 0;
     if (owing > 0) {
       const pay = document.createElement("button");

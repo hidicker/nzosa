@@ -4,7 +4,7 @@ import { callFunction, rpc } from "../cloud.js";
 import { usingOwnProject } from "../cloud-config.js";
 import { booksCurrency } from "../country.js";
 import { state } from "../state.js";
-import { backendKind, openCloudBookId, savePart } from "../store.js";
+import { backendKind, booksReadOnly, openCloudBookId, savePart } from "../store.js";
 import { askOnPage, note, tellOnPage } from "../ui.js";
 import { formatAmount, isPosted } from "@nzosa/core";
 import type { Invoice } from "@nzosa/core";
@@ -129,7 +129,8 @@ export async function payLinkFor(invoice: Invoice): Promise<void> {
  */
 export async function checkCardPayments(force = false): Promise<number> {
   const book = openCloudBookId();
-  if (!stripePossible() || (!force && checked.book === book && Date.now() - checked.at < 60_000)) return 0;
+  // Recording what Stripe says is a change to the books: not for somebody who may only read them.
+  if (!stripePossible() || booksReadOnly() || (!force && checked.book === book && Date.now() - checked.at < 60_000)) return 0;
   checked = { book, at: Date.now() };
   const open = (state.ledger.invoices ?? []).filter((i) => i.payLink !== undefined && i.payLink.paidAt === undefined);
   if (open.length === 0) return 0;
@@ -162,7 +163,7 @@ export function cardLinksWaiting(): boolean {
 
 /** A button to ask Stripe now, for the Invoices page, when links are waiting. */
 export function checkCardPaymentsButton(): HTMLElement | null {
-  if (!stripeConnected() || !cardLinksWaiting()) return null;
+  if (booksReadOnly() || !stripeConnected() || !cardLinksWaiting()) return null;
   const go = document.createElement("button");
   go.type = "button";
   go.textContent = "Check card payments";

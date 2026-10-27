@@ -220,7 +220,7 @@ Sizes are rough: **S** a day or less, **M** a few days, **L** a week or more.
 34. Analytics: revenue trend, expenses by category, days sales outstanding, margin and a 90-day cash forecast (M).
 35. One-click AI analyses beside the conversation (S).
 36. Global search across contacts, invoices, bills and lines (M).
-37. Receipt scanning in the page, without AI (L).
+37. ~~Receipt scanning in the page, without AI (L).~~ Declined 27 October 2026: the OCR engine would add several megabytes to the app.
 38. Foreign-currency invoices and bank accounts (L; with Wise balances in other currencies).
 39. Online payment links (L; which provider, and keys held online).
 40. Sage 50, Wave, Zoho Books and GnuCash imports, and the Transaction Pro bank sheet (M each).

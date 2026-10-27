@@ -1,6 +1,6 @@
 import { redraw } from "../app.js";
 import { invoiceBalanceMap, record } from "../books.js";
-import { callFunction } from "../cloud.js";
+import { callFunction, rpc } from "../cloud.js";
 import { usingOwnProject } from "../cloud-config.js";
 import { booksCurrency } from "../country.js";
 import { state } from "../state.js";
@@ -215,6 +215,12 @@ export function stripeSettings(): HTMLElement {
       body.append(off);
       return;
     }
+    // Only an owner connects it: anyone else is told so, not offered a box the server refuses.
+    void rpc<boolean>("has_role", { book: openCloudBookId(), roles: ["owner"] }).then((owner) => {
+      if (owner === true) return;
+      body.textContent = "";
+      body.append(note("Stripe is not connected for these books. Only an owner of these books can connect it."));
+    });
     body.append(
       note(
         "Make a restricted key in your Stripe dashboard (Developers, API keys, Create restricted key) with " +
@@ -240,7 +246,9 @@ export function stripeSettings(): HTMLElement {
       try {
         await callFunction("stripe", { action: "connect", book: openCloudBookId(), key: value });
       } catch (error) {
-        said.textContent = (error as Error).message;
+        const why = (error as Error).message;
+        said.textContent = /not allowed/.test(why) ? "Only an owner of these books can connect Stripe." : why;
+        said.className = "cloud-said bad";
         go.disabled = false;
         return;
       }

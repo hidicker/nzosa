@@ -554,7 +554,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
 
   const ok = document.createElement("button");
   ok.type = "button";
-  ok.className = "primary";
+  ok.className = "primary code-ok";
   // A confirmed line can still be changed, and used to look as though it could:
   // the account picker, the rate and the description all stayed editable while
   // the button that saves them was disabled. Changing your mind about a coding
@@ -565,8 +565,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   // this", and a tick would say both.
   ok.textContent = one.confirmed ? "Update" : "✓";
   ok.title = one.confirmed
-    ? "Save a change to this coding"
-    : "Confirm this line as coded";
+    ? "Save a change to this coding (Ctrl+Enter)"
+    : "Confirm this line as coded (Ctrl+Enter)";
   // The glyph is not a name. Anything reading this aloud, or listing the
   // buttons on the page, needs the words.
   if (!one.confirmed) {
@@ -2875,7 +2875,43 @@ function codingReconciliationWarning(): HTMLElement | null {
 }
 
 /** Searching and filtering the coding queue. */
+/**
+ * Ctrl+Enter (Cmd+Enter on a Mac) anywhere in a line confirms it, as its tick
+ * does, and goes on to the next line's account: a queue coded from the
+ * keyboard without reaching for the mouse each time.
+ */
+function wireConfirmKey(): void {
+  document.addEventListener("keydown", (event) => {
+    if (event.key !== "Enter" || !(event.ctrlKey || event.metaKey) || event.altKey || event.shiftKey) return;
+    const target = event.target;
+    if (!(target instanceof Element)) return;
+    const row = target.closest<HTMLElement>("#page-reconcile .code-row");
+    if (row === null) return;
+    const ok = row.querySelector<HTMLButtonElement>("button.code-ok");
+    if (ok === null || ok.disabled) return;
+    event.preventDefault();
+    // The next line, by its id: the list is drawn again once this one is saved.
+    const rows = [...document.querySelectorAll<HTMLElement>("#page-reconcile .code-row")];
+    const next = rows.slice(rows.indexOf(row) + 1).find((r) => !r.classList.contains("done"))?.dataset["id"];
+    ok.click();
+    if (next === undefined) return;
+    const focusNext = (tries: number): void => {
+      const found = [...document.querySelectorAll<HTMLElement>("#page-reconcile .code-row")].find((r) => r.dataset["id"] === next);
+      const input = found?.querySelector<HTMLInputElement>(".combo-input, input");
+      if (input !== undefined && input !== null) {
+        input.focus();
+        input.select();
+        found!.scrollIntoView({ block: "nearest" });
+      } else if (tries > 0) {
+        setTimeout(() => focusNext(tries - 1), 150);
+      }
+    };
+    setTimeout(() => focusNext(10), 150);
+  });
+}
+
 export function wireReconcile(): void {
+  wireConfirmKey();
   $<HTMLInputElement>("reconcile-search").addEventListener("input", (e) => {
     state.reconcileSearch = (e.target as HTMLInputElement).value;
     redraw("reconcile");

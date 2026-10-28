@@ -18,7 +18,7 @@ import { billEntities, controlAccountFor, record } from "../books.js";
 import { booksCountry, booksCurrency, booksMoney, noSalesTax } from "../country.js";
 import { state } from "../state.js";
 import { savePart } from "../store.js";
-import { askOnPage, tellOnPage } from "../ui.js";
+import { askOnPage, noteBriefly, tellOnPage } from "../ui.js";
 
 /**
  * Quick entry: a pile of paper invoices or bills typed in one after another,
@@ -365,7 +365,7 @@ export function openQuickEntry(kind: InvoiceKind): void {
       finish();
       redraw("invoices");
       redraw("bills");
-      await tellOnPage(made.length === 1 ? `Saved ${noun} ${numbers}.` : `Saved ${made.length} ${nouns}, ${numbers}.`);
+      noteBriefly(made.length === 1 ? `Saved ${noun} ${numbers}.` : `Saved ${made.length} ${nouns}, ${numbers}.`);
     })();
   });
 

@@ -85,6 +85,35 @@ export function askOnPage(message: string, yes = "OK", no = "Cancel"): Promise<b
 }
 
 /**
+ * Say that something went as asked, without stopping anybody: a note in the
+ * corner that goes by itself after a few seconds. For news that needs no
+ * answer -- saved, added -- where a dialog to dismiss is only in the way.
+ * Read aloud by screen readers as it appears.
+ */
+export function noteBriefly(message: string, seconds = 5): void {
+  let shelf = document.getElementById("brief-notes");
+  if (shelf === null) {
+    shelf = document.createElement("div");
+    shelf.id = "brief-notes";
+    shelf.setAttribute("role", "status");
+    shelf.setAttribute("aria-live", "polite");
+    document.body.append(shelf);
+  }
+  const one = document.createElement("div");
+  one.className = "brief-note";
+  one.textContent = message;
+  const close = document.createElement("button");
+  close.type = "button";
+  close.className = "brief-note-close";
+  close.textContent = "×";
+  close.setAttribute("aria-label", "Close");
+  close.addEventListener("click", () => one.remove());
+  one.append(close);
+  shelf.append(one);
+  setTimeout(() => one.remove(), seconds * 1000);
+}
+
+/**
  * Say something on the page that needs reading before going on, with one
  * button. What alert() was used for -- which an embedded browser also skips
  * without showing. Resolves when it is closed.

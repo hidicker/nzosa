@@ -5,7 +5,7 @@ import { usingOwnProject } from "../cloud-config.js";
 import { booksCurrency } from "../country.js";
 import { state } from "../state.js";
 import { backendKind, booksReadOnly, openCloudBookId, savePart } from "../store.js";
-import { askOnPage, note, tellOnPage } from "../ui.js";
+import { askOnPage, note, noteBriefly, tellOnPage } from "../ui.js";
 import { formatAmount, isPosted } from "@nzosa/core";
 import type { Invoice } from "@nzosa/core";
 
@@ -174,7 +174,7 @@ export function checkCardPaymentsButton(): HTMLElement | null {
     void checkCardPayments(true).then(async (marked) => {
       go.disabled = false;
       go.textContent = "Check card payments";
-      await tellOnPage(marked === 0 ? "Nothing new has been paid by card." : `${marked} ${marked === 1 ? "invoice has" : "invoices have"} been paid by card.`);
+      noteBriefly(marked === 0 ? "Nothing new has been paid by card." : `${marked} ${marked === 1 ? "invoice has" : "invoices have"} been paid by card.`);
     });
   });
   return go;

@@ -123,6 +123,19 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     draw();
   });
 
+  // What is still to allocate, into an empty last part or a new one: the
+  // usual end of a split, done in one press rather than worked out.
+  const restButton = button("Put the rest in a part", () => {
+    readRows();
+    const left = transaction.amount - total();
+    if (left === 0) return;
+    const last = drafts[drafts.length - 1];
+    if (last !== undefined && (parseAmount(last.amount, booksCurrency()) ?? 0) === 0) last.amount = (left / 100).toFixed(2);
+    else drafts.push({ amount: (left / 100).toFixed(2), code: "", rate: "15", note: "" });
+    draw();
+  });
+  restButton.hidden = true;
+
   const saveButton = button("Save split", () => {
     // The account pickers commit without firing an event, so their values are
     // read back before the drafts are turned into parts.
@@ -281,6 +294,8 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
     const difference = transaction.amount - sum;
     const undecided = drafts.filter((d) => isGstAccount(d.code) && d.rate === "").length;
     saveButton.disabled = difference !== 0 || drafts.length < 2 || undecided > 0;
+    restButton.hidden = difference === 0;
+    restButton.textContent = `Put the ${formatAmount(Math.abs(difference))} left in a part`;
     balance.className = difference === 0 && undecided === 0 ? "split-balance ok" : "split-balance off";
     if (undecided > 0) {
       balance.textContent =
@@ -295,7 +310,7 @@ export function splitEditor(options: SplitEditorOptions): HTMLElement {
           `${formatAmount(difference)} still to allocate`;
   }
 
-  footer.append(addButton, halfButton, saveButton, removeButton, balance);
+  footer.append(addButton, restButton, halfButton, saveButton, removeButton, balance);
   if (options.parts.length === 0) removeButton.hidden = true;
   footer.append(button("Cancel", () => options.onCancel()));
 

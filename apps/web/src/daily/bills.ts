@@ -12,7 +12,7 @@ import {
 } from "../books.js";
 import { $, state } from "../state.js";
 import { savePart } from "../store.js";
-import { amountCell, askOnPage, invoiceCell, nameCell, note, tellOnPage } from "../ui.js";
+import { amountCell, askOnPage, invoiceCell, nameCell, note, noteBriefly, tellOnPage } from "../ui.js";
 import { approveBill, creditNoteSection, editBill, startNewBill } from "./invoices.js";
 import { addPayableFor } from "./standard-accounts-panel.js";
 import {
@@ -240,7 +240,7 @@ function payableMissing(entity: Entity): HTMLElement {
     add.disabled = true;
     void addPayableFor(entity).then(async (code) => {
       state.invoiceMessage = "";
-      await tellOnPage(`Added ${code} Accounts Payable for ${entity.name}.`);
+      noteBriefly(`Added ${code} Accounts Payable for ${entity.name}.`);
       redraw("bills");
     });
   });

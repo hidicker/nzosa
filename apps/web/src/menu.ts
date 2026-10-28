@@ -5,7 +5,8 @@ import { toggleNarrow } from "./chrome.js";
 import { $, state } from "./state.js";
 import { applyModules } from "./modules.js";
 import { bankLabel, billsAvailable } from "./books.js";
-import { editBill, editInvoice, startNewBill, startNewInvoice } from "./daily/invoices.js";
+import { editBill, editInvoice, startNewBill, startNewInvoice, startNewReceipt } from "./daily/invoices.js";
+import { openQuickEntry } from "./daily/quick-entry.js";
 import { booksMoney } from "./country.js";
 import { searchBooks } from "@nzosa/core";
 import type { SearchHit } from "@nzosa/core";
@@ -268,6 +269,49 @@ const KIND_SAID: Record<SearchHit["kind"], string> = {
   journal: "Journal",
 };
 
+/** Things to do, found by what they are called and what people call them. */
+function actions(): Destination[] {
+  const bills = billsAvailable();
+  const all: (Destination | null)[] = [
+    { label: "New invoice", where: "Action · Alt+Shift+I", words: "create add make raise sale invoice", go: () => { showPage("invoices", "top"); startNewInvoice(); } },
+    { label: "New sales receipt", where: "Action", words: "create add cash sale receipt counter walk-in", go: () => { showPage("invoices", "top"); startNewReceipt(); } },
+    bills ? { label: "New bill", where: "Action · Alt+Shift+B", words: "create add enter bill supplier purchase", go: () => { showPage("bills", "top"); startNewBill(); } } : null,
+    { label: "New journal", where: "Action · Alt+Shift+J", words: "create add write manual journal adjustment", go: () => startNewJournal() },
+    { label: "Quick entry: invoices", where: "Action", words: "paper backlog many invoices type", go: () => { showPage("invoices", "top"); openQuickEntry("sales"); } },
+    bills ? { label: "Quick entry: bills", where: "Action", words: "paper backlog many bills type", go: () => { showPage("bills", "top"); openQuickEntry("purchase"); } } : null,
+    { label: "Load a bank file", where: "Action", words: "import upload csv statement ofx qif bank file", go: () => showPage("import") },
+  ];
+  return all.filter((a): a is Destination => a !== null);
+}
+
+/** Chart accounts by code or name: opened on the chart, the row found. */
+function accountsMatching(query: string): Destination[] {
+  const words = query.toLowerCase().split(/\s+/).filter((w) => w !== "");
+  if (words.length === 0) return [];
+  return state.chart
+    .filter((a) => a.code.trim() !== "" || a.name.trim() !== "")
+    .filter((a) => words.every((w) => `${a.code} ${a.name}`.toLowerCase().includes(w)))
+    .sort((a, b) => (a.code.toLowerCase().startsWith(words[0]!) ? 0 : 1) - (b.code.toLowerCase().startsWith(words[0]!) ? 0 : 1))
+    .slice(0, 4)
+    .map((a) => ({
+      label: `${a.code} ${a.name}`.trim(),
+      where: `Account · ${a.type || "no type yet"}`,
+      words: "",
+      go: () => {
+        showPage("entities");
+        setTimeout(() => {
+          const row = [...document.querySelectorAll<HTMLTableRowElement>(".accounts-table tbody tr")].find(
+            (r) => r.cells[0]?.textContent === a.code && (r.cells[1]?.textContent ?? "") === a.name,
+          );
+          if (row === undefined) return;
+          row.scrollIntoView({ block: "center" });
+          row.classList.add("row-found");
+          setTimeout(() => row.classList.remove("row-found"), 2500);
+        }, 200);
+      },
+    }));
+}
+
 /** What the books hold that matches: contacts, documents, bank lines, journals. */
 function inTheBooks(query: string): Destination[] {
   const hits = searchBooks(query, {
@@ -310,7 +354,7 @@ function matches(query: string): Destination[] {
   const words = query.toLowerCase().split(/\s+/).filter((word) => word !== "");
   if (words.length === 0) return [];
   const phrase = words.join(" ");
-  return destinations()
+  return [...actions(), ...destinations()]
     .flatMap((destination) => {
       const label = destination.label.toLowerCase();
       const haystack = `${label} ${destination.where.toLowerCase()} ${destination.words}`;
@@ -323,7 +367,7 @@ function matches(query: string): Destination[] {
     .sort((a, b) => a.score - b.score)
     .slice(0, 5)
     .map((scored) => scored.destination)
-    .concat(query.trim().length >= 2 ? inTheBooks(query) : []);
+    .concat(query.trim().length >= 2 ? [...accountsMatching(query), ...inTheBooks(query)] : []);
 }
 
 function wireSearch(): void {

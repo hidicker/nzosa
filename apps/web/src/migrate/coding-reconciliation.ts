@@ -402,8 +402,8 @@ export async function acceptAllShown(): Promise<void> {
             `invoice yet, and ${unfinished === 1 ? "is" : "are"} left for you to finish.\n\n`
           : "") +
         (pairs.length > 0
-          ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} also shown. ` +
-            "Press Accept all again afterwards to pair them.\n\n"
+          ? `${pairs.length} proposed transfer${pairs.length === 1 ? " is" : "s are"} paired too: the same ` +
+            "amount the other way between two of your own accounts, within four days, with exactly one match.\n\n"
           : "") +
         // Said out loud, and counted apart from the rules. A rule is
         // something these books were told; a model's answer is something
@@ -476,6 +476,8 @@ export async function acceptAllShown(): Promise<void> {
       batch,
       null,
     );
+    // The transfers shown with them, in the same press.
+    if (pairs.length > 0) await pairAll(pairs);
     reclassify();
     redraw("reconcile");
   });

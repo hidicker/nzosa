@@ -462,8 +462,8 @@
 }
 
 @media (max-width: 820px) {
-  /* Narrow: the sidebar becomes a strip of icons rather than disappearing, so
-     nothing has to be hunted for behind a menu. */
+  /* Narrow: the sidebar becomes a bar across the top; its menu slides out
+     from the button (see the end of this file). */
   .shell {
     flex-direction: column;
   }
@@ -4718,3 +4718,97 @@ select.needs-choice {
 
 /* A row found from the search box, shown for a moment. */
 tr.row-found td { background: color-mix(in srgb, var(--accent) 18%, transparent); transition: background 0.6s; }
+
+/* A phone: the bar stays at the top with the menu button, the name and the
+   books; the menu slides out beneath it with its names, and goes again once
+   somewhere is chosen. */
+@media (max-width: 820px) {
+  .sidebar {
+    position: sticky;
+    top: 0;
+    z-index: 50;
+  }
+  .sidebar-nav {
+    display: none;
+  }
+  .shell.menu-open .sidebar-nav {
+    display: flex;
+    flex-direction: column;
+    position: fixed;
+    top: var(--menu-top, 56px);
+    left: 0;
+    bottom: 0;
+    width: min(300px, 86vw);
+    padding: 10px 12px 24px;
+    gap: 2px;
+    overflow-x: hidden;
+    overflow-y: auto;
+    background: var(--navy);
+    box-shadow: 4px 0 18px rgba(0, 0, 0, 0.3);
+    z-index: 60;
+    -webkit-mask-image: none;
+    mask-image: none;
+  }
+  .shell.menu-open::after {
+    content: "";
+    position: fixed;
+    top: var(--menu-top, 56px);
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background: rgba(0, 0, 0, 0.35);
+    z-index: 45;
+  }
+  .shell.menu-open .menu-search {
+    display: block;
+  }
+  .shell.menu-open .sidebar-group {
+    display: block;
+  }
+  .shell.menu-open .sidebar-group-items {
+    display: flex;
+    flex-direction: column;
+    gap: 2px;
+  }
+  .shell.menu-open .sidebar-group.collapsed .sidebar-group-items {
+    display: none;
+  }
+  .shell.menu-open .sidebar-nav button.sidebar-heading {
+    display: block;
+  }
+  .shell.menu-open .sidebar-nav button {
+    padding: 9px 10px;
+  }
+  .shell.menu-open .sidebar-nav button span {
+    display: inline;
+  }
+  .shell.menu-open .sidebar-nav button[data-badge] svg {
+    display: inline-block;
+  }
+  .shell.menu-open .sidebar-nav button[data-badge]::before {
+    content: none;
+  }
+  /* The narrowed-to-icons choice is for a wide screen: here the bar keeps
+     its name and the books. */
+  .shell.narrow .sidebar {
+    width: auto;
+    flex: none;
+    padding: 10px 12px;
+  }
+  .shell.narrow .sidebar-head {
+    flex-direction: row;
+    justify-content: space-between;
+    gap: 0;
+    padding: 0 10px 0 4px;
+  }
+  .shell.menu-open .sidebar-nav button {
+    justify-content: flex-start;
+  }
+  .shell.narrow .wordmark,
+  .shell.narrow .sidebar-foot {
+    display: block;
+  }
+  .sidebar-head {
+    flex: 1;
+  }
+}

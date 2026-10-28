@@ -55,6 +55,61 @@ export function toggleNarrow(): void {
   applyNarrow(narrow);
 }
 
+/**
+ * On a phone the menu slides out from the button at the top, with the names,
+ * rather than being a strip of icons too small to tell apart.
+ */
+const SMALL = "(max-width: 820px)";
+
+function smallScreen(): boolean {
+  return matchMedia(SMALL).matches;
+}
+
+function menuIsOpen(): boolean {
+  return document.querySelector(".shell")?.classList.contains("menu-open") === true;
+}
+
+function setMenuOpen(open: boolean): void {
+  const shell = document.querySelector<HTMLElement>(".shell");
+  const sidebar = document.querySelector<HTMLElement>(".sidebar");
+  if (!shell || !sidebar) return;
+  // Below the bar at the top, wherever the banners above it have left it.
+  shell.style.setProperty("--menu-top", `${Math.max(0, sidebar.getBoundingClientRect().bottom)}px`);
+  shell.classList.toggle("menu-open", open);
+  const button = $("sidebar-toggle");
+  if (smallScreen()) {
+    button.setAttribute("aria-expanded", String(open));
+    button.title = open ? "Close the menu" : "Open the menu";
+  }
+}
+
+function wireMenuDrawer(): void {
+  const sidebar = document.querySelector<HTMLElement>(".sidebar");
+  if (!sidebar) return;
+  if (smallScreen()) setMenuOpen(false);
+  // Going somewhere closes it; unfolding a group does not.
+  sidebar.querySelector(".sidebar-nav")?.addEventListener("click", (event) => {
+    const target = event.target as HTMLElement;
+    if (!menuIsOpen() || target.closest(".sidebar-heading, .menu-search input")) return;
+    if (target.closest("button, a, [role=option]")) setMenuOpen(false);
+  });
+  // A tap beside it, or Escape, puts it away.
+  document.addEventListener("click", (event) => {
+    if (menuIsOpen() && !sidebar.contains(event.target as Node)) setMenuOpen(false);
+  });
+  document.addEventListener("keydown", (event) => {
+    if (event.key === "Escape" && menuIsOpen()) setMenuOpen(false);
+    // Search lives in the menu: on a phone, Ctrl+K opens it first.
+    if ((event.ctrlKey || event.metaKey) && event.key.toLowerCase() === "k" && smallScreen() && !menuIsOpen()) {
+      setMenuOpen(true);
+    }
+  }, true);
+  matchMedia(SMALL).addEventListener("change", (change) => {
+    setMenuOpen(false);
+    if (!change.matches) applyNarrow(document.querySelector(".shell")?.classList.contains("narrow") === true);
+  });
+}
+
 export function applyTheme(theme: Theme): void {
   const root = document.documentElement;
   if (theme === "system") root.removeAttribute("data-theme");
@@ -187,12 +242,16 @@ export function wireChrome(): void {
     // and is wrong on hosted books, where importing your own data is the point.
     if (backendKind() === "folder") demoNotice.hidden = true;
   }
-  $("sidebar-toggle").addEventListener("click", () => toggleNarrow());
+  $("sidebar-toggle").addEventListener("click", () => {
+    if (smallScreen()) setMenuOpen(!menuIsOpen());
+    else toggleNarrow();
+  });
   try {
     applyNarrow(localStorage.getItem(NARROW_KEY) === "yes");
   } catch {
     applyNarrow(false);
   }
+  wireMenuDrawer();
   $("theme-toggle").addEventListener("click", () => cycleTheme());
   applyTheme(currentTheme());
   // Following the computer means noticing when the computer changes its mind.

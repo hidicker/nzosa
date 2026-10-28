@@ -274,7 +274,13 @@ function bankTable(model: EntityModel): HTMLElement {
   const bankTable = document.createElement("table");
   bankTable.className = "entity-table";
   const bankHead = document.createElement("thead");
-  bankHead.innerHTML = "<tr><th>Bank account</th><th>Belongs to</th><th></th></tr>";
+  // The chart's bank rows, so each bank account says here which of them it is,
+  // beside whose it is: one row per account rather than two tables to match up.
+  const chartBanks = state.chart.filter((a) => a.type.trim().toLowerCase() === "bank");
+  bankHead.innerHTML =
+    "<tr><th>Bank account</th><th>Belongs to</th>" +
+    (chartBanks.length > 0 ? "<th>In the chart</th>" : "") +
+    "<th>Lines</th><th></th></tr>";
   const bankBody = document.createElement("tbody");
 
   for (const account of accounts) {
@@ -319,6 +325,16 @@ function bankTable(model: EntityModel): HTMLElement {
     cell.append(pick);
     tr.append(cell);
 
+    if (chartBanks.length > 0) tr.append(chartLinkCell(account, chartBanks));
+
+    const onIt = state.ledger.transactions.filter((t) => t.account === account);
+    const lines = document.createElement("td");
+    lines.className = "cell-said-elsewhere";
+    const latest = onIt.reduce((at, t) => (t.date > at ? t.date : at), "");
+    lines.textContent = `${onIt.length}${latest !== "" ? `, latest ${latest}` : ""}`;
+    lines.title = "Bank lines in these books for this account, and the date of the newest";
+    tr.append(lines);
+
     const said = document.createElement("td");
     said.className = "cell-said-elsewhere";
     if (several) {
@@ -339,6 +355,56 @@ function bankTable(model: EntityModel): HTMLElement {
   bankTable.append(bankHead, bankBody);
   wrap.append(bankTable);
   return wrap;
+}
+
+/**
+ * Which of the chart's bank rows a bank account in these books is: the same
+ * link the chart's own picker sets, asked from the bank account's side.
+ */
+function chartLinkCell(account: string, chartBanks: Account[]): HTMLTableCellElement {
+  const cell = document.createElement("td");
+  const pick = document.createElement("select");
+  pick.className = "bank-link";
+  const linked = chartBanks.filter((row) => ledgerAccountFor(row.name, row) === account);
+  const labelOf = (row: Account): string => (row.code.trim() === "" ? row.name : `${row.code} ${row.name}`);
+  const none = document.createElement("option");
+  none.value = "";
+  none.textContent = "— which chart account? —";
+  none.selected = linked.length === 0;
+  pick.append(none);
+  chartBanks.forEach((row, index) => {
+    const option = document.createElement("option");
+    option.value = String(index);
+    const elsewhere = ledgerAccountFor(row.name, row);
+    option.textContent =
+      elsewhere !== null && elsewhere !== account
+        ? `${labelOf(row)} (now ${banks().labels.get(elsewhere) ?? elsewhere})`
+        : labelOf(row);
+    option.selected = linked[0] === row;
+    pick.append(option);
+  });
+  if (linked.length === 0) pick.classList.add("needs-choice");
+  pick.title = "The account in the chart that this bank account is";
+  pick.addEventListener("change", async () => {
+    const scroller = document.scrollingElement;
+    const at = scroller?.scrollTop ?? 0;
+    // Whatever row said this account before stops saying it, then the chosen one does.
+    for (const row of linked) {
+      const live = state.chart.find((a) => a.code === row.code && a.name === row.name) ?? row;
+      await setLedgerAccount(live, "");
+      const still = state.chart.find((a) => a.code === row.code && a.name === row.name);
+      // A row that names the account word for word would match it again by itself.
+      if (still !== undefined && ledgerAccountFor(still.name, still) === account) await setLedgerAccount(still, NOT_IN_LEDGER);
+    }
+    const chosen = pick.value === "" ? undefined : chartBanks[Number(pick.value)];
+    if (chosen !== undefined) {
+      const live = state.chart.find((a) => a.code === chosen.code && a.name === chosen.name) ?? chosen;
+      await setLedgerAccount(live, account);
+    }
+    if (scroller) scroller.scrollTop = at;
+  });
+  cell.append(pick);
+  return cell;
 }
 
 /**
@@ -1116,7 +1182,9 @@ export function renderEntities(): void {
       `${unlinked.length} bank account${unlinked.length === 1 ? "" : "s"} in the chart ` +
       `${unlinked.length === 1 ? "is" : "are"} not linked yet: ` +
       unlinked.map(({ account }) => account.name).join(", ") +
-      ". Link each one under “Entity, or which account” below.";
+      (model.entities.length > 0
+        ? ". Choose each one under “In the chart” in the bank accounts above."
+        : ". Link each one under “Entity, or which account” below.");
     body.append(say);
   }
 

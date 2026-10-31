@@ -111,6 +111,8 @@ test("a code is refused for a line already coded, a locked line, an unknown line
   assert.match(one({ transaction: "old", account: "449" }), /locked period/);
   assert.match(one({ transaction: "nope", account: "449" }), /no line "nope"/);
   assert.match(one({ transaction: "fuel", account: "999" }), /no account "999"/);
+  // By name alone, too.
+  assert.equal(call(ctx, "suggest_codes", { lines: [{ transaction: "fuel", account: "motor vehicle expenses", because: "fuel" }] }).suggestions, 1);
   assert.match(call(ctx, "suggest_codes", { lines: [{ transaction: "fuel", account: "449" }] }).error, /say why/);
 });
 

@@ -58,7 +58,13 @@ function account(books: Books, value: unknown, where: string): string {
   }
   const wanted = value.trim();
   const exact = books.labels.find((label) => label.toLowerCase() === wanted.toLowerCase());
-  const found = exact ?? labelForCode(splitAccountLabel(wanted).code || wanted, books.labels);
+  // By name alone ("General Expenses"), when only one account has it.
+  const byName = books.labels.filter((label) => {
+    const at = label.lastIndexOf(" - ");
+    return at > 0 && label.slice(0, at).trim().toLowerCase() === wanted.toLowerCase();
+  });
+  const found =
+    exact ?? (byName.length === 1 ? byName[0] : undefined) ?? labelForCode(splitAccountLabel(wanted).code || wanted, books.labels);
   if (found === undefined || found === null) {
     throw new ToolError(`${where}: these books have no account "${wanted}". Use one from list_accounts.`);
   }

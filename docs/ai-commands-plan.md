@@ -1,166 +1,120 @@
-# Plan: asking for things in words (AI commands trial)
+# Plan: your own AI app, working with NZOSA
 
-Status: plan for review, 31 October 2026. Nothing built yet.
+Status: stage 1 built, 31 October 2026. Stages 2 and 3 not started.
 
 ## The idea
 
-A person types what they want — "show me unpaid invoices", "paid $230 incl
-GST for shuttle fuel on the 15th", "split this 50/50 between equipment and
-site fees" — and the app goes to the right page and fills in the form it
-already has. Nothing is saved until the person confirms it there, the same
-as if they had typed it themselves.
+People already have an AI app they like: Claude on their computer or phone,
+ChatGPT, Cursor. Rather than build a chat box into NZOSA with a model we pay
+for, NZOSA lets the app they already use look at their books and *suggest*
+changes. The person then uses or declines each suggestion in NZOSA, where it
+goes through the same checks as if they had typed it.
 
-The model only works out *what was asked* and *with which values*. Every
-figure that reaches the books — GST, totals, the two sides of an entry, the
-parts of a split — is worked out by the code that works it out today, and
-every check that runs today (locked periods, balancing, known accounts)
-runs on the draft before it is shown.
+So the AI does the reading and the thinking, in the app the person chose,
+on their own subscription. NZOSA keeps the books, the arithmetic and the
+final say.
 
-## What this trial is not
+An earlier draft of this plan put a chat box inside NZOSA, driven by Gemini.
+It was set aside: it would have been a second AI system beside the one the
+app has, cost NZOSA per request, and taken screen space the reports need.
 
-- Not a second AI system. It goes through the AI connection the app has:
-  the key in Supabase Vault for books online, the key file for books in a
-  folder, the same consent switch (`aiEnabled`), the same daily limit.
-  No `.env` key and no new localhost-only endpoint: those would work on one
-  machine and never in the live app.
-- Not a new panel taking a quarter of the screen. Reports are wide and the
-  phone menu was just made to slide out; a docked rail fights both.
-- Not a new approval card. The draft is the real form, filled in.
-- Nothing is posted by the model, ever.
+## The rules it keeps
 
-## Where it goes in the page
+1. **The AI never changes the books.** It suggests. The books change only
+   when a person presses Save or the tick in NZOSA.
+2. **NZOSA does the arithmetic.** GST, totals, the two sides of a journal,
+   the parts of a split: worked out and checked by NZOSA's own code, never
+   taken on trust from the model.
+3. **Real accounts only.** A suggestion naming an account the books do not
+   have is refused before it is kept.
+4. **Nothing in a locked period.** Refused before it is kept, and checked
+   again when it is used.
+5. **Suggestions are change sets.** Several made together are one set, and
+   the same set sent twice is kept once, so a retried call cannot suggest
+   everything twice. (Prosaic's public API does the same with what it calls
+   change-sets: agent-proposed writes, held pending until an admin approves
+   them. NZOSA goes one step further: each suggestion is decided in the
+   place it belongs, not in a separate approval list.)
+6. **The person can see who suggested it.** Every suggestion carries the
+   name the app gives itself ("Claude"), and the page says so.
 
-The search box at the top (`#menu-search`, Ctrl+K) already finds pages and
-reports. It becomes the place to type a request too: what matches a page or
-report is offered as now, and below the matches one more line — "Ask: <what
-was typed>" — sends it as a request. One box, one shortcut, nothing new to
-learn, and it works the same on a phone.
+## Stage 1 — books in a folder, through the MCP server (built)
 
-The answer shows as one line under the box ("Showing unpaid invoices",
-"Drafted in Quick entry — check it and press Save"), with the page behind
-already changed.
+The NZOSA books MCP server (`packages/mcp`) could already read: entities,
+transactions, what is uncoded, coding progress, daily balances. It now also:
 
-## The three requests in the trial
+- `list_accounts` — every account the books can code to, by the name NZOSA
+  uses. Read-only, always offered.
+- With `--suggest` (the "Let Claude suggest" setting in the Claude Desktop
+  extension, off unless turned on):
+  - `suggest_codes` — accounts for uncoded lines, up to 200 at a time.
+  - `suggest_split` — one line split between accounts; the parts must add
+    up to the line to the cent.
+  - `suggest_journal` — a manual journal; debits must equal credits.
+  - `show_in_app` — bring up a page in NZOSA, with its search filled in.
+  - `list_suggestions` — what is still waiting for the person.
 
-### A. Go somewhere and narrow it down
+Each is kept in `suggested.json` beside the books. Only the MCP server
+writes that file; the app only reads it, and keeps what it has done with
+each suggestion in the books' decisions (`suggestionsHandled`). One writer
+per file, so a suggestion cannot be lost to two programs saving at once.
 
-"Show me unpaid invoices", "lines from Z Energy last month", "what's still
-to code".
+In NZOSA, while it is open (it looks every few seconds, and on focus):
 
-- Pages: `showPage(page)` in `apps/web/src/app.ts`.
-- Reconcile already has what is needed: `#reconcile-search` and
-  `#reconcile-filter` (to confirm, suggested, AI suggested, nothing
-  suggested, coded, between entities, all). The request sets those two and
-  redraws.
-- Invoices and Bills have only a search box (`#invoice-search`). This needs
-  a small "Show: all / unpaid / overdue / paid" choice added to those pages
-  first — worth having on its own, by hand, before any AI uses it.
-- Dates ("last month") are turned into a range by our code from the words
-  the model returns (`"last-month"`, `"this-gst-period"`, a from/to pair),
-  not worked out by the model.
+- **Codes** go on their lines on Reconcile as suggestions — "AI suggestion
+  (Claude) · because …" — to tick or change, like any other. They are kept
+  with the morning run's suggestions, so a reload does not lose them.
+- **Splits and journals** wait on Actions required under "Suggested by
+  Claude", each with Open and Decline. Open puts the split in the split
+  editor on its line, or the journal in the journal editor, filled in; Save
+  is the person's.
+- **A page asked for** in the last two minutes is brought up; an older
+  request is let go.
 
-### B. A spend or a sale, drafted
+What a person does to set it up: install the NZOSA books extension in
+Claude Desktop (or add the server by hand), choose the books folder, and
+turn on "Let Claude suggest". Then, in Claude: "go through this month's
+uncoded lines and suggest codes", and open Reconcile.
 
-"Paid $230 incl GST for shuttle fuel on the 15th."
+Tested: the MCP tests (every refusal: coded line, locked line, unknown
+line or account, split out by cents, journal out of balance, retried set),
+the shared format in core, and end to end on a copy of the 28OctTest books
+— the real server suggesting, the app showing each suggestion in its place,
+a journal opened and saved, a split opened filled in.
 
-- Goes to Quick entry (`openQuickEntry("purchase")` in
-  `apps/web/src/daily/quick-entry.ts`) and fills one row: date, contact,
-  description, account, tax type, amount.
-- The model returns: amount as written, whether it said incl/excl GST,
-  date words, payee, what it was for, and an account **chosen from the
-  chart's own list** (see "Keeping it to real accounts").
-- Our code turns "the 15th" into a date (the 15th of this month, or last
-  month if that is still ahead), applies the GST rule the row already
-  applies, and checks the date is not in a locked period
-  (`apps/web/src/daily/lock-dates.ts`). A locked date is said on the row,
-  not quietly moved.
-- Receipts (a photo or PDF dropped on the box) are the second step, not the
-  first: `aiReadDocument` already reads a document and could fill the same
-  row, but it is a separate thing to get right.
+## Stage 2 — books online (not started; needs your approval)
 
-### C. Do something to the line in front of you
+Books kept online (Supabase) have no folder for the MCP server to read.
+They need the same tools offered from the server:
 
-On Reconcile, with a line selected: "split this 50/50 between equipment
-and site fees".
+- A `suggested` book part, written only by a new edge function.
+- A **remote MCP connector**: an edge function speaking MCP over HTTP,
+  signed in with the person's NZOSA account (OAuth), so Claude.ai, Claude
+  Desktop and Claude on a phone can add "NZOSA" as a connector with nothing
+  to install.
+- A **read-and-suggest token** for it: it can read the books and add
+  suggestions, and nothing else — the line Prosaic draws with its read-only
+  token that may write only change-sets.
+- Rate limits per book, and the person's members and roles respected (a
+  member who may only read gets read-only tools).
 
-- Reconcile has no "selected line" today. The trial adds one: the row a
-  person last clicked or tabbed into is marked as the current line (and
-  shown so). The request sends that line's id, amount, date and payee —
-  not the rest of the books. With no current line it says so and asks for
-  one to be clicked.
-- Opens the split editor already there (`splitEditor` in
-  `apps/web/src/split-ui.ts`, reached through `state.splitting`) with the
-  parts filled in.
-- The cents are divided by our code (`splitByShare` in
-  `packages/core/src/ir7.ts` already divides by percentages without losing
-  a cent), and `validateSplits` in `packages/core/src/splits.ts` must pass
-  before it is shown. The person confirms the split as now.
+This changes production Supabase (a new part, a function, sign-in for an
+outside app), so it waits for your go-ahead.
 
-## Keeping it to real accounts
+## Stage 3 — later
 
-The app already has a tool-calling conversation with Gemini
-(`aiConverse` in `apps/web/src/ai-backend.ts`, the `converse` action of
-`supabase/functions/gemini`). The trial uses it with one tool per request:
+- Copy and paste for any AI app: "Copy for your AI" on a page (the lines,
+  the account names, what to answer in), and "Paste the answer" read into
+  the same suggestions. No setup, nothing sent unless pasted.
+- Re-coding lines a rule has already coded, with the rule shown beside the
+  suggestion. Today only uncoded lines take one.
+- Suggested invoices and bills (drafts in the invoice editor).
 
-- `show_page { page, filter, search, period }` — `page` and `filter` are
-  enums of what exists.
-- `draft_entry { kind, date_words, payee, description, amount, gst, account }`
-  — `account` is an enum of this entity's chart codes, built when asked;
-  `gst` is `incl | excl | none`.
-- `split_selected { parts: [{ share, account }] }` — `account` the same enum.
+## Files
 
-The model cannot name an account the chart does not have, and anything it
-returns is checked again on our side regardless. A request it cannot fit to
-one of the three is answered "I can only do these three for now" with the
-three listed, not guessed at.
-
-## What is sent, and when
-
-Only when AI is switched on for these books, as for every other AI feature.
-Each request sends: the words typed, the page it was typed on, the chart's
-codes and names, and for C the one selected line. Not the ledger, not other
-lines, not contacts.
-
-The online demo and books kept in a browser have no tool-calling route
-today (`aiConverse` refuses there). For the trial they get the fallback
-below; whether the shared demo key should take these requests is a later
-question.
-
-## Without a key: the fallback
-
-A plain pattern reader for the three kinds of request ("show … invoices",
-"$N incl GST for … on the Nth", "split this N/M between … and …") that
-returns the same tool call the model would. It is what the tests use, so
-the page choreography is tested without a model, and what the demo uses.
-
-## Showing what was filled
-
-- A field filled by a request gets a short highlight (`.ai-filled`, about
-  1.5 s, in the warning colour already used) and keeps a small "Filled from
-  your request" note until it is saved or changed.
-- A row picked out by a request (the line being split) gets the same
-  highlight.
-- Nothing about "AI preview" or "draft pending" in the wording: it is the
-  form, filled in, waiting to be saved like any other.
-
-## Order of work
-
-1. Invoices and Bills: the "Show: unpaid / overdue / paid" choice, by hand.
-2. The search box offers "Ask: …" and shows the one-line answer.
-3. The fallback reader and request A, end to end, with tests.
-4. Request B into Quick entry, with the date, GST and lock checks.
-5. Request C into the split editor.
-6. The model route (tools with chart enums) behind the same three, and a
-   test that whatever it returns is checked as the fallback's is.
-7. Try it on 28OctTest and TestOnline; NZ parity before anything ships.
-
-Each step is usable on its own; 1 ships whether or not the rest does.
-
-## Questions for you
-
-- Is the search box the right home, or would you rather a separate "Ask"
-  button beside it?
-- Request B into Quick entry (a bill of one line) — or should a spend paid
-  from the bank go to Reconcile instead, matched to its bank line?
-- Should the demo's shared key take these requests, or stay on the
-  fallback?
+- `packages/core/src/suggested.ts` — the format, change-set ids, what is waiting.
+- `packages/mcp/src/suggest-tools.ts` — the tools and their checks.
+- `packages/mcp/src/sandbox.ts` — the one file the server may write.
+- `apps/web/server.js` — `GET /api/suggested`, read-only.
+- `apps/web/src/suggested-inbox.ts` — taking suggestions in, and the Actions section.
+- `tools/build-mcpb.mjs` — the Claude Desktop extension and its setting.

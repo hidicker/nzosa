@@ -1,12 +1,13 @@
-import { existsSync, readdirSync, readFileSync, realpathSync, statSync } from "node:fs";
+import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join, sep } from "node:path";
 
 /**
  * The one door to the disk.
  *
- * The server is read-only because nothing here opens a file for writing, and it
- * is confined to one folder because nothing here opens a file except through
- * this. A tool never sees a path: it asks for one of a short list of file names
+ * The books are read-only because nothing here opens a book file for writing
+ * -- the one file written is the suggestions file beside them -- and the
+ * server is confined to one folder because nothing here opens a file except
+ * through this. A tool never sees a path: it asks for one of a short list of file names
  * and gets its text back or nothing.
  *
  * Resolved through the real path, so a link inside the books that points
@@ -22,6 +23,13 @@ export const BOOK_FILES = [
 ] as const;
 
 export type BookFile = (typeof BOOK_FILES)[number];
+
+/**
+ * The one file this server may write, and only when started with --suggest:
+ * what the person's AI app suggests, kept beside the books and never in them.
+ * The app reads it and takes a suggestion only when somebody uses it there.
+ */
+export const SUGGESTED_FILE = "suggested.json";
 
 export class Sandbox {
   readonly root: string;
@@ -45,6 +53,32 @@ export class Sandbox {
       throw new Error(`${name} resolves outside the books folder and was not read.`);
     }
     return readFileSync(real, "utf8");
+  }
+
+  /** The suggestions file's text, or undefined when there is none yet. */
+  readSuggested(): string | undefined {
+    const path = this.inside(SUGGESTED_FILE);
+    return existsSync(path) ? readFileSync(path, "utf8") : undefined;
+  }
+
+  /**
+   * Replace the suggestions file, whole: written beside it and renamed over
+   * it, so the app never reads half of one.
+   */
+  writeSuggested(text: string): void {
+    const path = this.inside(SUGGESTED_FILE);
+    const writing = `${path}.writing`;
+    writeFileSync(writing, text, { mode: 0o600 });
+    renameSync(writing, path);
+  }
+
+  /** A path in the books folder, refused where a link would take it out. */
+  private inside(name: string): string {
+    const path = join(this.root, name);
+    if (existsSync(path) && !realpathSync(path).startsWith(this.root + sep)) {
+      throw new Error(`${name} resolves outside the books folder and was not used.`);
+    }
+    return path;
   }
 
   /** When any book file last changed, so a cache knows to let go. */

@@ -664,6 +664,19 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
         return;
       }
 
+      // What the person's AI app suggested, through nzosa-mcp --suggest (see
+      // packages/mcp). Read here, never written: only the MCP server writes it.
+      if (path === "/api/suggested" && request.method === "GET") {
+        let held = {};
+        try {
+          held = JSON.parse(readFileSync(join(folderOf(current), "suggested.json"), "utf8"));
+        } catch {
+          held = {};
+        }
+        send(response, 200, held);
+        return;
+      }
+
       if (path === "/api/nightly" && request.method === "GET") {
         send(response, 200, readNightly(folderOf(current)));
         return;

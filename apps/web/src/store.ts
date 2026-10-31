@@ -1,5 +1,5 @@
 import { applyPartOps, copySize, entityId, partChanges, partCopy, writeQueue } from "@nzosa/core";
-import type { Attachment, CreditAllocation, JobsHeld, LockedChange, PartCopy, PartOp, Wording, WordingKind } from "@nzosa/core";
+import type { Attachment, CreditAllocation, JobsHeld, LockedChange, PartCopy, PartOp, SuggestionDone, Wording, WordingKind } from "@nzosa/core";
 import type {
   AuPayroll,
   Item,
@@ -454,6 +454,8 @@ export interface StoredLedger {
   gstKeptFrom?: string;
   /** Actions required, put off until a day: item to the day it comes back. */
   snoozed?: Record<string, string>;
+  /** What was done with each suggestion from the person's own AI app, by suggestion key. */
+  suggestionsHandled?: Record<string, SuggestionDone>;
   /** Unmatched lines in external reference exports (e.g. Xero) dismissed with a reason. Key is line key -> { reason, at }. */
   ignoredReference?: Record<string, { reason: string; at: string }>;
   /** What these books are, for the briefing that goes with every question. */
@@ -950,6 +952,7 @@ function decisionsOf(ledger: StoredLedger): Record<string, unknown> {
     ...(ledger.nightly ? { nightly: true } : {}),
     ...(ledger.dailyBalances ? { dailyBalances: ledger.dailyBalances } : {}),
     ...(ledger.snoozed ? { snoozed: ledger.snoozed } : {}),
+    ...(ledger.suggestionsHandled ? { suggestionsHandled: ledger.suggestionsHandled } : {}),
     ...(ledger.ignoredReference ? { ignoredReference: ledger.ignoredReference } : {}),
     ...(ledger.beforeStart ? { beforeStart: ledger.beforeStart } : {}),
     ...(ledger.lockDates ? { lockDates: ledger.lockDates } : {}),
@@ -1682,6 +1685,21 @@ async function putCloudPart(part: string, data: unknown): Promise<boolean> {
 function cloudPart<T>(part: string): T | null {
   const held = cloudParts[part];
   return held === undefined ? null : (held.data as T);
+}
+
+/**
+ * What the person's own AI app has suggested, through the MCP server: a file
+ * beside books in a folder, which only that server writes. Books online and
+ * in the browser have none yet.
+ */
+export async function readSuggestedPart(): Promise<unknown | null> {
+  if (backend !== "folder") return null;
+  try {
+    const response = await api("suggested");
+    return response.ok ? ((await response.json()) as unknown) : null;
+  } catch {
+    return null;
+  }
 }
 
 /**

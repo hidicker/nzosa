@@ -16,6 +16,12 @@ export interface ToolContext {
   /** Entities the server was told it may show, or undefined for all of them. */
   allowed: ReadonlySet<string> | undefined;
   maxRows: number;
+  /** Started with --suggest: the suggest tools are offered, and may write the suggestions file. */
+  suggest?: boolean;
+  /** The client's name for itself, from initialize: who a suggestion came from. */
+  client?: string;
+  /** Now, as an ISO time; a test gives a fixed one. */
+  now?: () => string;
 }
 
 export interface Tool {
@@ -37,14 +43,14 @@ export function money(cents: Cents): string {
 
 const DATE = /^\d{4}-\d{2}-\d{2}$/;
 
-function text(args: Record<string, unknown>, key: string): string | undefined {
+export function text(args: Record<string, unknown>, key: string): string | undefined {
   const value = args[key];
   if (value === undefined || value === null || value === "") return undefined;
   if (typeof value !== "string") throw new ToolError(`${key} must be text.`);
   return value;
 }
 
-function date(args: Record<string, unknown>, key: string): string | undefined {
+export function date(args: Record<string, unknown>, key: string): string | undefined {
   const value = text(args, key);
   if (value === undefined) return undefined;
   if (!DATE.test(value)) throw new ToolError(`${key} must be a date as YYYY-MM-DD.`);
@@ -73,7 +79,7 @@ function amount(args: Record<string, unknown>, key: string): Cents | undefined {
 }
 
 /** The entities this server will show, in the books' own order. */
-function visibleEntities(books: Books, context: ToolContext) {
+export function visibleEntities(books: Books, context: ToolContext) {
   return books.entities.entities.filter((e) => context.allowed === undefined || context.allowed.has(e.id));
 }
 
@@ -83,7 +89,7 @@ function visibleEntities(books: Books, context: ToolContext) {
  * Required once there is more than one, because a figure that quietly mixes a
  * rental and a company is worse than a refusal.
  */
-function scope(books: Books, context: ToolContext, args: Record<string, unknown>): string | undefined {
+export function scope(books: Books, context: ToolContext, args: Record<string, unknown>): string | undefined {
   const visible = visibleEntities(books, context);
   const asked = text(args, "entity");
   if (asked !== undefined) {
@@ -104,7 +110,7 @@ function scope(books: Books, context: ToolContext, args: Record<string, unknown>
  * The entities a line belongs to: where its coding lands, and for a line not
  * yet coded, whoever its bank account serves.
  */
-function entitiesOfLine(books: Books, transaction: Transaction, code: string | null): readonly string[] {
+export function entitiesOfLine(books: Books, transaction: Transaction, code: string | null): readonly string[] {
   if (code !== null) {
     const key = splitAccountLabel(code).code;
     const owner = books.entities.accounts[key];
@@ -120,7 +126,7 @@ function belongs(books: Books, transaction: Transaction, code: string | null, en
   return ids.length === 0 ? books.entities.entities.length <= 1 : ids.includes(entity);
 }
 
-function row(books: Books, t: Transaction, code: string | null) {
+export function row(books: Books, t: Transaction, code: string | null) {
   return {
     id: t.id,
     date: t.date,

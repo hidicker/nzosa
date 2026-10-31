@@ -9,6 +9,7 @@ import type {
   Invoice,
   ReferenceLine,
   RuleSet,
+  SplitPart,
   Transaction,
 } from "@nzosa/core";
 import type { RulesArchive } from "./store.js";
@@ -93,6 +94,11 @@ export const state = {
    */
   reconcileFilter: "todo" as "todo" | "suggested" | "ai" | "nocode" | "coded" | "between" | "gstdiff" | "all",
   splitting: null as string | null,
+  /**
+   * A split suggested by the person's AI app, put in the split editor for
+   * that line instead of the parts it has, and told when it is saved.
+   */
+  splitSuggested: null as { id: string; parts: SplitPart[]; saved: () => void } | null,
   expanded: null as string | null,
   reference: [] as ReferenceLine[],
   chart: [] as Account[],

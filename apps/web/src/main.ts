@@ -3,6 +3,7 @@ import { applyNewBooksCountry } from "./new-books-country.js";
 import { wirePresentation } from "./presentation.js";
 import { afterPress, watchBusyButtons } from "./busy.js";
 import { INBOX_FRESH_HOURS, readMorning, restoreMorning } from "./nightly.js";
+import { watchForSuggestions } from "./suggested-inbox.js";
 import { redraw, registerPages, showPage } from "./app.js";
 import type { PageName } from "./app.js";
 import { applyModules } from "./modules.js";
@@ -399,6 +400,8 @@ async function init(): Promise<void> {
     // new lines into the books through the feed's own import, below.
     const morning = await readMorning();
     await restoreMorning(morning);
+    // And what the person's own AI app suggested, now and while this is open.
+    watchForSuggestions();
     const ranToday =
       morning.ran !== undefined && Date.now() - Date.parse(morning.ran.at) < INBOX_FRESH_HOURS * 3600 * 1000;
     if (ranToday && morning.ran !== undefined) {

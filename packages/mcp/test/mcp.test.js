@@ -84,7 +84,7 @@ test("the server lists its tools, and every one is read-only by name", () => {
   const names = answer.result.tools.map((t) => t.name);
   assert.deepEqual(names, [
     "list_entities", "search_transactions", "get_unreconciled_transactions",
-    "get_coding_progress", "check_daily_balances",
+    "get_coding_progress", "check_daily_balances", "list_accounts",
   ]);
   for (const name of names) assert.doesNotMatch(name, /^(set|write|post|delete|update|create)_/);
 });

@@ -34,6 +34,8 @@ import { booksLocale, moneyPlaces } from "../country.js";
 import { booksCountry, noSalesTax } from "../country.js";
 import { societyFiguresEntered } from "./society-report-page.js";
 import { taxYearEnd, taxYearEndSaid, taxYearOf } from "../tax-year.js";
+import { suggestionsSection, suggestionsToLookAt } from "../suggested-inbox.js";
+import { suggesterName } from "@nzosa/core";
 
 /**
  * Everything waiting to be done, in one list, each a click from where it is
@@ -113,6 +115,22 @@ function gstDue(now: IsoDate): { periodEnd: IsoDate; due: IsoDate }[] {
 export function actionItems(): ActionItem[] {
   const items: ActionItem[] = [];
   const now = today();
+
+  const suggested = suggestionsToLookAt();
+  if (suggested.length > 0) {
+    const names = [...new Set(suggested.map((one) => suggesterName(one.set.from)))].join(" and ");
+    items.push({
+      key: "suggested",
+      what: `Suggested by ${names}`,
+      count: suggested.length,
+      urgency: "amber",
+      detail: "Splits and journals to check and save, or decline. Nothing is in the books until you do.",
+      go: () => {
+        showPage("actions");
+        document.getElementById("suggested-inbox")?.scrollIntoView({ behavior: "smooth", block: "start" });
+      },
+    });
+  }
 
   if (state.feedProblem !== "") {
     items.push({
@@ -710,6 +728,8 @@ export function renderActions(): void {
       note("Red: the figures are wrong or a deadline has passed. Amber: work is waiting."),
     );
   }
+  const suggestedHere = suggestionsSection();
+  if (suggestedHere !== null) body.append(suggestedHere);
   if (resting.length > 0) {
     const fold = document.createElement("details");
     fold.className = "actions-snoozed";

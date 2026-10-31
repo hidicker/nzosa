@@ -639,6 +639,29 @@ interface JournalDraft {
  * a change of year -- does not throw away what has been typed.
  */
 let journalDraft: JournalDraft | null = null;
+/** Told when the journal on the page is saved: set when it came from a suggestion. */
+let journalSaved: (() => void) | null = null;
+
+/**
+ * Open the journal editor with a journal already written -- one the person's
+ * AI app suggested -- for them to check and save, or cancel. Amounts in cents.
+ */
+export function openJournalDraft(
+  given: { date: string; narration: string; lines: readonly { code: string; debit: number; credit: number; description?: string }[] },
+  saved: () => void,
+): void {
+  const decimal = (cents: number): string => (cents === 0 ? "" : (cents / 100).toFixed(2));
+  journalDraft = {
+    date: given.date,
+    narration: given.narration,
+    lines: given.lines.map((l) => ({ code: l.code, debit: decimal(l.debit), credit: decimal(l.credit), description: l.description ?? "", gst: "" })),
+  };
+  journalSaved = saved;
+  const select = document.querySelector<HTMLSelectElement>("#report-kind");
+  if (select) select.value = "manual";
+  showPage("reports", "top");
+  redraw("reports");
+}
 /** Whether the manual journals list shows only the adjusting entries. */
 let adjustingOnly = false;
 
@@ -761,10 +784,12 @@ function journalEditor(draft: JournalDraft): HTMLElement {
     const slip = dateLooksWrong(journal.date, new Date().toLocaleDateString("en-CA"));
     if (slip !== null && !(await askOnPage(`${slip}\n\nSave the journal with this date?`))) return;
     journalDraft = null;
+    const told = journalSaved;
+    journalSaved = null;
     void saveManualJournals(
       [...(state.ledger.manualJournals ?? []), journal],
       `Journal: ${journal.narration}`,
-    );
+    ).then(() => told?.());
   });
 
   const cancel = document.createElement("button");
@@ -772,6 +797,7 @@ function journalEditor(draft: JournalDraft): HTMLElement {
   cancel.textContent = "Cancel";
   cancel.addEventListener("click", () => {
     journalDraft = null;
+    journalSaved = null;
     redraw("reports");
   });
 

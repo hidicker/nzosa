@@ -37,7 +37,7 @@ Started either of those ways, your books are files in a folder you can back up a
 
 ## Ask an AI about your books (optional)
 
-`packages/mcp` is a small read-only [MCP](https://modelcontextprotocol.io) server. It lets an AI client on the same machine, such as Claude Desktop or Claude Code, search your transactions and check how much of your coding is done, without the books going anywhere except to the AI you chose to ask. It has no network listener, it opens no file for writing, and it can see the one folder you point it at.
+`packages/mcp` is a small [MCP](https://modelcontextprotocol.io) server. It lets an AI client on the same machine, such as Claude Desktop or Claude Code, search your transactions and check how much of your coding is done, without the books going anywhere except to the AI you chose to ask. It has no network listener, it never writes to the books, and it can see the one folder you point it at.
 
 ```bash
 npm install && npm run build
@@ -48,7 +48,11 @@ For Claude Desktop there is a one-file extension: run `npm run build:mcpb`, then
 
 Or, by hand, in Claude Desktop's config, add it as a server with that command and arguments. `--entities a,b` limits it to some of the entities in the books, and `--max-rows` caps how many rows one answer can hold.
 
-Be clear about what that means: whatever the AI asks for is sent to the company running it, including payee names and bank references. The tools return figures without free text wherever they can, and mark the text they do return as data. A model that runs on your own machine keeps all of it local. The tools today are `list_entities`, `search_transactions`, `get_unreconciled_transactions`, `get_coding_progress` and `check_daily_balances`; reports and journals are not in yet.
+Be clear about what that means: whatever the AI asks for is sent to the company running it, including payee names and bank references. The tools return figures without free text wherever they can, and mark the text they do return as data. A model that runs on your own machine keeps all of it local. The read-only tools are `list_entities`, `search_transactions`, `get_unreconciled_transactions`, `get_coding_progress`, `check_daily_balances` and `list_accounts`.
+
+### Let it suggest (optional)
+
+Started with `--suggest` (in the Claude Desktop extension, the "Let Claude suggest" setting), it can also suggest: `suggest_codes` for uncoded lines, `suggest_split`, `suggest_journal`, `show_in_app` to bring up a page in NZOSA where it is open, and `list_suggestions`. Each suggestion is checked against the books first (a real line, a real account, a split that adds up, a journal that balances, nothing in a locked period) and kept in `suggested.json` beside the books, never in them. NZOSA picks them up while it is open: codes show on Reconcile as suggestions to tick, and splits and journals wait under Actions required, opening in the split or journal editor filled in for you to save or decline. Nothing reaches the books until you do. Books kept online do not take suggestions yet.
 
 ## Documentation
 

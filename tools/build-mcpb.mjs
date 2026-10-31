@@ -25,7 +25,9 @@ for (const needed of [join(mcp, "dist", "server.js"), join(core, "dist", "index.
 }
 
 const version = JSON.parse(readFileSync(join(mcp, "package.json"), "utf8")).version;
-const tools = (await import(pathToUrl(join(mcp, "dist", "tools.js")))).TOOLS;
+const readOnly = (await import(pathToUrl(join(mcp, "dist", "tools.js")))).TOOLS;
+const { LIST_ACCOUNTS, SUGGEST_TOOLS } = await import(pathToUrl(join(mcp, "dist", "suggest-tools.js")));
+const tools = [...readOnly, LIST_ACCOUNTS, ...SUGGEST_TOOLS];
 
 function pathToUrl(path) {
   return new URL(`file:///${path.replace(/\\/g, "/")}`).href;
@@ -57,12 +59,13 @@ const manifest = {
   name: "nzosa",
   display_name: "NZOSA books",
   version,
-  description: "Ask Claude about your NZOSA books: search transactions, see what is uncoded, check bank balances. Read-only.",
+  description: "Ask Claude about your NZOSA books, and let it suggest codes, splits and journals for you to check in NZOSA.",
   long_description:
-    "A read-only view of a folder of NZOSA books, on your own computer. Claude can list your entities, search bank transactions, " +
+    "A view of a folder of NZOSA books, on your own computer. Claude can list your entities, search bank transactions, " +
     "list what is not yet coded, report coding progress and compare the bank's daily balances with your transactions. " +
-    "It cannot change anything. What Claude asks for is sent to Anthropic as part of your chat, including payee names, " +
-    "so choose the folder with that in mind.",
+    "It cannot change the books. With suggestions turned on it can also suggest codes, a split or a journal, and bring up a page in NZOSA: " +
+    "each waits in NZOSA, beside the books, until you use or decline it there. " +
+    "What Claude asks for is sent to Anthropic as part of your chat, including payee names, so choose the folder with that in mind.",
   author: { name: "hidicker", url: "https://nbparagliding.nz/nzosa/home/" },
   homepage: "https://nbparagliding.nz/nzosa/home/",
   license: "AGPL-3.0-or-later",
@@ -72,7 +75,7 @@ const manifest = {
     entry_point: "server/server.js",
     mcp_config: {
       command: "node",
-      args: ["${__dirname}/server/server.js", "--books", "${user_config.books_folder}"],
+      args: ["${__dirname}/server/server.js", "--books", "${user_config.books_folder}", "--suggest", "${user_config.allow_suggestions}"],
     },
   },
   tools: tools.map((t) => ({ name: t.name, description: t.description.split(". ")[0].replace(/\.$/, "") + "." })),
@@ -82,6 +85,15 @@ const manifest = {
       title: "NZOSA books folder",
       description: "The folder NZOSA keeps your books in (it holds transactions.json). Claude can read this folder and nothing else.",
       required: true,
+    },
+    allow_suggestions: {
+      type: "boolean",
+      title: "Let Claude suggest",
+      description:
+        "Claude may suggest codes, splits and journals, kept in a file beside the books until you use or decline each in NZOSA. " +
+        "Off, it only reads.",
+      default: false,
+      required: false,
     },
   },
   compatibility: { platforms: ["darwin", "win32", "linux"], runtimes: { node: ">=20.0.0" } },

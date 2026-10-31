@@ -643,8 +643,9 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
           // so" and "something guessed, this confidently, because".
           (fromModel.via === DIRECTORY_VIA
             ? `Known business · ${fromModel.because}`
-            : `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}, ` +
-              `${Math.round(fromModel.confidence * 100)}% sure · ${fromModel.because}`) +
+            : `AI suggestion${fromModel.via === undefined ? "" : ` (${fromModel.via})`}` +
+              (fromModel.confidence > 0 ? `, ${Math.round(fromModel.confidence * 100)}% sure` : "") +
+              ` · ${fromModel.because}`) +
           (fromModel.caution === undefined ? "" : ` · ${fromModel.caution}`) +
           (fromHistory === null || noSalesTax() ? "" : ` · GST ${fromHistory.why}`)
         : noSalesTax()
@@ -832,7 +833,8 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
   }
 
   if (state.splitting === one.transaction.id) {
-    const parts = (state.ledger.splits ?? {})[one.transaction.id] ?? [];
+    const suggested = state.splitSuggested?.id === one.transaction.id ? state.splitSuggested : null;
+    const parts = suggested?.parts ?? (state.ledger.splits ?? {})[one.transaction.id] ?? [];
     const editor = splitEditor({
       transaction: one.transaction,
       parts,
@@ -841,6 +843,7 @@ function renderLine(one: Suggestion, codes: readonly string[]): HTMLElement {
       onRemove: () => void saveSplit(one.transaction.id, null),
       onCancel: () => {
         state.splitting = null;
+        state.splitSuggested = null;
         redraw("reconcile");
       },
     });
@@ -855,7 +858,10 @@ async function saveSplit(id: string, parts: SplitPart[] | null): Promise<void> {
   if (parts === null) delete splits[id];
   else splits[id] = parts;
   state.ledger = { ...state.ledger, splits };
+  const suggested = state.splitSuggested?.id === id ? state.splitSuggested : null;
+  state.splitSuggested = null;
   state.persistent = await save(state.ledger);
+  if (parts !== null) suggested?.saved();
   state.splitting = null;
   redraw("reconcile");
 }

@@ -78,12 +78,14 @@ export function allAiSuggestions(): AiSuggestion[] {
  * these books still have. A line answered since, or an account since removed,
  * is not brought back to life by a note written before it.
  */
-export function restoreAiSuggestions(kept: readonly AiSuggestion[]): number {
+export function restoreAiSuggestions(kept: readonly AiSuggestion[], replace = false): number {
   const waiting = new Set(waitingForAnswers().map((one) => one.transaction.id));
   const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   let back = 0;
   for (const one of kept) {
-    if (!waiting.has(one.id) || found.has(one.id)) continue;
+    // Replacing: what the person asked their own AI app for wins over a
+    // guess nobody asked for.
+    if (!waiting.has(one.id) || (found.has(one.id) && !replace)) continue;
     const label = labelForCode(splitAccountLabel(one.code).code || one.code, labels);
     if (label === null) continue;
     found.set(one.id, { ...one, code: label });

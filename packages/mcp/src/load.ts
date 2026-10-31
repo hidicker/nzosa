@@ -1,9 +1,13 @@
-import { codingEngine } from "@nzosa/core";
+import { codingEngine, knownCodes } from "@nzosa/core";
 import type {
   Account,
   BalanceSection,
   CodingEngine,
   EntityModel,
+  LockDates,
+  Overrides,
+  RuleSet,
+  SuggestionDone,
   Transaction,
 } from "@nzosa/core";
 import { Sandbox } from "./sandbox.js";
@@ -22,6 +26,13 @@ export interface Books {
   chart: Account[];
   engine: CodingEngine | null;
   dailyBalances: BalanceSection[];
+  /** Every account a line can be coded to, as the books name them: "Motor Vehicle Expenses - 449". */
+  labels: string[];
+  /** Lines with a split already. */
+  split: ReadonlySet<string>;
+  locks: LockDates | undefined;
+  /** What the app has done with each suggestion, by suggestion key. */
+  suggestionsDone: Record<string, SuggestionDone>;
 }
 
 type Rules = NonNullable<Parameters<typeof codingEngine>[0]["rules"]>;
@@ -74,6 +85,10 @@ export class BookShelf {
       chart,
       engine,
       dailyBalances: asArray<BalanceSection>(decisions["dailyBalances"]),
+      labels: knownCodes(rules as RuleSet | undefined, (decisions["overrides"] ?? {}) as Overrides, chart),
+      split: new Set(Object.keys((decisions["splits"] ?? {}) as Record<string, unknown>)),
+      locks: decisions["lockDates"] as LockDates | undefined,
+      suggestionsDone: (decisions["suggestionsHandled"] ?? {}) as Record<string, SuggestionDone>,
     };
   }
 }

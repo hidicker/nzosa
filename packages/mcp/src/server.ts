@@ -4,7 +4,11 @@ import { serve } from "./protocol.js";
 import { Sandbox } from "./sandbox.js";
 
 /**
- *   nzosa-mcp --books <folder> [--entities a,b] [--max-rows 200]
+ *   nzosa-mcp --books <folder> [--entities a,b] [--max-rows 200] [--suggest]
+ *
+ * With --suggest it may also suggest codes, splits and journals, kept in a
+ * file beside the books until somebody uses them in NZOSA. Without it, it
+ * writes nothing at all.
  *
  * Started by the client (Claude Desktop, Claude Code) as a child process. It
  * can see the one folder it is given, and nothing else.
@@ -28,6 +32,8 @@ try {
     shelf,
     allowed: entities === undefined ? undefined : new Set(entities.split(",").map((e) => e.trim())),
     maxRows: Number.isInteger(rows) && rows > 0 ? rows : 200,
+    // "--suggest", or "--suggest true|false" as Claude Desktop's extension passes its setting.
+    suggest: process.argv.includes("--suggest") && option("suggest") !== "false",
   });
 } catch (error) {
   process.stderr.write(`${(error as Error).message}\n`);

@@ -291,3 +291,22 @@ test("over standard input and output it answers a client the way the protocol sa
   assert.match(lines[0].result.instructions, /read-only/);
   assert.equal(JSON.parse(lines[1].result.content[0].text).entities.length, 2);
 });
+
+test("a folder holding several sets of books still starts, and says why it cannot answer", async () => {
+  const { folder } = books();
+  const above = join(folder, "..");
+  mkdirSync(join(above, "second"));
+  writeFileSync(join(above, "second", "transactions.json"), JSON.stringify({ version: 1, data: [] }));
+  const server = fileURLToPath(new URL("../dist/server.js", import.meta.url));
+  const child = spawn(process.execPath, [server, "--books", above], { stdio: ["pipe", "pipe", "pipe"] });
+  let out = "";
+  child.stdout.on("data", (chunk) => (out += chunk));
+  child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: 1, method: "initialize", params: { protocolVersion: "2025-06-18", capabilities: {}, clientInfo: { name: "t" } } })}\n`);
+  child.stdin.write(`${JSON.stringify({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "list_entities", arguments: {} } })}\n`);
+  child.stdin.end();
+  await new Promise((done) => child.on("close", done));
+  const [hello, answer] = out.trim().split("\n").map((line) => JSON.parse(line));
+  assert.equal(hello.result.serverInfo.name, "nzosa-mcp");
+  assert.equal(answer.result.isError, true);
+  assert.match(answer.result.content[0].text, /holds 2 sets of books.*Change the books folder/);
+});

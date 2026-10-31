@@ -2,6 +2,7 @@
 import { BookShelf } from "./load.js";
 import { serve } from "./protocol.js";
 import { Sandbox } from "./sandbox.js";
+import { ToolError } from "./tools.js";
 
 /**
  *   nzosa-mcp --books <folder> [--entities a,b] [--max-rows 200] [--suggest]
@@ -24,8 +25,30 @@ if (folder === undefined) {
   process.exit(2);
 }
 
+/**
+ * Books that could not be opened -- a folder holding several sets, or none --
+ * still start the server, and every question is answered with why. Stopping
+ * instead showed in Claude Desktop as a server that disconnected for no
+ * reason: the reason went to a log nobody reads.
+ */
+function unreadable(why: string): BookShelf {
+  const refuse = (): never => {
+    throw new ToolError(`${why} Change the books folder in the extension's settings.`);
+  };
+  return { get: refuse, get sandbox() { return refuse(); } } as unknown as BookShelf;
+}
+
+function shelfFor(chosen: string): BookShelf {
+  try {
+    return new BookShelf(new Sandbox(chosen));
+  } catch (error) {
+    process.stderr.write(`${(error as Error).message}\n`);
+    return unreadable((error as Error).message);
+  }
+}
+
 try {
-  const shelf = new BookShelf(new Sandbox(folder));
+  const shelf = shelfFor(folder);
   const entities = option("entities");
   const rows = Number(option("max-rows") ?? 200);
   await serve(process.stdin, process.stdout, {

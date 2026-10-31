@@ -1,6 +1,6 @@
 # Plan: your own AI app, working with NZOSA
 
-Status: stage 1 built, 31 October 2026. Stages 2 and 3 not started.
+Status: stages 1 and 2 built, 31 October 2026. Stage 3 not started.
 
 ## The idea
 
@@ -82,24 +82,35 @@ the shared format in core, and end to end on a copy of the 28OctTest books
 — the real server suggesting, the app showing each suggestion in its place,
 a journal opened and saved, a split opened filled in.
 
-## Stage 2 — books online (not started; needs your approval)
+## Stage 2 — books online, through a connector (built)
 
-Books kept online (Supabase) have no folder for the MCP server to read.
-They need the same tools offered from the server:
+Books kept online have no folder for the MCP server to read, so the same
+tools are offered from the server, as a **remote connector**: Claude (web,
+desktop, phone), ChatGPT and any app that takes a remote MCP server with
+sign-in can connect with nothing to install.
 
-- A `suggested` book part, written only by a new edge function.
-- A **remote MCP connector**: an edge function speaking MCP over HTTP,
-  signed in with the person's NZOSA account (OAuth), so Claude.ai, Claude
-  Desktop and Claude on a phone can add "NZOSA" as a connector with nothing
-  to install.
-- A **read-and-suggest token** for it: it can read the books and add
-  suggestions, and nothing else — the line Prosaic draws with its read-only
-  token that may write only change-sets.
-- Rate limits per book, and the person's members and roles respected (a
-  member who may only read gets read-only tools).
-
-This changes production Supabase (a new part, a function, sign-in for an
-outside app), so it waits for your go-ahead.
+- **The address**, one per set of books, is on the AI page:
+  `https://<project>.supabase.co/functions/v1/mcp/<book id>`.
+- **Sign-in** is Supabase's OAuth 2.1 server, with dynamic registration (how
+  Claude and ChatGPT register themselves). The app connecting is sent to
+  NZOSA's own consent screen (`/nzosa/oauth/consent`, answered by
+  `connect-consent.ts`): the person signs in if need be, sees what the app
+  may and may not do, and allows or denies.
+- **The connector** (`supabase/functions/mcp`) checks the token with Auth,
+  checks the person is a member of those books (and not past their access
+  date), loads the parts, and answers with the very same tools as stage 1
+  (`packages/mcp`, bundled in). A read-only member gets the read tools only.
+  What is suggested is added to the part `suggested` by `suggested_add`,
+  under the row's lock, so two chats suggesting at once both land.
+- **What an outside app's token cannot do.** Such a token is a sign-in for
+  the person, and would otherwise reach everything the app can. It carries
+  the app's `client_id`, so every database request through the API that
+  comes with one is refused (PostgREST's pre-request hook,
+  `refuse_outside_apps`), and membership is never granted to one
+  (`is_member`, `has_role`). The connector is the only way in: read, and
+  suggest. Migration `20261031120000_outside_apps.sql`.
+- **In NZOSA**, the page reads `suggested` every 30 seconds and on focus,
+  and suggestions land as in stage 1.
 
 ## Stage 3 — later
 
@@ -118,3 +129,8 @@ outside app), so it waits for your go-ahead.
 - `apps/web/server.js` — `GET /api/suggested`, read-only.
 - `apps/web/src/suggested-inbox.ts` — taking suggestions in, and the Actions section.
 - `tools/build-mcpb.mjs` — the Claude Desktop extension and its setting.
+- `packages/mcp/src/source.ts`, `hosted.ts` — books read from a folder or handed over by the server.
+- `supabase/functions/mcp/index.ts` — the connector; `tools/build-mcp-function.mjs` bundles the tools into it.
+- `supabase/migrations/20261031120000_outside_apps.sql` — the `suggested` part, `suggested_add`, and the guard.
+- `apps/web/src/connect-consent.ts`, `public/oauth/consent/` — the consent screen.
+- `apps/web/src/daily/own-ai-panel.ts` — the AI page section, for both kinds of books.

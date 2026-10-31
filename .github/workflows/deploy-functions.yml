@@ -12,7 +12,7 @@ on:
       function:
         description: Which function to deploy
         type: choice
-        options: [akahu, wise, gemini, gemini-demo, nightly, signup-alert, all]
+        options: [akahu, wise, gemini, gemini-demo, nightly, signup-alert, mcp, all]
         default: akahu
 
 concurrency:
@@ -35,6 +35,16 @@ jobs:
         with:
           node-version: 24
 
+      - run: npm ci
+
+      # The two functions that run the app's own code get it bundled into
+      # their folders first (built output, not kept in git).
+      - name: Bundle
+        run: |
+          npm run build -w @nzosa/core
+          node tools/build-nightly-function.mjs
+          node tools/build-mcp-function.mjs
+
       - name: Deploy
         env:
           SUPABASE_ACCESS_TOKEN: ${{ secrets.SUPABASE_ACCESS_TOKEN }}
@@ -44,11 +54,11 @@ jobs:
             echo "The SUPABASE_ACCESS_TOKEN secret is not set." >&2
             exit 1
           fi
-          if [ "$CHOSEN" = "all" ]; then names="akahu wise gemini gemini-demo nightly signup-alert"; else names="$CHOSEN"; fi
+          if [ "$CHOSEN" = "all" ]; then names="akahu wise gemini gemini-demo nightly signup-alert mcp"; else names="$CHOSEN"; fi
           for name in $names; do
             echo "Deploying $name"
             # The morning run and the sign-up alert are called by the database, which has no user to sign in as.
             flags=""
-            if [ "$name" = "nightly" ] || [ "$name" = "signup-alert" ]; then flags="--no-verify-jwt"; fi
+            if [ "$name" = "nightly" ] || [ "$name" = "signup-alert" ] || [ "$name" = "mcp" ]; then flags="--no-verify-jwt"; fi
             npx --yes supabase functions deploy "$name" $flags --use-api --project-ref "$PROJECT_REF"
           done

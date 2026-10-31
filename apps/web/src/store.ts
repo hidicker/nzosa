@@ -1689,10 +1689,16 @@ function cloudPart<T>(part: string): T | null {
 
 /**
  * What the person's own AI app has suggested, through the MCP server: a file
- * beside books in a folder, which only that server writes. Books online and
- * in the browser have none yet.
+ * beside books in a folder, which only that server writes; for books online,
+ * the part `suggested`, which only the connector writes. Books kept in the
+ * browser have none.
  */
 export async function readSuggestedPart(): Promise<unknown | null> {
+  if (backend === "cloud") {
+    const book = cloudBook;
+    if (book === null) return null;
+    return (await loadCloudPart(book.id, "suggested"))?.data ?? null;
+  }
   if (backend !== "folder") return null;
   try {
     const response = await api("suggested");

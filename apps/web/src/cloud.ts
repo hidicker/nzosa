@@ -779,3 +779,50 @@ export async function feedStatus(
     ? { connected: false, accounts: {}, settings: {} }
     : { connected: row.connected, accounts: row.accounts, settings: row.settings };
 }
+
+/** The connector's address for one set of books: what an outside AI app is given. */
+export function connectorUrl(bookId: string): string {
+  return `${CLOUD.url}/functions/v1/mcp/${bookId}`;
+}
+
+/** An outside app asking to connect, as Supabase's OAuth server describes it. */
+export interface ConnectRequest {
+  authorization_id?: string;
+  client?: { name?: string; client_name?: string; uri?: string };
+  scope?: string;
+  /** Set alone when this person already allowed this app. */
+  redirect_url?: string;
+}
+
+/** What an outside app is asking for, or null when the request is gone or not this person's. */
+export async function connectRequest(id: string): Promise<ConnectRequest | null> {
+  const token = await freshToken();
+  if (token === null) return null;
+  try {
+    const response = await fetch(`${CLOUD.url}/auth/v1/oauth/authorizations/${encodeURIComponent(id)}`, {
+      headers: { apikey: CLOUD.publishableKey, authorization: `Bearer ${token}` },
+    });
+    if (!response.ok) return null;
+    return (await response.json()) as ConnectRequest;
+  } catch {
+    return null;
+  }
+}
+
+/** Allow or refuse it. Returns where to send the browser back to the app, or null. */
+export async function answerConnectRequest(id: string, action: "approve" | "deny"): Promise<string | null> {
+  const token = await freshToken();
+  if (token === null) return null;
+  try {
+    const response = await fetch(`${CLOUD.url}/auth/v1/oauth/authorizations/${encodeURIComponent(id)}/consent`, {
+      method: "POST",
+      headers: { apikey: CLOUD.publishableKey, authorization: `Bearer ${token}`, "content-type": "application/json" },
+      body: JSON.stringify({ action }),
+    });
+    if (!response.ok) return null;
+    const answer = (await response.json()) as { redirect_url?: string };
+    return answer.redirect_url ?? null;
+  } catch {
+    return null;
+  }
+}

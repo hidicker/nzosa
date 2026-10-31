@@ -52,7 +52,9 @@ Be clear about what that means: whatever the AI asks for is sent to the company 
 
 ### Let it suggest (optional)
 
-Started with `--suggest` (in the Claude Desktop extension, the "Let Claude suggest" setting), it can also suggest: `suggest_codes` for uncoded lines, `suggest_split`, `suggest_journal`, `show_in_app` to bring up a page in NZOSA where it is open, and `list_suggestions`. Each suggestion is checked against the books first (a real line, a real account, a split that adds up, a journal that balances, nothing in a locked period) and kept in `suggested.json` beside the books, never in them. NZOSA picks them up while it is open: codes show on Reconcile as suggestions to tick, and splits and journals wait under Actions required, opening in the split or journal editor filled in for you to save or decline. Nothing reaches the books until you do. Books kept online do not take suggestions yet.
+Started with `--suggest` (in the Claude Desktop extension, the "Let Claude suggest" setting), it can also suggest: `suggest_codes` for uncoded lines, `suggest_split`, `suggest_journal`, `show_in_app` to bring up a page in NZOSA where it is open, and `list_suggestions`. Each suggestion is checked against the books first (a real line, a real account, a split that adds up, a journal that balances, nothing in a locked period) and kept in `suggested.json` beside the books, never in them. NZOSA picks them up while it is open: codes show on Reconcile as suggestions to tick, and splits and journals wait under Actions required, opening in the split or journal editor filled in for you to save or decline. Nothing reaches the books until you do.
+
+Books kept online connect the same way through a remote connector: the AI page shows each set of books' address, which Claude (web, desktop or phone), ChatGPT and other apps add as a custom connector, signing in to NZOSA and allowing it. The connector can read and suggest, nothing else; see [docs/ai-commands-plan.md](docs/ai-commands-plan.md).
 
 ## Documentation
 

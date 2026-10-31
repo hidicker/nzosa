@@ -80,6 +80,7 @@ golden/
 # Supabase CLI working files: which project this checkout is linked to.
 supabase/.temp/
 supabase/functions/nightly/run.js
+supabase/functions/mcp/tools.js
 
 packages/mcp/mcpb-stage/
 packages/mcp/*.mcpb

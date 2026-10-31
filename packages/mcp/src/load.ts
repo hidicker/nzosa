@@ -10,8 +10,7 @@ import type {
   SuggestionDone,
   Transaction,
 } from "@nzosa/core";
-import { Sandbox } from "./sandbox.js";
-import type { BookFile } from "./sandbox.js";
+import type { BookFile, BookSource } from "./source.js";
 
 /**
  * A folder of books, read once and kept until a file in it changes.
@@ -40,7 +39,7 @@ type Rules = NonNullable<Parameters<typeof codingEngine>[0]["rules"]>;
 export class BookShelf {
   private cached: { stamp: string; books: Books } | undefined;
 
-  constructor(readonly sandbox: Sandbox) {}
+  constructor(readonly sandbox: BookSource) {}
 
   get(): Books {
     const stamp = this.sandbox.stamp();

@@ -1,4 +1,5 @@
-import { backendKind, folderPaths } from "../store.js";
+import { backendKind, folderPaths, openCloudBookId } from "../store.js";
+import { connectorUrl } from "../cloud.js";
 import { note } from "../ui.js";
 
 /**
@@ -110,6 +111,37 @@ function forFolder(inner: HTMLElement): void {
   });
 }
 
+/** For books kept online: the connector address, for Claude, ChatGPT and others. */
+function forOnline(inner: HTMLElement, book: string): void {
+  const said = document.createElement("p");
+  said.className = "own-ai-said";
+  const address = connectorUrl(book);
+  const shown = document.createElement("p");
+  shown.append(code(address), " ", copyButton("Copy", () => address, said));
+  inner.append(
+    heading("The connector address for these books"),
+    shown,
+    said,
+    heading("Claude (on the web, the desktop app or a phone)"),
+    steps([
+      ["Open Settings, Connectors, and choose Add custom connector."],
+      ["Name it NZOSA, paste the address above, and add it."],
+      ["Choose Connect. Sign in to NZOSA when asked, and allow it."],
+      ["In a chat, turn the NZOSA connector on and ask: “Suggest codes for this month's uncoded lines.”"],
+    ]),
+    heading("ChatGPT and other apps"),
+    note(
+      "Any app that takes a remote MCP connector with sign-in can use the same address. In ChatGPT, adding your own " +
+        "connector needs developer mode, in its settings under connectors. The app asks you to sign in to NZOSA and allow it, as above.",
+    ),
+    note(
+      "Each set of books has its own address, and only people who are members of these books can connect to them. " +
+        "Somebody who may only read them gets an app that only reads.",
+    ),
+    whereItLands(),
+  );
+}
+
 export function ownAiPanel(): HTMLElement {
   const box = document.createElement("div");
   box.className = "ai-panel own-ai";
@@ -124,13 +156,8 @@ export function ownAiPanel(): HTMLElement {
   const kind = backendKind();
   if (kind === "folder") {
     forFolder(inner);
-  } else if (kind === "cloud") {
-    inner.append(
-      note(
-        "For books kept online, connecting Claude or ChatGPT is on its way. Until then, it works with books kept in a " +
-          "folder on your own computer.",
-      ),
-    );
+  } else if (kind === "cloud" && openCloudBookId() !== "") {
+    forOnline(inner, openCloudBookId());
   } else {
     inner.append(
       note("This needs NZOSA running on your own computer, with the books in a folder there, or books kept online."),

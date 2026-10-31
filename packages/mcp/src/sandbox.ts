@@ -1,5 +1,17 @@
 import { existsSync, readdirSync, readFileSync, realpathSync, renameSync, statSync, writeFileSync } from "node:fs";
 import { join, sep } from "node:path";
+import { BOOK_FILES } from "./source.js";
+import type { BookFile, BookSource } from "./source.js";
+
+export { BOOK_FILES };
+export type { BookFile };
+
+/**
+ * The one file this server may write, and only when started with --suggest:
+ * what the person's AI app suggests, kept beside the books and never in them.
+ * The app reads it and takes a suggestion only when somebody uses it there.
+ */
+export const SUGGESTED_FILE = "suggested.json";
 
 /**
  * The one door to the disk.
@@ -13,25 +25,7 @@ import { join, sep } from "node:path";
  * Resolved through the real path, so a link inside the books that points
  * elsewhere is refused as well as a name containing "..".
  */
-export const BOOK_FILES = [
-  "transactions.json",
-  "decisions.json",
-  "entities.json",
-  "chart.json",
-  "rules.json",
-  "ledger.json",
-] as const;
-
-export type BookFile = (typeof BOOK_FILES)[number];
-
-/**
- * The one file this server may write, and only when started with --suggest:
- * what the person's AI app suggests, kept beside the books and never in them.
- * The app reads it and takes a suggestion only when somebody uses it there.
- */
-export const SUGGESTED_FILE = "suggested.json";
-
-export class Sandbox {
+export class Sandbox implements BookSource {
   readonly root: string;
 
   constructor(folder: string) {

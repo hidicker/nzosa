@@ -175,3 +175,32 @@ test("show_in_app asks for a page, each time anew", () => {
   assert.equal(held(folder).sets[0].items[0].page, "reconcile");
   assert.match(call(ctx, "show_in_app", { page: "settings" }).error, /one of/);
 });
+
+test("books handed over by the server answer the same, and suggestions come back to be saved", async () => {
+  const { answerHosted } = await import("../dist/hosted.js");
+  const folder = books();
+  const part = (name) => JSON.parse(readFileSync(join(folder, name), "utf8")).data;
+  const parts = {
+    transactions: part("transactions.json"), decisions: part("decisions.json"), entities: part("entities.json"),
+    chart: part("chart.json"), rules: part("rules.json"),
+  };
+  const ask = (body, suggest = true) => answerHosted({ body, parts, name: "Online co", suggest, client: "Claude" });
+
+  const listed = ask({ jsonrpc: "2.0", id: 1, method: "tools/call", params: { name: "list_entities", arguments: {} } });
+  assert.equal(JSON.parse(listed.reply.result.content[0].text).books, "Online co");
+  assert.equal(listed.suggested, undefined);
+
+  const made = ask({ jsonrpc: "2.0", id: 2, method: "tools/call", params: { name: "suggest_codes", arguments: { lines: [{ transaction: "fuel", account: "449", because: "fuel" }] } } });
+  assert.equal(JSON.parse(made.reply.result.content[0].text).from, "Claude");
+  assert.equal(made.suggested.sets[0].from, "Claude");
+  assert.equal(made.suggested.sets[0].items[0].code, "Motor Vehicle Expenses - 449");
+
+  // Read-only in these books: no suggest tools.
+  const names = ask({ jsonrpc: "2.0", id: 3, method: "tools/list" }, false).reply.result.tools.map((t) => t.name);
+  assert.ok(!names.includes("suggest_codes"));
+
+  // A batch, with a notification in it that takes no answer.
+  const batch = ask([{ jsonrpc: "2.0", method: "notifications/initialized" }, { jsonrpc: "2.0", id: 4, method: "ping" }]);
+  assert.deepEqual(batch.reply, [{ jsonrpc: "2.0", id: 4, result: {} }]);
+  assert.equal(ask({ jsonrpc: "2.0", method: "notifications/initialized" }).reply, undefined);
+});

@@ -32,8 +32,14 @@ let heldText = "";
 /** A page asked for longer ago than this is not brought up: the moment has passed. */
 const SHOW_FRESH_MS = 2 * 60 * 1000;
 
-/** How often an open page looks for new suggestions. */
+/** How often an open page looks for new suggestions: often beside a folder, less often of the server. */
 const LOOK_EVERY_MS = 4000;
+const LOOK_ONLINE_EVERY_MS = 30_000;
+
+function looks(): boolean {
+  const kind = backendKind();
+  return kind === "folder" || kind === "cloud";
+}
 
 type Waiting = { key: string; set: SuggestedSet; item: SuggestedItem };
 
@@ -56,7 +62,7 @@ async function mark(marks: Record<string, SuggestionDone>): Promise<void> {
 
 /** Look for new suggestions, and put any found where they go. */
 export async function lookForSuggestions(): Promise<void> {
-  if (backendKind() !== "folder") return;
+  if (!looks()) return;
   const raw = await readSuggestedPart();
   if (raw === null) return;
   const text = JSON.stringify(raw);
@@ -118,11 +124,11 @@ function bringUp(page: string, search: string | undefined): void {
 
 /** Keep looking while the page is open and in front. */
 export function watchForSuggestions(): void {
-  if (backendKind() !== "folder") return;
+  if (!looks()) return;
   void lookForSuggestions();
   setInterval(() => {
     if (document.visibilityState === "visible") void lookForSuggestions();
-  }, LOOK_EVERY_MS);
+  }, backendKind() === "cloud" ? LOOK_ONLINE_EVERY_MS : LOOK_EVERY_MS);
   window.addEventListener("focus", () => void lookForSuggestions());
 }
 

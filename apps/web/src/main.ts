@@ -129,6 +129,7 @@ import {
   wireCodingReconciliation,
 } from "./migrate/coding-reconciliation.js";
 import { sessionFromUrl, signedIn } from "./cloud.js";
+import { connectInterrupts } from "./connect-consent.js";
 import { applyCountry, booksCountry } from "./country.js";
 import { reportsFromMenu, wireMenu } from "./menu.js";
 import { $, state } from "./state.js";
@@ -177,6 +178,9 @@ async function init(): Promise<void> {
   // before anything is loaded, or the books that open are this browser's own
   // copy and the person appears not to be signed in at all.
   await sessionFromUrl();
+
+  // An outside AI app asking to connect: answered on a screen of its own.
+  if (await connectInterrupts()) return;
 
   // Before the first load, because loading changes the state and the state is
   // what a page is drawn from. Every page at once: leaving one out does not

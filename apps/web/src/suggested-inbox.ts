@@ -1,4 +1,4 @@
-import { readSuggestedFile, suggesterName, suggestionsWaiting } from "@nzosa/core";
+import { readSuggestedFile, suggesterName, suggestionKey, suggestionsWaiting } from "@nzosa/core";
 import type { SuggestedFile, SuggestedItem, SuggestedSet, SuggestionDone } from "@nzosa/core";
 import { redraw, showPage } from "./app.js";
 import { restoreAiSuggestions } from "./ai.js";
@@ -76,15 +76,29 @@ async function takeIn(): Promise<void> {
   const waiting = suggestionsWaiting(held, done());
   const marks: Record<string, SuggestionDone> = {};
 
-  // Codes onto their lines. One for a line answered since is passed over.
+  // Codes onto their lines: the newest for each line, so a correction asked
+  // for in the chat replaces what was suggested before it. One passed over
+  // (its line answered, or held by an earlier fault) is tried again each
+  // time; only one used or declined is done with. Older ones for the same
+  // line are passed over for good.
   let coded = 0;
-  for (const { key, set, item } of waiting) {
-    if (item.kind !== "coding") continue;
+  const newest = new Map<string, { key: string; set: SuggestedSet; item: SuggestedItem & { kind: "coding" } }>();
+  for (const set of held.sets) {
+    set.items.forEach((item, index) => {
+      if (item.kind !== "coding") return;
+      const key = suggestionKey(set.id, index);
+      if (!newest.has(item.transaction)) newest.set(item.transaction, { key, set, item });
+      else if (done()[key] === undefined) marks[key] = "passed";
+    });
+  }
+  for (const { key, set, item } of newest.values()) {
+    const was = done()[key];
+    if (was === "used" || was === "declined") continue;
     const back = restoreAiSuggestions(
       [{ id: item.transaction, code: item.code, confidence: 0, because: item.because, via: suggesterName(set.from) }],
       true,
     );
-    marks[key] = back > 0 ? "used" : "passed";
+    if (back > 0 || was === undefined) marks[key] = back > 0 ? "used" : "passed";
     coded += back;
   }
   // Kept with the morning's, so a reload still shows them on their lines.

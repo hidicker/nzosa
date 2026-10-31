@@ -79,7 +79,12 @@ export function allAiSuggestions(): AiSuggestion[] {
  * is not brought back to life by a note written before it.
  */
 export function restoreAiSuggestions(kept: readonly AiSuggestion[], replace = false): number {
-  const waiting = new Set(waitingForAnswers().map((one) => one.transaction.id));
+  // Replacing, a line with a suggestion on it already is still waiting: what
+  // the person asked their own AI app for (or a correction they asked for)
+  // takes the place of the guess before it.
+  const waiting = new Set(
+    (replace ? allLines().filter(nothingHasAnswered) : waitingForAnswers()).map((one) => one.transaction.id),
+  );
   const labels = knownCodes(state.rules, state.ledger.overrides ?? {}, state.chart);
   let back = 0;
   for (const one of kept) {

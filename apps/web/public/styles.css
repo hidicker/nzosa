@@ -4819,3 +4819,11 @@ tr.row-found td { background: color-mix(in srgb, var(--accent) 18%, transparent)
 .suggested-list li { padding: 0.75rem 0; border-top: 1px solid var(--border); }
 .suggested-list li:first-child { border-top: none; padding-top: 0.25rem; }
 .suggested-because { color: var(--muted); font-size: 0.9em; margin: 0.15rem 0 0.5rem; }
+
+/* Use your own AI app, on the AI page. */
+.own-ai h4 { margin: 1rem 0 0.25rem; }
+.own-ai-steps { margin: 0.25rem 0 0.75rem; padding-left: 1.4rem; }
+.own-ai-steps li { margin: 0.3rem 0; }
+.own-ai-steps code { overflow-wrap: anywhere; }
+.own-ai-settings { overflow-x: auto; max-width: 100%; padding: 0.75rem; border: 1px solid var(--border); border-radius: var(--radius); background: var(--surface); font-size: 0.85em; white-space: pre; }
+.own-ai-said { color: var(--muted); font-size: 0.9em; min-height: 1.2em; margin: 0.25rem 0; }

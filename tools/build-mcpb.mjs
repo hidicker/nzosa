@@ -117,3 +117,10 @@ if (packed.status !== 0 || !existsSync(out)) {
   process.exit(1);
 }
 console.log(`Built ${out}`);
+
+// Beside the app, so the AI page can offer it for download.
+const appDist = join(root, "apps", "web", "dist");
+if (existsSync(appDist)) {
+  cpSync(out, join(appDist, "nzosa.mcpb"));
+  console.log(`Copied to ${join(appDist, "nzosa.mcpb")}`);
+}

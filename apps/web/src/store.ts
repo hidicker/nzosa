@@ -1764,6 +1764,8 @@ export async function writeNightlyPart(data: unknown): Promise<boolean> {
 
 interface FolderStatus {
   ledger?: string;
+  folder?: string;
+  mcpServer?: string | null;
   ledgers?: Array<{ id: string; name: string; transactions: number }>;
 }
 
@@ -1794,6 +1796,14 @@ export async function ledgers(): Promise<
 > {
   if (backend !== "folder") return [];
   return (await folderStatus())?.ledgers ?? [];
+}
+
+/** Where the open books are on this computer, and the MCP server that came with this copy. */
+export async function folderPaths(): Promise<{ books: string; mcpServer: string | null } | null> {
+  if (backend !== "folder") return null;
+  const status = await folderStatus();
+  if (status?.folder === undefined) return null;
+  return { books: status.folder, mcpServer: status.mcpServer ?? null };
 }
 
 /** Which ledger the folder is currently open on. */

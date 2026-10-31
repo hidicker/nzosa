@@ -658,6 +658,10 @@ export function startServer({ port, ledgerRoot, ledgerId }) {
           // folder of the same name that was deleted are not taken for its own.
           created: madeAt(folderOf(current)),
           folder: folderOf(current),
+          // For other AI apps' settings: the MCP server that came with this copy, where it was built.
+          mcpServer: existsSync(join(root, "..", "..", "packages", "mcp", "dist", "server.js"))
+            ? join(root, "..", "..", "packages", "mcp", "dist", "server.js")
+            : null,
           ledgers: listLedgers(ledgerRoot),
           parts: PARTS,
         });

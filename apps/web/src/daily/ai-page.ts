@@ -11,6 +11,7 @@ import { sayAiTrouble } from "./actions.js";
 import { aiAllowed } from "../ai-consent.js";
 import { aiKeyPanel, refreshAiStatus } from "../ai-key-panel.js";
 import { morningChoice } from "../nightly-ui.js";
+import { ownAiPanel } from "./own-ai-panel.js";
 import { emptyEntityModel } from "@nzosa/core";
 import { ANALYSES, analysisPrompt } from "./reports.js";
 import type { Entity } from "@nzosa/core";
@@ -63,6 +64,8 @@ export function renderAi(): void {
     carryPanel(),
     step("About the figures", "One-click analyses"),
     analysesPanel(),
+    step("Or", "Use your own AI app"),
+    ownAiPanel(),
   );
 
   if (aiRoute() === "none") {

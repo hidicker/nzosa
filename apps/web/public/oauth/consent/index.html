@@ -5,14 +5,9 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <meta name="robots" content="noindex">
 <title>Connect an AI app to NZOSA</title>
-<script>
-  // Supabase's OAuth server sends a person here to allow an AI app to
-  // connect. The app answers it (src/connect-consent.ts): pass the request on.
-  location.replace("../../" + location.search);
-</script>
 </head>
 <body>
 <p><a id="go" href="../../">Continue to NZOSA</a></p>
-<script>document.getElementById("go").href = "../../" + location.search;</script>
+<script src="go.js"></script>
 </body>
 </html>

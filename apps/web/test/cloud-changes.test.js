@@ -425,3 +425,49 @@ test("both made the same change to a line (the same suggestion accepted): no ref
   assert.equal(await store.save(memory.ledger), false);
   assert.equal(remote.parts.get("decisions").data.overrides.t5.code, "THEIRS");
 });
+
+test("saves made together go once, at the end, with the latest of each part", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, events, troubles } = await opened(remote);
+  const before = saves(remote).length;
+
+  let books = ledger;
+  let history = events;
+  await store.saveTogether(async () => {
+    for (let i = 0; i < 25; i++) {
+      books = { ...books, overrides: { ...books.overrides, [`t${i}`]: { code: "4000", confirmed: true } } };
+      history = [{ id: `n${i}`, kind: "coding", summary: `Coded t${i}`, before: null, after: { code: "4000" } }, ...history];
+      assert.equal(await store.save(books), true);
+      assert.equal(await store.saveEvents(history), true);
+    }
+    assert.equal(saves(remote).length, before, "nothing sent while the work runs");
+    assert.ok(store.savesPending() > 0, "leaving now is warned about");
+  });
+
+  assert.equal(saves(remote).length, before + 1, "one request");
+  assert.equal(store.savesPending(), 0);
+  assert.deepEqual(troubles, []);
+  assert.equal(remote.parts.get("decisions").data.overrides.t24.code, "4000");
+  assert.equal(remote.parts.get("decisions").version, 8);
+  assert.equal(remote.parts.get("events").data[0].id, "n24");
+  assert.equal(remote.parts.get("events").data.length, 2025);
+});
+
+test("saves made together that do not go are said once, and left unsaved", async () => {
+  const remote = server();
+  seeded(remote);
+  const { store, ledger, troubles } = await opened(remote);
+  const working = remote.fetch;
+  globalThis.fetch = async (url, init) =>
+    String(url).includes("/rpc/save_part") ? new Response("{}", { status: 500 }) : working(url, init);
+
+  await store.saveTogether(async () => {
+    await store.save({ ...ledger, overrides: { ...ledger.overrides, t1: { code: "1" } } });
+    await store.save({ ...ledger, overrides: { ...ledger.overrides, t1: { code: "2" } } });
+  });
+
+  assert.equal(troubles.length, 1);
+  assert.equal(store.hasUnsavedChanges(), true);
+  assert.equal(remote.parts.get("decisions").data.overrides.t1.code, "6100");
+});

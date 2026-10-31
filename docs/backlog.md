@@ -241,6 +241,10 @@ works).
   (1,168 bank lines, 1,508 journals, 135 invoices). Reading the files took
   about four minutes, and for most of it the page did not answer clicks or
   scroll: the reading, matching and posting all run on the page's own thread.
-  The figures came out right. Needs the work moved off that thread (a worker),
-  or broken into pieces with the page let back in between, and a progress line
-  that moves. 31 October 2026.
+  The figures came out right. 31 October 2026. Fixed the same day: the load
+  saved the books 187 times, and online each save was a trip to the server
+  the next step waited for; they now go as one save at the end ("Saving the
+  books…"). Pages not on screen are no longer redrawn after every file, and
+  the page gets a turn between files. On a copy of those books the page was
+  busy 4 s instead of 12, with the books saved identical. Still on the page's
+  thread: a single file can hold it for up to a second.

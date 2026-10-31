@@ -838,7 +838,7 @@ function oneAtATime<T>(work: () => Promise<T>): Promise<T> {
  * so leaving the page straight after has to be warned about while any is.
  */
 export function savesPending(): number {
-  return writes.pending();
+  return writes.pending() + (holdingSaves > 0 && waitingToSend.size > 0 ? 1 : 0);
 }
 
 /**
@@ -1291,19 +1291,67 @@ let sendQueued = false;
  * sends the later value, and both are answered with how it went.
  */
 function sendToCloud(part: string, value: unknown): Promise<SaveOutcome> {
+  if (holdingSaves > 0) {
+    // Answered now, and told later only if it did not go.
+    waitToSend(part, value, (outcome) => {
+      if (outcome.kind === "saved") {
+        markSaved(part);
+        return;
+      }
+      markUnsaved(part);
+      if (!heldTroubleTold) tellCloudTrouble(outcome);
+      heldTroubleTold = true;
+    });
+    return Promise.resolve({ kind: "saved", version: versions.get(part) ?? 0 });
+  }
   return new Promise((resolve) => {
-    const held = waitingToSend.get(part);
-    if (held === undefined) {
-      waitingToSend.set(part, { value, answer: [resolve] });
-    } else {
-      held.value = value;
-      held.answer.push(resolve);
-    }
-    if (!sendQueued) {
-      sendQueued = true;
-      void oneAtATime(sendWaiting);
-    }
+    waitToSend(part, value, resolve);
+    sendSoon();
   });
+}
+
+function waitToSend(part: string, value: unknown, answer: (outcome: SaveOutcome) => void): void {
+  const held = waitingToSend.get(part);
+  if (held === undefined) {
+    waitingToSend.set(part, { value, answer: [answer] });
+  } else {
+    held.value = value;
+    held.answer.push(answer);
+  }
+}
+
+function sendSoon(): void {
+  if (sendQueued) return;
+  sendQueued = true;
+  void oneAtATime(sendWaiting);
+}
+
+/** Saves of hosted books asked for while `saveTogether` runs, kept to go as one. */
+let holdingSaves = 0;
+let heldTroubleTold = false;
+
+/**
+ * Do some work, and send what it saves to hosted books once, at the end.
+ *
+ * Loading a full set of Xero files saves the books nearly two hundred times,
+ * once or more for each file, and online each save is a trip to the server
+ * the next step waited for: minutes, all told. Held, each part goes once with
+ * its latest value. A save that then fails is said once, as any other is, and
+ * leaving the page before it goes is warned about. Books in a folder or in
+ * this browser are written as before.
+ */
+export async function saveTogether<T>(work: () => Promise<T>): Promise<T> {
+  holdingSaves += 1;
+  try {
+    return await work();
+  } finally {
+    holdingSaves -= 1;
+    if (holdingSaves === 0 && waitingToSend.size > 0) {
+      heldTroubleTold = false;
+      sendSoon();
+      await oneAtATime(async () => undefined);
+    }
+  }
 }
 
 /** The changes are sent instead of the whole part when no more than this share of its size. */

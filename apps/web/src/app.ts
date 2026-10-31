@@ -101,7 +101,34 @@ function badgeSoon(): void {
   }, 0);
 }
 
+/**
+ * Pages drawn only while they show, by the section they draw into.
+ *
+ * Loading a set of Xero files redraws Reconcile, Reports, Invoices and the
+ * rest after every file, whichever page is in front. `showPage` draws each of
+ * these as it is shown, so one drawn while hidden would be drawn again before
+ * anybody saw it.
+ */
+const drawnWhenShown: Partial<Record<PageName, string>> = {
+  actions: "page-actions",
+  assets: "page-assets",
+  bills: "page-bills",
+  check: "page-check",
+  contacts: "page-contacts",
+  entities: "page-entities",
+  history: "page-history",
+  invoices: "page-invoices",
+  ird: "page-ird",
+  openingBalances: "page-opening",
+  reconcile: "page-reconcile",
+  reports: "page-reports",
+  rules: "page-rules",
+  variance: "page-gst",
+};
+
 export function redraw(page: PageName): void {
+  const section = drawnWhenShown[page];
+  if (section !== undefined && document.getElementById(section)?.hidden === true) return;
   pages[page]?.();
 }
 

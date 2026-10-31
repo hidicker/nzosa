@@ -11,7 +11,7 @@ import { loadOpeningDocuments } from "../daily/aged-report.js";
 import { setQuickBooksExportCompanions } from "./qbo-export-set.js";
 import { loadCheckFiles, settleInvoicesFromXero } from "../migrate/coding-reconciliation.js";
 import { $, state } from "../state.js";
-import { ledgerName, save, savePart } from "../store.js";
+import { ledgerName, save, savePart, saveTogether, savesPending } from "../store.js";
 import { askOnPage, tellOnPage } from "../ui.js";
 import { downloadBackupNow, restoreWithConfirm } from "../backup.js";
 import { readFiledReturns } from "../variance.js";
@@ -120,8 +120,15 @@ export async function loadWhatever(files: File[]): Promise<void> {
     show();
   };
   try {
-    files = await unzipped(files, say);
-    await loadEach(files, say, loading);
+    await saveTogether(async () => {
+      files = await unzipped(files, say);
+      await loadEach(files, say, loading);
+      // What loading saved goes to the books now, all at once.
+      if (savesPending() > 0) {
+        setLoading({ done: files.length, total: files.length, name: "", saving: true });
+        show();
+      }
+    });
   } finally {
     setLoading(null);
     show();
@@ -157,10 +164,28 @@ async function unzipped(files: File[], say: (line: string) => void): Promise<Fil
 }
 
 /** Where loading dropped files is up to: how many are in, of how many, and which now. */
+/**
+ * Let the page draw and answer what is waiting, then carry on. Not a timer:
+ * a tab in the background runs its timers once a minute at worst, which
+ * would hold a load there for as long.
+ */
+function giveThePageATurn(): Promise<void> {
+  return new Promise((resolve) => {
+    const channel = new MessageChannel();
+    channel.port1.onmessage = () => {
+      channel.port1.close();
+      resolve();
+    };
+    channel.port2.postMessage(null);
+  });
+}
+
 export interface LoadingFiles {
   done: number;
   total: number;
   name: string;
+  /** Read, and being saved. */
+  saving?: boolean;
 }
 
 let loadingNow: LoadingFiles | null = null;
@@ -193,7 +218,9 @@ export function loadingLine(now: LoadingFiles): HTMLElement {
   line.className = "files-loading";
   line.setAttribute("role", "status");
   line.textContent =
-    now.total === 1
+    now.saving === true
+      ? "Saving the books…"
+      : now.total === 1
       ? `Loading ${now.name}…`
       : `Loading ${Math.min(now.done + 1, now.total)} of ${now.total}${now.name !== "" ? `: ${now.name}` : ""}…`;
   return line;
@@ -312,6 +339,9 @@ async function loadEach(
   for (const { file, identified } of rest) {
     loading(done, file.name);
     done += 1;
+    // The page gets a turn between files: the line above shows, and a click
+    // or a scroll is answered rather than waiting for the whole set.
+    await giveThePageATurn();
     try {
       switch (identified.kind) {
         case "quickbooks-chart":

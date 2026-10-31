@@ -7,8 +7,8 @@ import { gstWithin } from "./reports.js";
 /**
  * A GST return as a report: the boxes, and the transactions behind them.
  *
- * Set out the way Xero presents a return and the command line prints one, so
- * a return here can be read beside one filed there without translating: the
+ * Set out as the command line prints one, so a return here can be read
+ * beside one filed from Xero without translating: the
  * boxes in order, then the transactions grouped by tax rate, expenses shown as
  * positive amounts under their own heading.
  */

@@ -35,7 +35,7 @@ export interface GstOptions {
   /** Restrict to transactions the rules coded to one of these. Needs rulesPath. */
   codes: string[];
   detail: boolean;
-  /** `plain` for the summary table, `xero` to mirror Xero's GST return layout. */
+  /** `plain` for the summary table, `xero` to be read beside a return filed from Xero. */
   format: "plain" | "xero";
   json: boolean;
 }
@@ -77,7 +77,7 @@ export function runGst(options: GstOptions): number {
   return 0;
 }
 /**
- * The return laid out the way Xero presents it.
+ * The return laid out to be read beside one filed from Xero.
  *
  * Same box order, same wording, and the same two parts: the return itself and
  * the transactions behind it grouped by tax rate. The point is that it can be
@@ -113,8 +113,8 @@ function writeXeroReturn(result: GstReturnResult, options: GstOptions): void {
   row("Box 14", "Total GST credit", b.box14);
   row("Box 15", b.outcome === "refund" ? "GST refund" : "GST to pay", b.box15);
 
-  // Grouped by tax rate, the way Xero groups them, so the two can be read
-  // side by side without translating between layouts.
+  // Grouped by tax rate, so it reads side by side with a return filed from
+  // Xero without translating between layouts.
   const groups = new Map<string, GstReturnResult["lines"]>();
   const rateOf = (line: GstReturnResult["lines"][number]): string => {
     if (line.classification.side === "imports") return "GST on Imports";

@@ -93,7 +93,7 @@ GST options:
   --codes <codes>     Comma-separated codes to include (needs --rules).
                       Use when income for an entity is banked elsewhere.
   --detail            List the transactions behind each box
-  --format <f>        plain (summary table) or xero (mirrors Xero's GST return)
+  --format <f>        plain (summary table) or xero (to read beside a Xero return)
 
 Variance options:
   --import <path>     GST return workbook (.xlsx) to load. Repeatable.

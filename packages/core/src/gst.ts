@@ -416,8 +416,8 @@ export function gstReturn(
     // leaving Box 5 as the raw total broke that by a few cents -- a real
     // period read Box 5 7,467.09 and Box 7 7,466.95 with nothing zero-rated --
     // which is a return whose own boxes do not add up, and the first thing an
-    // accountant checks. Xero works Box 5 back the same way, which is what its
-    // filed returns show.
+    // accountant checks. Returns filed from Xero work Box 5 back the same way,
+    // so these agree with them.
     box7 = grossFromTax(box8);
     box5 = box7 + box6;
   }

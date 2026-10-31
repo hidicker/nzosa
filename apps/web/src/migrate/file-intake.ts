@@ -348,7 +348,7 @@ async function loadEach(
           await loadCheckFiles([file]);
           break;
         case "quickbooks-ledger": {
-          // The coding it holds goes the way Xero's does, and its bank and card
+          // The coding it holds is checked like any imported coding, and its bank and card
           // postings come in as bank lines: with no bank feed they are all
           // there is, and with one the duplicates are found as usual.
           await loadCheckFiles([file]);

@@ -123,8 +123,8 @@ strong { font-weight: 650; }
 <h2 id="5-deploy-the-edge-functions">5. Deploy the Edge Functions</h2>
 <p>Four functions, in <code>supabase/functions/</code>. With the CLI (Docker is not needed with <code>--use-api</code>):</p>
 <pre><code>npx supabase functions deploy akahu --use-api --project-ref &lt;your-ref&gt;</code></pre>
-<pre><code>npx supabase functions deploy wise --use-api --project-ref &lt;your-ref&gt;</code></pre>
-<pre><code>npx supabase functions deploy stripe --use-api --project-ref &lt;your-ref&gt;</code></pre>
+<pre><code>npx supabase functions deploy wise --use-api --project-ref &lt;your-ref&gt;
+npx supabase functions deploy stripe --use-api --project-ref &lt;your-ref&gt;</code></pre>
 <pre><code>npx supabase functions deploy gemini --use-api --project-ref &lt;your-ref&gt;</code></pre>
 <pre><code>npx supabase functions deploy gemini-demo --use-api --project-ref &lt;your-ref&gt;</code></pre>
 <p><code>SUPABASE_URL</code> and <code>SUPABASE_SERVICE_ROLE_KEY</code> are given to every function by Supabase itself — you set nothing for them.</p>

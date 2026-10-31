@@ -79,8 +79,7 @@ works).
   QuickBooks" lesson to offer.
 - **US income tax** stops at the single filer with the standard deduction: no
   QBI deduction, credits, other filing statuses or state tax.
-- **Form 941/940, W-2 and sales tax payable reports** exist in QuickBooks and
-  SlowBooks Pro; none here.
+- **Form 941/940, W-2 and sales tax payable reports**: none yet.
 
 ## The app
 
@@ -207,17 +206,17 @@ works).
   coded, the rest as journals. MYOB's sales and purchases exports (open
   invoices and bills, with due dates), its cards (customers and suppliers) and
   items are not read, so invoices and bills arrive as journals rather than as
-  documents to be paid. Its export formats were taken from MYOB's help pages;
+  documents to be paid. The reader follows MYOB's published export layouts;
   no real MYOB file has been tried yet. 26 October 2026.
-- **Sage 50, Wave, Zoho Books and the Transaction Pro bank sheet.** Item 40 of
-  the SlowBooks comparison. GnuCash is read (`packages/core/src/gnucash.ts`:
+- **Imports from Sage 50, Wave, Zoho Books and the Transaction Pro bank
+  sheet.** GnuCash is read (`packages/core/src/gnucash.ts`:
   the account tree and the transactions CSV, both layouts). The other four
   export formats vary by version and country and none was in hand to build
   against; each needs a real export (with invented figures) to write its
   reader and test it. Like MYOB, no real GnuCash file has been tried yet.
   27 October 2026.
-- **Foreign currencies: what the first version leaves out.** Item 38 of the
-  SlowBooks comparison (`packages/core/src/fx.ts`, Currencies page). Documents
+- **Foreign currencies: what the first version leaves out.**
+  (`packages/core/src/fx.ts`, Currencies page.) Documents
   and bank lines in another currency count at their dates' rates, payments
   realise the exchange difference, conversions between own accounts post the
   spread, and foreign bank accounts are revalued at each balance date. Not
@@ -227,7 +226,7 @@ works).
   the books' currency only; with several entities the exchange accounts are
   one pair for all; and Reconcile shows a foreign line in its own currency
   with no converted figure beside it. 27 October 2026.
-- **Card payments with Stripe: what the first version leaves out.** Item 39
+- **Card payments with Stripe: what the first version leaves out.**
   (`supabase/functions/stripe`, `apps/web/src/daily/stripe-ui.ts`). Books kept
   online only: books in a folder or the browser have nowhere safe for the key
   (a folder version could keep it beside the ledgers, as Wise's desktop token

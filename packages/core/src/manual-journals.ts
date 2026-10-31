@@ -130,9 +130,9 @@ export function splitManualGst(amount: Cents): { net: Cents; tax: Cents } {
 /**
  * The GST lines of manual journals dated in a period, for the GST return.
  *
- * As Xero does with "Show journal on cash basis reports" ticked, its default:
- * a journal has no payment to wait for, so a line given GST is on the return
- * for the period of the journal's date, whichever basis the return is on. GST
+ * A journal has no payment to wait for, so a line given GST is on the return
+ * for the period of the journal's date, whichever basis the return is on --
+ * which also keeps these returns in agreement with ones filed from Xero. GST
  * on expenses is a purchase (a credit, a refund, reduces them); GST on income
  * is a sale. `include` says which lines belong to the return being worked:
  * the entity chosen, and one registered for GST.

@@ -3442,8 +3442,8 @@ function parseTreatment(text: string): unknown | null {
   if (value === "imports") return { treatment: "standard", side: "imports" };
   // A chart written before partial deduction was removed may still say
   // "standard 50%". The treatment is kept and the percentage dropped: a part
-  // deduction is expressed by splitting the line, as Xero does it, so there is
-  // nothing here for a percentage to mean.
+  // deduction is expressed by splitting the line, so there is nothing here
+  // for a percentage to mean.
   const percent = /^(\S+)\s+\d{1,3}%$/.exec(value);
   if (percent?.[1]) return percent[1];
   return value;

@@ -228,7 +228,7 @@ export function combobox(
       return;
     }
     if (key === "Enter" || key === "Tab") {
-      // Tab takes the highlighted account too, as in Xero, and then moves on.
+      // Tab takes the highlighted account too, and then moves on.
       const match = list.hidden ? undefined : typedChoice(matches, true);
       if (match !== undefined) {
         if (key === "Enter") event.preventDefault();

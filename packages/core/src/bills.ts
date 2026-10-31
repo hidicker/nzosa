@@ -12,8 +12,8 @@ import type { PostedJournal, PostedLine } from "./posting.js";
 /**
  * Bills: what is owed to suppliers, and when it falls due.
  *
- * A bill is an invoice somebody else raised, held the way Xero holds one. It
- * is a draft until it is approved, and approving it is what puts it in the
+ * A bill is an invoice somebody else raised. It is a draft until it is
+ * approved, and approving it is what puts it in the
  * books: the cost and the GST on the bill date, the whole amount owing in
  * Accounts Payable. Paying it moves that balance to the bank and touches the
  * cost not at all.
@@ -116,7 +116,7 @@ function emptyBuckets(): Record<AgeBucket, Cents> {
  * bill paid on 3 April was still owing then, and has to be, or the report
  * cannot agree with the balance sheet for the same day.
  *
- * Aged by due date, as Xero does by default: a bill with 20th-of-the-month
+ * Aged by due date: a bill with 20th-of-the-month
  * terms is not late on the 5th. A document with no due date is aged from its
  * own date. Only documents in the books count -- a draft owes nothing -- and
  * a credit note nobody has applied is shown as the credit it is, reducing

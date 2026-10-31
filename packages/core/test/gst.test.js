@@ -547,7 +547,7 @@ test("a refund sits on the side of the return its account is on, not the side it
   const result = gstReturn([refund, repaid], { from: "2025-04-01", to: "2025-05-31" }, { resolve, basis: "payments" });
   // Negative, which is the point: a refund to a customer reduces sales. The
   // figure is -800.02 rather than -800.00 because Box 5 is worked back from
-  // the GST (-104.35 x 23/3), the way Xero states it.
+  // the GST (-104.35 x 23/3), as a filed return states it.
   assert.ok(result.boxes.box5 < 0, "a refund to a customer reduces sales");
   assert.equal(result.boxes.box5, -80002);
   // Box 11 is stated from the tax rather than summed from the lines, so the

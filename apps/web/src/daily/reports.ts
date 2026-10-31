@@ -2787,7 +2787,7 @@ function renderGstBoxes(body: HTMLElement, result: GstReturnResult, money: (cent
   if (b.box7 !== b.box5 - b.box6 || (b.box11 !== purchasesGross && Math.abs(b.box11 - purchasesGross) < 100)) {
     body.append(
       note(
-        `Box 8 and Box 12 total the GST on each line, rounded to the cent${moduleOn("xero") ? ", as Xero does" : ""}. Box 7 ` +
+        `Box 8 and Box 12 total the GST on each line, rounded to the cent${moduleOn("xero") ? ", so they agree with returns filed from Xero" : ""}. Box 7 ` +
           "and Box 11 are worked back from them, so they can differ by a few cents.",
       ),
     );

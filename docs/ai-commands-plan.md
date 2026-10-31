@@ -31,10 +31,9 @@ app has, cost NZOSA per request, and taken screen space the reports need.
    again when it is used.
 5. **Suggestions are change sets.** Several made together are one set, and
    the same set sent twice is kept once, so a retried call cannot suggest
-   everything twice. (Prosaic's public API does the same with what it calls
-   change-sets: agent-proposed writes, held pending until an admin approves
-   them. NZOSA goes one step further: each suggestion is decided in the
-   place it belongs, not in a separate approval list.)
+   everything twice. Each suggestion is decided in the place it belongs —
+   Reconcile, the split editor, the journal editor — not in a separate
+   approval list.
 6. **The person can see who suggested it.** Every suggestion carries the
    name the app gives itself ("Claude"), and the page says so.
 

@@ -74,7 +74,7 @@ test("an opening balance counts, and only later anniversaries add to it", () => 
   assert.equal(b.sickDays, 18);
 });
 
-test("a leave request counts working days, as Xero did for 3 to 8 October 2026", async () => {
+test("a leave request counts working days: 3 to 8 October 2026", async () => {
   const { workingDaysBetween, regionalAnniversary } = await import("../dist/index.js");
   // Saturday 3 to Thursday 8 October: Monday to Thursday, 4 days -- 32 hours at 8 a day.
   assert.equal(workingDaysBetween("2026-10-03", "2026-10-08"), 4);

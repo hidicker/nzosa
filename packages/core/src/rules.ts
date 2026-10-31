@@ -368,12 +368,23 @@ function describeRule(rule: CategoryRule): string {
  * that work today to fix ones that never did.
  */
 export function matchText(text: string): string {
-  return text
+  const known = matchTexts.get(text);
+  if (known !== undefined) return known;
+  const tidy = text
     .toUpperCase()
     .replace(/[^A-Z0-9&' -]+/g, " ")
     .replace(/\s+/g, " ")
     .trim();
+  if (matchTexts.size >= 20_000) matchTexts.clear();
+  matchTexts.set(text, tidy);
+  return tidy;
 }
+
+/**
+ * Each text matchText has tidied, kept: every rule is tried against every
+ * line, so the same few keywords are tidied thousands of times a page.
+ */
+const matchTexts = new Map<string, string>();
 
 /**
  * Whether every named field holds what the rule asks of it.

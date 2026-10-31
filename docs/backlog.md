@@ -236,3 +236,11 @@ works).
   the amount owing when it was made; after a part payment a new one is made
   and the old one closed. The money reaches the books with Stripe's payout,
   as before. 27 October 2026.
+- **A full Xero move holds the page for minutes.** Found starting a set of
+  books online from the Xero exports with the bank feed and Wise connected
+  (1,168 bank lines, 1,508 journals, 135 invoices). Reading the files took
+  about four minutes, and for most of it the page did not answer clicks or
+  scroll: the reading, matching and posting all run on the page's own thread.
+  The figures came out right. Needs the work moved off that thread (a worker),
+  or broken into pieces with the page let back in between, and a progress line
+  that moves. 31 October 2026.

@@ -14,6 +14,22 @@
  * so foreign IBANs and Wise references pass through intact.
  */
 export function normaliseAccountNumber(value: string): string {
+  const known = normalisedNumbers.get(value);
+  if (known !== undefined) return known;
+  const normal = normaliseOnce(value);
+  if (normalisedNumbers.size >= 20_000) normalisedNumbers.clear();
+  normalisedNumbers.set(value, normal);
+  return normal;
+}
+
+/**
+ * Each account number already put in standard form: a rule limited to one
+ * account compares that account's number with every line's, for every rule,
+ * on every page that suggests codes.
+ */
+const normalisedNumbers = new Map<string, string>();
+
+function normaliseOnce(value: string): string {
   const text = value.trim();
   if (text === "") return "";
 

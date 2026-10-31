@@ -107,6 +107,33 @@ export function mergeContacts(held: readonly Contact[], incoming: readonly Omit<
   return out;
 }
 
+/**
+ * The customers and vendors that imported invoices and bills name, with the
+ * email the document carried: a customer for a sale, a vendor for a bill, both
+ * where somebody is each. Ready for mergeContacts, which keeps whatever a
+ * record already holds.
+ */
+export function contactsFromDocuments(
+  documents: readonly { contact: string; kind: "sales" | "purchase"; email?: string }[],
+  source: string,
+): Omit<Contact, "id">[] {
+  const byKey = new Map<string, Omit<Contact, "id">>();
+  for (const document of documents) {
+    const name = document.contact.trim();
+    const key = contactKey(name);
+    if (key === "") continue;
+    const kind: ContactKind = document.kind === "purchase" ? "vendor" : "customer";
+    const there = byKey.get(key);
+    if (there === undefined) {
+      byKey.set(key, { name, kind, source, ...(document.email ? { email: document.email } : {}) });
+      continue;
+    }
+    there.kind = joined(there.kind, kind);
+    if ((there.email ?? "") === "" && document.email) there.email = document.email;
+  }
+  return [...byKey.values()];
+}
+
 /** The record for a name on a document, or the one for its parent customer. */
 export function findContact(contacts: readonly Contact[], name: string): Contact | undefined {
   const key = contactKey(name);

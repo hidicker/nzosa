@@ -28,6 +28,8 @@ import {
   parseXeroAllocations,
   parseXeroInvoices,
   parseXeroJournalReport,
+  contactsFromDocuments,
+  mergeContacts,
   validateInvoices,
 } from "@nzosa/core";
 import type { Identified, Journal } from "@nzosa/core";
@@ -631,8 +633,14 @@ export async function loadInvoices(file: File): Promise<string> {
   // sales invoices already loaded, and the other way round.
   const kinds = new Set(parsed.invoices.map((i) => i.kind));
   const kept = (state.ledger.invoices ?? []).filter((i) => !kinds.has(i.kind));
-  state.ledger = { ...state.ledger, invoices: [...kept, ...parsed.invoices] };
+  // The customers and vendors they name, as records with the email Xero
+  // gave: nothing else brings them across from Xero.
+  const contactsBefore = (state.ledger.contacts ?? []).length;
+  const contacts = mergeContacts(state.ledger.contacts ?? [], contactsFromDocuments(parsed.invoices, "Xero"));
+  const newContacts = contacts.length - contactsBefore;
+  state.ledger = { ...state.ledger, invoices: [...kept, ...parsed.invoices], contacts };
   state.persistent = await savePart(state.ledger, "invoices");
+  redraw("contacts");
   const bills = parsed.invoices.filter((i) => i.kind === "purchase").length;
   const sales = parsed.invoices.length - bills;
   const what = [
@@ -653,7 +661,8 @@ export async function loadInvoices(file: File): Promise<string> {
   redraw("invoices");
   const paid =
     (settled > 0 ? ` ${settled} payment${settled === 1 ? "" : "s"} matched as Xero recorded them.` : "") +
-    (credited > 0 ? ` ${credited} credit note${credited === 1 ? "" : "s"} put against the document ${credited === 1 ? "it credits" : "they credit"}.` : "");
+    (credited > 0 ? ` ${credited} credit note${credited === 1 ? "" : "s"} put against the document ${credited === 1 ? "it credits" : "they credit"}.` : "") +
+    (newContacts > 0 ? ` ${newContacts} ${bills > 0 && sales === 0 ? "vendor" : bills === 0 ? "customer" : "customer and vendor"} record${newContacts === 1 ? "" : "s"} added.` : "");
   return (issues.length > 0 ? `${what}; ${issues.length} look wrong, see Invoices.` : `${what}.`) + paid;
 }
 

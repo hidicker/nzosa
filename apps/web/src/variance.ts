@@ -174,11 +174,18 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     : split;
   const ruleFile = input.rules as RuleFile | undefined;
   const codingRules: RuleSet = { ...(ruleFile ?? {}), overrides: expanded.overrides };
+  // Each line's code, worked out once: choosing the lines and resolving their
+  // GST both ask, and every rule is tried each time.
+  const codes = new Map<Transaction, ReturnType<typeof categorise>["code"]>();
+  const codeFor = (t: Transaction): ReturnType<typeof categorise>["code"] => {
+    if (!codes.has(t)) codes.set(t, categorise(t, codingRules).code);
+    return codes.get(t) ?? null;
+  };
 
   const belongs = input.belongsTo;
   const selected =
     belongs !== undefined
-      ? expanded.transactions.filter((t) => belongs(t.account, categorise(t, codingRules).code ?? ""))
+      ? expanded.transactions.filter((t) => belongs(t.account, codeFor(t) ?? ""))
       : input.accounts.length === 0
         ? expanded.transactions
         : expanded.transactions.filter((t) => input.accounts.includes(t.account));
@@ -192,7 +199,7 @@ export function computeOurReturns(input: VarianceInput, from: string, to: string
     ...(ruleFile?.codeTreatments ? { codeTreatments: ruleFile.codeTreatments } : {}),
     ...(input.chartTreatment ? { chartTreatment: input.chartTreatment as never } : {}),
     ...(input.sideOf ? { sideOf: input.sideOf } : {}),
-    codeOf: (t) => categorise(t, codingRules).code,
+    codeOf: (t) => codeFor(t),
     overrides: expanded.overrides,
     ...(input.transfers ? { transfers: input.transfers } : {}),
     ...(input.unregistered ? { unregistered: input.unregistered } : {}),

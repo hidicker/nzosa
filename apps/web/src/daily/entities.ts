@@ -293,7 +293,11 @@ function bankTable(model: EntityModel): HTMLElement {
     label.textContent = named !== undefined ? bankWithId(named, account) : account;
     tr.append(label);
 
-    const ticked = model.banks[account] ?? [];
+    // Books of one entity: everything in them is that entity's, as the guided
+    // start says, so an account nobody has been asked about is shown as its.
+    const only = model.entities.length === 1 ? model.entities[0]?.id : undefined;
+    const given = model.banks[account] ?? [];
+    const ticked = given.length === 0 && only !== undefined ? [only] : given;
     const several = ticked.length > 1;
     const chosen = several ? suggestedBankOwner(model, account) : ticked[0];
     const cell = document.createElement("td");
@@ -342,7 +346,8 @@ function bankTable(model: EntityModel): HTMLElement {
     } else {
       const reach = bankReach(account).filter((id) => id !== ticked[0]);
       if (reach.length > 0) said.textContent = `Also pays for ${reach.map(nameOf).join(", ")}`;
-      const owner = ticked[0];
+      // Only an owner somebody chose: the one implied above has nothing to apply.
+      const owner = given[0];
       const lines = new Set(state.ledger.transactions.filter((t) => t.account === account).map((t) => t.id));
       const earlier = owner === undefined ? [] : betweenLinesDiffering((id, c) => lines.has(id) && c.owner !== owner);
       if (earlier.length > 0) {
@@ -355,6 +360,13 @@ function bankTable(model: EntityModel): HTMLElement {
   bankTable.append(bankHead, bankBody);
   wrap.append(bankTable);
   return wrap;
+}
+
+/** Whether any bank account in these books has no chart row saying it is that account. */
+function bankAccountsUnlinked(): boolean {
+  const rows = state.chart.filter((a) => a.type.trim().toLowerCase() === "bank");
+  const linked = new Set(rows.map((row) => ledgerAccountFor(row.name, row)).filter((id) => id !== null));
+  return [...banks().accounts].some((id) => !linked.has(id));
 }
 
 /**
@@ -1182,9 +1194,9 @@ export function renderEntities(): void {
       `${unlinked.length} bank account${unlinked.length === 1 ? "" : "s"} in the chart ` +
       `${unlinked.length === 1 ? "is" : "are"} not linked yet: ` +
       unlinked.map(({ account }) => account.name).join(", ") +
-      (model.entities.length > 0
-        ? ". Choose each one under “In the chart” in the bank accounts above."
-        : ". Link each one under “Entity, or which account” below.");
+      (model.entities.length > 0 && bankAccountsUnlinked()
+        ? ". Choose each one under “In the chart” in the bank accounts above, or as “not in this ledger” below."
+        : ". Link each one under “Entity, or which account” below, or choose “not in this ledger” if these books hold no money in it.");
     body.append(say);
   }
 

@@ -315,6 +315,22 @@ function diffText(a, b) {
   return lines.join("\n");
 }
 
+/** Every text in a capture, with these folders named rather than spelled out (also as JSON writes them). */
+function withoutPaths(value, folders) {
+  if (typeof value === "string") {
+    let text = value;
+    for (const [path, name] of folders) {
+      text = text.split(path.replaceAll("\\", "\\\\")).join(name).split(path).join(name);
+    }
+    return text;
+  }
+  if (Array.isArray(value)) return value.map((one) => withoutPaths(one, folders));
+  if (value !== null && typeof value === "object") {
+    return Object.fromEntries(Object.entries(value).map(([key, one]) => [key, withoutPaths(one, folders)]));
+  }
+  return value;
+}
+
 async function captureSide(repo, label, book, port, chromePort) {
   const folder = mkdtempSync(join(tmpdir(), `parity-${label}-`));
   copyBooks(join(ledgers, book), join(folder, book));
@@ -327,7 +343,12 @@ async function captureSide(repo, label, book, port, chromePort) {
     await chrome.send("Page.addScriptToEvaluateOnNewDocument", { source: FREEZE_CLOCK });
     await chrome.send("Page.navigate", { url: `http://127.0.0.1:${port}/` });
     await wait(1500);
-    return await chrome.evaluate(CAPTURE);
+    // The AI page shows where the books and the app are on this computer,
+    // and the two sides run from different folders by design.
+    return withoutPaths(await chrome.evaluate(CAPTURE), [
+      [join(folder, book), "<books folder>"],
+      [resolve(repo), "<app folder>"],
+    ]);
   } finally {
     chrome.close();
     server.kill();
